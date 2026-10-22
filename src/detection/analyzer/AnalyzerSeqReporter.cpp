@@ -7,6 +7,7 @@
 #include "../../detection/detectors/DetectorReportPrinter.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../app/TimeBase.h"
+#include "../../app/SerialOut.h"
 
 namespace {
 
@@ -43,40 +44,40 @@ const char* pipelineIntegrityReasonName(detection::PipelineIntegrityReason reaso
 }
 
 void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, bool extended) {
-    Serial.print(prefix);
-    Serial.print(" expected.start_ms=");
-    Serial.print(report.expected.windowStartMs);
-    Serial.print(" expected.end_ms=");
-    Serial.print(report.expected.windowEndMs);
-    Serial.print(" verdict.type=");
-    Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
-    Serial.print(" verdict.valid=");
-    Serial.print(report.primaryPattern.valid ? 1 : 0);
-    Serial.print(" verdict.reason=");
-    Serial.print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
-    Serial.print(" analyzer.result=");
-    Serial.print(analyzerResultName(report.classification.result));
-    Serial.print(" analyzer.stage=");
-    Serial.print(analyzerStageName(report.classification.primaryStage));
-    Serial.print(" analyzer.reason=");
-    Serial.print(analyzerReasonName(report.classification.reason));
-    Serial.print(" analyzer.dt_ms=");
-    Serial.print(report.classification.dtMs);
+    serialOut().print(prefix);
+    serialOut().print(" expected.start_ms=");
+    serialOut().print(report.expected.windowStartMs);
+    serialOut().print(" expected.end_ms=");
+    serialOut().print(report.expected.windowEndMs);
+    serialOut().print(" verdict.type=");
+    serialOut().print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
+    serialOut().print(" verdict.valid=");
+    serialOut().print(report.primaryPattern.valid ? 1 : 0);
+    serialOut().print(" verdict.reason=");
+    serialOut().print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
+    serialOut().print(" analyzer.result=");
+    serialOut().print(analyzerResultName(report.classification.result));
+    serialOut().print(" analyzer.stage=");
+    serialOut().print(analyzerStageName(report.classification.primaryStage));
+    serialOut().print(" analyzer.reason=");
+    serialOut().print(analyzerReasonName(report.classification.reason));
+    serialOut().print(" analyzer.dt_ms=");
+    serialOut().print(report.classification.dtMs);
     if (extended) {
-        Serial.print(" occurrence.present=");
-        Serial.print(report.occurrences.present ? 1 : 0);
-        Serial.print(" occurrence.source=");
-        Serial.print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
-        Serial.print(" inspection.label=");
-        Serial.print(detection::inspectionTargetName(report.inspection.moduleTarget));
-        Serial.print(" inspection.strength=");
-        Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
-        Serial.print(" integrity.complete=");
-        Serial.print(report.integrity.correlationComplete ? 1 : 0);
-        Serial.print(" integrity.reason=");
-        Serial.print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
+        serialOut().print(" occurrence.present=");
+        serialOut().print(report.occurrences.present ? 1 : 0);
+        serialOut().print(" occurrence.source=");
+        serialOut().print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
+        serialOut().print(" inspection.label=");
+        serialOut().print(detection::inspectionTargetName(report.inspection.moduleTarget));
+        serialOut().print(" inspection.strength=");
+        serialOut().print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
+        serialOut().print(" integrity.complete=");
+        serialOut().print(report.integrity.correlationComplete ? 1 : 0);
+        serialOut().print(" integrity.reason=");
+        serialOut().print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
     }
-    Serial.println();
+    serialOut().println();
 }
 
 }
@@ -86,11 +87,11 @@ Canonical analyzer reporting surface.
 */
 
 void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
-    Serial.println();
-    Serial.print("#");
-    Serial.print(trialNumber);
-    Serial.print(" ----------------");
-    Serial.println();
+    serialOut().println();
+    serialOut().print("#");
+    serialOut().print(trialNumber);
+    serialOut().print(" ----------------");
+    serialOut().println();
 }
 
 void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
@@ -102,58 +103,58 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     }
     {
         const AudioSourceStats& audioStats = _audioSource.stats();
-        Serial.print("SEQ_HISTDBG trial=");
-        Serial.print(report.context.trial);
-        Serial.print(" incomplete_total=");
-        Serial.print(hist.count);
-        Serial.print(" new=");
-        Serial.print(hist.count - _lastPrintedHistoryIncompleteCount);
+        serialOut().print("SEQ_HISTDBG trial=");
+        serialOut().print(report.context.trial);
+        serialOut().print(" incomplete_total=");
+        serialOut().print(hist.count);
+        serialOut().print(" new=");
+        serialOut().print(hist.count - _lastPrintedHistoryIncompleteCount);
         if (hist.count != _lastPrintedHistoryIncompleteCount) {
-            Serial.print(" stream=");
-            Serial.print(detection::featureStreamName(hist.stream));
-            Serial.print(" req=");
-            Serial.print(hist.requestedStartMs);
-            Serial.print("..");
-            Serial.print(hist.requestedEndMs);
-            Serial.print(" now=");
-            Serial.print(hist.inspectionNowMs);
-            Serial.print(" ring=");
-            Serial.print(hist.ringOldestMs);
-            Serial.print("..");
-            Serial.print(hist.ringNewestMs);
-            Serial.print(" ring_bins=");
-            Serial.print(static_cast<unsigned long>(hist.ringBins));
-            Serial.print(" out_of_order_at_fail=");
-            Serial.print(hist.outOfOrderRecords);
+            serialOut().print(" stream=");
+            serialOut().print(detection::featureStreamName(hist.stream));
+            serialOut().print(" req=");
+            serialOut().print(hist.requestedStartMs);
+            serialOut().print("..");
+            serialOut().print(hist.requestedEndMs);
+            serialOut().print(" now=");
+            serialOut().print(hist.inspectionNowMs);
+            serialOut().print(" ring=");
+            serialOut().print(hist.ringOldestMs);
+            serialOut().print("..");
+            serialOut().print(hist.ringNewestMs);
+            serialOut().print(" ring_bins=");
+            serialOut().print(static_cast<unsigned long>(hist.ringBins));
+            serialOut().print(" out_of_order_at_fail=");
+            serialOut().print(hist.outOfOrderRecords);
         }
-        Serial.print(" out_of_order_total=");
-        Serial.print(_detection.featureHistory().outOfOrderRecordCount());
-        Serial.print(" i2s_backsteps=");
-        Serial.print(audioStats.timestampBacksteps);
-        Serial.print(" i2s_max_backstep_us=");
-        Serial.print(audioStats.maxTimestampBackstepUs);
-        Serial.print(" i2s_overflows=");
-        Serial.print(audioStats.overflowCount);
-        Serial.print(" clock_corrections=");
-        Serial.print(audioStats.sampleClockCorrections);
-        Serial.print(" clock_max_correction_us=");
-        Serial.print(audioStats.maxSampleClockCorrectionUs);
-        Serial.print(" emit_marker_seen=");
-        Serial.print(_sequenceTest.currentTrialDiagnostics.emitStartSeen ? 1 : 0);
-        Serial.print(" emit_marker_dt_ms=");
-        Serial.print(_sequenceTest.currentTrialDiagnostics.emitStartDtMs);
-        Serial.print(" uptime_ms=");
-        Serial.print(timebase::nowMs());
-        Serial.print(" samples_read=");
-        Serial.print(static_cast<unsigned long>(audioStats.totalSamplesRead));
-        Serial.print(" us_per_sample=");
-        Serial.print(_diagSamplesWorked > 0
+        serialOut().print(" out_of_order_total=");
+        serialOut().print(_detection.featureHistory().outOfOrderRecordCount());
+        serialOut().print(" i2s_backsteps=");
+        serialOut().print(audioStats.timestampBacksteps);
+        serialOut().print(" i2s_max_backstep_us=");
+        serialOut().print(audioStats.maxTimestampBackstepUs);
+        serialOut().print(" i2s_overflows=");
+        serialOut().print(audioStats.overflowCount);
+        serialOut().print(" clock_corrections=");
+        serialOut().print(audioStats.sampleClockCorrections);
+        serialOut().print(" clock_max_correction_us=");
+        serialOut().print(audioStats.maxSampleClockCorrectionUs);
+        serialOut().print(" emit_marker_seen=");
+        serialOut().print(_sequenceTest.currentTrialDiagnostics.emitStartSeen ? 1 : 0);
+        serialOut().print(" emit_marker_dt_ms=");
+        serialOut().print(_sequenceTest.currentTrialDiagnostics.emitStartDtMs);
+        serialOut().print(" uptime_ms=");
+        serialOut().print(timebase::nowMs());
+        serialOut().print(" samples_read=");
+        serialOut().print(static_cast<unsigned long>(audioStats.totalSamplesRead));
+        serialOut().print(" us_per_sample=");
+        serialOut().print(_diagSamplesWorked > 0
             ? static_cast<float>(_diagSampleWorkUs) / static_cast<float>(_diagSamplesWorked)
             : 0.0f, 2);
-        Serial.print(" dropped_dma_buffers=");
-        Serial.print(audioStats.droppedDmaBuffers);
-        Serial.print(" clock_rate_mhz=");
-        Serial.println(audioStats.sampleClockRateMilliHz);
+        serialOut().print(" dropped_dma_buffers=");
+        serialOut().print(audioStats.droppedDmaBuffers);
+        serialOut().print(" clock_rate_mhz=");
+        serialOut().println(audioStats.sampleClockRateMilliHz);
         _lastPrintedHistoryIncompleteCount = hist.count;
     }
     const char* trialRejectReason = analyzerReasonName(report.classification.reason);
@@ -165,39 +166,39 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         trialRejectReason = report.occurrences.rejectReason;
     }
 
-    Serial.print("SEQ_TRIAL trial=");
-    Serial.print(report.context.trial);
-    Serial.print(" result=");
-    Serial.print(analyzerResultName(report.classification.result));
-    Serial.print(" stage=");
-    Serial.print(analyzerStageName(report.classification.primaryStage));
-    Serial.print(" reject_reason=");
-    Serial.print(trialRejectReason);
-    Serial.print(" source_selection=");
-    Serial.print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
-    Serial.print(" source_reason=");
-    Serial.print(report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
-    Serial.print(" dt=");
+    serialOut().print("SEQ_TRIAL trial=");
+    serialOut().print(report.context.trial);
+    serialOut().print(" result=");
+    serialOut().print(analyzerResultName(report.classification.result));
+    serialOut().print(" stage=");
+    serialOut().print(analyzerStageName(report.classification.primaryStage));
+    serialOut().print(" reject_reason=");
+    serialOut().print(trialRejectReason);
+    serialOut().print(" source_selection=");
+    serialOut().print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
+    serialOut().print(" source_reason=");
+    serialOut().print(report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
+    serialOut().print(" dt=");
     if (report.classification.result == AnalyzerResult::Rejected) {
-        Serial.print("na");
+        serialOut().print("na");
     } else if (report.classification.dtMs >= 0) {
-        Serial.print(report.classification.dtMs);
-        Serial.print("ms");
+        serialOut().print(report.classification.dtMs);
+        serialOut().print("ms");
     } else {
-        Serial.print(report.classification.dtMs);
-        Serial.print("ms");
+        serialOut().print(report.classification.dtMs);
+        serialOut().print("ms");
     }
     if (report.occurrences.primaryDurationMs > 0) {
-        Serial.print(" duration_ms=");
-        Serial.print(report.occurrences.primaryDurationMs);
+        serialOut().print(" duration_ms=");
+        serialOut().print(report.occurrences.primaryDurationMs);
     } else if (report.detectorReport != nullptr && report.detectorReport->accepted.present) {
-        Serial.print(" duration_ms=");
-        Serial.print(report.detectorReport->accepted.durationMs);
+        serialOut().print(" duration_ms=");
+        serialOut().print(report.detectorReport->accepted.durationMs);
     }
-    Serial.print(" contrast_class=");
-    Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
-    Serial.print(" amp_class=");
-    Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
+    serialOut().print(" contrast_class=");
+    serialOut().print(strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
+    serialOut().print(" amp_class=");
+    serialOut().print(strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
     if (report.detectorReport != nullptr) {
         const auto& accepted = report.detectorReport->accepted;
         const auto& selectedReject = report.detectorReport->selectedReject;
@@ -205,30 +206,30 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         const auto coverageMs = useAccepted ? accepted.coverageAboveReleaseMs : selectedReject.coverageAboveReleaseMs;
         const auto islandMaxMs = useAccepted ? accepted.islandMaxMs : selectedReject.islandMaxMs;
         const auto gapMaxMs = useAccepted ? accepted.gapMaxMs : selectedReject.gapMaxMs;
-        Serial.print(" coverage_ms=");
-        Serial.print(coverageMs);
-        Serial.print(" island_max_ms=");
-        Serial.print(islandMaxMs);
-        Serial.print(" gap_max_ms=");
-        Serial.print(gapMaxMs);
+        serialOut().print(" coverage_ms=");
+        serialOut().print(coverageMs);
+        serialOut().print(" island_max_ms=");
+        serialOut().print(islandMaxMs);
+        serialOut().print(" gap_max_ms=");
+        serialOut().print(gapMaxMs);
     }
-    Serial.print(" source_strength=");
-    Serial.print(report.occurrences.primaryStrength, 1);
-    Serial.print(" verdict_confidence=");
-    Serial.print(report.primaryPattern.confidence, 2);
-    Serial.print(" dup=");
-    Serial.print(report.debug.duplicates);
-    Serial.print(" src_total=");
-    Serial.print(report.occurrences.total);
-    Serial.print(" src_acc=");
-    Serial.print(report.occurrences.accepted);
-    Serial.print(" src_rej=");
-    Serial.print(report.occurrences.rejected);
-    Serial.print(" buffer_overrun=");
-    Serial.print(report.debug.bufferOverrun ? 1 : 0);
-    Serial.print(" profile=");
-    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
-    Serial.println();
+    serialOut().print(" source_strength=");
+    serialOut().print(report.occurrences.primaryStrength, 1);
+    serialOut().print(" verdict_confidence=");
+    serialOut().print(report.primaryPattern.confidence, 2);
+    serialOut().print(" dup=");
+    serialOut().print(report.debug.duplicates);
+    serialOut().print(" src_total=");
+    serialOut().print(report.occurrences.total);
+    serialOut().print(" src_acc=");
+    serialOut().print(report.occurrences.accepted);
+    serialOut().print(" src_rej=");
+    serialOut().print(report.occurrences.rejected);
+    serialOut().print(" buffer_overrun=");
+    serialOut().print(report.debug.bufferOverrun ? 1 : 0);
+    serialOut().print(" profile=");
+    serialOut().print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    serialOut().println();
 }
 
 void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) const {
@@ -241,74 +242,74 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
     auto printInspectCore = [&report](const detection::MagnitudeInspectionObservation* observation,
                                       detection::InspectionTarget target) {
         const bool available = observation != nullptr && observation->available;
-        Serial.print("SEQ_INSPECT");
-        Serial.print(" inspect.label=");
-        Serial.print(detection::inspectionTargetName(target));
-        Serial.print(" inspect.anchor_ms=");
-        Serial.print(observation != nullptr ? observation->anchorMs : 0UL);
-        Serial.print(" inspect.requested_start_ms=");
-        Serial.print(observation != nullptr ? observation->requestedStartMs : 0UL);
-        Serial.print(" inspect.requested_end_ms=");
-        Serial.print(observation != nullptr ? observation->requestedEndMs : 0UL);
-        Serial.print(" inspect.inspection_now_ms=");
-        Serial.print(observation != nullptr ? observation->inspectionNowMs : 0UL);
-        Serial.print(" inspect.available_start_ms=");
-        Serial.print(observation != nullptr ? observation->availableStartMs : 0UL);
-        Serial.print(" inspect.available_end_ms=");
-        Serial.print(observation != nullptr ? observation->availableEndMs : 0UL);
-        Serial.print(" inspect.value=");
-        Serial.print(available ? observation->classificationValue : 0.0f, 3);
-        Serial.print(" inspect.strength_class=");
-        Serial.print(available ? detection::strengthClassName(observation->strength) : "unknown");
-        Serial.print(" inspect.valid=");
-        Serial.print(available ? 1 : 0);
-        Serial.print(" inspect.status=");
-        Serial.print(available ? "observed" : "missing");
-        Serial.print(" inspect.reject_reason=");
-        Serial.print(available ? "none" : detection::magnitudeInspectionNoteName(observation != nullptr ? observation->note : detection::MagnitudeInspectionNote::WindowInvalid));
-        Serial.print(" inspect.stream=");
-        Serial.print(observation != nullptr ? scalarObservedStreamDisplayName(observation->stream) : "unknown");
-        Serial.print(" inspect.metric=");
-        Serial.print(observation != nullptr ? detection::magnitudeInspectionModeName(observation->mode) : "unknown");
-        Serial.print(" inspect.window_ms=");
-        Serial.print(observation != nullptr ? observation->windowMs : 0UL);
-        Serial.print(" inspect.expected_bin_count=");
-        Serial.print(observation != nullptr ? observation->windowMs : 0UL);
-        Serial.print(" inspect.sample_count=");
-        Serial.print(observation != nullptr ? static_cast<unsigned long>(observation->sampleCount) : 0UL);
-        Serial.print(" inspect.coverage=");
-        Serial.print(observation != nullptr ? observation->coverageRatio : 0.0f, 3);
-        Serial.print(" inspect.covered_ms=");
-        Serial.print(observation != nullptr ? observation->coveredDurationMs : 0UL);
-        Serial.print(" inspect.coverage_complete=");
-        Serial.print(observation != nullptr && observation->coverageComplete ? 1 : 0);
-        Serial.print(" inspect.future_unavailable=");
-        Serial.print(observation != nullptr && observation->requestedFutureAtInspection ? 1 : 0);
-        Serial.print(" inspect.peak=");
-        Serial.print(observation != nullptr ? observation->peak : 0.0f, 3);
-        Serial.print(" inspect.mean=");
-        Serial.print(observation != nullptr ? observation->mean : 0.0f, 3);
-        Serial.print(" inspect.rms=");
-        Serial.print(observation != nullptr ? observation->rms : 0.0f, 3);
-        Serial.print(" inspect.median=");
-        Serial.print(observation != nullptr ? observation->median : 0.0f, 3);
-        Serial.print(" inspect.p75=");
-        Serial.print(observation != nullptr ? observation->p75 : 0.0f, 3);
-        Serial.print(" inspect.p90=");
-        Serial.print(observation != nullptr ? observation->p90 : 0.0f, 3);
-        Serial.print(" inspect.trimmed_mean=");
-        Serial.print(observation != nullptr ? observation->trimmedMean : 0.0f, 3);
-        Serial.print(" inspect.input_value_count=");
-        Serial.print(observation != nullptr ? static_cast<unsigned long>(observation->freshValueCount) : 0UL);
-        Serial.print(" inspect.occurrence_id=");
-        Serial.print(report.sourceOccurrenceId);
-        Serial.print(" inspect.integrity_complete=");
-        Serial.print(report.integrity.correlationComplete ? 1 : 0);
-        Serial.print(" inspect.integrity_reason=");
-        Serial.print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
-        Serial.print(" inspect.integrity_queue_overflow=");
-        Serial.print(report.integrity.queueOverflowAffected ? 1 : 0);
-        Serial.println();
+        serialOut().print("SEQ_INSPECT");
+        serialOut().print(" inspect.label=");
+        serialOut().print(detection::inspectionTargetName(target));
+        serialOut().print(" inspect.anchor_ms=");
+        serialOut().print(observation != nullptr ? observation->anchorMs : 0UL);
+        serialOut().print(" inspect.requested_start_ms=");
+        serialOut().print(observation != nullptr ? observation->requestedStartMs : 0UL);
+        serialOut().print(" inspect.requested_end_ms=");
+        serialOut().print(observation != nullptr ? observation->requestedEndMs : 0UL);
+        serialOut().print(" inspect.inspection_now_ms=");
+        serialOut().print(observation != nullptr ? observation->inspectionNowMs : 0UL);
+        serialOut().print(" inspect.available_start_ms=");
+        serialOut().print(observation != nullptr ? observation->availableStartMs : 0UL);
+        serialOut().print(" inspect.available_end_ms=");
+        serialOut().print(observation != nullptr ? observation->availableEndMs : 0UL);
+        serialOut().print(" inspect.value=");
+        serialOut().print(available ? observation->classificationValue : 0.0f, 3);
+        serialOut().print(" inspect.strength_class=");
+        serialOut().print(available ? detection::strengthClassName(observation->strength) : "unknown");
+        serialOut().print(" inspect.valid=");
+        serialOut().print(available ? 1 : 0);
+        serialOut().print(" inspect.status=");
+        serialOut().print(available ? "observed" : "missing");
+        serialOut().print(" inspect.reject_reason=");
+        serialOut().print(available ? "none" : detection::magnitudeInspectionNoteName(observation != nullptr ? observation->note : detection::MagnitudeInspectionNote::WindowInvalid));
+        serialOut().print(" inspect.stream=");
+        serialOut().print(observation != nullptr ? scalarObservedStreamDisplayName(observation->stream) : "unknown");
+        serialOut().print(" inspect.metric=");
+        serialOut().print(observation != nullptr ? detection::magnitudeInspectionModeName(observation->mode) : "unknown");
+        serialOut().print(" inspect.window_ms=");
+        serialOut().print(observation != nullptr ? observation->windowMs : 0UL);
+        serialOut().print(" inspect.expected_bin_count=");
+        serialOut().print(observation != nullptr ? observation->windowMs : 0UL);
+        serialOut().print(" inspect.sample_count=");
+        serialOut().print(observation != nullptr ? static_cast<unsigned long>(observation->sampleCount) : 0UL);
+        serialOut().print(" inspect.coverage=");
+        serialOut().print(observation != nullptr ? observation->coverageRatio : 0.0f, 3);
+        serialOut().print(" inspect.covered_ms=");
+        serialOut().print(observation != nullptr ? observation->coveredDurationMs : 0UL);
+        serialOut().print(" inspect.coverage_complete=");
+        serialOut().print(observation != nullptr && observation->coverageComplete ? 1 : 0);
+        serialOut().print(" inspect.future_unavailable=");
+        serialOut().print(observation != nullptr && observation->requestedFutureAtInspection ? 1 : 0);
+        serialOut().print(" inspect.peak=");
+        serialOut().print(observation != nullptr ? observation->peak : 0.0f, 3);
+        serialOut().print(" inspect.mean=");
+        serialOut().print(observation != nullptr ? observation->mean : 0.0f, 3);
+        serialOut().print(" inspect.rms=");
+        serialOut().print(observation != nullptr ? observation->rms : 0.0f, 3);
+        serialOut().print(" inspect.median=");
+        serialOut().print(observation != nullptr ? observation->median : 0.0f, 3);
+        serialOut().print(" inspect.p75=");
+        serialOut().print(observation != nullptr ? observation->p75 : 0.0f, 3);
+        serialOut().print(" inspect.p90=");
+        serialOut().print(observation != nullptr ? observation->p90 : 0.0f, 3);
+        serialOut().print(" inspect.trimmed_mean=");
+        serialOut().print(observation != nullptr ? observation->trimmedMean : 0.0f, 3);
+        serialOut().print(" inspect.input_value_count=");
+        serialOut().print(observation != nullptr ? static_cast<unsigned long>(observation->freshValueCount) : 0UL);
+        serialOut().print(" inspect.occurrence_id=");
+        serialOut().print(report.sourceOccurrenceId);
+        serialOut().print(" inspect.integrity_complete=");
+        serialOut().print(report.integrity.correlationComplete ? 1 : 0);
+        serialOut().print(" inspect.integrity_reason=");
+        serialOut().print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
+        serialOut().print(" inspect.integrity_queue_overflow=");
+        serialOut().print(report.integrity.queueOverflowAffected ? 1 : 0);
+        serialOut().println();
     };
 
     if (observationCount == 0) {
@@ -327,58 +328,58 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
         return;
     }
 
-    Serial.print("SEQ_SOURCE");
-    Serial.print(" source.selection=");
-    Serial.print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
-    Serial.print(" source.occurrence_id=");
-    Serial.print(report.sourceOccurrenceId);
-    Serial.print(" source.candidate_id=");
-    Serial.print(report.sourceCandidateId);
-    Serial.print(" source.report_matched=");
-    Serial.print(report.sourceReportMatched ? 1 : 0);
-    Serial.print(" source.event_id=");
-    Serial.print(report.sourceEventId);
-    Serial.print(" source.report_generation=");
-    Serial.print(report.sourceReportGeneration);
-    Serial.print(" source.event_trial_attribution=");
-    Serial.print(report.sourceEventTrialAttribution);
-    Serial.print(" source.report_reason=");
-    Serial.print(report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
-    Serial.print(" source.kind=");
-    Serial.print(report.occurrences.kind != nullptr ? report.occurrences.kind : "none");
-    Serial.print(" source.source=");
-    Serial.print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
-    Serial.print(" source.present=");
-    Serial.print(report.occurrences.present ? 1 : 0);
-    Serial.print(" source.valid=");
-    Serial.print(report.occurrences.valid ? 1 : 0);
-    Serial.print(" source.start_ms=");
-    Serial.print(report.occurrences.startMs);
-    Serial.print(" source.peak_ms=");
-    Serial.print(report.occurrences.peakMs);
-    Serial.print(" source.release_ms=");
-    Serial.print(report.occurrences.releaseMs);
-    Serial.print(" source.duration_ms=");
-    Serial.print(report.occurrences.primaryDurationMs);
-    Serial.print(" source.strength=");
-    Serial.print(report.occurrences.primaryStrength, 1);
-    Serial.print(" source.confidence=");
-    Serial.print(report.occurrences.confidence, 2);
-    Serial.print(" source.reject_reason=");
-    Serial.print(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
-    Serial.print(" source.total=");
-    Serial.print(report.occurrences.total);
-    Serial.print(" source.accepted_count=");
-    Serial.print(report.occurrences.accepted);
-    Serial.print(" source.rejected_count=");
-    Serial.print(report.occurrences.rejected);
-    Serial.print(" integrity.complete=");
-    Serial.print(report.integrity.correlationComplete ? 1 : 0);
-    Serial.print(" integrity.queue_overflow=");
-    Serial.print(report.integrity.queueOverflowAffected ? 1 : 0);
-    Serial.print(" integrity.reason=");
-    Serial.print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
-    Serial.println();
+    serialOut().print("SEQ_SOURCE");
+    serialOut().print(" source.selection=");
+    serialOut().print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
+    serialOut().print(" source.occurrence_id=");
+    serialOut().print(report.sourceOccurrenceId);
+    serialOut().print(" source.candidate_id=");
+    serialOut().print(report.sourceCandidateId);
+    serialOut().print(" source.report_matched=");
+    serialOut().print(report.sourceReportMatched ? 1 : 0);
+    serialOut().print(" source.event_id=");
+    serialOut().print(report.sourceEventId);
+    serialOut().print(" source.report_generation=");
+    serialOut().print(report.sourceReportGeneration);
+    serialOut().print(" source.event_trial_attribution=");
+    serialOut().print(report.sourceEventTrialAttribution);
+    serialOut().print(" source.report_reason=");
+    serialOut().print(report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
+    serialOut().print(" source.kind=");
+    serialOut().print(report.occurrences.kind != nullptr ? report.occurrences.kind : "none");
+    serialOut().print(" source.source=");
+    serialOut().print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
+    serialOut().print(" source.present=");
+    serialOut().print(report.occurrences.present ? 1 : 0);
+    serialOut().print(" source.valid=");
+    serialOut().print(report.occurrences.valid ? 1 : 0);
+    serialOut().print(" source.start_ms=");
+    serialOut().print(report.occurrences.startMs);
+    serialOut().print(" source.peak_ms=");
+    serialOut().print(report.occurrences.peakMs);
+    serialOut().print(" source.release_ms=");
+    serialOut().print(report.occurrences.releaseMs);
+    serialOut().print(" source.duration_ms=");
+    serialOut().print(report.occurrences.primaryDurationMs);
+    serialOut().print(" source.strength=");
+    serialOut().print(report.occurrences.primaryStrength, 1);
+    serialOut().print(" source.confidence=");
+    serialOut().print(report.occurrences.confidence, 2);
+    serialOut().print(" source.reject_reason=");
+    serialOut().print(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
+    serialOut().print(" source.total=");
+    serialOut().print(report.occurrences.total);
+    serialOut().print(" source.accepted_count=");
+    serialOut().print(report.occurrences.accepted);
+    serialOut().print(" source.rejected_count=");
+    serialOut().print(report.occurrences.rejected);
+    serialOut().print(" integrity.complete=");
+    serialOut().print(report.integrity.correlationComplete ? 1 : 0);
+    serialOut().print(" integrity.queue_overflow=");
+    serialOut().print(report.integrity.queueOverflowAffected ? 1 : 0);
+    serialOut().print(" integrity.reason=");
+    serialOut().print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
+    serialOut().println();
 
     printSequenceSourceCoreCanonical(report);
     printSequenceSourceSpecCanonical(report);
@@ -403,27 +404,27 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
         return;
     }
 
-    Serial.print("SEQ_EXPLAIN");
-    Serial.print(" trial=");
-    Serial.print(report.context.trial);
-    Serial.print(" profile=");
-    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
-    Serial.print(" source.selection=");
-    Serial.print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
-    Serial.print(" source.occurrence_id=");
-    Serial.print(report.sourceOccurrenceId);
-    Serial.print(" source.event_id=");
-    Serial.print(report.sourceEventId);
-    Serial.print(" source.report_generation=");
-    Serial.print(report.sourceReportGeneration);
-    Serial.print(" source.event_trial_attribution=");
-    Serial.print(report.sourceEventTrialAttribution);
-    Serial.print(" source.report_matched=");
-    Serial.print(report.sourceReportMatched ? 1 : 0);
-    Serial.print(" DETECTOR:");
-    Serial.print(" lifecycle=");
-    Serial.print(report.detectorReport != nullptr && report.detectorReport->accepted.present ? "valid" : "invalid");
-    Serial.print(" carrier_quality=");
+    serialOut().print("SEQ_EXPLAIN");
+    serialOut().print(" trial=");
+    serialOut().print(report.context.trial);
+    serialOut().print(" profile=");
+    serialOut().print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    serialOut().print(" source.selection=");
+    serialOut().print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
+    serialOut().print(" source.occurrence_id=");
+    serialOut().print(report.sourceOccurrenceId);
+    serialOut().print(" source.event_id=");
+    serialOut().print(report.sourceEventId);
+    serialOut().print(" source.report_generation=");
+    serialOut().print(report.sourceReportGeneration);
+    serialOut().print(" source.event_trial_attribution=");
+    serialOut().print(report.sourceEventTrialAttribution);
+    serialOut().print(" source.report_matched=");
+    serialOut().print(report.sourceReportMatched ? 1 : 0);
+    serialOut().print(" DETECTOR:");
+    serialOut().print(" lifecycle=");
+    serialOut().print(report.detectorReport != nullptr && report.detectorReport->accepted.present ? "valid" : "invalid");
+    serialOut().print(" carrier_quality=");
     if (report.detectorReport != nullptr) {
         const auto& detector = *report.detectorReport;
         const bool carrierQualityPass =
@@ -432,59 +433,59 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
                    detector.scalar.inspect.carrierIslandPassed &&
                    detector.scalar.inspect.carrierGapPassed)
                 : true;
-        Serial.print(carrierQualityPass ? "valid" : "invalid");
-        Serial.print(" carrier_quality_required=");
-        Serial.print(detector.scalar.inspect.carrierQualityRequired ? 1 : 0);
-        Serial.print(" carrier_coverage_passed=");
-        Serial.print(detector.scalar.inspect.carrierCoveragePassed ? 1 : 0);
-        Serial.print(" carrier_island_passed=");
-        Serial.print(detector.scalar.inspect.carrierIslandPassed ? 1 : 0);
-        Serial.print(" carrier_gap_passed=");
-        Serial.print(detector.scalar.inspect.carrierGapPassed ? 1 : 0);
+        serialOut().print(carrierQualityPass ? "valid" : "invalid");
+        serialOut().print(" carrier_quality_required=");
+        serialOut().print(detector.scalar.inspect.carrierQualityRequired ? 1 : 0);
+        serialOut().print(" carrier_coverage_passed=");
+        serialOut().print(detector.scalar.inspect.carrierCoveragePassed ? 1 : 0);
+        serialOut().print(" carrier_island_passed=");
+        serialOut().print(detector.scalar.inspect.carrierIslandPassed ? 1 : 0);
+        serialOut().print(" carrier_gap_passed=");
+        serialOut().print(detector.scalar.inspect.carrierGapPassed ? 1 : 0);
     } else {
-        Serial.print("unknown");
+        serialOut().print("unknown");
     }
-    Serial.print(" INSPECT:");
-    Serial.print(" contrast.class=");
-    Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
-    Serial.print(" amp.class=");
-    Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
-    Serial.print(" coverage.complete=");
-    Serial.print(report.profileDetail.magnitudeObservation.coverageComplete ? 1 : 0);
-    Serial.print(" coverage.future_unavailable=");
-    Serial.print(report.profileDetail.magnitudeObservation.requestedFutureAtInspection ? 1 : 0);
-    Serial.print(" coverage.covered_ms=");
-    Serial.print(report.profileDetail.magnitudeObservation.coveredDurationMs);
-    Serial.print(" integrity.detector_present=");
-    Serial.print(report.integrity.detectorReportPresent ? 1 : 0);
-    Serial.print(" integrity.occurrence_matched=");
-    Serial.print(report.integrity.occurrenceMatched ? 1 : 0);
-    Serial.print(" integrity.inspection_present=");
-    Serial.print(report.integrity.inspectionPresent ? 1 : 0);
-    Serial.print(" integrity.evaluator_report_present=");
-    Serial.print(report.integrity.evaluatorReportPresent ? 1 : 0);
-    Serial.print(" integrity.verdict_present=");
-    Serial.print(report.integrity.verdictPresent ? 1 : 0);
-    Serial.print(" integrity.complete=");
-    Serial.print(report.integrity.correlationComplete ? 1 : 0);
-    Serial.print(" integrity.queue_overflow=");
-    Serial.print(report.integrity.queueOverflowAffected ? 1 : 0);
-    Serial.print(" integrity.reason=");
-    Serial.print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
-    Serial.print(" PATTERN:");
-    Serial.print(" result=");
-    Serial.print(report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late
+    serialOut().print(" INSPECT:");
+    serialOut().print(" contrast.class=");
+    serialOut().print(strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
+    serialOut().print(" amp.class=");
+    serialOut().print(strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
+    serialOut().print(" coverage.complete=");
+    serialOut().print(report.profileDetail.magnitudeObservation.coverageComplete ? 1 : 0);
+    serialOut().print(" coverage.future_unavailable=");
+    serialOut().print(report.profileDetail.magnitudeObservation.requestedFutureAtInspection ? 1 : 0);
+    serialOut().print(" coverage.covered_ms=");
+    serialOut().print(report.profileDetail.magnitudeObservation.coveredDurationMs);
+    serialOut().print(" integrity.detector_present=");
+    serialOut().print(report.integrity.detectorReportPresent ? 1 : 0);
+    serialOut().print(" integrity.occurrence_matched=");
+    serialOut().print(report.integrity.occurrenceMatched ? 1 : 0);
+    serialOut().print(" integrity.inspection_present=");
+    serialOut().print(report.integrity.inspectionPresent ? 1 : 0);
+    serialOut().print(" integrity.evaluator_report_present=");
+    serialOut().print(report.integrity.evaluatorReportPresent ? 1 : 0);
+    serialOut().print(" integrity.verdict_present=");
+    serialOut().print(report.integrity.verdictPresent ? 1 : 0);
+    serialOut().print(" integrity.complete=");
+    serialOut().print(report.integrity.correlationComplete ? 1 : 0);
+    serialOut().print(" integrity.queue_overflow=");
+    serialOut().print(report.integrity.queueOverflowAffected ? 1 : 0);
+    serialOut().print(" integrity.reason=");
+    serialOut().print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
+    serialOut().print(" PATTERN:");
+    serialOut().print(" result=");
+    serialOut().print(report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late
         ? "confirmed"
         : "rejected");
-    Serial.print(" verdict.first_failed_requirement_index=");
-    Serial.print(report.primaryPattern.firstFailedRequirementIndex);
-    Serial.print(" verdict.first_failed_label=");
-    Serial.print(detection::inspectionTargetName(report.primaryPattern.firstFailedTarget));
-    Serial.print(" verdict.observed_class=");
-    Serial.print(report.primaryPattern.firstFailedObservedStrength != nullptr ? report.primaryPattern.firstFailedObservedStrength : "unknown");
-    Serial.print(" verdict.required_class=");
-    Serial.print(report.primaryPattern.firstFailedRequiredStrength != nullptr ? report.primaryPattern.firstFailedRequiredStrength : "unknown");
-    Serial.println();
+    serialOut().print(" verdict.first_failed_requirement_index=");
+    serialOut().print(report.primaryPattern.firstFailedRequirementIndex);
+    serialOut().print(" verdict.first_failed_label=");
+    serialOut().print(detection::inspectionTargetName(report.primaryPattern.firstFailedTarget));
+    serialOut().print(" verdict.observed_class=");
+    serialOut().print(report.primaryPattern.firstFailedObservedStrength != nullptr ? report.primaryPattern.firstFailedObservedStrength : "unknown");
+    serialOut().print(" verdict.required_class=");
+    serialOut().print(report.primaryPattern.firstFailedRequiredStrength != nullptr ? report.primaryPattern.firstFailedRequiredStrength : "unknown");
+    serialOut().println();
 }
 
 void AnalyzerApp::printSequenceSummaryClean() const {
@@ -499,52 +500,52 @@ void AnalyzerApp::printSequenceSummaryClean() const {
         ? summary.totalConfidence / static_cast<float>(summary.confidenceCount)
         : 0.0f;
 
-    Serial.print("SEQ_SUMMARY profile=");
-    Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");
-    Serial.print(" detector=");
-    Serial.print(detection::detectorIdName(summary.detectorId));
-    Serial.print(" trials=");
-    Serial.print(summary.trials);
-    Serial.print(" completed=");
-    Serial.print(summary.completed);
-    Serial.print(" expected_trials=");
-    Serial.print(summary.expectedTrials);
-    Serial.print(" early_trials=");
-    Serial.print(summary.earlyTrials);
-    Serial.print(" late_trials=");
-    Serial.print(summary.lateTrials);
-    Serial.print(" miss_trials=");
-    Serial.print(summary.missTrials);
-    Serial.print(" duplicate_trials=");
-    Serial.print(summary.duplicateTrials);
-    Serial.print(" unexpected_trials=");
-    Serial.print(summary.unexpectedTrials);
-    Serial.print(" rejected_trials=");
-    Serial.print(summary.rejectedTrials);
-    Serial.print(" buffer_overrun_trials=");
-    Serial.print(summary.bufferOverrunTrials);
-    Serial.print(" ambiguous_trials=");
-    Serial.print(summary.ambiguousTrials);
-    Serial.print(" too_dense_trials=");
-    Serial.print(summary.tooDenseTrials);
-    Serial.print(" detector_accepted_trials=");
-    Serial.print(summary.detectorAcceptedTrials);
-    Serial.print(" detector_reject_trials=");
-    Serial.print(summary.detectorSelectedRejectTrials);
-    Serial.print(" pattern_valid_trials=");
-    Serial.print(summary.patternValidTrials);
-    Serial.print(" pattern_rejected_trials=");
-    Serial.print(summary.patternRejectedTrials);
-    Serial.print(" avg_dt_ms=");
+    serialOut().print("SEQ_SUMMARY profile=");
+    serialOut().print(summary.profileName != nullptr ? summary.profileName : "unknown");
+    serialOut().print(" detector=");
+    serialOut().print(detection::detectorIdName(summary.detectorId));
+    serialOut().print(" trials=");
+    serialOut().print(summary.trials);
+    serialOut().print(" completed=");
+    serialOut().print(summary.completed);
+    serialOut().print(" expected_trials=");
+    serialOut().print(summary.expectedTrials);
+    serialOut().print(" early_trials=");
+    serialOut().print(summary.earlyTrials);
+    serialOut().print(" late_trials=");
+    serialOut().print(summary.lateTrials);
+    serialOut().print(" miss_trials=");
+    serialOut().print(summary.missTrials);
+    serialOut().print(" duplicate_trials=");
+    serialOut().print(summary.duplicateTrials);
+    serialOut().print(" unexpected_trials=");
+    serialOut().print(summary.unexpectedTrials);
+    serialOut().print(" rejected_trials=");
+    serialOut().print(summary.rejectedTrials);
+    serialOut().print(" buffer_overrun_trials=");
+    serialOut().print(summary.bufferOverrunTrials);
+    serialOut().print(" ambiguous_trials=");
+    serialOut().print(summary.ambiguousTrials);
+    serialOut().print(" too_dense_trials=");
+    serialOut().print(summary.tooDenseTrials);
+    serialOut().print(" detector_accepted_trials=");
+    serialOut().print(summary.detectorAcceptedTrials);
+    serialOut().print(" detector_reject_trials=");
+    serialOut().print(summary.detectorSelectedRejectTrials);
+    serialOut().print(" pattern_valid_trials=");
+    serialOut().print(summary.patternValidTrials);
+    serialOut().print(" pattern_rejected_trials=");
+    serialOut().print(summary.patternRejectedTrials);
+    serialOut().print(" avg_dt_ms=");
     if (avgDtRounded >= 0L) {
-        Serial.print(avgDtRounded);
+        serialOut().print(avgDtRounded);
     } else {
-        Serial.print(-1);
+        serialOut().print(-1);
     }
-    Serial.print(" avg_strength=");
-    Serial.print(avgStrength, 1);
-    Serial.print(" avg_conf=");
-    Serial.println(avgConfidence, 2);
+    serialOut().print(" avg_strength=");
+    serialOut().print(avgStrength, 1);
+    serialOut().print(" avg_conf=");
+    serialOut().println(avgConfidence, 2);
 }
 
 void AnalyzerApp::printSequenceReport() const {
@@ -564,21 +565,21 @@ void AnalyzerApp::printSequenceReport() const {
 }
 
 void AnalyzerApp::printSequenceStatus() const {
-    Serial.print("SEQ_STATUS mode=");
-    Serial.print(sequenceOutputModeName(_sequenceTest.outputConfig.mode));
-    Serial.print(" when=");
-    Serial.print(sequenceOutputWhenName(_sequenceTest.outputConfig.when));
-    Serial.print(" verbosity=");
-    Serial.print(_sequenceTest.outputConfig.verbosity);
-    Serial.print(" profile=");
-    Serial.print(_sequenceTest.active ? activeAnalyzerProfileName() : detection::detectionProfileName(_seqOutputConfig.profileKind));
-    Serial.print(" tries=");
-    Serial.print(_seqOutputConfig.totalTrials);
-    Serial.print(" diagnostics=");
-    Serial.print(_seqOutputConfig.diagnosticsEnabled ? "on" : "off");
-    Serial.print(" freqband=");
-    Serial.print(_seqOutputConfig.frequencyBandEnabled ? "on" : "off");
-    Serial.print(" freqUpdateEverySamples=");
-    Serial.print(_seqOutputConfig.frequencyUpdateEverySamples);
-    Serial.println();
+    serialOut().print("SEQ_STATUS mode=");
+    serialOut().print(sequenceOutputModeName(_sequenceTest.outputConfig.mode));
+    serialOut().print(" when=");
+    serialOut().print(sequenceOutputWhenName(_sequenceTest.outputConfig.when));
+    serialOut().print(" verbosity=");
+    serialOut().print(_sequenceTest.outputConfig.verbosity);
+    serialOut().print(" profile=");
+    serialOut().print(_sequenceTest.active ? activeAnalyzerProfileName() : detection::detectionProfileName(_seqOutputConfig.profileKind));
+    serialOut().print(" tries=");
+    serialOut().print(_seqOutputConfig.totalTrials);
+    serialOut().print(" diagnostics=");
+    serialOut().print(_seqOutputConfig.diagnosticsEnabled ? "on" : "off");
+    serialOut().print(" freqband=");
+    serialOut().print(_seqOutputConfig.frequencyBandEnabled ? "on" : "off");
+    serialOut().print(" freqUpdateEverySamples=");
+    serialOut().print(_seqOutputConfig.frequencyUpdateEverySamples);
+    serialOut().println();
 }

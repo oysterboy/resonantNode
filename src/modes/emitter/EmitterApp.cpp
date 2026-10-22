@@ -10,6 +10,7 @@
 #include "../../selftest/SelfTestReport.h"
 #include "../../app/TimeBase.h"
 #include "../../app/TimingUtils.h"
+#include "../../app/SerialOut.h"
 
 namespace {
 bool startsWithToken(const char* line, const char* token) {
@@ -61,8 +62,8 @@ EmitterApp::EmitterApp(int outputPin, int outputBtlPin, int rxPin, int txPin, un
 #endif
 
 void EmitterApp::begin() {
-    printBuildIdentity(Serial, "emitter");
-    Serial.println();
+    printBuildIdentity(serialOut(), "emitter");
+    serialOut().println();
 
     Serial2.begin(_baudRate, SERIAL_8N1, _rxPin, _txPin);
 #if !defined(BOARD_PIEZO)
@@ -77,14 +78,14 @@ void EmitterApp::begin() {
     _usbLineLength = 0;
     _usbLineBuffer[0] = '\0';
 
-    Serial.print("EVT emitter_ready mode=");
-    Serial.print(modeName());
-    Serial.print(" interval_ms=");
-    Serial.print(_autoIntervalMs);
-    Serial.print(" freq_hz=");
-    Serial.print(_autoToneHz);
-    Serial.print(" dur_ms=");
-    Serial.println(_autoDurationMs);
+    serialOut().print("EVT emitter_ready mode=");
+    serialOut().print(modeName());
+    serialOut().print(" interval_ms=");
+    serialOut().print(_autoIntervalMs);
+    serialOut().print(" freq_hz=");
+    serialOut().print(_autoToneHz);
+    serialOut().print(" dur_ms=");
+    serialOut().println(_autoDurationMs);
 }
 
 void EmitterApp::update() {
@@ -99,7 +100,7 @@ void EmitterApp::update() {
         snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_OFF trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
         sendEmitterMarker(markerLine);
         _activeTrialId = 0;
-        Serial.println("EVT emitter_chirp_finished");
+        serialOut().println("EVT emitter_chirp_finished");
     }
 
     if (_mode == EmitterMode::Auto && !_chirpOutput.isActive()) {
@@ -165,7 +166,7 @@ void EmitterApp::handleSelfTestCommand(const char* line) {
         return;
     }
     if (command.kind == selftest::Command::Kind::Help || command.kind == selftest::Command::Kind::Unknown) {
-        selftest::printHelp(Serial, false);
+        selftest::printHelp(serialOut(), false);
         return;
     }
     // Blocking: no AUTO / sweep chirp may start meanwhile; stop one in flight.
@@ -181,27 +182,27 @@ void EmitterApp::handleSelfTestCommand(const char* line) {
 #endif
 
     if (command.kind == selftest::Command::Kind::Chirp) {
-        selftest::emitChirpsBlocking(Serial, mic, _chirpOutput.toneOutput(), runtime::kDefaultChirpFrequencyHz,
+        selftest::emitChirpsBlocking(serialOut(), mic, _chirpOutput.toneOutput(), runtime::kDefaultChirpFrequencyHz,
                                      command.chirps, command.durMs, command.gapMs);
     } else {
         selftest::Tally tally;
         const bool external = command.kind == selftest::Command::Kind::External;
-        selftest::printBegin(Serial, "emitter", external ? "external" : "full");
-        selftest::printBoard(Serial, tally, "emitter");
+        selftest::printBegin(serialOut(), "emitter", external ? "external" : "full");
+        selftest::printBoard(serialOut(), tally, "emitter");
         if (external) {
-            selftest::skip(Serial, tally, "external_chirp", "not_node");
+            selftest::skip(serialOut(), tally, "external_chirp", "not_node");
         } else if (mic == nullptr) {
-            selftest::skip(Serial, tally, "mic", "no_mic_in_build");
-            selftest::skip(Serial, tally, "amp", "no_mic_in_build");
+            selftest::skip(serialOut(), tally, "mic", "no_mic_in_build");
+            selftest::skip(serialOut(), tally, "amp", "no_mic_in_build");
         } else {
-            if (selftest::runMicCheck(Serial, tally, *mic) != selftest::Result::Pass) {
-                selftest::skip(Serial, tally, "amp", "mic_failed");
+            if (selftest::runMicCheck(serialOut(), tally, *mic) != selftest::Result::Pass) {
+                selftest::skip(serialOut(), tally, "amp", "mic_failed");
             } else {
-                selftest::runAmpCheck(Serial, tally, *mic, _chirpOutput.toneOutput(),
+                selftest::runAmpCheck(serialOut(), tally, *mic, _chirpOutput.toneOutput(),
                                       runtime::kDefaultChirpFrequencyHz, "i2s");
             }
         }
-        selftest::printSummary(Serial, tally, "emitter");
+        selftest::printSummary(serialOut(), tally, "emitter");
     }
 
     // Back to the configured tone; AUTO resumes one interval from now.
@@ -213,8 +214,8 @@ void EmitterApp::handleSelfTestCommand(const char* line) {
 void EmitterApp::handleLine(const char* line) {
     // Echo every control line to USB so the Serial2 link can be checked from
     // the Emitter's own console.
-    Serial.print("EVT emitter_cmd line=");
-    Serial.println(line);
+    serialOut().print("EVT emitter_cmd line=");
+    serialOut().println(line);
 
     char buffer[96];
     strncpy(buffer, line, sizeof(buffer));
@@ -256,11 +257,11 @@ static bool emitterToneHzPlayable(unsigned long toneHz) {
 }
 
 static void printToneHzRejected(const char* command, unsigned long toneHz) {
-    Serial.print("ERR ");
-    Serial.print(command);
-    Serial.print(" freq=");
-    Serial.print(toneHz);
-    Serial.println(" not playable");
+    serialOut().print("ERR ");
+    serialOut().print(command);
+    serialOut().print(" freq=");
+    serialOut().print(toneHz);
+    serialOut().println(" not playable");
 }
 
 void EmitterApp::handleChirpCommand(const char* line) {
@@ -370,28 +371,28 @@ void EmitterApp::handlePulsesCommand(const char* line) {
 
     if (count == 0 || count > kPulsesMaxCount || pulseMs == 0 || pulseMs > kPulsesMaxPulseMs ||
         gapMs == 0 || gapMs > kPulsesMaxGapMs || rampMs > kPulsesMaxRampMs) {
-        Serial.print("ERR PULSES n=");
-        Serial.print(count);
-        Serial.print(" pulse=");
-        Serial.print(pulseMs);
-        Serial.print(" gap=");
-        Serial.print(gapMs);
-        Serial.print(" ramp=");
-        Serial.print(rampMs);
-        Serial.print(" use PULSES n(1-");
-        Serial.print(kPulsesMaxCount);
-        Serial.print(") pulse_ms(1-");
-        Serial.print(kPulsesMaxPulseMs);
-        Serial.print(") gap_ms(1-");
-        Serial.print(kPulsesMaxGapMs);
-        Serial.print(") [freq=HZ] [ramp=0-");
-        Serial.print(kPulsesMaxRampMs);
-        Serial.println("] [trial=N]");
+        serialOut().print("ERR PULSES n=");
+        serialOut().print(count);
+        serialOut().print(" pulse=");
+        serialOut().print(pulseMs);
+        serialOut().print(" gap=");
+        serialOut().print(gapMs);
+        serialOut().print(" ramp=");
+        serialOut().print(rampMs);
+        serialOut().print(" use PULSES n(1-");
+        serialOut().print(kPulsesMaxCount);
+        serialOut().print(") pulse_ms(1-");
+        serialOut().print(kPulsesMaxPulseMs);
+        serialOut().print(") gap_ms(1-");
+        serialOut().print(kPulsesMaxGapMs);
+        serialOut().print(") [freq=HZ] [ramp=0-");
+        serialOut().print(kPulsesMaxRampMs);
+        serialOut().println("] [trial=N]");
         return;
     }
     if (hopBad) {
         _pulseHopCount = 0;
-        Serial.println("ERR PULSES hop=F1,F2,... (up to 8 playable frequencies)");
+        serialOut().println("ERR PULSES hop=F1,F2,... (up to 8 playable frequencies)");
         return;
     }
     if (!emitterToneHzPlayable(toneHz)) {
@@ -645,8 +646,8 @@ void EmitterApp::advanceSweep(unsigned long now) {
     _chirpOutput.setToneHz(static_cast<uint32_t>(_sweepCurrentHz));
     _chirpOutput.setTiming(_sweepDurationMs, 0);
     _chirpOutput.start();
-    Serial.print("EVT sweep_step freq=");
-    Serial.println(_sweepCurrentHz);
+    serialOut().print("EVT sweep_step freq=");
+    serialOut().println(_sweepCurrentHz);
 
     // "next step past stop" without unsigned underflow when step > stop (issue #31).
     if (_sweepCurrentHz >= _sweepStopHz || _sweepStepHz > _sweepStopHz - _sweepCurrentHz) {

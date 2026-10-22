@@ -7,6 +7,7 @@
 #include "../../app/TimingUtils.h"
 
 #include <Arduino.h>
+#include "../../app/SerialOut.h"
 
 void NodeDebug::setDebugMode(DebugMode mode) {
     _debugMode = mode;
@@ -174,18 +175,18 @@ void NodeDebug::observeBehaviorGate(unsigned long now,
         reason = "transient";
     }
 
-    Serial.print("RB gate state=");
-    Serial.print(behavior.stateName());
-    Serial.print(" reason=");
-    Serial.print(reason);
-    Serial.print(" transient=");
-    Serial.print(transientDetected ? 1 : 0);
-    Serial.print(" waitMs=");
-    Serial.print(waitRemainingMs);
-    Serial.print(" selfIgnoreMs=");
-    Serial.print(selfIgnoreRemainingMs);
-    Serial.print(" refractoryMs=");
-    Serial.println(refractoryRemainingMs);
+    serialOut().print("RB gate state=");
+    serialOut().print(behavior.stateName());
+    serialOut().print(" reason=");
+    serialOut().print(reason);
+    serialOut().print(" transient=");
+    serialOut().print(transientDetected ? 1 : 0);
+    serialOut().print(" waitMs=");
+    serialOut().print(waitRemainingMs);
+    serialOut().print(" selfIgnoreMs=");
+    serialOut().print(selfIgnoreRemainingMs);
+    serialOut().print(" refractoryMs=");
+    serialOut().println(refractoryRemainingMs);
 }
 
 void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSignal) {
@@ -212,24 +213,24 @@ void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSign
         return;
     }
 
-    Serial.print("I2S occurrence t=");
-    Serial.print(now);
-    Serial.print(" raw=");
-    Serial.print(rawSignal);
-    Serial.print(" rawMin=");
-    Serial.print(_i2sSignalMin);
-    Serial.print(" rawMax=");
-    Serial.print(_i2sSignalMax);
-    Serial.print(" centered=");
-    Serial.print(centeredSignal);
-    Serial.print(" centeredMin=");
-    Serial.print(_i2sCenteredMin);
-    Serial.print(" centeredMax=");
-    Serial.print(_i2sCenteredMax);
-    Serial.print(" magnitude=");
-    Serial.print(audioSignal.signalMagnitude(), 3);
-    Serial.print(" smooth=");
-    Serial.println(audioSignal.smoothedSignalMagnitude(), 3);
+    serialOut().print("I2S occurrence t=");
+    serialOut().print(now);
+    serialOut().print(" raw=");
+    serialOut().print(rawSignal);
+    serialOut().print(" rawMin=");
+    serialOut().print(_i2sSignalMin);
+    serialOut().print(" rawMax=");
+    serialOut().print(_i2sSignalMax);
+    serialOut().print(" centered=");
+    serialOut().print(centeredSignal);
+    serialOut().print(" centeredMin=");
+    serialOut().print(_i2sCenteredMin);
+    serialOut().print(" centeredMax=");
+    serialOut().print(_i2sCenteredMax);
+    serialOut().print(" magnitude=");
+    serialOut().print(audioSignal.signalMagnitude(), 3);
+    serialOut().print(" smooth=");
+    serialOut().println(audioSignal.smoothedSignalMagnitude(), 3);
 
     _lastI2SSignalLogMs = now;
     _i2sSignalMin = rawSignal;
@@ -244,18 +245,18 @@ void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, C
     }
 
     _debugChirpVisibleUntilMs = now + _debugChirpEventHoldMs;
-    Serial.print("EVT chirp_started source=");
-    Serial.print(sourceName);
-    Serial.print(" pattern=");
+    serialOut().print("EVT chirp_started source=");
+    serialOut().print(sourceName);
+    serialOut().print(" pattern=");
     switch (pattern) {
         case ChirpOutput::ChirpPattern::Single:
-            Serial.println("single");
+            serialOut().println("single");
             break;
         case ChirpOutput::ChirpPattern::Triple:
-            Serial.println("triple");
+            serialOut().println("triple");
             break;
         case ChirpOutput::ChirpPattern::Idle:
-            Serial.println("idle");
+            serialOut().println("idle");
             break;
     }
 }
@@ -268,7 +269,7 @@ void NodeDebug::observeChirpFinished(unsigned long now) {
     if (timing::atOrAfter(now, _debugChirpVisibleUntilMs)) {
         _debugChirpVisibleUntilMs = now + _debugChirpEventHoldMs;
     }
-    Serial.println("EVT chirp_finished");
+    serialOut().println("EVT chirp_finished");
 }
 
 void NodeDebug::updateLed(unsigned long now) {
@@ -315,38 +316,38 @@ void NodeDebug::printPlotValues(unsigned long now,
     const int state = behavior.stateCode();
     const int chirp = chirpOutput.isActive() ? 1 : 0;
 
-    Serial.print("centered:");
-    Serial.print(centeredSignal, 3);
-    Serial.print(" magnitude:");
-    Serial.print(signalMagnitude, 3);
-    Serial.print(" smooth:");
-    Serial.print(smoothedSignalMagnitude, 3);
-    Serial.print(" onsetPulse:");
-    Serial.print(onsetPulse);
-    Serial.print(" onset:");
-    Serial.print(onsetStrength, 3);
-    Serial.print(" transientPulse:");
-    Serial.print(transientPulse);
-    Serial.print(" transient:");
-    Serial.print(transientStrength, 3);
-    Serial.print(" behaviorSuppressSelfChirp:");
-    Serial.print(selfChirpSuppressed ? 1 : 0);
-    Serial.print(" coreUs:");
-    Serial.print(coreLoopAvgUs);
-    Serial.print("/");
-    Serial.print(_coreLoopUsMin);
-    Serial.print("/");
-    Serial.print(_coreLoopUsMax);
-    Serial.print(" fullUs:");
-    Serial.print(fullLoopAvgUs);
-    Serial.print("/");
-    Serial.print(_fullLoopUsMin);
-    Serial.print("/");
-    Serial.print(_fullLoopUsMax);
-    Serial.print(" state:");
-    Serial.print(state);
-    Serial.print(" chirp:");
-    Serial.println(chirp);
+    serialOut().print("centered:");
+    serialOut().print(centeredSignal, 3);
+    serialOut().print(" magnitude:");
+    serialOut().print(signalMagnitude, 3);
+    serialOut().print(" smooth:");
+    serialOut().print(smoothedSignalMagnitude, 3);
+    serialOut().print(" onsetPulse:");
+    serialOut().print(onsetPulse);
+    serialOut().print(" onset:");
+    serialOut().print(onsetStrength, 3);
+    serialOut().print(" transientPulse:");
+    serialOut().print(transientPulse);
+    serialOut().print(" transient:");
+    serialOut().print(transientStrength, 3);
+    serialOut().print(" behaviorSuppressSelfChirp:");
+    serialOut().print(selfChirpSuppressed ? 1 : 0);
+    serialOut().print(" coreUs:");
+    serialOut().print(coreLoopAvgUs);
+    serialOut().print("/");
+    serialOut().print(_coreLoopUsMin);
+    serialOut().print("/");
+    serialOut().print(_coreLoopUsMax);
+    serialOut().print(" fullUs:");
+    serialOut().print(fullLoopAvgUs);
+    serialOut().print("/");
+    serialOut().print(_fullLoopUsMin);
+    serialOut().print("/");
+    serialOut().print(_fullLoopUsMax);
+    serialOut().print(" state:");
+    serialOut().print(state);
+    serialOut().print(" chirp:");
+    serialOut().println(chirp);
 
     resetLoopStats();
 }

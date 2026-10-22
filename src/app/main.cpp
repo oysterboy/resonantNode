@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "app/BoardConfig.h"
+#include "app/SerialOut.h"
 
 // Select exactly one runtime mode at compile time:
 // - ANALYZER_MODE for occurrence analysis
@@ -30,7 +31,9 @@ void setup() {
     // loop past the 24 ms the I2S DMA queue holds. On the Node one
     // 1,133-byte RB STATUS line cost 10 dropped DMA buffers (80 ms of audio)
     // every time; a SEQ trial report on the Analyzer is several KB (issue
-    // #26). Queue the output instead and let the UART drain it.
+    // #26). Queue the output instead and let the UART drain it. That alone
+    // was not enough: small writes fill the ring with per-item overhead, so
+    // all output goes through serialOut() in whole lines (SerialOut.h).
     Serial.setTxBufferSize(16384);
     Serial.begin(115200);
     app.begin();
@@ -38,6 +41,7 @@ void setup() {
 
 void loop() {
     app.update();
+    serialOutFlush();  // a partial line (no newline yet) still goes out every pass (SerialOut.h)
     // Keep the loop responsive enough that burst edges are not quantized too coarsely.
 #if defined(ANALYZER_MODE)
     delay(app.loopDelayMs());

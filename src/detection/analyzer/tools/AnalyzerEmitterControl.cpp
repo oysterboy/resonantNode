@@ -7,6 +7,7 @@
 #include <string.h>
 #include "../../../app/TimeBase.h"
 #include "../../../app/TimingUtils.h"
+#include "../../../app/SerialOut.h"
 
 namespace {
 
@@ -56,11 +57,11 @@ bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs) {
 
 void AnalyzerApp::beginEmitterControl() {
     Serial2.begin(_controlBaudRate, SERIAL_8N1, _controlRxPin, _controlTxPin);
-    Serial.print("EVT analyzer_control rx=");
-    Serial.print(_controlRxPin);
-    Serial.print(" tx=");
-    Serial.println(_controlTxPin);
-    Serial.println("EVT analyzer_control_claim scheduled");
+    serialOut().print("EVT analyzer_control rx=");
+    serialOut().print(_controlRxPin);
+    serialOut().print(" tx=");
+    serialOut().println(_controlTxPin);
+    serialOut().println("EVT analyzer_control_claim scheduled");
 }
 
 void AnalyzerApp::pollEmitterSerial() {

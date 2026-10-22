@@ -15,6 +15,7 @@
 #include "../../detection/evaluation/VerdictNames.h"
 #include "../../param/ParamRegistry.h"
 #include "../../app/TimeBase.h"
+#include "../../app/SerialOut.h"
 
 /*
 Node
@@ -121,153 +122,153 @@ const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
 }
 
 void printProfileComposition(const detection::DetectionProfile& profile) {
-    Serial.print(" emitters=");
-    Serial.print(detection::detectorSelectionName(profile.detectorSelection));
-    Serial.print(" inspectionPlan=");
-    Serial.print(detection::inspectionPlanName(profile.inspectionPlan));
-    Serial.print(" fieldStateConfig=");
-    Serial.print(profile.fieldStateConfig.occurrenceWindowMs);
-    Serial.print("/");
-    Serial.print(profile.fieldStateConfig.patternWindowMs);
+    serialOut().print(" emitters=");
+    serialOut().print(detection::detectorSelectionName(profile.detectorSelection));
+    serialOut().print(" inspectionPlan=");
+    serialOut().print(detection::inspectionPlanName(profile.inspectionPlan));
+    serialOut().print(" fieldStateConfig=");
+    serialOut().print(profile.fieldStateConfig.occurrenceWindowMs);
+    serialOut().print("/");
+    serialOut().print(profile.fieldStateConfig.patternWindowMs);
 }
 
 void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
-    Serial.println("RB DETECT");
-    Serial.print("  kind=");
-    Serial.println(detection::detectionProfileName(profile.kind));
-    Serial.print("  detectorSelection=");
-    Serial.println(detection::detectorSelectionName(profile.detectorSelection));
-    Serial.print("  inspectionPlan=");
-    Serial.println(detection::inspectionPlanName(profile.inspectionPlan));
+    serialOut().println("RB DETECT");
+    serialOut().print("  kind=");
+    serialOut().println(detection::detectionProfileName(profile.kind));
+    serialOut().print("  detectorSelection=");
+    serialOut().println(detection::detectorSelectionName(profile.detectorSelection));
+    serialOut().print("  inspectionPlan=");
+    serialOut().println(detection::inspectionPlanName(profile.inspectionPlan));
     if (profile.detectorSelection == detection::DetectorSelection::ScalarTransient) {
-        Serial.print("  scalarTransient.observedStream=");
+        serialOut().print("  scalarTransient.observedStream=");
         switch (profile.scalarTransient.observedStream) {
             case detection::FeatureStreamId::AmpMagnitude:
-                Serial.println("AmpMagnitude");
+                serialOut().println("AmpMagnitude");
                 break;
             case detection::FeatureStreamId::AmpEnvelope:
-                Serial.println("AmpEnvelope");
+                serialOut().println("AmpEnvelope");
                 break;
             case detection::FeatureStreamId::FrequencyTarget:
-                Serial.println("FrequencyTarget");
+                serialOut().println("FrequencyTarget");
                 break;
             case detection::FeatureStreamId::FrequencyContrast:
-                Serial.println("FrequencyContrast");
+                serialOut().println("FrequencyContrast");
                 break;
             case detection::FeatureStreamId::Unknown:
             default:
-                Serial.println("Unknown");
+                serialOut().println("Unknown");
                 break;
         }
-        Serial.print("  scalarTransient.onsetDetectionThreshold=");
-        Serial.println(profile.scalarTransient.onsetDetectionThreshold, 1);
-        Serial.print("  scalarTransient.onsetReleaseThreshold=");
-        Serial.println(profile.scalarTransient.onsetReleaseThreshold, 1);
-        Serial.print("  scalarTransient.cooldownAfterOnsetMs=");
-        Serial.println(profile.scalarTransient.cooldownAfterOnsetMs);
-        Serial.print("  scalarTransient.minTransientDurationMs=");
-        Serial.println(profile.scalarTransient.minTransientDurationMs);
-        Serial.print("  scalarTransient.maxTransientDurationMs=");
-        Serial.println(profile.scalarTransient.maxTransientDurationMs);
-        Serial.print("  scalarTransient.releaseDebounceMs=");
-        Serial.println(profile.scalarTransient.releaseDebounceMs);
-        Serial.print("  scalarTransient.minTransientPeakStrength=");
-        Serial.println(profile.scalarTransient.minTransientPeakStrength, 1);
+        serialOut().print("  scalarTransient.onsetDetectionThreshold=");
+        serialOut().println(profile.scalarTransient.onsetDetectionThreshold, 1);
+        serialOut().print("  scalarTransient.onsetReleaseThreshold=");
+        serialOut().println(profile.scalarTransient.onsetReleaseThreshold, 1);
+        serialOut().print("  scalarTransient.cooldownAfterOnsetMs=");
+        serialOut().println(profile.scalarTransient.cooldownAfterOnsetMs);
+        serialOut().print("  scalarTransient.minTransientDurationMs=");
+        serialOut().println(profile.scalarTransient.minTransientDurationMs);
+        serialOut().print("  scalarTransient.maxTransientDurationMs=");
+        serialOut().println(profile.scalarTransient.maxTransientDurationMs);
+        serialOut().print("  scalarTransient.releaseDebounceMs=");
+        serialOut().println(profile.scalarTransient.releaseDebounceMs);
+        serialOut().print("  scalarTransient.minTransientPeakStrength=");
+        serialOut().println(profile.scalarTransient.minTransientPeakStrength, 1);
     } else {
-        Serial.print("  freqMatch.releaseDebounceMs=");
-        Serial.println(profile.frequencyMatch.releaseDebounceMs);
-        Serial.print("  freqMatch.cooldownAfterReleaseMs=");
-        Serial.println(profile.frequencyMatch.cooldownAfterReleaseMs);
-        Serial.print("  freqMatch.minDurationMs=");
-        Serial.println(profile.frequencyMatch.minDurationMs);
-        Serial.print("  freqMatch.attackScoreMin=");
-        Serial.println(profile.frequencyMatch.attackScoreMin, 0);
-        Serial.print("  freqMatch.releaseScoreMin=");
-        Serial.println(profile.frequencyMatch.releaseScoreMin, 0);
-        Serial.print("  freqMatch.attackContrastMin=");
-        Serial.println(profile.frequencyMatch.attackContrastMin, 1);
-        Serial.print("  freqMatch.releaseContrastMin=");
-        Serial.println(profile.frequencyMatch.releaseContrastMin, 1);
+        serialOut().print("  freqMatch.releaseDebounceMs=");
+        serialOut().println(profile.frequencyMatch.releaseDebounceMs);
+        serialOut().print("  freqMatch.cooldownAfterReleaseMs=");
+        serialOut().println(profile.frequencyMatch.cooldownAfterReleaseMs);
+        serialOut().print("  freqMatch.minDurationMs=");
+        serialOut().println(profile.frequencyMatch.minDurationMs);
+        serialOut().print("  freqMatch.attackScoreMin=");
+        serialOut().println(profile.frequencyMatch.attackScoreMin, 0);
+        serialOut().print("  freqMatch.releaseScoreMin=");
+        serialOut().println(profile.frequencyMatch.releaseScoreMin, 0);
+        serialOut().print("  freqMatch.attackContrastMin=");
+        serialOut().println(profile.frequencyMatch.attackContrastMin, 1);
+        serialOut().print("  freqMatch.releaseContrastMin=");
+        serialOut().println(profile.frequencyMatch.releaseContrastMin, 1);
     }
     for (size_t i = 0; i < profile.inspectionPlan.count; ++i) {
         const auto& module = profile.inspectionPlan.modules[i];
-        Serial.print("  inspectionPlan.module[");
-        Serial.print(static_cast<unsigned int>(i));
-        Serial.print("].kind=");
-        Serial.print(module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength ? "MagnitudeFeatureStrength" : "None");
-        Serial.print(" label=");
-        Serial.print(detection::inspectionTargetName(module.target));
+        serialOut().print("  inspectionPlan.module[");
+        serialOut().print(static_cast<unsigned int>(i));
+        serialOut().print("].kind=");
+        serialOut().print(module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength ? "MagnitudeFeatureStrength" : "None");
+        serialOut().print(" label=");
+        serialOut().print(detection::inspectionTargetName(module.target));
         if (module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength) {
-            Serial.print(" stream=");
+            serialOut().print(" stream=");
             switch (module.magnitude.stream) {
                 case detection::FeatureStreamId::AmpMagnitude:
-                    Serial.print("AmpMagnitude");
+                    serialOut().print("AmpMagnitude");
                     break;
                 case detection::FeatureStreamId::AmpEnvelope:
-                    Serial.print("AmpEnvelope");
+                    serialOut().print("AmpEnvelope");
                     break;
                 case detection::FeatureStreamId::FrequencyTarget:
-                    Serial.print("FrequencyTarget");
+                    serialOut().print("FrequencyTarget");
                     break;
                 case detection::FeatureStreamId::FrequencyContrast:
-                    Serial.print("FrequencyContrast");
+                    serialOut().print("FrequencyContrast");
                     break;
                 case detection::FeatureStreamId::Unknown:
                 default:
-                    Serial.print("Unknown");
+                    serialOut().print("Unknown");
                     break;
             }
-            Serial.print(" windowPreMs=");
-            Serial.print(module.magnitude.windowPreMs);
-            Serial.print(" windowPostMs=");
-            Serial.println(module.magnitude.windowPostMs);
+            serialOut().print(" windowPreMs=");
+            serialOut().print(module.magnitude.windowPreMs);
+            serialOut().print(" windowPostMs=");
+            serialOut().println(module.magnitude.windowPostMs);
         } else {
-            Serial.println();
+            serialOut().println();
         }
     }
     const detection::InspectionModuleConfig* supportRequirement =
         detection::evaluatorFirstEnabledRequirement(profile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
-    Serial.print("  verdict.has_requirement=");
-    Serial.println(supportRequired ? 1 : 0);
-    Serial.print("  verdict.required_label=");
-    Serial.println(supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
-    Serial.print("  fieldState.occurrenceWindowMs=");
-    Serial.println(profile.fieldStateConfig.occurrenceWindowMs);
-    Serial.print("  fieldState.patternWindowMs=");
-    Serial.println(profile.fieldStateConfig.patternWindowMs);
-    Serial.print("  fieldState.busyOccurrenceCountThreshold=");
-    Serial.println(profile.fieldStateConfig.busyOccurrenceCountThreshold);
-    Serial.print("  fieldState.denseOccurrenceCountThreshold=");
-    Serial.println(profile.fieldStateConfig.denseOccurrenceCountThreshold);
-    Serial.print("  fieldState.quietOccurrenceCountThreshold=");
-    Serial.println(profile.fieldStateConfig.quietOccurrenceCountThreshold);
-    Serial.print("  fieldState.quietActivityThreshold=");
-    Serial.println(profile.fieldStateConfig.quietActivityThreshold, 2);
-    Serial.print("  fieldState.busyActivityThreshold=");
-    Serial.println(profile.fieldStateConfig.busyActivityThreshold, 2);
+    serialOut().print("  verdict.has_requirement=");
+    serialOut().println(supportRequired ? 1 : 0);
+    serialOut().print("  verdict.required_label=");
+    serialOut().println(supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
+    serialOut().print("  fieldState.occurrenceWindowMs=");
+    serialOut().println(profile.fieldStateConfig.occurrenceWindowMs);
+    serialOut().print("  fieldState.patternWindowMs=");
+    serialOut().println(profile.fieldStateConfig.patternWindowMs);
+    serialOut().print("  fieldState.busyOccurrenceCountThreshold=");
+    serialOut().println(profile.fieldStateConfig.busyOccurrenceCountThreshold);
+    serialOut().print("  fieldState.denseOccurrenceCountThreshold=");
+    serialOut().println(profile.fieldStateConfig.denseOccurrenceCountThreshold);
+    serialOut().print("  fieldState.quietOccurrenceCountThreshold=");
+    serialOut().println(profile.fieldStateConfig.quietOccurrenceCountThreshold);
+    serialOut().print("  fieldState.quietActivityThreshold=");
+    serialOut().println(profile.fieldStateConfig.quietActivityThreshold, 2);
+    serialOut().print("  fieldState.busyActivityThreshold=");
+    serialOut().println(profile.fieldStateConfig.busyActivityThreshold, 2);
 }
 
 void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
-    Serial.println("RB BEHAV");
-    Serial.print("  idleEnabled=");
-    Serial.println(behavior.idleEnabled() ? 1 : 0);
-    Serial.print("  waitAfterHeardMs=");
-    Serial.println(behavior.waitAfterHeardMs());
-    Serial.print("  refractoryAfterEmitMs=");
-    Serial.println(behavior.refractoryAfterEmitMs());
-    Serial.print("  behaviorSuppressSelfChirpMs=");
-    Serial.println(behavior.behaviorSuppressSelfChirpMs());
-    Serial.print("  detectionSuppressTailMsOwnEmit=");
-    Serial.println(behavior.detectionSuppressTailMsOwnEmit());
-    Serial.print("  idleTimeoutMs=");
-    Serial.println(behavior.idleTimeoutMs());
-    Serial.print("  idleTimeVariationMs=");
-    Serial.println(behavior.idleTimeVariationMs());
-    Serial.print("  idleBlockedAfterHeardMs=");
-    Serial.println(behavior.idleBlockedAfterHeardMs());
-    Serial.print("  idleBlockedAfterOwnEmitMs=");
-    Serial.println(behavior.idleBlockedAfterOwnEmitMs());
+    serialOut().println("RB BEHAV");
+    serialOut().print("  idleEnabled=");
+    serialOut().println(behavior.idleEnabled() ? 1 : 0);
+    serialOut().print("  waitAfterHeardMs=");
+    serialOut().println(behavior.waitAfterHeardMs());
+    serialOut().print("  refractoryAfterEmitMs=");
+    serialOut().println(behavior.refractoryAfterEmitMs());
+    serialOut().print("  behaviorSuppressSelfChirpMs=");
+    serialOut().println(behavior.behaviorSuppressSelfChirpMs());
+    serialOut().print("  detectionSuppressTailMsOwnEmit=");
+    serialOut().println(behavior.detectionSuppressTailMsOwnEmit());
+    serialOut().print("  idleTimeoutMs=");
+    serialOut().println(behavior.idleTimeoutMs());
+    serialOut().print("  idleTimeVariationMs=");
+    serialOut().println(behavior.idleTimeVariationMs());
+    serialOut().print("  idleBlockedAfterHeardMs=");
+    serialOut().println(behavior.idleBlockedAfterHeardMs());
+    serialOut().print("  idleBlockedAfterOwnEmitMs=");
+    serialOut().println(behavior.idleBlockedAfterOwnEmitMs());
 }
 
 void printNodeBuildIdentity() {
@@ -275,9 +276,9 @@ void printNodeBuildIdentity() {
     const uint64_t nodeId = ESP.getEfuseMac();
     snprintf(nodeIdBuffer, sizeof(nodeIdBuffer), "0x%012llX", static_cast<unsigned long long>(nodeId));
 
-    printBuildIdentity(Serial, "node");
-    Serial.print("RB node_id=");
-    Serial.println(nodeIdBuffer);
+    printBuildIdentity(serialOut(), "node");
+    serialOut().print("RB node_id=");
+    serialOut().println(nodeIdBuffer);
 }
 
 const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool patternDetected, bool selfChirpSuppressed) {
@@ -340,7 +341,7 @@ Node::Node(int ledPin, int chirpPin, int chirpBtlPin)
 
 void Node::begin() {
     printNodeBuildIdentity();
-    Serial.println();
+    serialOut().println();
 
     randomSeed(esp_random() ^ timebase::nowMs());
     configureParameters();
@@ -362,10 +363,10 @@ void Node::begin() {
         } else {
             _hopRotation = bins > 0 ? static_cast<uint32_t>(ESP.getEfuseMac() % bins) : 0U;
         }
-        Serial.print("RB node name=");
-        Serial.print(me != nullptr ? me->name : "unknown");
-        Serial.print(" rotation_source=");
-        Serial.println(me != nullptr ? "roster" : "mac");
+        serialOut().print("RB node name=");
+        serialOut().print(me != nullptr ? me->name : "unknown");
+        serialOut().print(" rotation_source=");
+        serialOut().println(me != nullptr ? "roster" : "mac");
     }
     printSignalConfig();
     printHopGapCheck();
@@ -392,16 +393,16 @@ void Node::begin() {
     _serialLineOverflow = false;
     _serialLineBuffer[0] = '\0';
 
-    Serial.print("RB PROFILE name=");
-    Serial.print(profileName());
+    serialOut().print("RB PROFILE name=");
+    serialOut().print(profileName());
     printProfileComposition(activeDetectionProfile());
-    Serial.println();
+    serialOut().println();
     printDetectionProfileDetails(activeDetectionProfile());
-    Serial.println();
+    serialOut().println();
     printBehaviorRuntimeDetails(_behavior);
-    Serial.println();
-    Serial.print("RB startup baseline=");
-    Serial.println(rbBaselineStateName());
+    serialOut().println();
+    serialOut().print("RB startup baseline=");
+    serialOut().println(rbBaselineStateName());
 }
 
 // Outputs go off: Behavior must not carry a HeardPattern (or a sounding
@@ -457,7 +458,7 @@ void Node::performRbRebase() {
     // the post-rebase Settle, where verdicts don't reach Behavior.
     quiesceBehaviorForOutputsOff();
     if (!_audioSignal.rebase()) {
-        Serial.println("RB WARN rebase_timeout no_audio baseline_unchanged");
+        serialOut().println("RB WARN rebase_timeout no_audio baseline_unchanged");
     }
     _behavior.resetState();
     resetDetectionState();
@@ -500,10 +501,10 @@ void Node::updateRbBaselineState(unsigned long now) {
                 startRbQuietBaseline();
             } else if (_rbBaselineLastLogMs == 0 || timing::elapsedSince(now, _rbBaselineLastLogMs, 1000UL)) {
                 _rbBaselineLastLogMs = now;
-                Serial.print("RB warmup waiting ms=");
-                Serial.print(now - _rbBaselineStateStartedMs);
-                Serial.print(" of ");
-                Serial.println(kRbStartupMicWarmupMs);
+                serialOut().print("RB warmup waiting ms=");
+                serialOut().print(now - _rbBaselineStateStartedMs);
+                serialOut().print(" of ");
+                serialOut().println(kRbStartupMicWarmupMs);
             }
             break;
 
@@ -522,18 +523,18 @@ void Node::updateRbBaselineState(unsigned long now) {
                     _rbBaselineSettleUntilMs = now + kRbPostRebaseSettleMs;
                     _rbLastRebaseSmooth = smooth;
                     noteRebaseResult(RbRebaseResult::Done);
-                    Serial.print("RB rebase done quietMs=");
-                    Serial.print(quietMs);
-                    Serial.print(" baseline=");
-                    Serial.print(_audioSignal.baseline(), 1);
-                    Serial.print(" smooth=");
-                    Serial.println(_audioSignal.smoothedSignalMagnitude());
+                    serialOut().print("RB rebase done quietMs=");
+                    serialOut().print(quietMs);
+                    serialOut().print(" baseline=");
+                    serialOut().print(_audioSignal.baseline(), 1);
+                    serialOut().print(" smooth=");
+                    serialOut().println(_audioSignal.smoothedSignalMagnitude());
                 } else if (_rbBaselineLastLogMs == 0 || timing::elapsedSince(now, _rbBaselineLastLogMs, 1000UL)) {
                     _rbBaselineLastLogMs = now;
-                    Serial.print("RB rebase waiting smooth=");
-                    Serial.print(smooth, 1);
-                    Serial.print(" quietMs=");
-                    Serial.println(quietMs);
+                    serialOut().print("RB rebase waiting smooth=");
+                    serialOut().print(smooth, 1);
+                    serialOut().print(" quietMs=");
+                    serialOut().println(quietMs);
                 }
             } else {
                 _rbBaselineQuietSinceMs = 0;
@@ -541,8 +542,8 @@ void Node::updateRbBaselineState(unsigned long now) {
                     _rbBaselineState = RBBaselineState::FailedNoQuiet;
                     _rbLastRebaseSmooth = smooth;
                     noteRebaseResult(RbRebaseResult::NoQuiet);
-                    Serial.print("RB rebase skipped reason=no_quiet smooth=");
-                    Serial.println(smooth, 1);
+                    serialOut().print("RB rebase skipped reason=no_quiet smooth=");
+                    serialOut().println(smooth, 1);
                 }
             }
         } break;
@@ -553,7 +554,7 @@ void Node::updateRbBaselineState(unsigned long now) {
         case RBBaselineState::Settle:
             if (timing::atOrAfter(now, _rbBaselineSettleUntilMs)) {
                 _rbBaselineState = RBBaselineState::Active;
-                Serial.println("RB baseline active");
+                serialOut().println("RB baseline active");
             }
             break;
 
@@ -692,20 +693,20 @@ unsigned long Node::startNetworkSignal() {
         return 0;
     }
     if (rbShouldLogDetail()) {
-        Serial.print("RB emit shape=hop steps=");
-        Serial.print(static_cast<unsigned long>(n));
-        Serial.print(" pulse_ms=");
-        Serial.print(_hopPulseMs);
-        Serial.print(" gap_ms=");
-        Serial.print(_hopGapMs);
-        Serial.print(" order=");
+        serialOut().print("RB emit shape=hop steps=");
+        serialOut().print(static_cast<unsigned long>(n));
+        serialOut().print(" pulse_ms=");
+        serialOut().print(_hopPulseMs);
+        serialOut().print(" gap_ms=");
+        serialOut().print(_hopGapMs);
+        serialOut().print(" order=");
         for (size_t k = 0; k < n; ++k) {
             if (k > 0) {
-                Serial.print(',');
+                serialOut().print(',');
             }
-            Serial.print(hz[k]);
+            serialOut().print(hz[k]);
         }
-        Serial.println();
+        serialOut().println();
     }
     return static_cast<unsigned long>(n) * _hopPulseMs + static_cast<unsigned long>(n - 1) * _hopGapMs;
 }
@@ -713,30 +714,30 @@ unsigned long Node::startNetworkSignal() {
 void Node::printSignalConfig() {
     uint32_t hz[8];
     const size_t n = hopFrequencies(hz, sizeof(hz) / sizeof(hz[0]));
-    Serial.print("RB signal band=");
-    Serial.print(_bandLowHz);
-    Serial.print('-');
-    Serial.print(_bandHighHz);
-    Serial.print(" bins=");
-    Serial.print(static_cast<unsigned long>(bandBinCount()));
-    Serial.print(" hop=");
-    Serial.print(_hopEnabled ? "on" : "off");
-    Serial.print(" rotation=");
-    Serial.print(_hopRotation);
-    Serial.print(" steps=");
-    Serial.print(_hopSteps);
-    Serial.print(" pulse_ms=");
-    Serial.print(_hopPulseMs);
-    Serial.print(" gap_ms=");
-    Serial.print(_hopGapMs);
-    Serial.print(" order=");
+    serialOut().print("RB signal band=");
+    serialOut().print(_bandLowHz);
+    serialOut().print('-');
+    serialOut().print(_bandHighHz);
+    serialOut().print(" bins=");
+    serialOut().print(static_cast<unsigned long>(bandBinCount()));
+    serialOut().print(" hop=");
+    serialOut().print(_hopEnabled ? "on" : "off");
+    serialOut().print(" rotation=");
+    serialOut().print(_hopRotation);
+    serialOut().print(" steps=");
+    serialOut().print(_hopSteps);
+    serialOut().print(" pulse_ms=");
+    serialOut().print(_hopPulseMs);
+    serialOut().print(" gap_ms=");
+    serialOut().print(_hopGapMs);
+    serialOut().print(" order=");
     for (size_t k = 0; k < n; ++k) {
         if (k > 0) {
-            Serial.print(',');
+            serialOut().print(',');
         }
-        Serial.print(hz[k]);
+        serialOut().print(hz[k]);
     }
-    Serial.println();
+    serialOut().println();
 }
 
 void Node::configureI2SParameters() {
@@ -806,14 +807,14 @@ void Node::update() {
     if (_behavior.restsEntered() != _rbLastRestsEntered) {
         _rbLastRestsEntered = _behavior.restsEntered();
         if (rbShouldLogDetail()) {
-            Serial.print("RB rest start reason=");
-            Serial.print(ResonantBehavior::behaviorDecisionName(_behavior.lastRestReason()));
-            Serial.print(" now=");
-            Serial.print(now);
-            Serial.print(" until=");
-            Serial.print(_behavior.restUntilMs());
-            Serial.print(" field_patterns=");
-            Serial.println(_detection.fieldState().recentPatternCount);
+            serialOut().print("RB rest start reason=");
+            serialOut().print(ResonantBehavior::behaviorDecisionName(_behavior.lastRestReason()));
+            serialOut().print(" now=");
+            serialOut().print(now);
+            serialOut().print(" until=");
+            serialOut().print(_behavior.restUntilMs());
+            serialOut().print(" field_patterns=");
+            serialOut().println(_detection.fieldState().recentPatternCount);
         }
     }
     const bool behaviorWouldEmit = _behavior.takeWouldEmit();
@@ -821,26 +822,26 @@ void Node::update() {
                                     (_behavior.lastHeardMs() != _rbLastWouldEmitHeardMs ||
                                      _behavior.lastDecision() != _rbLastWouldEmitDecision);
     if (shouldLogWouldEmit) {
-        Serial.print("BEH verdict=");
-        Serial.print(_behavior.lastVerdictTypeName());
-        Serial.print(" heard=");
-        Serial.print(_behavior.lastHeardMs());
-        Serial.print(" now=");
-        Serial.print(now);
-        Serial.print(" decision=");
-        Serial.print(_behavior.lastDecisionName());
-        Serial.print(" block=");
-        Serial.print(_behavior.lastBlockReasonName());
-        Serial.print(" waitMs=");
-        Serial.print(_behavior.waitRemainingMs(now));
-        Serial.print(" refractoryMs=");
-        Serial.print(_behavior.refractoryRemainingMs(now));
-        Serial.print(" behaviorSuppressMs=");
-        Serial.print(_behavior.behaviorSuppressRemainingMs(now));
-        Serial.print(" outputBusy=");
-        Serial.print(_behavior.outputBusy() ? 1 : 0);
-        Serial.print(" wouldEmit=");
-        Serial.println(1);
+        serialOut().print("BEH verdict=");
+        serialOut().print(_behavior.lastVerdictTypeName());
+        serialOut().print(" heard=");
+        serialOut().print(_behavior.lastHeardMs());
+        serialOut().print(" now=");
+        serialOut().print(now);
+        serialOut().print(" decision=");
+        serialOut().print(_behavior.lastDecisionName());
+        serialOut().print(" block=");
+        serialOut().print(_behavior.lastBlockReasonName());
+        serialOut().print(" waitMs=");
+        serialOut().print(_behavior.waitRemainingMs(now));
+        serialOut().print(" refractoryMs=");
+        serialOut().print(_behavior.refractoryRemainingMs(now));
+        serialOut().print(" behaviorSuppressMs=");
+        serialOut().print(_behavior.behaviorSuppressRemainingMs(now));
+        serialOut().print(" outputBusy=");
+        serialOut().print(_behavior.outputBusy() ? 1 : 0);
+        serialOut().print(" wouldEmit=");
+        serialOut().println(1);
         _rbLastWouldEmitHeardMs = _behavior.lastHeardMs();
         _rbLastWouldEmitDecision = _behavior.lastDecision();
     }
@@ -854,22 +855,22 @@ void Node::update() {
         const auto chirpPattern = _behavior.chirpPattern();
         const char* sourceName = _behavior.chirpRequestSourceName();
         if (rbShouldLogDetail()) {
-            Serial.print("BEH emit start now=");
-            Serial.print(now);
-            Serial.print(" source=");
-            Serial.print(sourceName);
-            Serial.print(" state=");
-            Serial.print(_behavior.stateName());
-            Serial.print(" pattern=");
-            Serial.println(chirpPatternName(chirpPattern));
-            Serial.print("RB emit accepted source=");
-            Serial.print(sourceName);
-            Serial.print(" state=");
-            Serial.print(_behavior.stateName());
-            Serial.print(" gate=");
-            Serial.print(behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
-            Serial.print(" pattern=");
-            Serial.println(chirpPatternName(chirpPattern));
+            serialOut().print("BEH emit start now=");
+            serialOut().print(now);
+            serialOut().print(" source=");
+            serialOut().print(sourceName);
+            serialOut().print(" state=");
+            serialOut().print(_behavior.stateName());
+            serialOut().print(" pattern=");
+            serialOut().println(chirpPatternName(chirpPattern));
+            serialOut().print("RB emit accepted source=");
+            serialOut().print(sourceName);
+            serialOut().print(" state=");
+            serialOut().print(_behavior.stateName());
+            serialOut().print(" gate=");
+            serialOut().print(behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
+            serialOut().print(" pattern=");
+            serialOut().println(chirpPatternName(chirpPattern));
         }
     _debug.observeChirpStarted(now, sourceName, chirpPattern);
     _debug.flashLed(now, 2);
@@ -897,13 +898,13 @@ void Node::update() {
             : runtime::kDefaultChirpDurationMs;
         emitSpanMs = _idleAnnounceMs + kIdleAnnounceGapMs + trainMs;
         if (rbShouldLogDetail()) {
-            Serial.print("RB emit shape=idle_call announce_hz=");
-            Serial.print(_idleAnnounceHz);
-            Serial.print(" announce_ms=");
-            Serial.print(_idleAnnounceMs);
-            Serial.print(" gap_ms=");
-            Serial.print(kIdleAnnounceGapMs);
-            Serial.println(hopCall ? " then=hop" : " then=chirp");
+            serialOut().print("RB emit shape=idle_call announce_hz=");
+            serialOut().print(_idleAnnounceHz);
+            serialOut().print(" announce_ms=");
+            serialOut().print(_idleAnnounceMs);
+            serialOut().print(" gap_ms=");
+            serialOut().print(kIdleAnnounceGapMs);
+            serialOut().println(hopCall ? " then=hop" : " then=chirp");
         }
     }
     if (emitSpanMs == 0) {
@@ -973,8 +974,8 @@ void Node::pollSerialCommands() {
         if (c == '\n') {
             _serialLineBuffer[_serialLineLength] = '\0';
             if (_serialLineOverflow) {
-                Serial.print("RB ERR line_too_long max=");
-                Serial.println(static_cast<unsigned long>(sizeof(_serialLineBuffer) - 1));
+                serialOut().print("RB ERR line_too_long max=");
+                serialOut().println(static_cast<unsigned long>(sizeof(_serialLineBuffer) - 1));
             } else if (_serialLineLength > 0) {
                 handleSerialLine(_serialLineBuffer);
             }
@@ -994,25 +995,25 @@ void Node::pollSerialCommands() {
 
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
-        Serial.println("RB CMD: RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
-        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) restField=N budget=N budgetWindowMs=MS restMs=MS (0 = off) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
-        Serial.println("RB CMD: RB STATUS");
-        Serial.println("RB CMD: RB PROFILE name=TonalPulseFreq");
-        Serial.println("RB CMD(ALT): RB PROFILE name=TonalPulseFreq");
-        Serial.println("RB CMD: RB PROFILE name=TonalPulseScalar");
-        Serial.println("RB CMD: RB PROFILE name=AmpExperimental");
-        Serial.println("RB CMD: RB rebase");
-        Serial.println("RB CMD: RB rebase force");
-        Serial.println("RB CMD: RB CALL (play the node's network signal now; a kick for multi-node runs)");
-        Serial.println("RB CMD: RB log off|minimal|full");
-        Serial.println("RB CMD: RB debug off|events|plot");
-        Serial.println("RB CMD: RB summary");
-        Serial.println("RB CMD: RB stop");
-        Serial.println("RB CMD: PARAM LIST");
-        Serial.println("RB CMD: PARAM GET <path>");
-        Serial.println("RB CMD: PARAM SET <path> <value>");
-        Serial.println("RB CMD: PARAM DUMP");
-        Serial.println("RB CMD: SELFTEST | SELFTEST external wait_ms=10000 | SELFTEST chirp n=5 | SELFTEST help");
+        serialOut().println("RB CMD: RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
+        serialOut().println("RB CMD: RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) restField=N budget=N budgetWindowMs=MS restMs=MS (0 = off) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
+        serialOut().println("RB CMD: RB STATUS");
+        serialOut().println("RB CMD: RB PROFILE name=TonalPulseFreq");
+        serialOut().println("RB CMD(ALT): RB PROFILE name=TonalPulseFreq");
+        serialOut().println("RB CMD: RB PROFILE name=TonalPulseScalar");
+        serialOut().println("RB CMD: RB PROFILE name=AmpExperimental");
+        serialOut().println("RB CMD: RB rebase");
+        serialOut().println("RB CMD: RB rebase force");
+        serialOut().println("RB CMD: RB CALL (play the node's network signal now; a kick for multi-node runs)");
+        serialOut().println("RB CMD: RB log off|minimal|full");
+        serialOut().println("RB CMD: RB debug off|events|plot");
+        serialOut().println("RB CMD: RB summary");
+        serialOut().println("RB CMD: RB stop");
+        serialOut().println("RB CMD: PARAM LIST");
+        serialOut().println("RB CMD: PARAM GET <path>");
+        serialOut().println("RB CMD: PARAM SET <path> <value>");
+        serialOut().println("RB CMD: PARAM DUMP");
+        serialOut().println("RB CMD: SELFTEST | SELFTEST external wait_ms=10000 | SELFTEST chirp n=5 | SELFTEST help");
         return;
     }
     if (startsWithTokenIgnoreCase(line, "SELFTEST")) {
@@ -1037,7 +1038,7 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "PARAM")) {
-            Serial.println("RB PARAM usage=RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
+            serialOut().println("RB PARAM usage=RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
             return;
         }
 
@@ -1049,9 +1050,9 @@ void Node::handleSerialLine(const char* line) {
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             if (!FrequencyMatchCriteria::parseToken(token, freqTuning)) {
-                Serial.print("RB PARAM ERR token=");
-                Serial.print(token);
-                Serial.println(" (unknown key or invalid value; unchanged)");
+                serialOut().print("RB PARAM ERR token=");
+                serialOut().print(token);
+                serialOut().println(" (unknown key or invalid value; unchanged)");
             }
         }
 
@@ -1061,14 +1062,14 @@ void Node::handleSerialLine(const char* line) {
         _activeDetectionProfile.frequencyMatch.releaseContrastMin = freqTuning.releaseContrastMin;
         applyActiveDetectionProfile();
 
-        Serial.print(" freqScore=");
-        Serial.print(_activeDetectionProfile.frequencyMatch.attackScoreMin, 0);
-        Serial.print(" freqContrast=");
-        Serial.print(_activeDetectionProfile.frequencyMatch.attackContrastMin, 1);
-        Serial.print(" freqReleaseScore=");
-        Serial.print(_activeDetectionProfile.frequencyMatch.releaseScoreMin, 0);
-        Serial.print(" freqReleaseContrast=");
-        Serial.println(_activeDetectionProfile.frequencyMatch.releaseContrastMin, 1);
+        serialOut().print(" freqScore=");
+        serialOut().print(_activeDetectionProfile.frequencyMatch.attackScoreMin, 0);
+        serialOut().print(" freqContrast=");
+        serialOut().print(_activeDetectionProfile.frequencyMatch.attackContrastMin, 1);
+        serialOut().print(" freqReleaseScore=");
+        serialOut().print(_activeDetectionProfile.frequencyMatch.releaseScoreMin, 0);
+        serialOut().print(" freqReleaseContrast=");
+        serialOut().println(_activeDetectionProfile.frequencyMatch.releaseContrastMin, 1);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
@@ -1081,7 +1082,7 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
-            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) restField=N budget=N budgetWindowMs=MS restMs=MS (0 = off) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
+            serialOut().println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) restField=N budget=N budgetWindowMs=MS restMs=MS (0 = off) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
             return;
         }
 
@@ -1155,9 +1156,9 @@ void Node::handleSerialLine(const char* line) {
             } else if (const char* value = valueAfterPrefix(token, "restMs=")) {
                 restMs = strtoul(value, nullptr, 10);
             } else {
-                Serial.print("RB BEHAV ERR token=");
-                Serial.print(token);
-                Serial.println(" (unknown key; ignored)");
+                serialOut().print("RB BEHAV ERR token=");
+                serialOut().print(token);
+                serialOut().println(" (unknown key; ignored)");
             }
         }
 
@@ -1175,32 +1176,32 @@ void Node::handleSerialLine(const char* line) {
         _behavior.setOwnEmitBudgetWindowMs(ownEmitBudgetWindowMs);
         _behavior.setRestMs(restMs);
 
-        Serial.print("RB BEHAV wait=");
-        Serial.print(_behavior.waitAfterHeardMs());
-        Serial.print(" refractory=");
-        Serial.print(_behavior.refractoryAfterEmitMs());
-        Serial.print(" suppressSelfChirp=");
-        Serial.print(_behavior.behaviorSuppressSelfChirpMs());
-        Serial.print(" detectionSuppressTail=");
-        Serial.print(_behavior.detectionSuppressTailMsOwnEmit());
-        Serial.print(" idleTimeout=");
-        Serial.print(_behavior.idleTimeoutMs());
-        Serial.print(" idleTimeoutVariation=");
-        Serial.print(_behavior.idleTimeVariationMs());
-        Serial.print(" idleBlockedHeard=");
-        Serial.print(_behavior.idleBlockedAfterHeardMs());
-        Serial.print(" idleBlockedOwnEmit=");
-        Serial.print(_behavior.idleBlockedAfterOwnEmitMs());
-        Serial.print(" idleEnabled=");
-        Serial.print(_behavior.idleEnabled() ? 1 : 0);
-        Serial.print(" restField=");
-        Serial.print(_behavior.restAfterFieldPatterns());
-        Serial.print(" budget=");
-        Serial.print(_behavior.ownEmitBudget());
-        Serial.print(" budgetWindowMs=");
-        Serial.print(_behavior.ownEmitBudgetWindowMs());
-        Serial.print(" restMs=");
-        Serial.println(_behavior.restMs());
+        serialOut().print("RB BEHAV wait=");
+        serialOut().print(_behavior.waitAfterHeardMs());
+        serialOut().print(" refractory=");
+        serialOut().print(_behavior.refractoryAfterEmitMs());
+        serialOut().print(" suppressSelfChirp=");
+        serialOut().print(_behavior.behaviorSuppressSelfChirpMs());
+        serialOut().print(" detectionSuppressTail=");
+        serialOut().print(_behavior.detectionSuppressTailMsOwnEmit());
+        serialOut().print(" idleTimeout=");
+        serialOut().print(_behavior.idleTimeoutMs());
+        serialOut().print(" idleTimeoutVariation=");
+        serialOut().print(_behavior.idleTimeVariationMs());
+        serialOut().print(" idleBlockedHeard=");
+        serialOut().print(_behavior.idleBlockedAfterHeardMs());
+        serialOut().print(" idleBlockedOwnEmit=");
+        serialOut().print(_behavior.idleBlockedAfterOwnEmitMs());
+        serialOut().print(" idleEnabled=");
+        serialOut().print(_behavior.idleEnabled() ? 1 : 0);
+        serialOut().print(" restField=");
+        serialOut().print(_behavior.restAfterFieldPatterns());
+        serialOut().print(" budget=");
+        serialOut().print(_behavior.ownEmitBudget());
+        serialOut().print(" budgetWindowMs=");
+        serialOut().print(_behavior.ownEmitBudgetWindowMs());
+        serialOut().print(" restMs=");
+        serialOut().println(_behavior.restMs());
         return;
     }
     if (startsWithTokenIgnoreCase(line, "PARAM")) {
@@ -1211,7 +1212,7 @@ void Node::handleSerialLine(const char* line) {
         // A rebase stops and resets what SELFTEST is waiting on (issue #31
         // R2-13): finish or wait out the self-test first.
         if (_selfTest.phase != SelfTestState::Phase::Idle) {
-            Serial.println("RB rebase refused busy=selftest");
+            serialOut().println("RB rebase refused busy=selftest");
             return;
         }
         _rbBaselineState = RBBaselineState::Rebase;
@@ -1219,7 +1220,7 @@ void Node::handleSerialLine(const char* line) {
         _rbBaselineState = RBBaselineState::Settle;
         _rbBaselineSettleUntilMs = timebase::nowMs() + kRbPostRebaseSettleMs;
         ++_rbForcedRebaseCount;
-        Serial.println("RB rebase forced");
+        serialOut().println("RB rebase forced");
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB rebase")) {
@@ -1230,16 +1231,16 @@ void Node::handleSerialLine(const char* line) {
             ++extra;
         }
         if (*extra != '\0') {
-            Serial.print("RB ERR rebase unknown token=");
-            Serial.println(extra);
+            serialOut().print("RB ERR rebase unknown token=");
+            serialOut().println(extra);
             return;
         }
         if (_selfTest.phase != SelfTestState::Phase::Idle) {
-            Serial.println("RB rebase refused busy=selftest");
+            serialOut().println("RB rebase refused busy=selftest");
             return;
         }
         startRbQuietBaseline();
-        Serial.println("RB rebase requested quiet-gated");
+        serialOut().println("RB rebase requested quiet-gated");
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB log")) {
@@ -1249,10 +1250,10 @@ void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB CALL") || equalsIgnoreCase(line, "RB call")) {
         // Step 5g: play the node's network signal now, through Behavior (kick).
         _behavior.requestNetworkCall();
-        Serial.print("RB CALL queued resting=");
-        Serial.print(_behavior.resting(timebase::nowMs()) ? 1 : 0);
-        Serial.print(" state=");
-        Serial.println(_behavior.stateName());
+        serialOut().print("RB CALL queued resting=");
+        serialOut().print(_behavior.resting(timebase::nowMs()) ? 1 : 0);
+        serialOut().print(" state=");
+        serialOut().println(_behavior.stateName());
         return;
     }
     if (equalsIgnoreCase(line, "RB summary") || equalsIgnoreCase(line, "RB stop")) {
@@ -1278,14 +1279,14 @@ void Node::handleDebugCommand(const char* line) {
     } else if (equalsIgnoreCase(mode, "plot")) {
         _debug.setDebugMode(NodeDebug::DebugMode::Plot);
     } else {
-        Serial.print("RB debug mode=");
-        Serial.print(_debug.debugModeName());
-        Serial.println(" (use off|events|plot)");
+        serialOut().print("RB debug mode=");
+        serialOut().print(_debug.debugModeName());
+        serialOut().println(" (use off|events|plot)");
         return;
     }
 
-    Serial.print("RB debug mode=");
-    Serial.println(_debug.debugModeName());
+    serialOut().print("RB debug mode=");
+    serialOut().println(_debug.debugModeName());
 }
 
 void Node::handleLogCommand(const char* line) {
@@ -1301,64 +1302,64 @@ void Node::handleLogCommand(const char* line) {
     } else if (equalsIgnoreCase(mode, "full")) {
         _rbLogMode = RbLogMode::Full;
     } else {
-        Serial.print("RB log mode=");
-        Serial.print(rbLogModeName());
-        Serial.println(" (use off|minimal|full)");
+        serialOut().print("RB log mode=");
+        serialOut().print(rbLogModeName());
+        serialOut().println(" (use off|minimal|full)");
         return;
     }
 
-    Serial.print("RB log mode=");
-    Serial.println(rbLogModeName());
+    serialOut().print("RB log mode=");
+    serialOut().println(rbLogModeName());
 }
 
 void Node::handleDetectCommand(const char* line) {
     (void)line;
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
-    Serial.print("RB STATUS profile=");
-    Serial.print(detection::detectionProfileName(detectionProfile.kind));
-    Serial.print(" emitters=");
-    Serial.print(detection::detectorSelectionName(detectionProfile.detectorSelection));
-    Serial.print(" inspectionPlan=");
-    Serial.print(detection::inspectionPlanName(detectionProfile.inspectionPlan));
+    serialOut().print("RB STATUS profile=");
+    serialOut().print(detection::detectionProfileName(detectionProfile.kind));
+    serialOut().print(" emitters=");
+    serialOut().print(detection::detectorSelectionName(detectionProfile.detectorSelection));
+    serialOut().print(" inspectionPlan=");
+    serialOut().print(detection::inspectionPlanName(detectionProfile.inspectionPlan));
     const detection::InspectionModuleConfig* supportRequirement =
         detection::evaluatorFirstEnabledRequirement(detectionProfile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
-    Serial.print(" has_requirement=");
-    Serial.print(supportRequired ? 1 : 0);
-    Serial.print(" required_label=");
-    Serial.print(supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
-    Serial.print(" freqScore=");
-    Serial.print(detectionProfile.frequencyMatch.attackScoreMin, 0);
-    Serial.print(" freqContrast=");
-    Serial.print(detectionProfile.frequencyMatch.attackContrastMin, 1);
-    Serial.print(" freqReleaseScore=");
-    Serial.print(detectionProfile.frequencyMatch.releaseScoreMin, 0);
-    Serial.print(" freqReleaseContrast=");
-    Serial.print(detectionProfile.frequencyMatch.releaseContrastMin, 1);
-    Serial.print(" behavior_state=");
-    Serial.print(_behavior.stateName());
-    Serial.print(" behavior_idle=");
-    Serial.print(_behavior.idleEnabled() ? 1 : 0);
-    Serial.print(" behavior_suppressSelfChirpMs=");
-    Serial.print(_behavior.behaviorSuppressSelfChirpMs());
-    Serial.print(" behavior_detectionSuppressTailMsOwnEmit=");
-    Serial.print(_behavior.detectionSuppressTailMsOwnEmit());
-    Serial.print(" output_busy=");
-    Serial.print(_behavior.outputBusy() ? 1 : 0);
-    Serial.print(" band=");
-    Serial.print(_freqBandStream.bandLowHz());
-    Serial.print('-');
-    Serial.print(_freqBandStream.bandHighHz());
-    Serial.print(" hop_enabled=");
-    Serial.print(_hopEnabled ? 1 : 0);
-    Serial.print(" hop_rotation=");
-    Serial.print(_hopRotation);
-    Serial.print(" hop_steps=");
-    Serial.print(_hopSteps);
-    Serial.print(" hop_pulse_ms=");
-    Serial.print(_hopPulseMs);
-    Serial.print(" hop_gap_ms=");
-    Serial.print(_hopGapMs);
+    serialOut().print(" has_requirement=");
+    serialOut().print(supportRequired ? 1 : 0);
+    serialOut().print(" required_label=");
+    serialOut().print(supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
+    serialOut().print(" freqScore=");
+    serialOut().print(detectionProfile.frequencyMatch.attackScoreMin, 0);
+    serialOut().print(" freqContrast=");
+    serialOut().print(detectionProfile.frequencyMatch.attackContrastMin, 1);
+    serialOut().print(" freqReleaseScore=");
+    serialOut().print(detectionProfile.frequencyMatch.releaseScoreMin, 0);
+    serialOut().print(" freqReleaseContrast=");
+    serialOut().print(detectionProfile.frequencyMatch.releaseContrastMin, 1);
+    serialOut().print(" behavior_state=");
+    serialOut().print(_behavior.stateName());
+    serialOut().print(" behavior_idle=");
+    serialOut().print(_behavior.idleEnabled() ? 1 : 0);
+    serialOut().print(" behavior_suppressSelfChirpMs=");
+    serialOut().print(_behavior.behaviorSuppressSelfChirpMs());
+    serialOut().print(" behavior_detectionSuppressTailMsOwnEmit=");
+    serialOut().print(_behavior.detectionSuppressTailMsOwnEmit());
+    serialOut().print(" output_busy=");
+    serialOut().print(_behavior.outputBusy() ? 1 : 0);
+    serialOut().print(" band=");
+    serialOut().print(_freqBandStream.bandLowHz());
+    serialOut().print('-');
+    serialOut().print(_freqBandStream.bandHighHz());
+    serialOut().print(" hop_enabled=");
+    serialOut().print(_hopEnabled ? 1 : 0);
+    serialOut().print(" hop_rotation=");
+    serialOut().print(_hopRotation);
+    serialOut().print(" hop_steps=");
+    serialOut().print(_hopSteps);
+    serialOut().print(" hop_pulse_ms=");
+    serialOut().print(_hopPulseMs);
+    serialOut().print(" hop_gap_ms=");
+    serialOut().print(_hopGapMs);
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
     const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
@@ -1372,29 +1373,29 @@ void Node::handleDetectCommand(const char* line) {
     const float ageMs = sampleRateHz > 0
         ? (static_cast<float>(ageSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
         : 0.0f;
-    Serial.print(" freq.window_samples=");
-    Serial.print(windowSizeSamples);
-    Serial.print(" freq.window_ms=");
-    Serial.print(windowMs, 2);
-    Serial.print(" freq.update_every_samples=");
-    Serial.print(frequencyUpdateEverySamples);
-    Serial.print(" freq.update_period_ms=");
-    Serial.print(updateStepMs, 3);
-    Serial.print(" freq.target_hz=");
-    Serial.print(_freqBandStream.targetFrequencyHz());
-    Serial.print(" freq.produced_fresh_packet=");
-    Serial.print(_freqBandStream.producedFreshPacketOnLastObserve() ? 1 : 0);
-    Serial.print(" freq.packet_age_samples=");
-    Serial.print(ageSamples);
-    Serial.print(" freq.packet_age_ms=");
-    Serial.print(ageMs, 3);
+    serialOut().print(" freq.window_samples=");
+    serialOut().print(windowSizeSamples);
+    serialOut().print(" freq.window_ms=");
+    serialOut().print(windowMs, 2);
+    serialOut().print(" freq.update_every_samples=");
+    serialOut().print(frequencyUpdateEverySamples);
+    serialOut().print(" freq.update_period_ms=");
+    serialOut().print(updateStepMs, 3);
+    serialOut().print(" freq.target_hz=");
+    serialOut().print(_freqBandStream.targetFrequencyHz());
+    serialOut().print(" freq.produced_fresh_packet=");
+    serialOut().print(_freqBandStream.producedFreshPacketOnLastObserve() ? 1 : 0);
+    serialOut().print(" freq.packet_age_samples=");
+    serialOut().print(ageSamples);
+    serialOut().print(" freq.packet_age_ms=");
+    serialOut().print(ageMs, 3);
     const AudioSourceStats& audioStats = _audioSource.stats();
-    Serial.print(" i2s.samples_read=");
-    Serial.print(static_cast<unsigned long>(audioStats.totalSamplesRead));
-    Serial.print(" i2s.dropped_dma_buffers=");
-    Serial.print(audioStats.droppedDmaBuffers);
-    Serial.print(" i2s.clock_rate_mhz=");
-    Serial.print(audioStats.sampleClockRateMilliHz);
+    serialOut().print(" i2s.samples_read=");
+    serialOut().print(static_cast<unsigned long>(audioStats.totalSamplesRead));
+    serialOut().print(" i2s.dropped_dma_buffers=");
+    serialOut().print(audioStats.droppedDmaBuffers);
+    serialOut().print(" i2s.clock_rate_mhz=");
+    serialOut().print(audioStats.sampleClockRateMilliHz);
     // Audio-source health without the Analyzer (2026-10-16: a Node that
     // heard nothing had no field saying why). overflows: DMA overflow
     // events; backsteps: blocks whose time went backwards; clock
@@ -1406,57 +1407,57 @@ void Node::handleDetectCommand(const char* line) {
     const double deficitS = expectedSamples > audioStats.totalSamplesRead
         ? static_cast<double>(expectedSamples - audioStats.totalSamplesRead) / static_cast<double>(sampleRateHz)
         : 0.0;
-    Serial.print(" i2s.overflows=");
-    Serial.print(audioStats.overflowCount);
-    Serial.print(" i2s.backsteps=");
-    Serial.print(audioStats.timestampBacksteps);
-    Serial.print(" i2s.max_backstep_us=");
-    Serial.print(audioStats.maxTimestampBackstepUs);
-    Serial.print(" i2s.clock_corrections=");
-    Serial.print(audioStats.sampleClockCorrections);
-    Serial.print(" i2s.max_clock_correction_us=");
-    Serial.print(audioStats.maxSampleClockCorrectionUs);
-    Serial.print(" i2s.read_errors=");
-    Serial.print(audioStats.readErrors);
-    Serial.print(" audio.uptime_ms=");
-    Serial.print(uptimeMs);
-    Serial.print(" audio.deficit_s=");
-    Serial.print(deficitS, 1);
+    serialOut().print(" i2s.overflows=");
+    serialOut().print(audioStats.overflowCount);
+    serialOut().print(" i2s.backsteps=");
+    serialOut().print(audioStats.timestampBacksteps);
+    serialOut().print(" i2s.max_backstep_us=");
+    serialOut().print(audioStats.maxTimestampBackstepUs);
+    serialOut().print(" i2s.clock_corrections=");
+    serialOut().print(audioStats.sampleClockCorrections);
+    serialOut().print(" i2s.max_clock_correction_us=");
+    serialOut().print(audioStats.maxSampleClockCorrectionUs);
+    serialOut().print(" i2s.read_errors=");
+    serialOut().print(audioStats.readErrors);
+    serialOut().print(" audio.uptime_ms=");
+    serialOut().print(uptimeMs);
+    serialOut().print(" audio.deficit_s=");
+    serialOut().print(deficitS, 1);
     // Why a Node might not hear (2026-10-17): the sample clock against the
     // system clock, the own-emit suppression deadline on that axis, whether
     // the newest sample would be suppressed right now, how many samples the
     // suppression has swallowed since boot, and whether the chirp output
     // still counts as active (a train that never "finishes" keeps Behavior
     // in Chirping, which suppresses every sample).
-    Serial.print(" clock.now_ms=");
-    Serial.print(uptimeMs);
-    Serial.print(" audio.last_sample_ms=");
-    Serial.print(_lastSampleTimeMs);
-    Serial.print(" behavior.suppress_armed=");
-    Serial.print(_behavior.ownEmitSuppressArmed() ? 1 : 0);
-    Serial.print(" behavior.suppress_until_ms=");
-    Serial.print(_behavior.ownEmitSuppressUntilMs());
-    Serial.print(" behavior.suppressed_now=");
-    Serial.print(_behavior.ownEmitDetectionSuppressed(_lastSampleTimeMs) ? 1 : 0);
-    Serial.print(" behavior.suppressed_samples=");
-    Serial.print(_suppressedSampleCount);
-    Serial.print(" chirp_active=");
-    Serial.print(_chirpOutput.isActive() ? 1 : 0);
-    Serial.print(" field.patterns=");
-    Serial.print(_detection.fieldState().recentPatternCount);
-    Serial.print(" behavior.resting=");
-    Serial.print(_behavior.resting(uptimeMs) ? 1 : 0);
-    Serial.print(" behavior.rest_until_ms=");
-    Serial.print(_behavior.restUntilMs());
-    Serial.print(" behavior.rests=");
-    Serial.print(_behavior.restsEntered());
-    Serial.print(" behavior.last_rest=");
-    Serial.print(ResonantBehavior::behaviorDecisionName(_behavior.lastRestReason()));
-    Serial.print(" behavior.blocked_resting=");
-    Serial.print(_behavior.blockedResting());
-    Serial.print(" ");
-    printBuildIdentity(Serial, "node");
-    Serial.println();
+    serialOut().print(" clock.now_ms=");
+    serialOut().print(uptimeMs);
+    serialOut().print(" audio.last_sample_ms=");
+    serialOut().print(_lastSampleTimeMs);
+    serialOut().print(" behavior.suppress_armed=");
+    serialOut().print(_behavior.ownEmitSuppressArmed() ? 1 : 0);
+    serialOut().print(" behavior.suppress_until_ms=");
+    serialOut().print(_behavior.ownEmitSuppressUntilMs());
+    serialOut().print(" behavior.suppressed_now=");
+    serialOut().print(_behavior.ownEmitDetectionSuppressed(_lastSampleTimeMs) ? 1 : 0);
+    serialOut().print(" behavior.suppressed_samples=");
+    serialOut().print(_suppressedSampleCount);
+    serialOut().print(" chirp_active=");
+    serialOut().print(_chirpOutput.isActive() ? 1 : 0);
+    serialOut().print(" field.patterns=");
+    serialOut().print(_detection.fieldState().recentPatternCount);
+    serialOut().print(" behavior.resting=");
+    serialOut().print(_behavior.resting(uptimeMs) ? 1 : 0);
+    serialOut().print(" behavior.rest_until_ms=");
+    serialOut().print(_behavior.restUntilMs());
+    serialOut().print(" behavior.rests=");
+    serialOut().print(_behavior.restsEntered());
+    serialOut().print(" behavior.last_rest=");
+    serialOut().print(ResonantBehavior::behaviorDecisionName(_behavior.lastRestReason()));
+    serialOut().print(" behavior.blocked_resting=");
+    serialOut().print(_behavior.blockedResting());
+    serialOut().print(" ");
+    printBuildIdentity(serialOut(), "node");
+    serialOut().println();
 }
 
 void Node::handleProfileCommand(const char* line) {
@@ -1466,8 +1467,8 @@ void Node::handleProfileCommand(const char* line) {
     }
 
     if (*name == '\0') {
-        Serial.print("RB PROFILE name=");
-        Serial.println(profileName());
+        serialOut().print("RB PROFILE name=");
+        serialOut().println(profileName());
         return;
     }
 
@@ -1476,12 +1477,12 @@ void Node::handleProfileCommand(const char* line) {
     }
 
     if (setProfileFromName(name)) {
-        Serial.print("RB PROFILE name=");
-        Serial.print(profileName());
+        serialOut().print("RB PROFILE name=");
+        serialOut().print(profileName());
         printProfileComposition(activeDetectionProfile());
-        Serial.println();
+        serialOut().println();
     } else {
-        Serial.println("RB PROFILE usage=name=TonalPulseFreq|TonalPulseScalar|AmpExperimental");
+        serialOut().println("RB PROFILE usage=name=TonalPulseFreq|TonalPulseScalar|AmpExperimental");
     }
 }
 
@@ -1498,17 +1499,17 @@ void Node::handleParamCommand(const char* line) {
     token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
     if (token == nullptr) {
-        Serial.println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP");
+        serialOut().println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP");
         return;
     }
 
     if (equalsIgnoreCase(token, "LIST")) {
-        _paramRegistry.list(Serial);
+        _paramRegistry.list(serialOut());
         return;
     }
 
     if (equalsIgnoreCase(token, "DUMP")) {
-        _paramRegistry.dump(Serial);
+        _paramRegistry.dump(serialOut());
         return;
     }
 
@@ -1516,19 +1517,19 @@ void Node::handleParamCommand(const char* line) {
         const char* path = strtok_r(nullptr, " ", &savePtr);
         const param::ParamBinding* binding = path != nullptr ? _paramRegistry.find(path) : nullptr;
         if (binding == nullptr) {
-            Serial.print("PARAM GET path=");
-            Serial.print(path != nullptr ? path : "");
-            Serial.print(" status=");
-            Serial.println(param::paramSetStatusName(param::ParamSetStatus::UnknownParam));
+            serialOut().print("PARAM GET path=");
+            serialOut().print(path != nullptr ? path : "");
+            serialOut().print(" status=");
+            serialOut().println(param::paramSetStatusName(param::ParamSetStatus::UnknownParam));
             return;
         }
-        Serial.print("PARAM GET path=");
-        Serial.print(path);
-        Serial.print(" module=");
-        Serial.print(param::moduleName(binding->module));
-        Serial.print(" value=");
-        _paramRegistry.printValue(Serial, *binding);
-        Serial.println();
+        serialOut().print("PARAM GET path=");
+        serialOut().print(path);
+        serialOut().print(" module=");
+        serialOut().print(param::moduleName(binding->module));
+        serialOut().print(" value=");
+        _paramRegistry.printValue(serialOut(), *binding);
+        serialOut().println();
         return;
     }
 
@@ -1543,26 +1544,26 @@ void Node::handleParamCommand(const char* line) {
         const param::ParamBinding* binding = path != nullptr ? _paramRegistry.find(path) : nullptr;
 
         if (binding == nullptr) {
-            Serial.print("PARAM SET path=");
-            Serial.print(path != nullptr ? path : "");
-            Serial.print(" status=");
-            Serial.println(param::paramSetStatusName(param::ParamSetStatus::UnknownParam));
+            serialOut().print("PARAM SET path=");
+            serialOut().print(path != nullptr ? path : "");
+            serialOut().print(" status=");
+            serialOut().println(param::paramSetStatusName(param::ParamSetStatus::UnknownParam));
             return;
         }
 
-        Serial.print("PARAM SET path=");
-        Serial.print(path);
-        Serial.print(" module=");
-        Serial.print(param::moduleName(binding->module));
-        Serial.print(" old=");
-        _paramRegistry.printValue(Serial, *binding);
+        serialOut().print("PARAM SET path=");
+        serialOut().print(path);
+        serialOut().print(" module=");
+        serialOut().print(param::moduleName(binding->module));
+        serialOut().print(" old=");
+        _paramRegistry.printValue(serialOut(), *binding);
 
         const param::ParamSetStatus status = _paramRegistry.applyValue(*binding, value);
 
-        Serial.print(" new=");
-        _paramRegistry.printValue(Serial, *binding);
-        Serial.print(" status=");
-        Serial.println(param::paramSetStatusName(status));
+        serialOut().print(" new=");
+        _paramRegistry.printValue(serialOut(), *binding);
+        serialOut().print(" status=");
+        serialOut().println(param::paramSetStatusName(status));
 
         if (status == param::ParamSetStatus::Ok) {
             applyParamModule(binding->module);
@@ -1570,7 +1571,7 @@ void Node::handleParamCommand(const char* line) {
         return;
     }
 
-    Serial.println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP");
+    serialOut().println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP");
 }
 
 // Dirty ModuleId apply route: a successful PARAM SET only writes the bound
@@ -1605,21 +1606,21 @@ void Node::printHopGapCheck() {
     shape.gapMs = _hopGapMs;
     const detection::ScalarTransientConfig& sc = _activeDetectionProfile.scalarTransient;
     const detection::HopGapCheck c = detection::checkHopGap(shape, sc);
-    Serial.print("RB hop_check status=");
-    Serial.print(!c.hardOk() ? "fail" : (!c.softOk() ? "warn" : "ok"));
-    Serial.print(" train_ms=");
-    Serial.print(c.trainMs);
-    Serial.print(" gap_ms=");
-    Serial.print(shape.gapMs);
-    Serial.print(" release_debounce_ms=");
-    Serial.print(sc.releaseDebounceMs);
-    Serial.print(" max_gap_ms=");
-    Serial.print(sc.maxGapMs);
-    Serial.print(" duration_ms=");
-    Serial.print(sc.minTransientDurationMs);
-    Serial.print("..");
-    Serial.print(sc.maxTransientDurationMs);
-    Serial.print(" issues=");
+    serialOut().print("RB hop_check status=");
+    serialOut().print(!c.hardOk() ? "fail" : (!c.softOk() ? "warn" : "ok"));
+    serialOut().print(" train_ms=");
+    serialOut().print(c.trainMs);
+    serialOut().print(" gap_ms=");
+    serialOut().print(shape.gapMs);
+    serialOut().print(" release_debounce_ms=");
+    serialOut().print(sc.releaseDebounceMs);
+    serialOut().print(" max_gap_ms=");
+    serialOut().print(sc.maxGapMs);
+    serialOut().print(" duration_ms=");
+    serialOut().print(sc.minTransientDurationMs);
+    serialOut().print("..");
+    serialOut().print(sc.maxTransientDurationMs);
+    serialOut().print(" issues=");
     bool any = false;
     const struct {
         bool ok;
@@ -1634,12 +1635,12 @@ void Node::printHopGapCheck() {
     };
     for (const auto& item : items) {
         if (!item.ok) {
-            Serial.print(any ? "," : "");
-            Serial.print(item.name);
+            serialOut().print(any ? "," : "");
+            serialOut().print(item.name);
             any = true;
         }
     }
-    Serial.println(any ? "" : "none");
+    serialOut().println(any ? "" : "none");
 }
 
 bool Node::setProfileFromName(const char* name) {
@@ -1742,24 +1743,24 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         }
 
         if (rbShouldLogDetail()) {
-            Serial.print("RB verdict=");
-            Serial.print(detection::verdictTypeName(verdict.type));
-            Serial.print(" fieldQuiet=");
-            Serial.print(_detection.fieldState().quiet ? 1 : 0);
-            Serial.print(" fieldActive=");
-            Serial.print(_detection.fieldState().active ? 1 : 0);
-            Serial.print(" fieldDense=");
-            Serial.print(_detection.fieldState().dense ? 1 : 0);
+            serialOut().print("RB verdict=");
+            serialOut().print(detection::verdictTypeName(verdict.type));
+            serialOut().print(" fieldQuiet=");
+            serialOut().print(_detection.fieldState().quiet ? 1 : 0);
+            serialOut().print(" fieldActive=");
+            serialOut().print(_detection.fieldState().active ? 1 : 0);
+            serialOut().print(" fieldDense=");
+            serialOut().print(_detection.fieldState().dense ? 1 : 0);
             // Outputs off: Behavior never saw this verdict, so its last
             // decision belongs to an earlier one (issue #31 R2-11).
-            Serial.print(" behaviorEligible=");
-            Serial.print(behaviorSeesVerdict && _behavior.behaviorEligible() ? 1 : 0);
-            Serial.print(" decision=");
-            Serial.print(behaviorSeesVerdict ? _behavior.lastDecisionName() : "outputs_off");
-            Serial.print(" valid=");
-            Serial.print(verdict.valid ? 1 : 0);
-            Serial.print(" profile=");
-            Serial.println(profileName());
+            serialOut().print(" behaviorEligible=");
+            serialOut().print(behaviorSeesVerdict && _behavior.behaviorEligible() ? 1 : 0);
+            serialOut().print(" decision=");
+            serialOut().print(behaviorSeesVerdict ? _behavior.lastDecisionName() : "outputs_off");
+            serialOut().print(" valid=");
+            serialOut().print(verdict.valid ? 1 : 0);
+            serialOut().print(" profile=");
+            serialOut().println(profileName());
         }
 
     }
@@ -1793,100 +1794,100 @@ void Node::printRbSummary() const {
     const float avgDuration = _rbPendingCount > 0 ? static_cast<float>(_rbDurationSumMs) / static_cast<float>(_rbPendingCount) : 0.0f;
     const AudioSignalStats& stats = _audioSignal.stats();
 
-    Serial.print("RB summary: pending=");
-    Serial.print(_rbPendingCount);
-    Serial.print(" accepted=");
-    Serial.print(_rbPatternAcceptedCount);
-    Serial.print(" validPatterns=");
-    Serial.print(_rbValidPatternCount);
-    Serial.print(" chirpStarted=");
-    Serial.print(_rbChirpStartedCount);
-    Serial.print(" overflowPending=");
-    Serial.print(_rbOverflowPending);
-    Serial.print(" avg_strength=");
-    Serial.print(avgStrength, 1);
-    Serial.print(" avg_duration=");
-    Serial.print(avgDuration, 1);
-    Serial.print("ms");
-    Serial.print(" profile=");
-    Serial.print(profileName());
-    printBuildIdentity(Serial, "node");
-    Serial.println();
-    Serial.print("RB baseline state=");
-    Serial.println(rbBaselineStateName());
-    Serial.print("RB log mode=");
-    Serial.println(rbLogModeName());
+    serialOut().print("RB summary: pending=");
+    serialOut().print(_rbPendingCount);
+    serialOut().print(" accepted=");
+    serialOut().print(_rbPatternAcceptedCount);
+    serialOut().print(" validPatterns=");
+    serialOut().print(_rbValidPatternCount);
+    serialOut().print(" chirpStarted=");
+    serialOut().print(_rbChirpStartedCount);
+    serialOut().print(" overflowPending=");
+    serialOut().print(_rbOverflowPending);
+    serialOut().print(" avg_strength=");
+    serialOut().print(avgStrength, 1);
+    serialOut().print(" avg_duration=");
+    serialOut().print(avgDuration, 1);
+    serialOut().print("ms");
+    serialOut().print(" profile=");
+    serialOut().print(profileName());
+    printBuildIdentity(serialOut(), "node");
+    serialOut().println();
+    serialOut().print("RB baseline state=");
+    serialOut().println(rbBaselineStateName());
+    serialOut().print("RB log mode=");
+    serialOut().println(rbLogModeName());
 
     printRbBehaviorSummary();
     printRbSignalSummary();
 }
 
 void Node::printRbBehaviorSummary() const {
-    Serial.print("RB behavior idle=");
-    Serial.print(_behavior.idleEnabled() ? 1 : 0);
-    Serial.print(" wait=");
-    Serial.print(_behavior.waitAfterHeardMs());
-    Serial.print(" refractory=");
-    Serial.print(_behavior.refractoryAfterEmitMs());
-    Serial.print(" suppressSelfChirp=");
-    Serial.print(_behavior.behaviorSuppressSelfChirpMs());
-    Serial.print(" detectionSuppressTail=");
-    Serial.print(_behavior.detectionSuppressTailMsOwnEmit());
-    Serial.print(" idleTimeout=");
-    Serial.print(_behavior.idleTimeoutMs());
-    Serial.print(" idleTimeoutVariation=");
-    Serial.print(_behavior.idleTimeVariationMs());
-    Serial.print(" idleBlockedHeard=");
-    Serial.print(_behavior.idleBlockedAfterHeardMs());
-    Serial.print(" idleBlockedOwnEmit=");
-    Serial.print(_behavior.idleBlockedAfterOwnEmitMs());
-    Serial.print(" idleEnabled=");
-    Serial.print(_behavior.idleEnabled() ? 1 : 0);
-    Serial.print(" lastDecision=");
-    Serial.print(_behavior.lastDecisionName());
-    Serial.print(" lastBlock=");
-    Serial.print(_behavior.lastBlockReasonName());
-    Serial.print(" lastPattern=");
-    Serial.print(_behavior.lastVerdictTypeName());
-    Serial.print(" lastHeardMs=");
-    Serial.print(_behavior.lastHeardMs());
-    Serial.print(" lastEmitMs=");
-    Serial.print(_behavior.lastEmitMs());
-    Serial.print(" waitUntilMs=");
-    Serial.print(_behavior.waitUntilMs());
-    Serial.print(" refractoryUntilMs=");
-    Serial.print(_behavior.refractoryUntilMs());
-    Serial.print(" ownEmitDetectionSuppressUntilMs=");
-    Serial.print(_behavior.ownEmitDetectionSuppressUntilMs());
-    Serial.print(" outputBusy=");
-    Serial.print(_behavior.outputBusy() ? 1 : 0);
-    Serial.print(" patternsReceived=");
-    Serial.print(_behavior.patternsReceived());
-    Serial.print(" ignoredInvalid=");
-    Serial.print(_behavior.patternsIgnoredInvalid());
-    Serial.print(" ignoredAmbiguous=");
-    Serial.print(_behavior.patternsIgnoredAmbiguous());
-    Serial.print(" blockedOutputBusy=");
-    Serial.print(_behavior.blockedOutputBusy());
-    Serial.print(" blockedWaiting=");
-    Serial.print(_behavior.blockedWaiting());
-    Serial.print(" blockedRefractory=");
-    Serial.print(_behavior.blockedRefractory());
-    Serial.print(" blockedSelfSuppressed=");
-    Serial.print(_behavior.blockedSelfSuppressed());
-    Serial.print(" wouldEmit=");
-    Serial.print(_behavior.wouldEmitCount());
-    Serial.print(" emitted=");
-    Serial.println(_behavior.emittedCount());
+    serialOut().print("RB behavior idle=");
+    serialOut().print(_behavior.idleEnabled() ? 1 : 0);
+    serialOut().print(" wait=");
+    serialOut().print(_behavior.waitAfterHeardMs());
+    serialOut().print(" refractory=");
+    serialOut().print(_behavior.refractoryAfterEmitMs());
+    serialOut().print(" suppressSelfChirp=");
+    serialOut().print(_behavior.behaviorSuppressSelfChirpMs());
+    serialOut().print(" detectionSuppressTail=");
+    serialOut().print(_behavior.detectionSuppressTailMsOwnEmit());
+    serialOut().print(" idleTimeout=");
+    serialOut().print(_behavior.idleTimeoutMs());
+    serialOut().print(" idleTimeoutVariation=");
+    serialOut().print(_behavior.idleTimeVariationMs());
+    serialOut().print(" idleBlockedHeard=");
+    serialOut().print(_behavior.idleBlockedAfterHeardMs());
+    serialOut().print(" idleBlockedOwnEmit=");
+    serialOut().print(_behavior.idleBlockedAfterOwnEmitMs());
+    serialOut().print(" idleEnabled=");
+    serialOut().print(_behavior.idleEnabled() ? 1 : 0);
+    serialOut().print(" lastDecision=");
+    serialOut().print(_behavior.lastDecisionName());
+    serialOut().print(" lastBlock=");
+    serialOut().print(_behavior.lastBlockReasonName());
+    serialOut().print(" lastPattern=");
+    serialOut().print(_behavior.lastVerdictTypeName());
+    serialOut().print(" lastHeardMs=");
+    serialOut().print(_behavior.lastHeardMs());
+    serialOut().print(" lastEmitMs=");
+    serialOut().print(_behavior.lastEmitMs());
+    serialOut().print(" waitUntilMs=");
+    serialOut().print(_behavior.waitUntilMs());
+    serialOut().print(" refractoryUntilMs=");
+    serialOut().print(_behavior.refractoryUntilMs());
+    serialOut().print(" ownEmitDetectionSuppressUntilMs=");
+    serialOut().print(_behavior.ownEmitDetectionSuppressUntilMs());
+    serialOut().print(" outputBusy=");
+    serialOut().print(_behavior.outputBusy() ? 1 : 0);
+    serialOut().print(" patternsReceived=");
+    serialOut().print(_behavior.patternsReceived());
+    serialOut().print(" ignoredInvalid=");
+    serialOut().print(_behavior.patternsIgnoredInvalid());
+    serialOut().print(" ignoredAmbiguous=");
+    serialOut().print(_behavior.patternsIgnoredAmbiguous());
+    serialOut().print(" blockedOutputBusy=");
+    serialOut().print(_behavior.blockedOutputBusy());
+    serialOut().print(" blockedWaiting=");
+    serialOut().print(_behavior.blockedWaiting());
+    serialOut().print(" blockedRefractory=");
+    serialOut().print(_behavior.blockedRefractory());
+    serialOut().print(" blockedSelfSuppressed=");
+    serialOut().print(_behavior.blockedSelfSuppressed());
+    serialOut().print(" wouldEmit=");
+    serialOut().print(_behavior.wouldEmitCount());
+    serialOut().print(" emitted=");
+    serialOut().println(_behavior.emittedCount());
 }
 
 void Node::printRbSignalSummary() const {
-    Serial.print("RB occurrence baseline=");
-    Serial.print(_audioSignal.baseline(), 1);
-    Serial.print(" mag=");
-    Serial.print(_audioSignal.signalMagnitude());
-    Serial.print(" smooth=");
-    Serial.println(_audioSignal.smoothedSignalMagnitude());
+    serialOut().print("RB occurrence baseline=");
+    serialOut().print(_audioSignal.baseline(), 1);
+    serialOut().print(" mag=");
+    serialOut().print(_audioSignal.signalMagnitude());
+    serialOut().print(" smooth=");
+    serialOut().println(_audioSignal.smoothedSignalMagnitude());
 }
 
 

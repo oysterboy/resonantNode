@@ -5,6 +5,7 @@
 #include "DetectorNames.h"
 #include "frequency/FrequencyMatchPrinter.h"
 #include "scalar/ScalarTransientPrinter.h"
+#include "../../app/SerialOut.h"
 
 // Shared detector report rendering. Dispatches to detector-owned detail printers.
 namespace detection {
@@ -15,81 +16,81 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     const auto& accepted = detectorReport.accepted;
     const auto& selectedReject = detectorReport.selectedReject;
 
-    Serial.print(prefix);
-    Serial.print(" trial=");
-    Serial.print(trial);
-    Serial.print(" detector=");
-    Serial.print(detectorIdName(detectorReport.detectorId));
-    Serial.print(" source.selection=");
-    Serial.print(detectorReport.sourceSelection != nullptr ? detectorReport.sourceSelection : "none");
-    Serial.print(" source.occurrence_id=");
-    Serial.print(detectorReport.sourceOccurrenceId);
-    Serial.print(" source.candidate_id=");
-    Serial.print(detectorReport.sourceCandidateId);
-    Serial.print(" source.report_matched=");
-    Serial.print(detectorReport.sourceReportMatched ? 1 : 0);
-    Serial.print(" window.start_ms=");
-    Serial.print(detectorReport.reportStartMs);
-    Serial.print(" window.end_ms=");
-    Serial.print(detectorReport.reportEndMs);
-    Serial.print(" accepted.present=");
-    Serial.print(accepted.present ? 1 : 0);
-    Serial.print(" accepted.start_ms=");
-    Serial.print(accepted.startMs);
-    Serial.print(" accepted.peak_ms=");
-    Serial.print(accepted.peakMs);
-    Serial.print(" accepted.end_ms=");
-    Serial.print(accepted.endMs);
-    Serial.print(" accepted.duration_ms=");
-    Serial.print(accepted.durationMs);
-    Serial.print(" accepted.strength=");
-    Serial.print(accepted.strength, 1);
-    Serial.print(" accepted.confidence=");
-    Serial.print(accepted.confidence, 2);
-    Serial.print(" accepted.peak=");
-    Serial.print(accepted.peak, 1);
-    Serial.print(" accepted.mean=");
-    Serial.print(accepted.mean, 1);
-    Serial.print(" accepted.rms=");
-    Serial.print(accepted.rms, 1);
-    Serial.print(" accepted.coverage_attack_ms=");
-    Serial.print(accepted.coverageAboveAttackMs);
-    Serial.print(" accepted.coverage_release_ms=");
-    Serial.print(accepted.coverageAboveReleaseMs);
-    Serial.print(" accepted.sustained_ms=");
-    Serial.print(accepted.sustainedMs);
-    Serial.print(" accepted.island_count=");
-    Serial.print(accepted.islandCount);
-    Serial.print(" accepted.gap_count=");
-    Serial.print(accepted.gapCount);
-    Serial.print(" accepted.island_max_ms=");
-    Serial.print(accepted.islandMaxMs);
-    Serial.print(" accepted.gap_max_ms=");
-    Serial.print(accepted.gapMaxMs);
-    Serial.print(" reject.present=");
-    Serial.print(selectedReject.present ? 1 : 0);
-    Serial.print(" reject.class=");
-    Serial.print(detectorRejectClassName(selectedReject.rejectClass));
-    Serial.print(" reject.detector_reason=");
-    Serial.print(selectedReject.detectorReason != nullptr ? selectedReject.detectorReason : "none");
-    Serial.print(" reject.start_ms=");
-    Serial.print(selectedReject.startMs);
-    Serial.print(" reject.peak_ms=");
-    Serial.print(selectedReject.peakMs);
-    Serial.print(" reject.end_ms=");
-    Serial.print(selectedReject.endMs);
-    Serial.print(" reject.duration_ms=");
-    Serial.print(selectedReject.durationMs);
-    Serial.print(" reject.strength=");
-    Serial.print(selectedReject.strength, 1);
-    Serial.print(" reject.confidence=");
-    Serial.print(selectedReject.confidence, 2);
-    Serial.print(" reject.peak=");
-    Serial.print(selectedReject.peak, 1);
-    Serial.print(" reject.mean=");
-    Serial.print(selectedReject.mean, 1);
-    Serial.print(" reject.rms=");
-    Serial.print(selectedReject.rms, 1);
+    serialOut().print(prefix);
+    serialOut().print(" trial=");
+    serialOut().print(trial);
+    serialOut().print(" detector=");
+    serialOut().print(detectorIdName(detectorReport.detectorId));
+    serialOut().print(" source.selection=");
+    serialOut().print(detectorReport.sourceSelection != nullptr ? detectorReport.sourceSelection : "none");
+    serialOut().print(" source.occurrence_id=");
+    serialOut().print(detectorReport.sourceOccurrenceId);
+    serialOut().print(" source.candidate_id=");
+    serialOut().print(detectorReport.sourceCandidateId);
+    serialOut().print(" source.report_matched=");
+    serialOut().print(detectorReport.sourceReportMatched ? 1 : 0);
+    serialOut().print(" window.start_ms=");
+    serialOut().print(detectorReport.reportStartMs);
+    serialOut().print(" window.end_ms=");
+    serialOut().print(detectorReport.reportEndMs);
+    serialOut().print(" accepted.present=");
+    serialOut().print(accepted.present ? 1 : 0);
+    serialOut().print(" accepted.start_ms=");
+    serialOut().print(accepted.startMs);
+    serialOut().print(" accepted.peak_ms=");
+    serialOut().print(accepted.peakMs);
+    serialOut().print(" accepted.end_ms=");
+    serialOut().print(accepted.endMs);
+    serialOut().print(" accepted.duration_ms=");
+    serialOut().print(accepted.durationMs);
+    serialOut().print(" accepted.strength=");
+    serialOut().print(accepted.strength, 1);
+    serialOut().print(" accepted.confidence=");
+    serialOut().print(accepted.confidence, 2);
+    serialOut().print(" accepted.peak=");
+    serialOut().print(accepted.peak, 1);
+    serialOut().print(" accepted.mean=");
+    serialOut().print(accepted.mean, 1);
+    serialOut().print(" accepted.rms=");
+    serialOut().print(accepted.rms, 1);
+    serialOut().print(" accepted.coverage_attack_ms=");
+    serialOut().print(accepted.coverageAboveAttackMs);
+    serialOut().print(" accepted.coverage_release_ms=");
+    serialOut().print(accepted.coverageAboveReleaseMs);
+    serialOut().print(" accepted.sustained_ms=");
+    serialOut().print(accepted.sustainedMs);
+    serialOut().print(" accepted.island_count=");
+    serialOut().print(accepted.islandCount);
+    serialOut().print(" accepted.gap_count=");
+    serialOut().print(accepted.gapCount);
+    serialOut().print(" accepted.island_max_ms=");
+    serialOut().print(accepted.islandMaxMs);
+    serialOut().print(" accepted.gap_max_ms=");
+    serialOut().print(accepted.gapMaxMs);
+    serialOut().print(" reject.present=");
+    serialOut().print(selectedReject.present ? 1 : 0);
+    serialOut().print(" reject.class=");
+    serialOut().print(detectorRejectClassName(selectedReject.rejectClass));
+    serialOut().print(" reject.detector_reason=");
+    serialOut().print(selectedReject.detectorReason != nullptr ? selectedReject.detectorReason : "none");
+    serialOut().print(" reject.start_ms=");
+    serialOut().print(selectedReject.startMs);
+    serialOut().print(" reject.peak_ms=");
+    serialOut().print(selectedReject.peakMs);
+    serialOut().print(" reject.end_ms=");
+    serialOut().print(selectedReject.endMs);
+    serialOut().print(" reject.duration_ms=");
+    serialOut().print(selectedReject.durationMs);
+    serialOut().print(" reject.strength=");
+    serialOut().print(selectedReject.strength, 1);
+    serialOut().print(" reject.confidence=");
+    serialOut().print(selectedReject.confidence, 2);
+    serialOut().print(" reject.peak=");
+    serialOut().print(selectedReject.peak, 1);
+    serialOut().print(" reject.mean=");
+    serialOut().print(selectedReject.mean, 1);
+    serialOut().print(" reject.rms=");
+    serialOut().print(selectedReject.rms, 1);
     const bool useAcceptedCandidate = accepted.present || !selectedReject.present;
     const float candidateMeanStrength = useAcceptedCandidate ? accepted.meanStrength : selectedReject.meanStrength;
     const float candidateMatchedMeanStrength = useAcceptedCandidate
@@ -101,52 +102,52 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     const unsigned int candidateMatchedStrengthCount = useAcceptedCandidate
         ? accepted.matchedStrengthCount
         : selectedReject.matchedStrengthCount;
-    Serial.print(" candidate.mean_strength=");
-    Serial.print(candidateMeanStrength, 1);
-    Serial.print(" candidate.min_strength=");
-    Serial.print(candidateMatchedMeanStrength, 1);
-    Serial.print(" candidate.strength_count=");
-    Serial.print(candidateStrengthCount);
-    Serial.print(" candidate.matched_strength_count=");
-    Serial.print(candidateMatchedStrengthCount);
-    Serial.print(" reject.coverage_attack_ms=");
-    Serial.print(selectedReject.coverageAboveAttackMs);
-    Serial.print(" reject.coverage_release_ms=");
-    Serial.print(selectedReject.coverageAboveReleaseMs);
-    Serial.print(" reject.sustained_ms=");
-    Serial.print(selectedReject.sustainedMs);
-    Serial.print(" reject.island_count=");
-    Serial.print(selectedReject.islandCount);
-    Serial.print(" reject.gap_count=");
-    Serial.print(selectedReject.gapCount);
-    Serial.print(" reject.island_max_ms=");
-    Serial.print(selectedReject.islandMaxMs);
-    Serial.print(" reject.gap_max_ms=");
-    Serial.print(selectedReject.gapMaxMs);
-    Serial.print(" carrier.quality_pass=");
+    serialOut().print(" candidate.mean_strength=");
+    serialOut().print(candidateMeanStrength, 1);
+    serialOut().print(" candidate.min_strength=");
+    serialOut().print(candidateMatchedMeanStrength, 1);
+    serialOut().print(" candidate.strength_count=");
+    serialOut().print(candidateStrengthCount);
+    serialOut().print(" candidate.matched_strength_count=");
+    serialOut().print(candidateMatchedStrengthCount);
+    serialOut().print(" reject.coverage_attack_ms=");
+    serialOut().print(selectedReject.coverageAboveAttackMs);
+    serialOut().print(" reject.coverage_release_ms=");
+    serialOut().print(selectedReject.coverageAboveReleaseMs);
+    serialOut().print(" reject.sustained_ms=");
+    serialOut().print(selectedReject.sustainedMs);
+    serialOut().print(" reject.island_count=");
+    serialOut().print(selectedReject.islandCount);
+    serialOut().print(" reject.gap_count=");
+    serialOut().print(selectedReject.gapCount);
+    serialOut().print(" reject.island_max_ms=");
+    serialOut().print(selectedReject.islandMaxMs);
+    serialOut().print(" reject.gap_max_ms=");
+    serialOut().print(selectedReject.gapMaxMs);
+    serialOut().print(" carrier.quality_pass=");
     if (detectorReport.detectorId == DetectorId::ScalarTransient) {
         const bool carrierQualityPass = detectorReport.scalar.inspect.carrierQualityRequired
             ? (detectorReport.scalar.inspect.carrierCoveragePassed &&
                detectorReport.scalar.inspect.carrierIslandPassed &&
                detectorReport.scalar.inspect.carrierGapPassed)
             : true;
-        Serial.print(carrierQualityPass ? 1 : 0);
+        serialOut().print(carrierQualityPass ? 1 : 0);
     } else if (accepted.present) {
-        Serial.print(1);
+        serialOut().print(1);
     } else {
-        Serial.print(0);
+        serialOut().print(0);
     }
-    Serial.print(" candidate.min_strength_pass=");
-    Serial.print(detectorReport.detectorId == DetectorId::ScalarTransient &&
+    serialOut().print(" candidate.min_strength_pass=");
+    serialOut().print(detectorReport.detectorId == DetectorId::ScalarTransient &&
         detectorReport.scalar.inspect.matchedMeanPassed ? 1 : 0);
-    Serial.print(" threshold.min_duration_ms=");
-    Serial.print(detectorReport.thresholds.minDurationMs);
-    Serial.print(" threshold.max_duration_ms=");
-    Serial.print(detectorReport.thresholds.maxDurationMs);
-    Serial.print(" aggregate.accepted_count=");
-    Serial.print(detectorReport.aggregates.acceptedCount);
-    Serial.print(" aggregate.rejected_count=");
-    Serial.println(detectorReport.aggregates.rejectedCount);
+    serialOut().print(" threshold.min_duration_ms=");
+    serialOut().print(detectorReport.thresholds.minDurationMs);
+    serialOut().print(" threshold.max_duration_ms=");
+    serialOut().print(detectorReport.thresholds.maxDurationMs);
+    serialOut().print(" aggregate.accepted_count=");
+    serialOut().print(detectorReport.aggregates.acceptedCount);
+    serialOut().print(" aggregate.rejected_count=");
+    serialOut().println(detectorReport.aggregates.rejectedCount);
 }
 
 void printDetectorDetailLine(const char* prefix, const DetectorReport* report) {

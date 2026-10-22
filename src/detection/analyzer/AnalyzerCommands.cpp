@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../../app/SerialOut.h"
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
@@ -37,39 +38,39 @@ const char* onOffName(bool value) {
 
 void printParamFieldStart(bool& firstField) {
     if (!firstField) {
-        Serial.print("PARAM ");
+        serialOut().print("PARAM ");
     } else {
-        Serial.print(" ");
+        serialOut().print(" ");
     }
     firstField = true;
 }
 
 void printParamField(const char* name, float value, bool& firstField) {
     printParamFieldStart(firstField);
-    Serial.print(name);
-    Serial.print("=");
-    Serial.print(value, 1);
+    serialOut().print(name);
+    serialOut().print("=");
+    serialOut().print(value, 1);
 }
 
 void printParamField(const char* name, unsigned long value, bool& firstField) {
     printParamFieldStart(firstField);
-    Serial.print(name);
-    Serial.print("=");
-    Serial.print(value);
+    serialOut().print(name);
+    serialOut().print("=");
+    serialOut().print(value);
 }
 
 void printParamField(const char* name, bool value, bool& firstField) {
     printParamFieldStart(firstField);
-    Serial.print(name);
-    Serial.print("=");
-    Serial.print(value ? "1" : "0");
+    serialOut().print(name);
+    serialOut().print("=");
+    serialOut().print(value ? "1" : "0");
 }
 
 void printParamField(const char* name, detection::FeatureStreamId value, bool& firstField) {
     printParamFieldStart(firstField);
-    Serial.print(name);
-    Serial.print("=");
-    Serial.print(scalarObservedStreamDisplayName(value));
+    serialOut().print(name);
+    serialOut().print("=");
+    serialOut().print(scalarObservedStreamDisplayName(value));
 }
 
 bool parseFeatureStreamToken(const char* token, detection::FeatureStreamId& out) {
@@ -179,45 +180,45 @@ bool parseScalarTransientToken(const char* token, detection::ScalarTransientConf
 } // namespace
 
 void AnalyzerApp::printSequenceHelp() {
-    Serial.println("CMD: SEQ help");
-    Serial.println("CMD: SEQ");
-    Serial.println("CMD: SEQ stop");
-    Serial.println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
-    Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
-    Serial.println("SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]");
-    Serial.println("SEQ IN: sweep inside the chirp (OUT-005): start ... freq=START_HZ dur=MS sweep=END_HZ");
-    Serial.println("SEQ IN: TRIES N");
-    Serial.println("SEQ IN: [profile=TonalPulseFreq|TonalPulseScalar|AmpExperimental]");
-    Serial.println("SEQ IN: MODE quiet|trial|inspect|source|system|detail");
-    Serial.println("SEQ IN: MODE quiet = no sequence output");
-    Serial.println("SEQ IN: MODE trial = trial verdict view");
-    Serial.println("SEQ IN: MODE system = trial verdict + system health");
-    Serial.println("SEQ IN: MODE source = source wrapper, then SEQ_SOURCE_CORE and SEQ_SOURCE_SPEC");
-    Serial.println("SEQ IN: MODE inspect = canonical detector report inspect");
-    Serial.println("SEQ IN: MODE detail = canonical trial/source/inspect report");
-    Serial.println("SEQ IN: PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental");
-    Serial.println("SEQ IN: DIAG on|off");
-    Serial.println("SEQ IN: FREQBAND on|off");
-    Serial.println("SEQ IN: FREQUPDATEEVERYSAMPLES 1|4|8|16");
-    Serial.println("SEQ IN: WHEN off|miss|all");
-    Serial.println("SEQ IN: VERBOSE 0|1|2 (0=compact, 1=summary, 2=deep debug)");
-    Serial.println("SEQ IN: SUMMARY");
-    Serial.println("SEQ IN: REPORT");
-    Serial.println("SEQ IN: TRIES N");
-    Serial.println("SEQ IN: STATUS");
-    Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_DETAIL, and not canonical Analyzer truth");
-    Serial.println("SEQ IN: sampleMax is the row budget over all dumped trials (default 5000); one trial must also fit the 256-row sampleRows buffer (default sampleStep=4)");
-    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_DETAIL / SEQ_SOURCE / SEQ_SOURCE_CORE / SEQ_SOURCE_SPEC / SEQ_SUMMARY / SEQ REPORT / AUDIO run");
-    Serial.println("SEQ OUT: SAMPLES_BEGIN / SAMPLES_NOTE / SAMPLES_END");
-    Serial.println("SEQ OUT: sample fields are t,value (value is the selected detector input stream)");
-    Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
-    Serial.println("SEQ IN: PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental");
-    Serial.println("SEQ PROFILE TonalPulseFreq");
-    Serial.println("SEQ PROFILE TonalPulseScalar");
-    Serial.println("SEQ PROFILE AmpExperimental");
-    Serial.println("SEQ PARAM: freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
-    Serial.println("SEQ PARAM STATUS");
+    serialOut().println("CMD: SEQ help");
+    serialOut().println("CMD: SEQ");
+    serialOut().println("CMD: SEQ stop");
+    serialOut().println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
+    serialOut().println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
+    serialOut().println("SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]");
+    serialOut().println("SEQ IN: sweep inside the chirp (OUT-005): start ... freq=START_HZ dur=MS sweep=END_HZ");
+    serialOut().println("SEQ IN: TRIES N");
+    serialOut().println("SEQ IN: [profile=TonalPulseFreq|TonalPulseScalar|AmpExperimental]");
+    serialOut().println("SEQ IN: MODE quiet|trial|inspect|source|system|detail");
+    serialOut().println("SEQ IN: MODE quiet = no sequence output");
+    serialOut().println("SEQ IN: MODE trial = trial verdict view");
+    serialOut().println("SEQ IN: MODE system = trial verdict + system health");
+    serialOut().println("SEQ IN: MODE source = source wrapper, then SEQ_SOURCE_CORE and SEQ_SOURCE_SPEC");
+    serialOut().println("SEQ IN: MODE inspect = canonical detector report inspect");
+    serialOut().println("SEQ IN: MODE detail = canonical trial/source/inspect report");
+    serialOut().println("SEQ IN: PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental");
+    serialOut().println("SEQ IN: DIAG on|off");
+    serialOut().println("SEQ IN: FREQBAND on|off");
+    serialOut().println("SEQ IN: FREQUPDATEEVERYSAMPLES 1|4|8|16");
+    serialOut().println("SEQ IN: WHEN off|miss|all");
+    serialOut().println("SEQ IN: VERBOSE 0|1|2 (0=compact, 1=summary, 2=deep debug)");
+    serialOut().println("SEQ IN: SUMMARY");
+    serialOut().println("SEQ IN: REPORT");
+    serialOut().println("SEQ IN: TRIES N");
+    serialOut().println("SEQ IN: STATUS");
+    serialOut().println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
+    serialOut().println("SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_DETAIL, and not canonical Analyzer truth");
+    serialOut().println("SEQ IN: sampleMax is the row budget over all dumped trials (default 5000); one trial must also fit the 256-row sampleRows buffer (default sampleStep=4)");
+    serialOut().println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_DETAIL / SEQ_SOURCE / SEQ_SOURCE_CORE / SEQ_SOURCE_SPEC / SEQ_SUMMARY / SEQ REPORT / AUDIO run");
+    serialOut().println("SEQ OUT: SAMPLES_BEGIN / SAMPLES_NOTE / SAMPLES_END");
+    serialOut().println("SEQ OUT: sample fields are t,value (value is the selected detector input stream)");
+    serialOut().println("SEQ OBS: passive observe mode for an already-running external emitter");
+    serialOut().println("SEQ IN: PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental");
+    serialOut().println("SEQ PROFILE TonalPulseFreq");
+    serialOut().println("SEQ PROFILE TonalPulseScalar");
+    serialOut().println("SEQ PROFILE AmpExperimental");
+    serialOut().println("SEQ PARAM: freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
+    serialOut().println("SEQ PARAM STATUS");
 }
 
 void AnalyzerApp::pollUsbConsole() {
@@ -244,18 +245,18 @@ void AnalyzerApp::pollUsbConsole() {
 
 void AnalyzerApp::handleUsbLine(const char* line) {
     if (equalsIgnoreCase(line, "HELP")) {
-        Serial.println("CMD: PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
-        Serial.println("CMD: PARAM STATUS");
-        Serial.println("CMD: EMIT CHIRP freq=3200 dur=100");
-        Serial.println("CMD: EMIT MODE REMOTE");
-        Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
-        Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
-        Serial.println("CMD: EMIT PULSES n pulse_ms gap_ms [freq=3200] [ramp=5] (e.g. EMIT PULSES 5 10 20)");
-        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat (default)|mode=pcm|mode=i2s|mode=both [pulses=N gap=MS hop=F1,F2,...] (pulses= plays a PULSES train instead of one CHIRP; dur= is then the pulse length)");
-        Serial.println("CMD: SEQ");
-        Serial.println("CMD: SEQ help");
-        Serial.println("CMD: SEQ stop");
-        Serial.println("CMD: SELFTEST | SELFTEST chirp n=5 gap_ms=1500 | SELFTEST help");
+        serialOut().println("CMD: PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
+        serialOut().println("CMD: PARAM STATUS");
+        serialOut().println("CMD: EMIT CHIRP freq=3200 dur=100");
+        serialOut().println("CMD: EMIT MODE REMOTE");
+        serialOut().println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
+        serialOut().println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
+        serialOut().println("CMD: EMIT PULSES n pulse_ms gap_ms [freq=3200] [ramp=5] (e.g. EMIT PULSES 5 10 20)");
+        serialOut().println("CMD: RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat (default)|mode=pcm|mode=i2s|mode=both [pulses=N gap=MS hop=F1,F2,...] (pulses= plays a PULSES train instead of one CHIRP; dur= is then the pulse length)");
+        serialOut().println("CMD: SEQ");
+        serialOut().println("CMD: SEQ help");
+        serialOut().println("CMD: SEQ stop");
+        serialOut().println("CMD: SELFTEST | SELFTEST chirp n=5 gap_ms=1500 | SELFTEST help");
         return;
     }
 
@@ -286,9 +287,9 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             const bool freqOk = FrequencyMatchCriteria::parseToken(token, freqTuning);
             const bool scalarOk = parseScalarTransientToken(token, scalarTuning);
             if (!freqOk && !scalarOk) {
-                Serial.print("ERR PARAM token=");
-                Serial.print(token);
-                Serial.println(" (unknown key or invalid value; unchanged)");
+                serialOut().print("ERR PARAM token=");
+                serialOut().print(token);
+                serialOut().println(" (unknown key or invalid value; unchanged)");
             }
         } while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr);
 
@@ -350,9 +351,9 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         _analyzerTuning.frequencyMatch = freqTuning;
         _analyzerTuning.scalarTransient = scalarTuning;
         if (printedAny) {
-            Serial.println();
+            serialOut().println();
         } else {
-            Serial.println("PARAM no_change");
+            serialOut().println("PARAM no_change");
         }
         return;
     }
@@ -397,8 +398,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     ok = (list[i] >= '0' && list[i] <= '9') || list[i] == ',';
                 }
                 if (!ok) {
-                    Serial.print("ERR RAW bad value token=");
-                    Serial.println(token);
+                    serialOut().print("ERR RAW bad value token=");
+                    serialOut().println(token);
                     return;
                 }
                 strncpy(shape.hop, list, sizeof(shape.hop) - 1);
@@ -418,7 +419,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
 
         if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, rawMode, shape)) {
-            Serial.println("OK RAW");
+            serialOut().println("OK RAW");
         }
         return;
     }
@@ -450,7 +451,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         bool valid = false;
         const bool enabled = parseOnOffToken(enabledToken, &valid);
         if (!valid) {
-            Serial.println("ERR SEQ unknown diagnostics use DIAG on|off");
+            serialOut().println("ERR SEQ unknown diagnostics use DIAG on|off");
             return;
         }
         _seqOutputConfig.diagnosticsEnabled = enabled;
@@ -458,8 +459,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _sequenceTest.outputConfig.diagnosticsEnabled = enabled;
             _detection.setDiagnosticsEnabled(enabled);
         }
-        Serial.print("OK SEQ DIAG ");
-        Serial.println(onOffName(enabled));
+        serialOut().print("OK SEQ DIAG ");
+        serialOut().println(onOffName(enabled));
         return;
     }
 
@@ -468,27 +469,27 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         bool valid = false;
         const bool enabled = parseOnOffToken(enabledToken, &valid);
         if (!valid) {
-            Serial.println("ERR SEQ unknown freqband use FREQBAND on|off");
+            serialOut().println("ERR SEQ unknown freqband use FREQBAND on|off");
             return;
         }
         _seqOutputConfig.frequencyBandEnabled = enabled;
         if (_sequenceTest.active) {
             _sequenceTest.outputConfig.frequencyBandEnabled = enabled;
         }
-        Serial.print("OK SEQ FREQBAND ");
-        Serial.println(onOffName(enabled));
+        serialOut().print("OK SEQ FREQBAND ");
+        serialOut().println(onOffName(enabled));
         return;
     }
 
     if (equalsIgnoreCase(token, "FREQUPDATEEVERYSAMPLES")) {
         const char* decimateToken = strtok_r(nullptr, " ", &savePtr);
         if (decimateToken == nullptr || *decimateToken == '\0') {
-            Serial.println("ERR SEQ missing freqUpdateEverySamples use FREQUPDATEEVERYSAMPLES 1|4|8|16");
+            serialOut().println("ERR SEQ missing freqUpdateEverySamples use FREQUPDATEEVERYSAMPLES 1|4|8|16");
             return;
         }
         const unsigned long decimation = strtoul(decimateToken, nullptr, 10);
         if (decimation == 0UL) {
-            Serial.println("ERR SEQ freqUpdateEverySamples out of range use N>=1");
+            serialOut().println("ERR SEQ freqUpdateEverySamples out of range use N>=1");
             return;
         }
         _seqOutputConfig.frequencyUpdateEverySamples = decimation;
@@ -496,8 +497,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         if (_sequenceTest.active) {
             _sequenceTest.outputConfig.frequencyUpdateEverySamples = decimation;
         }
-        Serial.print("OK SEQ FREQUPDATEEVERYSAMPLES ");
-        Serial.println(decimation);
+        serialOut().print("OK SEQ FREQUPDATEEVERYSAMPLES ");
+        serialOut().println(decimation);
         return;
     }
 
@@ -506,7 +507,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool valid = false;
             const AnalyzerApp::SeqOutputMode mode = AnalyzerApp::sequenceOutputModeFromToken(modeToken, &valid);
             if (!valid) {
-            Serial.println("ERR SEQ unknown mode use MODE quiet|trial|inspect|source|system|detail");
+            serialOut().println("ERR SEQ unknown mode use MODE quiet|trial|inspect|source|system|detail");
                 return;
             }
             _seqOutputConfig.mode = mode;
@@ -523,8 +524,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     _detection.setDiagnosticsEnabled(false);
                 }
             }
-            Serial.print("OK SEQ MODE ");
-            Serial.println(AnalyzerApp::sequenceOutputModeName(mode));
+            serialOut().print("OK SEQ MODE ");
+            serialOut().println(AnalyzerApp::sequenceOutputModeName(mode));
             return;
         }
 
@@ -533,7 +534,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool valid = false;
             const AnalyzerApp::SeqOutputWhen when = AnalyzerApp::sequenceOutputWhenFromToken(whenToken, &valid);
             if (!valid) {
-                Serial.println("ERR SEQ unknown when use WHEN off|miss|all");
+                serialOut().println("ERR SEQ unknown when use WHEN off|miss|all");
                 return;
             }
             _seqOutputConfig.when = when;
@@ -543,16 +544,16 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 _sequenceTest.diagMode = AnalyzerApp::sequenceDiagModeFromOutputWhen(when);
                 _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
             }
-            Serial.print("OK SEQ WHEN ");
-            Serial.println(AnalyzerApp::sequenceOutputWhenName(when));
+            serialOut().print("OK SEQ WHEN ");
+            serialOut().println(AnalyzerApp::sequenceOutputWhenName(when));
             return;
         }
 
         if (equalsIgnoreCase(token, "PROFILE")) {
             const char* profileToken = strtok_r(nullptr, " ", &savePtr);
             if (profileToken == nullptr || *profileToken == '\0') {
-                Serial.print("SEQ PROFILE ");
-                Serial.println(detection::detectionProfileName(_seqOutputConfig.profileKind));
+                serialOut().print("SEQ PROFILE ");
+                serialOut().println(detection::detectionProfileName(_seqOutputConfig.profileKind));
                 return;
             }
 
@@ -560,52 +561,52 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             const bool validProfile = detection::detectionProfileKindFromName(profileToken, profileKind);
 
             if (!validProfile) {
-                Serial.print("ERR SEQ unknown profile=");
-                Serial.print(profileToken);
-                Serial.println(" use PROFILE TonalPulseFreq, PROFILE TonalPulseScalar or PROFILE AmpExperimental");
+                serialOut().print("ERR SEQ unknown profile=");
+                serialOut().print(profileToken);
+                serialOut().println(" use PROFILE TonalPulseFreq, PROFILE TonalPulseScalar or PROFILE AmpExperimental");
                 return;
             }
 
             _seqOutputConfig.profileKind = profileKind;
-            Serial.print("OK SEQ PROFILE ");
-            Serial.println(detection::detectionProfileName(_seqOutputConfig.profileKind));
+            serialOut().print("OK SEQ PROFILE ");
+            serialOut().println(detection::detectionProfileName(_seqOutputConfig.profileKind));
             return;
         }
 
         if (equalsIgnoreCase(token, "VERBOSE")) {
             const char* verbosityToken = strtok_r(nullptr, " ", &savePtr);
             if (verbosityToken == nullptr || *verbosityToken == '\0') {
-                Serial.println("ERR SEQ missing verbosity use VERBOSE 0|1|2");
+                serialOut().println("ERR SEQ missing verbosity use VERBOSE 0|1|2");
                 return;
             }
             const unsigned long verbosity = strtoul(verbosityToken, nullptr, 10);
             if (verbosity > 2UL) {
-                Serial.println("ERR SEQ verbosity out of range use 0|1|2");
+                serialOut().println("ERR SEQ verbosity out of range use 0|1|2");
                 return;
             }
             _seqOutputConfig.verbosity = static_cast<uint8_t>(verbosity);
             if (_sequenceTest.active) {
                 _sequenceTest.outputConfig.verbosity = _seqOutputConfig.verbosity;
             }
-            Serial.print("OK SEQ VERBOSE ");
-            Serial.println(static_cast<unsigned long>(_seqOutputConfig.verbosity));
+            serialOut().print("OK SEQ VERBOSE ");
+            serialOut().println(static_cast<unsigned long>(_seqOutputConfig.verbosity));
             return;
         }
 
         if (equalsIgnoreCase(token, "TRIES")) {
             const char* trialsToken = strtok_r(nullptr, " ", &savePtr);
             if (trialsToken == nullptr || *trialsToken == '\0') {
-                Serial.println("ERR SEQ missing tries use TRIES N");
+                serialOut().println("ERR SEQ missing tries use TRIES N");
                 return;
             }
             const unsigned long totalTrials = strtoul(trialsToken, nullptr, 10);
             if (totalTrials == 0UL) {
-                Serial.println("ERR SEQ tries out of range use N>=1");
+                serialOut().println("ERR SEQ tries out of range use N>=1");
                 return;
             }
             _seqOutputConfig.totalTrials = totalTrials;
-            Serial.print("OK SEQ TRIES ");
-            Serial.println(_seqOutputConfig.totalTrials);
+            serialOut().print("OK SEQ TRIES ");
+            serialOut().println(_seqOutputConfig.totalTrials);
             return;
         }
 
@@ -622,7 +623,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         if (equalsIgnoreCase(token, "STOP")) {
             printSequenceSummaryClean();
             stopSequenceTest();
-            Serial.println("OK SEQ STOP");
+            serialOut().println("OK SEQ STOP");
             return;
         }
 
@@ -675,34 +676,34 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     totalTrialsSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "tries=")) {
                     if (!parseUnsignedValue(token + 6, _pendingSequenceStart.totalTrials)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                     totalTrialsSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "period=")) {
                     if (!parseUnsignedValue(token + 7, _pendingSequenceStart.periodMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "window=")) {
                     windowSet = true;
                     if (!parseUnsignedValue(token + 7, _pendingSequenceStart.windowEndOffsetMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "freq=")) {
                     if (!parseUnsignedValue(token + 5, _pendingSequenceStart.toneHz)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "dur=")) {
                     if (!parseUnsignedValue(token + 4, _pendingSequenceStart.durationMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "band=")) {
@@ -715,8 +716,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         const unsigned long lo = strtoul(spec, &dash, 10);
                         const unsigned long hi = (dash != nullptr && *dash == '-') ? strtoul(dash + 1, nullptr, 10) : 0UL;
                         if (lo == 0 || hi < lo || hi > 7900UL) {
-                            Serial.print("ERR SEQ bad value token=");
-                            Serial.println(token);
+                            serialOut().print("ERR SEQ bad value token=");
+                            serialOut().println(token);
                             return;
                         }
                         _pendingSequenceStart.bandLowHz = lo;
@@ -730,8 +731,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         ok = (list[i] >= '0' && list[i] <= '9') || list[i] == ',';
                     }
                     if (!ok) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                     strncpy(_pendingSequenceStart.pulseHop, list, sizeof(_pendingSequenceStart.pulseHop) - 1);
@@ -739,39 +740,39 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
                     if (!parseUnsignedValue(token + 6, _pendingSequenceStart.sweepToHz) ||
                         _pendingSequenceStart.sweepToHz > 7900UL) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
                     if (!parseUnsignedValue(token + 7, _pendingSequenceStart.pulseCount)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "gap=")) {
                     if (!parseUnsignedValue(token + 4, _pendingSequenceStart.pulseGapMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "ramp=")) {
                     if (!parseUnsignedValue(token + 5, _pendingSequenceStart.pulseRampMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                     _pendingSequenceStart.pulseRampSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "delay=") || startsWithTokenIgnoreCase(token, "warmup=")) {
                     if (!parseUnsignedValue(strchr(token, '=') + 1, _pendingSequenceStart.startupDelayMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "report_settle=") || startsWithTokenIgnoreCase(token, "settle=")) {
                     if (!parseUnsignedValue(strchr(token, '=') + 1, _pendingSequenceStart.reportSettleMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (equalsIgnoreCase(token, "quiet")) {
@@ -786,18 +787,18 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         profileSeen = true;
                     } else {
                         profileValid = false;
-                        Serial.print("ERR SEQ unknown profile=");
-                        Serial.print(profileValue);
-                        Serial.println(" use profile=TonalPulseFreq, profile=TonalPulseScalar or profile=AmpExperimental");
+                        serialOut().print("ERR SEQ unknown profile=");
+                        serialOut().print(profileValue);
+                        serialOut().println(" use profile=TonalPulseFreq, profile=TonalPulseScalar or profile=AmpExperimental");
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "mode=")) {
                     bool valid = false;
                     outputConfig.mode = AnalyzerApp::sequenceOutputModeFromToken(token + 5, &valid);
                     if (!valid) {
-                        Serial.print("ERR SEQ unknown mode=");
-                        Serial.print(token + 5);
-                    Serial.println(" use mode=quiet, mode=trial, mode=inspect, mode=source, mode=system or mode=detail");
+                        serialOut().print("ERR SEQ unknown mode=");
+                        serialOut().print(token + 5);
+                    serialOut().println(" use mode=quiet, mode=trial, mode=inspect, mode=source, mode=system or mode=detail");
                         return;
                     }
                     if (outputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet) {
@@ -808,17 +809,17 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     bool valid = false;
                     outputConfig.when = AnalyzerApp::sequenceOutputWhenFromToken(token + 5, &valid);
                     if (!valid) {
-                        Serial.print("ERR SEQ unknown when=");
-                        Serial.print(token + 5);
-                        Serial.println(" use when=off, when=miss or when=all");
+                        serialOut().print("ERR SEQ unknown when=");
+                        serialOut().print(token + 5);
+                        serialOut().println(" use when=off, when=miss or when=all");
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "verbose=")) {
                     const unsigned long verbosity = strtoul(token + 8, nullptr, 10);
                     if (verbosity > 2UL) {
-                        Serial.print("ERR SEQ verbose=");
-                        Serial.print(verbosity);
-                        Serial.println(" use 0|1|2");
+                        serialOut().print("ERR SEQ verbose=");
+                        serialOut().print(verbosity);
+                        serialOut().println(" use 0|1|2");
                         return;
                     }
                     outputConfig.verbosity = static_cast<uint8_t>(verbosity);
@@ -827,50 +828,50 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     bool valid = false;
                     const bool enabled = parseOnOffToken(valueToken, &valid);
                     if (!valid) {
-                        Serial.println("ERR SEQ diagnostics use diag=on|off");
+                        serialOut().println("ERR SEQ diagnostics use diag=on|off");
                         return;
                     }
                     outputConfig.diagnosticsEnabled = enabled;
                 } else if (startsWithTokenIgnoreCase(token, "sampleFirst=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
                     if (!parseUnsignedValue(token + 12, _pendingSequenceStart.sampleDumpFirstTrials)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleEvery=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
                     if (!parseUnsignedValue(token + 12, _pendingSequenceStart.sampleDumpEveryNth)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleLead=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
                     if (!parseUnsignedValue(token + 11, _pendingSequenceStart.sampleDumpLeadMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleTail=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
                     if (!parseUnsignedValue(token + 11, _pendingSequenceStart.sampleDumpTailMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleStep=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
                     if (!parseUnsignedValue(token + 11, _pendingSequenceStart.sampleDumpStepMs)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleMax=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
                     if (!parseUnsignedValue(token + 10, _pendingSequenceStart.sampleDumpMaxRows)) {
-                        Serial.print("ERR SEQ bad value token=");
-                        Serial.println(token);
+                        serialOut().print("ERR SEQ bad value token=");
+                        serialOut().println(token);
                         return;
                     }
                 } else if (equalsIgnoreCase(token, "external")) {
@@ -888,8 +889,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 } else {
                     // Unknown keys used to be ignored, so "perod=3000" ran on
                     // defaults with OK SEQ (issue #31 R2-19).
-                    Serial.print("ERR SEQ unknown token=");
-                    Serial.println(token);
+                    serialOut().print("ERR SEQ unknown token=");
+                    serialOut().println(token);
                     return;
                 }
             }
@@ -901,7 +902,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                  _pendingSequenceStart.durationMs > 1000 || _pendingSequenceStart.pulseGapMs == 0 ||
                  _pendingSequenceStart.pulseGapMs > 2000 ||
                  (_pendingSequenceStart.pulseRampSet && _pendingSequenceStart.pulseRampMs > 50))) {
-                Serial.println("ERR SEQ pulses use pulses=1-50 dur=1-1000 gap=1-2000 [ramp=0-50]");
+                serialOut().println("ERR SEQ pulses use pulses=1-50 dur=1-1000 gap=1-2000 [ramp=0-50]");
                 return;
             }
 
@@ -928,7 +929,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _pendingSequenceStart.setupLabel = _pendingSequenceStart.setupLabelStorage;
             _seqOutputConfig = outputConfig;
             _pendingSequenceStart.active = true;
-            Serial.println("OK SEQ");
+            serialOut().println("OK SEQ");
             return;
         }
 
@@ -938,40 +939,40 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         if (startsWithTokenIgnoreCase(line, "EMIT CHIRP")) {
             sendEmitterCommand("MODE REMOTE");
             if (!waitForEmitterAck("OK MODE REMOTE", 1500)) {
-                Serial.println("ERR EMIT CHIRP emitter_remote_claim_timeout");
+                serialOut().println("ERR EMIT CHIRP emitter_remote_claim_timeout");
                 return;
             }
             sendEmitterCommand(line + 5);
-            Serial.println("OK EMIT CHIRP");
+            serialOut().println("OK EMIT CHIRP");
             return;
         }
         if (startsWithTokenIgnoreCase(line, "EMIT PULSES")) {
             sendEmitterCommand("MODE REMOTE");
             if (!waitForEmitterAck("OK MODE REMOTE", 1500)) {
-                Serial.println("ERR EMIT PULSES emitter_remote_claim_timeout");
+                serialOut().println("ERR EMIT PULSES emitter_remote_claim_timeout");
                 return;
             }
             sendEmitterCommand(line + 5);
-            Serial.println("OK EMIT PULSES");
+            serialOut().println("OK EMIT PULSES");
             return;
         }
         if (startsWithTokenIgnoreCase(line, "EMIT MODE REMOTE")) {
             sendEmitterCommand("MODE REMOTE");
-            Serial.println("OK EMIT MODE REMOTE");
+            serialOut().println("OK EMIT MODE REMOTE");
             return;
         }
         if (startsWithTokenIgnoreCase(line, "EMIT MODE AUTO")) {
             sendEmitterCommand(line + 5);
-            Serial.println("OK EMIT MODE AUTO");
+            serialOut().println("OK EMIT MODE AUTO");
             return;
         }
         if (startsWithTokenIgnoreCase(line, "EMIT SWEEP")) {
             sendEmitterCommand(line + 5);
-            Serial.println("OK EMIT SWEEP");
+            serialOut().println("OK EMIT SWEEP");
             return;
         }
     }
 
-    Serial.print("EVT analyzer_unknown_cmd line=");
-    Serial.println(line);
+    serialOut().print("EVT analyzer_unknown_cmd line=");
+    serialOut().println(line);
 }

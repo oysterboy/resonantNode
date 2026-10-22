@@ -6,6 +6,7 @@
 #include "../../selftest/AudioSelfTest.h"
 #include "../../app/TimeBase.h"
 #include "../../app/TimingUtils.h"
+#include "../../app/SerialOut.h"
 
 /*
 Node SELFTEST (NODE-015, docs/refactors/archive/selftest.md)
@@ -79,14 +80,14 @@ void Node::noteRebaseResult(RbRebaseResult result) {
 void Node::handleSelfTestCommand(const char* line) {
     const selftest::Command command = selftest::parseCommand(line);
     if (command.kind == selftest::Command::Kind::Help || command.kind == selftest::Command::Kind::Unknown) {
-        selftest::printHelp(Serial, true);
+        selftest::printHelp(serialOut(), true);
         return;
     }
     if (command.kind == selftest::Command::Kind::None) {
         return;
     }
     if (_selfTest.phase != SelfTestState::Phase::Idle) {
-        Serial.println("SELFTEST busy");
+        serialOut().println("SELFTEST busy");
         return;
     }
 
@@ -97,14 +98,14 @@ void Node::handleSelfTestCommand(const char* line) {
 
     switch (command.kind) {
         case selftest::Command::Kind::Full:
-            selftest::printBegin(Serial, "node", "full");
-            selftest::printBoard(Serial, _selfTest.tally, "node");
+            selftest::printBegin(serialOut(), "node", "full");
+            selftest::printBoard(serialOut(), _selfTest.tally, "node");
             _selfTest.phase = SelfTestState::Phase::QuietBoot;
             _selfTest.deadlineMs = now + kQuietBootWaitMs;
             break;
         case selftest::Command::Kind::External:
-            selftest::printBegin(Serial, "node", "external");
-            selftest::printBoard(Serial, _selfTest.tally, "node");
+            selftest::printBegin(serialOut(), "node", "external");
+            selftest::printBoard(serialOut(), _selfTest.tally, "node");
             _selfTest.phase = SelfTestState::Phase::Settle;
             _selfTest.deadlineMs = now + kOutputsWaitMs;
             break;
@@ -151,8 +152,8 @@ void Node::updateSelfTest(unsigned long now) {
                 return;
             }
             if (st.command.kind == selftest::Command::Kind::External) {
-                Serial.print("SELFTEST_EXTERNAL waiting wait_ms=");
-                Serial.println(st.command.waitMs);
+                serialOut().print("SELFTEST_EXTERNAL waiting wait_ms=");
+                serialOut().println(st.command.waitMs);
                 st.phase = SelfTestState::Phase::External;
                 st.phaseStartMs = now;
                 st.deadlineMs = now + st.command.waitMs;
@@ -164,19 +165,19 @@ void Node::updateSelfTest(unsigned long now) {
             }
             if (st.command.kind == selftest::Command::Kind::Full
                 && (st.micResult != selftest::Result::Pass || st.ampResult != selftest::Result::Pass)) {
-                selftest::skip(Serial, st.tally, "own_chirp_suppressed",
+                selftest::skip(serialOut(), st.tally, "own_chirp_suppressed",
                                st.micResult != selftest::Result::Pass ? "mic_failed" : "amp_failed");
-                selftest::skip(Serial, st.tally, "external_chirp", "not_requested");
+                selftest::skip(serialOut(), st.tally, "external_chirp", "not_requested");
                 finishSelfTest();
                 return;
             }
             if (st.command.kind == selftest::Command::Kind::Chirp) {
-                Serial.print("SELFTEST_CHIRP start n=");
-                Serial.print(st.command.chirps);
-                Serial.print(" freq_hz=");
-                Serial.print(_chirpOutput.toneHz());
-                Serial.print(" path=behavior gap_ms=");
-                Serial.println(st.command.gapMs);
+                serialOut().print("SELFTEST_CHIRP start n=");
+                serialOut().print(st.command.chirps);
+                serialOut().print(" freq_hz=");
+                serialOut().print(_chirpOutput.toneHz());
+                serialOut().print(" path=behavior gap_ms=");
+                serialOut().println(st.command.gapMs);
             }
             startSelfTestChirps(SelfTestState::Phase::OwnChirp, now);
             return;
@@ -217,19 +218,19 @@ void Node::printSelfTestQuietBoot() {
         result = selftest::Result::Fail;
         reason = "timeout";
     }
-    selftest::begin(Serial, _selfTest.tally, "quiet_boot", result);
+    selftest::begin(serialOut(), _selfTest.tally, "quiet_boot", result);
     if (reason != nullptr) {
-        selftest::field(Serial, "reason", reason);
+        selftest::field(serialOut(), "reason", reason);
     }
-    selftest::field(Serial, "state", rbBaselineStateName());
-    selftest::field(Serial, "boot", rebaseResultName(static_cast<uint8_t>(_rbBootRebaseResult)));
-    selftest::field(Serial, "last", rebaseResultName(last));
-    selftest::field(Serial, "last_at_ms", _rbLastRebaseAtMs);
-    selftest::field(Serial, "smooth_at_rebase", _rbLastRebaseSmooth, 1);
-    selftest::field(Serial, "quiet_rebases", _rbQuietRebaseCount);
-    selftest::field(Serial, "forced_rebases", _rbForcedRebaseCount);
-    selftest::field(Serial, "baseline", _audioSignal.baseline(), 1);
-    selftest::end(Serial);
+    selftest::field(serialOut(), "state", rbBaselineStateName());
+    selftest::field(serialOut(), "boot", rebaseResultName(static_cast<uint8_t>(_rbBootRebaseResult)));
+    selftest::field(serialOut(), "last", rebaseResultName(last));
+    selftest::field(serialOut(), "last_at_ms", _rbLastRebaseAtMs);
+    selftest::field(serialOut(), "smooth_at_rebase", _rbLastRebaseSmooth, 1);
+    selftest::field(serialOut(), "quiet_rebases", _rbQuietRebaseCount);
+    selftest::field(serialOut(), "forced_rebases", _rbForcedRebaseCount);
+    selftest::field(serialOut(), "baseline", _audioSignal.baseline(), 1);
+    selftest::end(serialOut());
 }
 
 void Node::runSelfTestHardware(unsigned long now) {
@@ -242,11 +243,11 @@ void Node::runSelfTestHardware(unsigned long now) {
     }
 
     SelfTestState& st = _selfTest;
-    st.micResult = selftest::runMicCheck(Serial, st.tally, _i2sSource);
+    st.micResult = selftest::runMicCheck(serialOut(), st.tally, _i2sSource);
     if (st.micResult != selftest::Result::Pass) {
-        selftest::skip(Serial, st.tally, "quiet_boot", "mic_failed");
+        selftest::skip(serialOut(), st.tally, "quiet_boot", "mic_failed");
         st.ampResult = selftest::Result::Skip;
-        selftest::skip(Serial, st.tally, "amp", "mic_failed");
+        selftest::skip(serialOut(), st.tally, "amp", "mic_failed");
     } else {
         printSelfTestQuietBoot();
 #if defined(BOARD_PIEZO)
@@ -254,7 +255,7 @@ void Node::runSelfTestHardware(unsigned long now) {
 #else
         const char* path = "i2s";
 #endif
-        st.ampResult = selftest::runAmpCheck(Serial, st.tally, _i2sSource, _chirpOutput.toneOutput(),
+        st.ampResult = selftest::runAmpCheck(serialOut(), st.tally, _i2sSource, _chirpOutput.toneOutput(),
                                              _chirpOutput.toneHz(), path);
     }
     restoreAfterSelfTestHardware();
@@ -284,8 +285,8 @@ void Node::restoreAfterSelfTestHardware() {
         _rbBaselineSettleUntilMs = timebase::nowMs() + kSettleAfterHardwareMs;
     }
     _debug.markLoopStart(timebase::nowUs());
-    Serial.print("SELFTEST_RESTORE detection=reset baseline=");
-    Serial.println(rbBaselineStateName());
+    serialOut().print("SELFTEST_RESTORE detection=reset baseline=");
+    serialOut().println(rbBaselineStateName());
 }
 
 void Node::startSelfTestChirps(SelfTestState::Phase phase, unsigned long now) {
@@ -309,10 +310,10 @@ void Node::driveSelfTestChirps(unsigned long now) {
     SelfTestState& st = _selfTest;
     if (st.chirpsFinished >= st.command.chirps) {
         if (st.command.kind == selftest::Command::Kind::Chirp) {
-            Serial.print("SELFTEST_CHIRP done n=");
-            Serial.print(st.command.chirps);
-            Serial.print(" started=");
-            Serial.println(st.chirpsStarted);
+            serialOut().print("SELFTEST_CHIRP done n=");
+            serialOut().print(st.command.chirps);
+            serialOut().print(" started=");
+            serialOut().println(st.chirpsStarted);
             finishSelfTest();
             return;
         }
@@ -322,11 +323,11 @@ void Node::driveSelfTestChirps(unsigned long now) {
     }
     if (deadlinePassed(now, st.deadlineMs)) {
         if (st.command.kind == selftest::Command::Kind::Chirp) {
-            Serial.print("SELFTEST_CHIRP done n=");
-            Serial.print(st.command.chirps);
-            Serial.print(" started=");
-            Serial.print(st.chirpsStarted);
-            Serial.println(" reason=timeout");
+            serialOut().print("SELFTEST_CHIRP done n=");
+            serialOut().print(st.command.chirps);
+            serialOut().print(" started=");
+            serialOut().print(st.chirpsStarted);
+            serialOut().println(" reason=timeout");
             finishSelfTest();
             return;
         }
@@ -349,42 +350,42 @@ void Node::finishSelfTestOwnChirp(bool timedOut) {
     } else if (timedOut || st.chirpsStarted < st.command.chirps) {
         reason = "chirp_not_started";
     }
-    selftest::begin(Serial, st.tally, "own_chirp_suppressed",
+    selftest::begin(serialOut(), st.tally, "own_chirp_suppressed",
                     reason == nullptr ? selftest::Result::Pass : selftest::Result::Fail);
     if (reason != nullptr) {
-        selftest::field(Serial, "reason", reason);
+        selftest::field(serialOut(), "reason", reason);
     }
-    selftest::field(Serial, "chirps", static_cast<unsigned long>(st.command.chirps));
-    selftest::field(Serial, "started", static_cast<unsigned long>(st.chirpsStarted));
-    selftest::field(Serial, "verdicts", st.ownVerdicts);
-    selftest::field(Serial, "valid", st.ownValid);
-    selftest::field(Serial, "other_verdicts", st.otherVerdicts);
-    selftest::field(Serial, "other_valid", st.otherValid);
-    selftest::field(Serial, "echo_window_ms", kEchoWindowMs);
-    selftest::field(Serial, "suppress_tail_ms", _behavior.detectionSuppressTailMsOwnEmit());
-    selftest::end(Serial);
+    selftest::field(serialOut(), "chirps", static_cast<unsigned long>(st.command.chirps));
+    selftest::field(serialOut(), "started", static_cast<unsigned long>(st.chirpsStarted));
+    selftest::field(serialOut(), "verdicts", st.ownVerdicts);
+    selftest::field(serialOut(), "valid", st.ownValid);
+    selftest::field(serialOut(), "other_verdicts", st.otherVerdicts);
+    selftest::field(serialOut(), "other_valid", st.otherValid);
+    selftest::field(serialOut(), "echo_window_ms", kEchoWindowMs);
+    selftest::field(serialOut(), "suppress_tail_ms", _behavior.detectionSuppressTailMsOwnEmit());
+    selftest::end(serialOut());
 
-    selftest::skip(Serial, st.tally, "external_chirp", "not_requested");
+    selftest::skip(serialOut(), st.tally, "external_chirp", "not_requested");
     finishSelfTest();
 }
 
 void Node::finishSelfTestExternal(unsigned long now) {
     SelfTestState& st = _selfTest;
     if (st.otherValid > 0) {
-        selftest::begin(Serial, st.tally, "external_chirp", selftest::Result::Pass);
+        selftest::begin(serialOut(), st.tally, "external_chirp", selftest::Result::Pass);
     } else {
-        selftest::begin(Serial, st.tally, "external_chirp", selftest::Result::Skip);
-        selftest::field(Serial, "reason", "no_external_chirp");
+        selftest::begin(serialOut(), st.tally, "external_chirp", selftest::Result::Skip);
+        selftest::field(serialOut(), "reason", "no_external_chirp");
     }
-    selftest::field(Serial, "wait_ms", static_cast<unsigned long>(st.command.waitMs));
-    selftest::field(Serial, "latency_ms",
+    selftest::field(serialOut(), "wait_ms", static_cast<unsigned long>(st.command.waitMs));
+    selftest::field(serialOut(), "latency_ms",
                     st.firstOtherValidMs != 0 ? st.firstOtherValidMs - st.phaseStartMs : 0UL);
-    selftest::field(Serial, "valid", st.otherValid);
-    selftest::field(Serial, "verdicts", st.otherVerdicts);
-    selftest::field(Serial, "own_verdicts", st.ownVerdicts);
-    selftest::field(Serial, "responded", st.responses > 0 ? 1UL : 0UL);
-    selftest::field(Serial, "baseline", rbBaselineStateName());
-    selftest::end(Serial);
+    selftest::field(serialOut(), "valid", st.otherValid);
+    selftest::field(serialOut(), "verdicts", st.otherVerdicts);
+    selftest::field(serialOut(), "own_verdicts", st.ownVerdicts);
+    selftest::field(serialOut(), "responded", st.responses > 0 ? 1UL : 0UL);
+    selftest::field(serialOut(), "baseline", rbBaselineStateName());
+    selftest::end(serialOut());
     (void)now;
     finishSelfTest();
 }
@@ -393,7 +394,7 @@ void Node::finishSelfTest() {
     // A request Behavior never took (timeout) must not fire later.
     _behavior.cancelTestChirp();
     if (_selfTest.command.kind != selftest::Command::Kind::Chirp) {
-        selftest::printSummary(Serial, _selfTest.tally, "node");
+        selftest::printSummary(serialOut(), _selfTest.tally, "node");
     }
     _selfTest.phase = SelfTestState::Phase::Idle;
 }

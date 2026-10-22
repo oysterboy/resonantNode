@@ -5,6 +5,7 @@
 
 #include "../../../app/TimeBase.h"
 #include "../../../app/TimingUtils.h"
+#include "../../../app/SerialOut.h"
 
 namespace {
 
@@ -88,10 +89,10 @@ void AnalyzerApp::flushSequenceSampleHistory(unsigned long currentSampleMs) {
 
     if (_sequenceTest.sampleRowCount >= SequenceTest::kMaxSampleRows) {
         if (!_sequenceTest.sampleDumpWarned) {
-            Serial.print("SAMPLES_WARN reason=too_many_samples requested=");
-            Serial.print(_sequenceTest.sampleRowCount + 1UL);
-            Serial.print(" max_allowed=");
-            Serial.println(SequenceTest::kMaxSampleRows);
+            serialOut().print("SAMPLES_WARN reason=too_many_samples requested=");
+            serialOut().print(_sequenceTest.sampleRowCount + 1UL);
+            serialOut().print(" max_allowed=");
+            serialOut().println(SequenceTest::kMaxSampleRows);
             _sequenceTest.sampleDumpWarned = true;
         }
         _sequenceTest.sampleDumpCapturing = false;
@@ -156,10 +157,10 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
                 _sequenceTest.sampleRows[_sequenceTest.sampleRowCount++] = snapshot;
                 _sequenceTest.sampleDumpNextEmitMs = snapshot.sampleMs + _sequenceTest.sampleDumpStepMs;
             } else if (!_sequenceTest.sampleDumpWarned) {
-                Serial.print("SAMPLES_WARN reason=too_many_samples requested=");
-                Serial.print(_sequenceTest.sampleRowCount + 1UL);
-                Serial.print(" max_allowed=");
-                Serial.println(SequenceTest::kMaxSampleRows);
+                serialOut().print("SAMPLES_WARN reason=too_many_samples requested=");
+                serialOut().print(_sequenceTest.sampleRowCount + 1UL);
+                serialOut().print(" max_allowed=");
+                serialOut().println(SequenceTest::kMaxSampleRows);
                 _sequenceTest.sampleDumpWarned = true;
                 _sequenceTest.sampleDumpCapturing = false;
                 break;
@@ -174,33 +175,33 @@ void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
         return;
     }
 
-    Serial.print("SAMPLES_BEGIN trial=");
-    Serial.print(trialNumber);
-    Serial.print(" source=detector_input trigger_ms=");
-    Serial.print(_sequenceTest.sampleDumpTriggerMs);
-    Serial.print(" sample_rate_ms=");
-    Serial.print(_sequenceTest.sampleDumpStepMs);
-    Serial.print(" fields=t,value");
-    Serial.println();
-    Serial.print("SAMPLES_NOTE trial=");
-    Serial.print(trialNumber);
-    Serial.print(" input=");
-    Serial.print(detectorInputName(_sequenceTest.sampleDumpDetectorSelection, _sequenceTest.sampleDumpObservedStream));
-    Serial.print(" rows_cap=");
-    Serial.print(SequenceTest::kMaxSampleRows);
-    Serial.print(" sample_max_budget=");
-    Serial.print(_sequenceTest.sampleDumpMaxRows);
-    Serial.print(" value=detector_input_scalar");
-    Serial.println();
+    serialOut().print("SAMPLES_BEGIN trial=");
+    serialOut().print(trialNumber);
+    serialOut().print(" source=detector_input trigger_ms=");
+    serialOut().print(_sequenceTest.sampleDumpTriggerMs);
+    serialOut().print(" sample_rate_ms=");
+    serialOut().print(_sequenceTest.sampleDumpStepMs);
+    serialOut().print(" fields=t,value");
+    serialOut().println();
+    serialOut().print("SAMPLES_NOTE trial=");
+    serialOut().print(trialNumber);
+    serialOut().print(" input=");
+    serialOut().print(detectorInputName(_sequenceTest.sampleDumpDetectorSelection, _sequenceTest.sampleDumpObservedStream));
+    serialOut().print(" rows_cap=");
+    serialOut().print(SequenceTest::kMaxSampleRows);
+    serialOut().print(" sample_max_budget=");
+    serialOut().print(_sequenceTest.sampleDumpMaxRows);
+    serialOut().print(" value=detector_input_scalar");
+    serialOut().println();
 
     for (size_t i = 0; i < _sequenceTest.sampleRowCount; ++i) {
         const auto& sample = _sequenceTest.sampleRows[i];
         const long tMs = static_cast<long>(timing::delta(sample.sampleMs, _sequenceTest.sampleDumpTriggerSampleMs));
-        Serial.print(tMs);
-        Serial.print(",");
-        Serial.println(sample.value, 3);
+        serialOut().print(tMs);
+        serialOut().print(",");
+        serialOut().println(sample.value, 3);
     }
 
-    Serial.print("SAMPLES_END trial=");
-    Serial.println(trialNumber);
+    serialOut().print("SAMPLES_END trial=");
+    serialOut().println(trialNumber);
 }

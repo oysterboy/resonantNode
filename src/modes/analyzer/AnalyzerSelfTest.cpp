@@ -4,6 +4,7 @@
 
 #include "../../selftest/AudioSelfTest.h"
 #include "../../app/TimeBase.h"
+#include "../../app/SerialOut.h"
 
 /*
 Analyzer SELFTEST (NODE-015, docs/refactors/archive/selftest.md)
@@ -23,22 +24,22 @@ void AnalyzerApp::handleSelfTestCommand(const char* line) {
         return;
     }
     if (command.kind == selftest::Command::Kind::Help || command.kind == selftest::Command::Kind::Unknown) {
-        selftest::printHelp(Serial, false);
+        selftest::printHelp(serialOut(), false);
         return;
     }
     if (_sequenceTest.active || _pendingSequenceStart.active) {
-        Serial.println("SELFTEST busy reason=seq_active");
+        serialOut().println("SELFTEST busy reason=seq_active");
         return;
     }
 
     if (command.kind == selftest::Command::Kind::Chirp) {
 #if defined(BOARD_PIEZO)
-        Serial.print("SELFTEST_CHIRP done n=");
-        Serial.print(command.chirps);
-        Serial.println(" started=0 reason=no_output_in_build");
+        serialOut().print("SELFTEST_CHIRP done n=");
+        serialOut().print(command.chirps);
+        serialOut().println(" started=0 reason=no_output_in_build");
 #else
         _selfTestTone.begin();
-        selftest::emitChirpsBlocking(Serial, &_i2sSource, _selfTestTone, runtime::kDefaultChirpFrequencyHz,
+        selftest::emitChirpsBlocking(serialOut(), &_i2sSource, _selfTestTone, runtime::kDefaultChirpFrequencyHz,
                                      command.chirps, command.durMs, command.gapMs);
         _selfTestTone.end();
         restoreAfterSelfTest();
@@ -48,28 +49,28 @@ void AnalyzerApp::handleSelfTestCommand(const char* line) {
 
     selftest::Tally tally;
     const bool external = command.kind == selftest::Command::Kind::External;
-    selftest::printBegin(Serial, "analyzer", external ? "external" : "full");
-    selftest::printBoard(Serial, tally, "analyzer");
+    selftest::printBegin(serialOut(), "analyzer", external ? "external" : "full");
+    selftest::printBoard(serialOut(), tally, "analyzer");
     if (external) {
-        selftest::skip(Serial, tally, "external_chirp", "not_node");
-        selftest::printSummary(Serial, tally, "analyzer");
+        selftest::skip(serialOut(), tally, "external_chirp", "not_node");
+        selftest::printSummary(serialOut(), tally, "analyzer");
         return;
     }
 
-    const selftest::Result mic = selftest::runMicCheck(Serial, tally, _i2sSource);
+    const selftest::Result mic = selftest::runMicCheck(serialOut(), tally, _i2sSource);
 #if defined(BOARD_PIEZO)
-    selftest::skip(Serial, tally, "amp", "no_output_in_build");
+    selftest::skip(serialOut(), tally, "amp", "no_output_in_build");
 #else
     if (mic != selftest::Result::Pass) {
-        selftest::skip(Serial, tally, "amp", "mic_failed");
+        selftest::skip(serialOut(), tally, "amp", "mic_failed");
     } else {
         _selfTestTone.begin();
-        selftest::runAmpCheck(Serial, tally, _i2sSource, _selfTestTone, runtime::kDefaultChirpFrequencyHz, "i2s");
+        selftest::runAmpCheck(serialOut(), tally, _i2sSource, _selfTestTone, runtime::kDefaultChirpFrequencyHz, "i2s");
         _selfTestTone.end();
     }
 #endif
     restoreAfterSelfTest();
-    selftest::printSummary(Serial, tally, "analyzer");
+    selftest::printSummary(serialOut(), tally, "analyzer");
 }
 
 void AnalyzerApp::restoreAfterSelfTest() {
@@ -80,5 +81,5 @@ void AnalyzerApp::restoreAfterSelfTest() {
     _freqBandStream.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
     // The check held the loop for seconds; keep it out of the loop health.
     _loopLastUs = timebase::nowUs();
-    Serial.println("SELFTEST_RESTORE detection=reset");
+    serialOut().println("SELFTEST_RESTORE detection=reset");
 }

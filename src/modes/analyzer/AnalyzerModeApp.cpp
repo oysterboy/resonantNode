@@ -19,6 +19,7 @@
 #include "../../detection/inspection/OccurrenceInspector.h"
 #include "../../app/BuildInfo.h"
 #include "../../app/TimeBase.h"
+#include "../../app/SerialOut.h"
 
 /*
 AnalyzerApp
@@ -103,54 +104,54 @@ void printHeapStatus(const char* when) {
     const uint32_t freeInternal = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
     const uint32_t largestInternal = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
     const uint32_t minInternal = static_cast<uint32_t>(heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL));
-    Serial.print("HEAP_STATUS when=");
-    Serial.print(when != nullptr ? when : "unknown");
-    Serial.print(" free_8bit=");
-    Serial.print(free8);
-    Serial.print(" largest_8bit=");
-    Serial.print(largest8);
-    Serial.print(" min_8bit=");
-    Serial.print(min8);
-    Serial.print(" free_internal=");
-    Serial.println(freeInternal);
-    Serial.print(" largest_internal=");
-    Serial.print(largestInternal);
-    Serial.print(" min_internal=");
-    Serial.println(minInternal);
+    serialOut().print("HEAP_STATUS when=");
+    serialOut().print(when != nullptr ? when : "unknown");
+    serialOut().print(" free_8bit=");
+    serialOut().print(free8);
+    serialOut().print(" largest_8bit=");
+    serialOut().print(largest8);
+    serialOut().print(" min_8bit=");
+    serialOut().print(min8);
+    serialOut().print(" free_internal=");
+    serialOut().println(freeInternal);
+    serialOut().print(" largest_internal=");
+    serialOut().print(largestInternal);
+    serialOut().print(" min_internal=");
+    serialOut().println(minInternal);
 }
 
 void printRuntimeSize() {
-    Serial.println("MEMORY_INVENTORY");
-    Serial.print("RUNTIME_SIZE detection_runtime_bytes=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::DetectionRuntime)));
-    Serial.print("SIZE DetectionRuntime=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::DetectionRuntime)));
-    Serial.print("  SIZE FeatureHistory=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::FeatureHistory)));
-    Serial.print("    SIZE FeatureBin=");
-    Serial.println(static_cast<unsigned long>(detection::FeatureHistory::debugFeatureBinSize()));
-    Serial.print("  SIZE Occurrence=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::Occurrence)));
-    Serial.print("  SIZE InspectedOccurrence=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::InspectedOccurrence)));
-    Serial.print("  SIZE OccurrenceEvaluator=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::OccurrenceEvaluator)));
-    Serial.print("  SIZE OccurrenceVerdict=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::OccurrenceVerdict)));
-    Serial.print("SIZE AudioSignal=");
-    Serial.println(static_cast<unsigned long>(sizeof(AudioSignal)));
-    Serial.print("  SIZE RawSampleHistory=");
-    Serial.println(static_cast<unsigned long>(sizeof(RawSampleHistory)));
-    Serial.print("SIZE AnalyzerApp::SequenceTest=");
-    Serial.println(static_cast<unsigned long>(AnalyzerApp::debugSequenceTestSize()));
-    Serial.print("  SIZE DetectorInputSample sampleHistory=");
-    Serial.println(static_cast<unsigned long>(sizeof(DetectorInputSample) * AnalyzerApp::debugSequenceTestSampleHistoryCapacity()));
-    Serial.print("  SIZE DetectorInputSample sampleHistoryPending=");
-    Serial.println(static_cast<unsigned long>(sizeof(DetectorInputSample)));
-    Serial.print("  SIZE DetectorInputSample sampleRows=");
-    Serial.println(static_cast<unsigned long>(sizeof(DetectorInputSample) * AnalyzerApp::debugSequenceTestSampleRowsCapacity()));
-    Serial.print("SIZE AnalyzerReport=");
-    Serial.println(static_cast<unsigned long>(sizeof(AnalyzerReport)));
+    serialOut().println("MEMORY_INVENTORY");
+    serialOut().print("RUNTIME_SIZE detection_runtime_bytes=");
+    serialOut().println(static_cast<unsigned long>(sizeof(detection::DetectionRuntime)));
+    serialOut().print("SIZE DetectionRuntime=");
+    serialOut().println(static_cast<unsigned long>(sizeof(detection::DetectionRuntime)));
+    serialOut().print("  SIZE FeatureHistory=");
+    serialOut().println(static_cast<unsigned long>(sizeof(detection::FeatureHistory)));
+    serialOut().print("    SIZE FeatureBin=");
+    serialOut().println(static_cast<unsigned long>(detection::FeatureHistory::debugFeatureBinSize()));
+    serialOut().print("  SIZE Occurrence=");
+    serialOut().println(static_cast<unsigned long>(sizeof(detection::Occurrence)));
+    serialOut().print("  SIZE InspectedOccurrence=");
+    serialOut().println(static_cast<unsigned long>(sizeof(detection::InspectedOccurrence)));
+    serialOut().print("  SIZE OccurrenceEvaluator=");
+    serialOut().println(static_cast<unsigned long>(sizeof(detection::OccurrenceEvaluator)));
+    serialOut().print("  SIZE OccurrenceVerdict=");
+    serialOut().println(static_cast<unsigned long>(sizeof(detection::OccurrenceVerdict)));
+    serialOut().print("SIZE AudioSignal=");
+    serialOut().println(static_cast<unsigned long>(sizeof(AudioSignal)));
+    serialOut().print("  SIZE RawSampleHistory=");
+    serialOut().println(static_cast<unsigned long>(sizeof(RawSampleHistory)));
+    serialOut().print("SIZE AnalyzerApp::SequenceTest=");
+    serialOut().println(static_cast<unsigned long>(AnalyzerApp::debugSequenceTestSize()));
+    serialOut().print("  SIZE DetectorInputSample sampleHistory=");
+    serialOut().println(static_cast<unsigned long>(sizeof(DetectorInputSample) * AnalyzerApp::debugSequenceTestSampleHistoryCapacity()));
+    serialOut().print("  SIZE DetectorInputSample sampleHistoryPending=");
+    serialOut().println(static_cast<unsigned long>(sizeof(DetectorInputSample)));
+    serialOut().print("  SIZE DetectorInputSample sampleRows=");
+    serialOut().println(static_cast<unsigned long>(sizeof(DetectorInputSample) * AnalyzerApp::debugSequenceTestSampleRowsCapacity()));
+    serialOut().print("SIZE AnalyzerReport=");
+    serialOut().println(static_cast<unsigned long>(sizeof(AnalyzerReport)));
     const uint32_t free8 = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_8BIT));
     const uint32_t largest8 = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
     const uint32_t min8 = static_cast<uint32_t>(heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT));
@@ -160,24 +161,24 @@ void printRuntimeSize() {
     const uint32_t freeDma = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_DMA));
     const uint32_t largestDma = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_DMA));
     const uint32_t minDma = static_cast<uint32_t>(heap_caps_get_minimum_free_size(MALLOC_CAP_DMA));
-    Serial.print("HEAP_CAPS cap=8BIT free=");
-    Serial.print(free8);
-    Serial.print(" largest=");
-    Serial.print(largest8);
-    Serial.print(" min=");
-    Serial.println(min8);
-    Serial.print("HEAP_CAPS cap=INTERNAL free=");
-    Serial.print(freeInternal);
-    Serial.print(" largest=");
-    Serial.print(largestInternal);
-    Serial.print(" min=");
-    Serial.println(minInternal);
-    Serial.print("HEAP_CAPS cap=DMA free=");
-    Serial.print(freeDma);
-    Serial.print(" largest=");
-    Serial.print(largestDma);
-    Serial.print(" min=");
-    Serial.println(minDma);
+    serialOut().print("HEAP_CAPS cap=8BIT free=");
+    serialOut().print(free8);
+    serialOut().print(" largest=");
+    serialOut().print(largest8);
+    serialOut().print(" min=");
+    serialOut().println(min8);
+    serialOut().print("HEAP_CAPS cap=INTERNAL free=");
+    serialOut().print(freeInternal);
+    serialOut().print(" largest=");
+    serialOut().print(largestInternal);
+    serialOut().print(" min=");
+    serialOut().println(minInternal);
+    serialOut().print("HEAP_CAPS cap=DMA free=");
+    serialOut().print(freeDma);
+    serialOut().print(" largest=");
+    serialOut().print(largestDma);
+    serialOut().print(" min=");
+    serialOut().println(minDma);
 }
 
 const char* audioHealthNameFromCounters(unsigned long zeroishFrames,
@@ -577,8 +578,8 @@ detection::DetectionProfile const& AnalyzerApp::effectiveSequenceProfile() const
 }
 
 void AnalyzerApp::begin() {
-    printBuildIdentity(Serial, "analyzer");
-    Serial.println();
+    printBuildIdentity(serialOut(), "analyzer");
+    serialOut().println();
 
     beginEmitterControl();
     ++g_analyzerBootCount;
@@ -604,8 +605,8 @@ void AnalyzerApp::begin() {
     _controlClaimSent = false;
     _controlClaimAtMs = 0;
 
-    Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
+    serialOut().println("EVT analyzer_ready");
+    serialOut().println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -816,7 +817,7 @@ void AnalyzerApp::update() {
     pollEmitterSerial();
 
 #if TEST_LOG_STRESS
-    Serial.println("LOG_STRESS");
+    serialOut().println("LOG_STRESS");
 #endif
 }
 

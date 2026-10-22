@@ -10,6 +10,7 @@
 #include <string.h>
 #include "../../../app/TimeBase.h"
 #include "../../../app/TimingUtils.h"
+#include "../../../app/SerialOut.h"
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
@@ -70,17 +71,17 @@ uint16_t rawCaptureOffsetMs(unsigned long sampleMs, unsigned long baseMs) {
 }
 
 void printRawMemoryState(const char* label) {
-    Serial.print("RAW_MEM label=");
-    Serial.print(label);
-    Serial.print(" free_heap=");
-    Serial.print(ESP.getFreeHeap());
-    Serial.print(" min_heap=");
-    Serial.print(ESP.getMinFreeHeap());
-    Serial.print(" largest_8bit=");
-    Serial.print(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-    Serial.print(" free_8bit=");
-    Serial.print(heap_caps_get_free_size(MALLOC_CAP_8BIT));
-    Serial.println();
+    serialOut().print("RAW_MEM label=");
+    serialOut().print(label);
+    serialOut().print(" free_heap=");
+    serialOut().print(ESP.getFreeHeap());
+    serialOut().print(" min_heap=");
+    serialOut().print(ESP.getMinFreeHeap());
+    serialOut().print(" largest_8bit=");
+    serialOut().print(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+    serialOut().print(" free_8bit=");
+    serialOut().print(heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    serialOut().println();
 }
 
 unsigned long rawCaptureChunkSize(unsigned long sampleRateHz, unsigned long decim) {
@@ -114,18 +115,18 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     if (decim == 0) {
         decim = 1;
     }
-    Serial.print("RAW_INFO mode=");
-    Serial.print(rawCaptureModeName(mode));
-    Serial.println(" output=csv");
-    Serial.print("RAW_INFO row_size=");
+    serialOut().print("RAW_INFO mode=");
+    serialOut().print(rawCaptureModeName(mode));
+    serialOut().println(" output=csv");
+    serialOut().print("RAW_INFO row_size=");
     if (mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s) {
-        Serial.print(sizeof(RawCapturePcmSample));
+        serialOut().print(sizeof(RawCapturePcmSample));
     } else if (mode == RawCaptureMode::Features) {
-        Serial.print(sizeof(RawCaptureFeatureSample));
+        serialOut().print(sizeof(RawCaptureFeatureSample));
     } else {
-        Serial.print(sizeof(RawCaptureBothSample));
+        serialOut().print(sizeof(RawCaptureBothSample));
     }
-    Serial.println();
+    serialOut().println();
 
     const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long maxSamples = 6000UL;
@@ -169,7 +170,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         if (preWantedSamples > 0) {
             prePcmRingBuffer = static_cast<RawCapturePcmSample*>(allocRows(preWantedSamples, sizeof(RawCapturePcmSample)));
             if (prePcmRingBuffer == nullptr) {
-                Serial.println("RAW_ERR memory=pre_ring_alloc_failed");
+                serialOut().println("RAW_ERR memory=pre_ring_alloc_failed");
                 printRawMemoryState("pre_ring");
                 return false;
             }
@@ -180,7 +181,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             if (prePcmRingBuffer != nullptr) {
                 free(prePcmRingBuffer);
             }
-            Serial.println("RAW_ERR memory=raw_buffer_alloc_failed");
+            serialOut().println("RAW_ERR memory=raw_buffer_alloc_failed");
             printRawMemoryState("raw_buffer");
             return false;
         }
@@ -188,7 +189,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         if (preWantedSamples > 0) {
             preFeatureRingBuffer = static_cast<RawCaptureFeatureSample*>(allocRows(preWantedSamples, sizeof(RawCaptureFeatureSample)));
             if (preFeatureRingBuffer == nullptr) {
-                Serial.println("RAW_ERR memory=pre_ring_alloc_failed");
+                serialOut().println("RAW_ERR memory=pre_ring_alloc_failed");
                 printRawMemoryState("pre_ring");
                 return false;
             }
@@ -199,7 +200,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             if (preFeatureRingBuffer != nullptr) {
                 free(preFeatureRingBuffer);
             }
-            Serial.println("RAW_ERR memory=raw_buffer_alloc_failed");
+            serialOut().println("RAW_ERR memory=raw_buffer_alloc_failed");
             printRawMemoryState("raw_buffer");
             return false;
         }
@@ -207,7 +208,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         if (preWantedSamples > 0) {
             preBothRingBuffer = static_cast<RawCaptureBothSample*>(allocRows(preWantedSamples, sizeof(RawCaptureBothSample)));
             if (preBothRingBuffer == nullptr) {
-                Serial.println("RAW_ERR memory=pre_ring_alloc_failed");
+                serialOut().println("RAW_ERR memory=pre_ring_alloc_failed");
                 printRawMemoryState("pre_ring");
                 return false;
             }
@@ -218,7 +219,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             if (preBothRingBuffer != nullptr) {
                 free(preBothRingBuffer);
             }
-            Serial.println("RAW_ERR memory=raw_buffer_alloc_failed");
+            serialOut().println("RAW_ERR memory=raw_buffer_alloc_failed");
             printRawMemoryState("raw_buffer");
             return false;
         }
@@ -240,7 +241,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     };
 
     if (!claimEmitterRemoteControl()) {
-        Serial.println("RAW_ERR emitter_remote_claim_timeout");
+        serialOut().println("RAW_ERR emitter_remote_claim_timeout");
         printRawMemoryState("emitter_timeout");
         if (prePcmRingBuffer != nullptr) {
             free(prePcmRingBuffer);
@@ -343,23 +344,23 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             emitStartMs = timebase::nowMs();
             copyPreWindow();
             if (mode != RawCaptureMode::Pcm && mode != RawCaptureMode::I2s) {
-                Serial.print("RAW_EMIT_START id=");
-                Serial.print(captureId);
-                Serial.print(" t_ms=");
-                Serial.print(emitStartMs);
-                Serial.print(" line=");
-                Serial.println(line);
+                serialOut().print("RAW_EMIT_START id=");
+                serialOut().print(captureId);
+                serialOut().print(" t_ms=");
+                serialOut().print(emitStartMs);
+                serialOut().print(" line=");
+                serialOut().println(line);
             }
         } else if (doneLine && !emitDone) {
             emitDone = true;
             emitDoneMs = timebase::nowMs();
             if (mode != RawCaptureMode::Pcm && mode != RawCaptureMode::I2s) {
-                Serial.print("RAW_EMIT_DONE id=");
-                Serial.print(captureId);
-                Serial.print(" t_ms=");
-                Serial.print(emitDoneMs);
-                Serial.print(" line=");
-                Serial.println(line);
+                serialOut().print("RAW_EMIT_DONE id=");
+                serialOut().print(captureId);
+                serialOut().print(" t_ms=");
+                serialOut().print(emitDoneMs);
+                serialOut().print(" line=");
+                serialOut().println(line);
             }
         }
     };
@@ -557,138 +558,138 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
     }
 
-    Serial.print("RAW_BEGIN id=");
-    Serial.print(captureId);
-    Serial.print(" sr=");
-    Serial.print(storedRateHz);
-    Serial.print(" trigger_ms=");
-    Serial.print(emitStarted ? emitStartMs : commandMs);
-    Serial.print(" command_ms=");
-    Serial.print(commandMs);
-    Serial.print(" emit_seen=");
-    Serial.print(emitStarted ? 1 : 0);
-    Serial.print(" emit_start_ms=");
-    Serial.print(emitStartMs);
-    Serial.print(" emit_done_ms=");
-    Serial.print(emitDoneMs);
-    Serial.print(" f=");
-    Serial.print(toneHz);
-    Serial.print(" dur=");
-    Serial.print(durationMs);
+    serialOut().print("RAW_BEGIN id=");
+    serialOut().print(captureId);
+    serialOut().print(" sr=");
+    serialOut().print(storedRateHz);
+    serialOut().print(" trigger_ms=");
+    serialOut().print(emitStarted ? emitStartMs : commandMs);
+    serialOut().print(" command_ms=");
+    serialOut().print(commandMs);
+    serialOut().print(" emit_seen=");
+    serialOut().print(emitStarted ? 1 : 0);
+    serialOut().print(" emit_start_ms=");
+    serialOut().print(emitStartMs);
+    serialOut().print(" emit_done_ms=");
+    serialOut().print(emitDoneMs);
+    serialOut().print(" f=");
+    serialOut().print(toneHz);
+    serialOut().print(" dur=");
+    serialOut().print(durationMs);
     if (shape.pulseCount > 0) {
-        Serial.print(" pulses=");
-        Serial.print(shape.pulseCount);
-        Serial.print(" gap=");
-        Serial.print(shape.pulseGapMs);
+        serialOut().print(" pulses=");
+        serialOut().print(shape.pulseCount);
+        serialOut().print(" gap=");
+        serialOut().print(shape.pulseGapMs);
         if (shape.hop[0] != '\0') {
-            Serial.print(" hop=");
-            Serial.print(shape.hop);
+            serialOut().print(" hop=");
+            serialOut().print(shape.hop);
         }
     } else if (shape.sweepToHz != 0) {
-        Serial.print(" sweep=");
-        Serial.print(shape.sweepToHz);
+        serialOut().print(" sweep=");
+        serialOut().print(shape.sweepToHz);
     }
-    Serial.print(" pre_ms=");
-    Serial.print(preMs);
-    Serial.print(" post_ms=");
-    Serial.print(postMs);
+    serialOut().print(" pre_ms=");
+    serialOut().print(preMs);
+    serialOut().print(" post_ms=");
+    serialOut().print(postMs);
     // Which PCM conditioning produced the stored stream (mode=i2s stores the
     // raw PCM, every other mode what AudioSignal received), so a transcript
     // used as a host fixture says which chain it represents.
-    Serial.print(" preprocess=");
-    Serial.print(runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::DcBlocker ? "dc"
+    serialOut().print(" preprocess=");
+    serialOut().print(runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::DcBlocker ? "dc"
                  : runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::FirstDifference ? "fd" : "none");
-    Serial.print(" decim=");
-    Serial.print(decim);
-    Serial.print(" pre_samples=");
-    Serial.print(preWindowSamples);
-    Serial.print(" post_samples=");
-    Serial.print(postCaptured);
-    Serial.print(" mode=");
-    Serial.print(rawCaptureModeName(mode));
-    Serial.print(" output=csv");
+    serialOut().print(" decim=");
+    serialOut().print(decim);
+    serialOut().print(" pre_samples=");
+    serialOut().print(preWindowSamples);
+    serialOut().print(" post_samples=");
+    serialOut().print(postCaptured);
+    serialOut().print(" mode=");
+    serialOut().print(rawCaptureModeName(mode));
+    serialOut().print(" output=csv");
     if (mode == RawCaptureMode::Pcm) {
-        Serial.print(" fields=ms,pcm,baseline");
+        serialOut().print(" fields=ms,pcm,baseline");
     } else if (mode == RawCaptureMode::I2s) {
-        Serial.print(" fields=ms,pcm");
+        serialOut().print(" fields=ms,pcm");
     } else if (mode == RawCaptureMode::Features) {
-        Serial.print(" fields=ms,amp_strength,env_strength,freq_score,freq_fresh");
+        serialOut().print(" fields=ms,amp_strength,env_strength,freq_score,freq_fresh");
     } else {
-        Serial.print(" fields=ms,amp,pcm");
+        serialOut().print(" fields=ms,amp,pcm");
     }
-    Serial.println();
+    serialOut().println();
 
     if (mode == RawCaptureMode::Pcm) {
-        Serial.println("ms,pcm,baseline,centered");
+        serialOut().println("ms,pcm,baseline,centered");
         for (unsigned long i = 0; i < capturedSamples; ++i) {
             const RawCapturePcmSample& sample = pcmCaptureBuffer[i];
-            Serial.print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
-            Serial.print(",");
-            Serial.print(sample.pcm);
-            Serial.print(",");
-            Serial.print(sample.baseline, 1);
-            Serial.print(",");
-            Serial.println(sample.pcm - static_cast<int32_t>(sample.baseline));
+            serialOut().print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
+            serialOut().print(",");
+            serialOut().print(sample.pcm);
+            serialOut().print(",");
+            serialOut().print(sample.baseline, 1);
+            serialOut().print(",");
+            serialOut().println(sample.pcm - static_cast<int32_t>(sample.baseline));
         }
     } else if (mode == RawCaptureMode::I2s) {
-        Serial.println("ms,pcm");
+        serialOut().println("ms,pcm");
         for (unsigned long i = 0; i < capturedSamples; ++i) {
             const RawCapturePcmSample& sample = pcmCaptureBuffer[i];
-            Serial.print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
-            Serial.print(",");
-            Serial.println(sample.pcm);
+            serialOut().print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
+            serialOut().print(",");
+            serialOut().println(sample.pcm);
         }
     } else if (mode == RawCaptureMode::Features) {
-        Serial.println("ms,amp_strength,env_strength,freq_score,freq_fresh");
+        serialOut().println("ms,amp_strength,env_strength,freq_score,freq_fresh");
         for (unsigned long i = 0; i < capturedSamples; ++i) {
             const RawCaptureFeatureSample& sample = featureCaptureBuffer[i];
-            Serial.print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
-            Serial.print(",");
-            Serial.print(sample.ampStrength);
-            Serial.print(",");
-            Serial.print(sample.envStrength);
-            Serial.print(",");
-            Serial.print(sample.frequencyScore);
-            Serial.print(",");
-            Serial.println(sample.targetFresh ? 1 : 0);
+            serialOut().print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
+            serialOut().print(",");
+            serialOut().print(sample.ampStrength);
+            serialOut().print(",");
+            serialOut().print(sample.envStrength);
+            serialOut().print(",");
+            serialOut().print(sample.frequencyScore);
+            serialOut().print(",");
+            serialOut().println(sample.targetFresh ? 1 : 0);
         }
     } else {
-        Serial.println("ms,amp,pcm");
+        serialOut().println("ms,amp,pcm");
         for (unsigned long i = 0; i < capturedSamples; ++i) {
             const RawCaptureBothSample& sample = bothCaptureBuffer[i];
-            Serial.print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
-            Serial.print(",");
-            Serial.print(sample.amp);
-            Serial.print(",");
-            Serial.println(sample.pcm);
+            serialOut().print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
+            serialOut().print(",");
+            serialOut().print(sample.amp);
+            serialOut().print(",");
+            serialOut().println(sample.pcm);
         }
     }
 
-    Serial.print("RAW_SUMMARY id=");
-    Serial.print(captureId);
-    Serial.print(" requested=");
-    Serial.print(requestedSamples);
-    Serial.print(" captured=");
-    Serial.print(capturedSamples);
-    Serial.print(" unused_capacity=");
-    Serial.print(unusedCapacitySamples);
-    Serial.print(" max_pcm_abs=");
-    Serial.print(maxPcmAbs);
+    serialOut().print("RAW_SUMMARY id=");
+    serialOut().print(captureId);
+    serialOut().print(" requested=");
+    serialOut().print(requestedSamples);
+    serialOut().print(" captured=");
+    serialOut().print(capturedSamples);
+    serialOut().print(" unused_capacity=");
+    serialOut().print(unusedCapacitySamples);
+    serialOut().print(" max_pcm_abs=");
+    serialOut().print(maxPcmAbs);
     if (rawCaptureUsesFeatureStream(mode)) {
-        Serial.print(" max_amp=");
-        Serial.print(maxAmp);
+        serialOut().print(" max_amp=");
+        serialOut().print(maxAmp);
     }
-    Serial.print(" raw_mean=");
-    Serial.print(rawWindowMean, 1);
-    Serial.print(" raw_abs_mean=");
-    Serial.print(rawWindowAbsMean, 1);
-    Serial.print(" raw_min=");
-    Serial.print(rawWindowMinOut);
-    Serial.print(" raw_max=");
-    Serial.print(rawWindowMaxOut);
-    Serial.print(" baseline=");
-    Serial.print(_audioSignal.baseline(), 1);
-    Serial.println();
+    serialOut().print(" raw_mean=");
+    serialOut().print(rawWindowMean, 1);
+    serialOut().print(" raw_abs_mean=");
+    serialOut().print(rawWindowAbsMean, 1);
+    serialOut().print(" raw_min=");
+    serialOut().print(rawWindowMinOut);
+    serialOut().print(" raw_max=");
+    serialOut().print(rawWindowMaxOut);
+    serialOut().print(" baseline=");
+    serialOut().print(_audioSignal.baseline(), 1);
+    serialOut().println();
 
     if (prePcmRingBuffer != nullptr) {
         free(prePcmRingBuffer);

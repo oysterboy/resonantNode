@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 #include "../../../app/TimingUtils.h"
+#include "../../../app/SerialOut.h"
 
 void ScalarTransientDetector::refreshReportDetail() {
     const char* onsetRejectReason = lastOnsetRejectReasonName();
@@ -92,32 +93,32 @@ void ScalarTransientDetector::printTransientStatsIfDue(uint64_t nowUs) {
         const unsigned long expectedCount = (elapsedMs + (_expectedTransientPeriodMs / 2)) / _expectedTransientPeriodMs;
         const unsigned long successRate = expectedCount > 0 ? ((_peakAcceptedCount * 100UL) / expectedCount) : 0;
 
-        Serial.print(_diagnosticsLabel);
-        Serial.print(" transient success t=");
-        Serial.print(timebase::msFromUs64(nowUs));
-        Serial.print(" accepted=");
-        Serial.print(_peakAcceptedCount);
-        Serial.print(" expected=");
-        Serial.print(expectedCount);
-        Serial.print(" success_rate=");
-        Serial.print(successRate);
-        Serial.print("%");
-        Serial.print(" onset_rejected=");
-        Serial.print(_onsetRejectedCount);
-        Serial.print(" transient_rejected=");
-        Serial.print(_transientRejectedCount);
-        Serial.print(" duration_short=");
-        Serial.print(_transientRejectedDurationTooShortCount);
-        Serial.print(" duration_long=");
-        Serial.print(_transientRejectedDurationTooLongCount);
-        Serial.print(" strength_low=");
-        Serial.print(_transientRejectedStrengthTooLowCount);
-        Serial.print(" peak_strength=");
-        Serial.print(_acceptedOccurrence.peak, 1);
-        Serial.print(" best_rejected_strength=");
-        Serial.print(_selectedReject.strength, 1);
-        Serial.print(" best_rejected_reason=");
-        Serial.println(_selectedReject.detectorReason != nullptr ? _selectedReject.detectorReason : "none");
+        serialOut().print(_diagnosticsLabel);
+        serialOut().print(" transient success t=");
+        serialOut().print(timebase::msFromUs64(nowUs));
+        serialOut().print(" accepted=");
+        serialOut().print(_peakAcceptedCount);
+        serialOut().print(" expected=");
+        serialOut().print(expectedCount);
+        serialOut().print(" success_rate=");
+        serialOut().print(successRate);
+        serialOut().print("%");
+        serialOut().print(" onset_rejected=");
+        serialOut().print(_onsetRejectedCount);
+        serialOut().print(" transient_rejected=");
+        serialOut().print(_transientRejectedCount);
+        serialOut().print(" duration_short=");
+        serialOut().print(_transientRejectedDurationTooShortCount);
+        serialOut().print(" duration_long=");
+        serialOut().print(_transientRejectedDurationTooLongCount);
+        serialOut().print(" strength_low=");
+        serialOut().print(_transientRejectedStrengthTooLowCount);
+        serialOut().print(" peak_strength=");
+        serialOut().print(_acceptedOccurrence.peak, 1);
+        serialOut().print(" best_rejected_strength=");
+        serialOut().print(_selectedReject.strength, 1);
+        serialOut().print(" best_rejected_reason=");
+        serialOut().println(_selectedReject.detectorReason != nullptr ? _selectedReject.detectorReason : "none");
         _lastStatsPrintUs = nowUs;
     }
 }

@@ -9,6 +9,7 @@
 #include "../../app/TimingUtils.h"
 #include "AnalyzerPassRules.h"
 #include "../../app/TimeBase.h"
+#include "../../app/SerialOut.h"
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
@@ -87,10 +88,10 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
         _sequenceTest.windowEndOffsetMs = emittedSpanMs + 500;
     }
     if (!_sequenceTest.externalEmitter && emittedSpanMs + 250 > _sequenceTest.windowEndOffsetMs) {
-        Serial.print("SEQ_WARN emitted span close to window end span_ms=");
-        Serial.print(emittedSpanMs);
-        Serial.print(" window=");
-        Serial.println(_sequenceTest.windowEndOffsetMs);
+        serialOut().print("SEQ_WARN emitted span close to window end span_ms=");
+        serialOut().print(emittedSpanMs);
+        serialOut().print(" window=");
+        serialOut().println(_sequenceTest.windowEndOffsetMs);
     }
     _sequenceTest.toneHz = pending.toneHz;
     _sequenceTest.durationMs = pending.durationMs;
@@ -109,12 +110,12 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
         _sequenceTest.windowEndOffsetMs + _sequenceTest.reportSettleMs > _sequenceTest.periodMs) {
         // A trial finalizes reportSettleMs after its window; until then the
         // next emitter chirp is credited to the old trial (issue #31).
-        Serial.print("OBS_WARN window+report_settle>period window=");
-        Serial.print(_sequenceTest.windowEndOffsetMs);
-        Serial.print(" report_settle=");
-        Serial.print(_sequenceTest.reportSettleMs);
-        Serial.print(" period=");
-        Serial.println(_sequenceTest.periodMs);
+        serialOut().print("OBS_WARN window+report_settle>period window=");
+        serialOut().print(_sequenceTest.windowEndOffsetMs);
+        serialOut().print(" report_settle=");
+        serialOut().print(_sequenceTest.reportSettleMs);
+        serialOut().print(" period=");
+        serialOut().println(_sequenceTest.periodMs);
     }
     _sequenceTest.sampleDumpEnabled = pending.sampleDumpEnabled;
     _sequenceTest.sampleDumpFirstTrials = pending.sampleDumpFirstTrials;
@@ -159,12 +160,12 @@ void AnalyzerApp::configureSequenceDetection() {
     _freqBandStream.setBand(_sequenceTest.bandLowHz, _sequenceTest.bandHighHz);
     _freqBandStream.resetState();
     if (_sequenceTest.bandLowHz != 0) {
-        Serial.print("SEQ band: low_hz=");
-        Serial.print(_sequenceTest.bandLowHz);
-        Serial.print(" high_hz=");
-        Serial.print(_sequenceTest.bandHighHz);
-        Serial.print(" bin_spacing_hz=");
-        Serial.println(_freqBandStream.bandSpacingHz(), 1);
+        serialOut().print("SEQ band: low_hz=");
+        serialOut().print(_sequenceTest.bandLowHz);
+        serialOut().print(" high_hz=");
+        serialOut().print(_sequenceTest.bandHighHz);
+        serialOut().print(" bin_spacing_hz=");
+        serialOut().println(_freqBandStream.bandSpacingHz(), 1);
     }
 }
 
@@ -239,10 +240,10 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     // One history entry per ms holds the lead before the trigger; a longer
     // sampleLead was cut silently (issue #31 R2-19).
     if (_sequenceTest.sampleDumpEnabled && _sequenceTest.sampleDumpLeadMs >= SequenceTest::kMaxSampleHistory) {
-        Serial.print("SAMPLES_WARN reason=lead_beyond_history requested_lead_ms=");
-        Serial.print(_sequenceTest.sampleDumpLeadMs);
-        Serial.print(" max_lead_ms=");
-        Serial.println(static_cast<unsigned long>(SequenceTest::kMaxSampleHistory - 1));
+        serialOut().print("SAMPLES_WARN reason=lead_beyond_history requested_lead_ms=");
+        serialOut().print(_sequenceTest.sampleDumpLeadMs);
+        serialOut().print(" max_lead_ms=");
+        serialOut().println(static_cast<unsigned long>(SequenceTest::kMaxSampleHistory - 1));
         _sequenceTest.sampleDumpLeadMs = SequenceTest::kMaxSampleHistory - 1;
     }
     if (_sequenceTest.sampleDumpEnabled) {
@@ -252,14 +253,14 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
                                             _sequenceTest.sampleDumpStepMs) + 1UL;
         const unsigned long requestedRows = selectedTrialsEstimate * rowsPerTrial;
         if (requestedRows > _sequenceTest.sampleDumpMaxRows || rowsPerTrial > SequenceTest::kMaxSampleRows) {
-            Serial.print("SAMPLES_WARN reason=too_many_samples requested=");
-            Serial.print(requestedRows);
-            Serial.print(" max_allowed=");
-            Serial.print(_sequenceTest.sampleDumpMaxRows);
-            Serial.print(" rows_per_trial=");
-            Serial.print(rowsPerTrial);
-            Serial.print(" max_per_trial=");
-            Serial.println(static_cast<unsigned long>(SequenceTest::kMaxSampleRows));
+            serialOut().print("SAMPLES_WARN reason=too_many_samples requested=");
+            serialOut().print(requestedRows);
+            serialOut().print(" max_allowed=");
+            serialOut().print(_sequenceTest.sampleDumpMaxRows);
+            serialOut().print(" rows_per_trial=");
+            serialOut().print(rowsPerTrial);
+            serialOut().print(" max_per_trial=");
+            serialOut().println(static_cast<unsigned long>(SequenceTest::kMaxSampleRows));
             _sequenceTest.sampleDumpEnabled = false;
         }
     }
@@ -274,150 +275,150 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", 1500);
         const unsigned long sequenceClaimAckMs = timebase::nowMs();
         if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
-            Serial.print("SEQ remote claim: send=");
-            Serial.print(sequenceClaimSendMs);
-            Serial.print("ms ack=");
-            Serial.print(sequenceClaimAckMs);
-            Serial.print("ms wait=");
-            Serial.print(sequenceClaimAckMs - sequenceClaimSendMs);
-            Serial.print("ms status=");
-            Serial.println(sequenceClaimAcked ? "ok" : "timeout");
+            serialOut().print("SEQ remote claim: send=");
+            serialOut().print(sequenceClaimSendMs);
+            serialOut().print("ms ack=");
+            serialOut().print(sequenceClaimAckMs);
+            serialOut().print("ms wait=");
+            serialOut().print(sequenceClaimAckMs - sequenceClaimSendMs);
+            serialOut().print("ms status=");
+            serialOut().println(sequenceClaimAcked ? "ok" : "timeout");
         }
     }
 
     const unsigned long sequenceRebaseStartMs = timebase::nowMs();
     delay(100);
     if (!_audioSignal.rebase()) {
-        Serial.println("SEQ WARN rebase_timeout no_audio baseline_unchanged");
+        serialOut().println("SEQ WARN rebase_timeout no_audio baseline_unchanged");
     }
     if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
-        Serial.print("SEQ rebase: start=");
-        Serial.print(sequenceRebaseStartMs);
-        Serial.print("ms end=");
-        Serial.print(timebase::nowMs());
-        Serial.print("ms elapsed=");
-        Serial.print(timebase::nowMs() - sequenceRebaseStartMs);
-        Serial.println("ms");
+        serialOut().print("SEQ rebase: start=");
+        serialOut().print(sequenceRebaseStartMs);
+        serialOut().print("ms end=");
+        serialOut().print(timebase::nowMs());
+        serialOut().print("ms elapsed=");
+        serialOut().print(timebase::nowMs() - sequenceRebaseStartMs);
+        serialOut().println("ms");
     }
     resetAudioSignalState();
     _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     _audioSignal.resetStats();
     _audioSource.resetStats();
     if (!_sequenceTest.quiet) {
-        Serial.println("AUDIO stats reset");
+        serialOut().println("AUDIO stats reset");
     }
 
     if (!_sequenceTest.quiet) {
-        Serial.print("SEQ start test=");
-        Serial.print(_sequenceTest.setupLabel);
-        Serial.print(" startup_delay_ms=");
-        Serial.print(_sequenceTest.startupDelayMs);
-        Serial.print(" report_settle_ms=");
-        Serial.print(_sequenceTest.reportSettleMs);
-        Serial.print(" loopDelayMs=");
-        Serial.print(TEST_LOOP_DELAY_MS);
-        Serial.print(" logStress=");
-        Serial.println(TEST_LOG_STRESS ? 1 : 0);
+        serialOut().print("SEQ start test=");
+        serialOut().print(_sequenceTest.setupLabel);
+        serialOut().print(" startup_delay_ms=");
+        serialOut().print(_sequenceTest.startupDelayMs);
+        serialOut().print(" report_settle_ms=");
+        serialOut().print(_sequenceTest.reportSettleMs);
+        serialOut().print(" loopDelayMs=");
+        serialOut().print(TEST_LOOP_DELAY_MS);
+        serialOut().print(" logStress=");
+        serialOut().println(TEST_LOG_STRESS ? 1 : 0);
     }
 
     if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
         const detection::DetectionProfile& selectedProfile = effectiveSequenceProfile();
-        Serial.print("SEQ start source=");
-        Serial.print("I2S");
-        Serial.print(" probe=AMP");
-        Serial.print(" profile=");
-        Serial.print(detection::detectionProfileName(_sequenceTest.profileKind));
-        Serial.print(" source=");
-        Serial.print(detection::detectorSelectionName(selectedProfile.detectorSelection));
-        Serial.print(" detector=");
-        Serial.print(detection::detectorSelectionName(selectedProfile.detectorSelection));
-        Serial.print(" freq_min_duration_ms=");
-        Serial.print(selectedProfile.frequencyMatch.minDurationMs);
-        Serial.print(" freq_release_debounce_ms=");
-        Serial.print(selectedProfile.frequencyMatch.releaseDebounceMs);
-        Serial.print(" freq_cooldown_ms=");
-        Serial.print(selectedProfile.frequencyMatch.cooldownAfterReleaseMs);
+        serialOut().print("SEQ start source=");
+        serialOut().print("I2S");
+        serialOut().print(" probe=AMP");
+        serialOut().print(" profile=");
+        serialOut().print(detection::detectionProfileName(_sequenceTest.profileKind));
+        serialOut().print(" source=");
+        serialOut().print(detection::detectorSelectionName(selectedProfile.detectorSelection));
+        serialOut().print(" detector=");
+        serialOut().print(detection::detectorSelectionName(selectedProfile.detectorSelection));
+        serialOut().print(" freq_min_duration_ms=");
+        serialOut().print(selectedProfile.frequencyMatch.minDurationMs);
+        serialOut().print(" freq_release_debounce_ms=");
+        serialOut().print(selectedProfile.frequencyMatch.releaseDebounceMs);
+        serialOut().print(" freq_cooldown_ms=");
+        serialOut().print(selectedProfile.frequencyMatch.cooldownAfterReleaseMs);
         //PARAM TUNING TEMPORARY
-        Serial.print(" scalar_observed_stream=");
-        Serial.print(scalarObservedStreamDisplayName(selectedProfile.scalarTransient.observedStream));
-        Serial.print(" scalar_onset_threshold=");
-        Serial.print(selectedProfile.scalarTransient.onsetDetectionThreshold, 1);
-        Serial.print(" scalar_release_threshold=");
-        Serial.print(selectedProfile.scalarTransient.onsetReleaseThreshold, 1);
-        Serial.print(" scalar_cooldown_ms=");
-        Serial.print(selectedProfile.scalarTransient.cooldownAfterOnsetMs);
-        Serial.print(" scalar_min_duration_ms=");
-        Serial.print(selectedProfile.scalarTransient.minTransientDurationMs);
-        Serial.print(" scalar_max_duration_ms=");
-        Serial.print(selectedProfile.scalarTransient.maxTransientDurationMs);
-        Serial.print(" scalar_min_peak_strength=");
-        Serial.print(selectedProfile.scalarTransient.minTransientPeakStrength, 1);
-        Serial.print(" scalar_release_debounce_ms=");
-        Serial.print(selectedProfile.scalarTransient.releaseDebounceMs);
-        Serial.print(" scalar_require_carrier_quality=");
-        Serial.print(selectedProfile.scalarTransient.requireCarrierQuality ? 1 : 0);
-        Serial.print(" scalar_min_release_coverage_ms=");
-        Serial.print(selectedProfile.scalarTransient.minCoverageAboveReleaseMs);
-        Serial.print(" scalar_min_longest_island_ms=");
-        Serial.print(selectedProfile.scalarTransient.minLongestIslandMs);
-        Serial.print(" scalar_max_gap_ms=");
-        Serial.print(selectedProfile.scalarTransient.maxGapMs);
-        Serial.print(" history.bin_ms=");
-        Serial.print(1);
-        Serial.print(" history.capacity_bins=");
-        Serial.print(detection::FeatureHistory::kBinsPerStream);
-        Serial.print(" history.coverage_ms=");
-        Serial.print(detection::FeatureHistory::kBinsPerStream);
-        Serial.print(" history.stream=amp aggregation=mean_abs+rms+peak_abs");
-        Serial.print(" history.stream=freq_target aggregation=fresh_only");
-        Serial.print(" history.stream=freq_contrast aggregation=fresh_only");
-        Serial.print(" mode=");
-        Serial.print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
-        Serial.print(" test=");
-        Serial.print(_sequenceTest.setupLabel);
-        Serial.print(" startup_delay_ms=");
-        Serial.print(_sequenceTest.startupDelayMs);
-        Serial.print(" report_settle_ms=");
-        Serial.print(_sequenceTest.reportSettleMs);
-        Serial.print(" loopDelayMs=");
-        Serial.print(TEST_LOOP_DELAY_MS);
-        Serial.print(" logStress=");
-        Serial.print(TEST_LOG_STRESS ? 1 : 0);
-        Serial.print(" quiet=");
-        Serial.print(_sequenceTest.quiet ? 1 : 0);
-        Serial.print(" tries=");
-        Serial.print(_sequenceTest.totalTrials);
-        Serial.print(" period_ms=");
-        Serial.print(_sequenceTest.periodMs);
-        Serial.print(" window_start_ms=");
-        Serial.print(_sequenceTest.windowStartOffsetMs);
-        Serial.print(" window_end_ms=");
-        Serial.print(_sequenceTest.windowEndOffsetMs);
-        Serial.print(" freq_hz=");
-        Serial.print(_sequenceTest.toneHz);
-        Serial.print(" dur_ms=");
-        Serial.print(_sequenceTest.durationMs);
+        serialOut().print(" scalar_observed_stream=");
+        serialOut().print(scalarObservedStreamDisplayName(selectedProfile.scalarTransient.observedStream));
+        serialOut().print(" scalar_onset_threshold=");
+        serialOut().print(selectedProfile.scalarTransient.onsetDetectionThreshold, 1);
+        serialOut().print(" scalar_release_threshold=");
+        serialOut().print(selectedProfile.scalarTransient.onsetReleaseThreshold, 1);
+        serialOut().print(" scalar_cooldown_ms=");
+        serialOut().print(selectedProfile.scalarTransient.cooldownAfterOnsetMs);
+        serialOut().print(" scalar_min_duration_ms=");
+        serialOut().print(selectedProfile.scalarTransient.minTransientDurationMs);
+        serialOut().print(" scalar_max_duration_ms=");
+        serialOut().print(selectedProfile.scalarTransient.maxTransientDurationMs);
+        serialOut().print(" scalar_min_peak_strength=");
+        serialOut().print(selectedProfile.scalarTransient.minTransientPeakStrength, 1);
+        serialOut().print(" scalar_release_debounce_ms=");
+        serialOut().print(selectedProfile.scalarTransient.releaseDebounceMs);
+        serialOut().print(" scalar_require_carrier_quality=");
+        serialOut().print(selectedProfile.scalarTransient.requireCarrierQuality ? 1 : 0);
+        serialOut().print(" scalar_min_release_coverage_ms=");
+        serialOut().print(selectedProfile.scalarTransient.minCoverageAboveReleaseMs);
+        serialOut().print(" scalar_min_longest_island_ms=");
+        serialOut().print(selectedProfile.scalarTransient.minLongestIslandMs);
+        serialOut().print(" scalar_max_gap_ms=");
+        serialOut().print(selectedProfile.scalarTransient.maxGapMs);
+        serialOut().print(" history.bin_ms=");
+        serialOut().print(1);
+        serialOut().print(" history.capacity_bins=");
+        serialOut().print(detection::FeatureHistory::kBinsPerStream);
+        serialOut().print(" history.coverage_ms=");
+        serialOut().print(detection::FeatureHistory::kBinsPerStream);
+        serialOut().print(" history.stream=amp aggregation=mean_abs+rms+peak_abs");
+        serialOut().print(" history.stream=freq_target aggregation=fresh_only");
+        serialOut().print(" history.stream=freq_contrast aggregation=fresh_only");
+        serialOut().print(" mode=");
+        serialOut().print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
+        serialOut().print(" test=");
+        serialOut().print(_sequenceTest.setupLabel);
+        serialOut().print(" startup_delay_ms=");
+        serialOut().print(_sequenceTest.startupDelayMs);
+        serialOut().print(" report_settle_ms=");
+        serialOut().print(_sequenceTest.reportSettleMs);
+        serialOut().print(" loopDelayMs=");
+        serialOut().print(TEST_LOOP_DELAY_MS);
+        serialOut().print(" logStress=");
+        serialOut().print(TEST_LOG_STRESS ? 1 : 0);
+        serialOut().print(" quiet=");
+        serialOut().print(_sequenceTest.quiet ? 1 : 0);
+        serialOut().print(" tries=");
+        serialOut().print(_sequenceTest.totalTrials);
+        serialOut().print(" period_ms=");
+        serialOut().print(_sequenceTest.periodMs);
+        serialOut().print(" window_start_ms=");
+        serialOut().print(_sequenceTest.windowStartOffsetMs);
+        serialOut().print(" window_end_ms=");
+        serialOut().print(_sequenceTest.windowEndOffsetMs);
+        serialOut().print(" freq_hz=");
+        serialOut().print(_sequenceTest.toneHz);
+        serialOut().print(" dur_ms=");
+        serialOut().print(_sequenceTest.durationMs);
         // Pulse trains only (DET-011); a plain chirp run keeps its old header.
         if (_sequenceTest.pulseCount > 0) {
-            Serial.print(" pulses=");
-            Serial.print(_sequenceTest.pulseCount);
-            Serial.print(" gap_ms=");
-            Serial.print(_sequenceTest.pulseGapMs);
-            Serial.print(" ramp_ms=");
+            serialOut().print(" pulses=");
+            serialOut().print(_sequenceTest.pulseCount);
+            serialOut().print(" gap_ms=");
+            serialOut().print(_sequenceTest.pulseGapMs);
+            serialOut().print(" ramp_ms=");
             if (_sequenceTest.pulseRampSet) {
-                Serial.print(_sequenceTest.pulseRampMs);
+                serialOut().print(_sequenceTest.pulseRampMs);
             } else {
-                Serial.print("default");
+                serialOut().print("default");
             }
         } else if (_sequenceTest.sweepToHz != 0) {
             // Sweep inside the chirp (OUT-005): freq_hz glides to this over dur_ms.
-            Serial.print(" sweep_hz=");
-            Serial.print(_sequenceTest.sweepToHz);
+            serialOut().print(" sweep_hz=");
+            serialOut().print(_sequenceTest.sweepToHz);
         }
-        Serial.println();
+        serialOut().println();
         printDetectionParameters();
         if (!_sequenceTest.quiet) {
-            Serial.println(_sequenceTest.externalEmitter ? "OBS running" : "SEQ running");
+            serialOut().println(_sequenceTest.externalEmitter ? "OBS running" : "SEQ running");
         }
     }
 }
@@ -758,24 +759,51 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             _sequenceTest.misses++;
         }
     }
+    // ANA-004 (step 7a): where the per-trial report time goes. One line per
+    // trial with diagnostics on: microseconds per print block and the
+    // cumulative dropped-DMA count at finalize start (drops caused by this
+    // report show up in the next trial's line).
+    const uint32_t tBuildUs = timebase::nowUs();
+    const uint32_t dropsAtFinalize = _audioSource.stats().droppedDmaBuffers;
     flushSequenceSampleHistory(now + 1UL);
+    const uint32_t tFlushUs = timebase::nowUs();
     if (shouldPrintSequenceTrial()) {
         printSequenceTrial(*finalizedReport);
     }
+    const uint32_t tTrialUs = timebase::nowUs();
     if (_sequenceTest.sampleDumpEnabled) {
         printSequenceSampleReport(_sequenceTest.currentTrial);
     }
+    const uint32_t tSamplesUs = timebase::nowUs();
     if (shouldPrintSequenceInspect(*finalizedReport)) {
         printSequenceInspectCanonical(*finalizedReport);
     }
+    const uint32_t tInspectUs = timebase::nowUs();
     if (shouldPrintSequenceSource(*finalizedReport)) {
         printSequenceSourceCanonical(*finalizedReport);
     }
+    const uint32_t tSourceUs = timebase::nowUs();
     if (shouldPrintSequenceSystem(*finalizedReport)) {
         printSystemHealth(*finalizedReport);
     }
+    const uint32_t tSystemUs = timebase::nowUs();
     if (shouldPrintSequenceDetail(*finalizedReport)) {
         printSequenceDetailCanonical(*finalizedReport);
+    }
+    const uint32_t tDetailUs = timebase::nowUs();
+    if (_sequenceTest.outputConfig.diagnosticsEnabled) {
+        serialOut().printf("SEQ_TIMING trial=%lu build_us=%lu flush_us=%lu trial_us=%lu samples_us=%lu inspect_us=%lu source_us=%lu system_us=%lu detail_us=%lu drops_at_finalize=%lu tx_free=%d\n",
+                      static_cast<unsigned long>(_sequenceTest.currentTrial),
+                      static_cast<unsigned long>(tBuildUs - finalizeStartUs),
+                      static_cast<unsigned long>(tFlushUs - tBuildUs),
+                      static_cast<unsigned long>(tTrialUs - tFlushUs),
+                      static_cast<unsigned long>(tSamplesUs - tTrialUs),
+                      static_cast<unsigned long>(tInspectUs - tSamplesUs),
+                      static_cast<unsigned long>(tSourceUs - tInspectUs),
+                      static_cast<unsigned long>(tSystemUs - tSourceUs),
+                      static_cast<unsigned long>(tDetailUs - tSystemUs),
+                      static_cast<unsigned long>(dropsAtFinalize),
+                      Serial.availableForWrite());
     }
     // OBS keeps the trigger grid: the external emitter runs on its own fixed
     // period, and finalize already waited reportSettleMs past the window, so

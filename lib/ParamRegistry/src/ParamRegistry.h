@@ -59,7 +59,7 @@ struct ParamBinding {
 
 class ParamRegistry {
 public:
-    static constexpr size_t kMaxParams = 32;
+    static constexpr size_t kMaxParams = 48;  // 35 used by the Node (22 + 13 behavior.*) since step 10
     using GroupNamer = const char* (*)(uint8_t group);
 
     // Raw registration. Rejects a null path or field, a duplicate path, a

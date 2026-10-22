@@ -172,6 +172,7 @@ private:
     void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)
     void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history (step 8b item 2)
     void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset (step 10 item 2)
+    void registerBehaviorParams();    // behavior.* on the registry (PAR-006, step 10 item 4)
 
     // Hardware wiring.
     int _ledPin;
@@ -244,6 +245,7 @@ private:
     unsigned long _rbLastLoggedTransientRejectCount = 0;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;
+    BehaviorGateConfig _activeBehaviorProfile = {};  // the behavior.* params bind into it (step 10 item 4)
     bool _wasSelfChirpSuppressed = false;
     // When the last own chirp stopped; SELFTEST Settle waits out its echo.
     unsigned long _lastOwnChirpEndMs = 0;

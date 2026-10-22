@@ -236,7 +236,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
 }
 
 void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
-    serialOut().println("RB BEHAV");
+    serialOut().println("RB behavior");
     serialOut().print("  idleEnabled=");
     serialOut().println(behavior.idleEnabled() ? 1 : 0);
     serialOut().print("  waitAfterHeardMs=");
@@ -394,7 +394,7 @@ void Node::begin() {
 
 // Outputs go off: Behavior must not carry a HeardPattern (or a sounding
 // chirp) across, or it answers seconds late once outputs return. Config
-// (RB BEHAV) is kept; performRbRebase does the same plus the audio reset
+// (the behavior.* params) is kept; performRbRebase does the same plus the audio reset
 // (issue #31 R2-3).
 void Node::quiesceBehaviorForOutputsOff() {
     if (_chirpOutput.isActive()) {
@@ -430,7 +430,7 @@ void Node::resetRbCounters() {
 void Node::resetDetectionState() {
     _audioSignal.resetSignalState();
     _detection.resetState();
-    // Detection config only: a rebase must not put live RB BEHAV values back
+    // Detection config only: a rebase must not put live behavior.* values back
     // to the profile defaults (issue #31). Profile switches and boot apply
     // both through applyActiveProfiles().
     applyActiveDetectionProfile();
@@ -558,6 +558,7 @@ void Node::configureParameters() {
     _paramRegistry.setGroupNamer(param::moduleNameForGroup);
     registerDetectionParams();
     registerOutputParams();
+    registerBehaviorParams();
 }
 
 // Bind the currently-editable detection fields into the flat ParamRegistry.
@@ -627,6 +628,44 @@ void Node::registerOutputParams() {
 // SET does not drop an occurrence in flight (step 10 item 2, issue #14,
 // decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md D2). A profile
 // switch still goes through applyActiveDetectionProfile().
+// Behavior's BehaviorGateConfig on the registry (PAR-006, step 10 item 4). The
+// params bind into the Node-owned _activeBehaviorProfile; a PARAM SET applies it
+// through ResonantBehavior::configure(), which only calls setters (no state
+// reset). Paths are the snake_case field names; the RB BEHAV keys they replace
+// are mapped in decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md.
+void Node::registerBehaviorParams() {
+    static_assert(sizeof(unsigned long) == sizeof(uint32_t), "behavior ms fields are bound as uint32_t");
+    BehaviorGateConfig& b = _activeBehaviorProfile;
+    using param::ModuleId;
+    using param::ParamId;
+    auto u32 = [](unsigned long* field) { return reinterpret_cast<uint32_t*>(field); };
+    _paramRegistry.addBool(ParamId::Behavior_IdleEnabled, ModuleId::Behavior, "behavior.idle_enabled", &b.idleEnabled);
+    _paramRegistry.addUInt32(ParamId::Behavior_WaitAfterHeardMs, ModuleId::Behavior,
+                             "behavior.wait_after_heard_ms", u32(&b.waitAfterHeardMs), 0U, 10000U);
+    _paramRegistry.addUInt32(ParamId::Behavior_RefractoryAfterEmitMs, ModuleId::Behavior,
+                             "behavior.refractory_after_emit_ms", u32(&b.refractoryAfterEmitMs), 0U, 60000U);
+    _paramRegistry.addUInt32(ParamId::Behavior_SuppressSelfChirpMs, ModuleId::Behavior,
+                             "behavior.suppress_self_chirp_ms", u32(&b.behaviorSuppressSelfChirpMs), 0U, 10000U);
+    _paramRegistry.addUInt32(ParamId::Behavior_DetectionSuppressTailMs, ModuleId::Behavior,
+                             "behavior.detection_suppress_tail_ms", u32(&b.detectionSuppressTailMsOwnEmit), 0U, 5000U);
+    _paramRegistry.addUInt32(ParamId::Behavior_IdleTimeoutMs, ModuleId::Behavior,
+                             "behavior.idle_timeout_ms", u32(&b.idleTimeoutMs), 0U, 3600000U);
+    _paramRegistry.addUInt32(ParamId::Behavior_IdleTimeoutVariationMs, ModuleId::Behavior,
+                             "behavior.idle_timeout_variation_ms", u32(&b.idleTimeVariationMs), 0U, 3600000U);
+    _paramRegistry.addUInt32(ParamId::Behavior_IdleBlockedAfterHeardMs, ModuleId::Behavior,
+                             "behavior.idle_blocked_after_heard_ms", u32(&b.idleBlockedAfterHeardMs), 0U, 600000U);
+    _paramRegistry.addUInt32(ParamId::Behavior_IdleBlockedAfterOwnEmitMs, ModuleId::Behavior,
+                             "behavior.idle_blocked_after_own_emit_ms", u32(&b.idleBlockedAfterOwnEmitMs), 0U, 600000U);
+    _paramRegistry.addUInt32(ParamId::Behavior_RestAfterFieldPatterns, ModuleId::Behavior,
+                             "behavior.rest_after_field_patterns", u32(&b.restAfterFieldPatterns), 0U, 100U);
+    _paramRegistry.addUInt32(ParamId::Behavior_OwnEmitBudget, ModuleId::Behavior,
+                             "behavior.own_emit_budget", u32(&b.ownEmitBudget), 0U, 100U);
+    _paramRegistry.addUInt32(ParamId::Behavior_OwnEmitBudgetWindowMs, ModuleId::Behavior,
+                             "behavior.own_emit_budget_window_ms", u32(&b.ownEmitBudgetWindowMs), 0U, 600000U);
+    _paramRegistry.addUInt32(ParamId::Behavior_RestMs, ModuleId::Behavior,
+                             "behavior.rest_ms", u32(&b.restMs), 0U, 600000U);
+}
+
 void Node::applyLiveDetectionParams() {
     _detection.setScalarTransientConfig(_activeDetectionProfile.scalarTransient);
     applyBandParams();
@@ -985,7 +1024,7 @@ void Node::pollSerialCommands() {
 
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
-        serialOut().println("RB CMD: RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) restField=N budget=N budgetWindowMs=MS restMs=MS (0 = off) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
+        serialOut().println("RB CMD: PARAM SET behavior.<key> <value> (Behavior timing, rest and idle call; PARAM LIST)");
         serialOut().println("RB CMD: RB STATUS");
         serialOut().println("RB CMD: RB PROFILE name=TonalPulseScalar");
         serialOut().println("RB CMD: RB PROFILE name=AmpExperimental");
@@ -1023,135 +1062,10 @@ void Node::handleSerialLine(const char* line) {
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
-        char buffer[kSerialLineCapacity];
-        strncpy(buffer, line, sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
-
-        char* savePtr = nullptr;
-        char* token = strtok_r(buffer, " ", &savePtr);
-        token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
-
-        if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
-            serialOut().println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) restField=N budget=N budgetWindowMs=MS restMs=MS (0 = off) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
-            return;
-        }
-
-        unsigned long waitAfterHeardMs = _behavior.waitAfterHeardMs();
-        unsigned long refractoryAfterEmitMs = _behavior.refractoryAfterEmitMs();
-        unsigned long behaviorSuppressSelfChirpMs = _behavior.behaviorSuppressSelfChirpMs();
-        unsigned long detectionSuppressTailMsOwnEmit = _behavior.detectionSuppressTailMsOwnEmit();
-        unsigned long idleTimeoutMs = _behavior.idleTimeoutMs();
-        unsigned long idleTimeoutVariationMs = _behavior.idleTimeVariationMs();
-        unsigned long idleBlockedAfterHeardMs = _behavior.idleBlockedAfterHeardMs();
-        unsigned long idleBlockedAfterOwnEmitMs = _behavior.idleBlockedAfterOwnEmitMs();
-        bool idleEnabled = _behavior.idleEnabled();
-        unsigned long restAfterFieldPatterns = _behavior.restAfterFieldPatterns();
-        unsigned long ownEmitBudget = _behavior.ownEmitBudget();
-        unsigned long ownEmitBudgetWindowMs = _behavior.ownEmitBudgetWindowMs();
-        unsigned long restMs = _behavior.restMs();
-
-        while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
-            if (const char* value = valueAfterPrefix(token, "waitMs=")) {
-                waitAfterHeardMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "wait=")) {
-                waitAfterHeardMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "refractoryMs=")) {
-                refractoryAfterEmitMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "refractory=")) {
-                refractoryAfterEmitMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "behaviorSuppressSelfChirpMs=")) {
-                behaviorSuppressSelfChirpMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "suppressSelfChirp=")) {
-                behaviorSuppressSelfChirpMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "detectionSuppressTailMsOwnEmit=")) {
-                detectionSuppressTailMsOwnEmit = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "detectionSuppressTail=")) {
-                detectionSuppressTailMsOwnEmit = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleTimeoutMs=")) {
-                idleTimeoutMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleMs=")) {
-                idleTimeoutMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleTimeout=")) {
-                idleTimeoutMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idle=")) {
-                idleTimeoutMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleTimeoutVariation=")) {
-                idleTimeoutVariationMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleVariation=")) {
-                idleTimeoutVariationMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleVar=")) {
-                idleTimeoutVariationMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleBlockedAfterHeard=")) {
-                idleBlockedAfterHeardMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleBlockedHeardMs=")) {
-                idleBlockedAfterHeardMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleBlockedAfterOwnEmit=")) {
-                idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleBlockedOwnEmitMs=")) {
-                idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleBlockedHeard=")) {
-                // The keys RB BEHAV and RB summary echo, so an echoed line
-                // pastes back (issue #31 R2-19).
-                idleBlockedAfterHeardMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleBlockedOwnEmit=")) {
-                idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "idleEnabled=")) {
-                idleEnabled = equalsIgnoreCase(value, "1") || equalsIgnoreCase(value, "on") || equalsIgnoreCase(value, "true");
-            } else if (const char* value = valueAfterPrefix(token, "restField=")) {
-                restAfterFieldPatterns = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "budget=")) {
-                ownEmitBudget = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "budgetWindowMs=")) {
-                ownEmitBudgetWindowMs = strtoul(value, nullptr, 10);
-            } else if (const char* value = valueAfterPrefix(token, "restMs=")) {
-                restMs = strtoul(value, nullptr, 10);
-            } else {
-                serialOut().print("RB BEHAV ERR token=");
-                serialOut().print(token);
-                serialOut().println(" (unknown key; ignored)");
-            }
-        }
-
-        _behavior.setWaitAfterHeardMs(waitAfterHeardMs);
-        _behavior.setRefractoryAfterEmitMs(refractoryAfterEmitMs);
-        _behavior.setBehaviorSuppressSelfChirpMs(behaviorSuppressSelfChirpMs);
-        _behavior.setDetectionSuppressTailMsOwnEmit(detectionSuppressTailMsOwnEmit);
-        _behavior.setIdleTimeoutMs(idleTimeoutMs);
-        _behavior.setIdleTimeVariationMs(idleTimeoutVariationMs);
-        _behavior.setIdleBlockedAfterHeardMs(idleBlockedAfterHeardMs);
-        _behavior.setIdleBlockedAfterOwnEmitMs(idleBlockedAfterOwnEmitMs);
-        _behavior.setIdleEnabled(idleEnabled);
-        _behavior.setRestAfterFieldPatterns(restAfterFieldPatterns);
-        _behavior.setOwnEmitBudget(ownEmitBudget);
-        _behavior.setOwnEmitBudgetWindowMs(ownEmitBudgetWindowMs);
-        _behavior.setRestMs(restMs);
-
-        serialOut().print("RB BEHAV wait=");
-        serialOut().print(_behavior.waitAfterHeardMs());
-        serialOut().print(" refractory=");
-        serialOut().print(_behavior.refractoryAfterEmitMs());
-        serialOut().print(" suppressSelfChirp=");
-        serialOut().print(_behavior.behaviorSuppressSelfChirpMs());
-        serialOut().print(" detectionSuppressTail=");
-        serialOut().print(_behavior.detectionSuppressTailMsOwnEmit());
-        serialOut().print(" idleTimeout=");
-        serialOut().print(_behavior.idleTimeoutMs());
-        serialOut().print(" idleTimeoutVariation=");
-        serialOut().print(_behavior.idleTimeVariationMs());
-        serialOut().print(" idleBlockedHeard=");
-        serialOut().print(_behavior.idleBlockedAfterHeardMs());
-        serialOut().print(" idleBlockedOwnEmit=");
-        serialOut().print(_behavior.idleBlockedAfterOwnEmitMs());
-        serialOut().print(" idleEnabled=");
-        serialOut().print(_behavior.idleEnabled() ? 1 : 0);
-        serialOut().print(" restField=");
-        serialOut().print(_behavior.restAfterFieldPatterns());
-        serialOut().print(" budget=");
-        serialOut().print(_behavior.ownEmitBudget());
-        serialOut().print(" budgetWindowMs=");
-        serialOut().print(_behavior.ownEmitBudgetWindowMs());
-        serialOut().print(" restMs=");
-        serialOut().println(_behavior.restMs());
+        // RB BEHAV was removed in step 10 (decisions/2026-10-22-live-params-
+        // profile-reset-no-rb-behav.md): Behavior's values are behavior.*
+        // params; PARAM DUMP shows them, PARAM SET changes them.
+        serialOut().println("RB BEHAV ERR removed; use PARAM SET behavior.<key> <value> (PARAM LIST shows the keys)");
         return;
     }
     if (startsWithTokenIgnoreCase(line, "PARAM")) {
@@ -1436,8 +1350,8 @@ void Node::handleProfileCommand(const char* line) {
 }
 
 // PARAM LIST / GET / SET / DUMP: the generic ParamRegistry command surface.
-// Kept separate from the ad hoc RB PARAM / RB BEHAV commands until those are
-// deliberately migrated (see docs/roadmaps/roadmap-param-config.md).
+// The one command path for every registered knob since step 10 (RB PARAM and
+// RB BEHAV were removed; docs/roadmaps/roadmap-param-config.md PAR-015).
 void Node::handleParamCommand(const char* line) {
     char buffer[kSerialLineCapacity];
     strncpy(buffer, line, sizeof(buffer));
@@ -1535,8 +1449,10 @@ void Node::applyParamModule(param::ModuleId module) {
         case param::ModuleId::Output:
             printHopGapCheck();
             break;
-        case param::ModuleId::Node:
         case param::ModuleId::Behavior:
+            applyActiveBehaviorGateConfig();
+            break;
+        case param::ModuleId::Node:
             break;
     }
 }
@@ -1627,6 +1543,7 @@ bool Node::setProfileFromName(const char* name) {
 
     _profileKind = parsed;
     _activeDetectionProfile = detection::detectionProfileForKind(_profileKind);
+    _activeBehaviorProfile = makeTonalPulseBehaviorProfile();
     applyActiveProfiles();
     return true;
 }
@@ -1640,14 +1557,10 @@ const detection::DetectionProfile& Node::activeDetectionProfile() const {
 }
 
 const BehaviorGateConfig& Node::activeBehaviorProfile() const {
-    static const BehaviorGateConfig kTonalPulseProfile = makeTonalPulseBehaviorProfile();
-
-    switch (_profileKind) {
-        case detection::DetectionProfileKind::TonalPulseScalar:
-        case detection::DetectionProfileKind::AmpExperimental:
-        default:
-            return kTonalPulseProfile;
-    }
+    // One behavior program for every detection profile (decisions/2026-10-17-
+    // behavior-contract-and-reproducible-sessions.md); its live values are the
+    // behavior.* params.
+    return _activeBehaviorProfile;
 }
 
 void Node::applyActiveProfiles() {

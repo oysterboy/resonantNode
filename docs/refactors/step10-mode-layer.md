@@ -30,7 +30,12 @@ both profiles are param-bound.
 
 - 2026-10-22, item 2 (7c2c28e): live detection params apply in place. Bench: a PARAM SET mid-train, old firmware
   0/10 hop trains heard, new 10/10 (bench/sessions/2026-10-22-step10-live-params).
-- 2026-10-22, item 3: ParamRegistry is lib/ParamRegistry (PAR-016), with a host test and a strict CI include rule.
+- 2026-10-22, item 3 (89e723e): ParamRegistry is lib/ParamRegistry (PAR-016), with a host test and a strict CI
+  include rule; PARAM DUMP/LIST byte-identical on E2.
+- 2026-10-22, items 4-5: 13 behavior.* params (PAR-006), RB BEHAV removed (PAR-015, D3), four bench tools
+  migrated, key map in the decision. E2: dump has 35 params; a behavior.* SET reaches ResonantBehavior
+  (wait 100 -> 150, refractory 400 -> 900); RB BEHAV gives ERR; 10/10 hop trains answered; RB PROFILE resets
+  behavior.rest_ms 7000 -> 5000 (silently: item 6 adds the announcement).
 
 ## Standing checks (every commit)
 

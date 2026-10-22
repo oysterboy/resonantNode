@@ -9,7 +9,7 @@ the longest alternating chain, and the heard-to-emit latency.
   python tools/bench/nodepair.py --a COM5 --b COM3 --secs 120 --kick a \
       --out bench/sessions/<folder> --name pair_kickA_120s
 
-After the setup commands each node is asked for a bare `RB BEHAV` and `PARAM DUMP`; the
+After the setup commands each node is asked for `PARAM DUMP` (behavior.*, detection.*, output.*); the
 replies go into the log header as `# state A|B << ...` lines, so the log carries every
 effective behavior and detection value, not only the commands sent (a mechanism added
 later, e.g. rest, would otherwise run unrecorded; decisions/2026-10-17-behavior-contract-
@@ -28,7 +28,7 @@ ap.add_argument("--b", required=True, help="COM port of node B")
 ap.add_argument("--secs", type=int, default=120)
 ap.add_argument("--kick", choices=["a", "b", "none"], default="a", help="which node plays one SELFTEST chirp at t=5 s")
 ap.add_argument("--kick-n", type=int, default=1)
-ap.add_argument("--a-setup", default="", help="commands for node A after boot, ';'-separated, e.g. 'PARAM SET output.hop_rotation 3;RB BEHAV idleEnabled=0'")
+ap.add_argument("--a-setup", default="", help="commands for node A after boot, ';'-separated, e.g. 'PARAM SET output.hop_rotation 3;PARAM SET behavior.idle_enabled 0'")
 ap.add_argument("--b-setup", default="", help="same for node B")
 ap.add_argument("--boot-wait", type=float, default=4.0, help="seconds to wait after opening the ports (a port open resets a D-AMP board over DTR)")
 ap.add_argument("--status-every", type=float, default=0.0, help="poll RB STATUS on both nodes every N s and log it (audio health vs hearing)")
@@ -51,7 +51,7 @@ def send(name, cmd):
         if not l:
             break
         l = l.decode(errors="replace").strip()
-        if l and (l.startswith("PARAM") or l.startswith("RB BEHAV") or l.startswith("RB ERR")):
+        if l and (l.startswith("PARAM") or l.startswith("RB ERR") or l.startswith("RB BEHAV ERR")):
             reply.append(l[:160])
     return reply
 
@@ -60,9 +60,9 @@ for name, cmds in (("A", a.a_setup), ("B", a.b_setup)):
     for cmd in [c.strip() for c in cmds.split(";") if c.strip()]:
         reply = send(name, cmd)
         setup_lines.append(("setup", "%s >> %s\n%s" % (name, cmd, "\n".join("%s << %s" % (name, r) for r in reply) or "%s << (no reply captured)" % name)))
-# The effective state, after the setup: one RB BEHAV echo line and one PARAM line per registered param.
+# The effective state, after the setup: one PARAM line per registered param (behavior.* included since step 10).
 for name in ("A", "B"):
-    for cmd in ("RB BEHAV", "PARAM DUMP"):
+    for cmd in ("PARAM DUMP",):
         reply = send(name, cmd)
         setup_lines.append(("state", "\n".join("%s << %s" % (name, r) for r in reply) or "%s << (no reply to %s)" % (name, cmd)))
 for kind, line in setup_lines:

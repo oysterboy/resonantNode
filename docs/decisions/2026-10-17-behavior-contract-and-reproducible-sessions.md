@@ -1,5 +1,10 @@
 # Behavior: one program, the shipped struct as its profile, values as params; a session records the whole effective state
 
+Updated 2026-10-22 (step 10): RB BEHAV is removed (decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md).
+The behavior values are `behavior.*` params. A bench session header records them with `PARAM DUMP` alone; the
+RB BEHAV lines in older headers map onto the paths through the key table in that decision. Where the text below
+says RB BEHAV, read PARAM SET / PARAM DUMP behavior.* from here on.
+
 Status: decided (rules 1-3 and the tooling now; rules 4-5 land with step 10a).
 Date: 2026-10-17.
 

@@ -37,10 +37,10 @@ def hold(ports):
     time.sleep(6)
     status = []
     for s in held:
-        s.write(b"RB BEHAV idleEnabled=0\n"); time.sleep(0.4)
+        s.write(b"PARAM SET behavior.idle_enabled 0\n"); time.sleep(0.4)
         s.write(b"PARAM SET detection.scalar_onset_threshold 200000\n"); time.sleep(0.4)
         out = [s.readline().decode("ascii", errors="replace").strip() for _ in range(80)]
-        status.append(any("idleEnabled=0" in l for l in out) and any("new=200000" in l for l in out))
+        status.append(any("behavior.idle_enabled" in l and "status=ok" in l for l in out) and any("new=200000" in l for l in out))
     return held, status
 
 results = []

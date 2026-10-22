@@ -3,7 +3,7 @@
 All --boards get `RB log full` and run as they are (idle voice, answers, rest rule); --silent boards are
 silenced (idle off, unreachable detection threshold) with their ports kept open, since closing a port resets
 a D-AMP board. Optional --setup commands go to every board after the boot, then every free-running board
-is asked for a bare `RB BEHAV` and `PARAM DUMP` and the replies go into the log header as
+is asked for `PARAM DUMP` (behavior.*, detection.*, output.*) and the replies go into the log header as
 `# state <NAME> << ...` lines (the effective values the run used, not only the commands sent;
 decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md). RB STATUS is polled every
 --status-every s. One log, "<t> <NAME> <line>".
@@ -46,16 +46,16 @@ held = {n: serial.Serial(p, 115200, timeout=0.05) for n, p in silent}
 time.sleep(6)
 setup_log = []
 for n, s in held.items():
-    s.write(b"RB BEHAV idleEnabled=0\n"); time.sleep(0.4)
+    s.write(b"PARAM SET behavior.idle_enabled 0\n"); time.sleep(0.4)
     s.write(b"PARAM SET detection.scalar_onset_threshold 200000\n"); time.sleep(0.4)
     out = [s.readline().decode("ascii", errors="replace").strip() for _ in range(60)]
-    ok = any("idleEnabled=0" in l for l in out) and any("new=200000" in l for l in out)
+    ok = any("behavior.idle_enabled" in l and "status=ok" in l for l in out) and any("new=200000" in l for l in out)
     setup_log.append("%s silent %s" % (n, "ok" if ok else "NOT CONFIRMED"))
 state_log = []
 for n, s in ports.items():
     for cmd in [c.strip() for c in a.setup.split(";") if c.strip()]:
         s.write((cmd + "\n").encode()); time.sleep(0.4)
-    for cmd in ("RB BEHAV", "PARAM DUMP"):
+    for cmd in ("PARAM DUMP",):
         s.write((cmd + "\n").encode()); time.sleep(0.8)
         got = 0
         while True:
@@ -63,7 +63,7 @@ for n, s in ports.items():
             if not l:
                 break
             l = l.decode("ascii", errors="replace").strip()
-            if l.startswith("RB BEHAV") or l.startswith("PARAM"):
+            if l.startswith("PARAM"):
                 state_log.append("state %s << %s" % (n, l[:160])); got += 1
         if not got:
             state_log.append("state %s << (no reply to %s)" % (n, cmd))

@@ -1,6 +1,6 @@
 # Live params apply in place, a profile switch announces its reset, RB BEHAV goes
 
-Status: decided, not yet implemented (step 10 items 2, 5, 6).
+Status: decided; D2 implemented (7c2c28e), D3 implemented (step 10 items 4-5), D1's announcement pending (item 6).
 Date: 2026-10-22.
 
 ## Decision
@@ -39,6 +39,25 @@ key map.
 
 A bench workflow needs a one-line setter for many behavior values; PARAM SET then gets a multi-value form, not a
 second command.
+
+
+## RB BEHAV key -> behavior.* path (for session headers recorded before step 10)
+
+| RB BEHAV echo / set key | behavior.* path |
+|---|---|
+| `idleEnabled` | `behavior.idle_enabled` |
+| `wait` (`waitMs`) | `behavior.wait_after_heard_ms` |
+| `refractory` (`refractoryMs`) | `behavior.refractory_after_emit_ms` |
+| `suppressSelfChirp` (`behaviorSuppressSelfChirpMs`) | `behavior.suppress_self_chirp_ms` |
+| `detectionSuppressTail` (`detectionSuppressTailMsOwnEmit`) | `behavior.detection_suppress_tail_ms` |
+| `idleTimeout` (`idleTimeoutMs`, `idleMs`, `idle`) | `behavior.idle_timeout_ms` |
+| `idleTimeoutVariation` (`idleVariation`, `idleVar`) | `behavior.idle_timeout_variation_ms` |
+| `idleBlockedHeard` (`idleBlockedAfterHeard`, `idleBlockedHeardMs`) | `behavior.idle_blocked_after_heard_ms` |
+| `idleBlockedOwnEmit` (`idleBlockedAfterOwnEmit`, `idleBlockedOwnEmitMs`) | `behavior.idle_blocked_after_own_emit_ms` |
+| `restField` | `behavior.rest_after_field_patterns` |
+| `budget` | `behavior.own_emit_budget` |
+| `budgetWindowMs` | `behavior.own_emit_budget_window_ms` |
+| `restMs` | `behavior.rest_ms` |
 
 ## Source
 

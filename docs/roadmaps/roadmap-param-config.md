@@ -285,7 +285,9 @@ no-ops until PAR-003/PAR-006/PAR-008 register params for them.
 
 ### PAR-006 - Behavior params
 
-Status: DEFERRED
+Status: DONE 2026-10-22 (step 10 item 4): 13 `behavior.*` params, one per BehaviorGateConfig field, bound into
+the Node's `_activeBehaviorProfile` and applied through `ResonantBehavior::configure()` (setters only).
+kMaxParams 48. The key map from the old RB BEHAV keys is in decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md.
 
 ```text
 Extend the same pattern to Behavior.
@@ -474,7 +476,8 @@ separate from Params.
 
 ### PAR-015 - retire RB PARAM / RB BEHAV onto ParamRegistry
 
-Status: TODO
+Status: DONE 2026-10-22: RB PARAM went with FrequencyMatch (7d); RB BEHAV removed in step 10 (owner D3, not
+aliased). Both answer with an ERR naming the PARAM path. The bench tools use PARAM SET / PARAM DUMP behavior.*.
 
 ```text
 Two command paths currently set the same knobs: the ad hoc RB PARAM /

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Hearing matrix: each node calls in turn (RB CALL), the others log; listener x caller cells (step 6, 5e).
 
-All boards are opened together (a port open resets a D-AMP board) and set to idle off, restField=1 and a short
+All boards are opened together (a port open resets a D-AMP board) and set to idle off, behavior.rest_after_field_patterns=1 and a short
 rest: a listener that hears a valid pattern rests instead of answering, so no chain forms, and its verdict is still
 logged (decision=rest_field_dense / resting, valid=1). Each caller then plays --calls RB CALLs, --every s apart.
 A cell counts the caller's calls that the listener logged as a valid verdict within --window s after the caller's
@@ -46,10 +46,11 @@ def pump(secs):
 
 pump(7)
 for n, s in ports.items():
-    for cmd in ("RB BEHAV idleEnabled=0 restField=1 restMs=%d" % a.rest_ms, "RB BEHAV", "PARAM DUMP", "RB log full"):
+    for cmd in ("PARAM SET behavior.idle_enabled 0", "PARAM SET behavior.rest_after_field_patterns 1",
+                "PARAM SET behavior.rest_ms %d" % a.rest_ms, "PARAM DUMP", "RB log full"):
         s.write((cmd + "\n").encode())
         pump(0.6)
-log.write("# setup done: idle off, restField=1, restMs=%d on every board\n" % a.rest_ms)
+log.write("# setup done: behavior.idle_enabled=0, rest_after_field_patterns=1, rest_ms=%d on every board\n" % a.rest_ms)
 pump(a.rest_ms / 1000.0 + 1)
 for caller in names:
     for k in range(a.calls):

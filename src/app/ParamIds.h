@@ -78,6 +78,22 @@ enum class ParamId : uint16_t {
     // then the node's own call (the hop train), so an idle call wakes the network.
     Output_IdleAnnounceHz,
     Output_IdleAnnounceMs,
+    // Behavior's BehaviorGateConfig, one param per field (PAR-006, step 10
+    // item 4; they replace the RB BEHAV command, decisions/2026-10-22-live-
+    // params-profile-reset-no-rb-behav.md).
+    Behavior_IdleEnabled,
+    Behavior_WaitAfterHeardMs,
+    Behavior_RefractoryAfterEmitMs,
+    Behavior_SuppressSelfChirpMs,
+    Behavior_DetectionSuppressTailMs,
+    Behavior_IdleTimeoutMs,
+    Behavior_IdleTimeoutVariationMs,
+    Behavior_IdleBlockedAfterHeardMs,
+    Behavior_IdleBlockedAfterOwnEmitMs,
+    Behavior_RestAfterFieldPatterns,
+    Behavior_OwnEmitBudget,
+    Behavior_OwnEmitBudgetWindowMs,
+    Behavior_RestMs,
 };
 
 }  // namespace param

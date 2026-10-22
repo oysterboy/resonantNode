@@ -217,6 +217,58 @@ void test_radio_speech_is_not_accepted() {
     TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
 }
 
+// Step 8b item 3 (audit 3.7): a continuous in-band tone is closed as too long once it passes
+// max duration + debounce (310 ms on the shipped profile), not when it ends, and no new
+// candidate opens until the signal drops below release. A normal pulse afterwards is accepted.
+namespace {
+ScalarTransientDetector gScalar;
+
+void feedScalar(unsigned long& ms, unsigned long count, float value) {
+    for (unsigned long i = 0; i < count; ++i, ++ms) {
+        AudioSamplePacket packet = {};
+        packet.timeMs = ms;
+        packet.timeUs64 = static_cast<uint64_t>(ms) * 1000ULL;
+        packet.valid = true;
+        gScalar.update(packet, value);
+    }
+}
+}  // namespace
+
+void test_continuous_tone_is_closed_at_max_duration() {
+    const detection::ScalarTransientConfig c = detection::makeTonalPulseScalarProfile().scalarTransient;
+    gScalar.resetState();
+    gScalar.setOnsetDetectionThreshold(c.onsetDetectionThreshold);
+    gScalar.setOnsetReleaseThreshold(c.onsetReleaseThreshold);
+    gScalar.setCooldownAfterOnsetMs(c.cooldownAfterOnsetMs);
+    gScalar.setMinTransientDurationMs(c.minTransientDurationMs);
+    gScalar.setMaxTransientDurationMs(c.maxTransientDurationMs);
+    gScalar.setMinTransientPeakStrength(c.minTransientPeakStrength);
+    gScalar.setReleaseDebounceMs(c.releaseDebounceMs);
+    gScalar.setRequireCarrierQuality(c.requireCarrierQuality);
+    gScalar.setRequireMinStrength(c.requireMinStrength);
+    gScalar.setMinMatchedMeanStrength(c.minMatchedMeanStrength);
+    gScalar.setMinCoverageAboveReleaseMs(c.minCoverageAboveReleaseMs);
+    gScalar.setMinLongestIslandMs(c.minLongestIslandMs);
+    gScalar.setMaxGapMs(c.maxGapMs);
+
+    unsigned long ms = 1000;
+    feedScalar(ms, 100, 0.0f);
+    feedScalar(ms, 330, 5000.0f);  // 330 ms into a tone that goes on
+    TEST_ASSERT_EQUAL_UINT32(1, gScalar.latestReport().scalar.aggregates.tooLongCount);
+    const uint32_t rejectsAfterClose = gScalar.selectedRejectGeneration();
+    feedScalar(ms, 600, 5000.0f);  // the tone continues: no new candidate, no new reject
+    TEST_ASSERT_EQUAL_UINT32(rejectsAfterClose, gScalar.selectedRejectGeneration());
+    detection::Occurrence occurrence;
+    TEST_ASSERT_FALSE(gScalar.popOccurrence(occurrence));
+
+    feedScalar(ms, 200, 0.0f);     // the tone ends
+    feedScalar(ms, 120, 5000.0f);  // a 120 ms pulse
+    feedScalar(ms, 100, 0.0f);
+    TEST_ASSERT_TRUE(gScalar.popOccurrence(occurrence));
+    TEST_ASSERT_TRUE(occurrence.valid);
+    TEST_ASSERT_TRUE(occurrence.durationMs >= 115 && occurrence.durationMs <= 135);
+}
+
 int runTests() {
     UNITY_BEGIN();
     RUN_TEST(test_chirp_is_accepted_once_on_the_single_target);
@@ -225,6 +277,7 @@ int runTests() {
     RUN_TEST(test_hop_train_is_accepted_once_in_band_mode);
     RUN_TEST(test_hop_train_is_not_heard_on_the_single_target);
     RUN_TEST(test_radio_speech_is_not_accepted);
+    RUN_TEST(test_continuous_tone_is_closed_at_max_duration);
     return UNITY_END();
 }
 

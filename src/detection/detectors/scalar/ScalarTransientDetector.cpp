@@ -19,6 +19,7 @@ void ScalarTransientDetector::begin() {
 }
 
 void ScalarTransientDetector::resetState() {
+    _awaitReleaseBeforeOnset = false;
     _onsetDetected = false;
     _onsetStrength = 0.0f;
     _lastOnsetUs = 0;
@@ -181,7 +182,7 @@ void ScalarTransientDetector::finalizeCandidateFacts(uint64_t releaseObservedUs)
 void IRAM_ATTR ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     // Use raw magnitude for the edge so short bursts are not delayed by smoothing.
     // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
-    if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
+    if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed && !_awaitReleaseBeforeOnset) {
         resetCandidateFacts();
         _currentOccurrenceId = detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
         _nextOccurrenceId = _currentOccurrenceId;
@@ -240,7 +241,18 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
     // Close the peak only after the occurrence has stayed below the release
     // threshold for long enough to count as a real end of burst.
     const unsigned long releaseDebounceUs = _releaseDebounceMs * 1000UL;
-    if (_peakActive && _releaseCandidateStartedUs != 0 && nowUs - _releaseCandidateStartedUs >= releaseDebounceUs) {
+    // Step 8b item 3 (audit 3.7): a candidate still open past max duration plus
+    // the debounce can only be rejected as too long, so close it now instead of
+    // when the sound ends, and open no new one until the signal has dropped
+    // below release (one reject per continuous tone, not one per max duration).
+    const uint64_t maxOpenUs = (static_cast<uint64_t>(_maxTransientDurationMs) + _releaseDebounceMs) * 1000ULL;
+    const bool openPastMax = _peakActive && _maxTransientDurationMs > 0 && nowUs - _peakStartedUs > maxOpenUs;
+    const bool releaseDebounced =
+        _peakActive && _releaseCandidateStartedUs != 0 && nowUs - _releaseCandidateStartedUs >= releaseDebounceUs;
+    if (openPastMax && !releaseDebounced && aboveReleaseThreshold) {
+        _awaitReleaseBeforeOnset = true;
+    }
+    if (releaseDebounced || openPastMax) {
         const uint64_t releaseObservedUs = _releaseObservedUs != 0 ? _releaseObservedUs : nowUs;
         const unsigned long peakDurationUs = static_cast<unsigned long>(releaseObservedUs - _peakStartedUs);
         const unsigned long minTransientDurationUs = _minTransientDurationMs * 1000UL;
@@ -384,6 +396,9 @@ void IRAM_ATTR ScalarTransientDetector::update(
     const unsigned long cooldownAfterOnsetUs = _cooldownAfterOnsetMs * 1000UL;
     const bool onsetCooldownElapsed = nowUs - _lastOnsetUs >= cooldownAfterOnsetUs;
 
+    if (!aboveReleaseThreshold) {
+        _awaitReleaseBeforeOnset = false;
+    }
     updateOnsetStage(nowUs, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
     if (_peakActive) {
         updateCandidateFacts(nowUs, signalMagnitude, aboveAttackThreshold, aboveReleaseThreshold);

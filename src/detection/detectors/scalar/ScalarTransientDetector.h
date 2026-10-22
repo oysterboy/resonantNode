@@ -119,6 +119,10 @@ private:
     float _transientStrength = 0.0f;
     unsigned long _transientDurationMs = 0;
     bool _peakActive = false;
+    // Set when a candidate was closed for running past max duration while the
+    // signal was still above release; no new candidate opens until it drops
+    // below release (step 8b item 3).
+    bool _awaitReleaseBeforeOnset = false;
     uint64_t _peakStartedUs = 0;
     uint64_t _peakStrengthObservedUs = 0;
     uint64_t _releaseCandidateStartedUs = 0;

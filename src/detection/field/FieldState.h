@@ -22,12 +22,12 @@ struct FieldStateConfig {
     float busyActivityThreshold = 0.5f;
 };
 
+// noiseFloor, avgAmbientLevel and chatter were removed 2026-10-22: two copies of
+// an occurrence count per window and one of the count itself, read by nothing
+// (decisions/2026-10-22-fieldstate-is-the-rest-gate.md).
 struct FieldState {
-    float avgAmbientLevel = 0.0f;
     float activity = 0.0f;
     float density = 0.0f;
-    float noiseFloor = 0.0f;
-    unsigned long chatter = 0;
 
     unsigned long lastOccurrenceMs = 0;
     unsigned long lastInspectedOccurrenceMs = 0;

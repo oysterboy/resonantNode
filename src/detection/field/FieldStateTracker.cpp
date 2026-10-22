@@ -73,7 +73,6 @@ void FieldStateTracker::recompute(unsigned long nowMs) {
     _state.recentOccurrenceCount = _occurrenceCountInWindow;
     _state.recentAcceptedOccurrenceCount = _acceptedOccurrenceCountInWindow;
     _state.recentPatternCount = _patternCountInWindow;
-    _state.chatter = _occurrenceCountInWindow;
     _state.quiet = _occurrenceCountInWindow <= _config.quietOccurrenceCountThreshold;
     _state.active = _occurrenceCountInWindow > 0;
     _state.dense = _occurrenceCountInWindow >= _config.denseOccurrenceCountThreshold;
@@ -87,8 +86,6 @@ void FieldStateTracker::recompute(unsigned long nowMs) {
         : (_patternCountInWindow >= _config.denseOccurrenceCountThreshold
             ? 1.0f
             : static_cast<float>(_patternCountInWindow) / static_cast<float>(_config.denseOccurrenceCountThreshold));
-    _state.noiseFloor = _occurrenceCountInWindow == 0 ? 0.0f : static_cast<float>(_occurrenceCountInWindow) / static_cast<float>(_config.occurrenceWindowMs);
-    _state.avgAmbientLevel = _state.noiseFloor;
 }
 
 } // namespace detection

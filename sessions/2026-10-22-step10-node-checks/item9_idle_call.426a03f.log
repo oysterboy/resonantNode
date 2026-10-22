@@ -1,0 +1,10 @@
+  idleEnabled=1
+  idleTimeoutMs=60000
+  idleTimeVariationMs=20000
+  idleBlockedAfterHeardMs=1000
+  idleBlockedAfterOwnEmitMs=500
+BEH emit start now=66253 source=idle state=Chirping pattern=idle
+RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+elapsed 57.5

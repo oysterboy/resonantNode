@@ -1,0 +1,19 @@
+== RB STATUS fields: 61 has i2s.dropped: True stack: ['loop.stack_free_min_bytes=3448']
+== after 5 trains: ['RB summary: pending=5 accepted=5 validPatterns=5 chirpStarted=5']
+== idle call lines:
+
+== SELFTEST:
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=node version=0.4.0 git=9721ed5 built=Oct_22_2026 built_time=20:20:43 uptime_ms=61741
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=68892 floor_mean=1145 floor_peak=3804 bit8_pct=49.8 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=1776 smooth_at_rebase=185.0 quiet_rebases=1 forced_rebases=0 baseline=91.2
+SELFTEST_AMP n=1 floor=3745 tone=349731 snr_db=39.4 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=2733 tone=349726 snr_db=42.1 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=2379 tone=348872 snr_db=43.3 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=3696 tone=348629 snr_db=39.5 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=3338 tone=347481 snr_db=40.3 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=348872 floor=3338 snr_db=40.3 snr_min_db=39.4 snr_max_db=43.3 tone_spread=1.01 pass_db=30.0 max_spread=1.30
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=0 other_valid=0 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node

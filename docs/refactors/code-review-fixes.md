@@ -129,6 +129,38 @@ Open: re-check the T3 classification counts of the existing baselines in
   pulse with an early peak gets `HistoryWindowIncomplete` and then
   `MissingSupport`. TonalPulseFreq has no maximum duration, so any tone
   longer than ~215 ms with an early peak hits it.
+  2026-10-22 re-read against max duration 300 / history 512 (shipped
+  2026-10-16): the long side is covered by construction for
+  TonalPulseScalar (onset-anchored 0..+100 window, inspection at pop,
+  oldest bin needed is the onset bin at about 300 + 10 debounce + loop
+  latency, so ~190 ms of margin; rejected occurrences never reach the
+  inspector; the amp and band streams are fed per sample, so the 1 ms
+  bins are contiguous). What is not covered, in fix order:
+  1. Nothing ties `maxTransientDurationMs` to `FEATURE_HISTORY_BINS`:
+     Node PARAM allows 0..5000 (`ResonantNodeApp.cpp`
+     `detection.scalar_max_duration_ms`), the Analyzer PARAM is
+     unbounded, the setter clamps nothing. Above ~400 ms inspection
+     degrades silently to `HistoryWindowIncomplete`. Cheap fix: a
+     static_assert on the profile defaults (bins >= max + debounce +
+     windowPost + margin) and a clamp or warning in the setter.
+  2. `coverageComplete` (`FeatureHistory.cpp` getWindow) checks only the
+     first and last bin found; interior holes pass. The realistic hole
+     source is own-emit suppression, which skips samples entirely
+     (`ResonantNodeApp.cpp` per-sample `ownEmitDetectionSuppressed`), so
+     a foreign occurrence straddling the start of the node's own train
+     inspects over a gap and also gets the suppressed span added to its
+     duration. Latent, not new with 300.
+  3. `kSmearedDurationMaxMs` 240 / `kTooLongDurationMinMs` 241 /
+     `kNearMaxDurationMinMs` 220 (`AnalyzerModeApp.cpp`) are unused and
+     written for max 240. Delete or derive from the profile.
+  4. The frequency family's `_pendingMaxDurationMs` is still never
+     enforced (`cleanup-detector-family-build.md`); with 512 bins its
+     latent ceiling moved from ~246 to ~500 ms.
+  Also noted: `cooldownAfterOnsetMs` (50) counts from onset, so it has
+  expired by close for any accepted occurrence; a tail that re-crosses
+  attack right after release starts a new occurrence immediately. The
+  short side (next bullet, DET-010) is unchanged by 300 and still open.
+  Noise cost of 300 alone is still unmeasured (lab note 2026-10-16).
 - **DET-010 on TonalPulseScalar**: the window is Start-anchored 0..+100 ms
   and the shortest accepted pulse is 85 ms with a 10 ms debounce. A pulse
   of 85-89 ms is inspected before its window closes, gets

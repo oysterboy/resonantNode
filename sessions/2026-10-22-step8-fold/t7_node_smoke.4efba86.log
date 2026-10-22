@@ -1,0 +1,146 @@
+=== NODE (E2)
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=node git=4efba86 date=Oct 22 2026 time=14:11:03 version=0.4.0 board=damp
+E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+RB node_id=0xE84C4BC3DC24
+
+RB node name=E2 rotation_source=roster
+RB signal band=2950-3950 bins=5 hop=on rotation=1 steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=85..300 issues=gap_not_below_debounce
+RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+RB DETECT
+  kind=TonalPulseScalar
+  detectorSelection=ScalarTransient
+  inspectionPlan=custom
+  scalarTransient.observedStream=FrequencyTarget
+  scalarTransient.onsetDetectionThreshold=2000.0
+  scalarTransient.onsetReleaseThreshold=1500.0
+  scalarTransient.cooldownAfterOnsetMs=50
+  scalarTransient.minTransientDurationMs=85
+  scalarTransient.maxTransientDurationMs=300
+  scalarTransient.releaseDebounceMs=10
+  scalarTransient.minTransientPeakStrength=3000.0
+  inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+  inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+  verdict.has_requirement=1
+  verdict.required_label=contrast
+  fieldState.occurrenceWindowMs=4000
+  fieldState.patternWindowMs=4000
+  fieldState.busyOccurrenceCountThreshold=3
+  fieldState.denseOccurrenceCountThreshold=6
+  fieldState.quietOccurrenceCountThreshold=0
+  fieldState.quietActivityThreshold=0.00
+  fieldState.busyActivityThreshold=0.45
+
+RB BEHAV
+  idleEnabled=1
+  waitAfterHeardMs=100
+  refractoryAfterEmitMs=400
+  behaviorSuppressSelfChirpMs=100
+  detectionSuppressTailMsOwnEmit=60
+  idleTimeoutMs=60000
+  idleTimeVariationMs=20000
+  idleBlockedAfterHeardMs=1000
+  idleBlockedAfterOwnEmitMs=500
+
+RB startup baseline=LISTEN_FOR_QUIET
+RB rebase waiting smooth=0.0 quietMs=0
+RB rebase waiting smooth=31.0 quietMs=21
+RB rebase waiting smooth=126.0 quietMs=101
+RB rebase waiting smooth=56.0 quietMs=5
+RB rebase waiting smooth=156.0 quietMs=21
+RB rebase waiting smooth=149.0 quietMs=101
+RB rebase waiting smooth=39.0 quietMs=61
+RB rebase waiting smooth=74.0 quietMs=0
+RB rebase waiting smooth=373.0 quietMs=176
+RB rebase skipped reason=no_quiet smooth=401.0
+RB summary: pending=10 accepted=10 validPatterns=10 chirpStarted=9 overflowPending=0 avg_strength=9891.0 avg_duration=196.1ms profile=TonalPulseScalarBUILD role=node git=4efba86 date=Oct 22 2026 time=14:11:03 version=0.4.0 board=damp
+
+RB baseline state=FAILED_NO_QUIET
+RB log mode=minimal
+RB behavior idle=1 wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=60000 idleTimeoutVariation=20000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=1 lastDecision=emitted lastBlock=none lastPattern=single_pulse lastHeardMs=62236 lastEmitMs=62349 waitUntilMs=62348 refractoryUntilMs=62911 ownEmitDetectionSuppressUntilMs=62571 outputBusy=0 patternsReceived=9 ignoredInvalid=0 ignoredAmbiguous=0 blockedOutputBusy=0 blockedWaiting=0 blockedRefractory=0 blockedSelfSuppressed=0 wouldEmit=9 emitted=9
+RB occurrence baseline=-6.1 mag=378 smooth=365
+
+=== EMITTER (E3)
+EVT emitter_cmd line=PULSES 5 25 10 trial=1 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line=@# z?A_/  @           QSR5EIQtrial=1 t_ms=16253393
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=1 t_ms=16253393
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_chirp_finished
+EVT emitter_cmd line= }@5%Q}=9trial=1 t_ms=16253558
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=1 t_ms=16253558
+EVT emitter_cmd line=PULSES 5 25 10 trial=2 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line=B ``2[B ";G}eg@ 'wB^I{H@*4G7ChQSR5EIQtrial=2 t_ms=16259487
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=2 t_ms=16259487
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_chirp_finished
+EVT emitter_cmd line= yv}6` EMIT_DONE trial=2 t_ms=16259654
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=2 t_ms=16259654
+EVT emitter_cmd line=PULSES 5 25 10 trial=3 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line=@00@@_P32' O $wRwP0@  @@QSR5EIQtrial=3 t_ms=16265570
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=3 t_ms=16265570
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_chirp_finished
+EVT emitter_cmd line=@g@@?~W5%Q}=9trial=3 t_ms=16265734
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=3 t_ms=16265734
+EVT emitter_cmd line=_z('gD``4@` L
+EVT emitter_cmd line=PULSES 5 25 10 trial=4 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line="wwPTL4@`QSR5EIQtrial=4 t_ms=16271665
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=4 t_ms=16271665
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_chirp_finished
+EVT emitter_cmd line=&X @I<QSRE=9trial=4 t_ms=16271830
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=4 t_ms=16271830
+EVT emitter_cmd line=PULSES 5 25 10 trial=5 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line= @w.Y7 V2~!H+@ kqWQSR5EIQtrial=5 t_ms=16277760
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=5 t_ms=16277760
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_cmd line=+0@x
+EVT emitter_chirp_finished
+EVT emitter_cmd line=QSRE=9trial=5 t_ms=16277926
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=5 t_ms=16277926
+EVT emitter_cmd line=PULSES 5 25 10 trial=6 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line=0@d9ct  Z7@@s@E0HD?@@ QSR5EIQtrial=6 t_ms=16283848
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=6 t_ms=16283848
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_chirp_finished
+EVT emitter_cmd line=wG!5%Q}=9trial=6 t_ms=16284014
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=6 t_ms=16284014
+EVT emitter_cmd line=PULSES 5 25 10 trial=7 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line=X/.%XGHP@A@f_`}$DP 66@ QSR5EIQtrial=7 t_ms=16289935
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=7 t_ms=16289935
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_chirp_finished
+EVT emitter_cmd line=2QSRE=9trial=7 t_ms=16290102
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=7 t_ms=16290102
+EVT emitter_cmd line=PULSES 5 25 10 trial=8 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line=n2@x{@w@`IC@!HQ@zdq$h   @A  QSR5EIQtrial=8 t_ms=16296025
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=8 t_ms=16296025
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_chirp_finished
+EVT emitter_cmd line= p_QSRE=9trial=8 t_ms=16296190
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=8 t_ms=16296190
+EVT emitter_cmd line=PULSES 5 25 10 trial=9 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line=@W@ & $W KE|A@)gw3@ [QQSR5EIQtrial=9 t_ms=16302121
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=9 t_ms=16302121
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_chirp_finished
+EVT emitter_cmd line=o<!rQSRE=9trial=9 t_ms=16302286
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=9 t_ms=16302286
+EVT emitter_cmd line=PULSES 5 25 10 trial=10 freq=3300 hop=2950,3200,3450,3700,3950
+EVT emitter_cmd line=`~\ ` 0lMU `VtdB_@@@@QSR5EIQtrial=10 t_ms=16308208
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=10 t_ms=16308208
+EVT emitter_cmd line=OK PULSES n=5 pulse=25 gap=10 freq=3300 ramp=5 span=165 hop=5
+EVT emitter_chirp_finished
+EVT emitter_cmd line=b!EMIT_DONE trial=10 t_ms=16308374
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=10 t_ms=16308374
+

@@ -39,6 +39,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-22, late: step 10b done (the field rerun holds: hearing 19/20, every chain ends, 0 noise
+starts, 0 drops); 10c's first overnight block runs to 08:00.
 Status update 2026-10-22, step 10: done (ANA-003, Node glue split, dead code). Next by order: 10b, the field
 baseline rerun on the refactored firmware (five nodes, step 6's protocol).
 Status update 2026-10-22, step 10a: done (map, live params, ParamRegistry library, behavior.* params, RB BEHAV gone).
@@ -907,7 +909,7 @@ the previous gate open unless the step says it can run in parallel.
    Gate: the map in docs/; behavior.* and detection.* registered; RB BEHAV
    gone. Inside step 10, after PAR-016, before PAR-015.
 
-10b. [TODO] Field baseline rerun on the refactored firmware. (issue #50)
+10b. [DONE 2026-10-22] Field baseline rerun on the refactored firmware. (issue #50, closed)
    Where: NODE-008 (roadmap-node.md), step 6's protocol and pass marks
    (decisions/2026-10-17-trial-third-question-pass-mark.md, 2026-10-22-network-pacing.md).
    Why: steps 8-10 promise unchanged behavior and prove it on the Analyzer (T2/T3) and the host; nothing proves it
@@ -915,8 +917,17 @@ the previous gate open unless the step says it can run in parallel.
    Gate: five nodes on one build of main after step 10a, in the step 6 layout or its NODE-012 successor, with
    `# state` headers: hearing matrix no worse per cell than step 6, every chain ends within 30 s in quiet and
    with speech/music, 0 chains started by noise, 0 dropped buffers. A difference is investigated before step 11.
+   Done 2026-10-22 (bench/sessions/2026-10-22-step10b-field-rerun, five nodes on 8ec0764, the step 6 layout):
+   - Hearing matrix: 19 of 20 cells at 10/10 (step 6: 18). No cell is worse.
+   - Quiet 30 min: 41 of 41 chains ended (max 4.7 s); max 40 per minute.
+   - Speech and music 30 min (bench_audio.wav x4, played by the lab PC): 40 of 40 chains ended (max 4.8 s); max 45
+     per minute.
+   - Both runs: 0 chains started by noise, 0 dropped buffers, 0 resets. Gate met: the refactor phase holds in
+     the field.
 
-10c. [TODO] Long run: five nodes for 24 h or more. (issue #51)
+10c. [NEXT] Long run: five nodes for 24 h or more. (issue #51)
+   Running 2026-10-22: a first overnight block, 22:23 to 08:00 (about 9.6 h, owner's request), five nodes on
+   8ec0764, no kick (idle calls only), quiet, RB STATUS every 120 s; bench/sessions/2026-10-22-step10c-overnight.
    Where: NODE-008, NODE-013 (soak), NODE-017 (real uptime past the 72 min wrap); audit 4.4.
    Why: the longest run so far is the 7.3 h single-board soak (3a, accepted short, ~25 % strength drift not
    attributed); the trial runs were 30 min each. An installation runs for days, and wrap, drift and heap faults

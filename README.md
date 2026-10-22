@@ -171,3 +171,6 @@ COM6 = E1, COM10 = E3 (same MACs).
    `import_session.py --reindex-only`.
 4. Pass docs, issues, and lab notes cite sessions by path; they don't copy
    raw output.
+5. Behavior values in `# state` headers: since step 10 (main, 2026-10-22) a header records them as
+   `PARAM path=behavior.* ...` lines in the PARAM DUMP. Older headers carry an `RB BEHAV wait=... restMs=...` echo
+   line instead. The key map is in `docs/decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md` on main.

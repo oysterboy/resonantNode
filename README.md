@@ -174,3 +174,8 @@ COM6 = E1, COM10 = E3 (same MACs).
 5. Behavior values in `# state` headers: since step 10 (main, 2026-10-22) a header records them as
    `PARAM path=behavior.* ...` lines in the PARAM DUMP. Older headers carry an `RB BEHAV wait=... restMs=...` echo
    line instead. The key map is in `docs/decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md` on main.
+6. Speech/music material: `C:\Users\admin\Downloads\bench_audio.wav` on the lab PC (435 s; sections in
+   `tools/bench/bench_audio.sections.txt` on main), played with Windows `System.Media.SoundPlayer` through the
+   default device, the Studio One box at its last volume (the 2026-10-16 / 10-21 level). Step 6 played it four
+   times in a 30 min run, the speaker midway between the nodes and 40 cm off their line. Record passes, start times
+   and speaker position in the session README.

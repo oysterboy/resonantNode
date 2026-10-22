@@ -20,7 +20,13 @@ named and handed to a tuning pass or a decision file.
 Closed as moot: DET-001 (FrequencyMatch report freeze, Freq removed in 7d), DET-010's Freq half, audit 3.2,
 #32 P2a, the FrequencyMatch half of B11.
 
-## Open for the owner
+## Decided 2026-10-22 (owner)
+
+- A: defer the inspection until the window is complete (decisions/2026-10-22-inspect-when-window-complete.md).
+  Replay the dur40 captures on the host before shipping.
+- B: leave `strongPeakThreshold` for contrast as it is and add a comment that Strong is unused for contrast.
+
+## Options as they were put to the owner
 
 **A. How to fix item 1.** Three options:
 - *Defer the inspection* until the window end has arrived (an occurrence waits up to `windowPost - duration`,

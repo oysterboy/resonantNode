@@ -121,6 +121,9 @@ bool loadRawCsv(const std::string& path, Capture& out) {
     char line[512];
     int pcmCol = -1;
     int ampCol = -1;
+    int freqCol = -1;
+    int contrastCol = -1;
+    int freshCol = -1;
     while (fgets(line, sizeof(line), f) != nullptr) {
         size_t len = strlen(line);
         while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
@@ -141,6 +144,23 @@ bool loadRawCsv(const std::string& path, Capture& out) {
                 const char* end = strchr(p + 6, ' ');
                 out.mode.assign(p + 6, end != nullptr ? static_cast<size_t>(end - p - 6) : strlen(p + 6));
             }
+            if ((p = strstr(line, " band=")) != nullptr) {
+                out.hasBoardBand = true;
+                if (strncmp(p + 6, "off", 3) == 0) {
+                    out.boardBandLow = out.boardBandHigh = 0;
+                } else {
+                    char* dash = nullptr;
+                    out.boardBandLow = strtoul(p + 6, &dash, 10);
+                    out.boardBandHigh = (dash != nullptr && *dash == '-') ? strtoul(dash + 1, nullptr, 10) : 0UL;
+                }
+            }
+            if ((p = strstr(line, " band_lead=")) != nullptr) {
+                out.hasBandLead = true;
+                out.bandLead = strtoul(p + 11, nullptr, 10);
+            }
+            if ((p = strstr(line, " band_update_every=")) != nullptr) {
+                out.bandUpdateEvery = strtoul(p + 19, nullptr, 10);
+            }
             if ((p = strstr(line, " preprocess=")) != nullptr) {
                 const char* end = strchr(p + 12, ' ');
                 out.preprocess.assign(p + 12, end != nullptr ? static_cast<size_t>(end - p - 12) : strlen(p + 12));
@@ -160,7 +180,7 @@ bool loadRawCsv(const std::string& path, Capture& out) {
             continue;
         }
         if (strncmp(line, "ms,", 3) == 0) {
-            pcmCol = ampCol = -1;
+            pcmCol = ampCol = freqCol = contrastCol = freshCol = -1;
             int field = 0;
             char* save = nullptr;
             for (char* tok = strtok_r(line, ",", &save); tok != nullptr; tok = strtok_r(nullptr, ",", &save), ++field) {
@@ -169,6 +189,15 @@ bool loadRawCsv(const std::string& path, Capture& out) {
                 }
                 if (strcmp(tok, "amp") == 0) {
                     ampCol = field;
+                }
+                if (strcmp(tok, "freq") == 0) {
+                    freqCol = field;
+                }
+                if (strcmp(tok, "contrast") == 0) {
+                    contrastCol = field;
+                }
+                if (strcmp(tok, "fresh") == 0) {
+                    freshCol = field;
                 }
             }
             continue;
@@ -180,6 +209,9 @@ bool loadRawCsv(const std::string& path, Capture& out) {
         int col = 0;
         int32_t pcm = 0;
         int32_t amp = 0;
+        int32_t freq = 0;
+        float contrast = 0.0f;
+        int fresh = 0;
         bool havePcm = false;
         for (char* tok = strtok_r(line, ",", &save); tok != nullptr; tok = strtok_r(nullptr, ",", &save), ++col) {
             if (col == pcmCol) {
@@ -187,12 +219,23 @@ bool loadRawCsv(const std::string& path, Capture& out) {
                 havePcm = true;
             } else if (col == ampCol) {
                 amp = static_cast<int32_t>(strtol(tok, nullptr, 10));
+            } else if (col == freqCol) {
+                freq = static_cast<int32_t>(strtol(tok, nullptr, 10));
+            } else if (col == contrastCol) {
+                contrast = static_cast<float>(atof(tok));
+            } else if (col == freshCol) {
+                fresh = static_cast<int>(strtol(tok, nullptr, 10));
             }
         }
         if (havePcm) {
             out.pcm.push_back(pcm);
             if (ampCol >= 0) {
                 out.boardAmp.push_back(amp);
+            }
+            if (freqCol >= 0 && contrastCol >= 0) {
+                out.boardFreq.push_back(freq);
+                out.boardContrast.push_back(contrast);
+                out.boardFresh.push_back(static_cast<uint8_t>(freshCol >= 0 ? fresh : 1));
             }
         }
     }
@@ -285,6 +328,14 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     band.setSampleRateHz(cap.sampleRateHz);
     band.setTargetFrequencyHz(opt.targetHz);
     band.setBand(opt.bandLow, opt.bandHigh);
+    // Same band-update phase as the board (RAW band_lead=, step 7b). The pad
+    // zeros sit in the 64-sample window for its first pass, so --compare
+    // skips the first window of samples.
+    if (cap.hasBandLead && cap.bandUpdateEvery > 0) {
+        for (unsigned long k = 0; k < cap.bandLead % cap.bandUpdateEvery; ++k) {
+            band.observeCenteredSample(0, 0);
+        }
+    }
 
     runtime.resetState();
     runtime.setDetectorSelection(profile.detectorSelection);
@@ -298,6 +349,13 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     const size_t tailSamples = static_cast<size_t>((static_cast<uint64_t>(opt.tailMs) * cap.sampleRateHz) / 1000ULL);
     const size_t total = cap.pcm.size() + tailSamples;
     double ampDiffSum = 0.0;
+    double freqDiffSum = 0.0;
+    FILE* dump = opt.dumpFreqPath.empty() ? nullptr : fopen(opt.dumpFreqPath.c_str(), "w");
+    if (dump != nullptr) {
+        fprintf(dump, "i,ms,host_freq,board_freq,host_contrast,board_contrast,host_fresh,board_fresh\n");
+    }
+    double contrastRelSum = 0.0;
+    size_t contrastCompared = 0;
     for (size_t i = 0; i < total; ++i) {
         const int32_t raw = i < cap.pcm.size() ? cap.pcm[i] : 0;
         const int sample = static_cast<int>(preprocessor.process(raw));
@@ -315,6 +373,29 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
                 r.ampMaxAbsDiff = d;
             }
             ++r.ampCompared;
+        }
+        if (dump != nullptr && i < cap.pcm.size()) {
+            fprintf(dump, "%zu,%lu,%d,%d,%.1f,%.1f,%d,%d\n", i, packet.timeMs, static_cast<int>(evidence.targetBandValue),
+                    i < cap.boardFreq.size() ? cap.boardFreq[i] : -1, static_cast<double>(evidence.targetBandContrastValue),
+                    i < cap.boardContrast.size() ? static_cast<double>(cap.boardContrast[i]) : -1.0, evidence.fresh ? 1 : 0,
+                    i < cap.boardFresh.size() ? cap.boardFresh[i] : -1);
+        }
+        if (opt.compare && i >= runtime::kFreqBandWindowSamples && i < cap.boardFreq.size() && cap.boardFresh[i] != 0 && evidence.present) {
+            const double fd = fabs(static_cast<double>(evidence.targetBandValue) - static_cast<double>(cap.boardFreq[i]));
+            const double boardC = static_cast<double>(cap.boardContrast[i]);
+            freqDiffSum += fd;
+            if (fd > r.freqMaxAbsDiff) {
+                r.freqMaxAbsDiff = fd;
+            }
+            ++r.freqCompared;
+            if (fabs(boardC) >= 1000.0) {
+                const double cd = fabs(static_cast<double>(evidence.targetBandContrastValue) - boardC) / fabs(boardC);
+                contrastRelSum += cd;
+                ++contrastCompared;
+                if (cd > r.contrastMaxRelDiff) {
+                    r.contrastMaxRelDiff = cd;
+                }
+            }
         }
         detection::OccurrenceVerdict verdict;
         while (runtime.popOccurrenceVerdict(verdict)) {
@@ -336,6 +417,13 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     r.samples = cap.pcm.size();
     if (r.ampCompared > 0) {
         r.ampMeanAbsDiff = ampDiffSum / static_cast<double>(r.ampCompared);
+    }
+    if (dump != nullptr) {
+        fclose(dump);
+    }
+    if (r.freqCompared > 0) {
+        r.freqMeanAbsDiff = freqDiffSum / static_cast<double>(r.freqCompared);
+        r.contrastMeanRelDiff = contrastCompared > 0 ? contrastRelSum / static_cast<double>(contrastCompared) : 0.0;
     }
     return r;
 }

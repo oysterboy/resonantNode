@@ -36,6 +36,7 @@ ap.add_argument("--mode", default="both", help="both (pcm + amp feature), i2s, p
 ap.add_argument("--pulses", type=int, default=0, help="PULSES train instead of one chirp; --dur is the pulse length")
 ap.add_argument("--gap", type=int, default=0, help="gap between pulses, ms")
 ap.add_argument("--hop", default="", help="per-pulse frequencies F1,F2,... (cycled), bin-aligned")
+ap.add_argument("--band", default="", help="detector band for the capture, LO-HI or off (Analyzer after 2026-10-22, step 7b); default: the Analyzer's idle setting")
 ap.add_argument("--sweep", type=int, default=0, help="sweep inside the chirp: glide from --freq to this Hz over --dur")
 ap.add_argument("--distance-cm", type=float)
 ap.add_argument("--orientation", default="mic and speaker facing up, bench")
@@ -233,6 +234,8 @@ if banner:
 for rep in range(a.reps):
     started = time.strftime("%Y-%m-%dT%H:%M:%S")
     cmd = "RAW trigger f=%d dur=%d pre=%d post=%d mode=%s" % (a.freq, a.dur, a.pre, a.post, a.mode)
+    if a.band:
+        cmd += " band=%s" % a.band
     if a.pulses > 0:
         cmd += " pulses=%d gap=%d" % (a.pulses, a.gap)
         if a.hop:

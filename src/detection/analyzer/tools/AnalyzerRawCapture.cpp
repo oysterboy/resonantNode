@@ -33,10 +33,18 @@ struct RawCaptureFeatureSample {
     uint8_t targetFresh : 1;
 };
 
+// mode=both (step 7b): PCM plus the features the shipped gates decide on, so
+// the host replay can compare its frequency path with the board's: amp
+// (Strength16), freq (the target-band FrequencyScore16 the scalar detector
+// observes), contrast (the band contrast the contrast inspector reads) and
+// fresh (a new Goertzel packet this sample). 16 bytes per row.
 struct RawCaptureBothSample {
     uint16_t timeOffsetMs = 0;
+    uint16_t amp = 0;
     int32_t pcm = 0;
-    int32_t amp = 0;
+    uint16_t freq = 0;
+    uint8_t fresh = 0;
+    float contrast = 0.0f;
 };
 
 const char* rawCaptureModeName(AnalyzerApp::RawCaptureMode mode) {
@@ -100,6 +108,21 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
                                 RawCaptureMode mode,
                                 const RawTriggerShape& shape) {
     stopSequenceTest();
+    // band= (step 7b): set for this capture, restored on every way out.
+    struct BandRestore {
+        FreqBandStream& band;
+        unsigned long low;
+        unsigned long high;
+        ~BandRestore() { band.setBand(low, high); }
+    } bandRestore{_freqBandStream, _freqBandStream.bandLowHz(), _freqBandStream.bandHighHz()};
+    if (shape.bandSet) {
+        _freqBandStream.setBand(shape.bandLowHz, shape.bandHighHz);
+    }
+    // Start the band bank from rest, as the host replay does, so its round-
+    // robin bin updates run in the same phase and the freq/contrast columns
+    // compare sample for sample (step 7b). The pre window fills the 64-sample
+    // Goertzel window long before the trigger.
+    _freqBandStream.resetState();
     resetAudioSignalState();
     _audioSource.resetStats();
 
@@ -478,6 +501,9 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
                     preBothRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
                     preBothRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(sourceSample);
                     preBothRingBuffer[preWriteIndex].amp = ampStrength;
+                    preBothRingBuffer[preWriteIndex].freq = frequencyScore;
+                    preBothRingBuffer[preWriteIndex].fresh = frequencyEvidence.fresh ? 1U : 0U;
+                    preBothRingBuffer[preWriteIndex].contrast = frequencyEvidence.targetBandContrastValue;
                     preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
                 }
                 ++preCapturedTotal;
@@ -492,6 +518,9 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
                     bothCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
                     bothCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(sourceSample);
                     bothCaptureBuffer[preWindowSamples + postCaptured].amp = ampStrength;
+                    bothCaptureBuffer[preWindowSamples + postCaptured].freq = frequencyScore;
+                    bothCaptureBuffer[preWindowSamples + postCaptured].fresh = frequencyEvidence.fresh ? 1U : 0U;
+                    bothCaptureBuffer[preWindowSamples + postCaptured].contrast = frequencyEvidence.targetBandContrastValue;
                 }
                 ++postCaptured;
             }
@@ -615,6 +644,21 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     serialOut().print(preMs);
     serialOut().print(" post_ms=");
     serialOut().print(postMs);
+    serialOut().print(" band=");
+    if (_freqBandStream.bandLowHz() == 0) {
+        serialOut().print("off");
+    } else {
+        serialOut().print(_freqBandStream.bandLowHz());
+        serialOut().print('-');
+        serialOut().print(_freqBandStream.bandHighHz());
+    }
+    // How many samples the band stream saw (since its reset at the start of
+    // this capture) before the first stored row; a replay that feeds that
+    // many mod frequencyUpdateEverySamples first runs in the same update phase.
+    serialOut().print(" band_lead=");
+    serialOut().print(preCapturedTotal > preWindowSamples ? preCapturedTotal - preWindowSamples : 0UL);
+    serialOut().print(" band_update_every=");
+    serialOut().print(_freqBandStream.frequencyUpdateEverySamples());
     // Which PCM conditioning produced the stored stream (mode=i2s stores the
     // raw PCM, every other mode what AudioSignal received), so a transcript
     // used as a host fixture says which chain it represents.
@@ -637,7 +681,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     } else if (mode == RawCaptureMode::Features) {
         serialOut().print(" fields=ms,amp_strength,env_strength,freq_score,freq_fresh");
     } else {
-        serialOut().print(" fields=ms,amp,pcm");
+        serialOut().print(" fields=ms,amp,pcm,freq,contrast,fresh");
     }
     serialOut().println();
 
@@ -676,14 +720,20 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             serialOut().println(sample.targetFresh ? 1 : 0);
         }
     } else {
-        serialOut().println("ms,amp,pcm");
+        serialOut().println("ms,amp,pcm,freq,contrast,fresh");
         for (unsigned long i = 0; i < capturedSamples; ++i) {
             const RawCaptureBothSample& sample = bothCaptureBuffer[i];
             serialOut().print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
             serialOut().print(",");
             serialOut().print(sample.amp);
             serialOut().print(",");
-            serialOut().println(sample.pcm);
+            serialOut().print(sample.pcm);
+            serialOut().print(",");
+            serialOut().print(sample.freq);
+            serialOut().print(",");
+            serialOut().print(sample.contrast, 1);
+            serialOut().print(",");
+            serialOut().println(sample.fresh);
         }
     }
 

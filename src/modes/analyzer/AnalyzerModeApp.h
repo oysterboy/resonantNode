@@ -76,6 +76,12 @@ public:
         unsigned long pulseGapMs = 0;
         char hop[40] = {};
         unsigned long sweepToHz = 0;  // CHIRP sweep=: glide from f= to this over dur=
+        // band=LO-HI|off (step 7b): the detector's band for this capture only,
+        // so a transcript carries the frequency path the Node runs (the
+        // network band) and not the Analyzer's idle setting.
+        bool bandSet = false;
+        unsigned long bandLowHz = 0;
+        unsigned long bandHighHz = 0;
     };
 
     struct SeqOutputConfig {

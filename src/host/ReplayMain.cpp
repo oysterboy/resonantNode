@@ -52,6 +52,7 @@ void usage() {
 int main(int argc, char** argv) {
     using namespace hostreplay;
     Options opt;
+    bool bandGiven = false;  // --band on the command line wins over a transcript's RAW_BEGIN band=
     bool quiet = false;
     std::vector<std::pair<std::string, double>> sets;
     std::vector<std::string> files;
@@ -65,6 +66,7 @@ int main(int argc, char** argv) {
             return argv[++i];
         };
         if (a == "--band") {
+            bandGiven = true;
             const std::string v = next("--band");
             if (v == "off") {
                 opt.bandLow = opt.bandHigh = 0;
@@ -95,6 +97,8 @@ int main(int argc, char** argv) {
             opt.skipMs = strtoul(next("--skip-ms"), nullptr, 10);
         } else if (a == "--compare") {
             opt.compare = true;
+        } else if (a == "--dump-freq" && i + 1 < argc) {
+            opt.dumpFreqPath = argv[++i];
         } else if (a == "--verbose") {
             opt.verbose = true;
         } else if (a == "--quiet") {
@@ -155,7 +159,15 @@ int main(int argc, char** argv) {
             printf("%s samples=%zu sr=%u mode=%s %s\n", cap.name.c_str(), cap.pcm.size(), cap.sampleRateHz,
                    cap.mode.c_str(), cap.shape.c_str());
         }
-        const Result r = replay(cap, opt, profile);
+        // A transcript that records the board's band (RAW band=, step 7b) is
+        // replayed on that band unless --band says otherwise, so --compare
+        // compares like with like.
+        Options capOpt = opt;
+        if (!bandGiven && cap.hasBoardBand) {
+            capOpt.bandLow = cap.boardBandLow;
+            capOpt.bandHigh = cap.boardBandHigh;
+        }
+        const Result r = replay(cap, capOpt, profile);
         totalAccepted += r.accepted;
         totalRejected += r.rejected;
         if (!quiet) {
@@ -170,6 +182,10 @@ int main(int argc, char** argv) {
             }
             if (r.ampCompared > 0) {
                 printf(" amp_vs_board: n=%zu mean_abs=%.1f max_abs=%.0f", r.ampCompared, r.ampMeanAbsDiff, r.ampMaxAbsDiff);
+            }
+            if (r.freqCompared > 0) {
+                printf(" freq_vs_board: n=%zu mean_abs=%.1f max_abs=%.0f contrast_rel mean=%.4f max=%.4f", r.freqCompared,
+                       r.freqMeanAbsDiff, r.freqMaxAbsDiff, r.contrastMeanRelDiff, r.contrastMaxRelDiff);
             }
             printf("\n");
         }

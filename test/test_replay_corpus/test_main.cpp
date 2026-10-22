@@ -49,6 +49,11 @@ const char* kChirpCsv = "test/fixtures/chirp3200_90cm_2026-10-16.csv";
 const char* kTone3300Csv = "test/fixtures/tone3300_90cm_2026-10-16.csv";
 const char* kSpeechWav = "test/fixtures/radio_speech_110cm_2026-10-16.wav";
 const char* kHopCsv = "test/fixtures/hop5_25x5g10_70cm_2026-10-16.csv";
+// Step 7b: mode=both with the board's frequency path (freq, contrast, fresh), captured on the network band
+// (RAW band=2950-3950, band stream reset at capture start, band_lead in RAW_BEGIN), E2 Analyzer / E3 Emitter
+// 0.5 FS at 110 cm (bench/sessions/2026-10-22-corpus-freqcols-aligned-110cm).
+const char* kChirpFreqColsCsv = "test/fixtures/chirp3200_band_freqcols_110cm_2026-10-22.csv";
+const char* kHopFreqColsCsv = "test/fixtures/hop5_band_freqcols_110cm_2026-10-22.csv";
 
 std::string hopVariant(const char* kind, int gapMs) {
     return std::string("test/fixtures/hop5_25x5g10_70cm_2026-10-16_") + kind + "_g" + std::to_string(gapMs) + ".csv";
@@ -166,6 +171,33 @@ void test_host_amp_feature_matches_the_board() {
     const hostreplay::Result r = hostreplay::replay(cap, opt, profile);
     TEST_ASSERT_TRUE(r.ampCompared > 4000);
     TEST_ASSERT_TRUE_MESSAGE(r.ampMaxAbsDiff <= 1.0, "max |host amp - board amp| (Strength16)");
+}
+
+// Step 7b: the frequency path that decides (the target-band FrequencyScore16
+// the scalar detector observes, and the band contrast the contrast inspector
+// reads; both float Goertzel) is the board's, sample for sample, on the
+// network band: target within rounding, contrast within 2 % where it is
+// >= 1000 (2026-10-22: max 1 and 0.5 %). With the amp check above, every
+// stream a shipped gate reads is compared host vs board.
+void test_host_frequency_path_matches_the_board_on_the_band() {
+    const char* files[] = {kChirpFreqColsCsv, kHopFreqColsCsv};
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    for (const char* f : files) {
+        hostreplay::Capture cap;
+        TEST_ASSERT_TRUE(hostreplay::loadCapture(f, cap));
+        TEST_ASSERT_TRUE_MESSAGE(cap.hasBoardBand && cap.boardBandLow == 2950 && cap.boardBandHigh == 3950, f);
+        TEST_ASSERT_TRUE_MESSAGE(cap.hasBandLead, f);
+        TEST_ASSERT_EQUAL_UINT32(cap.pcm.size(), cap.boardFreq.size());
+        hostreplay::Options opt = networkBand();
+        opt.compare = true;
+        const hostreplay::Result r = hostreplay::replay(cap, opt, profile);
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(1, r.accepted, f);
+        TEST_ASSERT_TRUE_MESSAGE(r.freqCompared > 900, f);
+        TEST_ASSERT_TRUE_MESSAGE(r.freqMaxAbsDiff <= 2.0, "max |host - board| target FrequencyScore16");
+        TEST_ASSERT_TRUE_MESSAGE(r.contrastMaxRelDiff <= 0.02, "max relative contrast difference (|board| >= 1000)");
+        TEST_ASSERT_TRUE_MESSAGE(r.contrastMeanRelDiff <= 0.001, "mean relative contrast difference");
+        TEST_ASSERT_TRUE_MESSAGE(r.ampMaxAbsDiff <= 1.0, "max |host - board| amp (Strength16)");
+    }
 }
 
 // A contrast limit above what any chirp reaches rejects the same capture at the inspector.
@@ -391,6 +423,7 @@ int main(int, char**) {
     RUN_TEST(test_off_bin_tone_fails_the_contrast_gate_in_band_mode);
     RUN_TEST(test_host_amp_feature_matches_the_board);
     RUN_TEST(test_profile_override_reaches_the_inspector);
+    RUN_TEST(test_host_frequency_path_matches_the_board_on_the_band);
     RUN_TEST(test_radio_speech_is_not_accepted);
     RUN_TEST(test_hop_train_is_accepted_once_in_band_mode);
     RUN_TEST(test_hop_train_is_not_heard_on_the_single_target);

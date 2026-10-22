@@ -389,6 +389,24 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 shape.pulseGapMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
             } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
                 shape.sweepToHz = static_cast<unsigned long>(strtoul(token + 6, nullptr, 10));
+            } else if (startsWithTokenIgnoreCase(token, "band=")) {
+                const char* spec = token + 5;
+                shape.bandSet = true;
+                if (equalsIgnoreCase(spec, "off")) {
+                    shape.bandLowHz = 0;
+                    shape.bandHighHz = 0;
+                } else {
+                    char* dash = nullptr;
+                    const unsigned long lo = strtoul(spec, &dash, 10);
+                    const unsigned long hi = (dash != nullptr && *dash == '-') ? strtoul(dash + 1, nullptr, 10) : 0UL;
+                    if (lo == 0 || hi < lo || hi > 7900UL) {
+                        serialOut().print("RAW_ERR bad value token=");
+                        serialOut().println(token);
+                        return;
+                    }
+                    shape.bandLowHz = lo;
+                    shape.bandHighHz = hi;
+                }
             } else if (startsWithTokenIgnoreCase(token, "hop=")) {
                 // Same validation as SEQ start: digits and commas, fits the buffer.
                 const char* list = token + 4;

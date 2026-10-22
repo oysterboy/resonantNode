@@ -34,6 +34,24 @@ struct Capture {
     std::string name;
     std::vector<int32_t> pcm;
     std::vector<int32_t> boardAmp;  // mode=both transcripts: the board's audioMagnitudeValue per sample
+    // mode=both transcripts since step 7b: the board's frequency path per
+    // sample (the target-band FrequencyScore16, the band contrast, and
+    // whether a fresh Goertzel packet came with this sample).
+    std::vector<int32_t> boardFreq;
+    std::vector<float> boardContrast;
+    std::vector<uint8_t> boardFresh;
+    // RAW_BEGIN band= (Analyzer builds after 2026-10-22): the detector band the
+    // board ran during the capture; 0/0 = single target. Absent in older
+    // transcripts, which ran on the Analyzer's idle setting.
+    bool hasBoardBand = false;
+    unsigned long boardBandLow = 0;
+    unsigned long boardBandHigh = 0;
+    // RAW_BEGIN band_lead= / band_update_every=: samples the board's band
+    // stream saw before the first stored row; the replay pads lead %
+    // update_every zeros into its band stream so both update in phase.
+    bool hasBandLead = false;
+    unsigned long bandLead = 0;
+    unsigned long bandUpdateEvery = 4;
     uint32_t sampleRateHz = 16000;
     long emitStartMs = -1;
     long emitDoneMs = -1;
@@ -62,6 +80,7 @@ struct Options {
     unsigned long skipMs = 0;    // ignore verdicts whose occurrence starts earlier (marker tone)
     bool compare = false;        // amp feature vs the board's column (mode=both transcripts)
     bool verbose = false;        // one line per verdict
+    std::string dumpFreqPath;    // if set: per-sample host vs board frequency path as CSV (step 7b)
 };
 
 struct Result {
@@ -73,6 +92,15 @@ struct Result {
     size_t ampCompared = 0;
     double ampMeanAbsDiff = 0.0;
     double ampMaxAbsDiff = 0.0;
+    // Frequency path vs the board (step 7b), compared on samples where the
+    // board had a fresh packet: target FrequencyScore16 absolute, contrast
+    // relative to the board's value, on samples where |board| >= 1000 (the
+    // gate's range; the medium limit is 30,500).
+    size_t freqCompared = 0;
+    double freqMeanAbsDiff = 0.0;
+    double freqMaxAbsDiff = 0.0;
+    double contrastMeanRelDiff = 0.0;
+    double contrastMaxRelDiff = 0.0;
 };
 
 // Profile override by the Analyzer PARAM key names plus contrast_medium / amp_medium.

@@ -1,0 +1,106 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=node git=3a11d80 date=Oct 22 2026 time=11:48:27 version=0.4.0 board=damp
+E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+RB node_id=0xE84C4BC3DC24
+
+RB node name=E2 rotation_source=roster
+RB signal band=2950-3950 bins=5 hop=on rotation=1 steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=85..300 issues=gap_not_below_debounce
+RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+RB DETECT
+  kind=TonalPulseScalar
+  detectorSelection=ScalarTransient
+  inspectionPlan=custom
+  scalarTransient.observedStream=FrequencyTarget
+  scalarTransient.onsetDetectionThreshold=2000.0
+  scalarTransient.onsetReleaseThreshold=1500.0
+  scalarTransient.cooldownAfterOnsetMs=50
+  scalarTransient.minTransientDurationMs=85
+  scalarTransient.maxTransientDurationMs=300
+  scalarTransient.releaseDebounceMs=10
+  scalarTransient.minTransientPeakStrength=3000.0
+  inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+  inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+  verdict.has_requirement=1
+  verdict.required_label=contrast
+  fieldState.occurrenceWindowMs=4000
+  fieldState.patternWindowMs=4000
+  fieldState.busyOccurrenceCountThreshold=3
+  fieldState.denseOccurrenceCountThreshold=6
+  fieldState.quietOccurrenceCountThreshold=0
+  fieldState.quietActivityThreshold=0.00
+  fieldState.busyActivityThreshold=0.45
+
+RB BEHAV
+  idleEnabled=1
+  waitAfterHeardMs=100
+  refractoryAfterEmitMs=400
+  behaviorSuppressSelfChirpMs=100
+  detectionSuppressTailMsOwnEmit=60
+  idleTimeoutMs=60000
+  idleTimeVariationMs=20000
+  idleBlockedAfterHeardMs=1000
+  idleBlockedAfterOwnEmitMs=500
+
+RB startup baseline=LISTEN_FOR_QUIET
+RB rebase waiting smooth=0.0 quietMs=0
+RB rebase waiting smooth=79.0 quietMs=333
+RB rebase waiting smooth=118.0 quietMs=613
+RB rebase waiting smooth=33.0 quietMs=597
+RB rebase done quietMs=1000 baseline=948.7 smooth=0
+RB baseline active
+
+>> RB stop
+RB summary: pending=0 accepted=0 validPatterns=0 chirpStarted=0 overflowPending=0 avg_strength=0.0 avg_duration=0.0ms profile=TonalPulseScalarBUILD role=node git=3a11d80 date=Oct 22 2026 time=11:48:27 version=0.4.0 board=damp
+
+RB baseline state=ACTIVE
+RB log mode=minimal
+RB behavior idle=1 wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=60000 idleTimeoutVariation=20000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=1 lastDecision=none lastBlock=none lastPattern=none lastHeardMs=0 lastEmitMs=0 waitUntilMs=0 refractoryUntilMs=0 ownEmitDetectionSuppressUntilMs=0 outputBusy=0 patternsReceived=0 ignoredInvalid=0 ignoredAmbiguous=0 blockedOutputBusy=0 blockedWaiting=0 blockedRefractory=0 blockedSelfSuppressed=0 wouldEmit=0 emitted=0
+RB occurrence baseline=848.8 mag=38 smooth=65
+
+>> RB STATUS
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=65408 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=1 i2s.max_backstep_us=1 i2s.clock_corrections=8 i2s.max_clock_correction_us=2 i2s.read_errors=0 audio.uptime_ms=7533 audio.deficit_s=3.4 clock.now_ms=7533 audio.last_sample_ms=7528 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=3a11d80 date=Oct 22 2026 time=11:48:27 version=0.4.0 board=damp
+
+
+>> RB PARAM freqScore=1
+RB PARAM ERR removed (FrequencyMatch removed); use PARAM SET detection.scalar_<key> <value>
+
+>> RB PROFILE name=TonalPulseFreq
+RB PROFILE usage=name=TonalPulseScalar|AmpExperimental
+
+>> PARAM GET detection.freq_attack_score_min
+PARAM GET path=detection.freq_attack_score_min status=unknown_param
+
+>> PARAM DUMP
+PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=85
+PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=300
+PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+PARAM path=detection.band_high_hz module=detection type=uint32 value=3950
+PARAM path=output.hop_enabled module=output type=bool value=1
+PARAM path=output.hop_rotation module=output type=uint32 value=1
+PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+PARAM path=output.hop_steps module=output type=uint32 value=5
+PARAM path=output.idle_announce_hz module=output type=uint32 value=300
+PARAM path=output.idle_announce_ms module=output type=uint32 value=500
+

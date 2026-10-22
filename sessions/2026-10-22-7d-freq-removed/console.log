@@ -1,0 +1,20 @@
+[11:50:02] boot banner: {'role': 'analyzer', 'git': '3a11d80', 'version': '0.4.0', 'board': 'damp'}
+[11:50:04] warmup: OK EMIT CHIRP
+[11:50:04] start final_chirp_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=20 mode=detail when=all verbose=1
+[11:51:14] done final_chirp_diag_detail (70s): complete=True results={'expected': 20}
+[11:51:20] session updated, index rebuilt
+[11:51:32] boot banner: {'role': 'analyzer', 'git': '3a11d80', 'version': '0.4.0', 'board': 'damp'}
+[11:51:34] warmup: OK EMIT CHIRP
+[11:51:34] start final_hop5_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[11:52:11] done final_hop5_diag_detail (37s): complete=True results={'expected': 10}
+[11:52:17] session updated, index rebuilt
+[11:52:21] boot banner: {'role': 'analyzer', 'git': '3a11d80', 'version': '0.4.0', 'board': 'damp'}
+[11:52:23] warmup: OK EMIT CHIRP
+[11:52:23] start final_dur40_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 dur=40 mode=detail when=all verbose=1
+[11:53:01] done final_dur40_diag_detail (37s): complete=True results={'rejected': 10}
+[11:53:07] session updated, index rebuilt
+[11:54:37] boot banner: {'role': 'analyzer', 'git': 'a9a47c3', 'version': '0.4.0', 'board': 'damp'}
+[11:54:39] warmup: OK EMIT CHIRP
+[11:54:39] start ab_pre7d_dur40_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 dur=40 mode=detail when=all verbose=1
+[11:55:16] done ab_pre7d_dur40_diag_detail (37s): complete=True results={'rejected': 10}
+[11:55:22] session updated, index rebuilt

@@ -1,0 +1,23 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+test/test_timebase/test_main.cpp:177:test_ms_from_us64_is_continuous_across_us_wrap:PASS
+test/test_timebase/test_main.cpp:178:test_ms_from_us64_matches_millis_formula:PASS
+test/test_timebase/test_main.cpp:179:test_ms_cache_equals_division:PASS
+test/test_timebase/test_main.cpp:180:test_timing_helpers_across_ms_wrap:PASS
+test/test_timebase/test_main.cpp:181:test_now_ms_agrees_with_millis_when_offset_is_zero:PASS
+test/test_timebase/test_main.cpp:182:test_feature_history_window_across_ms_wrap:PASS
+test/test_timebase/test_main.cpp:183:test_scalar_occurrence_across_us_wrap:PASS
+test/test_timebase/test_main.cpp:184:test_scalar_occurrence_across_ms_wrap:PASS
+
+-----------------------
+8 Tests 0 Failures 0 Ignored 
+OK
+

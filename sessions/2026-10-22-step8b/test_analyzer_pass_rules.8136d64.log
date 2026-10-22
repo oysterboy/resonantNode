@@ -1,0 +1,24 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+test/test_analyzer_pass_rules/test_main.cpp:249:test_feature_history_empty_window:PASS
+test/test_analyzer_pass_rules/test_main.cpp:250:test_feature_history_single_value_quantiles:PASS
+test/test_analyzer_pass_rules/test_main.cpp:251:test_feature_history_sorted_and_reverse_sorted_quantiles_match:PASS
+test/test_analyzer_pass_rules/test_main.cpp:252:test_feature_history_duplicate_values_quantiles:PASS
+test/test_analyzer_pass_rules/test_main.cpp:253:test_feature_history_coverage_ratio_is_bounded:PASS
+test/test_analyzer_pass_rules/test_main.cpp:254:test_next_occurrence_ids_are_unique:PASS
+test/test_analyzer_pass_rules/test_main.cpp:255:test_scalar_detector_emits_distinct_occurrence_ids:PASS
+test/test_analyzer_pass_rules/test_main.cpp:256:test_pattern_rejected_helper_excludes_source_rejects:PASS
+test/test_analyzer_pass_rules/test_main.cpp:257:test_scalar_detector_accepted_report_clears_stale_reject_reason:PASS
+
+-----------------------
+9 Tests 0 Failures 0 Ignored 
+OK
+

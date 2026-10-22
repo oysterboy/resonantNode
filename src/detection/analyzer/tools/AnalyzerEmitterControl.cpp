@@ -78,6 +78,10 @@ void AnalyzerApp::pollEmitterSerial() {
             const bool emitDoneLine = startsWithTokenIgnoreCase(_emitterLineBuffer, "EMIT_DONE");
             const bool emitDriveOnLine = startsWithTokenIgnoreCase(_emitterLineBuffer, "EMIT_DRIVE_ON");
             const bool emitDriveOffLine = startsWithTokenIgnoreCase(_emitterLineBuffer, "EMIT_DRIVE_OFF");
+            if (_controlClaimSent && !_controlClaimAcked && startsWithTokenIgnoreCase(_emitterLineBuffer, "OK MODE REMOTE")) {
+                _controlClaimAcked = true;
+                serialOut().println("EVT analyzer_control_claim acked");
+            }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && (emitStartLine || emitDoneLine || emitDriveOnLine || emitDriveOffLine)) {
                 const unsigned long markerTrial = parseUnsignedTokenValue(_emitterLineBuffer, "trial=");
                 if (markerTrial == _sequenceTest.currentTrial) {

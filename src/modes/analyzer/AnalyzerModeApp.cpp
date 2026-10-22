@@ -601,9 +601,13 @@ void AnalyzerApp::begin() {
     _usbLineBuffer[0] = '\0';
     _emitterLineLength = 0;
     _emitterLineBuffer[0] = '\0';
-    _controlClaimPending = false;
+    // ANA-005 (step 7a): the boot claim was announced ("scheduled") but never
+    // queued, so the Emitter kept chirping in AUTO until the first EMIT/SEQ.
+    // Send MODE REMOTE half a second after boot.
+    _controlClaimPending = true;
     _controlClaimSent = false;
-    _controlClaimAtMs = 0;
+    _controlClaimAcked = false;
+    _controlClaimAtMs = timebase::nowMs() + 500UL;
 
     serialOut().println("EVT analyzer_ready");
     serialOut().println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
@@ -811,6 +815,7 @@ void AnalyzerApp::update() {
         sendEmitterCommand("MODE REMOTE");
         _controlClaimSent = true;
         _controlClaimPending = false;
+        serialOut().println("EVT analyzer_control_claim sent");
     }
     updateSequenceTest(now);
     pollUsbConsole();

@@ -579,6 +579,7 @@ private:
 
     bool _controlClaimPending = false; // Waiting to request emitter control.
     bool _controlClaimSent = false; // Control claim has already been sent.
+    bool _controlClaimAcked = false; // The Emitter answered the boot claim (ANA-005).
     unsigned long _controlClaimAtMs = 0; // When the claim was queued.
 
     // Session state.

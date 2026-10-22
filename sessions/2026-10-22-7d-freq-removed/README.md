@@ -29,6 +29,6 @@ just above the 1,500 release threshold, and keeps the candidate open. A 2.6 % le
 flip it.
 
 What it means: a 40 ms tone read +45 ms long sits 0-2 ms over the 85 ms minimum, so the duration gate held it only by
-chance in 7a. The contrast/amp inspectors reject it either way. This is audit 3.1 / DET-010's 85-89 ms window (step 8b).
+chance in 7a. Correction 2026-10-22, later: the inspectors never measured these tones. Each 85-87 ms occurrence was inspected 3 ms before its 0..+100 ms contrast window ended, so it was rejected future_window_unavailable (MissingSupport): audit 3.1's bug, by construction, not the contrast gate. Step 8b.
 
 Afterwards E2 was flashed back to the Analyzer (3a11d80).

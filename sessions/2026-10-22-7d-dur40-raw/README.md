@@ -26,4 +26,4 @@ band off: 3 x 40 ms and 2 x 100 ms at 3200 Hz.
 A short tone's duration flips between ~62 and ~87 ms depending on whether a late reflection clears the release
 threshold. The strength is up 2.6 % since 7a (5,291 -> 5,427), which is enough. What raised it (temperature,
 humidity, something moved, the Emitter's level) is not recorded. The duration gate (85 ms) is not what keeps
-40 ms tones out in this room; the contrast inspector is. This is audit 3.1's 85-89 ms window (step 8b).
+40 ms tones out in this room. Correction 2026-10-22, later: the inspectors never measured these tones. Each 85-87 ms occurrence was inspected 3 ms before its 0..+100 ms contrast window ended, so it was rejected future_window_unavailable (MissingSupport): audit 3.1's bug, by construction, not the contrast gate. Step 8b.

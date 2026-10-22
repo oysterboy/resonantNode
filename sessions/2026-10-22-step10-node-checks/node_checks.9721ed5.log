@@ -1,0 +1,18 @@
+== RB debug plot -> RB debug mode=events (use off|events)
+== RB debug events -> RB debug mode=events
+== A3 long line -> RB ERR line_too_long max=255
+== A4 bare RB PROFILE -> RB PROFILE name=TonalPulseScalar
+== RB log full -> RB log mode=full
+== A1 RB CALL + rebase force 60 ms in, then a hop train during settle:
+RB CALL queued resting=0 state=Idle
+BEH emit start now=20117 source=call state=Chirping pattern=single
+RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+RB rebase forced
+RB baseline active
+RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+BEH verdict=single_pulse heard=21039 now=21157 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+BEH emit start now=21157 source=heard_pattern state=Chirping pattern=single
+RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+== summary: RB summary: pending=1 accepted=1 validPatterns=1 chirpStarted=1 overflowPending=0 avg_strength=10177.0 avg_duration=195.0ms profile=TonalPulseScalarBUILD role=node git=4ee7a42 date=Oct 22 2026 time=20

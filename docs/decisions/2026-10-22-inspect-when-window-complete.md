@@ -1,13 +1,13 @@
 # Inspect an occurrence when its window is complete, not at release
 
-Status: decided, not yet implemented (step 8b item 1).
+Status: decided, implemented on branch step8b-defer-inspection; merges with DET-017 (owner, 2026-10-22).
 Date: 2026-10-22.
 
 ## Decision
 
 An occurrence whose inspection window ends after its release is held until the window end has arrived, then
 inspected and judged on its real evidence. The window definition (Start anchor, 0..+100 ms on TonalPulseScalar)
-and all thresholds stay. Owner's pick from three options in docs/refactors/step8b-detection-followups.md.
+and all thresholds stay. Owner's pick from three options in docs/refactors/archive/step8b-detection-followups.md.
 
 ## Why
 
@@ -31,4 +31,4 @@ against a ~45 ms room tail) needs a tuning pass, logged on its own, before the b
 
 ## Source
 
-Step 8b (issue #53), docs/refactors/step8b-detection-followups.md item 1; audit 3.1; DET-010.
+Step 8b (issue #53), docs/refactors/archive/step8b-detection-followups.md item 1; audit 3.1; DET-010.

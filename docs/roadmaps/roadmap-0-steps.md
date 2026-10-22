@@ -37,6 +37,8 @@ README.md ("Who answers what", "Ordering rule").
 
 Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (trimmed in step 8); FrequencyMatch
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
+Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
+against 7a. Next: step 8, starting with its baseline (3d's check 12).
 Status update 2026-10-22, evening: second revision (owner's picks): 8a held until after 10b (it changes the
 signal 10b compares against); step 9's Phase 6 re-checked once 7c decides Freq; new step 10c (five nodes for
 24 h or more) and a goal for the phase after 10b (an installation-ready node). Issues: 7c #49, 10b #50, 10c #51.
@@ -724,7 +726,7 @@ the previous gate open unless the step says it can run in parallel.
    - decisions/2026-10-22-remove-frequencymatch.md: FrequencyMatch and TonalPulseFreq leave the tree (new step
      7d). Scalar is the only family, so step 9 moves to step 11, and 8b's Freq-only items close as moot.
 
-7d. [TODO] Remove FrequencyMatchDetector and TonalPulseFreq. (issue #52)
+7d. [DONE 2026-10-22] Remove FrequencyMatchDetector and TonalPulseFreq. (issue #52, closed)
    Where: decisions/2026-10-22-remove-frequencymatch.md; src/detection/detectors/frequency/ (~1,260 lines), the
    FrequencyMatch branches in DetectionRuntime, DetectionProfile (whose default detectorSelection is
    FrequencyMatch today), DetectorReport, Occurrence, VerdictTypes, the Analyzer (SEQ profile, sample dump), the
@@ -735,6 +737,20 @@ the previous gate open unless the step says it can run in parallel.
    builds; the host suites and test_shipped_profile pass unchanged; the Node and Analyzer boot with
    TonalPulseScalar; one Analyzer T3 on Scalar matches the last 7b-era run (seqcmp). That T3 then becomes step
    8's baseline. Decisions and research files keep their references as history.
+   Done 2026-10-22 (3a11d80; bench/sessions/2026-10-22-7d-freq-removed):
+   - Code: detectors/frequency/ deleted (~1,260 lines). The runtime calls the scalar detector directly;
+     DetectorSelection, DetectorId and OccurrenceType keep only their Scalar value. RB PARAM answers ERR (it only
+     tuned Freq). The detection.freq_* params are unregistered; their ParamIds stay as retired so later ids keep
+     their values. parseFiniteFloat moved to app/TextParse.h. 31 files, -612/+138 lines.
+   - Every env builds, native-test 20/20, native-test-behavior 21/21, the on-device tests build.
+   - Node on E2 boots TonalPulseScalar; RB PARAM gives ERR; detection.freq_* reads unknown_param.
+   - Analyzer T3 vs 7a-gate: chirp 20/20 (dt 52 vs 51 ms), hop 10/10 (51 vs 48 ms), 40 ms 10/10 rejected, 0 drops.
+     The 40 ms tones now read 85-87 ms (7a: 61-62), so they pass the detector and fall at the pattern stage. The
+     pre-removal Analyzer (a9a47c3) does the same on today's setup, so this is the setup, not 7d. Cause not
+     found; handed to 8b.
+   - The three runs are on bench/baselines.csv as the 110 cm references. Step 8 still records check 12's full T3.
+   - The detector-family contract now lives in one place: myspec 5.3, "Adding a detector family". The
+     family-build doc and the 2026-09-23 decision point to it.
 
 8. Phase 7c: fold OccurrenceEvaluator into OccurrenceInspector, delete the
    correlation queue. (issue #11)
@@ -778,7 +794,9 @@ the previous gate open unless the step says it can run in parallel.
    fixing them first means migrating them. Closed as moot by 7d (2026-10-22):
    DET-010's Freq half, audit 3.2, #32 P2a and the FrequencyMatch half of
    B11. From #32: 13 / B11 (scalar aggregate counts) and the P4 history
-   window guard (scalar_max_duration_ms vs the history depth).
+   window guard (scalar_max_duration_ms vs the history depth). From 7d (2026-10-22): a 40 ms tone read 85-87 ms
+   on the bench (bench/sessions/2026-10-22-7d-freq-removed), 0-2 ms over the 85 ms minimum. In 7a it read
+   61-62 ms, cause not found. Only the inspectors keep it out. That is audit 3.1's window, measured.
    Gate: each item fixed with a host fixture or named closed-as-moot; T2/T3
    unchanged. After step 8, with or before 8a's shape inspectors.
 

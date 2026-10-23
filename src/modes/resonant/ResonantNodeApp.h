@@ -249,6 +249,7 @@ private:
     unsigned long _rbPatternAcceptedCount = 0;
     unsigned long _rbValidPatternCount = 0;
     unsigned long _rbChirpStartedCount = 0;
+    int _rbLevelMaxSinceStatus = 0;  // loudest smoothed level since the last RB STATUS (room notes, 10c)
     unsigned long _rbOverflowPending = 0;
     unsigned long _rbLastPendingMs = 0;
     bool _rbHaveLastPendingMs = false;

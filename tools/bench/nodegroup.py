@@ -168,7 +168,9 @@ if a.drift_bin > 0 and (pair_strength or status_heard):
         for b in range(nbins):
             inb = [r for r in rows if b * a.drift_bin <= r[0] < (b + 1) * a.drift_bin]
             prev = [r for r in rows if r[0] < b * a.drift_bin]
-            start = prev[-1] if prev else (0.0, 0, 0)  # opening the ports reset the boards: counters from 0
+            # The first STATUS line is the start: opening a port does not always reset the board (2026-10-23:
+            # E1 came in with heard.valid=109 from an earlier session), so counters need not start at 0.
+            start = prev[-1] if prev else (inb[0] if inb else None)
             if not inb or start is None or inb[-1][1] < start[1]:
                 cells.append("-")
                 continue

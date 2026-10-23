@@ -921,6 +921,10 @@ void Node::update() {
 
     if (sawI2SSample) {
         _debug.observeI2SSignal(now, _audioSignal);
+        const int level = _audioSignal.smoothedSignalMagnitude();
+        if (level > _rbLevelMaxSinceStatus) {
+            _rbLevelMaxSinceStatus = level;
+        }
     }
 
     if (rbOutputsEnabledNow && _behavior.shouldStartChirp()) {

@@ -179,6 +179,16 @@ void Node::printRbStatus(const char* line) {
     // on it per inspection module, audit 3.7).
     // Cumulative since boot or rebase (resetRbCounters): the mean over a span is
     // the difference of two STATUS lines (step 10c, per-board strength drift).
+    // The room as the mic hears it (smoothed magnitude, the same value the
+    // quiet baseline watches): now, the loudest since the last STATUS, and the
+    // baseline. Shows whether a run had noise at all (2026-10-23 drilling log).
+    serialOut().print(" audio.level=");
+    serialOut().print(_audioSignal.smoothedSignalMagnitude());
+    serialOut().print(" audio.level_max=");
+    serialOut().print(_rbLevelMaxSinceStatus);
+    _rbLevelMaxSinceStatus = 0;
+    serialOut().print(" audio.baseline=");
+    serialOut().print(_audioSignal.baseline(), 1);
     serialOut().print(" heard.valid=");
     serialOut().print(_rbValidPatternCount);
     serialOut().print(" heard.strength_sum=");

@@ -77,6 +77,26 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(_behavior.outputBusy() ? 1 : 0);
     serialOut().print(" silent=");
     serialOut().print(_silent ? 1 : 0);
+    // OutputStatus (OUT-002, step 10f): what SoundOutput is doing and has done.
+    {
+        const OutputStatus& out = _soundOutput.status();
+        serialOut().print(" output.phase=");
+        serialOut().print(outputPhaseName(out.phase));
+        serialOut().print(" output.started=");
+        serialOut().print(static_cast<unsigned long>(out.started));
+        serialOut().print(" output.done=");
+        serialOut().print(static_cast<unsigned long>(out.done));
+        serialOut().print(" output.rejected=");
+        serialOut().print(static_cast<unsigned long>(out.rejected));
+        serialOut().print(" output.last_reject=");
+        serialOut().print(outputRejectName(out.lastReject));
+        serialOut().print(" output.last_start_ms=");
+        serialOut().print(out.lastStartMs);
+        serialOut().print(" output.last_done_ms=");
+        serialOut().print(out.lastDoneMs);
+        serialOut().print(" output.span_ms=");
+        serialOut().print(out.spanMs);
+    }
     serialOut().print(" band=");
     serialOut().print(_freqBandStream.bandLowHz());
     serialOut().print('-');

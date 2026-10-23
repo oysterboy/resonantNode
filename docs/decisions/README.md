@@ -77,6 +77,7 @@ what replaced it.
 | 2026-10-22 | [Inspect an occurrence when its window is complete, not at release (step 8b)](2026-10-22-inspect-when-window-complete.md) (implemented 2026-10-23, bbb5728) |
 | 2026-10-22 | [Live params apply in place; RB PROFILE announces its reset; RB BEHAV removed for behavior.* params (step 10)](2026-10-22-live-params-profile-reset-no-rb-behav.md) |
 | 2026-10-23 | [Params persist on PARAM SAVE only; all registered; stored wins over a changed default, with a PARAM stale warning (PAR-010/011)](2026-10-23-param-persistence-save-only.md) |
+| 2026-10-23 | [SoundOutput executes an OutputRequest (hop train, pattern, idle call) with OutputStatus; the Node composes it from Behavior's decision (step 10f)](2026-10-23-soundoutput-executes-node-composes.md) |
 | 2026-10-23 | [The Node's network signal is the hop train; a plain chirp need not be heard](2026-10-23-node-hears-the-hop-train-only.md) (enforce by shape, DET-015; min duration cannot: the readings overlap) |
 | 2026-10-22 | [Network pacing: rest 5 s, idle call every 60 s +- 20 s, pass mark "the chain ends within 30 s in 80 %", M = 100](2026-10-22-network-pacing.md) |
 | 2026-10-21 | [D-AMP tone level 0.5 of full scale: at 0.3 the five-board hearing matrix had 7 of 20 cells at 10/10, at 0.5 19 of 20](2026-10-21-damp-tone-level-0p5.md) |

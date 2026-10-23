@@ -53,7 +53,9 @@ Keep behavior as the owner of the response decision.
 
 ### OUT-002 - minimal OutputStatus
 
-Status: DEFERRED
+Status: DONE 2026-10-23 (step 10f; decisions/2026-10-23-soundoutput-executes-node-composes.md). `OutputStatus` in
+src/output/SoundOutput.h: phase, started / done / rejected, last reject, last start / end, span; RB STATUS
+`output.*`. The original note:
 
 ```text
 Add OutputStatus only when behavior/status needs it.
@@ -62,7 +64,10 @@ Fields may include busy, lastStartMs, lastDoneMs, currentPattern.
 
 ### OUT-003 - OutputRequest
 
-Status: DEFERRED
+Status: DONE 2026-10-23, with one difference to the note below: the Node composes the request from Behavior's
+decision and the output.* params (the hop grid comes from the detection band, which Behavior does not know).
+`SoundOutput` executes it, sequences the idle call and checks `OutputLimits`. Host test test_sound_output.
+The original note:
 
 ```text
 Behavior emits OutputRequest / BehaviorAction.
@@ -118,7 +123,7 @@ Source: docs/research/frequency-drift-detection.md (Two-layer signal).
 
 ```text
 Order: roadmap-0-steps.md. OUT-001 folds into NODE-001 (step 6);
-OUT-002..004 are deferred (step 11). OUT-005 is step 5b, OUT-006 step 8a. The D-AMP output (a sine ToneOutput
+OUT-002/003 done in step 10f (2026-10-23); OUT-004 is deferred (step 11). OUT-005 is step 5b, OUT-006 step 8a. The D-AMP output (a sine ToneOutput
 over I2S) is NODE-009, step 2: hardware, not output architecture.
 ```
 

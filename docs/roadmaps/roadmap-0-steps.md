@@ -43,6 +43,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-23, 10f done (SoundOutput executes OutputRequest, OutputStatus in RB STATUS; emission
+unchanged on the bench). Next before block 2: 5h's cells.
 Status update 2026-10-23, 10e done (idle reschedule, 12 KB stack temporary removed: 3.4 -> 14.2 KB free). Next: 10f.
 Status update 2026-10-23, change order (owner): before 10c block 2 come 10e loose ends, 10f output status
 (OUT-002/003) and 5h's cells; DET-015 after 10c. Next: 10e.
@@ -993,12 +995,19 @@ the previous gate open unless the step says it can run in parallel.
    - strength fields on E1 (5/5 Emitter trains, STATUS sum matches the lines) and nodegroup's drift tables in a 90 s
      E1 + E4 run.
 
-10f. [NEXT] Output status and request (OUT-002/003). (issue #57)
+10f. [DONE 2026-10-23] Output status and request (OUT-002/003). (issue #57, closed)
    Change order 2026-10-23 (owner), out of step 11. OUT-002 a minimal OutputStatus (busy, last start / end,
    current pattern), OUT-003 Behavior's request that Output executes and checks against physical limits.
    OUT-004 (OutputProfile) stays deferred: its own condition (behavior variations proven needed) is not met.
    Gate: what the Node emits is unchanged (a session's emission lines and hop trains identical in shape), the
    status visible in RB STATUS, host test for the request path.
+   Done (bench/sessions/2026-10-23-step10f-output; decisions/2026-10-23-soundoutput-executes-node-composes.md):
+   SoundOutput executes the request (hop train, pattern, idle call), checks OutputLimits, keeps OutputStatus;
+   the Node composes the request. Same 90 s E1 + E4 run before and after: identical shape lines (steps=5 pulse 25
+   gap 10, order 2950..3950; idle_call 300 Hz 500 ms gap 200 then=hop), idle-call timing the same, E4 heard E1's
+   answer trains 15/23 before and 14/19 after, idle-call trains 6/10 and 6/12; RB STATUS output.started 28 =
+   done 28, rejected 0. Host: test_sound_output 7 tests. Also fixed: an idle call stopped in its gap no longer
+   starts its train later.
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here

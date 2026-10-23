@@ -411,8 +411,9 @@ void Node::begin() {
 // (the behavior.* params) is kept; performRbRebase does the same plus the audio reset
 // (issue #31 R2-3).
 void Node::quiesceBehaviorForOutputsOff() {
-    if (_chirpOutput.isActive()) {
-        _chirpOutput.stop();
+    // Also an idle call waiting in its gap (before step 10f its train still started later).
+    if (_soundOutput.busy() || _chirpOutput.isActive()) {
+        _soundOutput.stop();
         _lastOwnChirpEndMs = timebase::nowMs();
         _debug.observeChirpFinished(timebase::nowMs());
         selfTestNoteChirpFinished(timebase::nowMs());
@@ -777,35 +778,38 @@ size_t Node::hopFrequencies(uint32_t* out, size_t capacity) const {
     return steps;
 }
 
-unsigned long Node::startNetworkSignal() {
-    uint32_t hz[8];
-    const size_t n = hopFrequencies(hz, sizeof(hz) / sizeof(hz[0]));
+// The node's network signal as a request (BEH-005): the hop train on the band's
+// bins, rotated per node. False when the band has no bins.
+bool Node::composeHopTrain(OutputRequest& request) const {
+    const size_t n = hopFrequencies(request.hopHz, kMaxHopSteps);
     if (n == 0 || _hopPulseMs == 0) {
-        return 0;
+        request.hopSteps = 0;
+        return false;
     }
-    _chirpOutput.setPulseHop(hz, n);
-    _chirpOutput.startPulseTrain(static_cast<uint32_t>(n), _hopPulseMs, _hopGapMs, runtime::kDefaultI2sToneRampMs);
-    if (!_chirpOutput.isActive()) {
-        _chirpOutput.setPulseHop(nullptr, 0);
-        return 0;
+    request.hopSteps = n;
+    request.pulseMs = _hopPulseMs;
+    request.gapMs = _hopGapMs;
+    return true;
+}
+
+void Node::printHopShape(const OutputRequest& request) {
+    if (!rbShouldLogDetail()) {
+        return;
     }
-    if (rbShouldLogDetail()) {
-        serialOut().print("RB emit shape=hop steps=");
-        serialOut().print(static_cast<unsigned long>(n));
-        serialOut().print(" pulse_ms=");
-        serialOut().print(_hopPulseMs);
-        serialOut().print(" gap_ms=");
-        serialOut().print(_hopGapMs);
-        serialOut().print(" order=");
-        for (size_t k = 0; k < n; ++k) {
-            if (k > 0) {
-                serialOut().print(',');
-            }
-            serialOut().print(hz[k]);
+    serialOut().print("RB emit shape=hop steps=");
+    serialOut().print(static_cast<unsigned long>(request.hopSteps));
+    serialOut().print(" pulse_ms=");
+    serialOut().print(request.pulseMs);
+    serialOut().print(" gap_ms=");
+    serialOut().print(request.gapMs);
+    serialOut().print(" order=");
+    for (size_t k = 0; k < request.hopSteps; ++k) {
+        if (k > 0) {
+            serialOut().print(',');
         }
-        serialOut().println();
+        serialOut().print(request.hopHz[k]);
     }
-    return static_cast<unsigned long>(n) * _hopPulseMs + static_cast<unsigned long>(n - 1) * _hopGapMs;
+    serialOut().println();
 }
 
 void Node::configureI2SParameters() {
@@ -960,43 +964,59 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
     _debug.observeChirpStarted(now, sourceName, chirpPattern);
     _debug.flashLed(now, 2);
     // A response to a heard pattern is the network signal: the node's hop
-    // train inside the band (BEH-005). Idle voice and self-test stay plain
-    // chirps. Own-emit suppression covers the train's span.
-    unsigned long emitSpanMs = 0;
-    if (_hopEnabled && _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal) {
-    emitSpanMs = startNetworkSignal();
+    // train inside the band (BEH-005). The idle call is an announcement tone
+    // outside the band (not detected), a gap, then the node's own call (owner
+    // 2026-10-17): the hop train, or the plain chirp when the hop is off. Idle
+    // voice and self-test stay plain chirps. SoundOutput plays the request
+    // (step 10f); own-emit suppression covers its span.
+    OutputRequest request;
+    request.pattern = chirpPattern;
+    if (_hopEnabled && _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal &&
+        composeHopTrain(request)) {
+        request.kind = OutputRequest::Kind::HopTrain;
     } else if (_idleAnnounceHz > 0 && chirpPattern == ChirpOutput::ChirpPattern::Idle) {
-    // Idle call that wakes the network (owner 2026-10-17): an announcement
-    // tone outside the band (not detected), a gap, then the node's own call
-    // as configured: the hop train, or the plain chirp when the hop is off.
-    // The others hear the call and answer. Behavior stays in Chirping and
-    // own-emit suppression covers the whole span.
-    _chirpOutput.setToneHz(_idleAnnounceHz);
-    _chirpOutput.setTiming(_idleAnnounceMs, 0);
-    _chirpOutput.start(ChirpOutput::ChirpPattern::Single);
-    _idleHopPending = true;
-    _idleHopArmed = false;
-    const bool hopCall = _hopEnabled && bandBinCount() > 0;
-    const unsigned long trainMs = hopCall
-        ? static_cast<unsigned long>(_hopSteps) * _hopPulseMs
-              + static_cast<unsigned long>(_hopSteps > 0 ? _hopSteps - 1 : 0) * _hopGapMs
-        : runtime::kDefaultChirpDurationMs;
-    emitSpanMs = _idleAnnounceMs + kIdleAnnounceGapMs + trainMs;
-    if (rbShouldLogDetail()) {
+        request.kind = OutputRequest::Kind::IdleCall;
+        request.announceHz = _idleAnnounceHz;
+        request.announceMs = _idleAnnounceMs;
+        request.announceGapMs = kIdleAnnounceGapMs;
+        if (!_hopEnabled || !composeHopTrain(request)) {
+            request.hopSteps = 0;
+        }
+    } else {
+        request.kind = OutputRequest::Kind::Pattern;
+    }
+    bool started = _soundOutput.start(request);
+    if (!started && request.kind != OutputRequest::Kind::Pattern) {
+        // As before step 10f: a train or call that does not start falls back to the pattern.
+        serialOut().print("RB emit rejected reason=");
+        serialOut().print(outputRejectName(_soundOutput.status().lastReject));
+        serialOut().println(" fallback=pattern");
+        request.kind = OutputRequest::Kind::Pattern;
+        started = _soundOutput.start(request);
+    }
+    const unsigned long emitSpanMs = started ? _soundOutput.status().spanMs : 0;
+    if (started && request.kind == OutputRequest::Kind::HopTrain) {
+        printHopShape(request);
+    }
+    if (started && request.kind == OutputRequest::Kind::IdleCall && rbShouldLogDetail()) {
         serialOut().print("RB emit shape=idle_call announce_hz=");
-        serialOut().print(_idleAnnounceHz);
+        serialOut().print(request.announceHz);
         serialOut().print(" announce_ms=");
-        serialOut().print(_idleAnnounceMs);
+        serialOut().print(request.announceMs);
         serialOut().print(" gap_ms=");
-        serialOut().print(kIdleAnnounceGapMs);
-        serialOut().println(hopCall ? " then=hop" : " then=chirp");
-    }
-    }
-    if (emitSpanMs == 0) {
-    _chirpOutput.start(chirpPattern);
+        serialOut().print(request.announceGapMs);
+        serialOut().println(request.hopSteps > 0 ? " then=hop" : " then=chirp");
     }
     _behavior.notifyChirpStarted(now, emitSpanMs);
     ++_rbChirpStartedCount;
+    if (!started) {
+        // Nothing sounds: end the emission at once so Behavior does not wait in Chirping.
+        serialOut().print("RB emit rejected reason=");
+        serialOut().println(outputRejectName(_soundOutput.status().lastReject));
+        const unsigned long finishedMs = timebase::nowMs();
+        _lastOwnChirpEndMs = finishedMs;
+        _behavior.notifyChirpFinished(finishedMs);
+    }
     selfTestNoteChirpStarted(now, sourceName);
 }
 
@@ -1004,39 +1024,14 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
 // announcement) and the end of an emission (step 10 item 9: out of update(),
 // unchanged).
 void Node::updateEmissions(unsigned long now) {
-    _chirpOutput.update();
-
-    // Idle call, second half: after the announcement and the gap, the hop train.
-    if (_idleHopArmed && timing::atOrAfter(timebase::nowMs(), _idleHopAtMs) && !_chirpOutput.isActive()) {
-        _idleHopArmed = false;
-        _idleHopPending = false;
-        // The node's call: the hop train, or the plain chirp when the hop is off.
-        unsigned long callSpanMs = 0;
-        if (_hopEnabled && bandBinCount() > 0) {
-            callSpanMs = startNetworkSignal();
-        }
-        if (callSpanMs == 0) {
-            _chirpOutput.start(ChirpOutput::ChirpPattern::Single);
-            callSpanMs = _chirpOutput.isActive() ? runtime::kDefaultChirpDurationMs : 0;
-        }
-        if (callSpanMs == 0) {
-            const unsigned long finishedMs = timebase::nowMs();
-            _lastOwnChirpEndMs = finishedMs;
-            _behavior.notifyChirpFinished(finishedMs);
-        }
+    const uint8_t events = _soundOutput.update();
+    if ((events & SoundOutput::kEventCallStarted) != 0 && _soundOutput.callIsHop()) {
+        printHopShape(_soundOutput.current());
     }
-
-    if (_idleHopPending && !_idleHopArmed && _chirpOutput.finished()) {
-        // The announcement ended: restore the chirp tone and timing, start the gap.
-        // Behavior is not told "finished" yet; that comes when the train ends.
-        _chirpOutput.setToneHz(runtime::kDefaultChirpFrequencyHz);
-        _chirpOutput.setTiming(runtime::kDefaultChirpDurationMs, 150);
-        _idleHopAtMs = timebase::nowMs() + kIdleAnnounceGapMs;
-        _idleHopArmed = true;
-    } else if (_chirpOutput.finished()) {
-        // Fresh time: the own-emit tail runs from the actual toneOff in
-        // update() above, not from the loop start (issue #31).
-        const unsigned long finishedMs = timebase::nowMs();
+    if ((events & SoundOutput::kEventFinished) != 0) {
+        // Fresh time (SoundOutput stamps it at the actual end): the own-emit
+        // tail runs from the toneOff, not from the loop start (issue #31).
+        const unsigned long finishedMs = _soundOutput.finishedAtMs();
         _lastOwnChirpEndMs = finishedMs;
         _behavior.notifyChirpFinished(finishedMs);
         _debug.observeChirpFinished(now);

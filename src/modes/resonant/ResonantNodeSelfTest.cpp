@@ -235,8 +235,8 @@ void Node::printSelfTestQuietBoot() {
 
 void Node::runSelfTestHardware(unsigned long now) {
     // Nothing of ours may sound while the mic floor is measured.
-    if (_chirpOutput.isActive()) {
-        _chirpOutput.stop();
+    if (_soundOutput.busy() || _chirpOutput.isActive()) {
+        _soundOutput.stop();
         _behavior.notifyChirpFinished(now);
         _debug.observeChirpFinished(now);
         selfTestNoteChirpFinished(now);
@@ -263,7 +263,7 @@ void Node::runSelfTestHardware(unsigned long now) {
 
 void Node::restoreAfterSelfTestHardware() {
     // The tone is off; put the output device back on the chirp frequency.
-    _chirpOutput.stop();
+    _soundOutput.stop();
     // Several seconds of blocking checks: a HeardPattern from before them
     // must not fire after Settle (issue #31 R2-3). Config is kept.
     _behavior.resetState();

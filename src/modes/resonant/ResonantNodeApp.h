@@ -16,6 +16,7 @@
 #include "../../audio/AudioSignal.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../output/ChirpOutput.h"
+#include "../../output/SoundOutput.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/evaluation/OccurrenceVerdict.h"
 #include <ParamRegistry.h>
@@ -169,7 +170,8 @@ private:
     void applyBandParams();              // band params -> FreqBandStream, when they differ
     size_t bandBinCount() const;         // 250 Hz bins from band_low to band_high
     size_t hopFrequencies(uint32_t* out, size_t capacity) const;  // the train's bins, rotated per node
-    unsigned long startNetworkSignal();  // hop train on the ChirpOutput; returns its span in ms, 0 = not started
+    bool composeHopTrain(OutputRequest& request) const;  // the node's train from output.* and the band; false = no bins
+    void printHopShape(const OutputRequest& request);
     void printSignalConfig();
     void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)
     void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history (step 8b item 2)
@@ -190,6 +192,8 @@ private:
     I2sToneOutput _toneOutput;
 #endif
     ChirpOutput _chirpOutput;
+    // Executes the Node's emissions and keeps their status (OUT-002/003, step 10f).
+    SoundOutput _soundOutput{_chirpOutput};
 
     // Occurrence / detection / behavior pipeline.
     AudioSignal _audioSignal;
@@ -226,9 +230,6 @@ private:
     bool _silent = false;
     bool _silentApplied = false;
     static constexpr unsigned long kIdleAnnounceGapMs = 200;
-    bool _idleHopPending = false;       // announcement playing or gap running, hop train to follow
-    unsigned long _idleHopAtMs = 0;     // when the hop train starts (after the gap)
-    bool _idleHopArmed = false;         // gap running: start the train at _idleHopAtMs
 
     // For RB STATUS (2026-10-17): the newest audio sample's time on the ms
     // axis and how many samples the own-emit suppression has dropped.

@@ -1,0 +1,30 @@
+===== set+save
+  PARAM SET path=output.hop_rotation module=output old=0 new=3 status=ok
+  RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+  PARAM SAVE written=37 unchanged=0 failed=0 status=ok
+===== boot
+  RB node_id=0x50B04AC3DC24
+  RB node name=E1 rotation_source=roster
+  PARAM load path=output.hop_rotation value=3 default=0
+  PARAM load stored=37 applied=37 stale=0 invalid=0
+  RB node rotation_source=stored rotation=3
+  RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+  RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+===== status
+  RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=52864 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=1 i2s.max_backstep_us=1 i2s.clock_corrections=6 i2s.max_clock_correction_us=2 i2s.read_errors=0 audio.uptime_ms=7857 audio.deficit_s=4.6 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=3448 clock.now_ms=7857 audio.last_sample_ms=7851 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=78dd50e date=Oct 23 2026 time=10:06:26 version=0.4.0 board=damp
+===== reset
+  PARAM RESET store=cleared values=defaults
+  RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+  RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+===== boot after reset
+  RB node_id=0x50B04AC3DC24
+  RB node name=E1 rotation_source=roster
+  PARAM load stored=0 applied=0 stale=0 invalid=0
+  RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+  RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+===== silence
+  PARAM SET path=behavior.idle_enabled module=behavior old=1 new=0 status=ok
+  PARAM SET path=detection.scalar_onset_threshold module=detection old=2000.000 new=200000.000 status=ok
+  RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+  RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+holding E1 open

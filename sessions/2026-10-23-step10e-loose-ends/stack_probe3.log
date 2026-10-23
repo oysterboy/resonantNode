@@ -1,0 +1,25 @@
+PROBE begin_start free_min=15404
+PROBE after_configure free_min=15072
+PROBE after_audio_begin free_min=14172
+PROBE after_signal_begin free_min=14172
+PROBE after_band_stream free_min=14172
+PROBE after_detection_reset free_min=3688
+PROBE adp_start free_min=3688
+PROBE after_selection free_min=3688
+PROBE after_scalar free_min=3688
+PROBE after_plan free_min=3624
+PROBE before_band free_min=3624
+PROBE after_band free_min=3624
+PROBE after_apply_profiles free_min=3624
+PROBE after_load free_min=3624
+PROBE after_signal_config free_min=3624
+PROBE after_checks free_min=3624
+PROBE adp_start free_min=3624
+PROBE after_selection free_min=3624
+PROBE after_scalar free_min=3624
+PROBE after_plan free_min=3624
+PROBE before_band free_min=3624
+PROBE after_band free_min=3624
+PROBE after_chirp_begin free_min=3624
+RB silent=1 (output.silent: listening, never sounding)
+holding

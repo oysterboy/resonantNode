@@ -1,0 +1,16 @@
+PROBE begin_start free_min=15484
+PROBE after_configure free_min=15072
+PROBE after_audio_begin free_min=14172
+PROBE after_apply_profiles free_min=3624
+PROBE after_load free_min=3624
+PROBE after_signal_config free_min=3624
+PROBE after_checks free_min=3624
+PROBE after_chirp_begin free_min=3624
+after boot + 10 s: 3624
+after PARAM SETs: 3624
+after 15 s of idle calls, log full: 3624
+after DUMP + summary: 3624
+after SAVE: 3624
+rebooted silent; holding
+
+[killed]

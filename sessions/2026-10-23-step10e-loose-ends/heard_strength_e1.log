@@ -1,0 +1,9 @@
+before: ['heard.valid=0', 'heard.strength_sum=0']
+  RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11227 duration_ms=202 profile=TonalPulseScalar
+  RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11289 duration_ms=202 profile=TonalPulseScalar
+  RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11312 duration_ms=202 profile=TonalPulseScalar
+  RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11373 duration_ms=202 profile=TonalPulseScalar
+  RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11373 duration_ms=202 profile=TonalPulseScalar
+after: ['heard.valid=5', 'heard.strength_sum=56574']
+emitter said: ['EVT emitter_cmd line=PULSES 5 25 10 trial=0 freq=3300 hop=2950,3200,3450,3700,3950', 'EVT emitter_chirp_finished', 'EVT emitter_cmd line=PULSES 5 25 10 trial=1 freq=3300 hop=2950,3200,3450,3700,3950']
+holding

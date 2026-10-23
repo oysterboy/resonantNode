@@ -1,0 +1,7 @@
+[13:13:58] boot banner: {'role': 'analyzer', 'git': 'f38cd69', 'version': '0.4.0', 'board': 'damp'}
+[13:14:00] warmup: OK EMIT CHIRP
+[13:14:00] start hop50: SEQ start profile=TonalPulseScalar tries=50 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[13:16:44] done hop50 (165s): complete=True results={'expected': 50}
+[13:16:46] start chirp50: SEQ start profile=TonalPulseScalar tries=50 dur=100 mode=detail when=all verbose=1
+[13:19:31] done chirp50 (165s): complete=True results={'expected': 50}
+[13:19:42] session updated, index rebuilt

@@ -438,6 +438,7 @@ void Node::resetRbCounters() {
     _rbLastPendingMs = 0;
     _rbHaveLastPendingMs = false;
     _rbStrengthSumScaled = 0;
+    _rbValidStrengthSum = 0;
     _rbDurationSumMs = 0;
 }
 
@@ -1524,6 +1525,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         }
         if (verdict.valid) {
             ++_rbValidPatternCount;
+            _rbValidStrengthSum += static_cast<uint64_t>(verdict.primaryStrength + 0.5f);
         }
 
         if (verdict.primaryAudioOverflow) {
@@ -1554,6 +1556,11 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
             serialOut().print(behaviorSeesVerdict ? _behavior.lastDecisionName() : "outputs_off");
             serialOut().print(" valid=");
             serialOut().print(verdict.valid ? 1 : 0);
+            // Step 10c: per-board strength drift, attributed to a sender by nodegroup.py.
+            serialOut().print(" strength=");
+            serialOut().print(static_cast<unsigned long>(verdict.primaryStrength + 0.5f));
+            serialOut().print(" duration_ms=");
+            serialOut().print(verdict.primaryDurationMs);
             serialOut().print(" profile=");
             serialOut().println(profileName());
         }

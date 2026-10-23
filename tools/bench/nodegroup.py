@@ -10,7 +10,9 @@ decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md). RB STATUS 
 
 Summary: per board emissions by source, valid verdicts, rests by reason; who-heard-whom, attributing each
 valid verdict at a board to the latest emission start of another board 0.15-0.8 s before it (the train is
-165 ms, the verdict lands 10-50 ms after its end); turns per minute for the whole group.
+165 ms, the verdict lands 10-50 ms after its end); turns per minute for the whole group. Strength drift (step
+10c): median heard strength per listener <- sender per --drift-bin s (from the verdict lines' strength=, Node
+da771a5 or later), and each board's mean valid strength per bin from RB STATUS heard.valid / heard.strength_sum.
 
   python tools/bench/nodegroup.py --boards E1=COM6,E2=COM3,E3=COM4,E4=COM7 --silent E5=COM9 \
       --secs 600 --status-every 60 --out bench/sessions/<folder> --name group4_600s
@@ -31,6 +33,7 @@ ap.add_argument("--quiet-gap", type=float, default=15.0, help="a silence this lo
 ap.add_argument("--quiet-within", type=float, default=30.0, help="pass mark: quiet within this many s after a start (RB CALL or idle call)")
 ap.add_argument("--chain-gap", type=float, default=3.0, help="a silence this long ends a chain (turns are ~0.35 s apart)")
 ap.add_argument("--max-per-min", type=int, default=100, help="M: the group's emissions-per-minute ceiling (owner 2026-10-22)")
+ap.add_argument("--drift-bin", type=float, default=3600.0, help="bin width (s) of the strength drift tables; 0 = off")
 ap.add_argument("--out", required=True)
 ap.add_argument("--name", required=True)
 a = ap.parse_args()
@@ -72,6 +75,8 @@ for l in setup_log:
     print(l, flush=True)
 
 events = []
+strengths = {}      # (t, listener) -> strength of a valid verdict
+status_heard = {}   # name -> [(t, heard.valid, heard.strength_sum)]
 t0 = time.time()
 next_status = a.status_every
 log_path = os.path.join(a.out, a.name + ".log")
@@ -103,6 +108,13 @@ with open(log_path, "w", encoding="utf-8") as f:
                 events.append((t, n, "emit_" + (m.group(1) if m else "?")))
             elif l.startswith("RB verdict=") and "valid=1" in l:
                 events.append((t, n, "verdict"))
+                m = re.search(r" strength=(\d+)", l)
+                if m:
+                    strengths[(t, n)] = int(m.group(1))
+            elif l.startswith("RB STATUS"):
+                m = re.search(r"heard\.valid=(\d+) heard\.strength_sum=(\d+)", l)
+                if m:
+                    status_heard.setdefault(n, []).append((t, int(m.group(1)), int(m.group(2))))
             elif l.startswith("RB rest start"):
                 m = re.search(r"reason=(\w+)", l)
                 events.append((t, n, "rest_" + (m.group(1) if m else "?")))
@@ -121,6 +133,7 @@ emits = [(t, n) for t, n, k in events if k.startswith("emit_")]
 heard = {(x, y): 0 for x in names for y in names if x != y}
 sent = {y: sum(1 for _, n in emits if n == y) for y in names}
 unattributed = 0
+pair_strength = {}  # (listener, sender) -> [(t, strength)]
 for t, n, k in events:
     if k != "verdict":
         continue
@@ -128,12 +141,40 @@ for t, n, k in events:
     cands = [(te, ne) for te, ne in emits if ne != n and 0.05 <= t - te <= 0.8]
     if cands:
         heard[(n, max(cands)[1])] += 1
+        if (t, n) in strengths:
+            pair_strength.setdefault((n, max(cands)[1]), []).append((t, strengths[(t, n)]))
     else:
         unattributed += 1
 print("  who heard whom (listener <- sender: verdicts / sender's emissions):")
 for x in names:
     print("    %s <- %s" % (x, "  ".join("%s %d/%d" % (y, heard[(x, y)], sent[y]) for y in names if y != x)))
 print("  unattributed verdicts: %d" % unattributed)
+if a.drift_bin > 0 and (pair_strength or status_heard):
+    nbins = int(a.secs // a.drift_bin) + (1 if a.secs % a.drift_bin else 0)
+    print("  strength drift, bins of %.0f s (median strength, verdict count in brackets):" % a.drift_bin)
+    for (x, y) in sorted(pair_strength):
+        cells = []
+        for b in range(nbins):
+            v = sorted(st for t, st in pair_strength[(x, y)] if b * a.drift_bin <= t < (b + 1) * a.drift_bin)
+            cells.append("%d(%d)" % (v[len(v) // 2], len(v)) if v else "-")
+        allv = sorted(st for _, st in pair_strength[(x, y)])
+        print("    %s <- %s: %s  first->last bin %s" % (x, y, " ".join(cells), "%+.0f %%" % (
+            100.0 * (int(cells[-1].split("(")[0]) - int(cells[0].split("(")[0])) / int(cells[0].split("(")[0]))
+            if cells and cells[0] != "-" and cells[-1] != "-" else "n/a"))
+    print("  mean valid strength per board and bin (RB STATUS heard.*; a counter drop = reboot or rebase):")
+    for n in sorted(status_heard):
+        rows = status_heard[n]
+        cells = []
+        for b in range(nbins):
+            inb = [r for r in rows if b * a.drift_bin <= r[0] < (b + 1) * a.drift_bin]
+            prev = [r for r in rows if r[0] < b * a.drift_bin]
+            start = prev[-1] if prev else (inb[0] if inb else None)
+            if not inb or start is None or inb[-1][1] < start[1]:
+                cells.append("-")
+                continue
+            dv, ds = inb[-1][1] - start[1], inb[-1][2] - start[2]
+            cells.append("%d(%d)" % (ds // dv, dv) if dv > 0 else "-")
+        print("    %s: %s" % (n, " ".join(cells)))
 mins = int(a.secs // 60) or 1
 per_min = [sum(1 for t, _ in emits if m * 60 <= t < (m + 1) * 60) for m in range(mins)]
 print("  group emissions per minute: %s" % " ".join(str(x) for x in per_min))

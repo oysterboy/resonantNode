@@ -252,6 +252,7 @@ private:
     unsigned long _rbLastPendingMs = 0;
     bool _rbHaveLastPendingMs = false;
     uint64_t _rbStrengthSumScaled = 0; // Strength16 * 100 per verdict; uint32 overflowed after ~1,300 (issue #31)
+    uint64_t _rbValidStrengthSum = 0;  // valid verdicts only, whole Strength16 units: RB STATUS heard.* (10c drift)
     unsigned long _rbDurationSumMs = 0;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;

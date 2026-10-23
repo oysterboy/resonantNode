@@ -157,6 +157,12 @@ void Node::printRbStatus(const char* line) {
     // Step 8b: verdicts the 4-slot queue dropped (was Analyzer-only), and the
     // loop task's lowest free stack since boot (bytes; getWindow() puts 2 KB
     // on it per inspection module, audit 3.7).
+    // Cumulative since boot or rebase (resetRbCounters): the mean over a span is
+    // the difference of two STATUS lines (step 10c, per-board strength drift).
+    serialOut().print(" heard.valid=");
+    serialOut().print(_rbValidPatternCount);
+    serialOut().print(" heard.strength_sum=");
+    serialOut().print(static_cast<unsigned long long>(_rbValidStrengthSum));
     serialOut().print(" detection.verdict_queue_overflows=");
     serialOut().print(_detection.verdictQueueOverflowCount());
     serialOut().print(" loop.stack_free_min_bytes=");

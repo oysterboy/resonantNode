@@ -213,6 +213,54 @@ void test_no_idle_while_resting() {
     TEST_ASSERT_TRUE_MESSAGE(idled, "idle voice back after the rest");
 }
 
+// Step 10e: a live idle_timeout change applies to the wait already running, from when it started.
+bool idlesBy(ResonantBehavior& b, unsigned long from, unsigned long until) {
+    for (unsigned long t = from; t <= until; t += 10) {
+        b.update(t);
+        if (b.shouldStartChirp()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void test_shorter_idle_timeout_applies_to_the_running_wait() {
+    ResonantBehavior b;
+    BehaviorGateConfig cfg = config();
+    cfg.idleEnabled = true;
+    cfg.idleTimeoutMs = 60000;
+    cfg.idleTimeVariationMs = 0;
+    cfg.idleBlockedAfterHeardMs = 0;
+    cfg.idleBlockedAfterOwnEmitMs = 0;
+    b.configure(cfg);
+    b.resetState();
+    b.seedIdleSchedule(0);
+    TEST_ASSERT_FALSE(idlesBy(b, 0, 1000));
+    cfg.idleTimeoutMs = 2000;  // PARAM SET behavior.idle_timeout_ms 2000 at t = 1 s
+    b.configure(cfg);
+    TEST_ASSERT_FALSE(idlesBy(b, 1010, 1990));
+    TEST_ASSERT_TRUE_MESSAGE(idlesBy(b, 2000, 2100), "the idle call comes 2 s after the wait started, not at 60 s");
+}
+
+void test_longer_idle_timeout_extends_the_running_wait_and_same_value_keeps_it() {
+    ResonantBehavior b;
+    BehaviorGateConfig cfg = config();
+    cfg.idleEnabled = true;
+    cfg.idleTimeoutMs = 2000;
+    cfg.idleTimeVariationMs = 0;
+    cfg.idleBlockedAfterHeardMs = 0;
+    cfg.idleBlockedAfterOwnEmitMs = 0;
+    b.configure(cfg);
+    b.resetState();
+    b.seedIdleSchedule(0);
+    b.configure(cfg);  // an unrelated PARAM SET re-applies the same values: the wait stays
+    TEST_ASSERT_FALSE(idlesBy(b, 0, 1000));
+    cfg.idleTimeoutMs = 5000;
+    b.configure(cfg);
+    TEST_ASSERT_FALSE(idlesBy(b, 1010, 4990));
+    TEST_ASSERT_TRUE(idlesBy(b, 5000, 5100));
+}
+
 // RB CALL (step 5g): the operator call plays the network signal, and is not taken while resting.
 void test_network_call_plays_the_network_signal() {
     ResonantBehavior b;
@@ -265,6 +313,8 @@ int main(int, char**) {
     RUN_TEST(test_slow_traffic_stays_under_the_budget);
     RUN_TEST(test_two_node_ping_pong_is_cut);
     RUN_TEST(test_no_idle_while_resting);
+    RUN_TEST(test_shorter_idle_timeout_applies_to_the_running_wait);
+    RUN_TEST(test_longer_idle_timeout_extends_the_running_wait_and_same_value_keeps_it);
     RUN_TEST(test_triggers_off_means_no_rest);
     RUN_TEST(test_network_call_plays_the_network_signal);
     RUN_TEST(test_network_call_waits_while_resting);

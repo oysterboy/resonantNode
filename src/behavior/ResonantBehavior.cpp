@@ -343,12 +343,30 @@ void ResonantBehavior::setDetectionSuppressTailMsOwnEmit(unsigned long value) {
     _detectionSuppressTailMsOwnEmit = value;
 }
 
+// A live change of the idle timing (PARAM SET behavior.idle_timeout*_ms)
+// applies to the wait already running, counted from when it started: before
+// step 10e an idle call scheduled under a 60 s timeout still came at 60 s
+// after the timeout was set to 5 s.
 void ResonantBehavior::setIdleTimeMs(unsigned long value) {
+    const bool changed = value != _idleTimeMs;
     _idleTimeMs = value;
+    if (changed) {
+        rescheduleIdleFromWaitStart();
+    }
 }
 
 void ResonantBehavior::setIdleTimeVariationMs(unsigned long value) {
+    const bool changed = value != _idleTimeVariationMs;
     _idleTimeVariationMs = value;
+    if (changed) {
+        rescheduleIdleFromWaitStart();
+    }
+}
+
+void ResonantBehavior::rescheduleIdleFromWaitStart() {
+    if (_nextIdleAtMs != 0) {
+        scheduleNextIdle(_idleScheduledFromMs);
+    }
 }
 
 void ResonantBehavior::setIdleBlockedAfterHeardMs(unsigned long value) {
@@ -787,6 +805,7 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
 }
 
 void ResonantBehavior::scheduleNextIdle(unsigned long now) {
+    _idleScheduledFromMs = now;
     _nextIdleAtMs = now + randomIdleDelayMs(idleMinMs(), idleMaxMs());
 }
 

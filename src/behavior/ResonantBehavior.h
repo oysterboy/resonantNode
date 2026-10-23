@@ -241,6 +241,7 @@ private:
     unsigned long _behaviorSuppressSelfChirpMs = 250; // Behavior-level suppression while the node's chirp is active.
     unsigned long _detectionSuppressTailMsOwnEmit = 0; // Detector/analyzer suppression tail after our own emit.
     unsigned long _nextIdleAtMs = 0;
+    unsigned long _idleScheduledFromMs = 0;  // when the current idle wait started (step 10e)
     unsigned long _idleTimeMs = 20000;
     unsigned long _idleTimeVariationMs = 10000;
     unsigned long _idleBlockedAfterHeardMs = 3000;
@@ -276,6 +277,7 @@ private:
     unsigned long _emittedCount = 0;
 
     void scheduleNextIdle(unsigned long now);
+    void rescheduleIdleFromWaitStart();
     bool canIdle(unsigned long now) const;
     unsigned long idleMinMs() const;
     unsigned long idleMaxMs() const;

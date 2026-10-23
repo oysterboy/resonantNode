@@ -333,6 +333,8 @@ Gate: passes on every board going into NODE-011, logged on bench.
 ### NODE-017 - detection goes deaf 71.6 min after boot (32-bit micros wrap)
 
 Status: DONE 2026-10-12 (step 3c, issue #30 closed). Offset wrap on hardware: Analyzer and Node (bench 85dd0a9); real uptime past 4,295 s: Analyzer in the 2026-10-12 soak (10/10 in every block after the wrap, to ~26,000 s). Node real uptime not run (offset test only).
+Real-uptime check done 2026-10-23: five Nodes ran 9.6 h (eight 71.6 min micros wraps) with no reset, no
+deaf node and no audio loss (bench/sessions/2026-10-22-step10c-overnight).
 Pass doc: docs/refactors/archive/micros-wrap.md (audit, design, wraptest envs, bench plan).
 2026-10-11: fix written, compile-verified only: one 64-bit time base
 (src/app/TimeBase.h) for the sample clock and every millis()/micros() read,

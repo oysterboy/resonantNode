@@ -926,8 +926,17 @@ the previous gate open unless the step says it can run in parallel.
      the field.
 
 10c. [NEXT] Long run: five nodes for 24 h or more. (issue #51)
-   Running 2026-10-22: a first overnight block, 22:23 to 08:00 (about 9.6 h, owner's request), five nodes on
-   8ec0764, no kick (idle calls only), quiet, RB STATUS every 120 s; bench/sessions/2026-10-22-step10c-overnight.
+   Block 1, 2026-10-22/23 (bench/sessions/2026-10-22-step10c-overnight): 9.6 h, 22:23 to 08:00 (owner's
+   request), five nodes on 8ec0764, idle calls only, quiet.
+   - 697 of 697 chains ended (max 6.0 s); max 50 per minute.
+   - 0 noise-started answers in 12,726.
+   - 0 dropped buffers in 1,440 STATUS lines; 0 resets (real uptime past eight micros wraps).
+   - No node went deaf (340-424 valid verdicts per hour each).
+   Open for the gate:
+   - 24 h (this block covered 9.6);
+   - per-board strength drift, which this log cannot show: RB STATUS needs a strength field, or the run needs
+     RB summary polls;
+   - room notes.
    Where: NODE-008, NODE-013 (soak), NODE-017 (real uptime past the 72 min wrap); audit 4.4.
    Why: the longest run so far is the 7.3 h single-board soak (3a, accepted short, ~25 % strength drift not
    attributed); the trial runs were 30 min each. An installation runs for days, and wrap, drift and heap faults

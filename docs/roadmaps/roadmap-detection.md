@@ -143,7 +143,12 @@ Research: docs/research/frequency-drift-detection.md (Inspectors that help)
 
 ### DET-017 - min-duration tuning pass, then merge the deferred inspection
 
-Status: TODO (owner, 2026-10-22: park the step 8b item 1 fix until this pass)
+Status: DONE 2026-10-23 (bbb5728, e58c4c2; bench/sessions/2026-10-23-det017-min92). Min duration 85 -> 92 ms
+(owner), with inspection waiting for a complete window. The 40 ms beep + reflection is rejected at the duration gate
+(10/10). Every single-null hop train survives on the host (33/33, shortest 97 ms). Beeps of 60 ms and more and the
+plain chirp are heard: hop-only needs DET-015 (decisions/2026-10-23-node-hears-the-hop-train-only.md).
+
+Former status: TODO (owner, 2026-10-22: park the step 8b item 1 fix until this pass)
 
 The fix for audit 3.1 (inspect when the window is complete) is on branch
 `step8b-defer-inspection` (5d2c0fa). With it, a 40 ms in-band tone plus a room
@@ -203,7 +208,8 @@ passing the incomplete case is not a fix.
 
 ### DET-010 - peak-centered inspection runs before its window has arrived
 
-Status: Freq case REMOVED 2026-10-22 with FrequencyMatch (step 7d,
+Status: DONE 2026-10-23 on Scalar (DET-017: inspection waits for a complete window, min 92 ms). Freq case REMOVED
+2026-10-22 with FrequencyMatch (step 7d,
 decisions/2026-10-22-remove-frequencymatch.md). Open on Scalar as audit 3.1:
 occurrences of 85-89 ms are inspected before the +100 ms Start-anchored
 window closes; measured with a 40 ms tone plus a room reflection reading

@@ -1,6 +1,6 @@
 # Inspect an occurrence when its window is complete, not at release
 
-Status: decided, implemented on branch step8b-defer-inspection; merges with DET-017 (owner, 2026-10-22).
+Status: implemented 2026-10-23 (bbb5728, with DET-017's min 92 ms in e58c4c2; bench/sessions/2026-10-23-det017-min92).
 Date: 2026-10-22.
 
 ## Decision

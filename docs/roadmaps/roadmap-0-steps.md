@@ -39,6 +39,9 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-23: DET-017 done (min 92 ms + deferred inspection; 40 ms beep rejected, hop 10/10).
+The owner chose hop-train-only, but duration cannot enforce it, so shape (DET-015) is next for that. 10c block 2 is
+Sunday.
 Status update 2026-10-22, late: step 10b done (the field rerun holds: hearing 19/20, every chain ends, 0 noise
 starts, 0 drops); 10c's first overnight block runs to 08:00.
 Status update 2026-10-22, step 10: done (ANA-003, Node glue split, dead code). Next by order: 10b, the field
@@ -938,6 +941,7 @@ the previous gate open unless the step says it can run in parallel.
      RB summary polls;
    - room notes.
    Block 2 planned for Sunday 2026-10-25 (owner): 15-24 h, with strength drift logged and room notes.
+   It runs on main after DET-017 (min 92 ms, deferred inspection; e58c4c2 or later), not on 8ec0764.
    Where: NODE-008, NODE-013 (soak), NODE-017 (real uptime past the 72 min wrap); audit 4.4.
    Why: the longest run so far is the 7.3 h single-board soak (3a, accepted short, ~25 % strength drift not
    attributed); the trial runs were 30 min each. An installation runs for days, and wrap, drift and heap faults

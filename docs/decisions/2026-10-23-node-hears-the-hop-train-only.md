@@ -31,6 +31,12 @@ a min near 100 ms sits above the beep plus reflection and at the shortest train 
 chirp, harmlessly. Hop-only needs a shape test: the train visits five band bins in order and a chirp or beep stays
 on one. That is DET-015's distinct-bins / pulse-structure inspector (step 8a).
 
+## Applied 2026-10-23
+
+DET-017 set the min duration to 92 ms (owner), the middle of the measured window (beep 86, shortest null-hit
+train 97). Bench: 40 ms beep rejected, 60/80 ms beeps and the chirp heard (bench/sessions/2026-10-23-det017-min92).
+Hop-only itself waits for DET-015.
+
 ## Rules out
 
 Using the plain chirp as a Node-to-Node signal. The Analyzer's 100 ms chirp T3 cells stay as a detector check,

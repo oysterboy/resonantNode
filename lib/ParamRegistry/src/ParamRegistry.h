@@ -13,9 +13,10 @@ one of its own tuning fields under a public dotted path; the registry owns
 lookup, parsing, range validation, and writing the field. The owning module
 still decides what the value means and how to apply it after a change.
 
-This is intentionally not a generic config framework: no persistence, no
-dynamic allocation, no nested schemas. Serial PARAM commands are the only
-transport today. A later transport (VEKTOR) should route through the same
+This is intentionally not a generic config framework: no dynamic allocation,
+no nested schemas. Serial PARAM commands are the only transport today.
+Persistence (PAR-010/011) goes through a ParamStore the app supplies (NVS on
+the Node); the registry decides what an entry holds and when it is valid. A later transport (VEKTOR) should route through the same
 find()/applyValue() path rather than touching module fields directly, so the
 path vocabulary doubles as the future external resource identity.
 
@@ -55,11 +56,49 @@ struct ParamBinding {
     float maxValue;
     uint32_t minUnsigned;
     uint32_t maxUnsigned;
+    // The field's value at captureDefaults(), as raw bits (see valueBits()).
+    uint32_t defaultBits;
+};
+
+// One persisted param (PAR-010): the value and the firmware default it was
+// saved against, both as raw bits of the binding's type (a float's bit
+// pattern, an unsigned value, a bool as 0/1).
+struct StoredParam {
+    static constexpr uint8_t kVersion = 1;
+    uint8_t version;
+    uint8_t type;  // ParamType
+    uint16_t id;
+    uint32_t valueBits;
+    uint32_t savedDefaultBits;
+};
+
+// The app's storage backend, keyed by the binding's id (stable, never reused).
+class ParamStore {
+public:
+    virtual ~ParamStore() = default;
+    // False when there is no entry for id or it cannot be read whole.
+    virtual bool read(uint16_t id, StoredParam& out) = 0;
+    virtual bool write(const StoredParam& entry) = 0;
+    // Removes every entry, also those of ids no longer registered.
+    virtual bool clear() = 0;
+};
+
+struct ParamLoadReport {
+    size_t stored = 0;   // entries found for a registered id
+    size_t applied = 0;  // written into the field
+    size_t stale = 0;    // saved against a default the firmware no longer has
+    size_t invalid = 0;  // wrong version or type, or out of range: field kept
+};
+
+struct ParamSaveReport {
+    size_t written = 0;
+    size_t unchanged = 0;  // the store already held this entry: not rewritten
+    size_t failed = 0;
 };
 
 class ParamRegistry {
 public:
-    static constexpr size_t kMaxParams = 48;  // 35 used by the Node (22 + 13 behavior.*) since step 10
+    static constexpr size_t kMaxParams = 48;  // 37 used by the Node since step 10
     using GroupNamer = const char* (*)(uint8_t group);
 
     // Raw registration. Rejects a null path or field, a duplicate path, a
@@ -106,6 +145,23 @@ public:
 
     void printValue(Print& out, const ParamBinding& binding) const;
 
+    // Persistence (PAR-010/011, decisions/2026-10-23-param-persistence-save-
+    // only.md). captureDefaults() records every field's current value as its
+    // firmware default; call it once the fields hold their defaults.
+    void captureDefaults();
+    uint32_t valueBits(const ParamBinding& binding) const;
+    bool isDefault(const ParamBinding& binding) const { return valueBits(binding) == binding.defaultBits; }
+    // Writes the captured defaults back into every field.
+    void restoreDefaults() const;
+    // Writes every registered param. An entry the store already holds as is
+    // is not rewritten (flash wear, and SAVE stays short).
+    ParamSaveReport save(ParamStore& store) const;
+    // Reads every registered param's entry and writes the valid ones into the
+    // fields: a stored value wins over the default. Prints a line per value
+    // that differs from the firmware default (PARAM load ...), per stale
+    // entry (PARAM stale ...) and per invalid entry.
+    ParamLoadReport load(ParamStore& store, Print& out) const;
+
     // PARAM LIST: one line per registered param, no values.
     void list(Print& out) const;
     // PARAM DUMP: one line per registered param, with current values.
@@ -113,6 +169,9 @@ public:
 
 private:
     bool addBinding(const ParamBinding& binding);
+    bool bitsInRange(const ParamBinding& binding, uint32_t bits) const;
+    void writeBits(const ParamBinding& binding, uint32_t bits) const;
+    void printBits(Print& out, const ParamBinding& binding, uint32_t bits) const;
 
     ParamBinding _bindings[kMaxParams] = {};
     size_t _count = 0;

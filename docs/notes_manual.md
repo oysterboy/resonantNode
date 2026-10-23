@@ -99,12 +99,18 @@ Short operator notes for running RB and Analyzer with the current detection stac
 - `Node::applyActiveProfiles()`
   - reapplies the selected detection profile into `DetectionRuntime`
   - reapplies the selected behavior profile into `ResonantBehavior`
-- `Node::RB PARAM`
-  - updates the active node frequency tuning values
-  - reapplies the active detection profile into `DetectionRuntime`
+- `Node::begin()`, after the roster rotation (PAR-010)
+  - `captureDefaults()`: the fields' values now are the firmware defaults
+  - loads valid stored values from NVS (a stored value wins; `PARAM stale` when its saved-against default
+    differs from the firmware's), then applies detection and behavior once
+- `PARAM SET <path> <value>` (Node)
+  - writes the bound field and applies its module in place, no detector reset (live, lost on reboot)
+- `PARAM SAVE` / `PARAM LOAD` / `PARAM RESET` (Node, PAR-011)
+  - SAVE writes every registered param to NVS (the only flash write); LOAD re-reads and applies; RESET clears the
+    store and restores the firmware defaults (decisions/2026-10-23-param-persistence-save-only.md)
 - `Node::RB PROFILE`
   - switches the active profile kind
-  - reapplies both detection and behavior profiles
+  - reapplies both detection and behavior profiles and prints every live value it reset
 
 Current profile gate shape:
 
@@ -154,6 +160,14 @@ RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idle
 ```
 
 ## Practical Commands
+
+Node params (since step 10, `RB PARAM` and `RB BEHAV` are gone; the lines below them are kept for older logs):
+- List, read, set: `PARAM LIST`, `PARAM DUMP`, `PARAM GET <path>`, `PARAM SET <path> <value>`
+- Keep across reboots: `PARAM SAVE` (all registered params, `output.hop_rotation` included: a saved rotation
+  overrides the roster until `PARAM RESET`)
+- Back to the saved values: `PARAM LOAD`; back to firmware defaults and an empty store: `PARAM RESET`
+- Boot prints `PARAM load stored=N applied=N stale=N invalid=N`, a `PARAM load path=... value=... default=...` line
+  per saved value that differs from the default, and `PARAM stale ...` per entry saved against an old default.
 
 - Show RB profile:
   - `RB PROFILE`

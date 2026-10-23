@@ -20,6 +20,7 @@
 #include "../../detection/evaluation/OccurrenceVerdict.h"
 #include <ParamRegistry.h>
 #include "../../app/ParamIds.h"
+#include "../../app/NvsParamStore.h"
 #include "../../selftest/SelfTestReport.h"
 #include "ResonantNodeDebug.h"
 
@@ -65,6 +66,7 @@ private:
     void registerDetectionParams();
     void handleParamCommand(const char* line);
     void applyParamModule(param::ModuleId module);
+    void loadStoredParams();
     void startRbQuietBaseline();
     void resetRbCounters();
     void resetDetectionState();
@@ -195,6 +197,7 @@ private:
     detection::DetectionProfile _activeDetectionProfile = detection::makeTonalPulseScalarProfile();
     ResonantBehavior _behavior;
     param::ParamRegistry _paramRegistry;
+    NvsParamStore _paramStore;
 
     // Network band the detector listens to (FreqBandStream bank; 0 = single
     // target at the chirp tone) and the node's network signal: a hop train

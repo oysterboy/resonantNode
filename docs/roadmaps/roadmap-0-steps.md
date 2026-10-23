@@ -39,6 +39,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-23, later: 10d done, params survive a reboot (PARAM SAVE / LOAD / RESET, PAR-010/011),
+pulled ahead of 10c block 2 by the owner; block 2 runs on this firmware.
 Status update 2026-10-23: DET-017 done (min 92 ms + deferred inspection; 40 ms beep rejected, hop 10/10).
 The owner chose hop-train-only, but duration cannot enforce it, so shape (DET-015) is next for that. 10c block 2 is
 Sunday.
@@ -950,11 +952,23 @@ the previous gate open unless the step says it can run in parallel.
    step 6's (every chain ends, 0 started by noise, 0 dropped buffers), plus no reboots, no deaf node and the
    per-board strength drift recorded with room notes. Opens the installation-ready phase.
 
+10d. [DONE 2026-10-23] Settings survive a reboot: PAR-010/011. (issue #55, closed)
+   Pulled ahead of 10c block 2 by the owner ("Persistence first okay?"), out of step 11's installation order.
+   Owner picks (decisions/2026-10-23-param-persistence-save-only.md): NVS written only by PARAM SAVE; every
+   registered param, output.hop_rotation included; a stored value wins over the firmware default, with a
+   `PARAM stale` warning naming both defaults when they differ.
+   Done (bench/sessions/2026-10-23-par010-persistence, E1): SAVE 37 written, a second SAVE 37 unchanged; after a
+   reboot the three changed values (rest_ms 6000, idle_enabled 0, hop_rotation 3) are back and printed, a stored
+   rotation prints `rotation_source=stored`; LOAD undoes an unsaved SET; RESET clears the store and the next boot
+   loads 0. Host: test_param_registry 9 tests (save/load, stale, invalid, NaN, missing). The stale path is
+   host-tested only: no firmware default changed on the board. All envs build; T2h not affected (no detection
+   code changed).
+   Note for 10c block 2: the silence hold still uses unsaved PARAM SETs, so a reboot brings a held node back.
+
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
-   PAR-010/011 and OUT-002..004 come first after 10c, see the phase goal; step 9's Phases 5d and 6 wait here
+   PAR-010/011 done early as 10d; OUT-002..004 come first after 10c, see the phase goal; step 9's Phases 5d and 6 wait here
    for a second detector family):
-   PAR-010/011
-   persistence, OutputStatus / OutputProfile (OUT-002..004), BehaviorRuntime
+   OutputStatus / OutputProfile (OUT-002..004), BehaviorRuntime
    (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*),
    ParamRegistry as its own repo (PAR-017), PAR-008 output params, PAR-009
    drift params, PAR-013 remote param update, PAR-014 config stays

@@ -1,8 +1,12 @@
 /*
 lib/ParamRegistry on the host (step 10 item 3, PAR-016): registration rules and
-the parse rules a PARAM SET goes through. Runs in native-test-behavior.
+the parse rules a PARAM SET goes through, and persistence (PAR-010/011):
+save, load with stale and invalid entries, restore defaults. Runs in
+native-test-behavior.
 */
 #include <unity.h>
+
+#include <map>
 
 #include "../../lib/ParamRegistry/src/ParamRegistry.h"
 #include "../../lib/ParamRegistry/src/ParamRegistry.cpp"
@@ -88,11 +92,148 @@ void test_float_and_bool_rules() {
     TEST_ASSERT_TRUE(flag);
 }
 
+// The NVS stand-in: one entry per id.
+class MemoryStore : public param::ParamStore {
+public:
+    bool read(uint16_t id, param::StoredParam& out) override {
+        auto it = entries.find(id);
+        if (it == entries.end()) {
+            return false;
+        }
+        out = it->second;
+        return true;
+    }
+    bool write(const param::StoredParam& entry) override {
+        ++writes;
+        entries[entry.id] = entry;
+        return true;
+    }
+    bool clear() override {
+        entries.clear();
+        return true;
+    }
+    std::map<uint16_t, param::StoredParam> entries;
+    int writes = 0;
+};
+
+void test_save_then_load_restores_values_over_defaults() {
+    param::ParamRegistry r = makeRegistry();
+    r.captureDefaults();
+    MemoryStore store;
+    set(r, "a.u32", "1234");
+    set(r, "b.f", "2.25");
+    set(r, "b.flag", "1");
+    const param::ParamSaveReport saved = r.save(store);
+    TEST_ASSERT_EQUAL_UINT32(4, saved.written);  // every registered param, also the unchanged u16
+    TEST_ASSERT_EQUAL_UINT32(0, saved.failed);
+
+    r.restoreDefaults();
+    TEST_ASSERT_EQUAL_UINT32(1000, u32);
+    TEST_ASSERT_EQUAL_FLOAT(1.5f, f);
+    TEST_ASSERT_FALSE(flag);
+
+    const param::ParamLoadReport loaded = r.load(store, Serial);
+    TEST_ASSERT_EQUAL_UINT32(4, loaded.stored);
+    TEST_ASSERT_EQUAL_UINT32(4, loaded.applied);
+    TEST_ASSERT_EQUAL_UINT32(0, loaded.stale);
+    TEST_ASSERT_EQUAL_UINT32(0, loaded.invalid);
+    TEST_ASSERT_EQUAL_UINT32(1234, u32);
+    TEST_ASSERT_EQUAL_FLOAT(2.25f, f);
+    TEST_ASSERT_TRUE(flag);
+    TEST_ASSERT_EQUAL_UINT16(10, u16);
+
+    // A second save of the same values writes nothing.
+    const int writes = store.writes;
+    TEST_ASSERT_EQUAL_UINT32(4, r.save(store).unchanged);
+    TEST_ASSERT_EQUAL_INT(writes, store.writes);
+}
+
+void test_stored_value_wins_over_a_changed_default_and_counts_stale() {
+    MemoryStore store;
+    {
+        param::ParamRegistry r = makeRegistry();
+        r.captureDefaults();
+        set(r, "a.u32", "1234");
+        r.save(store);
+    }
+    // New firmware: the default of a.u32 moved from 1000 to 2000.
+    setUp();
+    u32 = 2000;
+    param::ParamRegistry r = makeRegistry();
+    r.captureDefaults();
+    const param::ParamLoadReport loaded = r.load(store, Serial);
+    TEST_ASSERT_EQUAL_UINT32(1, loaded.stale);
+    TEST_ASSERT_EQUAL_UINT32(1234, u32);  // stored wins
+    // A saved value equal to its old default is stale too, and still wins.
+    store.entries.clear();
+    {
+        setUp();
+        param::ParamRegistry old = makeRegistry();
+        old.captureDefaults();  // u32 default 1000
+        old.save(store);
+    }
+    u32 = 2000;
+    r.captureDefaults();
+    TEST_ASSERT_EQUAL_UINT32(1, r.load(store, Serial).stale);
+    TEST_ASSERT_EQUAL_UINT32(1000, u32);
+}
+
+void test_invalid_entries_keep_the_field() {
+    param::ParamRegistry r = makeRegistry();
+    r.captureDefaults();
+    MemoryStore store;
+    r.save(store);
+    store.entries[static_cast<uint16_t>(Id::U16)].valueBits = 501;  // past the 500 max
+    store.entries[static_cast<uint16_t>(Id::F)].type = static_cast<uint8_t>(param::ParamType::UInt32);
+    store.entries[static_cast<uint16_t>(Id::Flag)].version = 99;
+    store.entries[static_cast<uint16_t>(Id::U32)].valueBits = 7;  // valid: applied
+    u16 = 42;
+    const param::ParamLoadReport loaded = r.load(store, Serial);
+    TEST_ASSERT_EQUAL_UINT32(4, loaded.stored);
+    TEST_ASSERT_EQUAL_UINT32(3, loaded.invalid);
+    TEST_ASSERT_EQUAL_UINT32(1, loaded.applied);
+    TEST_ASSERT_EQUAL_UINT16(42, u16);
+    TEST_ASSERT_EQUAL_UINT32(7, u32);
+}
+
+void test_float_nan_bits_are_invalid() {
+    param::ParamRegistry r = makeRegistry();
+    r.captureDefaults();
+    MemoryStore store;
+    r.save(store);
+    const float nan = NAN;
+    uint32_t bits = 0;
+    memcpy(&bits, &nan, sizeof(bits));
+    store.entries[static_cast<uint16_t>(Id::F)].valueBits = bits;
+    TEST_ASSERT_EQUAL_UINT32(1, r.load(store, Serial).invalid);
+    TEST_ASSERT_EQUAL_FLOAT(1.5f, f);
+}
+
+void test_missing_entries_keep_defaults_and_clear_empties_the_store() {
+    param::ParamRegistry r = makeRegistry();
+    r.captureDefaults();
+    MemoryStore store;
+    set(r, "a.u16", "99");
+    TEST_ASSERT_FALSE(r.isDefault(*r.find("a.u16")));
+    r.save(store);
+    TEST_ASSERT_TRUE(store.clear());
+    r.restoreDefaults();
+    TEST_ASSERT_TRUE(r.isDefault(*r.find("a.u16")));
+    const param::ParamLoadReport loaded = r.load(store, Serial);
+    TEST_ASSERT_EQUAL_UINT32(0, loaded.stored);
+    TEST_ASSERT_EQUAL_UINT16(10, u16);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_duplicate_path_and_duplicate_id_are_rejected);
     RUN_TEST(test_unsigned_rejects_sign_junk_and_overflow);
     RUN_TEST(test_uint32_range_is_exact_above_float_precision);
     RUN_TEST(test_float_and_bool_rules);
+    RUN_TEST(test_save_then_load_restores_values_over_defaults);
+    RUN_TEST(test_stored_value_wins_over_a_changed_default_and_counts_stale);
+    RUN_TEST(test_invalid_entries_keep_the_field);
+    RUN_TEST(test_float_nan_bits_are_invalid);
+    RUN_TEST(test_missing_entries_keep_defaults_and_clear_empties_the_store);
     return UNITY_END();
 }

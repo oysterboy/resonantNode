@@ -257,4 +257,142 @@ void ParamRegistry::dump(Print& out) const {
     }
 }
 
+uint32_t ParamRegistry::valueBits(const ParamBinding& binding) const {
+    switch (binding.type) {
+        case ParamType::Float: {
+            uint32_t bits = 0;
+            memcpy(&bits, binding.field, sizeof(bits));
+            return bits;
+        }
+        case ParamType::UInt32:
+            return *static_cast<const uint32_t*>(binding.field);
+        case ParamType::UInt16:
+            return *static_cast<const uint16_t*>(binding.field);
+        case ParamType::Bool:
+            return *static_cast<const bool*>(binding.field) ? 1U : 0U;
+    }
+    return 0;
+}
+
+bool ParamRegistry::bitsInRange(const ParamBinding& binding, uint32_t bits) const {
+    switch (binding.type) {
+        case ParamType::Float: {
+            float value = 0.0f;
+            memcpy(&value, &bits, sizeof(value));
+            return !isnan(value) && value >= binding.minValue && value <= binding.maxValue;
+        }
+        case ParamType::UInt32:
+        case ParamType::UInt16:
+            return bits >= binding.minUnsigned && bits <= binding.maxUnsigned;
+        case ParamType::Bool:
+            return bits <= 1U;
+    }
+    return false;
+}
+
+void ParamRegistry::writeBits(const ParamBinding& binding, uint32_t bits) const {
+    switch (binding.type) {
+        case ParamType::Float:
+            memcpy(binding.field, &bits, sizeof(bits));
+            break;
+        case ParamType::UInt32:
+            *static_cast<uint32_t*>(binding.field) = bits;
+            break;
+        case ParamType::UInt16:
+            *static_cast<uint16_t*>(binding.field) = static_cast<uint16_t>(bits);
+            break;
+        case ParamType::Bool:
+            *static_cast<bool*>(binding.field) = bits != 0U;
+            break;
+    }
+}
+
+void ParamRegistry::printBits(Print& out, const ParamBinding& binding, uint32_t bits) const {
+    if (binding.type == ParamType::Float) {
+        float value = 0.0f;
+        memcpy(&value, &bits, sizeof(value));
+        out.print(value, 3);
+    } else {
+        out.print(bits);
+    }
+}
+
+void ParamRegistry::captureDefaults() {
+    for (size_t i = 0; i < _count; ++i) {
+        _bindings[i].defaultBits = valueBits(_bindings[i]);
+    }
+}
+
+void ParamRegistry::restoreDefaults() const {
+    for (size_t i = 0; i < _count; ++i) {
+        writeBits(_bindings[i], _bindings[i].defaultBits);
+    }
+}
+
+ParamSaveReport ParamRegistry::save(ParamStore& store) const {
+    ParamSaveReport report;
+    for (size_t i = 0; i < _count; ++i) {
+        const ParamBinding& binding = _bindings[i];
+        const StoredParam entry{StoredParam::kVersion, static_cast<uint8_t>(binding.type), binding.id,
+                                valueBits(binding), binding.defaultBits};
+        StoredParam existing{};
+        if (store.read(binding.id, existing) && existing.version == entry.version && existing.type == entry.type &&
+            existing.id == entry.id && existing.valueBits == entry.valueBits &&
+            existing.savedDefaultBits == entry.savedDefaultBits) {
+            ++report.unchanged;
+            continue;
+        }
+        if (store.write(entry)) {
+            ++report.written;
+        } else {
+            ++report.failed;
+        }
+    }
+    return report;
+}
+
+ParamLoadReport ParamRegistry::load(ParamStore& store, Print& out) const {
+    ParamLoadReport report;
+    for (size_t i = 0; i < _count; ++i) {
+        const ParamBinding& binding = _bindings[i];
+        StoredParam entry{};
+        if (!store.read(binding.id, entry)) {
+            continue;
+        }
+        ++report.stored;
+        if (entry.version != StoredParam::kVersion || entry.id != binding.id ||
+            entry.type != static_cast<uint8_t>(binding.type) || !bitsInRange(binding, entry.valueBits)) {
+            ++report.invalid;
+            out.print("PARAM load path=");
+            out.print(binding.path);
+            out.println(" status=invalid kept=current");
+            continue;
+        }
+        if (entry.savedDefaultBits != binding.defaultBits) {
+            ++report.stale;
+            out.print("PARAM stale path=");
+            out.print(binding.path);
+            out.print(" stored=");
+            printBits(out, binding, entry.valueBits);
+            out.print(" saved_default=");
+            printBits(out, binding, entry.savedDefaultBits);
+            out.print(" firmware_default=");
+            printBits(out, binding, binding.defaultBits);
+            out.println(" using=stored");
+        }
+        writeBits(binding, entry.valueBits);
+        ++report.applied;
+        if (entry.valueBits != binding.defaultBits) {
+            out.print("PARAM load path=");
+            out.print(binding.path);
+            out.print(" value=");
+            printBits(out, binding, entry.valueBits);
+            out.print(" default=");
+            printBits(out, binding, binding.defaultBits);
+            out.println();
+        }
+    }
+    return report;
+}
+
 }  // namespace param

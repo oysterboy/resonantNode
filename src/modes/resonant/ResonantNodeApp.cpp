@@ -354,6 +354,18 @@ void Node::begin() {
         serialOut().print(" rotation_source=");
         serialOut().println(me != nullptr ? "roster" : "mac");
     }
+    // PAR-010 boot order: the fields hold the firmware defaults now (profile,
+    // roster rotation), so capture them, then let valid stored values win
+    // (decisions/2026-10-23-param-persistence-save-only.md) and apply once.
+    _paramRegistry.captureDefaults();
+    loadStoredParams();
+    {
+        const param::ParamBinding* rotation = _paramRegistry.find("output.hop_rotation");
+        if (rotation != nullptr && !_paramRegistry.isDefault(*rotation)) {
+            serialOut().print("RB node rotation_source=stored rotation=");
+            serialOut().println(_hopRotation);
+        }
+    }
     printSignalConfig();
     printHopGapCheck();
     printInspectionPlanCheck();
@@ -1228,7 +1240,7 @@ void Node::handleParamCommand(const char* line) {
     token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
     if (token == nullptr) {
-        serialOut().println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP");
+        serialOut().println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP|SAVE|LOAD|RESET");
         return;
     }
 
@@ -1239,6 +1251,38 @@ void Node::handleParamCommand(const char* line) {
 
     if (equalsIgnoreCase(token, "DUMP")) {
         _paramRegistry.dump(serialOut());
+        return;
+    }
+
+    // Persistence (PAR-011): only SAVE writes flash. LOAD re-reads the store,
+    // RESET clears it and restores the firmware defaults; both apply at once.
+    if (equalsIgnoreCase(token, "SAVE")) {
+        const param::ParamSaveReport report = _paramRegistry.save(_paramStore);
+        serialOut().print("PARAM SAVE written=");
+        serialOut().print(static_cast<unsigned long>(report.written));
+        serialOut().print(" unchanged=");
+        serialOut().print(static_cast<unsigned long>(report.unchanged));
+        serialOut().print(" failed=");
+        serialOut().print(static_cast<unsigned long>(report.failed));
+        serialOut().print(" status=");
+        serialOut().println(report.failed == 0 ? "ok" : "error");
+        return;
+    }
+
+    if (equalsIgnoreCase(token, "LOAD")) {
+        loadStoredParams();
+        applyParamModule(param::ModuleId::Detection);
+        return;
+    }
+
+    if (equalsIgnoreCase(token, "RESET")) {
+        const bool cleared = _paramStore.clear();
+        _paramRegistry.restoreDefaults();
+        serialOut().print("PARAM RESET store=");
+        serialOut().print(cleared ? "cleared" : "error");
+        serialOut().println(" values=defaults");
+        applyParamModule(param::ModuleId::Behavior);
+        applyParamModule(param::ModuleId::Detection);  // also prints hop_check and plan_check
         return;
     }
 
@@ -1300,7 +1344,27 @@ void Node::handleParamCommand(const char* line) {
         return;
     }
 
-    serialOut().println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP");
+    serialOut().println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP|SAVE|LOAD|RESET");
+}
+
+// Stored values into the fields (PAR-010), then every module applies once. At
+// boot this runs before the signal config prints; PARAM LOAD prints the checks
+// after it. Each value that differs from the default, and each stale or invalid
+// entry, has its own line (ParamRegistry::load).
+void Node::loadStoredParams() {
+    const param::ParamLoadReport report = _paramRegistry.load(_paramStore, serialOut());
+    serialOut().print("PARAM load stored=");
+    serialOut().print(static_cast<unsigned long>(report.stored));
+    serialOut().print(" applied=");
+    serialOut().print(static_cast<unsigned long>(report.applied));
+    serialOut().print(" stale=");
+    serialOut().print(static_cast<unsigned long>(report.stale));
+    serialOut().print(" invalid=");
+    serialOut().println(static_cast<unsigned long>(report.invalid));
+    if (report.applied > 0) {
+        applyLiveDetectionParams();
+        applyActiveBehaviorGateConfig();
+    }
 }
 
 // Dirty ModuleId apply route: a successful PARAM SET only writes the bound

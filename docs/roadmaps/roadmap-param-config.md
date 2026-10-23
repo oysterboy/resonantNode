@@ -392,7 +392,13 @@ concept of drift as one tuning group.
 
 ### PAR-010 - persistence backend
 
-Status: DEFERRED
+Status: DONE 2026-10-23 (decisions/2026-10-23-param-persistence-save-only.md; bench/sessions/2026-10-23-par010-
+persistence). As built: no per-param flag (every registered param persists, owner) and no storageKey field: the
+NVS key is `p<id>` from the stable ParamId, in namespace `params` (app/NvsParamStore.h). `defaultValue` is
+`ParamBinding::defaultBits`, captured at boot by `captureDefaults()`. Each entry stores the default it was saved
+against; boot warns `PARAM stale` when the firmware default has moved, and the stored value wins. The registry
+takes a `ParamStore` interface, so lib/ParamRegistry stays app-agnostic and is host-tested with a memory store.
+The original plan:
 
 ```text
 Only after runtime params are stable, add persistence.
@@ -421,7 +427,9 @@ Invalid or missing stored values keep defaults and log clearly.
 
 ### PAR-011 - PARAM SAVE / LOAD / RESET
 
-Status: DEFERRED
+Status: DONE 2026-10-23, on the Node (same sources as PAR-010). SAVE skips entries the store already holds as is.
+The Analyzer has no registry and no persistence.
+The original plan:
 
 ```text
 Add durable commands only after the persistence backend exists.

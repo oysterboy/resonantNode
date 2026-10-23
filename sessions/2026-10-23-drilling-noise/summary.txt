@@ -1,0 +1,17 @@
+drilling_listen: 3600 s, boards E1,E4,E5
+  E1: emits heard_pattern=0 idle=0  verdicts=0  rests={}
+  E4: emits heard_pattern=0 idle=0  verdicts=0  rests={}
+  E5: emits heard_pattern=0 idle=0  verdicts=0  rests={}
+  who heard whom (listener <- sender: verdicts / sender's emissions):
+    E1 <- E4 0/0  E5 0/0
+    E4 <- E1 0/0  E5 0/0
+    E5 <- E1 0/0  E4 0/0
+  unattributed verdicts: 0
+  strength drift, bins of 600 s (median strength, verdict count in brackets):
+  mean valid strength per board and bin (RB STATUS heard.*; a counter drop = reboot or rebase):
+    E1: 9670(109) - - - - -
+    E4: - - - - - -
+    E5: - - - - - -
+  group emissions per minute: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+  max emissions per minute 0, M = 100: PASS
+  log: bench/sessions/2026-10-23-drilling-noise\drilling_listen.log

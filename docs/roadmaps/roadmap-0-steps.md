@@ -43,6 +43,7 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-23, 10e done (idle reschedule, 12 KB stack temporary removed: 3.4 -> 14.2 KB free). Next: 10f.
 Status update 2026-10-23, change order (owner): before 10c block 2 come 10e loose ends, 10f output status
 (OUT-002/003) and 5h's cells; DET-015 after 10c. Next: 10e.
 Status update 2026-10-23, later: 10d done, params survive a reboot (PARAM SAVE / LOAD / RESET, PAR-010/011),
@@ -973,7 +974,7 @@ the previous gate open unless the step says it can run in parallel.
    survives a reboot, so a node kept out of a run no longer needs its port held open (E1 check in the same
    session folder, `silent.log`).
 
-10e. [NEXT] Loose ends before block 2. (issue #56)
+10e. [DONE 2026-10-23] Loose ends before block 2. (issue #56, closed)
    Change order 2026-10-23 (owner). Each fix with a host test or a board check:
    - an idle call already scheduled is not rescheduled when behavior.idle_timeout_ms changes;
    - hop_check warns gap_not_below_debounce on the shipped values (hop gap 10 = release debounce 10): either the
@@ -982,8 +983,17 @@ the previous gate open unless the step says it can run in parallel.
    Also landed for block 2 (db5213c): strength= on verdict lines, heard.valid / heard.strength_sum in RB STATUS,
    nodegroup.py drift tables (board check pending).
    Gate: each item fixed or recorded as not a bug, host suites and T2h unchanged.
+   Done (bench/sessions/2026-10-23-step10e-loose-ends):
+   - idle_timeout: fixed, the running wait is rescheduled from its start; 2 host tests (fail without the fix).
+   - gap_not_below_debounce: not a bug, the deliberate soft warning pinned in 5h; debounce 20 is the lever, decided
+     by 5h's dry-room cell (tuning, not here).
+   - stack: found. FeatureHistory::resetStream()'s `buffer = {}` put a 12 KB temporary on the loop stack at every
+     detection reset (boot, rebase, RB PROFILE). memset instead: free minimum 3,448 -> 14,172 B on E1. T2h
+     byte-identical, host suites 21 + 34.
+   - strength fields on E1 (5/5 Emitter trains, STATUS sum matches the lines) and nodegroup's drift tables in a 90 s
+     E1 + E4 run.
 
-10f. [TODO] Output status and request (OUT-002/003). (issue #57)
+10f. [NEXT] Output status and request (OUT-002/003). (issue #57)
    Change order 2026-10-23 (owner), out of step 11. OUT-002 a minimal OutputStatus (busy, last start / end,
    current pattern), OUT-003 Behavior's request that Output executes and checks against physical limits.
    OUT-004 (OutputProfile) stays deferred: its own condition (behavior variations proven needed) is not met.

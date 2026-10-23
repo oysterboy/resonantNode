@@ -1,6 +1,9 @@
 #include "FeatureHistory.h"
 
 #include <math.h>
+#include <string.h>
+
+#include <type_traits>
 
 #include "../../app/TimingUtils.h"
 
@@ -168,8 +171,13 @@ float FeatureHistory::representativeValueForAccumulator(FeatureStreamId stream, 
     }
 }
 
+// Every StreamBuffer member defaults to zero, so clearing the bytes is the same
+// as `buffer = {}`, without the 12 KB temporary GCC built on the stack for it:
+// that took the Node's loop stack from 14.2 KB to 3.6 KB free at boot and on
+// every detection reset (step 10e, bench/sessions/2026-10-23-step10e-loose-ends).
 void FeatureHistory::resetStream(StreamBuffer& buffer) {
-    buffer = {};
+    static_assert(std::is_trivially_copyable<StreamBuffer>::value, "resetStream clears StreamBuffer bytewise");
+    memset(&buffer, 0, sizeof(buffer));
 }
 
 void FeatureHistory::reset() {

@@ -99,6 +99,9 @@ enum class ParamId : uint16_t {
     // module with the matching target.
     Detection_ContrastMedium,
     Detection_AmpMedium,
+    // Silent (2026-10-23): the node listens and reports but never sounds;
+    // PARAM SAVE keeps it across a reboot.
+    Output_Silent,
 };
 
 }  // namespace param

@@ -67,6 +67,7 @@ private:
     void handleParamCommand(const char* line);
     void applyParamModule(param::ModuleId module);
     void loadStoredParams();
+    void applySilent();
     void startRbQuietBaseline();
     void resetRbCounters();
     void resetDetectionState();
@@ -218,6 +219,12 @@ private:
     // then the node's call (its hop train). 0 Hz = plain idle chirp pattern.
     uint32_t _idleAnnounceHz = 300;
     uint32_t _idleAnnounceMs = 500;
+    // output.silent: the outputs-off gate held shut (rbOutputsEnabled()), so
+    // detection runs and verdicts are counted, but Behavior never fires: no
+    // answer, no idle call, no RB CALL. _silentApplied is what the loop last
+    // acted on, so a change quiesces Behavior once.
+    bool _silent = false;
+    bool _silentApplied = false;
     static constexpr unsigned long kIdleAnnounceGapMs = 200;
     bool _idleHopPending = false;       // announcement playing or gap running, hop train to follow
     unsigned long _idleHopAtMs = 0;     // when the hop train starts (after the gap)

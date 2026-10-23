@@ -385,6 +385,10 @@ void Node::begin() {
     _chirpOutput.begin();
     _debug.begin(_ledPin);
     _behavior.seedIdleSchedule(timebase::nowMs());
+    _silentApplied = _silent;
+    if (_silent) {
+        serialOut().println("RB silent=1 (output.silent: listening, never sounding)");
+    }
     _debug.markLoopStart(timebase::nowUs());
     _serialLineLength = 0;
     _serialLineOverflow = false;
@@ -464,8 +468,26 @@ void Node::performRbRebase() {
 // --- baseline / startup ---
 
 bool Node::rbOutputsEnabled() const {
+    if (_silent) {
+        return false;
+    }
     return _rbBaselineState == RBBaselineState::Active
         || _rbBaselineState == RBBaselineState::FailedNoQuiet;
+}
+
+// output.silent changed (PARAM SET, LOAD, RESET, or a stored value at boot):
+// stop a sounding emission and drop Behavior's state either way, so a pattern
+// heard or a call queued before the change does not fire after it, and the
+// idle call starts its schedule fresh.
+void Node::applySilent() {
+    if (_silent == _silentApplied) {
+        return;
+    }
+    _silentApplied = _silent;
+    quiesceBehaviorForOutputsOff();
+    _behavior.seedIdleSchedule(timebase::nowMs());
+    serialOut().print("RB silent=");
+    serialOut().println(_silent ? 1 : 0);
 }
 
 const char* Node::rbBaselineStateName() const {
@@ -630,6 +652,7 @@ void Node::registerOutputParams() {
     _paramRegistry.addUInt32(ParamId::Output_HopSteps, ModuleId::Output, "output.hop_steps", &_hopSteps, 1U, 8U);
     _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &_idleAnnounceHz, 0U, 7900U);
     _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &_idleAnnounceMs, 20U, 2000U);
+    _paramRegistry.addBool(ParamId::Output_Silent, ModuleId::Output, "output.silent", &_silent);
 }
 
 // The registered detection params (detection.scalar_*, detection.band_*) applied
@@ -841,6 +864,7 @@ void Node::update() {
     }
 
     updateRbBaselineState(now);
+    applySilent();  // output.silent from any path (two compares when unchanged)
     const bool rbOutputsEnabledNow = rbOutputsEnabled();
     applyBandParams();  // PARAM SET detection.band_* takes effect here (two compares when unchanged)
 
@@ -1140,6 +1164,10 @@ void Node::handleSerialLine(const char* line) {
     }
     if (equalsIgnoreCase(line, "RB CALL") || equalsIgnoreCase(line, "RB call")) {
         // Step 5g: play the node's network signal now, through Behavior (kick).
+        if (_silent) {
+            serialOut().println("RB CALL ignored silent=1");
+            return;
+        }
         _behavior.requestNetworkCall();
         serialOut().print("RB CALL queued resting=");
         serialOut().print(_behavior.resting(timebase::nowMs()) ? 1 : 0);
@@ -1377,6 +1405,7 @@ void Node::applyParamModule(param::ModuleId module) {
             printInspectionPlanCheck();
             break;
         case param::ModuleId::Output:
+            applySilent();
             printHopGapCheck();
             break;
         case param::ModuleId::Behavior:

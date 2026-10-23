@@ -98,7 +98,7 @@ struct ParamSaveReport {
 
 class ParamRegistry {
 public:
-    static constexpr size_t kMaxParams = 48;  // 37 used by the Node since step 10
+    static constexpr size_t kMaxParams = 48;  // 38 used by the Node (output.silent since 2026-10-23)
     using GroupNamer = const char* (*)(uint8_t group);
 
     // Raw registration. Rejects a null path or field, a duplicate path, a

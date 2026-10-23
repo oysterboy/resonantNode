@@ -75,6 +75,8 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(_behavior.detectionSuppressTailMsOwnEmit());
     serialOut().print(" output_busy=");
     serialOut().print(_behavior.outputBusy() ? 1 : 0);
+    serialOut().print(" silent=");
+    serialOut().print(_silent ? 1 : 0);
     serialOut().print(" band=");
     serialOut().print(_freqBandStream.bandLowHz());
     serialOut().print('-');

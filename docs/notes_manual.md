@@ -165,6 +165,10 @@ Node params (since step 10, `RB PARAM` and `RB BEHAV` are gone; the lines below 
 - List, read, set: `PARAM LIST`, `PARAM DUMP`, `PARAM GET <path>`, `PARAM SET <path> <value>`
 - Keep across reboots: `PARAM SAVE` (all registered params, `output.hop_rotation` included: a saved rotation
   overrides the roster until `PARAM RESET`)
+- Silent: `PARAM SET output.silent 1`. The node keeps listening (verdicts counted, `decision=outputs_off` in the
+  log) but never sounds: no answer, no idle call, `RB CALL` is ignored. Add `PARAM SAVE` and it boots silent
+  (`RB silent=1` at boot) until `PARAM SET output.silent 0` + SAVE, or `PARAM RESET`. RB STATUS shows `silent=`.
+  The self-test still plays its tones: it is an explicit command.
 - Back to the saved values: `PARAM LOAD`; back to firmware defaults and an empty store: `PARAM RESET`
 - Boot prints `PARAM load stored=N applied=N stale=N invalid=N`, a `PARAM load path=... value=... default=...` line
   per saved value that differs from the default, and `PARAM stale ...` per entry saved against an old default.

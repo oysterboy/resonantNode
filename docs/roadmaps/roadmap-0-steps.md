@@ -963,7 +963,9 @@ the previous gate open unless the step says it can run in parallel.
    loads 0. Host: test_param_registry 9 tests (save/load, stale, invalid, NaN, missing). The stale path is
    host-tested only: no firmware default changed on the board. All envs build; T2h not affected (no detection
    code changed).
-   Note for 10c block 2: the silence hold still uses unsaved PARAM SETs, so a reboot brings a held node back.
+   Added the same day (owner): `output.silent`, the outputs-off gate held shut (listens, never sounds). Saved, it
+   survives a reboot, so a node kept out of a run no longer needs its port held open (E1 check in the same
+   session folder, `silent.log`).
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d; OUT-002..004 come first after 10c, see the phase goal; step 9's Phases 5d and 6 wait here

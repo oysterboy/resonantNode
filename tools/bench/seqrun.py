@@ -34,6 +34,10 @@ ap.add_argument("--purpose", help="why this session exists, e.g. 'issue #7 T2/T3
 ap.add_argument("--distance-cm", type=float)
 ap.add_argument("--orientation", help="e.g. 'vertical emit, vertical mic'")
 ap.add_argument("--emitter-fw", help="emitter firmware git hash, if known")
+# NODE-012 cells (research/acoustic-test-suite.md): which space, speaker and tone level the session ran in.
+ap.add_argument("--space", default="", help="e.g. 'desk', 'desk dry (absorbers)', 'installation site'")
+ap.add_argument("--speaker", default="", help="e.g. 'stock D-AMP 3 W / 8 ohm'")
+ap.add_argument("--tone-level", default="", help="Emitter tone level, e.g. '0.5 FS'")
 ap.add_argument("--note", action="append", default=[], help="free-form setup note (repeatable)")
 ap.add_argument("--run", nargs=2, action="append", metavar=("NAME", "COMMANDS"), required=True)
 ap.add_argument("--no-reset", action="store_true", help="skip reset (firmware read from session)")
@@ -56,6 +60,9 @@ else:
             "distance_cm": args.distance_cm,
             "orientation": args.orientation or "",
             "emitter_fw": args.emitter_fw or "",
+            "space": args.space,
+            "speaker": args.speaker,
+            "tone_level": args.tone_level,
             "notes": args.note,
         },
         "runs": [],

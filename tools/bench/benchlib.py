@@ -21,7 +21,7 @@ SUMMARY_FIELDS = ("trials", "completed", "expected_trials", "early_trials", "lat
                   "avg_strength", "avg_conf")
 
 INDEX_COLUMNS = ("session", "run", "date", "firmware", "role", "profile", "detector",
-                 "distance_cm", "purpose", "complete") + SUMMARY_FIELDS
+                 "distance_cm", "space", "speaker", "tone_level", "purpose", "complete") + SUMMARY_FIELDS
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 BENCH_ROOT = os.path.join(REPO_ROOT, "bench")
@@ -131,6 +131,9 @@ def rebuild_index():
                 "profile": summ.get("profile", ""),
                 "detector": summ.get("detector", ""),
                 "distance_cm": setup.get("distance_cm", ""),
+                "space": setup.get("space", ""),
+                "speaker": setup.get("speaker", ""),
+                "tone_level": setup.get("tone_level", ""),
                 "purpose": data.get("purpose", ""),
                 "complete": "1" if summ.get("complete") else "0",
             }

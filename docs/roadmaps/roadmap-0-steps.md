@@ -26,6 +26,10 @@ Next phase, after 10b: an installation-ready node. It opens with step 10c
 installation needs are sequenced in this order, the rest staying deferred:
 settings that survive a reboot (PAR-010/011), then output status
 (OUT-002..004), then a long run on that build.
+Change order 2026-10-23 (owner): what changes the installation build lands before 10c block 2 (Sunday), so that
+one long run covers it: 10d (persistence, done), 10e (loose ends), 10f (OUT-002/003; OUT-004 stays deferred);
+5h's measurement cells run before it too, on the bench. DET-015 (shape) waits until after 10c. Block 2 is then
+both 10c's second block and the "long run on that build".
 
 Previous phase (closed 2026-10-22 with step 6): five D-AMP nodes with the
 same firmware in one room, hearing and answering each other, with a
@@ -39,6 +43,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-23, change order (owner): before 10c block 2 come 10e loose ends, 10f output status
+(OUT-002/003) and 5h's cells; DET-015 after 10c. Next: 10e.
 Status update 2026-10-23, later: 10d done, params survive a reboot (PARAM SAVE / LOAD / RESET, PAR-010/011),
 pulled ahead of 10c block 2 by the owner; block 2 runs on this firmware.
 Status update 2026-10-23: DET-017 done (min 92 ms + deferred inspection; 40 ms beep rejected, hop 10/10).
@@ -568,7 +574,7 @@ the previous gate open unless the step says it can run in parallel.
    Done 2026-10-21 (bench/sessions/2026-10-21-group5-kick-idle): RB CALL played through Behavior 4 of 4 times and was
    answered each time; idle calls (300 Hz announcement, then the hop train) 27, all answered.
 
-5h. [TODO] Detection robustness against other physical conditions. (issue #47)
+5h. [TODO, before 10c block 2: change order 2026-10-23] Detection robustness against other physical conditions. (issue #47)
    Where: DET-011 (gap contract), NODE-012 (acoustic test suite, its cells), NODE-006 (host replay);
    research/unproven-assumptions-audit.md 2.3, 2.2, 1.5; research/acoustic-test-suite.md.
    Why: the hop train of 5b is measured under one condition: one room, one pair in one direction, 60-110 cm, one
@@ -943,7 +949,7 @@ the previous gate open unless the step says it can run in parallel.
      RB summary polls;
    - room notes.
    Block 2 planned for Sunday 2026-10-25 (owner): 15-24 h, with strength drift logged and room notes.
-   It runs on main after DET-017 (min 92 ms, deferred inspection; e58c4c2 or later), not on 8ec0764.
+   It runs on main after 10d, 10e and 10f (change order 2026-10-23), not on 8ec0764.
    Where: NODE-008, NODE-013 (soak), NODE-017 (real uptime past the 72 min wrap); audit 4.4.
    Why: the longest run so far is the 7.3 h single-board soak (3a, accepted short, ~25 % strength drift not
    attributed); the trial runs were 30 min each. An installation runs for days, and wrap, drift and heap faults
@@ -967,8 +973,25 @@ the previous gate open unless the step says it can run in parallel.
    survives a reboot, so a node kept out of a run no longer needs its port held open (E1 check in the same
    session folder, `silent.log`).
 
+10e. [NEXT] Loose ends before block 2. (issue #56)
+   Change order 2026-10-23 (owner). Each fix with a host test or a board check:
+   - an idle call already scheduled is not rescheduled when behavior.idle_timeout_ms changes;
+   - hop_check warns gap_not_below_debounce on the shipped values (hop gap 10 = release debounce 10): either the
+     check or the value is wrong;
+   - the Node's 3,448 B low point of free loop stack: where it is reached, and whether it can grow.
+   Also landed for block 2 (db5213c): strength= on verdict lines, heard.valid / heard.strength_sum in RB STATUS,
+   nodegroup.py drift tables (board check pending).
+   Gate: each item fixed or recorded as not a bug, host suites and T2h unchanged.
+
+10f. [TODO] Output status and request (OUT-002/003). (issue #57)
+   Change order 2026-10-23 (owner), out of step 11. OUT-002 a minimal OutputStatus (busy, last start / end,
+   current pattern), OUT-003 Behavior's request that Output executes and checks against physical limits.
+   OUT-004 (OutputProfile) stays deferred: its own condition (behavior variations proven needed) is not met.
+   Gate: what the Node emits is unchanged (a session's emission lines and hop trains identical in shape), the
+   status visible in RB STATUS, host test for the request path.
+
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
-   PAR-010/011 done early as 10d; OUT-002..004 come first after 10c, see the phase goal; step 9's Phases 5d and 6 wait here
+   PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here
    for a second detector family):
    OutputStatus / OutputProfile (OUT-002..004), BehaviorRuntime
    (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*),

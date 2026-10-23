@@ -129,7 +129,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTarget; // Track the target-band scalar stream.
     profile.scalarTransient.onsetDetectionThreshold = 2000.0f; // Attack threshold for candidate start.
     profile.scalarTransient.onsetReleaseThreshold = 1500.0f; // Release threshold for candidate end.
-    profile.scalarTransient.minTransientDurationMs = 85; // Reject pulses that are too short.
+    profile.scalarTransient.minTransientDurationMs = 92; // Reject pulses that are too short. 92 since 2026-10-23 (was 85; DET-017, owner): above a 40 ms beep + room reflection (86 ms, bench/sessions/2026-10-22-7d-dur40-raw), below the shortest hop train with one step in a deep null (97 ms, host notch sweep). 100 lost the deep null on the middle step.
     profile.scalarTransient.maxTransientDurationMs = 300; // Reject pulses that are too long. 300 since 2026-10-16 (was 200): a 5-step hop train (25 ms x 5, gap 10, 165 ms) is seen as up to 214 ms with the room tail; the 100 ms chirp is unaffected. Noise cost of 300 alone not yet measured (lab note 2026-10-16, open items).
 
     profile.scalarTransient.releaseDebounceMs = 10; // Require a short stable release before ending.

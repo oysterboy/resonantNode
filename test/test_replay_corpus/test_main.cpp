@@ -354,18 +354,18 @@ void test_shipped_hop_train_fits_the_scalar_detector() {
 // fixture is not heard), and a short train is under the minimum duration.
 // Step 8b item 2: the shipped profile's durations against its inspection plan and
 // the 512 ms history (detection/InspectionPlanContract.h; the Node prints RB
-// plan_check). The history fits (300 + 10 + 0 + 100 = 410 ms). The window does
-// not: a minimum-duration occurrence (85 ms) is inspected at 95 ms, 5 ms before
-// its 0..+100 ms window ends (audit 3.1). If this assertion flips, DET-017 has
-// landed: update the test and the contract note.
-void test_shipped_plan_fits_the_history_but_inspects_early() {
+// plan_check). The history fits (300 + 10 + 0 + 100 = 410 ms). Since DET-017
+// (2026-10-23, min 92 ms) the window is complete at release too: a
+// minimum-duration occurrence is inspected at 92 + 10 = 102 ms, after its
+// 0..+100 ms window ends. Before, at 85 ms, it was inspected 5 ms early (audit 3.1).
+void test_shipped_plan_fits_the_history_and_the_window() {
     const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
     const detection::InspectionPlanCheck c = detection::checkInspectionPlan(profile.scalarTransient, profile.inspectionPlan);
     TEST_ASSERT_EQUAL_UINT32(410, c.historyNeededMs);
     TEST_ASSERT_EQUAL_UINT32(512, c.historySpanMs);
     TEST_ASSERT_TRUE(c.hardOk());
-    TEST_ASSERT_EQUAL_UINT32(5, c.earlyWindowMs);
-    TEST_ASSERT_FALSE(c.softOk());
+    TEST_ASSERT_EQUAL_UINT32(0, c.earlyWindowMs);
+    TEST_ASSERT_TRUE(c.softOk());
     // A history of 400 ms would not hold the longest occurrence's window.
     TEST_ASSERT_FALSE(detection::checkInspectionPlan(profile.scalarTransient, profile.inspectionPlan, 400).hardOk());
 }
@@ -453,7 +453,7 @@ int main(int, char**) {
     RUN_TEST(test_one_deep_null_is_survived_two_in_the_middle_are_not);
     RUN_TEST(test_shipped_hop_train_fits_the_scalar_detector);
     RUN_TEST(test_hop_gap_check_flags_what_the_detector_cannot_read);
-    RUN_TEST(test_shipped_plan_fits_the_history_but_inspects_early);
+    RUN_TEST(test_shipped_plan_fits_the_history_and_the_window);
     RUN_TEST(test_band_grid_is_shared_by_detector_and_hop_train);
     RUN_TEST(test_dc_blocker_scale_is_the_first_difference_gain_at_the_chirp);
     return UNITY_END();

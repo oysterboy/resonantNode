@@ -19,10 +19,10 @@ Soft (some occurrences are judged on a window that has not arrived):
   - complete at release: an occurrence of the minimum duration is inspected at
     release + debounce; a Start or Peak anchored window ends at most
     windowPost after its start, so min duration + debounce >= windowPost. A
-    Release anchored window needs windowPost <= debounce. Shipped: 85 + 10 <
+    Release anchored window needs windowPost <= debounce. Until 2026-10-23: 85 + 10 <
     100, so occurrences of 85-89 ms are rejected as MissingSupport whatever the
-    signal (audit 3.1). The fix waits on DET-017 (branch
-    step8b-defer-inspection); this stays `warn` until then.
+    signal (audit 3.1). Since DET-017 (2026-10-23) the shipped values pass
+    (92 + 10 >= 100), and the runtime also waits for an incomplete window.
 */
 namespace detection {
 

@@ -634,6 +634,16 @@ the previous gate open unless the step says it can run in parallel.
    unnotched). Rotation 0 only. One host test (five single deep nulls accepted, 3450+3700 at 1/7 not).
    The three host items have landed, with 19 + 15 host tests passing. The session 1 items and the NODE-012 cells
    remain open.
+   Progress 2026-10-23 (change order, before 10c block 2; tools/bench/cellrun.py runs a cell in one command):
+   - reference, the trial desk at 110 cm (bench/sessions/2026-10-23-cell-desk-ref-110cm): hop 50/50, chirp 50/50,
+     contrast P75 32,369 / 32,744.
+   - height offset, E3 +25 cm (bench/sessions/2026-10-23-cell-height25-110cm): hop **42/50**, all 8 rejects
+     coverage_too_low; the train reads 107-118 ms (not 193): the last two steps fall into nulls (3700 -7, 3950
+     -12 dB; tools/bench/hopbins.py) and the train ends after step 3, 16 ms over the 92 ms minimum, coverage on
+     the 80 ms limit. Chirp 50/50. A measurement, not tuned: the levers above (and DET-015) decide.
+   - dry cell: open (owner).
+   - noise, 2026-10-23-drilling-noise: three silent Nodes 60 min, 0 verdicts; drilling level not logged (RB STATUS
+     audio.level fields added afterwards, aa97051).
 
 6. [DONE 2026-10-22] STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),

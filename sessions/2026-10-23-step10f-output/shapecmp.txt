@@ -1,0 +1,14 @@
+bench/sessions/2026-10-23-step10f-output/drift90b.log
+   33  RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=*
+   10  RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+  orders: {'2950,3200,3450,3700,3950': 33}
+  idle call: announce line -> train line (s): [0.45, 0.45, 0.45, 0.5, 0.53, 0.53, 0.55, 0.59, 0.6, 0.62]
+  E4 heard E1's answer trains 15/23, idle-call trains 6/10
+  last RB STATUS output.*: (none: before 10f)
+bench/sessions/2026-10-23-step10f-output/out10f.log
+   31  RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=*
+   12  RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+  orders: {'2950,3200,3450,3700,3950': 31}
+  idle call: announce line -> train line (s): [0.41, 0.45, 0.45, 0.46, 0.47, 0.49, 0.5, 0.53, 0.54, 0.54, 0.55, 0.55]
+  E4 heard E1's answer trains 14/19, idle-call trains 6/12
+  last RB STATUS output.*: output.phase=idle output.started=28 output.done=28 output.rejected=0 output.last_reject=none output.last_start_ms=92094 output.last_done_ms=92256 output.span_ms=165

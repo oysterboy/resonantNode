@@ -1,0 +1,37 @@
+E5 silent ok
+drift90b: 90 s, boards E1,E4
+  E1: emits heard_pattern=23 idle=10  verdicts=25  rests={'rest_field_dense': 1, 'rest_own_budget': 3}
+  E4: emits heard_pattern=22 idle=10  verdicts=29  rests={'rest_field_dense': 4, 'rest_own_budget': 2}
+  who heard whom (listener <- sender: verdicts / sender's emissions):
+    E1 <- E4 20/32
+    E4 <- E1 23/33
+  unattributed verdicts: 11
+  strength drift, bins of 30 s (median strength, verdict count in brackets):
+    E1 <- E4: 24258(7) 24066(8) 24089(5)  first->last bin -1 %
+  mean valid strength per board and bin (RB STATUS heard.*; a counter drop = reboot or rebase):
+    E1: - 23986(7) 23846(9)
+  group emissions per minute: 45
+  start 1 at 3 s (idle): never quiet before the next kick, 9 emissions until then
+  start 2 at 12 s (idle): never quiet before the next kick, 2 emissions until then
+  start 3 at 13 s (idle): never quiet before the next kick, 1 emissions until then
+  start 4 at 19 s (idle): never quiet before the next kick, 1 emissions until then
+  start 5 at 19 s (idle): never quiet before the next kick, 8 emissions until then
+  start 6 at 29 s (idle): never quiet before the next kick, 0 emissions until then
+  start 7 at 29 s (idle): never quiet before the next kick, 8 emissions until then
+  start 8 at 37 s (idle): never quiet before the next kick, 1 emissions until then
+  start 9 at 37 s (idle): never quiet before the next kick, 1 emissions until then
+  start 10 at 42 s (idle): never quiet before the next kick, 6 emissions until then
+  start 11 at 51 s (idle): never quiet before the next kick, 1 emissions until then
+  start 12 at 52 s (idle): never quiet before the next kick, 6 emissions until then
+  start 13 at 59 s (idle): never quiet before the next kick, 5 emissions until then
+  start 14 at 68 s (idle): never quiet before the next kick, 2 emissions until then
+  start 15 at 68 s (idle): never quiet before the next kick, 1 emissions until then
+  start 16 at 74 s (idle): never quiet before the next kick, 1 emissions until then
+  start 17 at 75 s (idle): never quiet before the next kick, 0 emissions until then
+  start 18 at 80 s (idle): never quiet before the next kick, 1 emissions until then
+  start 19 at 80 s (idle): never quiet before the next kick, 8 emissions until then
+  start 20 at 88 s (idle): never quiet before the next kick, 3 emissions until then
+  time to quiet (gap 15 s): 0 of 20 starts quiet; within 30 s: 0 of 20 (pass mark 80 %: FAIL)
+  chains: 16 distinct starts; length median 1.8 s, max 3.9 s; ended within 30 s: 16 of 16 (80 %: PASS)
+  max emissions per minute 45, M = 100: PASS
+  log: C:\Users\admin\AppData\Local\Temp/ngtest\drift90b.log

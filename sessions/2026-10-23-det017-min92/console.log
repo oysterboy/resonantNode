@@ -1,0 +1,25 @@
+[09:45:24] boot banner: {'role': 'analyzer', 'git': 'e58c4c2', 'version': '0.4.0', 'board': 'damp'}
+[09:45:26] warmup: OK EMIT CHIRP
+[09:45:26] start beep40: SEQ start profile=TonalPulseScalar tries=10 dur=40 mode=detail when=all verbose=1
+[09:46:03] done beep40 (37s): complete=True results={'rejected': 10}
+[09:46:10] session updated, index rebuilt
+[09:46:14] boot banner: {'role': 'analyzer', 'git': 'e58c4c2', 'version': '0.4.0', 'board': 'damp'}
+[09:46:16] warmup: OK EMIT CHIRP
+[09:46:16] start beep60: SEQ start profile=TonalPulseScalar tries=10 dur=60 mode=detail when=all verbose=1
+[09:46:53] done beep60 (37s): complete=True results={'expected': 10}
+[09:46:59] session updated, index rebuilt
+[09:47:03] boot banner: {'role': 'analyzer', 'git': 'e58c4c2', 'version': '0.4.0', 'board': 'damp'}
+[09:47:05] warmup: OK EMIT CHIRP
+[09:47:05] start beep80: SEQ start profile=TonalPulseScalar tries=10 dur=80 mode=detail when=all verbose=1
+[09:47:42] done beep80 (37s): complete=True results={'expected': 10}
+[09:47:48] session updated, index rebuilt
+[09:47:52] boot banner: {'role': 'analyzer', 'git': 'e58c4c2', 'version': '0.4.0', 'board': 'damp'}
+[09:47:54] warmup: OK EMIT CHIRP
+[09:47:54] start chirp100: SEQ start profile=TonalPulseScalar tries=10 dur=100 mode=detail when=all verbose=1
+[09:48:31] done chirp100 (37s): complete=True results={'expected': 10}
+[09:48:37] session updated, index rebuilt
+[09:48:41] boot banner: {'role': 'analyzer', 'git': 'e58c4c2', 'version': '0.4.0', 'board': 'damp'}
+[09:48:43] warmup: OK EMIT CHIRP
+[09:48:43] start hop10: SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[09:49:20] done hop10 (37s): complete=True results={'expected': 10}
+[09:49:26] session updated, index rebuilt

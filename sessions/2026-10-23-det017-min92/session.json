@@ -1,0 +1,259 @@
+{
+  "purpose": "DET-017: min duration 92 with deferred inspection; beep, chirp and hop cells",
+  "created": "2026-10-23T09:45:20",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "trial layout, E2 Analyzer / E3 Emitter 110 cm",
+    "emitter_fw": "e58c4c2 tree",
+    "notes": [
+      "E1/E4/E5 held silent"
+    ]
+  },
+  "runs": [
+    {
+      "name": "beep40",
+      "file": "beep40.e58c4c2.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "e58c4c2",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=10 dur=40 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-23T09:45:26",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 10,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "10",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "5583.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "beep60",
+      "file": "beep60.e58c4c2.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "e58c4c2",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=10 dur=60 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-23T09:46:16",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "58",
+        "avg_strength": "5680.2",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "beep80",
+      "file": "beep80.e58c4c2.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "e58c4c2",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=10 dur=80 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-23T09:47:05",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "56",
+        "avg_strength": "5640.2",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "chirp100",
+      "file": "chirp100.e58c4c2.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "e58c4c2",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=10 dur=100 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-23T09:47:54",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "57",
+        "avg_strength": "5649.2",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "hop10",
+      "file": "hop10.e58c4c2.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "e58c4c2",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-23T09:48:43",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "49",
+        "avg_strength": "9448.3",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

@@ -937,6 +937,7 @@ the previous gate open unless the step says it can run in parallel.
    - per-board strength drift, which this log cannot show: RB STATUS needs a strength field, or the run needs
      RB summary polls;
    - room notes.
+   Block 2 planned for Sunday 2026-10-25 (owner): 15-24 h, with strength drift logged and room notes.
    Where: NODE-008, NODE-013 (soak), NODE-017 (real uptime past the 72 min wrap); audit 4.4.
    Why: the longest run so far is the 7.3 h single-board soak (3a, accepted short, ~25 % strength drift not
    attributed); the trial runs were 30 min each. An installation runs for days, and wrap, drift and heap faults

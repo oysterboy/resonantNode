@@ -1,0 +1,27 @@
+===== boot
+  RB node name=E1 rotation_source=roster
+  PARAM load stored=0 applied=0 stale=0 invalid=0
+===== silent on
+  PARAM SET path=output.silent module=output old=0 new=1 status=ok
+  RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+silent 12 s: chirpStarted 0 -> 0
+===== status
+   silent=1
+===== silent off
+  PARAM SET path=output.silent module=output old=1 new=0 status=ok
+  RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+audible 12 s: chirpStarted 0 -> 7
+===== save silent only
+  PARAM RESET store=cleared values=defaults
+  RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+  RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+  PARAM SET path=output.silent module=output old=0 new=1 status=ok
+  RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+  PARAM SAVE written=38 unchanged=0 failed=0 status=ok
+===== boot with saved silent
+  RB node name=E1 rotation_source=roster
+  PARAM load path=output.silent value=1 default=0
+  PARAM load stored=38 applied=38 stale=0 invalid=0
+  RB silent=1 (output.silent: listening, never sounding)
+saved silent 12 s after boot: chirpStarted 0 -> 0
+holding E1 open (store keeps output.silent=1)

@@ -23,3 +23,15 @@ Left on the board: store cleared (defaults), silenced with unsaved PARAM SETs, p
 Not covered on the board: the `PARAM stale` path (needs a firmware with a moved default; host test
 test_stored_value_wins_over_a_changed_default_and_counts_stale) and invalid entries (host tests). The time a
 37-entry SAVE blocks the loop was not measured; SAVE is an operator command, not run during sessions.
+
+## Part 2: output.silent (same day)
+
+E1 reflashed with `output.silent` (main da771a5; this build, too, reads `git=3f2ed74` plus the change).
+Script `silent_test.py`, log `silent.log`; idle call every 2 s (unsaved) to give it something to block:
+- silent 1, plus an RB CALL: chirpStarted 0 -> 0 over 12 s; RB STATUS `silent=1`
+- silent 0: 0 -> 7 over 12 s
+- RESET, silent 1, SAVE (written=38), reboot: `PARAM load path=output.silent value=1 default=0`,
+  `RB silent=1 (...)`, chirpStarted 0 -> 0 over 12 s with the 2 s idle call set again
+Left on E1: store holds output.silent=1 only, so E1 stays silent across resets.
+Not checked: the "RB CALL ignored silent=1" and transition lines were not in the script's print filter; the
+chirpStarted counts cover them.

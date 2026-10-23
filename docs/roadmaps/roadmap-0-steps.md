@@ -963,6 +963,9 @@ the previous gate open unless the step says it can run in parallel.
    - room notes.
    Block 2 planned for Sunday 2026-10-25 (owner): 15-24 h, with strength drift logged and room notes.
    It runs on main after 10d, 10e and 10f (change order 2026-10-23), not on 8ec0764.
+   Started early (owner 2026-10-23, "run all as nodes, installation like", counted as block 2): five Nodes on
+   dbb6305 from ~16:51 for 24 h, bench/sessions/2026-10-23-installation-run, room notes in its README (E2 and E3
+   at one height, 79 cm apart). 5h's dry cell waits until it ends.
    Where: NODE-008, NODE-013 (soak), NODE-017 (real uptime past the 72 min wrap); audit 4.4.
    Why: the longest run so far is the 7.3 h single-board soak (3a, accepted short, ~25 % strength drift not
    attributed); the trial runs were 30 min each. An installation runs for days, and wrap, drift and heap faults

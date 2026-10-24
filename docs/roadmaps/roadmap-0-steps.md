@@ -43,6 +43,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-24: 10c done (block 2, 24 h on dbb6305, every pass mark met). Open before step 11's
+triage: 5h's dry cell.
 Status update 2026-10-23, 10f done (SoundOutput executes OutputRequest, OutputStatus in RB STATUS; emission
 unchanged on the bench). Next before block 2: 5h's cells.
 Status update 2026-10-23, 10e done (idle reschedule, 12 KB stack temporary removed: 3.4 -> 14.2 KB free). Next: 10f.
@@ -949,7 +951,7 @@ the previous gate open unless the step says it can run in parallel.
    - Both runs: 0 chains started by noise, 0 dropped buffers, 0 resets. Gate met: the refactor phase holds in
      the field.
 
-10c. [NEXT] Long run: five nodes for 24 h or more. (issue #51)
+10c. [DONE 2026-10-24] Long run: five nodes for 24 h or more. (issue #51, closed)
    Block 1, 2026-10-22/23 (bench/sessions/2026-10-22-step10c-overnight): 9.6 h, 22:23 to 08:00 (owner's
    request), five nodes on 8ec0764, idle calls only, quiet.
    - 697 of 697 chains ended (max 6.0 s); max 50 per minute.
@@ -966,6 +968,13 @@ the previous gate open unless the step says it can run in parallel.
    Started early (owner 2026-10-23, "run all as nodes, installation like", counted as block 2): five Nodes on
    dbb6305 from ~16:51 for 24 h, bench/sessions/2026-10-23-installation-run, room notes in its README (E2 and E3
    at one height, 79 cm apart). 5h's dry cell waits until it ends.
+   Block 2 done (bench/sessions/2026-10-23-installation-run, 24.00 h on dbb6305): 1752/1752 chains ended (max
+   5.8 s), 0 noise-started of 30,546 answers, 0 dropped buffers / read errors / queue overflows in 719 STATUS
+   lines per node, 0 resets, no deaf node (303-418 valid verdicts per hour each), max 49 per minute. Strength
+   drift per pair recorded: hours 0-17 within about +-15 %; one path (E2 <- E5) stepped alone at ~20:00 with
+   nothing changed (a moving null); from 10:50 on 10-24 many paths moved together (room change, cause not
+   noted). Together with block 1: 33.6 h. Gate met; the installation-ready phase's sequenced items (10d, 10f and
+   the long run on that build) are done with it.
    Where: NODE-008, NODE-013 (soak), NODE-017 (real uptime past the 72 min wrap); audit 4.4.
    Why: the longest run so far is the 7.3 h single-board soak (3a, accepted short, ~25 % strength drift not
    attributed); the trial runs were 30 min each. An installation runs for days, and wrap, drift and heap faults

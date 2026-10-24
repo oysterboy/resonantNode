@@ -76,6 +76,7 @@ for l in setup_log:
 
 events = []
 strengths = {}      # (t, listener) -> strength of a valid verdict
+trains = []         # (t, name): hop train starts, for the drift attribution
 status_heard = {}   # name -> [(t, heard.valid, heard.strength_sum)]
 t0 = time.time()
 next_status = a.status_every
@@ -106,6 +107,8 @@ with open(log_path, "w", encoding="utf-8") as f:
             if l.startswith("BEH emit start"):
                 m = re.search(r"source=(\w+)", l)
                 events.append((t, n, "emit_" + (m.group(1) if m else "?")))
+            elif l.startswith("RB emit shape=hop"):
+                trains.append((t, n))  # the train's own start; an idle call's is ~700 ms after its emit start
             elif l.startswith("RB verdict=") and "valid=1" in l:
                 events.append((t, n, "verdict"))
                 m = re.search(r" strength=(\d+)", l)
@@ -141,8 +144,13 @@ for t, n, k in events:
     cands = [(te, ne) for te, ne in emits if ne != n and 0.05 <= t - te <= 0.8]
     if cands:
         heard[(n, max(cands)[1])] += 1
-        if (t, n) in strengths:
-            pair_strength.setdefault((n, max(cands)[1]), []).append((t, strengths[(t, n)]))
+        # Drift only from unambiguous verdicts, timed by the trains themselves: exactly one other board's
+        # train started in the window. Overlapping answers to one call are heard as the louder train, and an
+        # idle call's train starts ~700 ms after its emit start (2026-10-23 block 2: E4 <- E2 flipped between
+        # E2's ~5,800 and E5's ~24,000 per 5 min when attributed by emit start).
+        senders = {ne for te, ne in trains if ne != n and 0.05 <= t - te <= 0.8}
+        if (t, n) in strengths and len(senders) == 1:
+            pair_strength.setdefault((n, senders.pop()), []).append((t, strengths[(t, n)]))
     else:
         unattributed += 1
 print("  who heard whom (listener <- sender: verdicts / sender's emissions):")

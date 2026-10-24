@@ -11,6 +11,8 @@ Setup:
 
 Room notes (owner, add as things change):
 - 2026-10-23 ~16:55: E2 and E3 at the same height again (E3 back down after the height cell); E2-E3 distance 79 cm.
+- 2026-10-24 ~07-09: owner briefly in the room (E5 <- E2 saturates for a moment then).
+- Owner: otherwise nothing changed in the room (asked about ~20:00 on 10-23 and the first hour).
 
 First 2 min: 24 emissions, every node started emissions and heard others, 0 dropped buffers.
 Results: when the run ends.

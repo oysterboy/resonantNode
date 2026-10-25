@@ -11,7 +11,7 @@ Date: 2026-10-17.
 ## Decision
 
 Behavior gets the same three layers as detection
-(`docs/refactors/cleanup-detector-family-build.md`), and named behavior
+(`docs/refactors/archive/cleanup-detector-family-build.md`), and named behavior
 variants wait for the `ResonantProgram` bundle of step 11:
 
 | Layer | Decided by | Changes via | Now |

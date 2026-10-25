@@ -2,8 +2,8 @@
 
 Status: **implemented 2026-09-21** (Phase 5a). Hardware verification still
 outstanding, see "Implementation record" below.
-Related to: `docs/refactors/cleanup.md` and
-`docs/refactors/cleanup-detector-ownership.md`.
+Related to: `docs/refactors/archive/cleanup.md` and
+`docs/refactors/archive/cleanup-detector-ownership.md`.
 
 ---
 

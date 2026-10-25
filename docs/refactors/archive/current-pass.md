@@ -8,7 +8,7 @@ been applied directly: `PatternMatcher::hasPendingInput()` was added and
 inferring from the correlation queue. Phase 4's atomicity gap is confirmed
 still present but downgraded: it only affects the diagnostic
 `DetectionPipelineEvent`'s correlation, not `PatternResult`/`FieldState`
-production, per the finding in `docs/refactors/cleanup-analyzer-node-isolation.md`
+production, per the finding in `docs/refactors/archive/cleanup-analyzer-node-isolation.md`
 that the correlation queue is diagnostics-only. Phase 6 (Analyzer capture
 timing) and the future-window-unavailable edge case were not re-verified.
 If either becomes relevant again, re-check them against

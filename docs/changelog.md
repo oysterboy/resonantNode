@@ -141,7 +141,7 @@ piezo runs before thresholds were judged on it.
 ### Context
 
 A review-driven cleanup of the detection layer, sequenced in
-`docs/refactors/cleanup-0-plan.md`. Every step is build-verified on all
+`docs/refactors/archive/cleanup-0-plan.md`. Every step is build-verified on all
 three environments against the real toolchain; none of it has run on
 hardware yet. The hardware battery (T2/T3 SEQ regression, T4 Unity, T6/T7)
 is the next thing to do before building further.

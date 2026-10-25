@@ -161,13 +161,27 @@ Open: whether the Node must still hear the plain 100 ms chirp (min ~110 ms keeps
 it) or only the hop train (min ~130-150 ms). Cells: 40/60/80 ms tones, chirp,
 hop train, speech/music OBS, and the replay corpus.
 
+### DET-018 - "valid pattern" vocabulary and vestigial verdict enum values
+
+Status: DEFERRED (from the archived cleanup plan's Phase 7a / 7b, 2026-10-25)
+
+```text
+7a: identifiers and SEQ labels that call a valid verdict a "pattern" (AnalyzerReason::ValidPattern*,
+pattern_valid_trials=, ...) renamed to verdict / detection wording; SEQ label changes reach
+tools/bench and bench/index.csv, so they ship with a tools update.
+7b: enum values assigned nowhere (VerdictType Duplicate/Unexpected/Ambiguous, the Freq-era reason and
+reject codes) removed, with Behavior's dead ignore branch.
+Detail and the audit tables: docs/refactors/archive/cleanup-0-plan.md, "Phase 7".
+Pick up with DET-016 (the verdict boundary rule touches the same names).
+```
+
 ### DET-016 - verdict boundary rule: normalized confidence, event class, no unit-bearing fields
 
 Status: DEFERRED (owner, 2026-10-22: a later roadmap item, not part of step 8)
 
 The verdict carries the decision, one normalized magnitude (`confidence`), an
 event class and timing; no `primary*Strength` / `primaryAmbientBaseline`. Rule
-and design: docs/refactors/cleanup-0-plan.md Phase 7c ("Resolved 2026-09-21:
+and design: docs/refactors/archive/cleanup-0-plan.md Phase 7c ("Resolved 2026-09-21:
 the verdict boundary rule" and the step 8 plan's Part B, which maps the readers:
 Behavior's activity level, the Node RB summary `avg_strength`, the Analyzer's
 trial strength, the replay lines, the behavior suites). Open before it starts:
@@ -178,10 +192,11 @@ is gone since step 7d. Sequenced in roadmap-0-steps.md step 11.
 
 ### DET-008 - detection-layer cleanup pass
 
-Status: PARTIAL
+Status: PLAN ARCHIVED 2026-10-25 (docs/refactors/archive/cleanup-0-plan.md, see its Archived line). Open parts:
+Phases 5d + 6 are step 9 (deferred until a second family), 7a + 7b are DET-018, step 8's Part B is DET-016.
 
 ```text
-Executed in docs/refactors/cleanup-0-plan.md (phase order, T1-T8 test
+Executed in docs/refactors/archive/cleanup-0-plan.md (phase order, T1-T8 test
 battery, gates) with its topic docs (cleanup.md,
 cleanup-detector-family-build.md, cleanup-analyzer-node-isolation.md, ...).
 That plan orders the work within this item; roadmap-0-steps.md decides when

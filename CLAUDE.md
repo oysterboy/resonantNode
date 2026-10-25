@@ -66,9 +66,11 @@ misses its output. Upload with `--without-testing`, then reset and read
 the port yourself. Host (no board,
 NODE-006): `pio test -e native-test` replays recorded captures through the
 real detection chain (`test/test_replay_corpus`, fixtures under
-`test/fixtures`), `pio test -e native-test-behavior` drives
-`ResonantBehavior` through a two-node reply (`test/test_behavior_refractory`,
-step 5d), and `pio run -e native-replay` builds the replay command
+`test/fixtures`), `pio test -e native-test-behavior` runs the host unit
+suites (`test_behavior_refractory` two-node reply, `test_behavior_rest`,
+`test_shipped_profile`, `test_param_registry` incl. persistence,
+`test_sound_output`, `test_net_frame`; list in `platformio.ini`), and
+`pio run -e native-replay` builds the replay command
 line (`.pio/build/native-replay/program.exe --help`; captures live in
 `bench/sessions/*-corpus-*`, made with `tools/bench/rawcorpus.py`). Both
 need a host C++ compiler on PATH: on the developer's Windows machine that is
@@ -152,7 +154,16 @@ Short map (see the two docs above for the real architecture):
 - `src/modes/resonant|analyzer|emitter/` — per-mode command handling and
   wiring.
 - `src/hal/`, `src/audio/`, `src/output/` — I2S input, signal processing,
-  tone/chirp output.
+  tone/chirp output (`SoundOutput` executes the Node's emission requests).
+- `src/net/` — the radio (ESP-NOW): `NetFrame.h` (pure, host-tested) and
+  `NodeNet` (transport, Node build only). `NET <target|*> <command>` on any
+  USB Node runs a Node command on others by radio, through the same command
+  path as serial (operator rules: `notes_manual.md`, Remote commands).
+  Interim: VEKTOR replaces it (`docs/decisions/2026-10-25-vektor-replaces-net.md`).
+
+Boards keep their stored params (NVS) across a reflash: a board that was
+`PARAM SAVE`d (e.g. `output.silent 1`) boots with that until `PARAM RESET`.
+Check `PARAM load stored=` in the boot output before reading a run.
 
 Don't retune detection/behavior profile thresholds (`DetectionProfile.h`,
 `BehaviorProfile.h`) as a side effect of unrelated work — this repo treats
@@ -186,22 +197,16 @@ in `archive/` while active):
 - **Multi-phase or multi-topic work** — a master executable plan (goal,
   ordered items, a standing test/verification battery, explicit
   don't-touch-this-without-saying-so constraints) plus one file per
-  architectural area it spans. This is the current live example:
-  - `docs/refactors/cleanup.md` — goal + itemized Detector-layer cleanup
-  - `docs/refactors/cleanup-detector-consolidation.md`,
-    `cleanup-inspector-evaluator-scope.md`,
-    `cleanup-analyzer-node-isolation.md` — one topic each, detail lives
-    here
-  - `docs/refactors/cleanup-detector-ownership.md` — the union-of-two-
-    detectors proposal; deferred on measurement (1,440 bytes, a lifetime
-    hazard on profile switch) and **superseded** by
-    `cleanup-detector-family-build.md` (detector family as a build flag,
-    profile as reboot-applied config, thresholds as live params) — read
-    the family-build doc first, this one is kept for the record of why
-    that approach was rejected
-  - `docs/refactors/cleanup-0-plan.md` — sequences all of the above into
-    ordered phases with gates and a standing test battery; read this first
-    to know whether you're clear to start a given item
+  architectural area it spans. The model is the 2026-09 detection cleanup
+  set, archived 2026-10-25 (`docs/refactors/archive/cleanup-0-plan.md`, the
+  master, and its topic docs `cleanup*.md`; read its `Archived:` line). Its
+  open parts live on as roadmap items: Phases 5d + 6 (detector family as a
+  build flag; design in `archive/cleanup-detector-family-build.md`) are step
+  9, Phase 7a/7b is DET-018, step 8's Part B is DET-016.
+- Since 2026-10-22 most steps have run without a pass doc: the step's text in
+  `roadmap-0-steps.md` carries its plan, progress lines and gate results, and
+  a pass doc is opened only for a step too big for that (step 10's were
+  `archive/step10-mode-layer.md` and `archive/step10-boundary-map.md`).
 
 **Closing one out:** prepend a short header — `Archived: <date> — <what
 landed, what's still open, what wasn't re-verified>` — to the master file
@@ -225,8 +230,7 @@ the next unit of work — worth flagging rather than assuming silently.
   cross-roadmap sequence, one gate per step, each pointing at a roadmap ID.
   Check it before picking up roadmap work, and update the order there when a
   step's gate closes. It orders *between* items; an active pass/plan doc in
-  `docs/refactors/` orders *within* its item (the detection cleanup is
-  DET-008 -> `cleanup-0-plan.md`). On conflict, the steps file decides
+  `docs/refactors/` orders *within* its item (when one exists). On conflict, the steps file decides
   whether and when, the pass doc decides how.
 - Per-subsystem roadmap files (`roadmap-detection.md`, `roadmap-behavior.md`,
   etc.) are edited in place as plans change.

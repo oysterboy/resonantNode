@@ -38,4 +38,4 @@ runtime profile. git history has the removed code (last commit with it: the pare
 ## Source
 
 Step 7c (issue #49), docs/roadmaps/roadmap-0-steps.md; decisions/2026-10-14-node-ships-tonalpulsescalar.md;
-docs/refactors/cleanup-0-plan.md Phase 0.
+docs/refactors/archive/cleanup-0-plan.md Phase 0.

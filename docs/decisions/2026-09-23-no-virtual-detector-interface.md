@@ -48,7 +48,7 @@ available in the toolchain changes what the contract check can express
 
 ## Source
 
-- `docs/refactors/cleanup-detector-family-build.md`, "Decision: no virtual
+- `docs/refactors/archive/cleanup-detector-family-build.md`, "Decision: no virtual
   interface for detectors or `DetectionRuntime` (2026-09-23)".
-- `docs/refactors/cleanup-0-plan.md`, Phase 5d.
+- `docs/refactors/archive/cleanup-0-plan.md`, Phase 5d.
 - Commit `10c658f` ("record no-virtual-interface decision").

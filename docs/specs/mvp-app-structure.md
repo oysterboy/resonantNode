@@ -68,7 +68,7 @@ One scalar feature, one detector, no frequency analysis, no FFT/Goertzel.
 
 This is implemented as its own detector family, `SimpleThresholdDetector`
 (`src/detection/detectors/simple/`), selected at build time per
-`docs/refactors/cleanup-detector-family-build.md`; see that document's
+`docs/refactors/archive/cleanup-detector-family-build.md`; see that document's
 "Worked example" for the class and the family wiring. It is a ~150-line
 class that implements steps 1–7 above and nothing else: no carrier-quality
 gating, no coverage/island bookkeeping, no reject summaries, and the

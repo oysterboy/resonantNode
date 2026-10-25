@@ -1,3 +1,12 @@
+Archived: 2026-10-25 — the detection cleanup plan set (DET-008), closed out after the refactor phase (steps 7-10).
+Landed: Phase 0 resolved as "consolidate" (FrequencyMatch removed, step 7d), Phases 1, 3, 5a, 5c, and 7c (the
+evaluator fold, step 8 Part A); Phase 2 moot with FrequencyMatch gone; Phase 4's soak covered by the later soaks
+(3a, 10c); 5b superseded by 5d. Still open, with a roadmap home: Phases 5d + 6 (detector family as a build flag,
+the SimpleThresholdDetector MVP family) as step 9, deferred until a second family is wanted; 7a + 7b (derived
+"valid pattern" vocabulary, vestigial verdict enum values) as DET-018; step 8's Part B (the verdict boundary
+rule) as DET-016. Not re-verified at archive time: the topic docs' line references and measured byte counts
+(code moved since); read them as the record of why, not as current state.
+
 # Executable Plan — Sequencing All Detection Cleanup Docs
 
 This sequences everything across `cleanup.md`,

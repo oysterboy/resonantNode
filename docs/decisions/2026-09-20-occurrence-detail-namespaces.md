@@ -38,6 +38,6 @@ the evidence namespaces and should not reopen this one.
 
 ## Source
 
-- `docs/refactors/cleanup.md`, Item 1, "Correction (2026-09-20)".
-- `docs/refactors/cleanup-0-plan.md`, Phase 1, "Out-of-band, 2026-09-21:
+- `docs/refactors/archive/cleanup.md`, Item 1, "Correction (2026-09-20)".
+- `docs/refactors/archive/cleanup-0-plan.md`, Phase 1, "Out-of-band, 2026-09-21:
   naming rename".

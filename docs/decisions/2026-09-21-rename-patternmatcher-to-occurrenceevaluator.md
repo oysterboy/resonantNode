@@ -34,5 +34,5 @@ name.
 ## Source
 
 - `docs/changelog.md`, 2026-09-21 entry.
-- `docs/refactors/cleanup-0-plan.md`, Phase 7 preamble.
+- `docs/refactors/archive/cleanup-0-plan.md`, Phase 7 preamble.
 - `CLAUDE.md`, "Naming note".

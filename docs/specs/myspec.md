@@ -567,7 +567,7 @@ Used by `TonalPulseScalar` and `AmpExperimental`.
 This is the one place the rule lives. The why is in
 docs/decisions/2026-09-23-no-virtual-detector-interface.md; the original
 design and its worked example (an MVP threshold detector) are in
-docs/refactors/cleanup-detector-family-build.md, which predates the
+docs/refactors/archive/cleanup-detector-family-build.md, which predates the
 FrequencyMatch removal.
 
 Since 2026-10-22 there is one family, ScalarTransientDetector

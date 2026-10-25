@@ -8,10 +8,10 @@ docs/specs/myspec.md 5.3, "Adding a detector family"; read that first. This doc
 stays as the design record and the worked MVP example. Its two-family examples
 (FrequencyMatch vs Scalar) are history, and its "setFrequencyMatchConfig in every
 build" constraint no longer applies.
-Supersedes: `docs/refactors/cleanup-detector-ownership.md` (the union-of-two-
+Supersedes: `docs/refactors/archive/cleanup-detector-ownership.md` (the union-of-two-
 detectors proposal, deferred on measurement). This gets everything that
 proposal wanted, and more, without any of its lifetime risk.
-Related to: `docs/refactors/cleanup-analyzer-node-isolation.md` (same
+Related to: `docs/refactors/archive/cleanup-analyzer-node-isolation.md` (same
 mechanism, same principle), `docs/roadmaps/roadmap-param-config.md`
 (PAR-013, PAR-014: this is that split applied to detection).
 

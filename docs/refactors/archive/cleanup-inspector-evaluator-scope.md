@@ -6,7 +6,7 @@ toolchain on 2026-09-20. The `OccurrenceInspector` half
 (`InspectionModuleKind`) was reviewed and declined, see the note below, not
 because it's wrong, but because doing it exceeds this pass's own
 Non-Goals for negligible benefit.
-Related to: `docs/refactors/cleanup.md` (same house style, adjacent scope).
+Related to: `docs/refactors/archive/cleanup.md` (same house style, adjacent scope).
 Not part of `cleanup.md` itself because its stated scope is the Detector
 layer (`DetectionRuntime`, the two detector cores, `DetectorReport`,
 `Occurrence`); this pass covers `OccurrenceEvaluator` and `OccurrenceInspector`

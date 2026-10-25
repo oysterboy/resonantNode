@@ -150,7 +150,7 @@ the previous gate open unless the step says it can run in parallel.
 ```text
 1. [LANDED 2026-10-09] Clear the hardware verification backlog, on the
    piezo nodes. (issue #7, closed)
-   Where: DET-008 -> docs/refactors/cleanup-0-plan.md (T2, T3, T6, T7 for
+   Where: DET-008 -> docs/refactors/archive/cleanup-0-plan.md (T2, T3, T6, T7 for
    Phases 1, 2, 3, 5a, 5c; T4 on-device).
    Why on piezo: the pre-phase SEQ baselines were recorded on piezo nodes;
    the check compares firmware before/after on the same hardware.
@@ -793,7 +793,7 @@ the previous gate open unless the step says it can run in parallel.
 
 8. [DONE 2026-10-22] Phase 7c: fold OccurrenceEvaluator into OccurrenceInspector, delete the
    correlation queue. (issue #11, closed)
-   Where: DET-008 -> docs/refactors/cleanup-0-plan.md Phase 7c.
+   Where: DET-008 -> docs/refactors/archive/cleanup-0-plan.md Phase 7c.
    Gate: as that phase states (T1, T2/T3 label-only diffs, T5, T7),
    measured against a baseline recorded on main at the start of this step,
    not the field-trial firmware 908dc9a: 7a moved the per-sample path to
@@ -875,7 +875,7 @@ the previous gate open unless the step says it can run in parallel.
    SimpleThresholdDetector (MVP) family. (issue #12)
    Deferred by decisions/2026-10-22-remove-frequencymatch.md: with Scalar the only family, the flag has nothing
    to switch between. Both phases come back together when a second family is wanted.
-   Where: DET-008 -> docs/refactors/cleanup-0-plan.md Phases 5d and 6
+   Where: DET-008 -> docs/refactors/archive/cleanup-0-plan.md Phases 5d and 6
    (design in cleanup-detector-family-build.md).
    Gate: as those phases state; confirm the C++ standard first (see the
    family-build doc's Risks). The board variant from step 2 is a second

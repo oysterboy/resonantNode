@@ -4,7 +4,7 @@
 Status:  promoted, partly (2026-10-09: moved from docs/roadmaps/
          DET_refactor_roadmap, last edited there 2026-09-21)
 Became:  partly landed in the TonalPulseScalar profile and the detection
-         cleanup (DET-008 -> docs/refactors/cleanup-0-plan.md); which of
+         cleanup (DET-008 -> docs/refactors/archive/cleanup-0-plan.md); which of
          passes 1-8 below landed has not been reviewed section by section
 Lab:     none cited; written against the piezo nodes
 ```

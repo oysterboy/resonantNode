@@ -44,6 +44,6 @@ kind) is now handled by adding a family, not by a union.
 
 ## Source
 
-- `docs/refactors/cleanup-detector-ownership.md`, "Decision (2026-09-21):
+- `docs/refactors/archive/cleanup-detector-ownership.md`, "Decision (2026-09-21):
   defer, with numbers".
-- `docs/refactors/cleanup-0-plan.md`, Phase 5b.
+- `docs/refactors/archive/cleanup-0-plan.md`, Phase 5b.

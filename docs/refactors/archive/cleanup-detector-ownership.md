@@ -6,7 +6,7 @@ proposal's full object-count reduction (not `max`, the whole other detector)
 with no union and no lifetime management. It was first deferred on
 measurement, see "Decision" next; the family-build proposal is what the
 measurement pointed at.
-Related to: `docs/refactors/cleanup.md` (this builds on and is complementary
+Related to: `docs/refactors/archive/cleanup.md` (this builds on and is complementary
 to that pass; it does not replace it).
 
 ---
@@ -179,7 +179,7 @@ ask `ScalarTransientDetector::update()` and `FrequencyMatchDetector::update()`
 to converge on one signature.
 
 Note: `latestReport()`/`reportGeneration()` are deliberately not part of
-this adapter's required surface. `docs/refactors/cleanup-analyzer-node-isolation.md`
+this adapter's required surface. `docs/refactors/archive/cleanup-analyzer-node-isolation.md`
 found that neither `OccurrenceVerdict` nor `FieldState` is ever built from
 `DetectorReport`, so report access is a diagnostics-only concern, not part
 of the core dispatch this proposal unifies. See that document's "minimal

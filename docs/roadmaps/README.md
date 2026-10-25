@@ -71,7 +71,7 @@ the active pass / plan doc  orders WITHIN its item (e.g. cleanup-0-plan.md's
 If they conflict, `roadmap-0-steps.md` wins on whether and when an item runs;
 the pass doc wins on how it runs. Every step in `roadmap-0-steps.md`
 references a roadmap ID, and an item executed through a pass doc says so in
-its roadmap entry (e.g. DET-008 -> `docs/refactors/cleanup-0-plan.md`), so
+its roadmap entry (e.g. DET-008 -> `docs/refactors/archive/cleanup-0-plan.md`), so
 the chain never skips the domain roadmap.
 
 ## Roadmap files
@@ -79,7 +79,7 @@ the chain never skips the domain roadmap.
 ```text
 roadmap-0-steps.md
     Ordered next steps across all roadmaps, with a gate per step. Named to
-    sort first, same convention as docs/refactors/cleanup-0-plan.md.
+    sort first, same convention as docs/refactors/archive/cleanup-0-plan.md.
 
 roadmap-detection.md
     Detection and analyzer items (DET, ANA). Renamed from roadmap_detection.md

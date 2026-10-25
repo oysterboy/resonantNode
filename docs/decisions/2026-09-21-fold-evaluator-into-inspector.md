@@ -38,6 +38,6 @@ behavioral difference; the phase gate in `cleanup-0-plan.md` is the test.
 
 ## Source
 
-- `docs/refactors/cleanup-0-plan.md`, Phase 7c ("Decided 2026-09-21").
+- `docs/refactors/archive/cleanup-0-plan.md`, Phase 7c ("Decided 2026-09-21").
 - `docs/roadmaps/implementation-status.md`, "OccurrenceEvaluator public
   boundary" row.

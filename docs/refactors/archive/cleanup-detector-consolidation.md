@@ -1,10 +1,10 @@
 # Decision Doc — Consolidate to One Detector Family?
 
 Status: decision pending field validation. Not a code change, not yet.
-Related to: `docs/refactors/cleanup.md`,
-`docs/refactors/cleanup-detector-ownership.md`,
-`docs/refactors/cleanup-analyzer-node-isolation.md`,
-`docs/refactors/cleanup-inspector-evaluator-scope.md`.
+Related to: `docs/refactors/archive/cleanup.md`,
+`docs/refactors/archive/cleanup-detector-ownership.md`,
+`docs/refactors/archive/cleanup-analyzer-node-isolation.md`,
+`docs/refactors/archive/cleanup-inspector-evaluator-scope.md`.
 
 Naming update (2026-09-21): `Occurrence.scalar`/`.frequency`, mentioned
 below (including in the 2026-09-20 correction), have since been renamed to

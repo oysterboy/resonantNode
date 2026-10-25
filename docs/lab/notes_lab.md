@@ -6,7 +6,7 @@ need both?
 
 2026-10-09: this is a research question, not an observation. It went to
 cleanup-0-plan.md Phase 0 (keep or consolidate FrequencyMatchDetector,
-detail in docs/refactors/cleanup-detector-consolidation.md) and the
+detail in docs/refactors/archive/cleanup-detector-consolidation.md) and the
 decisions 2026-09-21-defer-single-detector-union.md ->
 2026-09-23-no-virtual-detector-interface.md (detector family as a build
 flag).

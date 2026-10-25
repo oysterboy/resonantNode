@@ -43,6 +43,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-25 (owner away from the bench for a week): 11a OTA params, 11b DET-015 host phase,
+11c unattended runs, 11d OTA firmware. Next: 11a.
 Status update 2026-10-24: 10c done (block 2, 24 h on dbb6305, every pass mark met). Open before step 11's
 triage: 5h's dry cell.
 Status update 2026-10-23, 10f done (SoundOutput executes OutputRequest, OutputStatus in RB STATUS; emission
@@ -1030,6 +1032,30 @@ the previous gate open unless the step says it can run in parallel.
    answer trains 15/23 before and 14/19 after, idle-call trains 6/10 and 6/12; RB STATUS output.started 28 =
    done 28, rejected 0. Host: test_sound_output 7 tests. Also fixed: an idle call stopped in its gap no longer
    starts its train later.
+
+11a. [NEXT] OTA params: remote param update over the radio (PAR-013). (issue #58)
+   Owner 2026-10-25 (away from the bench for a week; boards stay on USB here). Set, save and read params on every
+   node by radio, ESP-NOW (no router), routed into the same PARAM command path as serial (PAR-013: no
+   transport-specific store or validation). Any USB node is the gateway (`NET <target> <command>`); replies come
+   back per node. Gate: a PARAM SET / SAVE to all five by radio applied and answered by each, persisted over a
+   reboot; the radio's cost measured on a long run (0 dropped buffers, free heap, loop stack); host tests for the
+   frame format.
+
+11b. [TODO] DET-015 shape inspector, host phase. (issue #59)
+   Owner 2026-10-25. The Node hears the hop train only (decisions/2026-10-23-node-hears-the-hop-train-only.md);
+   the height cell showed a train cut to three steps passing on 16 ms of margin. Host work on the corpus and the
+   height cell's RAW captures; bench validation when the owner is back. Gate (host): the shape reads the steps of
+   every recorded hop train, rejects the plain chirp and the 40 ms beep, T2h diff explained.
+
+11c. [TODO, parallel] Unattended bench runs. (issue #60)
+   Owner 2026-10-25: the reference cell (bench/sessions/2026-10-23-cell-desk-ref-110cm) repeated every few hours
+   for day-to-day variation, and listen logs of the silent nodes. No physical change; plays sound in the empty room.
+   Needs E2/E3 back as Analyzer/Emitter between runs of 11a.
+
+11d. [TODO] OTA firmware (FWOTA). (issue #61)
+   Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the
+   repo) and a two-slot partition table (a first USB flash of every board). Gate: an image flashed over WiFi to
+   every board, a failed or interrupted update falls back to the old image.
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here

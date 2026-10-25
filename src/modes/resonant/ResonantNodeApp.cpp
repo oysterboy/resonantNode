@@ -1,6 +1,7 @@
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
 #include <string.h>
+#include <new>
 
 #include <esp_system.h>
 
@@ -1110,7 +1111,7 @@ void Node::handleSerialLine(const char* line) {
         serialOut().println("RB CMD: PARAM GET <path>");
         serialOut().println("RB CMD: PARAM SET <path> <value>");
         serialOut().println("RB CMD: PARAM DUMP");
-        serialOut().println("RB CMD: NET <target|*> PARAM ... | NET <target|*> NET PING | NET STATUS (remote params by radio)");
+        serialOut().println("RB CMD: NET <target|*> <command> (PARAM, RB, SELFTEST to one target, NET PING) | NET STATUS (by radio)");
         serialOut().println("RB CMD: SELFTEST | SELFTEST external wait_ms=10000 | SELFTEST chirp n=5 | SELFTEST help");
         return;
     }
@@ -1618,13 +1619,13 @@ namespace {
 // The reply of one remote command: every line it prints goes back as a reply
 // frame. A line is held until the next one arrives, so the last frame carries
 // the "last" flag.
-// Lines are packed into frames, separated by kNetLineSep (a DUMP of 38 lines
-// is ~13 frames, not 38); the gateway prints one line per original line.
-constexpr char kNetLineSep = '\x1F';
-
+// The reply of one remote command is everything it prints, as a byte stream
+// cut into frames: a newline travels as net::kLineEnd, a long line (RB STATUS)
+// runs on into the next frame, and the console's 1 KB flushes of one line join
+// up again. The gateway's LineJoiner prints whole lines.
 struct NetReply {
     NodeNet* net = nullptr;
-    const uint8_t* mac = nullptr;
+    uint8_t mac[6] = {};
     uint16_t seq = 0;
     const char* name = nullptr;
     uint8_t part = 0;
@@ -1638,26 +1639,60 @@ struct NetReply {
 
     static void tee(void* ctx, const uint8_t* data, size_t len) {
         NetReply& r = *static_cast<NetReply*>(ctx);
-        while (len > 0 && (data[len - 1] == '\n' || data[len - 1] == '\r')) {
-            --len;
+        for (size_t i = 0; i < len; ++i) {
+            const char ch = static_cast<char>(data[i]);
+            if (ch == '\r') {
+                continue;
+            }
+            if (r.heldLen == sizeof(r.held)) {
+                r.send(false);
+            }
+            r.held[r.heldLen++] = ch == '\n' ? net::kLineEnd : ch;
         }
-        if (len == 0) {
-            return;
-        }
-        if (len > net::kMaxText) {
-            len = net::kMaxText;
-        }
-        const size_t need = len + (r.heldLen > 0 ? 1 : 0);
-        if (r.heldLen + need > sizeof(r.held)) {
-            r.send(false);
-        }
-        if (r.heldLen > 0) {
-            r.held[r.heldLen++] = kNetLineSep;
-        }
-        memcpy(r.held + r.heldLen, data, len);
-        r.heldLen += len;
     }
 };
+
+// A command that runs on after its call returns (SELFTEST: a state machine over
+// many loop passes) keeps its reply open until it is done; pollNet() closes it.
+NetReply gOpenReply;
+bool gOpenReplyActive = false;
+
+// The gateway's reassembly, one per replying node (by name).
+struct NetJoinSlot {
+    char name[net::kTargetLen + 1] = {};
+    uint16_t seq = 0;
+    net::LineJoiner<2560> joiner;
+};
+// On the heap at the first reply (only a gateway needs them; static RAM is full).
+constexpr size_t kJoinSlots = 5;
+NetJoinSlot* gJoin = nullptr;
+
+NetJoinSlot* joinSlotFor(const char* name, uint16_t seq) {
+    if (gJoin == nullptr) {
+        gJoin = new (std::nothrow) NetJoinSlot[kJoinSlots];
+        if (gJoin == nullptr) {
+            return nullptr;
+        }
+    }
+    for (size_t i = 0; i < kJoinSlots; ++i) {
+        NetJoinSlot& s = gJoin[i];
+        if (strcmp(s.name, name) == 0) {
+            if (s.seq != seq) {
+                s.seq = seq;
+                s.joiner.reset();
+            }
+            return &s;
+        }
+    }
+    static size_t next = 0;
+    NetJoinSlot& s = gJoin[next];
+    next = (next + 1) % kJoinSlots;
+    strncpy(s.name, name, net::kTargetLen);
+    s.name[net::kTargetLen] = '\0';
+    s.seq = seq;
+    s.joiner.reset();
+    return &s;
+}
 
 void printMac(const uint8_t mac[6]) {
     static const char* kHex = "0123456789ABCDEF";
@@ -1694,7 +1729,11 @@ void Node::handleNetCommand(const char* line) {
         ++text;
     }
     if (!net::remoteCommandAllowed(text)) {
-        serialOut().println("NET ERR usage=NET <target|*> PARAM SET|GET|SAVE|LOAD|RESET ...|NET PING (DUMP and LIST over USB only)");
+        serialOut().println("NET ERR usage=NET <target|*> PARAM ...|RB ...|SELFTEST ...|NET PING");
+        return;
+    }
+    if (net::remoteCommandNeedsOneTarget(text) && strcmp(target, "*") == 0) {
+        serialOut().println("NET ERR selftest_needs_one_target (one node at a time, the others silent)");
         return;
     }
     if (strlen(text) > net::kMaxText) {
@@ -1716,12 +1755,17 @@ void Node::handleNetCommand(const char* line) {
         if (equalsIgnoreCase(text, "NET PING")) {
             printNetStatus();
         } else {
-            handleParamCommand(text);
+            handleSerialLine(text);
         }
     }
 }
 
 void Node::pollNet() {
+    if (gOpenReplyActive && _selfTest.phase == SelfTestState::Phase::Idle) {
+        serialOut().setTee(nullptr, nullptr);
+        gOpenReply.send(true);
+        gOpenReplyActive = false;
+    }
     _net.service(timebase::nowMs());
     NodeNet::Received received;
     // One frame per loop pass, and only with 4 KB free in the UART ring: a
@@ -1731,26 +1775,28 @@ void Node::pollNet() {
     for (int handled = 0; handled < 1 && Serial.availableForWrite() > 4096 && _net.poll(received); ++handled) {
         const net::Frame& f = received.frame;
         if (f.type == net::FrameType::Reply) {
-            // One line per packed line; the part and last flag go on each.
-            const char* line = f.text;
-            while (true) {
-                const char* sep = strchr(line, kNetLineSep);
-                const size_t n = sep != nullptr ? static_cast<size_t>(sep - line) : strlen(line);
+            NetJoinSlot* slot = joinSlotFor(f.target, f.seq);
+            if (slot == nullptr) {
+                continue;
+            }
+            slot->joiner.feed(f.text, f.textLen, f.last, [&](const char* line, size_t n) {
                 serialOut().print("NET reply from=");
                 serialOut().print(f.target);
                 serialOut().print(" seq=");
                 serialOut().print(f.seq);
                 serialOut().print(" part=");
                 serialOut().print(f.part);
-                serialOut().print(" last=");
-                serialOut().print(f.last && sep == nullptr ? 1 : 0);
                 serialOut().print(' ');
                 serialOut().write(reinterpret_cast<const uint8_t*>(line), n);
                 serialOut().println();
-                if (sep == nullptr) {
-                    break;
-                }
-                line = sep + 1;
+            });
+            if (f.last) {
+                serialOut().print("NET reply from=");
+                serialOut().print(f.target);
+                serialOut().print(" seq=");
+                serialOut().print(f.seq);
+                serialOut().print(" done parts=");
+                serialOut().println(static_cast<unsigned>(f.part) + 1U);
             }
             continue;
         }
@@ -1772,22 +1818,38 @@ void Node::runRemoteCommand(const NodeNet::Received& received) {
     serialOut().print(" text=");
     serialOut().println(f.text);
 
-    NetReply reply;
+    if (gOpenReplyActive) {
+        // A new command ends a reply still open (its output stops here).
+        serialOut().setTee(nullptr, nullptr);
+        gOpenReply.send(true);
+        gOpenReplyActive = false;
+    }
+    NetReply& reply = gOpenReply;
+    reply = NetReply();
     reply.net = &_net;
-    reply.mac = received.mac;
+    memcpy(reply.mac, received.mac, 6);
     reply.seq = f.seq;
     reply.name = _nodeName;
     serialOut().setTee(&NetReply::tee, &reply);
     if (!net::remoteCommandAllowed(f.text)) {
-        serialOut().println("NET ERR not_allowed (only params and ping go by radio)");
+        serialOut().println("NET ERR not_allowed");
+    } else if (net::remoteCommandNeedsOneTarget(f.text) && strcmp(f.target, "*") == 0) {
+        serialOut().println("NET ERR selftest_needs_one_target (one node at a time, the others silent)");
     } else if (equalsIgnoreCase(f.text, "NET PING")) {
         printNetStatus();
     } else {
-        handleParamCommand(f.text);
+        if (net::remoteCommandNeedsOneTarget(f.text)) {
+            serialOut().println("NET note=selftest_by_radio rule=one_node_at_a_time_others_silent");
+        }
+        handleSerialLine(f.text);
+    }
+    ++_net.stats().commandsRun;
+    if (_selfTest.phase != SelfTestState::Phase::Idle) {
+        gOpenReplyActive = true;  // the self-test reports over the next seconds
+        return;
     }
     serialOut().setTee(nullptr, nullptr);
     reply.send(true);
-    ++_net.stats().commandsRun;
 }
 
 void Node::printNetStatus() {

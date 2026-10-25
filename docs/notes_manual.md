@@ -57,8 +57,8 @@ RB debug off|events             event tracing
 RB summary | RB stop | RB rebase [force]
 PARAM LIST|GET|SET|DUMP         every registered knob (see below)
 PARAM SAVE|LOAD|RESET           persistence to NVS
-NET <target|*> PARAM ...        remote params over ESP-NOW (SET|GET|SAVE|LOAD|RESET; DUMP and LIST are USB only)
-NET <target|*> NET PING | NET STATUS
+NET <target|*> <command>        any Node command by radio (PARAM, RB, SELFTEST to one named node), NET PING
+NET STATUS                      the gateway's own radio counters
 SELFTEST [external wait_ms=N | chirp n=N | help]
 ```
 
@@ -109,6 +109,30 @@ structs), `behavior.*` in `src/behavior/BehaviorProfile.h` (`BehaviorGateConfig`
 the log) but it never sounds: no answer, no idle call, `RB CALL` ignored. With `PARAM SAVE` it boots
 silent (`RB silent=1` at boot) until `PARAM SET output.silent 0` plus SAVE, or `PARAM RESET`.
 `RB STATUS` shows `silent=`. SELFTEST still plays its tones, it is an explicit command.
+
+### Remote commands (radio, step 11a)
+
+Any Node on USB is the gateway: `NET <target> <command>`, target `*` (all) or a roster name
+(`E1`..`E5`). Every Node command goes (PARAM, RB, SELFTEST) plus `NET PING`; each node answers with
+what it would print on serial, shown as `NET reply from=E3 seq=N part=P <line>` and
+`NET reply from=E3 seq=N done parts=K`. `NET STATUS` shows the gateway's own radio counters. The
+radio is on by default; `PARAM SET node.radio_enabled 0`, `PARAM SAVE`, reboot turns it off.
+
+Operator rules (the firmware does not check these, except where noted):
+
+- `SELFTEST` by radio: one node at a time, all others silent (`NET * PARAM SET output.silent 1`
+  first). The gateway and the node refuse `NET * SELFTEST`. The test blocks its node for seconds
+  and plays tones.
+- `RB CALL` makes the node sound now (the start of a chain): only when you want the network to run.
+- `RB PROFILE name=...` resets live detection and behavior values to the profile's (it lists them).
+- `RB rebase` blocks its node for about a second (audio baseline), as at boot.
+- `PARAM SAVE` costs every node it reaches about 8 audio buffers (the flash write); `NET * PARAM
+  SAVE` hits all nodes at once. Save outside a session.
+- Large replies are slow on purpose: a node sends one reply frame per 150 ms, so `NET * PARAM DUMP`
+  takes about 2 s and `NET * RB STATUS` about 1 s; the gateway keeps its audio. Do not cut the wait
+  short with another command: a new command to a node ends its reply still in progress.
+- Anyone with ESP-NOW on channel 1 and the network id can send these commands: fine for the
+  installation, not for a public space (`docs/decisions/2026-10-25-remote-params-espnow.md`).
 
 ### Startup quiet gate
 

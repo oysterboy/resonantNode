@@ -1047,6 +1047,9 @@ the previous gate open unless the step says it can run in parallel.
    USB; PARAM SAVE drops 8 per node by serial or radio (the NVS write, 10d's cost, measured here first). Heap
    94 KB free, loop stack >= 13.4 KB free, flash 65 %. Host: test_net_frame 5 tests. Open for the gate: the
    long run with the radio on and the nodes sounding.
+   Widened the same day (owner): every Node command by radio, large replies paced (150 ms per frame), long lines
+   joined at the gateway, SELFTEST to one named node only (operator rules in notes_manual.md). `NET * RB STATUS`,
+   `NET * PARAM DUMP`, `NET E5 SELFTEST`: complete replies, 0 drops on every node. test_net_frame 6 tests.
 
 11b. [TODO] DET-015 shape inspector, host phase. (issue #59)
    Owner 2026-10-25. The Node hears the hop train only (decisions/2026-10-23-node-hears-the-hop-train-only.md);

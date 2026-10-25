@@ -2,6 +2,7 @@
 
 #include <strings.h>
 
+#include "detectors/scalar/ScalarTransientConfig.h"
 #include "field/FieldState.h"
 #include "inspection/InspectorTypes.h"
 
@@ -51,23 +52,6 @@ enum class DetectorSelection {
     ScalarTransient,
 };
 
-struct ScalarTransientConfig {
-    // Configuration and defaults.
-    FeatureStreamId observedStream = FeatureStreamId::AmpEnvelope;
-    float onsetDetectionThreshold = 18000.0f;
-    float onsetReleaseThreshold = 12000.0f;
-    unsigned long cooldownAfterOnsetMs = 50;
-    unsigned long minTransientDurationMs = 0;
-    unsigned long maxTransientDurationMs = 120;
-    float minTransientPeakStrength = 8000.0f;
-    unsigned long releaseDebounceMs = 20;
-    bool requireCarrierQuality = false;
-    bool requireMinStrength = false;
-    float minMatchedMeanStrength = 0.0f;
-    unsigned long minCoverageAboveReleaseMs = 0;
-    unsigned long minLongestIslandMs = 0;
-    unsigned long maxGapMs = 0;
-};
 
 enum class DetectionProfileKind {
      // lists available Profiles

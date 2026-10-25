@@ -28,22 +28,6 @@ float selectedScalarValue(const AudioSamplePacket& audioSamplePacket, const Freq
     }
 }
 
-void applyScalarTransientConfig(ScalarTransientDetector& detector, const ScalarTransientConfig& config) {
-    detector.setOnsetDetectionThreshold(config.onsetDetectionThreshold);
-    detector.setOnsetReleaseThreshold(config.onsetReleaseThreshold);
-    detector.setCooldownAfterOnsetMs(config.cooldownAfterOnsetMs);
-    detector.setMinTransientDurationMs(config.minTransientDurationMs);
-    detector.setMaxTransientDurationMs(config.maxTransientDurationMs);
-    detector.setMinTransientPeakStrength(config.minTransientPeakStrength);
-    detector.setReleaseDebounceMs(config.releaseDebounceMs);
-    detector.setRequireCarrierQuality(config.requireCarrierQuality);
-    detector.setRequireMinStrength(config.requireMinStrength);
-    detector.setMinMatchedMeanStrength(config.minMatchedMeanStrength);
-    detector.setMinCoverageAboveReleaseMs(config.minCoverageAboveReleaseMs);
-    detector.setMinLongestIslandMs(config.minLongestIslandMs);
-    detector.setMaxGapMs(config.maxGapMs);
-}
-
 } // namespace
 
 void DetectionRuntime::resetState() {
@@ -184,13 +168,13 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
 
 void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& config) {
     _scalarTransientConfig = config;
-    applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
+    _scalarDetector.setConfig(_scalarTransientConfig);
 }
 
 void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _detectorSelection = selection;
     resetDetectors();
-    applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
+    _scalarDetector.setConfig(_scalarTransientConfig);
 #ifdef ANALYZER_MODE
     _pipelineEvents.clear();
     _lastEmittedAcceptedOccurrenceId = 0;

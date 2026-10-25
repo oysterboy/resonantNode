@@ -122,7 +122,7 @@ void IRAM_ATTR ScalarTransientDetector::updateCandidateFacts(uint64_t nowUs, flo
     }
     _candidateStrengthSum += static_cast<double>(strength);
     ++_candidateStrengthCount;
-    if (strength >= _onsetReleaseThreshold) {
+    if (strength >= _config.onsetReleaseThreshold) {
         _candidateMatchedStrengthSum += static_cast<double>(strength);
         ++_candidateMatchedStrengthCount;
     }
@@ -240,13 +240,13 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
 
     // Close the peak only after the occurrence has stayed below the release
     // threshold for long enough to count as a real end of burst.
-    const unsigned long releaseDebounceUs = _releaseDebounceMs * 1000UL;
+    const unsigned long releaseDebounceUs = _config.releaseDebounceMs * 1000UL;
     // Step 8b item 3 (audit 3.7): a candidate still open past max duration plus
     // the debounce can only be rejected as too long, so close it now instead of
     // when the sound ends, and open no new one until the signal has dropped
     // below release (one reject per continuous tone, not one per max duration).
-    const uint64_t maxOpenUs = (static_cast<uint64_t>(_maxTransientDurationMs) + _releaseDebounceMs) * 1000ULL;
-    const bool openPastMax = _peakActive && _maxTransientDurationMs > 0 && nowUs - _peakStartedUs > maxOpenUs;
+    const uint64_t maxOpenUs = (static_cast<uint64_t>(_config.maxTransientDurationMs) + _config.releaseDebounceMs) * 1000ULL;
+    const bool openPastMax = _peakActive && _config.maxTransientDurationMs > 0 && nowUs - _peakStartedUs > maxOpenUs;
     const bool releaseDebounced =
         _peakActive && _releaseCandidateStartedUs != 0 && nowUs - _releaseCandidateStartedUs >= releaseDebounceUs;
     if (openPastMax && !releaseDebounced && aboveReleaseThreshold) {
@@ -255,14 +255,14 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
     if (releaseDebounced || openPastMax) {
         const uint64_t releaseObservedUs = _releaseObservedUs != 0 ? _releaseObservedUs : nowUs;
         const unsigned long peakDurationUs = static_cast<unsigned long>(releaseObservedUs - _peakStartedUs);
-        const unsigned long minTransientDurationUs = _minTransientDurationMs * 1000UL;
-        const unsigned long maxTransientDurationUs = _maxTransientDurationMs * 1000UL;
+        const unsigned long minTransientDurationUs = _config.minTransientDurationMs * 1000UL;
+        const unsigned long maxTransientDurationUs = _config.maxTransientDurationMs * 1000UL;
         const bool durationAccepted = peakDurationUs >= minTransientDurationUs && peakDurationUs <= maxTransientDurationUs;
         // Duration alone is not enough: weak ambient crossings can still last
         // long enough to look valid, so require a minimum peak strength too.
         const bool strengthAccepted =
-            !_requireMinStrength ||
-            _peakStrength >= _minTransientPeakStrength;
+            !_config.requireMinStrength ||
+            _peakStrength >= _config.minTransientPeakStrength;
         const float candidateMeanStrength = _candidateStrengthCount > 0
             ? static_cast<float>(_candidateStrengthSum / static_cast<double>(_candidateStrengthCount))
             : 0.0f;
@@ -270,17 +270,17 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
             ? static_cast<float>(_candidateMatchedStrengthSum / static_cast<double>(_candidateMatchedStrengthCount))
             : 0.0f;
         const bool matchedMeanAccepted =
-            !_requireMinStrength ||
-            candidateMatchedMeanStrength >= _minMatchedMeanStrength;
+            !_config.requireMinStrength ||
+            candidateMatchedMeanStrength >= _config.minMatchedMeanStrength;
         const bool coverageAccepted =
-            !_requireCarrierQuality ||
-            _candidateCoverageAboveReleaseUs >= static_cast<uint64_t>(_minCoverageAboveReleaseMs) * 1000ULL;
+            !_config.requireCarrierQuality ||
+            _candidateCoverageAboveReleaseUs >= static_cast<uint64_t>(_config.minCoverageAboveReleaseMs) * 1000ULL;
         const bool islandAccepted =
-            !_requireCarrierQuality ||
-            _candidateIslandMaxMs >= _minLongestIslandMs;
+            !_config.requireCarrierQuality ||
+            _candidateIslandMaxMs >= _config.minLongestIslandMs;
         const bool gapAccepted =
-            !_requireCarrierQuality ||
-            _candidateGapMaxMs <= _maxGapMs;
+            !_config.requireCarrierQuality ||
+            _candidateGapMaxMs <= _config.maxGapMs;
         const bool accepted =
             durationAccepted &&
             strengthAccepted &&
@@ -389,9 +389,9 @@ void IRAM_ATTR ScalarTransientDetector::update(
     _transientStrength = 0.0f;
     _acceptedOccurrenceReleaseMs = 0;
 
-    const bool aboveAttackThreshold = signalMagnitude > _onsetDetectionThreshold;
-    const bool aboveReleaseThreshold = signalMagnitude > _onsetReleaseThreshold;
-    const unsigned long cooldownAfterOnsetUs = _cooldownAfterOnsetMs * 1000UL;
+    const bool aboveAttackThreshold = signalMagnitude > _config.onsetDetectionThreshold;
+    const bool aboveReleaseThreshold = signalMagnitude > _config.onsetReleaseThreshold;
+    const unsigned long cooldownAfterOnsetUs = _config.cooldownAfterOnsetMs * 1000UL;
     const bool onsetCooldownElapsed = nowUs - _lastOnsetUs >= cooldownAfterOnsetUs;
 
     if (!aboveReleaseThreshold) {
@@ -424,60 +424,12 @@ uint32_t ScalarTransientDetector::selectedRejectGeneration() const {
     return _selectedRejectGeneration;
 }
 
-void ScalarTransientDetector::setOnsetDetectionThreshold(float value) {
-    _onsetDetectionThreshold = value;
+void ScalarTransientDetector::setConfig(const detection::ScalarTransientConfig& config) {
+    _config = config;
 }
 
-void ScalarTransientDetector::setOnsetReleaseThreshold(float value) {
-    // Keep the release threshold below the attack threshold, but close enough
-    // that the peak closes promptly once the burst really starts to decay.
-    _onsetReleaseThreshold = value;
-}
-
-void ScalarTransientDetector::setCooldownAfterOnsetMs(unsigned long value) {
-    _cooldownAfterOnsetMs = value;
-}
-
-void ScalarTransientDetector::setReleaseDebounceMs(unsigned long value) {
-    // A small debounce makes the release edge less sensitive to one-sample dips.
-    _releaseDebounceMs = value;
-}
-
-void ScalarTransientDetector::setRequireCarrierQuality(bool value) {
-    _requireCarrierQuality = value;
-}
-
-void ScalarTransientDetector::setRequireMinStrength(bool value) {
-    _requireMinStrength = value;
-}
-
-void ScalarTransientDetector::setMinMatchedMeanStrength(float value) {
-    _minMatchedMeanStrength = value;
-}
-
-void ScalarTransientDetector::setMinCoverageAboveReleaseMs(unsigned long value) {
-    _minCoverageAboveReleaseMs = value;
-}
-
-void ScalarTransientDetector::setMinLongestIslandMs(unsigned long value) {
-    _minLongestIslandMs = value;
-}
-
-void ScalarTransientDetector::setMaxGapMs(unsigned long value) {
-    _maxGapMs = value;
-}
-
-void ScalarTransientDetector::setMinTransientDurationMs(unsigned long value) {
-    _minTransientDurationMs = value;
-}
-
-void ScalarTransientDetector::setMaxTransientDurationMs(unsigned long value) {
-    _maxTransientDurationMs = value;
-}
-
-void ScalarTransientDetector::setMinTransientPeakStrength(float value) {
-    // Set a floor above the ambient noise peaks we want to ignore.
-    _minTransientPeakStrength = value;
+const detection::ScalarTransientConfig& ScalarTransientDetector::config() const {
+    return _config;
 }
 
 void ScalarTransientDetector::setDiagnosticsEnabled(bool enabled) {

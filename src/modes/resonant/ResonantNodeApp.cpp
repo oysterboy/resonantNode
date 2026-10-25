@@ -204,23 +204,23 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
 void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
     serialOut().println("RB behavior");
     serialOut().print("  idleEnabled=");
-    serialOut().println(behavior.idleEnabled() ? 1 : 0);
+    serialOut().println(behavior.config().idleEnabled ? 1 : 0);
     serialOut().print("  waitAfterHeardMs=");
-    serialOut().println(behavior.waitAfterHeardMs());
+    serialOut().println(behavior.config().waitAfterHeardMs);
     serialOut().print("  refractoryAfterEmitMs=");
-    serialOut().println(behavior.refractoryAfterEmitMs());
+    serialOut().println(behavior.config().refractoryAfterEmitMs);
     serialOut().print("  behaviorSuppressSelfChirpMs=");
-    serialOut().println(behavior.behaviorSuppressSelfChirpMs());
+    serialOut().println(behavior.config().behaviorSuppressSelfChirpMs);
     serialOut().print("  detectionSuppressTailMsOwnEmit=");
-    serialOut().println(behavior.detectionSuppressTailMsOwnEmit());
+    serialOut().println(behavior.config().detectionSuppressTailMsOwnEmit);
     serialOut().print("  idleTimeoutMs=");
-    serialOut().println(behavior.idleTimeoutMs());
+    serialOut().println(behavior.config().idleTimeoutMs);
     serialOut().print("  idleTimeVariationMs=");
-    serialOut().println(behavior.idleTimeVariationMs());
+    serialOut().println(behavior.config().idleTimeVariationMs);
     serialOut().print("  idleBlockedAfterHeardMs=");
-    serialOut().println(behavior.idleBlockedAfterHeardMs());
+    serialOut().println(behavior.config().idleBlockedAfterHeardMs);
     serialOut().print("  idleBlockedAfterOwnEmitMs=");
-    serialOut().println(behavior.idleBlockedAfterOwnEmitMs());
+    serialOut().println(behavior.config().idleBlockedAfterOwnEmitMs);
 }
 
 void printNodeBuildIdentity() {

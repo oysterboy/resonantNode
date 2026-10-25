@@ -239,19 +239,7 @@ void configureShippedScalar() {
     gScalar.resetState();
     gScalar.resetSelectedRejectSummary();
     gScalar.resetAcceptedOccurrenceSummary();
-    gScalar.setOnsetDetectionThreshold(c.onsetDetectionThreshold);
-    gScalar.setOnsetReleaseThreshold(c.onsetReleaseThreshold);
-    gScalar.setCooldownAfterOnsetMs(c.cooldownAfterOnsetMs);
-    gScalar.setMinTransientDurationMs(c.minTransientDurationMs);
-    gScalar.setMaxTransientDurationMs(c.maxTransientDurationMs);
-    gScalar.setMinTransientPeakStrength(c.minTransientPeakStrength);
-    gScalar.setReleaseDebounceMs(c.releaseDebounceMs);
-    gScalar.setRequireCarrierQuality(c.requireCarrierQuality);
-    gScalar.setRequireMinStrength(c.requireMinStrength);
-    gScalar.setMinMatchedMeanStrength(c.minMatchedMeanStrength);
-    gScalar.setMinCoverageAboveReleaseMs(c.minCoverageAboveReleaseMs);
-    gScalar.setMinLongestIslandMs(c.minLongestIslandMs);
-    gScalar.setMaxGapMs(c.maxGapMs);
+    gScalar.setConfig(c);
 }
 
 void test_continuous_tone_is_closed_at_max_duration() {

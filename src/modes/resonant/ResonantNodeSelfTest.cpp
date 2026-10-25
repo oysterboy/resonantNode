@@ -359,7 +359,7 @@ void Node::finishSelfTestOwnChirp(bool timedOut) {
     selftest::field(serialOut(), "other_verdicts", st.otherVerdicts);
     selftest::field(serialOut(), "other_valid", st.otherValid);
     selftest::field(serialOut(), "echo_window_ms", kEchoWindowMs);
-    selftest::field(serialOut(), "suppress_tail_ms", _behavior.detectionSuppressTailMsOwnEmit());
+    selftest::field(serialOut(), "suppress_tail_ms", _behavior.config().detectionSuppressTailMsOwnEmit);
     selftest::end(serialOut());
 
     selftest::skip(serialOut(), st.tally, "external_chirp", "not_requested");
@@ -398,7 +398,7 @@ void Node::finishSelfTest() {
 
 bool Node::selfTestVerdictIsOwn(unsigned long occurrenceStartMs) const {
     const SelfTestState& st = _selfTest;
-    const unsigned long ownStartLimitMs = _behavior.detectionSuppressTailMsOwnEmit() + kOwnEchoStartMarginMs;
+    const unsigned long ownStartLimitMs = _behavior.config().detectionSuppressTailMsOwnEmit + kOwnEchoStartMarginMs;
     for (uint8_t i = 0; i < st.windowCount; ++i) {
         const unsigned long start = st.chirpStartMs[i];
         const unsigned long end = st.chirpEndMs[i] != 0 ? st.chirpEndMs[i] : start + kOpenChirpSpanMs;

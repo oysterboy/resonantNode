@@ -53,14 +53,26 @@ bool driveOccurrenceUs(ScalarTransientDetector& detector, uint64_t startUs,
     return detector.popOccurrence(out);
 }
 
+// The detector's old built-in defaults (onset 75 / release 67.5, no peak
+// gate) with every duration and quality gate open: the synthetic levels these
+// tests feed were written against them.
+detection::ScalarTransientConfig wideOpenConfig() {
+    detection::ScalarTransientConfig c;
+    c.onsetDetectionThreshold = 75.0f;
+    c.onsetReleaseThreshold = 67.5f;
+    c.cooldownAfterOnsetMs = 0;
+    c.minTransientDurationMs = 0;
+    c.maxTransientDurationMs = 1000;
+    c.minTransientPeakStrength = 0.0f;
+    c.releaseDebounceMs = 1;
+    c.requireCarrierQuality = false;
+    c.requireMinStrength = false;
+    return c;
+}
+
 void configureDetector(ScalarTransientDetector& detector) {
     detector.begin();
-    detector.setCooldownAfterOnsetMs(0);
-    detector.setReleaseDebounceMs(1);
-    detector.setMinTransientDurationMs(0);
-    detector.setMaxTransientDurationMs(1000);
-    detector.setRequireCarrierQuality(false);
-    detector.setRequireMinStrength(false);
+    detector.setConfig(wideOpenConfig());
 }
 
 } // namespace

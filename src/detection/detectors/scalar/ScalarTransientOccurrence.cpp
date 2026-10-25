@@ -93,8 +93,8 @@ void ScalarTransientDetector::captureAcceptedOccurrence(uint64_t releaseObserved
     _selectedReject = {};
     _reportDetail.selectedReject = {};
     _reportDetail.inspect.matchedMeanPassed =
-        !_requireMinStrength ||
-        candidateMatchedMean >= _minMatchedMeanStrength;
+        !_config.requireMinStrength ||
+        candidateMatchedMean >= _config.minMatchedMeanStrength;
     resetCandidateFacts();
 }
 
@@ -168,8 +168,8 @@ void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) 
     _reportDetail.selectedReject.crossedOnset = true;
     _reportDetail.selectedReject.crossedRelease = true;
     _reportDetail.inspect.matchedMeanPassed =
-        !_requireMinStrength ||
-        candidateMatchedMean >= _minMatchedMeanStrength;
+        !_config.requireMinStrength ||
+        candidateMatchedMean >= _config.minMatchedMeanStrength;
     // Detail from this reject, not from the previous update (issue #31 R2-6),
     // as capturePendingOccurrence already does.
     refreshReportDetail();

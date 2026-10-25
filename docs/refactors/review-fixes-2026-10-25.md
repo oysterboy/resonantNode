@@ -126,6 +126,14 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   events), Behavior's own-emit history and NodeNet's heap outbox use it; the read-index / count pairs and the
   six push / pop bodies are gone. Host 68/68, T2h byte-identical; sizeof DetectionRuntime unchanged (68,024 host),
   ResonantBehavior 576 -> 568. NodeNet builds on CI.
+- 2026-10-25, item 5: `ScalarTransientDetector` holds a `ScalarTransientConfig` (`setConfig` / `config()`; the
+  struct in its own header `detectors/scalar/ScalarTransientConfig.h`, DetectionProfile.h includes it); the 13
+  setters and the 13 members with their third default set are gone, `applyScalarTransientConfig` is one call.
+  `ResonantBehavior` holds a `BehaviorGateConfig` (`configure()` / `config()`): 14 setters, 14 getters and 13
+  members gone; the step 10e idle reschedule lives in `configure()`, the own-emit budget clamp too. Readers
+  (RB STATUS, SELFTEST, the behavior tests) use `config().field`. The two on-device detector tests that relied
+  on the detector's built-in 75 / 67.5 thresholds set them explicitly (`wideOpenConfig()`); syntax-checked on
+  the host, run on a board when one is back. Host 68/68, T2h byte-identical.
 
 ## Decisions recorded in this pass
 

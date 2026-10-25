@@ -52,24 +52,10 @@ public:
     void update(unsigned long now);
     void seedIdleSchedule(unsigned long now);
 
-    void setWaitAfterHeardMs(unsigned long value);
-    void setRefractoryAfterEmitMs(unsigned long value);
-    void setBehaviorSuppressSelfChirpMs(unsigned long value);
-    void setDetectionSuppressTailMsOwnEmit(unsigned long value);
-    void setIdleTimeMs(unsigned long value);
-    void setIdleTimeVariationMs(unsigned long value);
-    void setIdleBlockedAfterHeardMs(unsigned long value);
-    void setIdleBlockedAfterOwnEmitMs(unsigned long value);
-    void setIdleEnabled(bool value);
-    void setIdleTimeoutMs(unsigned long value);
-    void setRestAfterFieldPatterns(unsigned long value);
-    void setOwnEmitBudget(unsigned long value);
-    void setOwnEmitBudgetWindowMs(unsigned long value);
-    void setRestMs(unsigned long value);
-    unsigned long restAfterFieldPatterns() const;
-    unsigned long ownEmitBudget() const;
-    unsigned long ownEmitBudgetWindowMs() const;
-    unsigned long restMs() const;
+    // The gate timing as configured (configure() applies it in place; the
+    // idle wait already running is rescheduled from its start when the idle
+    // timing changes, step 10e).
+    const BehaviorGateConfig& config() const { return _config; }
     // Rest state: whether the node is resting at `now`, until when, how many
     // rests it has entered, what started the last one, and how many valid
     // verdicts it ignored while resting.
@@ -79,16 +65,6 @@ public:
     BehaviorDecision lastRestReason() const;
     unsigned long blockedResting() const;
     static const char* behaviorDecisionName(BehaviorDecision decision);
-    unsigned long waitAfterHeardMs() const;
-    unsigned long refractoryAfterEmitMs() const;
-    unsigned long behaviorSuppressSelfChirpMs() const;
-    unsigned long detectionSuppressTailMsOwnEmit() const;
-    unsigned long idleTimeMs() const;
-    unsigned long idleTimeVariationMs() const;
-    unsigned long idleBlockedAfterHeardMs() const;
-    unsigned long idleBlockedAfterOwnEmitMs() const;
-    bool idleEnabled() const;
-    unsigned long idleTimeoutMs() const;
     bool behaviorEligible() const;
 
     // state output (for debug / LED)
@@ -173,11 +149,10 @@ private:
     void enterRest(unsigned long untilMs, BehaviorDecision reason);
     unsigned long ownEmitsInWindow(unsigned long now) const;
 
+    // --- configured timing (BehaviorGateConfig.h documents the fields) ---
+    BehaviorGateConfig _config = {};
+
     // --- rest (busy network) ---
-    unsigned long _restAfterFieldPatterns = 0;
-    unsigned long _ownEmitBudget = 0;
-    unsigned long _ownEmitBudgetWindowMs = 10000;
-    unsigned long _restMs = 10000;
     bool _restArmed = false;
     unsigned long _restUntilMs = 0;
     unsigned long _restsEntered = 0;
@@ -226,18 +201,9 @@ private:
     bool _wouldEmit = false;
     bool _outputBusy = false;
 
-    // --- timing parameters ---
-    unsigned long _waitAfterHeardMs = 500; // Delay before responding after a heard pattern is seen.
-    unsigned long _refractoryAfterEmitMs = 200; // Ignore follow-up activity for a short time after a chirp finishes.
-    unsigned long _behaviorSuppressSelfChirpMs = 250; // Behavior-level suppression while the node's chirp is active.
-    unsigned long _detectionSuppressTailMsOwnEmit = 0; // Detector/analyzer suppression tail after our own emit.
+    // --- idle schedule ---
     unsigned long _nextIdleAtMs = 0;
     unsigned long _idleScheduledFromMs = 0;  // when the current idle wait started (step 10e)
-    unsigned long _idleTimeMs = 20000;
-    unsigned long _idleTimeVariationMs = 10000;
-    unsigned long _idleBlockedAfterHeardMs = 3000;
-    unsigned long _idleBlockedAfterOwnEmitMs = 5000;
-    bool _idleEnabled = true;
 
     // --- action latch ---
     bool _chirpRequested = false;

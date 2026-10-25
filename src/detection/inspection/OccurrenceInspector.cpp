@@ -267,7 +267,6 @@ void OccurrenceInspector::annotateMagnitudeFeatureStrength(
             break;
     }
 
-    out.occurrence.magnitude.evidence = observation;
 }
 
 void OccurrenceInspector::runInspectionModule(

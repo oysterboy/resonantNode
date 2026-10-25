@@ -1104,12 +1104,15 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
+    // The plan's last module's observation (the Amp module on TonalPulseScalar),
+    // as before step 11e item 6, when it rode on the occurrence itself.
     const detection::MagnitudeInspectionObservation emptyMagnitudeObservation{};
-    const detection::MagnitudeInspectionObservation& selectedMagnitudeObservation =
-        trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.magnitude.evidence.available
-            ? reportInspectedOccurrence->occurrence.magnitude.evidence
-            : emptyMagnitudeObservation;
-    report.profileDetail.magnitudeObservation = selectedMagnitudeObservation;
+    const detection::MagnitudeInspectionObservation* lastObservation =
+        trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->magnitudeObservationCount > 0
+            ? &reportInspectedOccurrence->magnitudeObservations[reportInspectedOccurrence->magnitudeObservationCount - 1]
+            : nullptr;
+    report.profileDetail.magnitudeObservation =
+        lastObservation != nullptr && lastObservation->available ? *lastObservation : emptyMagnitudeObservation;
     report.profileDetail.inspectionObservationCount = 0;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr) {
         const size_t availableCount = reportInspectedOccurrence->magnitudeObservationCount;
@@ -1142,13 +1145,3 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         ? (reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 }
-
-
-
-
-
-
-
-
-
-

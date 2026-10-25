@@ -685,7 +685,10 @@ RejectedCandidateSummary
 neutral tooling output
 ```
 
-Occurrence payload trimming is deferred until after OccurrenceEvaluator / OccurrenceVerdict cleanup.
+The inspection evidence left the Occurrence in step 11e (2026-10-25): an
+`Occurrence` carries the accepted-event facts and the per-target
+`StrengthClass` the inspector assigns; the observations themselves (windows,
+percentiles, coverage) are on `InspectedOccurrence` only.
 
 ---
 

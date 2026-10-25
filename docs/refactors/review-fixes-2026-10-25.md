@@ -134,6 +134,13 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   (RB STATUS, SELFTEST, the behavior tests) use `config().field`. The two on-device detector tests that relied
   on the detector's built-in 75 / 67.5 thresholds set them explicitly (`wideOpenConfig()`); syntax-checked on
   the host, run on a board when one is back. Host 68/68, T2h byte-identical.
+- 2026-10-25, item 6: `Occurrence.magnitude.evidence` (a whole `MagnitudeInspectionObservation`, written by the
+  inspector into its copy of the occurrence, the last module's winning) is gone, with the `MagnitudeEvidence`
+  alias; the Analyzer's one reader takes the last module's observation from `InspectedOccurrence`, same value,
+  same `available` rule. myspec 5.4's deferred "payload trimming" line now records the trim. Host sizes:
+  Occurrence 504 -> 224, InspectedOccurrence 1,336 -> 1,056, DetectionPipelineEvent 2,120 -> 1,840,
+  ScalarTransientDetector 2,048 -> 1,768, DetectionRuntime 68,024 -> 65,512 (xtensa: T5 at the bench).
+  Host 68/68, T2h byte-identical.
 
 ## Decisions recorded in this pass
 

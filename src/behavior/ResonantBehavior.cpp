@@ -88,8 +88,7 @@ void ResonantBehavior::resetState() {
     _restsEntered = 0;
     _blockedResting = 0;
     _lastRestReason = BehaviorDecision::None;
-    _emitHead = 0;
-    _emitCount = 0;
+    _emitTimes.clear();
 }
 
 void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
@@ -489,11 +488,7 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitS
 
     // Own budget: count this emission; at the budget the node rests from the
     // end of this emission on.
-    _emitTimes[_emitHead] = now;
-    _emitHead = (_emitHead + 1) % kEmitHistory;
-    if (_emitCount < kEmitHistory) {
-        _emitCount++;
-    }
+    _emitTimes.pushOverwrite(now);
     if (_ownEmitBudget > 0 && ownEmitsInWindow(now) >= _ownEmitBudget) {
         enterRest(now + emitSpanMs + _restMs, BehaviorDecision::RestOwnBudget);
     }
@@ -510,8 +505,8 @@ void ResonantBehavior::enterRest(unsigned long untilMs, BehaviorDecision reason)
 
 unsigned long ResonantBehavior::ownEmitsInWindow(unsigned long now) const {
     unsigned long n = 0;
-    for (size_t i = 0; i < _emitCount; ++i) {
-        const unsigned long t = _emitTimes[i];
+    for (size_t i = 0; i < _emitTimes.count(); ++i) {
+        const unsigned long t = _emitTimes.at(i);
         if (timing::atOrAfter(now, t) && now - t < _ownEmitBudgetWindowMs) {
             n++;
         }

@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
+#include "../app/RingQueue.h"
 #include "BehaviorProfile.h"
 #include "../detection/field/FieldState.h"
 #include "../detection/evaluation/OccurrenceVerdict.h"
@@ -183,9 +184,7 @@ private:
     unsigned long _blockedResting = 0;
     BehaviorDecision _lastRestReason = BehaviorDecision::None;
     static constexpr size_t kEmitHistory = 16;
-    unsigned long _emitTimes[kEmitHistory] = {};
-    size_t _emitHead = 0;
-    size_t _emitCount = 0;
+    RingQueue<unsigned long, kEmitHistory> _emitTimes;  // the last own emissions, oldest dropped
 
     // --- state machine ---
     enum class State {

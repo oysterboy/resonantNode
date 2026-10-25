@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../app/RingQueue.h"
 #include "NetFrame.h"
 
 /*
@@ -79,9 +80,8 @@ private:
     uint16_t _nextSeq = 1;
     net::SeqFilter _filter;
     Stats _stats;
-    Outgoing* _outbox = nullptr;  // kOutbox entries (~13 KB), on the heap at begin(): static RAM is full
-    size_t _outHead = 0;
-    size_t _outCount = 0;
+    // kOutbox entries (~13 KB), on the heap at begin(): static RAM is full.
+    RingQueue<Outgoing, kOutbox>* _outbox = nullptr;
     unsigned long _lastTxMs = 0;
     unsigned long _lastReplyAtMs = 0;
 };

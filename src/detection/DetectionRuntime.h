@@ -6,6 +6,7 @@
 // runtime header chain. DetectionRuntime snapshots the scalar detector's
 // reports for analyzer/report consumers.
 #include "detectors/DetectorReport.h"
+#include "../app/RingQueue.h"
 #include "../audio/AudioSignal.h"
 #include "DetectionProfile.h"
 #include "detectors/scalar/ScalarTransientDetector.h"
@@ -242,9 +243,7 @@ private:
     FieldStateTracker _fieldStateTracker;
     FeatureHistory _featureHistory;
 
-    OccurrenceVerdict _resultQueue[kResultQueueCapacity] = {};
-    size_t _resultReadIndex = 0;
-    size_t _resultCount = 0;
+    RingQueue<OccurrenceVerdict, kResultQueueCapacity> _verdictQueue;
     bool _verdictQueueEnabled = true;
     unsigned long _verdictQueueOverflowCount = 0;
 
@@ -258,9 +257,7 @@ private:
 #endif
     };
     static constexpr size_t kPendingInspectionCapacity = 2;
-    PendingInspection _pendingInspections[kPendingInspectionCapacity] = {};
-    size_t _pendingInspectionReadIndex = 0;
-    size_t _pendingInspectionCount = 0;
+    RingQueue<PendingInspection, kPendingInspectionCapacity> _pendingInspections;
     unsigned long _pendingInspectionOverflowCount = 0;
 
 #ifdef ANALYZER_MODE
@@ -272,9 +269,7 @@ private:
     unsigned long _pipelineEventOverflowCount = 0;
     unsigned long _detectorReportMismatchCount = 0;
     HistoryIncompleteSnapshot _historyIncomplete = {};
-    DetectionPipelineEvent _pipelineEventQueue[kPipelineEventQueueCapacity] = {};
-    size_t _pipelineEventReadIndex = 0;
-    size_t _pipelineEventCount = 0;
+    RingQueue<DetectionPipelineEvent, kPipelineEventQueueCapacity> _pipelineEvents;
     unsigned long _pipelineEventSequenceId = 0;
     uint32_t _lastEmittedAcceptedOccurrenceId = 0;
     uint32_t _lastEmittedAcceptedReportGeneration = 0;

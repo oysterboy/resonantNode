@@ -121,6 +121,11 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   accessors (my grep looked for `lastBlock()` only). It prints the same values from `latestFrame()` (one-sample
   blocks: start = sampleIndex, count = 1, micros = timeUs64). Lesson for the later items: grep the bare symbol
   stem across src/ and test/ before deleting a member.
+- 2026-10-25, item 4: `src/app/RingQueue.h` (`RingQueue<T, N>`: push / pushOverwrite / emplace / pop / front /
+  popFront / at / clear). DetectionRuntime's three rings (verdicts, pending inspections, Analyzer pipeline
+  events), Behavior's own-emit history and NodeNet's heap outbox use it; the read-index / count pairs and the
+  six push / pop bodies are gone. Host 68/68, T2h byte-identical; sizeof DetectionRuntime unchanged (68,024 host),
+  ResonantBehavior 576 -> 568. NodeNet builds on CI.
 
 ## Decisions recorded in this pass
 

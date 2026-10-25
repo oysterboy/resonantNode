@@ -55,8 +55,7 @@ void DetectionRuntime::resetState() {
 
 void DetectionRuntime::resetDetectors() {
     _scalarDetector.resetState();
-    _pendingInspectionReadIndex = 0;
-    _pendingInspectionCount = 0;
+    _pendingInspections.clear();
 }
 
 void DetectionRuntime::resetDetectionState() {
@@ -70,14 +69,10 @@ void DetectionRuntime::resetDetectionState() {
 }
 
 void DetectionRuntime::resetDetectionQueues() {
-    memset(&_resultQueue[0], 0, sizeof(_resultQueue[0]));
-    _resultReadIndex = 0;
-    _resultCount = 0;
+    _verdictQueue.clear();
     _verdictQueueOverflowCount = 0;
 #ifdef ANALYZER_MODE
-    memset(&_pipelineEventQueue[0], 0, sizeof(_pipelineEventQueue[0]));
-    _pipelineEventReadIndex = 0;
-    _pipelineEventCount = 0;
+    _pipelineEvents.clear();
 #endif
 }
 
@@ -197,9 +192,7 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     resetDetectors();
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
 #ifdef ANALYZER_MODE
-    _pipelineEventQueue[0] = {};
-    _pipelineEventReadIndex = 0;
-    _pipelineEventCount = 0;
+    _pipelineEvents.clear();
     _lastEmittedAcceptedOccurrenceId = 0;
     _lastEmittedAcceptedReportGeneration = 0;
     _lastEmittedSelectedRejectOccurrenceId = 0;
@@ -251,9 +244,7 @@ void DetectionRuntime::setProfileName(const char* profileName) {
 void DetectionRuntime::setVerdictQueueEnabled(bool enabled) {
     _verdictQueueEnabled = enabled;
     if (!enabled) {
-        _resultQueue[0] = {};
-        _resultReadIndex = 0;
-        _resultCount = 0;
+        _verdictQueue.clear();
     }
 }
 
@@ -290,7 +281,7 @@ void IRAM_ATTR DetectionRuntime::observeFrame(
 #endif
     }
 
-    if (detectorInputProcessed || hasPendingDetectorOutput() || _pendingInspectionCount > 0) {
+    if (detectorInputProcessed || hasPendingDetectorOutput() || !_pendingInspections.empty()) {
 #ifdef ANALYZER_MODE
         ++_detectorDrainCount;
 #endif
@@ -302,14 +293,7 @@ void IRAM_ATTR DetectionRuntime::observeFrame(
 }
 
 bool DetectionRuntime::popOccurrenceVerdict(OccurrenceVerdict& out) {
-    if (_resultCount == 0) {
-        return false;
-    }
-
-    out = _resultQueue[_resultReadIndex];
-    _resultReadIndex = (_resultReadIndex + 1) % kResultQueueCapacity;
-    --_resultCount;
-    return true;
+    return _verdictQueue.pop(out);
 }
 
 unsigned long DetectionRuntime::verdictQueueOverflowCount() const {
@@ -327,14 +311,7 @@ const FieldState& DetectionRuntime::fieldState() const {
 #ifdef ANALYZER_MODE
 
 bool DetectionRuntime::popPipelineEvent(DetectionPipelineEvent& out) {
-    if (_pipelineEventCount == 0) {
-        return false;
-    }
-
-    out = _pipelineEventQueue[_pipelineEventReadIndex];
-    _pipelineEventReadIndex = (_pipelineEventReadIndex + 1) % kPipelineEventQueueCapacity;
-    --_pipelineEventCount;
-    return true;
+    return _pipelineEvents.pop(out);
 }
 
 unsigned long DetectionRuntime::detectorReportMismatchCount() const {
@@ -434,7 +411,7 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
         // still waiting (order is kept).
         const unsigned long readyAtMs = _occurrenceInspector.windowCompleteAtMs(occurrence);
         const bool ready = !timing::after(readyAtMs, nowMs);
-        if (ready && _pendingInspectionCount == 0) {
+        if (ready && _pendingInspections.empty()) {
             inspectAndRender(occurrence, nowMs
 #ifdef ANALYZER_MODE
                 , _scalarDetector.latestReport()
@@ -442,31 +419,28 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
             );
             continue;
         }
-        if (_pendingInspectionCount == kPendingInspectionCapacity) {
+        if (_pendingInspections.full()) {
             // Cannot happen on the shipped values (one occurrence per >= 85 ms,
             // a wait of <= 15 ms); if it does, inspect the oldest now, early.
             ++_pendingInspectionOverflowCount;
-            PendingInspection& oldest = _pendingInspections[_pendingInspectionReadIndex];
+            PendingInspection& oldest = _pendingInspections.front();
             inspectAndRender(oldest.occurrence, nowMs
 #ifdef ANALYZER_MODE
                 , oldest.detectorReport
 #endif
             );
-            _pendingInspectionReadIndex = (_pendingInspectionReadIndex + 1) % kPendingInspectionCapacity;
-            --_pendingInspectionCount;
+            _pendingInspections.popFront();
         }
-        PendingInspection& slot =
-            _pendingInspections[(_pendingInspectionReadIndex + _pendingInspectionCount) % kPendingInspectionCapacity];
+        PendingInspection& slot = *_pendingInspections.emplace();
         slot.occurrence = occurrence;
         slot.readyAtMs = readyAtMs;
 #ifdef ANALYZER_MODE
         slot.detectorReport = _scalarDetector.latestReport();
 #endif
-        ++_pendingInspectionCount;
     }
 
-    while (_pendingInspectionCount > 0) {
-        PendingInspection& next = _pendingInspections[_pendingInspectionReadIndex];
+    while (!_pendingInspections.empty()) {
+        PendingInspection& next = _pendingInspections.front();
         if (timing::after(next.readyAtMs, nowMs)) {
             break;
         }
@@ -475,8 +449,7 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
             , next.detectorReport
 #endif
         );
-        _pendingInspectionReadIndex = (_pendingInspectionReadIndex + 1) % kPendingInspectionCapacity;
-        --_pendingInspectionCount;
+        _pendingInspections.popFront();
     }
 }
 
@@ -528,14 +501,10 @@ bool DetectionRuntime::pushOccurrenceVerdict(const OccurrenceVerdict& result) {
     if (!_verdictQueueEnabled) {
         return true;
     }
-    if (_resultCount == kResultQueueCapacity) {
+    if (!_verdictQueue.push(result)) {
         ++_verdictQueueOverflowCount;
         return false;
     }
-
-    const size_t writeIndex = (_resultReadIndex + _resultCount) % kResultQueueCapacity;
-    _resultQueue[writeIndex] = result;
-    ++_resultCount;
     return true;
 }
 
@@ -546,14 +515,10 @@ unsigned long DetectionRuntime::pipelineEventOverflowCount() const {
 }
 
 bool DetectionRuntime::pushPipelineEvent(const DetectionPipelineEvent& event) {
-    if (_pipelineEventCount == kPipelineEventQueueCapacity) {
+    if (!_pipelineEvents.push(event)) {
         ++_pipelineEventOverflowCount;
         return false;
     }
-
-    const size_t writeIndex = (_pipelineEventReadIndex + _pipelineEventCount) % kPipelineEventQueueCapacity;
-    _pipelineEventQueue[writeIndex] = event;
-    ++_pipelineEventCount;
     return true;
 }
 

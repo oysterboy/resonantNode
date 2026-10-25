@@ -56,7 +56,7 @@ bool NodeNet::begin() {
         return true;
     }
     gRxQueue = xQueueCreate(kQueueDepth, sizeof(RawFrame));
-    _outbox = new (std::nothrow) Outgoing[kOutbox];
+    _outbox = new (std::nothrow) RingQueue<Outgoing, kOutbox>();
     if (gRxQueue == nullptr || _outbox == nullptr) {
         return false;
     }
@@ -93,28 +93,27 @@ bool NodeNet::enqueue(const uint8_t mac[6], const net::Frame& frame, unsigned lo
     if (_outbox == nullptr) {
         return false;
     }
-    if (_outCount >= kOutbox) {
+    Outgoing* o = _outbox->emplace();
+    if (o == nullptr) {
         ++_stats.txOutboxFull;
         return false;
     }
-    Outgoing& o = _outbox[(_outHead + _outCount) % kOutbox];
-    memcpy(o.mac, mac, 6);
-    o.notBeforeMs = notBeforeMs;
-    o.frame = frame;
-    ++_outCount;
+    memcpy(o->mac, mac, 6);
+    o->notBeforeMs = notBeforeMs;
+    o->frame = frame;
     return true;
 }
 
 void NodeNet::service(unsigned long nowMs) {
-    if (!_started || _outCount == 0 || nowMs - _lastTxMs < kTxSpacingMs) {
+    if (!_started || _outbox == nullptr || _outbox->empty() || nowMs - _lastTxMs < kTxSpacingMs) {
         return;
     }
-    if (_outbox[_outHead].notBeforeMs != 0 && timing::beforeDeadline(nowMs, _outbox[_outHead].notBeforeMs)) {
+    Outgoing& o = _outbox->front();
+    if (o.notBeforeMs != 0 && timing::beforeDeadline(nowMs, o.notBeforeMs)) {
         return;
     }
-    Outgoing& o = _outbox[_outHead];
-    _outHead = (_outHead + 1) % kOutbox;
-    --_outCount;
+    // The slot stays valid until the next emplace(), which only enqueue() does.
+    _outbox->popFront();
     _lastTxMs = nowMs;
     uint8_t buf[net::kMaxFrameBytes];
     const size_t len = net::encode(o.frame, buf, sizeof(buf));

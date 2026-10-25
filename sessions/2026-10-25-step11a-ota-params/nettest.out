@@ -1,0 +1,30 @@
+== boot: radio up per node
+   E1 NET node=E1 started=1 build=f503a0c silent=1 uptime_s=269 rx=16 rejected=0 queue_full=0 tx=12 tx_failed=0 outbox_full=0 commands=0
+   E2 NET node=E2 started=1 build=f503a0c silent=1 uptime_s=251 rx=12 rejected=8 queue_full=0 tx=4 tx_failed=0 outbox_full=0 commands=4
+   E3 NET node=E3 started=1 build=f503a0c silent=1 uptime_s=229 rx=11 rejected=7 queue_full=0 tx=4 tx_failed=0 outbox_full=0 commands=4
+   E4 NET node=E4 started=1 build=f503a0c silent=1 uptime_s=211 rx=11 rejected=7 queue_full=0 tx=4 tx_failed=0 outbox_full=0 commands=4
+   E5 NET node=E5 started=1 build=f503a0c silent=1 uptime_s=192 rx=11 rejected=7 queue_full=0 tx=4 tx_failed=0 outbox_full=0 commands=4
+== NET * NET PING
+   E2 NET node=E2 started=1 build=f503a0c silent=1 uptime_s=252 rx=13 rejected=8 queue_full=0 tx=4 tx_failed=0 outbo
+   E3 NET node=E3 started=1 build=f503a0c silent=1 uptime_s=230 rx=12 rejected=7 queue_full=0 tx=4 tx_failed=0 outbo
+   E4 NET node=E4 started=1 build=f503a0c silent=1 uptime_s=212 rx=12 rejected=7 queue_full=0 tx=4 tx_failed=0 outbo
+   E5 NET node=E5 started=1 build=f503a0c silent=1 uptime_s=194 rx=12 rejected=7 queue_full=0 tx=4 tx_failed=0 outbo
+== NET * PARAM GET output.silent
+   E2 PARAM GET path=output.silent module=output value=1
+   E3 PARAM GET path=output.silent module=output value=1
+   E4 PARAM GET path=output.silent module=output value=1
+   E5 PARAM GET path=output.silent module=output value=1
+== NET E3 PARAM SET behavior.rest_ms 6000, then SAVE; reboot E3
+   replies: {'E3': 'PARAM SET path=behavior.rest_ms module=behavior old=5000 new=6000 status=ok'}
+   E3 serial: ['NET cmd from=24:DC:C3:4A:B0:50 seq=7 target=E3 text=PARAM SET behavior.rest_ms 6000']
+   save: {'E3': 'PARAM SAVE written=1 unchanged=38 failed=0 status=ok'}
+   E3 boot: ['PARAM load path=output.silent value=1 default=0', 'PARAM load path=behavior.rest_ms value=6000 default=5000', 'PARAM load stored=39 applied=39 stale=0 invalid=0', 'RB net started=1 channel=1 net_id=82', 'RB silent=1 (output.silent: listening, never sounding)']
+   restored: {'E3': 'PARAM SAVE written=1 unchanged=38 failed=0 status=ok'}
+== not allowed
+   ['NET ERR usage=NET <target|*> PARAM SET|GET|SAVE|LOAD|RESET ...|NET PING (DUMP and LIST over USB only)']
+== heap and radio counters (RB STATUS)
+   E1 i2s.dropped_dma_buffers=9 net.started=1 net.rx=28 net.tx_failed=0 heap.free=94216 heap.free_min=93760 loop.stack_free_min_bytes=13964
+   E2 i2s.dropped_dma_buffers=16 net.started=1 net.rx=30 net.tx_failed=0 heap.free=94464 heap.free_min=94128 loop.stack_free_min_bytes=13468
+   E3 i2s.dropped_dma_buffers=9 net.started=1 net.rx=6 net.tx_failed=0 heap.free=94464 heap.free_min=94184 loop.stack_free_min_bytes=13468
+   E4 i2s.dropped_dma_buffers=26 net.started=1 net.rx=29 net.tx_failed=0 heap.free=94304 heap.free_min=93960 loop.stack_free_min_bytes=13468
+   E5 i2s.dropped_dma_buffers=8 net.started=1 net.rx=29 net.tx_failed=0 heap.free=94304 heap.free_min=93960 loop.stack_free_min_bytes=13468

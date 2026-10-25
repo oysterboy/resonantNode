@@ -1,0 +1,9 @@
+RB STATUS only (the probe itself)          E1:+0 E2:+0 E3:+0 E4:+0 E5:+-18
+idle 120 s, radio on, no traffic           E1:+0 E2:+0 E3:+0 E4:+0 E5:+0
+serial PARAM DUMP on every node            E1:+0 E2:+0 E3:+0 E4:+0 E5:+0
+serial PARAM SAVE on E2 (NVS write)        E1:+0 E2:+8 E3:+0 E4:+0 E5:+0
+radio NET * NET PING                       E1:+0 E2:+0 E3:+0 E4:+0 E5:+0
+radio NET * PARAM GET output.silent        E1:+0 E2:+0 E3:+0 E4:+0 E5:+0
+radio NET * PARAM DUMP                     E1:+0 E2:+0 E3:+0 E4:+0 E5:+0
+radio NET * PARAM SET behavior.rest_ms 5000 E1:+0 E2:+0 E3:+0 E4:+0 E5:+0
+radio NET * PARAM SAVE (NVS write)         E1:+9 E2:+8 E3:+8 E4:+8 E5:+8

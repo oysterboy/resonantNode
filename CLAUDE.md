@@ -125,11 +125,22 @@ is the only family. Older docs and bench sessions that mention Freq describe
 removed code. A new detector joins on the terms in `myspec.md` 5.3, "Adding a
 detector family".
 
-`docs/notes_manual.md` is the complementary operator-facing doc: profile
-config sites, reset/apply points, and the
-`patternAccepted -> patternMatched -> supportMatched -> behaviorEligible`
-runtime gate chain. Use it for "where do I change this knob," use
-`myspec.md` for "where does this concept belong."
+`docs/notes_manual.md` is the operator guide (rewritten 2026-10-25): builds
+and boards, the command surface of each mode, param groups and their config
+sites, apply points in boot order, and the
+`accepted -> proposalMatched -> supportMatched -> valid -> behaviorEligible`
+runtime gate chain. Use it for "how does it work" and "where do I change this
+knob," use `myspec.md` for "where does this concept belong."
+
+**Spec / guide / roadmap split** (rule, stated in full in
+`docs/roadmaps/README.md`, "Spec, guide, roadmap"): the spec holds what must
+stay true for the code to be correct, the guide holds how to run and change
+what is built, the roadmap holds what is not true yet, and the code holds
+today's values. Never add a default, a knob list or a command syntax to
+`myspec.md`; put it in the guide, as a pointer to the code site or `PARAM DUMP`
+rather than a copied table, dated when a number is quoted. When a change
+renames a command, a param path or a config site, fix the pointer in
+`notes_manual.md` in the same commit.
 
 ## Source layout
 

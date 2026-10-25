@@ -1,268 +1,240 @@
-# Setup Notes
+# Operator Guide
 
-Short operator notes for running RB and Analyzer with the current detection stack.
+Status: current operator guide, rewritten 2026-10-25 (replaces the 2026-09 Setup Notes, whose
+2026-10-10 drift banner listed names that no longer existed).
+Scope: how to run, read and change the firmware that exists today, in all three build modes.
+Purpose: answer "how does what we built work" and "where do I change this knob". For "where does
+this concept belong" read `docs/specs/myspec.md`; for "what next" read `docs/roadmaps/`.
 
-> **Drift check 2026-10-10: much of this file predates the 2026-09 cleanup
-> and the D-AMP switch.** Profile names (`TonalPulse`, `ChirpExperimental`),
-> knob names (`requireSupportForAcceptance`, `inspectionConfig`,
-> `PatternRules`, `_ampDiagnosticProbe`) and paths (`node.cpp`,
-> `AnalyzerApp.cpp`) below no longer exist; the RB BEHAV example values are
-> not the defaults. Current facts until the rewrite:
->
-> - Profiles: `TonalPulseScalar` (Node boot default), `TonalPulseFreq`,
->   `AmpExperimental` (`src/detection/DetectionProfile.h`); which ships is
->   DET-007.
-> - Behavior defaults (`src/behavior/BehaviorProfile.h`): wait 100,
->   refractory 400, suppressSelfChirp 100, detectionSuppressTail 60, idle
->   timeout 20000 +- 5000, idleBlockedAfterHeard 1000, idleBlockedAfterOwnEmit
->   500. Own-emit detection is off for the whole chirp plus the tail
->   (`ResonantBehavior::ownEmitDetectionSuppressed()`).
-> - Node startup quiet threshold: `kRbStartupQuietThreshold` in
->   `src/modes/resonant/ResonantNodeApp.cpp` (400 on D-AMP, 20 on piezo).
-> - Board, pins, I2S slots: `src/app/BoardConfig.h`; tone level
->   `I2S_TONE_AMPLITUDE` (0.3 FS) in `src/app/RuntimeDefaults.h`.
-> - Analyzer: `src/modes/analyzer/AnalyzerModeApp.*`,
->   `src/detection/analyzer/` (commands in `AnalyzerCommands.cpp`).
+This file points, it does not copy. A value quoted here is the value on the date given; the
+source of truth for a number is `PARAM DUMP` on the board or the config header named next to it.
+When you find a stale name here, fix the pointer, do not add another table of values.
 
-## Using RB And Analyzer
+---
 
-- Use **RB** for live behavior checks.
-- Use **Analyzer** for SEQ / OBS validation and report inspection.
-- Both modes use the same detection profiles and the same underlying detection runtime.
-- Profile values are applied at fixed points; commands only override the small set of live tuning knobs that are still meant to move at runtime.
-
-## Detection Profiles
-
-- Default profile: `TonalPulse`
-- Profile definitions live in `src/detection/DetectionProfile.h`
-
-- Switch profile at runtime with:
-  - `RB PROFILE name=tonalpulse`
-- Profiles own the detection composition.
-- Live low-level detection tuning is mostly profile-defined, not a freeform runtime knob set.
-
-### Developer / Experimental profiles
-
-- `ChirpExperimental`
-  - select with `RB PROFILE name=chirp_experimental`
-  - experimental / proof profile / not stable / not normal use
-
-### Detection knobs
-
-**Runtime parameter**
-- `kind` in `src/detection/DetectionProfile.h`
-  - selected at runtime via `RB PROFILE name=tonalpulse|chirp_experimental`
-  - Analyzer SEQ also selects a profile when it starts a run
-
-**Coded in profile**
-- `signalEmitter` in `src/detection/DetectionProfile.h`
-  - which emitter family the runtime should use
-- `inspectionRules` in `src/detection/DetectionProfile.h`
-  - which inspection strategy/windowing rule the runtime should use
-- `frequencyTuning` in `src/detection/DetectionProfile.h`
-  - profile default for `freqScore` / `freqContrast`
-- `requireSupportForAcceptance` in `src/detection/DetectionProfile.h`
-  - whether support is a hard acceptance gate in `PatternRules`
-- `inspectionConfig` in `src/detection/DetectionProfile.h`
-  - windowing and support settings used by the inspector
-- `fieldStateConfig` in `src/detection/DetectionProfile.h`
-  - occurrence/pattern window lengths and field-density thresholds
-
-**Elsewhere**
-- I2S tuning in `src/modes/resonant/node.cpp`
-  - `configureI2SParameters()`
-- AMP diagnostic probe thresholds in `src/modes/resonant/node.cpp` and `src/modes/analyzer/AnalyzerApp.cpp`
-  - `_ampDiagnosticProbe`
-- live frequency tuning in `src/modes/resonant/node.cpp`
-  - `RB PARAM freqScore=... freqContrast=...`
-- live frequency tuning in `src/modes/analyzer/AnalyzerApp.cpp`
-  - `PARAM freqScore=... freqContrast=...`
-
-### Reset and apply points
-
-- `AnalyzerApp::begin()`
-  - calls `configureI2SParameters()`
-  - starts `AudioSignal`
-  - begins the AMP diagnostic probe
-  - seeds frequency tuning from the default `TonalPulse` profile
-- `AnalyzerApp::startSequenceTest()`
-  - resets `DetectionRuntime`
-  - reapplies the selected profile's emitter, inspection, pattern, and field configs
-  - reapplies the current frequency tuning values
-- `AnalyzerApp::PARAM`
-  - updates the active analyzer frequency tuning values only
-- `Node::begin()`
-  - calls `configureParameters()`
-  - starts the audio source/signal chain
-  - begins the AMP diagnostic probe
-  - applies the active detection and behavior profiles
-- `Node::applyActiveProfiles()`
-  - reapplies the selected detection profile into `DetectionRuntime`
-  - reapplies the selected behavior profile into `ResonantBehavior`
-- `Node::begin()`, after the roster rotation (PAR-010)
-  - `captureDefaults()`: the fields' values now are the firmware defaults
-  - loads valid stored values from NVS (a stored value wins; `PARAM stale` when its saved-against default
-    differs from the firmware's), then applies detection and behavior once
-- `PARAM SET <path> <value>` (Node)
-  - writes the bound field and applies its module in place, no detector reset (live, lost on reboot)
-- `PARAM SAVE` / `PARAM LOAD` / `PARAM RESET` (Node, PAR-011)
-  - SAVE writes every registered param to NVS (the only flash write); LOAD re-reads and applies; RESET clears the
-    store and restores the firmware defaults (decisions/2026-10-23-param-persistence-save-only.md)
-- `Node::RB PROFILE`
-  - switches the active profile kind
-  - reapplies both detection and behavior profiles and prints every live value it reset
-
-Current profile gate shape:
-
-```txt
-accepted -> proposalMatched -> supportMatched -> behaviorEligible
-```
-
-## Behavior Profiles
-
-- Behavior profiles control how RB reacts after detection has already produced a valid result.
-- They do not change the detection profile itself.
-- The current RB behavior profile is the `TonalPulse` behavior setup used by the active node.
-- Defaults defined in `src/behavior/BehaviorProfile.h`
-- Applied from `src/modes/resonant/node.cpp`
-- `RB BEHAV` updates the active behavior values and reapplies them immediately.
-
-### Behavior knobs
-
-**Runtime parameter**
-- none at the moment
-
-**Coded in profile**
-- `idleEnabled` in `src/behavior/BehaviorProfile.h`
-  - enables or disables idle emission behavior
-- `waitAfterHeardMs` in `src/behavior/BehaviorProfile.h`
-  - minimum wait after a heard pattern before RB may emit
-- `refractoryAfterEmitMs` in `src/behavior/BehaviorProfile.h`
-  - refractory time after an emit
-- `idleTimeoutMs` in `src/behavior/BehaviorProfile.h`
-  - time before idle emission may be considered
-- `idleTimeVariationMs` in `src/behavior/BehaviorProfile.h`
-  - variation applied to idle timing
-- `idleBlockedAfterHeardMs` in `src/behavior/BehaviorProfile.h`
-  - block idle emission for a while after hearing a pattern
-- `idleBlockedAfterOwnEmitMs` in `src/behavior/BehaviorProfile.h`
-  - block idle emission for a while after the node emits itself
-
-**Elsewhere**
-- applied in `src/modes/resonant/node.cpp`
-  - `applyActiveProfiles()`
-  - `ResonantBehavior::configure(...)`
-
-Current live command:
-
-```txt
-RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 idleEnabled=1
-```
-
-## Practical Commands
-
-Node params (since step 10, `RB PARAM` and `RB BEHAV` are gone; the lines below them are kept for older logs):
-- List, read, set: `PARAM LIST`, `PARAM DUMP`, `PARAM GET <path>`, `PARAM SET <path> <value>`
-- Keep across reboots: `PARAM SAVE` (all registered params, `output.hop_rotation` included: a saved rotation
-  overrides the roster until `PARAM RESET`)
-- Silent: `PARAM SET output.silent 1`. The node keeps listening (verdicts counted, `decision=outputs_off` in the
-  log) but never sounds: no answer, no idle call, `RB CALL` is ignored. Add `PARAM SAVE` and it boots silent
-  (`RB silent=1` at boot) until `PARAM SET output.silent 0` + SAVE, or `PARAM RESET`. RB STATUS shows `silent=`.
-  The self-test still plays its tones: it is an explicit command.
-- Back to the saved values: `PARAM LOAD`; back to firmware defaults and an empty store: `PARAM RESET`
-- Boot prints `PARAM load stored=N applied=N stale=N invalid=N`, a `PARAM load path=... value=... default=...` line
-  per saved value that differs from the default, and `PARAM stale ...` per entry saved against an old default.
-
-- Show RB profile:
-  - `RB PROFILE`
-- Set RB profile:
-  - `RB PROFILE name=tonalpulse`
-  - `RB PROFILE name=chirp_experimental` (experimental)
-- Tune RB frequency thresholds:
-  - `RB PARAM freqScore=10000 freqContrast=50.0`
-- Show RB behavior settings:
-  - `RB BEHAV`
-- Set RB behavior:
-  - `RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 idleEnabled=1`
-- Tune Analyzer frequency thresholds:
-  - `PARAM freqScore=10000 freqContrast=50.0`
-- Show Analyzer SEQ help:
-  - `SEQ help`
-
-## Route A Code Points
-
-The code-owned config sites are listed above in the detection and behavior sections.
-
-Use this route as a reminder only:
+## Builds and boards
 
 ```text
-detection defaults -> detection/profile code
-behavior defaults  -> behavior code
-output defaults    -> output code
-Node               -> status/log exposure only
+platformio run -e esp32dev            Node (RB, the field firmware)
+platformio run -e esp32dev-analyzer   Analyzer (default env)
+platformio run -e esp32dev-emitter    Emitter (signal source only)
 ```
 
-### Experimental profile
+These build the D-AMP board (MAX98357A amp and I2S mic on one full-duplex port), the node hardware
+since 2026-10-09. The discontinued piezo boards build as `esp32dev-piezo`, `esp32dev-piezo-analyzer`,
+`esp32dev-piezo-emitter` (`-D BOARD_PIEZO`). Pins and I2S slots per board: `src/app/BoardConfig.h`.
+Never flash a piezo build onto a D-AMP board or the reverse: the pinouts collide on GPIO 25/26.
 
-- `ChirpExperimental`
-  - `RB PROFILE name=chirp_experimental`
-  - `SEQ ... profile=chirp_experimental`
-  - experimental / proof profile / not stable / not normal use
+Build-time knobs (not params, they need a rebuild): `platformio.ini` build flags
+(`CHIRP_FREQUENCY_HZ`, `BUILD_VERSION`), tone level `I2S_TONE_AMPLITUDE` and the other defaults in
+`src/app/RuntimeDefaults.h`, the node roster (name and hop rotation per board MAC) in
+`src/app/NodeRoster.h`.
 
-## Current Implementation
+Host-side builds and tests (no board): see "Build & verify" in `CLAUDE.md`.
 
-- `accepted` means the inspector/pattern chain accepted a real, usable pattern result.
-- `proposalMatched` means the pending occurrence group matched the profile rules.
-- `supportMatched` means the profile-specific support gate passed.
-- `behaviorEligible` is the final gate used by RB to decide whether to react.
+## The three modes
 
-### TonalPulse decision tree
+- **Node / RB** (`src/modes/resonant/`): listens, detects, and answers through `ResonantBehavior`.
+  Use it for live behavior checks and for the field.
+- **Analyzer** (`src/modes/analyzer/`): runs SEQ / OBS trials against a known signal and prints
+  per-trial reports. No reactive output. Use it for detection validation and tuning.
+- **Emitter** (`src/modes/emitter/`): plays chirps, pulse trains and sweeps on command or on a
+  timer. Use it as the signal source for Analyzer runs.
 
-- `AudioSignalFrame` is built from the live I2S stream.
-- The detector produces occurrence evidence once.
-- `OccurrenceInspector` adds AMP support and amp-window evidence.
-- `makeVerdict()` (end of inspection, since 2026-10-22; was `OccurrenceEvaluator`) turns the inspected occurrence into an `OccurrenceVerdict`.
-- For `TonalPulse`, the result is valid only when:
-  - the frequency path matched
-  - the profile-owned support gate allows acceptance
-  - `AmpSupportLevel >= Medium` when support is required
-- `DetectionRuntime` forwards the `OccurrenceVerdict` and `FieldState` to RB.
-- `ResonantBehavior` decides whether to react now:
-  - reject if `accepted` is false
-  - reject if the pattern is ambiguous
-  - reject if `proposalMatched` is false
-  - reject if `supportMatched` is false
-  - otherwise apply the behavior state machine:
-    - `Chirping`
-    - `Refractory`
-    - `TransientSeen`
-    - self-suppression
-    - idle gating
-  - only then mark the result behavior-eligible
+Node and Analyzer share the detection profiles and `DetectionRuntime`; they differ in what happens
+after the verdict (behavior and output on the Node, reporting on the Analyzer).
 
-Short version:
+## Node (RB)
 
-```txt
-occurrence -> inspection -> pattern result -> behavior gate -> output
+`RB help` prints the command surface. As of 2026-10-25:
+
+```text
+RB STATUS                       state, profile, output.* status, silent=
+RB PROFILE [name=...]           show or switch the detection profile (TonalPulseScalar | AmpExperimental)
+RB CALL                         play the node's network signal now (a kick for multi-node runs)
+RB log off|minimal|full         serial log level
+RB debug off|events             event tracing
+RB summary | RB stop | RB rebase [force]
+PARAM LIST|GET|SET|DUMP         every registered knob (see below)
+PARAM SAVE|LOAD|RESET           persistence to NVS
+NET <target|*> PARAM ...        remote params over ESP-NOW (SET|GET|SAVE|LOAD|RESET; DUMP and LIST are USB only)
+NET <target|*> NET PING | NET STATUS
+SELFTEST [external wait_ms=N | chirp n=N | help]
 ```
 
-`TonalPulse` keeps support required by default. Future profiles can flip the profile-owned switch if they want support to be behavior-only.
+`RB PARAM` and `RB BEHAV` are gone since step 10 (2026-10-22). Old session headers map through
+`docs/decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md`.
 
-## Source Organization
+### Params
 
-- `src/detection/`
-  - detection profiles
-  - occurrence emitters and detectors
-  - inspection rules
-  - pattern assembly and pattern rules
-  - field-state tracking
-- `src/behavior/`
-  - RB behavior policy and timing
-- `src/modes/resonant/`
-  - RB command handling
-  - live orchestration
-  - behavior and detection wiring
-- `src/modes/analyzer/`
-  - SEQ / OBS command handling
-  - report formatting
-  - smoke-test output
+Every tunable knob on the Node is a registered param in `lib/ParamRegistry/` (an in-repo library
+that includes nothing from `src/`). `PARAM LIST` prints the paths with their ranges, `PARAM DUMP`
+the current values. The groups, registered in `src/modes/resonant/ResonantNodeApp.cpp`:
+
+```text
+detection.scalar_*        ScalarTransientDetector thresholds and timing (13 params)
+detection.band_low_hz / band_high_hz / amp_medium / contrast_medium
+behavior.*                wait, refractory, self-suppression, idle call, rest (13 params)
+output.*                  hop train, idle announce, silent (8 params)
+node.radio_enabled        ESP-NOW on or off
+```
+
+Where the defaults live: `detection.*` in `src/detection/DetectionProfile.h` (the profile
+structs), `behavior.*` in `src/behavior/BehaviorProfile.h` (`BehaviorGateConfig`), `output.*` in
+`src/app/RuntimeDefaults.h` and the roster. Retuning a default is its own pass, logged through
+`tools/logging/`; do not change these headers as a side effect of other work.
+
+### Apply points, in boot order
+
+- `Node::begin()`: `configureParameters()`, audio source and signal start, detection reset, then
+  `applyActiveProfiles()` (detection profile and behavior gate config from the headers), then the
+  roster lookup (node name, hop rotation; MAC fallback), then `captureDefaults()` so the registry
+  knows the firmware defaults, then `loadStoredParams()`: a valid stored value wins, `PARAM stale`
+  is printed per entry saved against a default that has since changed. The radio comes up last, so
+  a stored `node.radio_enabled 0` keeps it off.
+- `PARAM SET <path> <value>`: writes the bound field and applies its module in place, no detector
+  reset. Live only, lost on reboot.
+- `PARAM SAVE`: the only flash write; stores every registered param. `PARAM LOAD` re-reads and
+  applies the store, `PARAM RESET` clears it and restores the firmware defaults
+  (`docs/decisions/2026-10-23-param-persistence-save-only.md`).
+- `RB PROFILE name=...`: switches the profile and reapplies detection and behavior from the profile
+  structs, which replaces the bound `detection.*` fields wholesale. Live `PARAM SET` overrides on
+  them are gone after a switch; check `PARAM DUMP`.
+- Boot prints `PARAM load stored=N applied=N stale=N invalid=N` plus one line per stored value that
+  differs from its default.
+
+### Silent mode
+
+`PARAM SET output.silent 1` keeps the node listening (verdicts counted, `decision=outputs_off` in
+the log) but it never sounds: no answer, no idle call, `RB CALL` ignored. With `PARAM SAVE` it boots
+silent (`RB silent=1` at boot) until `PARAM SET output.silent 0` plus SAVE, or `PARAM RESET`.
+`RB STATUS` shows `silent=`. SELFTEST still plays its tones, it is an explicit command.
+
+### Startup quiet gate
+
+The Node waits for the room to be quiet before it arms: `kRbStartupQuietThreshold` in
+`src/modes/resonant/ResonantNodeApp.cpp`, one value per board (D-AMP and piezo differ).
+
+## Analyzer
+
+`HELP` prints the top-level commands, `SEQ help` the SEQ surface. As of 2026-10-25:
+
+```text
+SEQ start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]
+SEQ OBS start ...               passive observe mode for an external emitter already running
+SEQ start ... pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]      pulse train per trial (DET-011)
+SEQ start ... freq=START_HZ dur=MS sweep=END_HZ              sweep inside the chirp (OUT-005)
+SEQ stop | SEQ STATUS | SEQ SUMMARY | SEQ REPORT | SEQ TRIES N
+SEQ MODE quiet|trial|inspect|source|system|detail            which report lines print
+SEQ PROFILE TonalPulseScalar|AmpExperimental
+SEQ DIAG on|off | SEQ FREQBAND on|off | SEQ WHEN off|miss|all | SEQ VERBOSE 0|1|2
+PARAM scalar_<key>=<value> ...  Analyzer-side detector knobs (flat keys, same names as the Node's
+                                detection.scalar_* params); PARAM STATUS shows them
+RAW trigger f=HZ dur=MS post=MS [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=...]
+EMIT CHIRP|MODE AUTO|MODE REMOTE|SWEEP|PULSES ...            the Analyzer drives its own output too
+SELFTEST [chirp n=N gap_ms=MS | help]
+```
+
+The Analyzer has no ParamRegistry (planned, `roadmap-param-config.md`); its `PARAM` is the flat
+key list above, and `PARAM STATUS` shows what is set.
+
+What the report lines mean (SEQ_TRIAL, SEQ_SOURCE, SEQ_INSPECT, SEQ_EXPLAIN, SEQ_SUMMARY, and
+which output is neutral tooling rather than analyzer truth): `docs/specs/myspec.md` 5.9. That
+section defines the line classes; the exact fields are whatever the current firmware prints.
+
+### Sample dump (detector-input curve tooling)
+
+Neutral developer tooling: bounded rows of the selected detector-input stream around chosen
+trials, between `SAMPLES_BEGIN` and `SAMPLES_END`, with a `SAMPLES_NOTE` line naming the input
+and the budget. It is not RAW capture, not the audio envelope, not a report line.
+
+Knobs on the `SEQ start` line:
+
+```text
+sampleFirst=N  sampleEvery=N  sampleLead=MS  sampleTail=MS  sampleStep=MS  sampleMax=N
+```
+
+`sampleMax` is the row budget over all dumped trials (5,000 on 2026-10-25). Each trial must also
+fit the fixed per-trial buffer (`kMaxSampleRows`, 256 rows, `AnalyzerModeApp.h`); the defaults
+(lead 50 ms, tail 800 ms, step 4 ms) give 213 rows per trial. `SEQ help` prints the current
+defaults.
+
+### RAW capture
+
+`RAW trigger ...` records PCM or feature values around one played signal. Field layouts (they are
+a contract for `tools/bench/rawcorpus.py`): `docs/specs/myspec.md` 5.9, "RAW capture".
+
+## Emitter
+
+Commands over USB, as of 2026-10-25:
+
+```text
+EMIT CHIRP freq=HZ dur=MS
+EMIT PULSES n pulse_ms gap_ms [freq=HZ] [ramp=MS] [hop=F1,F2,...]    up to 8 playable frequencies
+EMIT SWEEP start=HZ stop=HZ step=HZ dur=MS pause=MS
+EMIT MODE AUTO interval=MS freq=HZ dur=MS | EMIT MODE REMOTE
+SELFTEST
+```
+
+The Emitter prints `EVT emitter_ready`, `EVT emitter_cmd`, `EMIT_DONE trial=... t_ms=...` and
+`EMIT_DRIVE_OFF` markers, so a log of an Emitter-driven run can be aligned with the Analyzer's trials.
+
+## Runtime gate chain
+
+One occurrence becomes one `OccurrenceVerdict` (`src/detection/evaluation/OccurrenceVerdict.h`),
+rendered by `makeVerdict()` at the end of inspection (`src/detection/inspection/VerdictProjection.h`):
+
+```text
+accepted          the detector emitted an accepted Occurrence
+proposalMatched   the inspected occurrence met the plan's requirements
+supportMatched    the support requirement passed
+valid             the verdict is a usable pattern result
+behaviorEligible  ResonantBehavior lets it trigger a reaction now
+```
+
+The first four are verdict fields, decided in detection. `behaviorEligible` is decided in
+`src/behavior/ResonantBehavior.*` from the verdict plus `FieldState` and the behavior timing
+(wait, refractory, self-suppression, idle, rest). `ResonantBehavior::BehaviorDecision` lists every
+reason a valid verdict is not acted on; the Node prints it as `decision=` in the event log.
+Older docs name the first two `patternAccepted` and `patternMatched`; same gates.
+
+## Where do I change this knob
+
+```text
+detector thresholds, timing       PARAM SET detection.scalar_* (live)   defaults: DetectionProfile.h
+listening band                    PARAM SET detection.band_*             defaults: RuntimeDefaults.h (kDefaultNetworkBand*)
+inspector medium limits           PARAM SET detection.amp_medium | contrast_medium
+answer timing, idle, rest         PARAM SET behavior.*                   defaults: BehaviorProfile.h
+hop train, idle announce, silent  PARAM SET output.*                     defaults: RuntimeDefaults.h, NodeRoster.h
+radio                             PARAM SET node.radio_enabled
+tone level                        I2S_TONE_AMPLITUDE (build flag / RuntimeDefaults.h)
+chirp frequency                   CHIRP_FREQUENCY_HZ (platformio.ini)
+pins, I2S slots                   BoardConfig.h
+startup quiet threshold           kRbStartupQuietThreshold (ResonantNodeApp.cpp)
+Analyzer detector knobs           PARAM scalar_<key>=<value> (flat, per run)
+```
+
+Live changes are lost on reboot unless `PARAM SAVE`d. Changing a default header is a tuning pass
+with its own log entry, not a drive-by.
+
+## Bench workflow
+
+Run SEQ tests with `tools/bench/seqrun.py`, compare runs with `tools/bench/seqcmp.py`, build
+replay corpora from RAW captures with `tools/bench/rawcorpus.py`. Hardware evidence is committed
+on the `bench` branch, checked out as a worktree at `bench/` (its `README.md` has the session
+layout). A gate result cites a `bench/sessions/...` path, never a run that only exists in `logs/`.
+
+## Source map
+
+```text
+src/detection/      profiles, detectors, features, occurrences, inspection (+ makeVerdict), field state, DetectionRuntime
+src/detection/analyzer/   pure Analyzer types and rules only (no mode code)
+src/behavior/       ResonantBehavior and BehaviorGateConfig
+src/output/         ChirpOutput, SoundOutput, OutputRequest / OutputStatus
+src/audio/, src/hal/  signal chain and I2S input / output
+src/net/            ESP-NOW frames for NET commands
+src/modes/resonant|analyzer|emitter/   per-mode command handling and wiring
+src/app/            board config, runtime defaults, roster, param ids, NVS store, serial
+lib/ParamRegistry/  the param registry (no src/ includes)
+test/, test/fixtures/   on-device and host suites, replay corpus
+```

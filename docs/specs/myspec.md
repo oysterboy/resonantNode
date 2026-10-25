@@ -40,6 +40,17 @@ This document describes the current intended architecture and the boundaries tha
 
 It is not a pass-by-pass refactor history.
 
+It is not an operator manual. Command syntax, knob and param names, default
+values and config sites live in `docs/notes_manual.md` (the guide) and in the
+code; the roadmap backlog lives in `docs/roadmaps/`. The spec holds what must
+stay true for the code to be correct: the chain, each module's owns / must not
+own, the numeric-domain contract, and interface shapes other code or tools
+depend on. A sentence belongs here if getting it wrong would force a refactor
+doc; if getting it wrong would only make an operator type the wrong command, it
+belongs in the guide. The spec names a value only where that value is a
+contract (a fixed domain range, a field layout a tool parses), never a tunable
+default.
+
 ---
 
 ## 2. Architecture Principle
@@ -1048,20 +1059,9 @@ SAMPLES_NOTE trial=<n> input=<selected_detector_input> rows_cap=<fixed> sample_m
 SAMPLES_END trial=<n>
 ```
 
-Useful knobs are:
-
-```text
-sampleFirst
-sampleEvery
-sampleLead
-sampleTail
-sampleStep
-sampleMax
-```
-
-`sampleMax` is the row budget over all dumped trials (default 5000). Each
-trial must also fit the fixed `sampleRows` capacity (256 rows); the defaults
-(lead 50 ms, tail 800 ms, step 4 ms) give 213 rows per trial.
+The row budget is bounded per trial and over the run; the knobs that set the
+window, the step and the budgets, and their current defaults, are operating
+detail: `docs/notes_manual.md`, "Sample dump", and `SEQ help` on the board.
 
 ---
 

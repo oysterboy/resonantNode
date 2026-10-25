@@ -1,7 +1,7 @@
 // Node status output (step 10 item 9, NODE-004): RB STATUS, the RB summaries, the
 // boot-time signal config, and the hop_check / plan_check lines. Moved verbatim
 // from ResonantNodeApp.cpp; handleDetectCommand is now printRbStatus (it was
-// RB STATUS under the wrong name, boundary map docs/refactors/step10-boundary-map.md).
+// RB STATUS under the wrong name, boundary map docs/refactors/archive/step10-boundary-map.md).
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
 #include <string.h>

@@ -84,6 +84,16 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   `chirpPatternName()` (the Node's and NodeDebug's copies gone); `ResonantBehavior.h` and `ResonantNodeDebug.h`
   include it, not `ChirpOutput.h`; BOM off `ResonantBehavior.h`. Host: 68 tests pass (g++ harness, PlatformIO's
   registry is blocked in this container), T2h byte-identical (sha c4bf73ec), include direction strict 0. T1 on CI.
+- 2026-10-25, item 2: comment drift and hygiene. DetectionProfile.h (stale "default 20000 / 2500", "pattern
+  rules", the duplicated minTransientPeakStrength line, the second include guard); First Difference named as the
+  default in AudioSourceI2S / AudioSelfTest; tone level 0.3 in RuntimeDefaults / I2sToneOutput; the three
+  micros-wrap.md and the step10-boundary-map / damp-bench-check pointers to archive/; build.yml and
+  include_direction.py "warning only until ANA-003"; the Node's garbled Does-NOT line, the stacked banners after
+  the split, the Transitional / RB BEHAV / RB DETECT leftovers (boot banner line now `RB PROFILE detail`); the
+  three new Node TUs lose the pasted preamble's unused headers; Analyzer `build="pass-c"` is BUILD_VERSION (never
+  printed); BOM off MagnitudeWindow.h; test_net_frame's raw control bytes are escapes (git diffs it again);
+  FreqBandStream's public constants in the public section; test/ and lib/ READMEs say what is there. Host 68/68,
+  T2h byte-identical, include direction strict.
 
 ## Decisions recorded in this pass
 

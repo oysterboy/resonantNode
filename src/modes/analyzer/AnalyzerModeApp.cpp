@@ -873,7 +873,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.context.trigger = _sequenceTest.externalEmitter ? "observe" : "chirp";
     report.context.target = "tone";
     report.context.timestampMs = _sequenceTest.currentTrialEndMs;
-    report.context.build = "pass-c";
+    report.context.build = BUILD_VERSION;
 
     report.expected.triggerMs = _sequenceTest.currentTrialStartMs;
     report.expected.windowStartMs = _sequenceTest.currentTrialStartMs;

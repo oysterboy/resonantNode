@@ -565,7 +565,7 @@ private:
     // writer task runs only during a SELFTEST (begin() ... end()).
     I2sToneOutput _selfTestTone;
 #endif
-    AudioSignal _audioSignal; // Legacy audio framing helper for detector input packets.
+    AudioSignal _audioSignal; // Audio framing for detector input packets (the same class the Node runs).
     mutable detection::DetectionRuntime _detection; // Canonical detector runtime and feature history.
     mutable uint32_t _lastPrintedHistoryIncompleteCount = 0; // Issue #26 diagnostics: last SEQ_HISTDBG count printed.
     uint64_t _diagSampleWorkUs = 0; // Issue #26 diagnostics: time spent in the per-sample loop.

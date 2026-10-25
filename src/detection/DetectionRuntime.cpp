@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include <Arduino.h>
-#include <string.h>
 
 // DetectionRuntime pipeline execution in source order.
 namespace detection {

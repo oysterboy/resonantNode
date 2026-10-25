@@ -4,22 +4,10 @@
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
 #include <string.h>
-#include <new>
-#include <esp_system.h>
-#include "../../app/RuntimeDefaults.h"
-#include "../../app/TimingUtils.h"
-#include "../../app/BuildInfo.h"
-#include "../../app/NodeRoster.h"
-#include "../../detection/HopGapContract.h"
 #include "../../detection/InspectionPlanContract.h"
-#include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
-#include "../../detection/inspection/InspectionNames.h"
-#include "../../detection/evaluation/VerdictNames.h"
 #include <ParamRegistry.h>
 #include "../../app/ParamIds.h"
-#include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
-#include <new>
 #include "ResonantNodeInternal.h"
 
 using namespace node_internal;

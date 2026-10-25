@@ -227,8 +227,8 @@ bool AudioSourceI2S::readRawSample(int& sample, uint64_t& sampleTimeUs64) {
         return false;
     }
     const uint8_t* rawBytes = frameBytes + kMicSlot * static_cast<size_t>(bytesPerSample);
-    // Keep the First Difference state current, so the next block does not
-    // difference across the RAW gap and emit one spurious spike.
+    // Keep the preprocessor state current, so the next block does not
+    // filter across the RAW gap and emit one spurious spike.
     (void)_preprocessor.process(static_cast<int32_t>(decodePcmSample(rawBytes, bytesPerSample)));
 
 #ifdef RAW_I2S_UNDECODED

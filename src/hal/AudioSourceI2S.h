@@ -17,8 +17,8 @@
 AudioSourceI2S
 
 ESP32 I2S implementation of AudioSource.
-Owns I2S_NUM_0: setup, block reads, mic slot selection, First Difference
-preprocessing, raw-sample diagnostics, and approximate block timing.
+Owns I2S_NUM_0: setup, block reads, mic slot selection, PCM
+preprocessing (DC blocker by default, First Difference selectable), raw-sample diagnostics, and approximate block timing.
 On a full-duplex board (D-AMP, see BoardConfig.h) it also installs the TX
 side and lets one writer (I2sToneOutput) feed it through writeTx(); the
 port mutex keeps a writer out while begin() reinstalls the driver.

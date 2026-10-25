@@ -143,11 +143,10 @@ constexpr int kDefaultAudioI2SDmaBufLen = I2S_DMA_BUF_LEN;
 constexpr int kDefaultAudioI2SDmaBufCount = I2S_DMA_BUF_COUNT;
 constexpr PcmPreprocessMode kPcmPreprocessMode = static_cast<PcmPreprocessMode>(PCM_PREPROCESS_MODE_VALUE);
 constexpr unsigned long kDefaultAudioSignalStartupWarmupMs = 2000UL;
-// I2S tone output (D-AMP): sine peak as a fraction of full scale, and the
-// on/off ramp. 0.3 since 2026-10-09 (#20): at 110 cm the stock
-// TonalPulseScalar profile goes from 0/50 at 0.1 to 50/50 at 0.3 (amp
-// evidence is the limit, not the tone itself); the amp is linear at 0.3.
-// docs/refactors/damp-bench-check.md section 5.
+// I2S tone output (D-AMP): sine peak as a fraction of full scale (the
+// I2S_TONE_AMPLITUDE flag above: 0.5 since 2026-10-21, 0.3 before; the 0.1 ->
+// 0.3 history is in docs/refactors/archive/damp-bench-check.md section 5) and
+// the on/off ramp.
 constexpr float kDefaultI2sToneAmplitude = I2S_TONE_AMPLITUDE;
 constexpr uint32_t kDefaultI2sToneRampMs = 5UL;
 

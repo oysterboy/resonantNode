@@ -1,5 +1,5 @@
 // Time-base math across the 32-bit us wrap (71.6 min) and the 32-bit ms wrap
-// (49.7 days); issue #30, docs/refactors/micros-wrap.md. Runs on-device like
+// (49.7 days); issue #30, docs/refactors/archive/micros-wrap.md. Runs on-device like
 // test_analyzer_pass_rules (no host toolchain on the bench machine):
 //   pio test -e esp32dev-analyzer -f test_timebase
 #include <Arduino.h>

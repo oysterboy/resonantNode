@@ -39,7 +39,7 @@ Does NOT:
 - implement the behavior state machine
 - classify patterns
 - generate waveforms
-- own probe thresholds as diagnostics, not core behavior logic
+- own detector thresholds or inspection rules (DetectionProfile, live detection.* params)
 
 File structure:
 - local helpers and constants
@@ -100,7 +100,7 @@ void printProfileComposition(const detection::DetectionProfile& profile) {
 }
 
 void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
-    serialOut().println("RB DETECT");
+    serialOut().println("RB PROFILE detail");
     serialOut().print("  kind=");
     serialOut().println(detection::detectionProfileName(profile.kind));
     serialOut().print("  detectorSelection=");
@@ -547,7 +547,7 @@ void Node::updateRbBaselineState(unsigned long now) {
     }
 }
 
-// --- parameter setup ---
+// --- band and hop composition ---
 
 void Node::applyBandParams() {
     // An empty or inverted band means "single target at the chirp tone".
@@ -626,8 +626,8 @@ void Node::configureI2SParameters() {
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
 
-    // Transitional node wiring: keep the active tone and detector target aligned here
-    // while the node still runs frequency-based profiles.
+    // Boot wiring: the chirp tone and the detector's single target start aligned;
+    // applyBandParams() replaces the target with the band when detection.band_* is set.
     _chirpOutput.setToneHz(runtime::kDefaultChirpFrequencyHz);
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _audioSignal.setBaselineTrackingQuietThreshold(20);
@@ -853,9 +853,7 @@ void Node::updateEmissions(unsigned long now) {
     }
 }
 
-// --- serial command handling ---
-
-// --- command handlers ---
+// --- detection frame -> Behavior -> SoundOutput ---
 
 void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
                               unsigned long now,
@@ -940,4 +938,3 @@ detection::FrequencyBandMeasurementPacket Node::captureFrequencyMeasurementPacke
     return detection::buildFrequencyMeasurementPacket(_freqBandStream, audioSamplePacket);
 }
 
-// --- remote params over the radio (PAR-013, step 11a) ---

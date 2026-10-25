@@ -1040,6 +1040,13 @@ the previous gate open unless the step says it can run in parallel.
    back per node. Gate: a PARAM SET / SAVE to all five by radio applied and answered by each, persisted over a
    reboot; the radio's cost measured on a long run (0 dropped buffers, free heap, loop stack); host tests for the
    frame format.
+   Progress 2026-10-25 (bench/sessions/2026-10-25-step11a-ota-params; decisions/2026-10-25-remote-params-espnow.md):
+   ESP-NOW in src/net/, all five on it. By radio: PING, GET and SET answered by all four others, `NET E3 PARAM
+   SAVE` kept over a reboot, `NET * PARAM SAVE` on all five. Cost: 0 dropped buffers with the radio idle (120 s)
+   and for PING / GET / SET; a radio DUMP cost the USB gateway up to 52 while it printed, so DUMP / LIST stay on
+   USB; PARAM SAVE drops 8 per node by serial or radio (the NVS write, 10d's cost, measured here first). Heap
+   94 KB free, loop stack >= 13.4 KB free, flash 65 %. Host: test_net_frame 5 tests. Open for the gate: the
+   long run with the radio on and the nodes sounding.
 
 11b. [TODO] DET-015 shape inspector, host phase. (issue #59)
    Owner 2026-10-25. The Node hears the hop train only (decisions/2026-10-23-node-hears-the-hop-train-only.md);

@@ -349,8 +349,9 @@ void Node::begin() {
         } else {
             _hopRotation = bins > 0 ? static_cast<uint32_t>(ESP.getEfuseMac() % bins) : 0U;
         }
+        _nodeName = me != nullptr ? me->name : "unknown";
         serialOut().print("RB node name=");
-        serialOut().print(me != nullptr ? me->name : "unknown");
+        serialOut().print(_nodeName);
         serialOut().print(" rotation_source=");
         serialOut().println(me != nullptr ? "roster" : "mac");
     }
@@ -365,6 +366,19 @@ void Node::begin() {
             serialOut().print("RB node rotation_source=stored rotation=");
             serialOut().println(_hopRotation);
         }
+    }
+    // The radio comes up after the stored values, so node.radio_enabled saved
+    // as 0 keeps it off (PAR-013, step 11a).
+    if (_radioEnabled) {
+        const bool up = _net.begin();
+        serialOut().print("RB net started=");
+        serialOut().print(up ? 1 : 0);
+        serialOut().print(" channel=");
+        serialOut().print(NET_CHANNEL);
+        serialOut().print(" net_id=");
+        serialOut().println(NET_ID);
+    } else {
+        serialOut().println("RB net started=0 reason=node.radio_enabled=0");
     }
     printSignalConfig();
     printHopGapCheck();
@@ -655,6 +669,7 @@ void Node::registerOutputParams() {
     _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &_idleAnnounceHz, 0U, 7900U);
     _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &_idleAnnounceMs, 20U, 2000U);
     _paramRegistry.addBool(ParamId::Output_Silent, ModuleId::Output, "output.silent", &_silent);
+    _paramRegistry.addBool(ParamId::Node_RadioEnabled, ModuleId::Node, "node.radio_enabled", &_radioEnabled);
 }
 
 // The registered detection params (detection.scalar_*, detection.band_*) applied
@@ -833,6 +848,7 @@ void Node::update() {
 
     _debug.noteCoreLoopUs(nowUs);
     pollSerialCommands();
+    pollNet();
 
     // Update input first, then detection, then behavior, so each layer sees the
     // latest state from the layer below it.
@@ -1074,6 +1090,10 @@ void Node::pollSerialCommands() {
 // --- command handlers ---
 
 void Node::handleSerialLine(const char* line) {
+    if (startsWithTokenIgnoreCase(line, "NET")) {
+        handleNetCommand(line);
+        return;
+    }
     if (equalsIgnoreCase(line, "RB help")) {
         serialOut().println("RB CMD: PARAM SET behavior.<key> <value> (Behavior timing, rest and idle call; PARAM LIST)");
         serialOut().println("RB CMD: RB STATUS");
@@ -1090,6 +1110,7 @@ void Node::handleSerialLine(const char* line) {
         serialOut().println("RB CMD: PARAM GET <path>");
         serialOut().println("RB CMD: PARAM SET <path> <value>");
         serialOut().println("RB CMD: PARAM DUMP");
+        serialOut().println("RB CMD: NET <target|*> PARAM ... | NET <target|*> NET PING | NET STATUS (remote params by radio)");
         serialOut().println("RB CMD: SELFTEST | SELFTEST external wait_ms=10000 | SELFTEST chirp n=5 | SELFTEST help");
         return;
     }
@@ -1590,4 +1611,209 @@ detection::FrequencyBandMeasurementPacket Node::captureFrequencyMeasurementPacke
     return detection::buildFrequencyMeasurementPacket(_freqBandStream, audioSamplePacket);
 }
 
+// --- remote params over the radio (PAR-013, step 11a) ---
 
+namespace {
+
+// The reply of one remote command: every line it prints goes back as a reply
+// frame. A line is held until the next one arrives, so the last frame carries
+// the "last" flag.
+// Lines are packed into frames, separated by kNetLineSep (a DUMP of 38 lines
+// is ~13 frames, not 38); the gateway prints one line per original line.
+constexpr char kNetLineSep = '\x1F';
+
+struct NetReply {
+    NodeNet* net = nullptr;
+    const uint8_t* mac = nullptr;
+    uint16_t seq = 0;
+    const char* name = nullptr;
+    uint8_t part = 0;
+    char held[net::kMaxText];
+    size_t heldLen = 0;
+
+    void send(bool last) {
+        net->sendReply(mac, seq, part++, last, name, held, heldLen);
+        heldLen = 0;
+    }
+
+    static void tee(void* ctx, const uint8_t* data, size_t len) {
+        NetReply& r = *static_cast<NetReply*>(ctx);
+        while (len > 0 && (data[len - 1] == '\n' || data[len - 1] == '\r')) {
+            --len;
+        }
+        if (len == 0) {
+            return;
+        }
+        if (len > net::kMaxText) {
+            len = net::kMaxText;
+        }
+        const size_t need = len + (r.heldLen > 0 ? 1 : 0);
+        if (r.heldLen + need > sizeof(r.held)) {
+            r.send(false);
+        }
+        if (r.heldLen > 0) {
+            r.held[r.heldLen++] = kNetLineSep;
+        }
+        memcpy(r.held + r.heldLen, data, len);
+        r.heldLen += len;
+    }
+};
+
+void printMac(const uint8_t mac[6]) {
+    static const char* kHex = "0123456789ABCDEF";
+    for (int i = 0; i < 6; ++i) {
+        if (i > 0) {
+            serialOut().print(':');
+        }
+        serialOut().print(kHex[mac[i] >> 4]);
+        serialOut().print(kHex[mac[i] & 0x0F]);
+    }
+}
+
+}  // namespace
+
+// NET STATUS, or NET <target> <command line>: this node is the gateway. The
+// command is broadcast; a target that includes this node runs it here as well.
+void Node::handleNetCommand(const char* line) {
+    const char* rest = line + 3;
+    while (*rest == ' ') {
+        ++rest;
+    }
+    if (*rest == '\0' || equalsIgnoreCase(rest, "STATUS")) {
+        printNetStatus();
+        return;
+    }
+    char target[net::kTargetLen + 1] = {};
+    size_t n = 0;
+    while (rest[n] != '\0' && rest[n] != ' ' && n < net::kTargetLen) {
+        target[n] = rest[n];
+        ++n;
+    }
+    const char* text = rest + n;
+    while (*text == ' ') {
+        ++text;
+    }
+    if (!net::remoteCommandAllowed(text)) {
+        serialOut().println("NET ERR usage=NET <target|*> PARAM SET|GET|SAVE|LOAD|RESET ...|NET PING (DUMP and LIST over USB only)");
+        return;
+    }
+    if (strlen(text) > net::kMaxText) {
+        serialOut().println("NET ERR command_too_long");
+        return;
+    }
+    if (!_net.started()) {
+        serialOut().println("NET ERR radio_off");
+        return;
+    }
+    const uint16_t seq = _net.sendCommand(target, text);
+    serialOut().print("NET sent seq=");
+    serialOut().print(seq);
+    serialOut().print(" target=");
+    serialOut().print(target);
+    serialOut().print(" text=");
+    serialOut().println(text);
+    if (net::targetMatches(target, _nodeName)) {
+        if (equalsIgnoreCase(text, "NET PING")) {
+            printNetStatus();
+        } else {
+            handleParamCommand(text);
+        }
+    }
+}
+
+void Node::pollNet() {
+    _net.service(timebase::nowMs());
+    NodeNet::Received received;
+    // One frame per loop pass, and only with 4 KB free in the UART ring: a
+    // gateway printing a whole NET * PARAM DUMP (~160 lines) at once waited on
+    // the UART and dropped 52 audio DMA buffers (2026-10-25). Frames wait in the
+    // receive queue meanwhile; a full queue loses replies, never audio.
+    for (int handled = 0; handled < 1 && Serial.availableForWrite() > 4096 && _net.poll(received); ++handled) {
+        const net::Frame& f = received.frame;
+        if (f.type == net::FrameType::Reply) {
+            // One line per packed line; the part and last flag go on each.
+            const char* line = f.text;
+            while (true) {
+                const char* sep = strchr(line, kNetLineSep);
+                const size_t n = sep != nullptr ? static_cast<size_t>(sep - line) : strlen(line);
+                serialOut().print("NET reply from=");
+                serialOut().print(f.target);
+                serialOut().print(" seq=");
+                serialOut().print(f.seq);
+                serialOut().print(" part=");
+                serialOut().print(f.part);
+                serialOut().print(" last=");
+                serialOut().print(f.last && sep == nullptr ? 1 : 0);
+                serialOut().print(' ');
+                serialOut().write(reinterpret_cast<const uint8_t*>(line), n);
+                serialOut().println();
+                if (sep == nullptr) {
+                    break;
+                }
+                line = sep + 1;
+            }
+            continue;
+        }
+        if (!net::targetMatches(f.target, _nodeName)) {
+            continue;
+        }
+        runRemoteCommand(received);
+    }
+}
+
+void Node::runRemoteCommand(const NodeNet::Received& received) {
+    const net::Frame& f = received.frame;
+    serialOut().print("NET cmd from=");
+    printMac(received.mac);
+    serialOut().print(" seq=");
+    serialOut().print(f.seq);
+    serialOut().print(" target=");
+    serialOut().print(f.target);
+    serialOut().print(" text=");
+    serialOut().println(f.text);
+
+    NetReply reply;
+    reply.net = &_net;
+    reply.mac = received.mac;
+    reply.seq = f.seq;
+    reply.name = _nodeName;
+    serialOut().setTee(&NetReply::tee, &reply);
+    if (!net::remoteCommandAllowed(f.text)) {
+        serialOut().println("NET ERR not_allowed (only params and ping go by radio)");
+    } else if (equalsIgnoreCase(f.text, "NET PING")) {
+        printNetStatus();
+    } else {
+        handleParamCommand(f.text);
+    }
+    serialOut().setTee(nullptr, nullptr);
+    reply.send(true);
+    ++_net.stats().commandsRun;
+}
+
+void Node::printNetStatus() {
+    const NodeNet::Stats& st = _net.stats();
+    serialOut().print("NET node=");
+    serialOut().print(_nodeName);
+    serialOut().print(" started=");
+    serialOut().print(_net.started() ? 1 : 0);
+    serialOut().print(" build=");
+    serialOut().print(BUILD_GIT_SHA);
+    serialOut().print(" silent=");
+    serialOut().print(_silent ? 1 : 0);
+    serialOut().print(" uptime_s=");
+    serialOut().print(timebase::nowMs() / 1000UL);
+    serialOut().print(" rx=");
+    serialOut().print(st.rxFrames);
+    serialOut().print(" rejected=");
+    serialOut().print(st.rxRejected);
+    serialOut().print(" queue_full=");
+    serialOut().print(st.rxQueueFull);
+    serialOut().print(" tx=");
+    serialOut().print(st.txFrames);
+    serialOut().print(" tx_failed=");
+    serialOut().print(st.txFailed);
+    serialOut().print(" outbox_full=");
+    serialOut().print(st.txOutboxFull);
+    serialOut().print(" commands=");
+    serialOut().println(st.commandsRun);
+}

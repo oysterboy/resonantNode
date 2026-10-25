@@ -32,6 +32,15 @@ inline void serialOutFlush() {}
 
 class LineBufferedSerial : public Print {
 public:
+    // A copy of every flushed line (or partial line) for a second sink: the
+    // radio reply of a remote command (PAR-013, step 11a). nullptr = off.
+    using Tee = void (*)(void* ctx, const uint8_t* data, size_t len);
+    void setTee(Tee tee, void* ctx) {
+        flush();  // what was printed before belongs to no reply
+        _tee = tee;
+        _teeCtx = ctx;
+    }
+
     size_t write(uint8_t c) override {
         _buf[_len++] = c;
         if (c == '\n' || _len == sizeof(_buf)) {
@@ -49,6 +58,9 @@ public:
 
     void flush() override {
         if (_len > 0) {
+            if (_tee != nullptr) {
+                _tee(_teeCtx, _buf, _len);
+            }
             Serial.write(_buf, _len);
             _len = 0;
         }
@@ -61,6 +73,8 @@ public:
 private:
     uint8_t _buf[1024];
     size_t _len = 0;
+    Tee _tee = nullptr;
+    void* _teeCtx = nullptr;
 };
 
 inline LineBufferedSerial& serialOut() {

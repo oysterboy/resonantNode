@@ -17,6 +17,7 @@
 #include "../../detection/features/FreqBandStream.h"
 #include "../../output/ChirpOutput.h"
 #include "../../output/SoundOutput.h"
+#include "../../net/NodeNet.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/evaluation/OccurrenceVerdict.h"
 #include <ParamRegistry.h>
@@ -68,6 +69,11 @@ private:
     void handleParamCommand(const char* line);
     void applyParamModule(param::ModuleId module);
     void loadStoredParams();
+    // Remote params over the radio (PAR-013, step 11a).
+    void handleNetCommand(const char* line);
+    void pollNet();
+    void runRemoteCommand(const NodeNet::Received& received);
+    void printNetStatus();
     void applySilent();
     void startRbQuietBaseline();
     void resetRbCounters();
@@ -194,6 +200,9 @@ private:
     ChirpOutput _chirpOutput;
     // Executes the Node's emissions and keeps their status (OUT-002/003, step 10f).
     SoundOutput _soundOutput{_chirpOutput};
+    NodeNet _net;
+    bool _radioEnabled = true;          // node.radio_enabled, read at boot
+    const char* _nodeName = "unknown";  // from the roster (app/NodeRoster.h)
 
     // Occurrence / detection / behavior pipeline.
     AudioSignal _audioSignal;

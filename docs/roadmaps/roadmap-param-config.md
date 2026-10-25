@@ -459,7 +459,8 @@ Without visibility, live tuning will create hidden drift between nodes.
 
 ### PAR-013 - remote param update
 
-Status: DEFERRED
+Status: IN PROGRESS 2026-10-25 (step 11a): ESP-NOW transport through the serial PARAM path, on all five boards;
+long-run radio cost open (decisions/2026-10-25-remote-params-espnow.md). The original note:
 
 ```text
 Add remote transports only after Serial and persistence are stable.

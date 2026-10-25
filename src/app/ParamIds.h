@@ -102,6 +102,9 @@ enum class ParamId : uint16_t {
     // Silent (2026-10-23): the node listens and reports but never sounds;
     // PARAM SAVE keeps it across a reboot.
     Output_Silent,
+    // The radio for remote params (PAR-013, step 11a): on by default, read at
+    // boot only (PARAM SET + SAVE, then a reboot, turns it off).
+    Node_RadioEnabled,
 };
 
 }  // namespace param

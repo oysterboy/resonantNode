@@ -193,6 +193,17 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(_rbValidPatternCount);
     serialOut().print(" heard.strength_sum=");
     serialOut().print(static_cast<unsigned long long>(_rbValidStrengthSum));
+    // The radio's cost (step 11a): frames, and the heap it took.
+    serialOut().print(" net.started=");
+    serialOut().print(_net.started() ? 1 : 0);
+    serialOut().print(" net.rx=");
+    serialOut().print(_net.stats().rxFrames);
+    serialOut().print(" net.tx_failed=");
+    serialOut().print(_net.stats().txFailed);
+    serialOut().print(" heap.free=");
+    serialOut().print(static_cast<unsigned long>(esp_get_free_heap_size()));
+    serialOut().print(" heap.free_min=");
+    serialOut().print(static_cast<unsigned long>(esp_get_minimum_free_heap_size()));
     serialOut().print(" detection.verdict_queue_overflows=");
     serialOut().print(_detection.verdictQueueOverflowCount());
     serialOut().print(" loop.stack_free_min_bytes=");

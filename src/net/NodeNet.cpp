@@ -9,6 +9,11 @@
 #include <freertos/queue.h>
 #include <string.h>
 
+#include <new>
+
+#include "../app/TimeBase.h"
+#include "../app/TimingUtils.h"
+
 namespace {
 
 struct RawFrame {
@@ -51,7 +56,8 @@ bool NodeNet::begin() {
         return true;
     }
     gRxQueue = xQueueCreate(kQueueDepth, sizeof(RawFrame));
-    if (gRxQueue == nullptr) {
+    _outbox = new (std::nothrow) Outgoing[kOutbox];
+    if (gRxQueue == nullptr || _outbox == nullptr) {
         return false;
     }
     WiFi.mode(WIFI_STA);
@@ -83,13 +89,17 @@ bool NodeNet::ensurePeer(const uint8_t mac[6]) {
     return esp_now_add_peer(&peer) == ESP_OK;
 }
 
-bool NodeNet::enqueue(const uint8_t mac[6], const net::Frame& frame) {
+bool NodeNet::enqueue(const uint8_t mac[6], const net::Frame& frame, unsigned long notBeforeMs) {
+    if (_outbox == nullptr) {
+        return false;
+    }
     if (_outCount >= kOutbox) {
         ++_stats.txOutboxFull;
         return false;
     }
     Outgoing& o = _outbox[(_outHead + _outCount) % kOutbox];
     memcpy(o.mac, mac, 6);
+    o.notBeforeMs = notBeforeMs;
     o.frame = frame;
     ++_outCount;
     return true;
@@ -97,6 +107,9 @@ bool NodeNet::enqueue(const uint8_t mac[6], const net::Frame& frame) {
 
 void NodeNet::service(unsigned long nowMs) {
     if (!_started || _outCount == 0 || nowMs - _lastTxMs < kTxSpacingMs) {
+        return;
+    }
+    if (_outbox[_outHead].notBeforeMs != 0 && timing::beforeDeadline(nowMs, _outbox[_outHead].notBeforeMs)) {
         return;
     }
     Outgoing& o = _outbox[_outHead];
@@ -147,7 +160,24 @@ bool NodeNet::sendReply(const uint8_t mac[6], uint16_t seq, uint8_t part, bool l
     frame.last = last;
     net::setTarget(frame, myName);
     net::setText(frame, text, len);
-    return enqueue(mac, frame);
+    // The first part goes at once, the rest kReplySpacingMs apart.
+    const unsigned long now = timebase::nowMs();
+    unsigned long at = 0;
+    if (part > 0) {
+        at = _lastReplyAtMs + kReplySpacingMs;
+        if (timing::beforeDeadline(at, now)) {
+            at = now;
+        }
+        if (at == 0) {
+            at = 1;
+        }
+    } else {
+        _lastReplyAtMs = now;
+    }
+    if (part > 0) {
+        _lastReplyAtMs = at;
+    }
+    return enqueue(mac, frame, at);
 }
 
 bool NodeNet::poll(Received& out) {

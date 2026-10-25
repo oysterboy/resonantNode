@@ -189,6 +189,28 @@ Node params (since step 10, `RB PARAM` and `RB BEHAV` are gone; the lines below 
 - Show Analyzer SEQ help:
   - `SEQ help`
 
+## Remote Commands (radio, step 11a)
+
+Any Node on USB is the gateway: `NET <target> <command>`, target `*` (all) or a name (`E1`..`E5`). Every Node
+command goes (PARAM, RB, SELFTEST) plus `NET PING`; each node answers with what it would print on serial, shown
+as `NET reply from=E3 seq=N part=P <line>` and `NET reply from=E3 seq=N done parts=K`. `NET STATUS` shows the
+gateway's own radio counters. The radio is on by default; `PARAM SET node.radio_enabled 0`, `PARAM SAVE`, reboot
+turns it off.
+
+Operator rules (the firmware does not check these, except where noted):
+- `SELFTEST` by radio: one node at a time, all others silent (`NET * PARAM SET output.silent 1` first). The
+  gateway and the node refuse `NET * SELFTEST`. The test blocks its node for seconds and plays tones.
+- `RB CALL` makes the node sound now (the start of a chain): only when you want the network to run.
+- `RB PROFILE name=...` resets live detection and behavior values to the profile's (it lists them).
+- `RB rebase` blocks its node for about a second (audio baseline), as at boot.
+- `PARAM SAVE` costs every node it reaches ~8 audio buffers (the flash write); `NET * PARAM SAVE` hits all
+  nodes at once. Save outside a session.
+- Large replies are slow on purpose: a node sends one reply frame per 150 ms, so `NET * PARAM DUMP` takes ~2 s
+  and `NET * RB STATUS` ~1 s; the gateway keeps its audio. Do not cut the wait short with another command: a new
+  command to a node ends its reply still in progress.
+- Anyone with ESP-NOW on channel 1 and the network id can send these commands: fine for the installation, not for
+  a public space (decisions/2026-10-25-remote-params-espnow.md).
+
 ## Route A Code Points
 
 The code-owned config sites are listed above in the detection and behavior sections.

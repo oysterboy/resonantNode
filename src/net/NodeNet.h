@@ -27,8 +27,12 @@ command and replying happen in the Node's loop through poll(). Node build only.
 class NodeNet {
 public:
     static constexpr int kCommandRepeats = 3;
-    static constexpr size_t kOutbox = 24;
+    static constexpr size_t kOutbox = 48;
     static constexpr unsigned long kTxSpacingMs = 4;
+    // Parts after the first of one reply go this far apart: four nodes answering
+    // a PARAM DUMP then reach the gateway at ~6 KB/s, under what its USB serial
+    // prints (11.5 KB/s at 115200), so the gateway keeps its audio.
+    static constexpr unsigned long kReplySpacingMs = 150;
 
     struct Received {
         uint8_t mac[6];
@@ -65,17 +69,19 @@ public:
 private:
     struct Outgoing {
         uint8_t mac[6];
+        unsigned long notBeforeMs;
         net::Frame frame;
     };
-    bool enqueue(const uint8_t mac[6], const net::Frame& frame);
+    bool enqueue(const uint8_t mac[6], const net::Frame& frame, unsigned long notBeforeMs = 0);
     bool ensurePeer(const uint8_t mac[6]);
 
     bool _started = false;
     uint16_t _nextSeq = 1;
     net::SeqFilter _filter;
     Stats _stats;
-    Outgoing _outbox[kOutbox];
+    Outgoing* _outbox = nullptr;  // kOutbox entries (~13 KB), on the heap at begin(): static RAM is full
     size_t _outHead = 0;
     size_t _outCount = 0;
     unsigned long _lastTxMs = 0;
+    unsigned long _lastReplyAtMs = 0;
 };

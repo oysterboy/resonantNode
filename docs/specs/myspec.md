@@ -1140,20 +1140,26 @@ node-specific variation
 slow time drift
 ```
 
-These variations belong to behavior configuration and behavior decision logic.
-
-They do not belong to:
+These variations are Behavior's decisions: which kind of emission, whether to
+answer at all, how a dense field changes the answer. They do not belong to:
 
 ```text
-Node
-SoundOutput hardware layer
+SoundOutput (executes what it is asked)
 Detector
 DetectionProfile
 ```
 
-`SoundOutput` executes requested frequency, duration, gain, or output variants.
-
-It does not decide artistic modulation.
+The Node's part in them is composition, not decision (7.2): Behavior names
+the kind of emission (`SignalShape`: the network signal, or a plain chirp),
+the Node turns that into one `OutputRequest` from the detection band's bin
+grid and the `output.*` params (which bins, in what order, how many steps,
+pulse and gap length), because Behavior does not know the band grid.
+Decided 2026-10-23 (`decisions/2026-10-23-soundoutput-executes-node-composes.md`);
+until Behavior variants exist (OUT-004, NODE-005's ResonantProgram), the
+Node is the one composer. A variation that needs Behavior to state the
+request itself (a program that picks bins or shortens the train by mood)
+is the point where composition moves into Behavior and the Node only
+forwards; that move is OUT-004, not a drive-by.
 
 Detection tolerance must be configured separately from emitted-output variation.
 
@@ -1181,53 +1187,75 @@ current gate it is rejected (lab note 2026-10-16 section 10).
 
 `SoundOutput` is a resource / actuator layer.
 
-Behavior requests sound.
+Behavior decides sound. The Node composes the request. SoundOutput performs
+sound.
 
-SoundOutput performs sound.
-
-SoundOutput may expose:
-
-```text
-emitClick()
-emitBeep(duration, frequency, amplitude)
-emitChirp(profile)
-stop()
-isBusy()
-```
-
-The implementation may use:
+The layering, top to bottom:
 
 ```text
-GPIO piezo
-PWM piezo
-BTL piezo
-I2S amp
-speaker
-exciter
+ResonantBehavior      decides: answer or not, which kind (SignalShape), when
+Node (mode glue)      composes one OutputRequest from the decision, the band grid
+                      and the output.* params; forwards OutputStatus and the
+                      finished time back to Behavior (own-emit suppression)
+SoundOutput           executes one OutputRequest at a time, validates it against
+                      OutputLimits, keeps OutputStatus
+ChirpOutput           the chirp device: patterns, pulse trains, sweeps on a ToneOutput
+ToneOutput            the hardware: I2S amp today, piezo variants as the fallback
 ```
 
-Behavior should not care which output hardware path is active.
+Behavior must not include a device header. The vocabulary Behavior speaks
+(`ChirpPattern`, `OutputRequest`, `OutputStatus`) lives in
+`src/output/OutputRequest.h`, which includes no device; `ChirpOutput` and the
+`ToneOutput` implementations are below it. A ToneOutput implementation may use:
+
+```text
+I2S amp (D-AMP, the node since 2026-10-09)
+GPIO / PWM / BTL piezo (discontinued, kept compiling)
+speaker, exciter (future)
+```
+
+Nothing above `ChirpOutput` may know which one is active.
 
 ---
 
 ### 7.2 OutputRequest / OutputStatus
 
-Longer-term output boundary should separate:
+The boundary between deciding, composing and performing is three types:
 
 ```text
 OutputRequest:
-    behavior-requested output action
+    one emission, fully specified and device-free: its kind (a chirp pattern,
+    the hop train, the idle call), the frequencies per step, pulse and gap
+    length, the announcement. Composed by the Node; nothing below it adds
+    content.
+
+OutputLimits:
+    what the device can play. SoundOutput validates a request against them
+    before anything sounds; a reject names its reason (OutputReject). The
+    output.* params are bound inside the limits, so a reject is a composition
+    bug, not an operating condition.
 
 OutputStatus:
-    busy / active / done / rejected / error status
-
-SoundOutput:
-    hardware execution
+    phase (idle / playing / announce / gap / call), the request's kind, the
+    counts started / done / rejected, the last reject, the last start and
+    end time, the planned span. Printed as output.* in RB STATUS.
 ```
 
-Behavior may use `OutputStatus` to avoid overlapping actions or to interpret self-suppression.
+Rules:
 
-SoundOutput must not decide pattern meaning or artistic response policy.
+```text
+SoundOutput executes one request at a time and owns its sequencing (the
+idle call's announcement, gap and call; the hop train's steps).
+SoundOutput must not decide pattern meaning or artistic response policy,
+and must not change a configured chirp behind the composer's back.
+Behavior reads OutputStatus (busy, finished time) to avoid overlapping
+emissions and to size its own-emit suppression; it never drives ChirpOutput.
+A request that does not start falls back to the plain pattern once (the
+composer's rule); if nothing starts, the emission ends at once so Behavior
+does not wait in Chirping.
+The self-test's amp check is the one explicit bypass: it plays fixed test
+tones on the ToneOutput directly, as a hardware check, outside this chain.
+```
 
 ---
 

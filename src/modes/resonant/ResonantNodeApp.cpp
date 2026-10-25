@@ -249,19 +249,6 @@ const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now
     return behavior.stateCode() == 0 ? "idle" : behavior.stateName();
 }
 
-const char* chirpPatternName(ChirpOutput::ChirpPattern pattern) {
-    switch (pattern) {
-        case ChirpOutput::ChirpPattern::Single:
-            return "single";
-        case ChirpOutput::ChirpPattern::Triple:
-            return "triple";
-        case ChirpOutput::ChirpPattern::Idle:
-            return "idle";
-    }
-
-    return "unknown";
-}
-
 // --- constructors ---
 
 Node::Node(int ledPin, int chirpPin, int chirpBtlPin)
@@ -801,7 +788,7 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
     if (_hopEnabled && _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal &&
         composeHopTrain(request)) {
         request.kind = OutputRequest::Kind::HopTrain;
-    } else if (_idleAnnounceHz > 0 && chirpPattern == ChirpOutput::ChirpPattern::Idle) {
+    } else if (_idleAnnounceHz > 0 && chirpPattern == ChirpPattern::Idle) {
         request.kind = OutputRequest::Kind::IdleCall;
         request.announceHz = _idleAnnounceHz;
         request.announceMs = _idleAnnounceMs;

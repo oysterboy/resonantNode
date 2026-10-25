@@ -2,6 +2,7 @@
 #include <Arduino.h>
 
 #include "../app/RuntimeDefaults.h"
+#include "OutputRequest.h"
 #include "ToneOutput.h"
 
 /*
@@ -16,12 +17,6 @@ Does NOT:
 
 class ChirpOutput {
 public:
-    enum class ChirpPattern {
-        Single,
-        Triple,
-        Idle
-    };
-
     explicit ChirpOutput(ToneOutput& toneOutput, uint32_t toneHz = runtime::kDefaultChirpFrequencyHz);
 
     void begin();

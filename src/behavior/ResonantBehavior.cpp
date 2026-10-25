@@ -84,7 +84,7 @@ void ResonantBehavior::resetState() {
     _outputBusy = false;
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
-    _chirpPattern = ChirpOutput::ChirpPattern::Single;
+    _chirpPattern = ChirpPattern::Single;
     _testChirpPending = false;
     _networkCallPending = false;
     _patternsReceived = 0;
@@ -241,7 +241,7 @@ void ResonantBehavior::update(unsigned long now) {
 
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
-    _chirpPattern = ChirpOutput::ChirpPattern::Single;
+    _chirpPattern = ChirpPattern::Single;
     _activityLevel = heardPatternStrength;
     _outputBusy = _state == State::Chirping;
 
@@ -268,7 +268,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _networkCallPending = false;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Call;
-                _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
                 _outputBusy = true;
                 _state = State::Chirping;
@@ -277,7 +277,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _testChirpPending = false;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::SelfTest;
-                _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
                 _outputBusy = true;
                 _state = State::Chirping;
@@ -288,7 +288,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _lastBlockReason = BehaviorDecision::None;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Idle;
-                _chirpPattern = ChirpOutput::ChirpPattern::Idle;
+                _chirpPattern = ChirpPattern::Idle;
                 _lastEmitMs = now;
                 _outputBusy = true;
                 _state = State::Chirping;
@@ -305,7 +305,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _lastBlockReason = BehaviorDecision::None;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::HeardPattern;
-                _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
                 _outputBusy = true;
                 _state = State::Chirping;
@@ -476,7 +476,7 @@ bool ResonantBehavior::testChirpPending() const {
     return _testChirpPending;
 }
 
-ChirpOutput::ChirpPattern ResonantBehavior::chirpPattern() const {
+ChirpPattern ResonantBehavior::chirpPattern() const {
     return _chirpPattern;
 }
 

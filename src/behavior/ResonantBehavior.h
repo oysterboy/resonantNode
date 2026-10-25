@@ -1,10 +1,10 @@
-﻿#pragma once
+#pragma once
 #include <Arduino.h>
 
 #include "BehaviorProfile.h"
 #include "../detection/field/FieldState.h"
 #include "../detection/evaluation/OccurrenceVerdict.h"
-#include "../output/ChirpOutput.h"
+#include "../output/OutputRequest.h"
 
 /*
 ResonantBehavior
@@ -154,7 +154,7 @@ public:
     // ACTION request (SOUND resource)
     bool shouldStartChirp();
     const char* chirpRequestSourceName() const;
-    ChirpOutput::ChirpPattern chirpPattern() const;
+    ChirpPattern chirpPattern() const;
     // What the requested emission is for (BEH-005): the network signal (a
     // response to a heard pattern, played as the node's hop train inside
     // the shared band) or a plain chirp (idle voice, self-test). Behavior
@@ -263,7 +263,7 @@ private:
     bool _networkCallPending = false;
 
     ChirpRequestSource _chirpRequestSource = ChirpRequestSource::None;
-    ChirpOutput::ChirpPattern _chirpPattern = ChirpOutput::ChirpPattern::Single;
+    ChirpPattern _chirpPattern = ChirpPattern::Single;
 
     // --- counters ---
     unsigned long _patternsReceived = 0;

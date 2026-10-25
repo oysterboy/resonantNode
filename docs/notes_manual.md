@@ -254,7 +254,8 @@ layout). A gate result cites a `bench/sessions/...` path, never a run that only 
 src/detection/      profiles, detectors, features, occurrences, inspection (+ makeVerdict), field state, DetectionRuntime
 src/detection/analyzer/   pure Analyzer types and rules only (no mode code)
 src/behavior/       ResonantBehavior and BehaviorGateConfig
-src/output/         ChirpOutput, SoundOutput, OutputRequest / OutputStatus
+src/output/         OutputRequest.h (the request vocabulary: ChirpPattern, OutputRequest,
+                    OutputLimits, OutputStatus; no device), SoundOutput, ChirpOutput, ToneOutput
 src/audio/, src/hal/  signal chain and I2S input / output
 src/net/            ESP-NOW frames for NET commands
 src/modes/resonant|analyzer|emitter/   per-mode command handling and wiring

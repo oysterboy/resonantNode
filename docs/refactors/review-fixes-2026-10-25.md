@@ -78,6 +78,13 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
 
 (one line per landed item: date, commit, what, the checks' result)
 
+- 2026-10-25, item 1: myspec 6.2 / 7 rewritten (layering table, OutputRequest / OutputLimits / OutputStatus,
+  the Node as composer per decision 2026-10-23, OUT-004 as the move point); `src/output/OutputRequest.h` holds
+  `ChirpPattern`, `OutputRequest`, `OutputLimits`, `OutputReject`, `OutputPhase`, `OutputStatus` and one
+  `chirpPatternName()` (the Node's and NodeDebug's copies gone); `ResonantBehavior.h` and `ResonantNodeDebug.h`
+  include it, not `ChirpOutput.h`; BOM off `ResonantBehavior.h`. Host: 68 tests pass (g++ harness, PlatformIO's
+  registry is blocked in this container), T2h byte-identical (sha c4bf73ec), include direction strict 0. T1 on CI.
+
 ## Decisions recorded in this pass
 
 - decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md (items 8 and 9).

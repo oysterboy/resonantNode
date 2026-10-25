@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../../output/ChirpOutput.h"
+#include "../../output/OutputRequest.h"
 
 class AudioSignal;
 class ResonantBehavior;
@@ -39,7 +39,7 @@ public:
                              bool transientDetected,
                              bool selfChirpSuppressed);
     void observeI2SSignal(unsigned long now, const AudioSignal& audioSignal);
-    void observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern);
+    void observeChirpStarted(unsigned long now, const char* sourceName, ChirpPattern pattern);
     void observeChirpFinished(unsigned long now);
     void updateLed(unsigned long now);
 

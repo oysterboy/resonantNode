@@ -1,0 +1,250 @@
+// Node command dispatch (owner 2026-10-25 split by role): serial line assembly and the one
+// dispatch every transport feeds (serial here, the radio in ResonantNodeNet.cpp, VEKTOR
+// later; a CommandRouter class is NODE-005). Moved verbatim from ResonantNodeApp.cpp.
+#include "ResonantNodeApp.h"
+#include <Arduino.h>
+#include <string.h>
+#include <new>
+#include <esp_system.h>
+#include "../../app/RuntimeDefaults.h"
+#include "../../app/TimingUtils.h"
+#include "../../app/BuildInfo.h"
+#include "../../app/NodeRoster.h"
+#include "../../detection/HopGapContract.h"
+#include "../../detection/InspectionPlanContract.h"
+#include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
+#include "../../detection/inspection/InspectionNames.h"
+#include "../../detection/evaluation/VerdictNames.h"
+#include <ParamRegistry.h>
+#include "../../app/ParamIds.h"
+#include "../../app/TimeBase.h"
+#include "../../app/SerialOut.h"
+#include <new>
+#include "ResonantNodeInternal.h"
+
+using namespace node_internal;
+
+void Node::pollSerialCommands() {
+    while (Serial.available() > 0) {
+        const char c = static_cast<char>(Serial.read());
+        if (c == '\r') {
+            continue;
+        }
+        if (c == '\n') {
+            _serialLineBuffer[_serialLineLength] = '\0';
+            if (_serialLineOverflow) {
+                serialOut().print("RB ERR line_too_long max=");
+                serialOut().println(static_cast<unsigned long>(sizeof(_serialLineBuffer) - 1));
+            } else if (_serialLineLength > 0) {
+                handleSerialLine(_serialLineBuffer);
+            }
+            _serialLineLength = 0;
+            _serialLineOverflow = false;
+            continue;
+        }
+        if (_serialLineLength < sizeof(_serialLineBuffer) - 1) {
+            _serialLineBuffer[_serialLineLength++] = c;
+        } else {
+            _serialLineOverflow = true;
+        }
+    }
+}
+
+void Node::handleSerialLine(const char* line) {
+    if (startsWithTokenIgnoreCase(line, "NET")) {
+        handleNetCommand(line);
+        return;
+    }
+    if (equalsIgnoreCase(line, "RB help")) {
+        serialOut().println("RB CMD: PARAM SET behavior.<key> <value> (Behavior timing, rest and idle call; PARAM LIST)");
+        serialOut().println("RB CMD: RB STATUS");
+        serialOut().println("RB CMD: RB PROFILE name=TonalPulseScalar");
+        serialOut().println("RB CMD: RB PROFILE name=AmpExperimental");
+        serialOut().println("RB CMD: RB rebase");
+        serialOut().println("RB CMD: RB rebase force");
+        serialOut().println("RB CMD: RB CALL (play the node's network signal now; a kick for multi-node runs)");
+        serialOut().println("RB CMD: RB log off|minimal|full");
+        serialOut().println("RB CMD: RB debug off|events");
+        serialOut().println("RB CMD: RB summary");
+        serialOut().println("RB CMD: RB stop");
+        serialOut().println("RB CMD: PARAM LIST");
+        serialOut().println("RB CMD: PARAM GET <path>");
+        serialOut().println("RB CMD: PARAM SET <path> <value>");
+        serialOut().println("RB CMD: PARAM DUMP");
+        serialOut().println("RB CMD: NET <target|*> <command> (PARAM, RB, SELFTEST to one target, NET PING) | NET STATUS (by radio)");
+        serialOut().println("RB CMD: SELFTEST | SELFTEST external wait_ms=10000 | SELFTEST chirp n=5 | SELFTEST help");
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "SELFTEST")) {
+        handleSelfTestCommand(line);
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB PROFILE")) {
+        handleProfileCommand(line);
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB STATUS")) {
+        printRbStatus(line);
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB PARAM")) {
+        // RB PARAM tuned only the FrequencyMatch thresholds, removed 2026-10-22
+        // (docs/decisions/2026-10-22-remove-frequencymatch.md). Detection params
+        // are set through the registry.
+        serialOut().println("RB PARAM ERR removed (FrequencyMatch removed); use PARAM SET detection.scalar_<key> <value>");
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
+        // RB BEHAV was removed in step 10 (decisions/2026-10-22-live-params-
+        // profile-reset-no-rb-behav.md): Behavior's values are behavior.*
+        // params; PARAM DUMP shows them, PARAM SET changes them.
+        serialOut().println("RB BEHAV ERR removed; use PARAM SET behavior.<key> <value> (PARAM LIST shows the keys)");
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "PARAM")) {
+        handleParamCommand(line);
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB rebase force")) {
+        // A rebase stops and resets what SELFTEST is waiting on (issue #31
+        // R2-13): finish or wait out the self-test first.
+        if (_selfTest.phase != SelfTestState::Phase::Idle) {
+            serialOut().println("RB rebase refused busy=selftest");
+            return;
+        }
+        _rbBaselineState = RBBaselineState::Rebase;
+        performRbRebase();
+        _rbBaselineState = RBBaselineState::Settle;
+        _rbBaselineSettleUntilMs = timebase::nowMs() + kRbPostRebaseSettleMs;
+        ++_rbForcedRebaseCount;
+        serialOut().println("RB rebase forced");
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB rebase")) {
+        // Only a bare "RB rebase" (or "force", above): "RB rebase forced"
+        // used to start a quiet-gated rebase (issue #32 check 17).
+        const char* extra = line + strlen("RB rebase");
+        while (*extra == ' ' || *extra == '\t') {
+            ++extra;
+        }
+        if (*extra != '\0') {
+            serialOut().print("RB ERR rebase unknown token=");
+            serialOut().println(extra);
+            return;
+        }
+        if (_selfTest.phase != SelfTestState::Phase::Idle) {
+            serialOut().println("RB rebase refused busy=selftest");
+            return;
+        }
+        startRbQuietBaseline();
+        serialOut().println("RB rebase requested quiet-gated");
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB log")) {
+        handleLogCommand(line);
+        return;
+    }
+    if (equalsIgnoreCase(line, "RB CALL") || equalsIgnoreCase(line, "RB call")) {
+        // Step 5g: play the node's network signal now, through Behavior (kick).
+        if (_silent) {
+            serialOut().println("RB CALL ignored silent=1");
+            return;
+        }
+        _behavior.requestNetworkCall();
+        serialOut().print("RB CALL queued resting=");
+        serialOut().print(_behavior.resting(timebase::nowMs()) ? 1 : 0);
+        serialOut().print(" state=");
+        serialOut().println(_behavior.stateName());
+        return;
+    }
+    if (equalsIgnoreCase(line, "RB summary") || equalsIgnoreCase(line, "RB stop")) {
+        printRbSummary();
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB debug")) {
+        handleDebugCommand(line);
+        return;
+    }
+}
+
+void Node::handleDebugCommand(const char* line) {
+    const char* mode = line + 8;
+    while (*mode == ' ') {
+        ++mode;
+    }
+
+    if (equalsIgnoreCase(mode, "off")) {
+        _debug.setDebugMode(NodeDebug::DebugMode::Off);
+    } else if (equalsIgnoreCase(mode, "events")) {
+        _debug.setDebugMode(NodeDebug::DebugMode::Events);
+    } else {
+        serialOut().print("RB debug mode=");
+        serialOut().print(_debug.debugModeName());
+        serialOut().println(" (use off|events)");
+        return;
+    }
+
+    serialOut().print("RB debug mode=");
+    serialOut().println(_debug.debugModeName());
+}
+
+void Node::handleLogCommand(const char* line) {
+    const char* mode = line + 6;
+    while (*mode == ' ') {
+        ++mode;
+    }
+
+    if (equalsIgnoreCase(mode, "off")) {
+        _rbLogMode = RbLogMode::Off;
+    } else if (equalsIgnoreCase(mode, "minimal")) {
+        _rbLogMode = RbLogMode::Minimal;
+    } else if (equalsIgnoreCase(mode, "full")) {
+        _rbLogMode = RbLogMode::Full;
+    } else {
+        serialOut().print("RB log mode=");
+        serialOut().print(rbLogModeName());
+        serialOut().println(" (use off|minimal|full)");
+        return;
+    }
+
+    serialOut().print("RB log mode=");
+    serialOut().println(rbLogModeName());
+}
+
+void Node::handleProfileCommand(const char* line) {
+    const char* name = line + 10; // strlen("RB PROFILE")
+    while (*name == ' ') {
+        ++name;
+    }
+
+    if (*name == '\0') {
+        serialOut().print("RB PROFILE name=");
+        serialOut().println(profileName());
+        return;
+    }
+
+    if (startsWithTokenIgnoreCase(name, "name=")) {
+        name += 5;
+    }
+
+    if (setProfileFromName(name)) {
+        serialOut().print("RB PROFILE name=");
+        serialOut().print(profileName());
+        printProfileComposition(activeDetectionProfile());
+        serialOut().println();
+    } else {
+        serialOut().println("RB PROFILE usage=name=TonalPulseScalar|AmpExperimental");
+    }
+}
+
+const char* Node::rbLogModeName() const {
+    switch (_rbLogMode) {
+        case RbLogMode::Off:
+            return "off";
+        case RbLogMode::Minimal:
+            return "minimal";
+        case RbLogMode::Full:
+            return "full";
+    }
+    return "off";
+}

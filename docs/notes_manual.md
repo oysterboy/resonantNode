@@ -69,7 +69,7 @@ SELFTEST [external wait_ms=N | chirp n=N | help]
 
 Every tunable knob on the Node is a registered param in `lib/ParamRegistry/` (an in-repo library
 that includes nothing from `src/`). `PARAM LIST` prints the paths with their ranges, `PARAM DUMP`
-the current values. The groups, registered in `src/modes/resonant/ResonantNodeApp.cpp`:
+the current values. The groups, registered in `src/modes/resonant/ResonantNodeParams.cpp`:
 
 ```text
 detection.scalar_*        ScalarTransientDetector thresholds and timing (13 params)
@@ -258,6 +258,10 @@ src/output/         ChirpOutput, SoundOutput, OutputRequest / OutputStatus
 src/audio/, src/hal/  signal chain and I2S input / output
 src/net/            ESP-NOW frames for NET commands
 src/modes/resonant|analyzer|emitter/   per-mode command handling and wiring
+src/modes/resonant/  the Node, split by role: ResonantNodeApp.cpp (boot, loop, pipeline, baseline),
+                     ResonantNodeParams.cpp (params, persistence, profile), ResonantNodeCommands.cpp
+                     (serial and the command dispatch), ResonantNodeNet.cpp (radio), ResonantNodeStatus.cpp
+                     + ResonantNodeSelfTest.cpp (diagnostics)
 src/app/            board config, runtime defaults, roster, param ids, NVS store, serial
 lib/ParamRegistry/  the param registry (no src/ includes)
 test/, test/fixtures/   on-device and host suites, replay corpus

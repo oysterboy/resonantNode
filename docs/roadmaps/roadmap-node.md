@@ -92,6 +92,10 @@ Upload the same firmware to all test nodes.
 Status: PARTIAL 2026-10-22 (step 10 item 9): RB STATUS and the status prints are in ResonantNodeStatus.cpp;
 the emission logic is out of update() (startEmission / updateEmissions); SelfTest uses the one detection reset.
 Open: update() and handleSerialLine() are still long; split further when an owner module has a home for it.
+2026-10-25 (owner: split by role): ResonantNodeApp.cpp is the core (boot, loop, pipeline, baseline; 1,881 -> 956
+lines); configuration in ResonantNodeParams.cpp, command dispatch in ResonantNodeCommands.cpp, the radio in
+ResonantNodeNet.cpp, diagnostics in Status + SelfTest; shared helpers in ResonantNodeInternal.h. A file split, not
+separate classes: a CommandRouter that serial, NET and VEKTOR feed is NODE-005, with VEKTOR.
 
 ```text
 Move incidental command parsing and status formatting out of Node only when

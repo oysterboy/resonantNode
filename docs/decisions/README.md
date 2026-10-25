@@ -79,6 +79,7 @@ what replaced it.
 | 2026-10-23 | [Params persist on PARAM SAVE only; all registered; stored wins over a changed default, with a PARAM stale warning (PAR-010/011)](2026-10-23-param-persistence-save-only.md) |
 | 2026-10-25 | [VEKTOR will replace NET; NET is the interim remote console; 11a's lessons go to the spec](2026-10-25-vektor-replaces-net.md) (not yet implemented) |
 | 2026-10-25 | [Remote params over ESP-NOW through the serial PARAM path; one-line replies only, DUMP/LIST stay on USB (step 11a)](2026-10-25-remote-params-espnow.md) (long-run radio cost open) |
+| 2026-10-25 | [Analyzer knobs on ParamRegistry with the Node's grammar, old key=value form dropped; long serial lines refused on every port (step 11e)](2026-10-25-analyzer-params-on-registry-and-line-policy.md) (implemented in 11e items 8-9) |
 | 2026-10-23 | [SoundOutput executes an OutputRequest (hop train, pattern, idle call) with OutputStatus; the Node composes it from Behavior's decision (step 10f)](2026-10-23-soundoutput-executes-node-composes.md) |
 | 2026-10-23 | [The Node's network signal is the hop train; a plain chirp need not be heard](2026-10-23-node-hears-the-hop-train-only.md) (enforce by shape, DET-015; min duration cannot: the readings overlap) |
 | 2026-10-22 | [Network pacing: rest 5 s, idle call every 60 s +- 20 s, pass mark "the chain ends within 30 s in 80 %", M = 100](2026-10-22-network-pacing.md) |

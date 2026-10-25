@@ -202,7 +202,9 @@ are checked; ParamId values are still assigned by hand per module).
 
 ### PAR-003 - Analyzer param registration
 
-Status: TODO
+Status: IN PROGRESS, step 11e item 9 (docs/refactors/review-fixes-2026-10-25.md): the 14 scalar knobs bind
+through the shared binding function, same paths and grammar as the Node, the key=value parser goes
+(decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md).
 
 ```text
 Add registerAnalyzerParams(...).

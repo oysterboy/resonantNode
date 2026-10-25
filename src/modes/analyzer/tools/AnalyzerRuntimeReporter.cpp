@@ -274,10 +274,13 @@ void AnalyzerApp::printOccurrenceSummary() const {
     serialOut().print(stats.blocksProcessed);
     serialOut().print(" samples=");
     serialOut().print(static_cast<unsigned long long>(stats.samplesProcessed));
+    // The signal layer runs per sample (one-sample "blocks"): the last block is
+    // the latest frame. Labels kept for the log readers.
+    const AudioSamplePacket& latest = _audioSignal.latestFrame();
     serialOut().print(" lastBlockStart=");
-    serialOut().print(static_cast<unsigned long long>(_audioSignal.lastBlockStartSample()));
+    serialOut().print(static_cast<unsigned long long>(latest.sampleIndex));
     serialOut().print(" lastBlockCount=");
-    serialOut().print(_audioSignal.lastBlockSampleCount());
+    serialOut().print(latest.valid ? 1 : 0);
     serialOut().print(" lastBlockMicros=");
-    serialOut().println(static_cast<unsigned long>(_audioSignal.lastBlockApproxStartUs64()));
+    serialOut().println(static_cast<unsigned long>(latest.timeUs64));
 }

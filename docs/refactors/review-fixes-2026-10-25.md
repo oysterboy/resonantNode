@@ -117,6 +117,10 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   no observer could see it (`rbBaselineStateName` never printed REBASE). SEQ output unchanged: every removed
   field was assigned and never read (grep per field). Host 68/68, T2h byte-identical; the mode layer compiles
   only on CI (T1).
+- 2026-10-25, item 3a follow-up: CI caught the Analyzer's OCCURRENCE summary reading the three `lastBlock*`
+  accessors (my grep looked for `lastBlock()` only). It prints the same values from `latestFrame()` (one-sample
+  blocks: start = sampleIndex, count = 1, micros = timeUs64). Lesson for the later items: grep the bare symbol
+  stem across src/ and test/ before deleting a member.
 
 ## Decisions recorded in this pass
 

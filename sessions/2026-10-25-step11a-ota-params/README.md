@@ -20,3 +20,12 @@ Earlier builds of the same session: a radio DUMP (17 frames per node) cost the g
 printing was throttled, 0 with printing off; hence DUMP / LIST are USB-only. Heap 94 KB free, heap.free_min
 >= 93.7 KB, loop stack >= 13.4 KB free. Not done: a long run with the radio on and the nodes sounding.
 Left: all five on 267b860 code, output.silent=1 stored, behavior.rest_ms back to 5000 on E3.
+
+## Part 2: every command by radio (9ef51a1)
+
+Owner: all commands by radio, SELFTEST one node at a time with the others silent. nettest3.py / nettest3.out:
+- `NET * RB STATUS`: one ~1.56 KB line per node in 6 frames, joined at the gateway, 0 drops on every node.
+- `NET * PARAM DUMP`: 39 lines per node in 13 frames (paced 150 ms), 0 drops on every node.
+- `NET * SELFTEST`: refused (selftest_needs_one_target).
+- `NET E5 SELFTEST`: board, mic, quiet_boot, amp all PASS, report complete by radio (11 lines; only the
+  restore line printed after the test's end is not in it), 0 drops. The others were silent.

@@ -1,0 +1,17 @@
+== NET * RB STATUS: one ~2 KB line per node, joined at the gateway
+   E3: 1561 chars, ends with board=: True, parts 6
+   E2: 1562 chars, ends with board=: True, parts 6
+   E4: 1576 chars, ends with board=: True, parts 6
+   E5: 1562 chars, ends with board=: True, parts 6
+   drops: E1:+0 E2:+0 E3:+0 E4:+0 E5:+0
+== NET * PARAM DUMP, paced
+   param lines per node: {'E2': 39, 'E5': 39, 'E3': 39, 'E4': 39}  frames: {'E3': 13, 'E2': 13, 'E4': 13, 'E5': 13}
+   drops: E1:+0 E2:+0 E3:+0 E4:+0 E5:+0
+== NET * SELFTEST (must be refused)
+   ['NET ERR selftest_needs_one_target (one node at a time, the others silent)']
+== NET E5 SELFTEST (one node; the others are silent)
+   reply lines from E5: 4; first: NET reply from=E5 seq=3 part=0 SELFTEST_BEGIN role=node mode=full board=damp
+     NET reply from=E5 seq=3 part=1 SELFTEST check=board result=PASS mac=24:dc:c3:4a:fe:38 board=damp role=node version=0.4.0 git=267b860 built=Oct_25_2026
+   E5 serial lines during the test: 18
+   drops: E1:+0 E2:+0 E3:+0 E4:+0 E5:+0
+

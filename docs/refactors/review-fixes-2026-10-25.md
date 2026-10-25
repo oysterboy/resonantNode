@@ -107,6 +107,16 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   verdictTypeName copy and the always-zero `ignoredAmbiguous=` field of RB behavior (no tool parses it). Kept on
   purpose: MagnitudeInspectionMode / Basis (implemented profile options, not dead) and DetectorRejectClass (the
   outward contract of 5.3). Host 68/68, T2h byte-identical, include direction strict.
+- 2026-10-25, item 3b (modes): the Analyzer's write-only trial bookkeeping is gone (39 `SequenceTest` /
+  `TrialDiagnostics` fields: the pending-sample array and its best / origin / class bookkeeping, the per-trial
+  accepted / duplicate copies of verdict fields, the onset-reject counters, the legacy run tallies hits / misses /
+  unexpected / duplicates / startupArtifacts, `diagMode` with its enum and mapper, `kPrintIntervalMs`), with
+  `SequencePendingClass`, `sequenceOutputModeEnabled`, `kSequenceWarmupMs` and the unused `_inputPin` ctor
+  argument. Emitter: `_outputPin` / `_outputBtlPin` members and `ControlSerialKind`. Node: the write-only
+  `_rbLastPendingMs` pair and `RBBaselineState::Rebase`, which was set and overwritten two statements later so
+  no observer could see it (`rbBaselineStateName` never printed REBASE). SEQ output unchanged: every removed
+  field was assigned and never read (grep per field). Host 68/68, T2h byte-identical; the mode layer compiles
+  only on CI (T1).
 
 ## Decisions recorded in this pass
 

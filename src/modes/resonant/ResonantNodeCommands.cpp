@@ -100,7 +100,6 @@ void Node::handleSerialLine(const char* line) {
             serialOut().println("RB rebase refused busy=selftest");
             return;
         }
-        _rbBaselineState = RBBaselineState::Rebase;
         performRbRebase();
         _rbBaselineState = RBBaselineState::Settle;
         _rbBaselineSettleUntilMs = timebase::nowMs() + kRbPostRebaseSettleMs;

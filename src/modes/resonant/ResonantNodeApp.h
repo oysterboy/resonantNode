@@ -57,7 +57,6 @@ private:
     enum class RBBaselineState {
         Boot,
         ListenForQuiet,
-        Rebase,
         Settle,
         Active,
         FailedNoQuiet,
@@ -260,8 +259,6 @@ private:
     unsigned long _rbChirpStartedCount = 0;
     int _rbLevelMaxSinceStatus = 0;  // loudest smoothed level since the last RB STATUS (room notes, 10c)
     unsigned long _rbOverflowPending = 0;
-    unsigned long _rbLastPendingMs = 0;
-    bool _rbHaveLastPendingMs = false;
     uint64_t _rbStrengthSumScaled = 0; // Strength16 * 100 per verdict; uint32 overflowed after ~1,300 (issue #31)
     uint64_t _rbValidStrengthSum = 0;  // valid verdicts only, whole Strength16 units: RB STATUS heard.* (10c drift)
     unsigned long _rbDurationSumMs = 0;

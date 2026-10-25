@@ -530,9 +530,8 @@ AnalyzerApp::SeqOutputWhen seqOutputWhenFromToken(const char* token, bool* valid
 // Construction and setup
 // -----------------------------------------------------------------------------
 
-AnalyzerApp::AnalyzerApp(int inputPin)
-    : _inputPin(inputPin),
-      _i2sSource(runtime::kDefaultAudioI2SSckPin,
+AnalyzerApp::AnalyzerApp()
+    :       _i2sSource(runtime::kDefaultAudioI2SSckPin,
                   runtime::kDefaultAudioI2SWsPin,
                   runtime::kDefaultAudioI2SDataPin,
                   static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
@@ -611,28 +610,6 @@ const char* AnalyzerApp::sequenceOutputWhenName(SeqOutputWhen value) {
     return seqOutputWhenName(value);
 }
 
-bool AnalyzerApp::sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputMode requested) {
-    if (configured == SeqOutputMode::Quiet) {
-        return false;
-    }
-    if (requested == SeqOutputMode::Trial) {
-        return true;
-    }
-    if (requested == SeqOutputMode::System) {
-        return configured == SeqOutputMode::System;
-    }
-    if (requested == SeqOutputMode::Source) {
-        return configured == requested;
-    }
-    if (requested == SeqOutputMode::Inspect) {
-        return configured == requested || configured == SeqOutputMode::Detail;
-    }
-    if (requested == SeqOutputMode::Detail) {
-        return configured == SeqOutputMode::Detail;
-    }
-    return configured == requested;
-}
-
 bool AnalyzerApp::sequenceOutputWhenEnabled(SeqOutputWhen configured, AnalyzerResult result) {
     return seqOutputWhenEnabled(configured, result);
 }
@@ -643,18 +620,6 @@ AnalyzerApp::SeqOutputMode AnalyzerApp::sequenceOutputModeFromToken(const char* 
 
 AnalyzerApp::SeqOutputWhen AnalyzerApp::sequenceOutputWhenFromToken(const char* token, bool* valid) {
     return seqOutputWhenFromToken(token, valid);
-}
-
-AnalyzerApp::SequenceDiagMode AnalyzerApp::sequenceDiagModeFromOutputWhen(SeqOutputWhen when) {
-    switch (when) {
-        case SeqOutputWhen::Off:
-            return SequenceDiagMode::Off;
-        case SeqOutputWhen::All:
-            return SequenceDiagMode::Trial;
-        case SeqOutputWhen::Miss:
-        default:
-            return SequenceDiagMode::Miss;
-    }
 }
 
 // -----------------------------------------------------------------------------

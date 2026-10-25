@@ -522,7 +522,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 if (mode == AnalyzerApp::SeqOutputMode::Quiet) {
                     _sequenceTest.outputConfig.when = AnalyzerApp::SeqOutputWhen::Off;
                     _sequenceTest.outputConfig.verbosity = 0;
-                    _sequenceTest.diagMode = AnalyzerApp::SequenceDiagMode::Off;
                     _detection.setDiagnosticsEnabled(false);
                 }
             }
@@ -540,10 +539,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 return;
             }
             _seqOutputConfig.when = when;
-            _sequenceTest.diagMode = AnalyzerApp::sequenceDiagModeFromOutputWhen(when);
             if (_sequenceTest.active) {
                 _sequenceTest.outputConfig.when = when;
-                _sequenceTest.diagMode = AnalyzerApp::sequenceDiagModeFromOutputWhen(when);
                 _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
             }
             serialOut().print("OK SEQ WHEN ");
@@ -651,7 +648,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _pendingSequenceStart.bandHighHz = 0;
             _pendingSequenceStart.quiet = false;
             _pendingSequenceStart.showDetails = true;
-            _pendingSequenceStart.diagMode = AnalyzerApp::SequenceDiagMode::Off;
             _pendingSequenceStart.setupLabel = _pendingSequenceStart.setupLabelStorage;
             _pendingSequenceStart.setupLabelStorage[0] = '\0';
             _pendingSequenceStart.sampleDumpEnabled = false;

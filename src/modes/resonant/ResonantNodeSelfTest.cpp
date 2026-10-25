@@ -127,8 +127,7 @@ void Node::updateSelfTest(unsigned long now) {
         case SelfTestState::Phase::QuietBoot: {
             const bool pending = _rbLastRebaseResult == RbRebaseResult::Pending
                 || _rbBaselineState == RBBaselineState::Boot
-                || _rbBaselineState == RBBaselineState::ListenForQuiet
-                || _rbBaselineState == RBBaselineState::Rebase;
+                || _rbBaselineState == RBBaselineState::ListenForQuiet;
             if (pending && !deadlinePassed(now, st.deadlineMs)) {
                 return;
             }

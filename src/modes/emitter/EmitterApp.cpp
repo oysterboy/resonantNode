@@ -39,9 +39,7 @@ EmitterApp::EmitterApp(int outputPin, int rxPin, int txPin, unsigned long baudRa
     : EmitterApp(outputPin, -1, rxPin, txPin, baudRate) {}
 
 EmitterApp::EmitterApp(int outputPin, int outputBtlPin, int rxPin, int txPin, unsigned long baudRate)
-    : _outputPin(outputPin),
-      _outputBtlPin(outputBtlPin),
-      _rxPin(rxPin),
+    : _rxPin(rxPin),
       _txPin(txPin),
       _baudRate(baudRate),
 #if defined(BOARD_PIEZO)

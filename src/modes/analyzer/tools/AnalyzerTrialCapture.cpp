@@ -10,27 +10,6 @@
 namespace {
 
 
-enum class SequencePendingClass : uint8_t {
-    Unknown = 0,
-    ExpectedPrimary,
-    Late,
-    UnexpectedNoise,
-    Duplicate,
-};
-
-uint8_t sequencePendingClass(bool duplicatePending, bool inWindow, long dtFromTriggerMs) {
-    if (duplicatePending) {
-        return static_cast<uint8_t>(SequencePendingClass::Duplicate);
-    }
-    if (!inWindow) {
-        return static_cast<uint8_t>(SequencePendingClass::UnexpectedNoise);
-    }
-    if (dtFromTriggerMs >= kAnalyzerLateOnsetMinMs) {
-        return static_cast<uint8_t>(SequencePendingClass::Late);
-    }
-    return static_cast<uint8_t>(SequencePendingClass::ExpectedPrimary);
-}
-
 } // namespace
 
 detection::FrequencyBandMeasurementPacket IRAM_ATTR AnalyzerApp::captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const {
@@ -59,7 +38,6 @@ void AnalyzerApp::handleSequencePending(
         return;
     }
 
-    diagnostics.rawPendingCount++;
     ++_sequenceTest.sourceCandidateCount;
     if (event.hasVerdict) {
         ++_sequenceTest.verdictCount;
@@ -123,7 +101,6 @@ void AnalyzerApp::handleSequencePending(
 
     const unsigned long onsetMs = verdict->primaryStartMs;
     const long dtFromTriggerMs = static_cast<long>(timing::delta(onsetMs, _sequenceTest.currentTrialScheduledAtMs));
-    const long dtFromTrialStartMs = static_cast<long>(timing::delta(onsetMs, _sequenceTest.currentTrialStartMs));
 
     const bool bufferOverrunSeenNow = verdict->primaryAudioOverflow
                                       || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
@@ -139,62 +116,9 @@ void AnalyzerApp::handleSequencePending(
     const bool preWindow = timing::beforeDeadline(onsetMs, _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs);
     const bool postWindow = timing::after(onsetMs, _sequenceTest.currentTrialEndMs);
     const bool inWindow = !preWindow && !postWindow;
-    const bool duplicatePending = _sequenceTest.primaryValidPatternCaptured && inWindow;
-    const auto pendingClass = sequencePendingClass(duplicatePending, inWindow, dtFromTriggerMs);
-
-    const SequenceTest::PendingOrigin origin = preWindow
-        ? SequenceTest::PendingOrigin::PreWindow
-        : postWindow
-            ? SequenceTest::PendingOrigin::PostWindow
-            : SequenceTest::PendingOrigin::InWindow;
-
-    if (diagnostics.firstPendingMs == 0) {
-        diagnostics.firstPendingMs = onsetMs;
-    }
-
-    if (diagnostics.pendingCount < SequenceTest::kMaxTrialPending) {
-        auto& entry = diagnostics.pendingSamples[diagnostics.pendingCount++];
-        entry.pendingMs = onsetMs;
-        entry.dtFromTriggerMs = dtFromTriggerMs;
-        entry.dtFromTrialStartMs = dtFromTrialStartMs;
-        entry.durationMs = verdict->primaryDurationMs;
-        entry.strength = verdict->primaryStrength;
-        entry.origin = origin;
-        entry.peakMs = verdict->primaryPeakMs;
-        entry.endDtMs = dtFromTriggerMs >= 0 ? dtFromTriggerMs + static_cast<long>(verdict->primaryDurationMs) : -1;
-        entry.valid = verdict->valid;
-        entry.accepted = verdict->accepted;
-        entry.proposalMatched = verdict->proposalMatched;
-        entry.supportMatched = verdict->supportMatched;
-        entry.behaviorEligible = verdict->valid;
-        entry.duplicatePending = duplicatePending;
-        entry.pendingClass = pendingClass;
-        entry.verdictType = verdict->type;
-        entry.reasonCode = verdict->reasonCode;
-        entry.rejectReasonCode = verdict->rejectReason;
-    } else {
-        diagnostics.pendingOverflowCount++;
-    }
-
-    if (origin == SequenceTest::PendingOrigin::PreWindow) {
-        diagnostics.pendingPreWindowCount++;
-    } else if (origin == SequenceTest::PendingOrigin::InWindow) {
-        diagnostics.pendingInWindowCount++;
-    } else {
-        diagnostics.pendingPostWindowCount++;
-    }
-
-    if (!diagnostics.bestPendingAccepted || verdict->primaryStrength > diagnostics.bestPendingStrength) {
-        diagnostics.bestPendingAccepted = true;
-        diagnostics.bestPendingDtFromTriggerMs = dtFromTriggerMs;
-        diagnostics.bestPendingDurationMs = verdict->primaryDurationMs;
-        diagnostics.bestPendingStrength = verdict->primaryStrength;
-        diagnostics.bestPendingOrigin = origin;
-    }
 
     if (!inWindow) {
         if (!_sequenceTest.bufferOverrun) {
-            _sequenceTest.unexpected++;
             _sequenceTest.currentTrialUnexpected++;
         }
         return;
@@ -213,26 +137,18 @@ void AnalyzerApp::handleSequencePending(
             _sequenceTest.primaryAcceptedSourceRecord = event.sourceRecord;
             _sequenceTest.primaryAcceptedSourceRecord.eventTrialAttribution = _sequenceTest.currentTrial;
         }
-        _sequenceTest.primaryAcceptedOccurrenceDtMs = dtFromTriggerMs;
         _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
         if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {
             _sequenceTest.currentTrialDiagnostics.firstOnsetMs = onsetMs;
         }
-        _sequenceTest.currentTrialDiagnostics.lastOnsetMs = onsetMs;
         if (_sequenceTest.currentTrialOnsetDetectedMs == 0) {
             _sequenceTest.currentTrialOnsetDetectedMs = onsetMs;
         }
         _sequenceTest.currentTrialDiagnostics.accepted = true;
         _sequenceTest.currentTrialDiagnostics.acceptedPatternMs = onsetMs;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetStrength = verdict->primaryOnsetStrength;
         _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = verdict->primaryStrength;
         _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = verdict->primaryDurationMs;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = verdict->primaryReleaseStrength;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = verdict->primaryPeakMs;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = verdict->primaryStartMs + verdict->primaryDurationMs;
         _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = verdict->primaryAmbientBaseline;
-        _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
-        _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
         _sequenceTest.currentTrialPatternDetectedMs = onsetMs;
     }
 
@@ -269,14 +185,12 @@ void AnalyzerApp::handleSequencePending(
                 _sequenceTest.primaryValidDetectorReport = *selectedDetectorReport;
             }
         }
-        _sequenceTest.primaryValidPatternDtMs = dtFromTriggerMs;
     }
 
     _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
     if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {
         _sequenceTest.currentTrialDiagnostics.firstOnsetMs = onsetMs;
     }
-    _sequenceTest.currentTrialDiagnostics.lastOnsetMs = onsetMs;
     if (_sequenceTest.currentTrialOnsetDetectedMs == 0) {
         _sequenceTest.currentTrialOnsetDetectedMs = onsetMs;
     }
@@ -286,32 +200,17 @@ void AnalyzerApp::handleSequencePending(
             diagnostics.duplicatePatternMs = onsetMs;
             diagnostics.duplicatePatternStrength = verdict->primaryStrength;
             diagnostics.duplicatePatternDurationMs = verdict->primaryDurationMs;
-            diagnostics.duplicatePatternPeakMs = verdict->primaryPeakMs;
-            diagnostics.duplicatePatternReleaseMs = verdict->primaryStartMs + verdict->primaryDurationMs;
-            diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.accepted
-                ? static_cast<long>(timing::delta(onsetMs, diagnostics.acceptedPatternMs))
-                : 0;
             strncpy(diagnostics.duplicateReason, "duplicate_after_primary", sizeof(diagnostics.duplicateReason) - 1);
             diagnostics.duplicateReason[sizeof(diagnostics.duplicateReason) - 1] = '\0';
         }
         _sequenceTest.currentTrialDiagnostics.duplicateCount++;
-        if (_sequenceTest.currentTrialDiagnostics.duplicateDtCount < SequenceTest::kMaxDuplicateDts) {
-            _sequenceTest.currentTrialDiagnostics.duplicateDts[_sequenceTest.currentTrialDiagnostics.duplicateDtCount++] =
-                timing::elapsedOrZero(onsetMs, _sequenceTest.currentTrialPatternDetectedMs);
-        }
         return;
     }
 
     _sequenceTest.currentTrialDiagnostics.accepted = true;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternMs = onsetMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetStrength = verdict->primaryOnsetStrength;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = verdict->primaryStrength;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = verdict->primaryDurationMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = verdict->primaryReleaseStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = verdict->primaryPeakMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = verdict->primaryStartMs + verdict->primaryDurationMs;
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = verdict->primaryAmbientBaseline;
-    _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
-    _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = onsetMs;
 }

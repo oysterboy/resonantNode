@@ -403,8 +403,6 @@ void Node::resetRbCounters() {
     _rbValidPatternCount = 0;
     _rbChirpStartedCount = 0;
     _rbOverflowPending = 0;
-    _rbLastPendingMs = 0;
-    _rbHaveLastPendingMs = false;
     _rbStrengthSumScaled = 0;
     _rbValidStrengthSum = 0;
     _rbDurationSumMs = 0;
@@ -465,8 +463,6 @@ const char* Node::rbBaselineStateName() const {
             return "BOOT";
         case RBBaselineState::ListenForQuiet:
             return "LISTEN_FOR_QUIET";
-        case RBBaselineState::Rebase:
-            return "REBASE";
         case RBBaselineState::Settle:
             return "SETTLE";
         case RBBaselineState::Active:
@@ -500,7 +496,6 @@ void Node::updateRbBaselineState(unsigned long now) {
                 }
                 const unsigned long quietMs = now - _rbBaselineQuietSinceMs;
                 if (quietMs >= kRbStartupQuietHoldMs) {
-                    _rbBaselineState = RBBaselineState::Rebase;
                     performRbRebase();
                     _rbBaselineState = RBBaselineState::Settle;
                     _rbBaselineSettleUntilMs = now + kRbPostRebaseSettleMs;
@@ -530,9 +525,6 @@ void Node::updateRbBaselineState(unsigned long now) {
                 }
             }
         } break;
-
-        case RBBaselineState::Rebase:
-            break;
 
         case RBBaselineState::Settle:
             if (timing::atOrAfter(now, _rbBaselineSettleUntilMs)) {
@@ -892,8 +884,6 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         }
         _rbStrengthSumScaled += static_cast<uint64_t>(verdict.primaryStrength * 100.0f);
         _rbDurationSumMs += verdict.primaryDurationMs;
-        _rbHaveLastPendingMs = true;
-        _rbLastPendingMs = verdict.primaryHeardAtMs;
         if (_selfTest.phase != SelfTestState::Phase::Idle) {
             selfTestObserveVerdict(verdict, now);
         }

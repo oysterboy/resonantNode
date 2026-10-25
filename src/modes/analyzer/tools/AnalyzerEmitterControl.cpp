@@ -90,17 +90,11 @@ void AnalyzerApp::pollEmitterSerial() {
                     trialDiag.emitSeen = true;
                     if (emitStartLine || emitDriveOnLine) {
                         trialDiag.emitStartSeen = true;
-                        trialDiag.emitDriveSeen = true;
-                        trialDiag.emitStartTrialId = markerTrial;
                         trialDiag.emitStartDtMs = timing::elapsedOrZero(now, _sequenceTest.currentTrialStartMs);
                     }
                     if (emitDoneLine || emitDriveOffLine) {
                         trialDiag.emitDoneSeen = true;
-                        trialDiag.emitDoneTrialId = markerTrial;
                         trialDiag.emitDoneDtMs = timing::elapsedOrZero(now, _sequenceTest.currentTrialStartMs);
-                        trialDiag.emitDurationMs = trialDiag.emitDoneDtMs >= trialDiag.emitStartDtMs
-                            ? trialDiag.emitDoneDtMs - trialDiag.emitStartDtMs
-                            : 0UL;
                     }
                 }
             }

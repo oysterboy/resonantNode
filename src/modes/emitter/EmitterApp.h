@@ -25,11 +25,6 @@ public:
         Sweep
     };
 
-    // Serial transport label kept for the control-port protocol surface.
-    enum class ControlSerialKind {
-        Serial2
-    };
-
     EmitterApp(int outputPin = 25,
                int rxPin = 16,
                int txPin = 17,
@@ -69,8 +64,6 @@ private:
     void advanceSweep(unsigned long now);
     const char* modeName() const;
 
-    int _outputPin;
-    int _outputBtlPin;
     int _rxPin;
     int _txPin;
     unsigned long _baudRate;

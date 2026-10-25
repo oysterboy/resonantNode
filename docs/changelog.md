@@ -1,3 +1,55 @@
+# 2026-10-25 - Refactor phase closed (8, 8b, 10, 10a-10c); installation build run 24 h; radio remote commands (11a)
+
+### Context
+
+The refactor phase opened on 2026-10-22 closed as planned: the evaluator fold (8), the detection fixes (8b), the
+mode-layer cleanup (10, 10a), the field rerun (10b) and a long run (10c). The owner then pulled the installation
+items ahead of 10c's second block (change order 2026-10-23: persistence, loose ends, output status), so block 2
+ran on that build for 24 h. With the owner away from the bench for a week (from 2026-10-25), step 11 opened with
+remote commands over the radio (11a), the DET-015 host phase, unattended runs and firmware OTA.
+
+### Changed
+
+- 8: OccurrenceEvaluator folded into inspection as makeVerdict() (2593327, 5c5f9ed); FieldState trimmed to the rest
+  gate (4efba86); step 8's Part B deferred as DET-016
+- 8b: inspection-plan contract and `RB plan_check` (881694f); a candidate past max duration closed as too long
+  (7b62c84); verdict-queue overflows counted (733a68b); FeatureHistory scratch off the loop stack (ef86297)
+- 10a / 10: boundary map (c8ec486); live detection params apply in place (7c2c28e); ParamRegistry as an in-repo
+  library (89e723e); behavior.* params, RB BEHAV removed (c4b27fa); RB PROFILE names what it reset (17c8801);
+  Analyzer out of src/detection/ (4ee7a42); dead code out (9721ed5); Node glue split (426a03f)
+- DET-017: inspection waits until its window is complete (bbb5728); min duration 85 -> 92 ms (e58c4c2); the owner
+  decided the Node's network signal is the hop train (a5a6331)
+- 10d: PARAM SAVE / LOAD / RESET to NVS, stored values win at boot with a `PARAM stale` warning (3f2ed74);
+  `output.silent` (da771a5)
+- 10e: a live idle_timeout reschedules the running wait (d275992); a 12 KB stack temporary removed from every
+  detection reset, loop stack free minimum 3.4 -> 14.2 KB (9972fe4)
+- 10f: SoundOutput executes an OutputRequest with OutputStatus (OUT-002/003, f38cd69)
+- drift and room visibility: heard strength on verdict lines and in RB STATUS (db5213c); audio.level fields
+  (aa97051); nodegroup drift attributed by the train's own start (1dff962)
+- 5h: cellrun.py and hopbins.py (3f3e69d, dbb6305)
+- 11a: remote commands over ESP-NOW through the serial command path, paced replies, SELFTEST to one node
+  (267b860, 9ef51a1); decided that VEKTOR will replace NET (5cd5959)
+- docs: spec / guide / roadmap split as a rule, notes_manual rewritten as the operator guide (2fab9ac)
+
+### Verification
+
+- 8 / 8b / 10: T2h host replay byte-identical through each step; T3 unchanged; host suites green
+- 10b: hearing 19/20, every chain ended, 0 noise starts, 0 drops (bench 2026-10-22-step10b-field-rerun)
+- 10c: block 1 9.6 h (bench 2026-10-22-step10c-overnight) and block 2 24.0 h on dbb6305 (bench
+  2026-10-23-installation-run): 1752/1752 chains ended, 0 noise-started of 30,546 answers, 0 dropped buffers, 0
+  resets, no deaf node; per-pair strength drift within about +-15 % over 18 h, one path stepped alone, a
+  room-wide change at 10:50 on 10-24 without a noted cause
+- DET-017: 40 ms beep rejected, hop and chirp 10/10 (bench 2026-10-23-det017-min92)
+- 10f: emission shape and hearing unchanged before / after on E1 + E4 (bench 2026-10-23-step10f-output)
+- 5h height cell: E3 +25 cm drops the hop train to 42/50, the train cut to three steps (bench
+  2026-10-23-cell-height25-110cm); reference 50/50
+- 11a: all five boards, 0 dropped buffers with the radio idle and for SET / GET / PING / STATUS / DUMP / SELFTEST by
+  radio; a PARAM SAVE costs about 8 buffers per node (the flash write, serial or radio)
+- not run: the dry cell (5h); the long run with the radio on (running); the host vs board 100 ms duration
+  mismatch is still unexamined
+
+---
+
 # 2026-10-22 - Field trial passed (step 6); refactor phase opened (3d, 7, 7a-7d closed)
 
 ### Context

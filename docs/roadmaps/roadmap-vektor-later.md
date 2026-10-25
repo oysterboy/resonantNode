@@ -36,8 +36,12 @@ VEKTOR must not drive premature local architecture.
 
 ```text
 [TODO] No VEKTOR implementation is landed in current code.
-[TODO] ParamRegistry, CommandRouter, and a state registry are not landed.
-[TODO] No transport, OSC, DESCRIBE, or hub protocol is landed.
+[LANDED] ParamRegistry (lib/ParamRegistry, stable ParamId, persistence). CommandRouter and a state registry are not.
+[PARTIAL] A radio transport exists: NET (step 11a), an ESP-NOW remote console through the serial command path.
+          Interim: VEKTOR replaces it (decisions/2026-10-25-vektor-replaces-net.md); its transport layer
+          (src/net/NodeNet) carries over. Lessons for the spec: docs/research/vektor-lessons-from-11a.md.
+[TODO] No OSC, DESCRIBE, or hub protocol is landed. Hub: not decided (owner 2026-10-25). Appendices B-F: not
+       written yet.
 ```
 
 ## Implementation order

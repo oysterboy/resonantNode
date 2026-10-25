@@ -41,8 +41,6 @@ detection::DetectorRejectClass scalarTransientRejectClass(ScalarTransientDetecto
         case ScalarTransientDetector::TransientRejectReason::LongestIslandTooShort:
         case ScalarTransientDetector::TransientRejectReason::GapTooLong:
             return detection::DetectorRejectClass::Quality;
-        case ScalarTransientDetector::TransientRejectReason::PeakStillActive:
-            return detection::DetectorRejectClass::State;
         case ScalarTransientDetector::TransientRejectReason::None:
         default:
             return detection::DetectorRejectClass::None;

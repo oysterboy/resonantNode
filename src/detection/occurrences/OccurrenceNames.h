@@ -20,25 +20,10 @@ inline const char* occurrenceRejectReasonName(OccurrenceRejectReason reason) {
     switch (reason) {
         case OccurrenceRejectReason::None:
             return "none";
-        case OccurrenceRejectReason::TooShort:
-            return "too_short";
-        case OccurrenceRejectReason::TooLong:
-            return "too_long";
-        case OccurrenceRejectReason::TooWeak:
-            return "too_weak";
-        case OccurrenceRejectReason::BelowThreshold:
-            return "below_threshold";
-        case OccurrenceRejectReason::Cooldown:
-            return "cooldown";
-        case OccurrenceRejectReason::MissingFrequencyEvidence:
-            return "missing_frequency_evidence";
-        case OccurrenceRejectReason::MissingAmpSupport:
-            return "missing_amp_support";
         case OccurrenceRejectReason::InvalidTiming:
             return "invalid_timing";
         case OccurrenceRejectReason::UnsupportedKind:
             return "unsupported_kind";
-        case OccurrenceRejectReason::Unknown:
         default:
             return "unknown";
     }

@@ -24,21 +24,14 @@ public:
         None,
         ConsumedPattern,
         IgnoredInvalidPattern,
-        IgnoredAmbiguousPattern,
         IgnoredMissingSupport,
         IgnoredSupportTooLow,
-        Disabled,
         OutputBusy,
-        WaitingAfterHeard,
         RefractoryAfterEmit,
-        IgnoreAfterOwnEmit,
-        CooldownAfterDetect,
         SelfSuppressed,
         AlreadyScheduled,
-        ResponseProbabilitySkipped,
         Emitted,
         WouldEmit,
-        UnknownBlocked,
         // Rest (decisions/2026-10-17-two-node-exchange-chain-length.md):
         // the verdict that started a rest because the field was dense, and
         // a verdict that arrived while resting.
@@ -127,7 +120,6 @@ public:
     unsigned long ownEmitSuppressUntilMs() const;
     unsigned long patternsReceived() const;
     unsigned long patternsIgnoredInvalid() const;
-    unsigned long patternsIgnoredAmbiguous() const;
     unsigned long blockedOutputBusy() const;
     unsigned long blockedRefractory() const;
     unsigned long blockedWaiting() const;
@@ -268,7 +260,6 @@ private:
     // --- counters ---
     unsigned long _patternsReceived = 0;
     unsigned long _patternsIgnoredInvalid = 0;
-    unsigned long _patternsIgnoredAmbiguous = 0;
     unsigned long _blockedOutputBusy = 0;
     unsigned long _blockedRefractory = 0;
     unsigned long _blockedWaiting = 0;

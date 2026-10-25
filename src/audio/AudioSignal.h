@@ -12,16 +12,6 @@ struct AudioSignalStats {
     uint64_t samplesProcessed = 0;
 };
 
-struct CurveSnapshot {
-    // Rough envelope/amplitude probe used only by SEQ sample-dump tooling.
-    // This is bounded diagnostic data, not RAW capture or detector truth.
-    unsigned long sampleMs = 0;
-    int current = 0;
-    int env = 0;
-    float peak = 0.0f; // Smoothed envelope value, not a detector peak.
-    bool open = false; // signalMagnitude > 0, not detector-open state.
-};
-
 struct AudioSamplePacket {
     // Monotonic sample index for the source stream.
     uint64_t sampleIndex = 0;
@@ -51,26 +41,6 @@ struct AudioSamplePacket {
     bool rawHistoryReady = false;
     // True when the underlying transport block overflowed.
     bool overflowDuringBlock = false;
-};
-
-struct DetectorOccurrenceDetail {
-    // Legacy/diagnostic occurrence shape used by retrospective probes.
-    uint64_t onsetSample = 0;
-    uint64_t peakSample = 0;
-    uint64_t releaseSample = 0;
-
-    uint32_t onsetMicrosApprox = 0;
-    uint32_t releaseMicrosApprox = 0;
-    uint32_t onsetMillisApprox = 0;
-    uint32_t releaseMillisApprox = 0;
-
-    float onsetStrength = 0.0f;
-    float peakStrength = 0.0f;
-    float releaseStrength = 0.0f;
-    float ambientBaseline = 0.0f;
-    uint32_t durationMs = 0;
-
-    bool audioOverflowDuringOccurrence = false;
 };
 
 struct RawSampleHistory {
@@ -161,6 +131,8 @@ Owns the neutral signal interpretation layer and the signal/history state:
 - exposes neutral sample frames and smoothed values for downstream consumers
 - keeps bounded centered sample history for downstream evidence builders
 
+IRAM_ATTR only on the per-sample path (update, processSample, emitFrame).
+
 Does not:
 - decide when the node should chirp
 - own pattern meaning
@@ -185,13 +157,10 @@ public:
     // DMA buffers (AudioBlock::overflowBeforeBlock); it lands in
     // AudioSamplePacket::overflowDuringBlock for the detectors.
     bool update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame, bool overflowDuringBlock = false);
-    void processBlock(const AudioBlock& block);
 
     void setBaselineTrackingQuietThreshold(int value);
     void setSmoothingFactor(float value);
     void setBaselineUpdateFactor(float value);
-    using CurveSampleCallback = void (*)(const CurveSnapshot& snapshot, void* context);
-    void setCurveSampleCallback(CurveSampleCallback callback, void* context);
 
     int rawSignal() const;
     float baseline() const;
@@ -200,10 +169,6 @@ public:
     int smoothedSignalMagnitude() const;
     uint64_t sampleTimeUs64() const;
     const AudioSamplePacket& latestFrame() const;
-    const AudioBlock& lastBlock() const;
-    uint64_t lastBlockStartSample() const;
-    uint16_t lastBlockSampleCount() const;
-    uint64_t lastBlockApproxStartUs64() const;
     const AudioSignalStats& stats() const;
     bool rawSampleHistoryAvailable(uint64_t startSampleIndex, uint64_t endSampleIndex) const;
     size_t copyRawSampleHistory(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const;
@@ -218,11 +183,9 @@ private:
     AudioSource& _source;
 
     // Processes one sample and updates the internal signal state.
-    void processSample(int sample, uint64_t sampleTimeUs64, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow);
+    void processSample(int sample, uint64_t sampleTimeUs64, uint64_t sampleIndex);
     // Copies the current signal state into a public frame.
     void emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint64_t sampleTimeUs64, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow);
-    // Optional bounded curve snapshot callback for diagnostics.
-    void emitCurveSample(uint32_t sampleTimeMs);
 
     // Last decoded source sample.
     int _rawSignal = 0;
@@ -234,38 +197,27 @@ private:
     uint64_t _sampleTimeUs64 = 0;
     // Sample time us -> ms without a 64-bit divide per sample.
     timebase::MsFromUs64 _msFromUs;
-    // Slow quiet-floor estimate. Starts at 0: both boards feed a First
-    // Difference stream centred on 0. The old 2000 (an ADC midpoint) read
-    // as ~250 Strength16 of offset that baseline tracking (quiet < 20) could
-    // never remove, so a Node that booted without a successful rebase kept
+    // Slow quiet-floor estimate. Starts at 0: both boards feed a preprocessed
+    // (DC-blocked) stream centred on 0. The old 2000 (an ADC midpoint) read
+    // as ~250 Strength16 of offset that baseline tracking (quiet below the
+    // threshold the modes set, 20) could never remove, so a Node that booted without a successful rebase kept
     // it in every amp and Goertzel value (issue #31 R2-1).
     float _baseline = 0.0f;
     // Smoothed magnitude used for diagnostics.
     float _smoothedSignalMagnitude = 0.0f;
     // Most recent emitted frame.
     AudioSamplePacket _latestFrame;
-    // Most recent transport block metadata.
-    AudioBlock _lastBlock;
-    // First sample index in the most recent block.
-    uint64_t _lastBlockStartSample = 0;
-    // Sample count in the most recent block.
-    uint16_t _lastBlockSampleCount = 0;
-    // Approximate block start time on the 64-bit time base.
-    uint64_t _lastBlockApproxStartUs64 = 0;
     // Cumulative audio-signal stats.
     AudioSignalStats _stats;
     // Bounded raw centered-sample history.
     RawSampleHistory _rawSampleHistory;
 
     // Tuning knobs for baseline tracking and smoothing.
-    // Magnitude below which baseline tracking is considered quiet.
-    int _baselineTrackingQuietThreshold = 40;
+    // Magnitude below which baseline tracking is considered quiet. Every mode
+    // sets 20 (configureI2SParameters / the replay); this is the fallback.
+    int _baselineTrackingQuietThreshold = 20;
     // Low-pass factor for the smoothed magnitude.
     float _smoothingFactor = 0.5f;
     // Baseline update factor during quiet periods.
     float _baselineUpdateFactor = 0.005f;
-    // Optional diagnostics callback.
-    CurveSampleCallback _curveSampleCallback = nullptr;
-    // Context pointer passed to the diagnostics callback.
-    void* _curveSampleCallbackContext = nullptr;
 };

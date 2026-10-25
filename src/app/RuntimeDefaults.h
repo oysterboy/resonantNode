@@ -138,9 +138,6 @@ constexpr int kDefaultAudioI2SSckPin = AUDIO_I2S_SCK_PIN;
 constexpr int kDefaultAudioI2SWsPin = AUDIO_I2S_WS_PIN;
 constexpr int kDefaultAudioI2SDataPin = AUDIO_I2S_DATA_PIN;
 constexpr int kDefaultAudioI2SDataOutPin = AUDIO_I2S_DOUT_PIN;
-constexpr size_t kDefaultAudioI2SReadBytes = I2S_READ_BYTES;
-constexpr int kDefaultAudioI2SDmaBufLen = I2S_DMA_BUF_LEN;
-constexpr int kDefaultAudioI2SDmaBufCount = I2S_DMA_BUF_COUNT;
 constexpr PcmPreprocessMode kPcmPreprocessMode = static_cast<PcmPreprocessMode>(PCM_PREPROCESS_MODE_VALUE);
 constexpr unsigned long kDefaultAudioSignalStartupWarmupMs = 2000UL;
 // I2S tone output (D-AMP): sine peak as a fraction of full scale (the

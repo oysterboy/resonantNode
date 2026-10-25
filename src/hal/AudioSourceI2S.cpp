@@ -36,16 +36,13 @@ int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
         return static_cast<int>(audio::clampToCanonicalPcm(static_cast<audio::PcmIntermediate>(signedPacked)));
     }
 
-    if (bytesPerSample == 2) {
-        int16_t sample16 = 0;
-        memcpy(&sample16, samplePtr, sizeof(sample16));
-        return static_cast<int>(sample16);
-    }
-
-    int8_t sample8 = 0;
-    memcpy(&sample8, samplePtr, sizeof(sample8));
-    return static_cast<int>(sample8);
+    // 16- and 8-bit slots are not a supported width (AUDIO_I2S_BITS_PER_SAMPLE
+    // is 32; the 3-byte path above is the 24-bit packing). Their decode would
+    // land on a different PCM scale, so they are refused, not guessed.
+    return 0;
 }
+static_assert(AUDIO_I2S_BITS_PER_SAMPLE == 32 || AUDIO_I2S_BITS_PER_SAMPLE == 24,
+              "decodePcmSample handles 32- and 24-bit slots only");
 
 uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     if (sampleRateHz == 0) {

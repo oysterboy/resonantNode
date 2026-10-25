@@ -49,7 +49,6 @@ public:
         CoverageTooLow,
         LongestIslandTooShort,
         GapTooLong,
-        PeakStillActive,
     };
 
     enum class OnsetRejectReason {

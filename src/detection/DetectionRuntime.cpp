@@ -61,7 +61,6 @@ void DetectionRuntime::resetDetectors() {
 
 void DetectionRuntime::resetDetectionState() {
     resetDetectors();
-    _occurrenceInspector.reset();
     _fieldStateTracker.reset();
     _featureHistory.reset();
     resetDetectionQueues();

@@ -65,13 +65,6 @@ public:
         unsigned long inspectionNowMs,
         float sustainedThreshold = 0.0f
     ) const;
-    size_t copyWindowApproximateValues(
-        FeatureStreamId stream,
-        unsigned long startMs,
-        unsigned long endMs,
-        float* outValues,
-        size_t capacity
-    ) const;
 
     size_t sampleCount(FeatureStreamId stream) const;
     // Diagnostics: span of the resident ring for a stream, and how often a

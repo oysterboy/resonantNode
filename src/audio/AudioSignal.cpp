@@ -4,16 +4,6 @@
 #include "../app/RuntimeDefaults.h"
 #include "../app/TimingUtils.h"
 
-namespace {
-uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
-    if (sampleRateHz == 0) {
-        return 0;
-    }
-
-    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
-}
-}
-
 // -----------------------------------------------------------------------------
 // Construction and lifecycle
 // -----------------------------------------------------------------------------
@@ -21,7 +11,7 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
 AudioSignal::AudioSignal(AudioSource& source)
     : _source(source) {}
 
-void IRAM_ATTR AudioSignal::begin(bool doRebase) {
+void AudioSignal::begin(bool doRebase) {
     resetStats();
     if (doRebase) {
         delay(runtime::kDefaultAudioSignalStartupWarmupMs);
@@ -29,11 +19,11 @@ void IRAM_ATTR AudioSignal::begin(bool doRebase) {
     }
 }
 
-void IRAM_ATTR AudioSignal::seedBaseline(float value) {
+void AudioSignal::seedBaseline(float value) {
     _baseline = value;
 }
 
-bool IRAM_ATTR AudioSignal::rebase() {
+bool AudioSignal::rebase() {
     constexpr unsigned long kRebaseTimeoutMs = 500; // 200 samples take 12.5 ms at 16 kHz
     const unsigned long startMs = timebase::nowMs();
     long sum = 0;
@@ -65,164 +55,79 @@ bool IRAM_ATTR AudioSignal::rebase() {
 // -----------------------------------------------------------------------------
 
 bool IRAM_ATTR AudioSignal::update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame, bool overflowDuringBlock) {
-    _lastBlock.samples = nullptr;
-    _lastBlock.sampleCount = 1;
     const uint64_t sampleIndex = _stats.samplesProcessed;
-    _lastBlock.startSampleIndex = sampleIndex;
-    _lastBlock.approxStartUs64 = sampleTimeUs64;
-    _lastBlock.overflowBeforeBlock = overflowDuringBlock;
-    _lastBlockStartSample = sampleIndex;
-    _lastBlockSampleCount = 1;
-    _lastBlockApproxStartUs64 = sampleTimeUs64;
-
-    processSample(sample, sampleTimeUs64, sampleIndex, 0, overflowDuringBlock);
+    processSample(sample, sampleTimeUs64, sampleIndex);
     _stats.blocksProcessed++;
     _stats.samplesProcessed++;
 
     const uint32_t sampleTimeMs = _msFromUs(sampleTimeUs64);
     emitFrame(outFrame, sampleIndex, sampleTimeUs64, sampleTimeMs, _source.sampleRateHz(), overflowDuringBlock);
-    emitCurveSample(sampleTimeMs);
     return true;
 }
 
-void IRAM_ATTR AudioSignal::processBlock(const AudioBlock& block) {
-    _lastBlock.samples = nullptr;
-    if (block.sampleCount > 0) {
-        _lastBlock.sampleCount = block.sampleCount;
-        _lastBlock.startSampleIndex = block.startSampleIndex;
-        _lastBlock.approxStartUs64 = block.approxStartUs64;
-        _lastBlock.overflowBeforeBlock = block.overflowBeforeBlock;
-        _lastBlockStartSample = block.startSampleIndex;
-        _lastBlockSampleCount = block.sampleCount;
-        _lastBlockApproxStartUs64 = block.approxStartUs64;
-    } else {
-        _lastBlock.sampleCount = 0;
-        _lastBlock.startSampleIndex = 0;
-        _lastBlock.approxStartUs64 = 0;
-        _lastBlock.overflowBeforeBlock = false;
-    }
-
-    if (block.samples == nullptr || block.sampleCount == 0) {
-        return;
-    }
-
-    _stats.blocksProcessed++;
-    const uint32_t sampleRateHz = _source.sampleRateHz();
-    for (uint16_t i = 0; i < block.sampleCount; ++i) {
-        const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
-        const uint32_t sampleTimeOffsetUs = sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
-        const uint64_t sampleTimeUs64 = block.approxStartUs64 + sampleTimeOffsetUs;
-        const uint32_t sampleTimeMs = _msFromUs(sampleTimeUs64);
-        processSample(static_cast<int>(block.samples[i]), sampleTimeUs64, sampleIndex, sampleRateHz, block.overflowBeforeBlock);
-        _stats.samplesProcessed++;
-        emitFrame(_latestFrame, sampleIndex, sampleTimeUs64, sampleTimeMs, sampleRateHz, block.overflowBeforeBlock);
-        emitCurveSample(sampleTimeMs);
-    }
-}
-
-void IRAM_ATTR AudioSignal::processSample(int sample, uint64_t sampleTimeUs64, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow) {
+void IRAM_ATTR AudioSignal::processSample(int sample, uint64_t sampleTimeUs64, uint64_t sampleIndex) {
     _rawSignal = sample;
     _sampleTimeUs64 = sampleTimeUs64;
     _centeredSignal = _rawSignal - static_cast<int>(_baseline);
     _rawSampleHistory.push(sampleIndex, _centeredSignal);
 
+    // Below the quiet threshold the sample feeds the baseline and counts as silence.
     int magnitude = static_cast<int>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_centeredSignal)));
     if (magnitude < _baselineTrackingQuietThreshold) {
         _baseline = _baseline * (1.0f - _baselineUpdateFactor) + _rawSignal * _baselineUpdateFactor;
-    }
-    if (magnitude < _baselineTrackingQuietThreshold) {
         magnitude = 0;
     }
 
     _signalMagnitude = magnitude;
     _smoothedSignalMagnitude = _smoothedSignalMagnitude * (1.0f - _smoothingFactor) + _signalMagnitude * _smoothingFactor;
-
-    (void)sampleIndex;
-    (void)sampleRateHz;
-    (void)blockOverflow;
 }
 
 // -----------------------------------------------------------------------------
 // Configuration
 // -----------------------------------------------------------------------------
 
-void IRAM_ATTR AudioSignal::setBaselineTrackingQuietThreshold(int value) {
+void AudioSignal::setBaselineTrackingQuietThreshold(int value) {
     _baselineTrackingQuietThreshold = value;
 }
 
-void IRAM_ATTR AudioSignal::setSmoothingFactor(float value) {
+void AudioSignal::setSmoothingFactor(float value) {
     _smoothingFactor = value;
 }
 
-void IRAM_ATTR AudioSignal::setBaselineUpdateFactor(float value) {
+void AudioSignal::setBaselineUpdateFactor(float value) {
     _baselineUpdateFactor = value;
-}
-
-void IRAM_ATTR AudioSignal::setCurveSampleCallback(CurveSampleCallback callback, void* context) {
-    _curveSampleCallback = callback;
-    _curveSampleCallbackContext = context;
 }
 
 // -----------------------------------------------------------------------------
 // Accessors
 // -----------------------------------------------------------------------------
 
-int IRAM_ATTR AudioSignal::rawSignal() const {
+int AudioSignal::rawSignal() const {
     return _rawSignal;
 }
 
-float IRAM_ATTR AudioSignal::baseline() const {
+float AudioSignal::baseline() const {
     return _baseline;
 }
 
-int IRAM_ATTR AudioSignal::centeredSignal() const {
+int AudioSignal::centeredSignal() const {
     return _centeredSignal;
 }
 
-int IRAM_ATTR AudioSignal::signalMagnitude() const {
+int AudioSignal::signalMagnitude() const {
     return _signalMagnitude;
 }
 
-int IRAM_ATTR AudioSignal::smoothedSignalMagnitude() const {
+int AudioSignal::smoothedSignalMagnitude() const {
     return static_cast<int>(_smoothedSignalMagnitude);
 }
 
-uint64_t IRAM_ATTR AudioSignal::sampleTimeUs64() const {
+uint64_t AudioSignal::sampleTimeUs64() const {
     return _sampleTimeUs64;
 }
 
-const AudioSamplePacket& IRAM_ATTR AudioSignal::latestFrame() const {
+const AudioSamplePacket& AudioSignal::latestFrame() const {
     return _latestFrame;
-}
-
-const AudioBlock& IRAM_ATTR AudioSignal::lastBlock() const {
-    return _lastBlock;
-}
-
-uint64_t IRAM_ATTR AudioSignal::lastBlockStartSample() const {
-    return _lastBlockStartSample;
-}
-
-uint16_t IRAM_ATTR AudioSignal::lastBlockSampleCount() const {
-    return _lastBlockSampleCount;
-}
-
-uint64_t IRAM_ATTR AudioSignal::lastBlockApproxStartUs64() const {
-    return _lastBlockApproxStartUs64;
-}
-
-void IRAM_ATTR AudioSignal::emitCurveSample(uint32_t sampleTimeMs) {
-    if (_curveSampleCallback == nullptr) {
-        return;
-    }
-
-    CurveSnapshot snapshot;
-    snapshot.sampleMs = sampleTimeMs;
-    snapshot.current = static_cast<int>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_centeredSignal)));
-    snapshot.env = static_cast<int>(_smoothedSignalMagnitude);
-    snapshot.peak = _smoothedSignalMagnitude;
-    snapshot.open = _signalMagnitude > 0;
-    _curveSampleCallback(snapshot, _curveSampleCallbackContext);
 }
 
 void IRAM_ATTR AudioSignal::emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint64_t sampleTimeUs64, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow) {
@@ -247,46 +152,42 @@ void IRAM_ATTR AudioSignal::emitFrame(AudioSamplePacket& outFrame, uint64_t samp
 // History and reset helpers
 // -----------------------------------------------------------------------------
 
-const AudioSignalStats& IRAM_ATTR AudioSignal::stats() const {
+const AudioSignalStats& AudioSignal::stats() const {
     return _stats;
 }
 
-bool IRAM_ATTR AudioSignal::rawSampleHistoryAvailable(uint64_t startSampleIndex, uint64_t endSampleIndex) const {
+bool AudioSignal::rawSampleHistoryAvailable(uint64_t startSampleIndex, uint64_t endSampleIndex) const {
     return _rawSampleHistory.hasWindow(startSampleIndex, endSampleIndex);
 }
 
-size_t IRAM_ATTR AudioSignal::copyRawSampleHistory(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const {
+size_t AudioSignal::copyRawSampleHistory(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const {
     return _rawSampleHistory.copyWindow(startSampleIndex, endSampleIndex, outSamples, outCapacity);
 }
 
-uint64_t IRAM_ATTR AudioSignal::rawSampleHistoryStartSampleIndex() const {
+uint64_t AudioSignal::rawSampleHistoryStartSampleIndex() const {
     return _rawSampleHistory.oldestSampleIndex();
 }
 
-uint64_t IRAM_ATTR AudioSignal::rawSampleHistoryEndSampleIndex() const {
+uint64_t AudioSignal::rawSampleHistoryEndSampleIndex() const {
     return _rawSampleHistory.newestSampleIndex();
 }
 
-size_t IRAM_ATTR AudioSignal::rawSampleHistorySampleCount() const {
+size_t AudioSignal::rawSampleHistorySampleCount() const {
     return _rawSampleHistory.sampleCount();
 }
 
-size_t IRAM_ATTR AudioSignal::rawSampleHistoryCapacity() const {
+size_t AudioSignal::rawSampleHistoryCapacity() const {
     return RawSampleHistory::kCapacity;
 }
 
-void IRAM_ATTR AudioSignal::resetStats() {
+void AudioSignal::resetStats() {
     _stats = {};
     _rawSampleHistory.reset();
-    _lastBlock = {};
-    _lastBlockStartSample = 0;
-    _lastBlockSampleCount = 0;
-    _lastBlockApproxStartUs64 = 0;
     _msFromUs.reset();
     _latestFrame = {};
 }
 
-void IRAM_ATTR AudioSignal::resetSignalState() {
+void AudioSignal::resetSignalState() {
     _rawSampleHistory.reset();
     _latestFrame = {};
 }

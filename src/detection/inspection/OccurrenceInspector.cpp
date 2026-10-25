@@ -174,9 +174,6 @@ void OccurrenceInspector::configure(const InspectionPlan& plan) {
     _inspectionPlan = plan;
 }
 
-void OccurrenceInspector::reset() {
-}
-
 unsigned long OccurrenceInspector::windowCompleteAtMs(const Occurrence& occurrence) const {
     unsigned long latest = 0;
     bool any = false;
@@ -193,19 +190,6 @@ unsigned long OccurrenceInspector::windowCompleteAtMs(const Occurrence& occurren
         }
     }
     return latest;
-}
-
-void OccurrenceInspector::inspectAcceptedOccurrence(
-    InspectedOccurrence& out,
-    const Occurrence& occurrence,
-    const FeatureHistory* featureHistory,
-    unsigned long inspectionNowMs
-) const {
-    out.magnitudeObservationCount = 0;
-
-    for (size_t i = 0; i < _inspectionPlan.count; ++i) {
-        runInspectionModule(out, occurrence, featureHistory, inspectionNowMs, _inspectionPlan.modules[i]);
-    }
 }
 
 void OccurrenceInspector::annotateMagnitudeFeatureStrength(
@@ -303,62 +287,30 @@ void OccurrenceInspector::runInspectionModule(
     }
 }
 
-InspectedOccurrence OccurrenceInspector::inspectImpl(
-    const Occurrence& occurrence,
-    const FeatureHistory* featureHistory,
-    unsigned long inspectionNowMs
-) const {
-    if (!occurrence.present) {
-        InspectedOccurrence out;
-        out.occurrence = occurrence;
-        setRejected(out, OccurrenceRejectReason::UnsupportedKind);
-        return out;
-    }
-
-    if (!occurrence.valid) {
-        InspectedOccurrence out;
-        out.occurrence = occurrence;
-        setRejected(out, OccurrenceRejectReason::InvalidTiming);
-        return out;
-    }
-
-    if (occurrence.valid) {
-        return inspectAcceptedOccurrenceResult(occurrence, featureHistory, inspectionNowMs);
-    }
-
-    InspectedOccurrence out;
-    out.occurrence = occurrence;
-    setRejected(out, OccurrenceRejectReason::UnsupportedKind);
-    return out;
-}
-
-InspectedOccurrence OccurrenceInspector::inspect(
-    const Occurrence& occurrence
-) const {
-    return inspectImpl(occurrence, nullptr, 0UL);
-}
-
 InspectedOccurrence OccurrenceInspector::inspectWithHistory(
     const Occurrence& occurrence,
     const FeatureHistory* featureHistory,
     unsigned long inspectionNowMs
 ) const {
-    return inspectImpl(occurrence, featureHistory, inspectionNowMs);
-}
-
-InspectedOccurrence OccurrenceInspector::inspectAcceptedOccurrenceResult(
-    const Occurrence& occurrence,
-    const FeatureHistory* featureHistory,
-    unsigned long inspectionNowMs
-) const {
     InspectedOccurrence out;
     out.occurrence = occurrence;
+    if (!occurrence.present) {
+        setRejected(out, OccurrenceRejectReason::UnsupportedKind);
+        return out;
+    }
+    if (!occurrence.valid) {
+        setRejected(out, OccurrenceRejectReason::InvalidTiming);
+        return out;
+    }
+
     out.occurrence.confidence = occurrence.confidence > 0.0f ? occurrence.confidence : 1.0f;
     out.decision = OccurrenceDecision::Accepted;
     out.rejectReason = OccurrenceRejectReason::None;
-    inspectAcceptedOccurrence(out, occurrence, featureHistory, inspectionNowMs);
+    out.magnitudeObservationCount = 0;
+    for (size_t i = 0; i < _inspectionPlan.count; ++i) {
+        runInspectionModule(out, occurrence, featureHistory, inspectionNowMs, _inspectionPlan.modules[i]);
+    }
     return out;
 }
 
 } // namespace detection
-

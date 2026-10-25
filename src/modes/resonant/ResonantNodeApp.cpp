@@ -179,7 +179,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         }
     }
     const detection::InspectionModuleConfig* supportRequirement =
-        detection::evaluatorFirstEnabledRequirement(profile.inspectionPlan);
+        detection::firstEnabledRequirement(profile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
     serialOut().print("  verdict.has_requirement=");
     serialOut().println(supportRequired ? 1 : 0);

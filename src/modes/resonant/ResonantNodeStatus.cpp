@@ -59,7 +59,7 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(" inspectionPlan=");
     serialOut().print(detection::inspectionPlanName(detectionProfile.inspectionPlan));
     const detection::InspectionModuleConfig* supportRequirement =
-        detection::evaluatorFirstEnabledRequirement(detectionProfile.inspectionPlan);
+        detection::firstEnabledRequirement(detectionProfile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
     serialOut().print(" has_requirement=");
     serialOut().print(supportRequired ? 1 : 0);
@@ -399,8 +399,6 @@ void Node::printRbBehaviorSummary() const {
     serialOut().print(_behavior.patternsReceived());
     serialOut().print(" ignoredInvalid=");
     serialOut().print(_behavior.patternsIgnoredInvalid());
-    serialOut().print(" ignoredAmbiguous=");
-    serialOut().print(_behavior.patternsIgnoredAmbiguous());
     serialOut().print(" blockedOutputBusy=");
     serialOut().print(_behavior.blockedOutputBusy());
     serialOut().print(" blockedWaiting=");

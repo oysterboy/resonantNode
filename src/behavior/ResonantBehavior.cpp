@@ -1,5 +1,6 @@
 #include "ResonantBehavior.h"
 #include "../app/TimingUtils.h"
+#include "../detection/evaluation/VerdictNames.h"
 
 /*
 ResonantBehavior
@@ -41,21 +42,6 @@ unsigned long randomIdleDelayMs(unsigned long minMs, unsigned long maxMs) {
     const unsigned long spanMs = maxMs - minMs + 1;
     return minMs + static_cast<unsigned long>(random(static_cast<long>(spanMs)));
 }
-
-const char* verdictTypeName(detection::VerdictType type) {
-    switch (type) {
-        case detection::VerdictType::None:
-            return "none";
-        case detection::VerdictType::SinglePulse:
-            return "single_pulse";
-        case detection::VerdictType::Invalid:
-            return "invalid";
-        case detection::VerdictType::Ambiguous:
-            return "ambiguous";
-    }
-
-    return "unknown";
-}
 }
 
 void ResonantBehavior::resetState() {
@@ -89,7 +75,6 @@ void ResonantBehavior::resetState() {
     _networkCallPending = false;
     _patternsReceived = 0;
     _patternsIgnoredInvalid = 0;
-    _patternsIgnoredAmbiguous = 0;
     _blockedOutputBusy = 0;
     _blockedRefractory = 0;
     _blockedWaiting = 0;
@@ -138,24 +123,9 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
 
     if (!result.accepted) {
         _behaviorEligible = false;
-        if (result.type == detection::VerdictType::Ambiguous) {
-            _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
-            _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
-            _patternsIgnoredAmbiguous++;
-            return _lastDecision;
-        }
-
         _lastDecision = BehaviorDecision::IgnoredInvalidPattern;
         _lastBlockReason = BehaviorDecision::IgnoredInvalidPattern;
         _patternsIgnoredInvalid++;
-        return _lastDecision;
-    }
-
-    if (result.type == detection::VerdictType::Ambiguous) {
-        _behaviorEligible = false;
-        _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
-        _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
-        _patternsIgnoredAmbiguous++;
         return _lastDecision;
     }
 
@@ -648,7 +618,7 @@ detection::VerdictType ResonantBehavior::lastVerdictType() const {
 }
 
 const char* ResonantBehavior::lastVerdictTypeName() const {
-    return verdictTypeName(_lastVerdictType);
+    return detection::verdictTypeName(_lastVerdictType);
 }
 
 unsigned long ResonantBehavior::lastHeardMs() const {
@@ -695,10 +665,6 @@ unsigned long ResonantBehavior::patternsReceived() const {
 
 unsigned long ResonantBehavior::patternsIgnoredInvalid() const {
     return _patternsIgnoredInvalid;
-}
-
-unsigned long ResonantBehavior::patternsIgnoredAmbiguous() const {
-    return _patternsIgnoredAmbiguous;
 }
 
 unsigned long ResonantBehavior::blockedOutputBusy() const {
@@ -763,36 +729,22 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
             return "consumed_pattern";
         case BehaviorDecision::IgnoredInvalidPattern:
             return "ignored_invalid_pattern";
-        case BehaviorDecision::IgnoredAmbiguousPattern:
-            return "ignored_ambiguous_pattern";
         case BehaviorDecision::IgnoredMissingSupport:
             return "ignored_missing_support";
         case BehaviorDecision::IgnoredSupportTooLow:
             return "ignored_support_too_low";
-        case BehaviorDecision::Disabled:
-            return "disabled";
         case BehaviorDecision::OutputBusy:
             return "output_busy";
-        case BehaviorDecision::WaitingAfterHeard:
-            return "waiting_after_heard";
         case BehaviorDecision::RefractoryAfterEmit:
             return "refractory_after_emit";
-        case BehaviorDecision::IgnoreAfterOwnEmit:
-            return "ignore_after_own_emit";
-        case BehaviorDecision::CooldownAfterDetect:
-            return "cooldown_after_detect";
         case BehaviorDecision::SelfSuppressed:
             return "self_suppressed";
         case BehaviorDecision::AlreadyScheduled:
             return "already_scheduled";
-        case BehaviorDecision::ResponseProbabilitySkipped:
-            return "response_probability_skipped";
         case BehaviorDecision::Emitted:
             return "emitted";
         case BehaviorDecision::WouldEmit:
             return "would_emit";
-        case BehaviorDecision::UnknownBlocked:
-            return "unknown_blocked";
         case BehaviorDecision::RestFieldDense:
             return "rest_field_dense";
         case BehaviorDecision::RestOwnBudget:

@@ -2,39 +2,24 @@
 
 namespace detection {
 
-// Core pattern labels and reasons.
+// The verdict's vocabulary, only what makeVerdict() produces (step 11e item 3;
+// DET-018 7b). A pattern stage over several occurrences, if it comes, adds its
+// own values downstream (myspec 5.7).
 enum class VerdictType {
     None,
     SinglePulse,
-    DuplicateAfterPrimary,
-    UnexpectedNoise,
-    Invalid,
-    Ambiguous,
 };
 
 enum class VerdictReasonCode {
     None,
     FromOccurrence,
-    DetectorRejected,
-    AmbiguousEvidence,
     SupportRequirementFailed,
 };
 
-// Pattern rejection reasons are kept separate from result kinds.
 enum class VerdictRejectReason {
     None,
-    NoProposal,
-    InvalidOccurrence,
-    NoFrequencyEvidence,
-    FrequencyWindowInvalid,
-    FrequencyScoreTooLow,
-    FrequencyContrastTooLow,
-    FrequencyScoreAndContrastTooLow,
     MissingSupport,
     SupportTooLow,
-    DuplicateAfterPrimary,
-    UnexpectedTiming,
-    UnexpectedNoise,
 };
 
 } // namespace detection

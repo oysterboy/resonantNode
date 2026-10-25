@@ -88,7 +88,8 @@ struct DetectionProfile {
     FieldStateConfig fieldStateConfig = {};
 };
 
-inline const InspectionModuleConfig* evaluatorFirstEnabledRequirement(const InspectionPlan& plan) {
+// The first enabled inspection module: the requirement the status lines name.
+inline const InspectionModuleConfig* firstEnabledRequirement(const InspectionPlan& plan) {
     const size_t count = plan.count > kMaxInspectionModules ? kMaxInspectionModules : plan.count;
     for (size_t i = 0; i < count; ++i) {
         if (plan.modules[i].enabled) {

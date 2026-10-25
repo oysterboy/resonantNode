@@ -16,12 +16,9 @@ Does not decide pattern validity or behavior eligibility.
 class OccurrenceInspector {
 public:
     void configure(const InspectionPlan& plan);
-    void reset();
 
-    InspectedOccurrence inspect(
-        const Occurrence& occurrence
-    ) const;
-
+    // Annotates an accepted occurrence with the plan's evidence from the
+    // history; an absent or invalid occurrence comes back Rejected.
     InspectedOccurrence inspectWithHistory(
         const Occurrence& occurrence,
         const FeatureHistory* featureHistory,
@@ -35,12 +32,6 @@ public:
     unsigned long windowCompleteAtMs(const Occurrence& occurrence) const;
 
 private:
-    void inspectAcceptedOccurrence(
-        InspectedOccurrence& out,
-        const Occurrence& occurrence,
-        const FeatureHistory* featureHistory,
-        unsigned long inspectionNowMs
-    ) const;
     void annotateMagnitudeFeatureStrength(
         InspectedOccurrence& out,
         const Occurrence& occurrence,
@@ -56,18 +47,6 @@ private:
         unsigned long inspectionNowMs,
         const InspectionModuleConfig& module
     ) const;
-    InspectedOccurrence inspectImpl(
-        const Occurrence& occurrence,
-        const FeatureHistory* featureHistory,
-        unsigned long inspectionNowMs
-    ) const;
-
-    InspectedOccurrence inspectAcceptedOccurrenceResult(
-        const Occurrence& occurrence,
-        const FeatureHistory* featureHistory,
-        unsigned long inspectionNowMs
-    ) const;
-
     InspectionPlan _inspectionPlan = {};
 };
 

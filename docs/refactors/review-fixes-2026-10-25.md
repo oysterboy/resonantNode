@@ -94,6 +94,19 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   printed); BOM off MagnitudeWindow.h; test_net_frame's raw control bytes are escapes (git diffs it again);
   FreqBandStream's public constants in the public section; test/ and lib/ READMEs say what is there. Host 68/68,
   T2h byte-identical, include direction strict.
+- 2026-10-25, item 3a (detection, audio, app): AudioSignal loses the never-called block path, `lastBlock*`, the
+  curve callback and `DetectorOccurrenceDetail`; `processSample` keeps the one parameter it reads; IRAM_ATTR only
+  on the per-sample path; the quiet-threshold fallback is the 20 every mode sets. RuntimeDefaults' three unused
+  aliases gone; the unreachable 16- / 8-bit I2S decodes refused with a static_assert. OccurrenceInspector: one
+  entry point `inspectWithHistory` (the `inspect` / `inspectImpl` / `inspectAcceptedOccurrence*` chain and the
+  empty `reset()` gone). FeatureHistory loses `copyWindowApproximateValues`. `evaluatorFirstEnabledRequirement`
+  is `firstEnabledRequirement`. Vocabulary (DET-018 7b): VerdictType {None, SinglePulse}, VerdictReasonCode
+  {None, FromOccurrence, SupportRequirementFailed}, VerdictRejectReason {None, MissingSupport, SupportTooLow},
+  OccurrenceRejectReason {None, InvalidTiming, UnsupportedKind}; TransientRejectReason::PeakStillActive and the
+  six BehaviorDecision values assigned nowhere removed, with Behavior's Ambiguous branches, its local
+  verdictTypeName copy and the always-zero `ignoredAmbiguous=` field of RB behavior (no tool parses it). Kept on
+  purpose: MagnitudeInspectionMode / Basis (implemented profile options, not dead) and DetectorRejectClass (the
+  outward contract of 5.3). Host 68/68, T2h byte-identical, include direction strict.
 
 ## Decisions recorded in this pass
 

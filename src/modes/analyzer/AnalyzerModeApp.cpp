@@ -1093,7 +1093,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.inspection.accepted = report.occurrences.accepted;
     report.inspection.rejected = report.occurrences.rejected;
     const detection::InspectionModuleConfig* supportRequirement =
-        detection::evaluatorFirstEnabledRequirement(selectedProfile.inspectionPlan);
+        detection::firstEnabledRequirement(selectedProfile.inspectionPlan);
     if (trialHasPipelineEvidence && hasInspectedOccurrence) {
         report.inspection.primaryEvidence = detection::occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
         report.inspection.moduleTarget = supportRequirement != nullptr ? supportRequirement->target : detection::InspectionTarget::None;

@@ -459,61 +459,6 @@ MagnitudeWindow FeatureHistory::getWindow(
     return out;
 }
 
-size_t FeatureHistory::copyWindowApproximateValues(
-    FeatureStreamId stream,
-    unsigned long startMs,
-    unsigned long endMs,
-    float* outValues,
-    size_t capacity
-) const {
-    const size_t slot = slotFor(stream);
-    if (slot == kNoSlot || outValues == nullptr || capacity == 0 || timing::beforeDeadline(endMs, startMs)) {
-        return 0;
-    }
-
-    const StreamBuffer& buffer = _streams[slot];
-    if (buffer.binCount == 0 && !buffer.hasCurrent) {
-        return 0;
-    }
-
-    size_t written = 0;
-
-    auto copyBin = [&](const FeatureHistoryBin& bin) {
-        if (!bin.valid || !timing::inWindow(bin.startMs, startMs, endMs)) {
-            return;
-        }
-        if (streamRequiresFreshAggregation(stream) && bin.freshCount == 0) {
-            return;
-        }
-        if (written < capacity) {
-            outValues[written++] = representativeValueForStream(stream, bin);
-        }
-    };
-
-    const size_t oldestIndex = buffer.binCount == kBinsPerStream ? buffer.writeIndex : 0U;
-    for (size_t i = 0; i < buffer.binCount && written < capacity; ++i) {
-        const size_t index = (oldestIndex + i) % kBinsPerStream;
-        copyBin(buffer.bins[index]);
-    }
-    if (buffer.hasCurrent && written < capacity) {
-        FeatureHistoryBin current = {};
-        current.startMs = buffer.current.startMs;
-        current.inputCount = buffer.current.inputCount;
-        current.freshCount = buffer.current.freshCount;
-        current.mean = buffer.current.inputCount > 0
-            ? static_cast<float>(buffer.current.sum / static_cast<double>(buffer.current.inputCount))
-            : 0.0f;
-        current.meanAbs = buffer.current.inputCount > 0
-            ? static_cast<float>(buffer.current.sumAbs / static_cast<double>(buffer.current.inputCount))
-            : 0.0f;
-        current.last = buffer.current.last;
-        current.valid = buffer.current.inputCount > 0;
-        copyBin(current);
-    }
-
-    return written;
-}
-
 size_t FeatureHistory::sampleCount(FeatureStreamId stream) const {
     const size_t slot = slotFor(stream);
     if (slot == kNoSlot) {

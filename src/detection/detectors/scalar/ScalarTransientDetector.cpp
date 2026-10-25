@@ -371,8 +371,6 @@ const char* ScalarTransientDetector::lastTransientRejectReasonName() const {
             return "longest_island_too_short";
         case TransientRejectReason::GapTooLong:
             return "gap_too_long";
-        case TransientRejectReason::PeakStillActive:
-            return "peak_still_active";
     }
 
     return "none";

@@ -13,6 +13,8 @@ one style, and explain how landed items move into the archive changelog.
 ```text
 What exists right now?          the code, then implementation-status.md
 Where does a concept belong?    docs/specs/myspec.md
+How does it work / how do I run
+or change it?                   docs/notes_manual.md (the operator guide)
 What next, in what order?       roadmap-0-steps.md
 What exactly is item X?         the domain roadmap that owns its ID
 How is a big item executed?     its pass / plan doc in docs/refactors/
@@ -31,6 +33,30 @@ docs/refactors/       executes an item too big for one commit: phases, test
                       battery, gates. Temporary; archived with an
                       "Archived: ..." header when the item closes.
 ```
+
+## Spec, guide, roadmap
+
+Three documents, three tenses:
+
+```text
+docs/specs/myspec.md      what must be true for the code to be correct: the chain,
+                          owns / must not own per module, numeric-domain contract,
+                          interface shapes other code or tools depend on.
+docs/notes_manual.md      how to run, read and change what is built: commands,
+                          param paths, config sites, apply points, gate chain in
+                          operating terms. Points at code and PARAM DUMP for values.
+docs/roadmaps/            what is not true yet, and in what order.
+the code                  what the value is today.
+```
+
+The test for a sentence: if it were wrong, would it force a refactor doc? Then
+it is spec. Would it only make an operator type the wrong command or read the
+wrong header? Then it is guide. A default, a knob list or a command syntax never
+goes into the spec; the guide quotes a value only with its date and the code
+site it came from, and prefers a pointer (`PARAM DUMP`, the header) to a copy.
+The guide drifts fastest because it names things; keep it cheap and
+pointer-shaped rather than complete, and fix a stale pointer when you find one
+instead of adding a drift banner.
 
 ## Ordering rule
 

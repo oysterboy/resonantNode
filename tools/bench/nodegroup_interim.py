@@ -24,13 +24,35 @@ verdicts = []       # (t, name, strength or None)
 trains = []         # (t, name): hop train starts
 status = defaultdict(list)
 last_t = 0.0
-for line in open(a.log, encoding="utf-8", errors="replace"):
-    if line.startswith("#"):
-        continue
-    m = re.match(r"([\d.]+) (E\d) (.*)", line.rstrip("\n"))
-    if not m:
-        continue
-    t, n, l = float(m.group(1)), m.group(2), m.group(3)
+# RB STATUS outgrew 1 KB (2026-10-25: ~1.7 KB with the radio and heap fields) and reaches the PC in two
+# pieces; nodegroup.py before that date logged the second piece as its own line (no "RB STATUS" prefix).
+# A STATUS line without its closing BUILD field is held and joined with the board's next line.
+held_status = {}
+
+
+def log_lines(path):
+    for line in open(path, encoding="utf-8", errors="replace"):
+        if line.startswith("#"):
+            continue
+        m = re.match(r"([\d.]+) (E\d) (.*)", line.rstrip("\n"))
+        if not m:
+            continue
+        t, n, l = float(m.group(1)), m.group(2), m.group(3)
+        if n in held_status:
+            t0, head = held_status.pop(n)
+            if not re.match(r"(RB |BEH |PARAM |NET |SELFTEST|BUILD )", l):
+                yield t0, n, head + l
+                continue
+            yield t0, n, head
+        if l.startswith("RB STATUS") and " BUILD role=" not in l:
+            held_status[n] = (t, l)
+            continue
+        yield t, n, l
+    for n, (t0, head) in held_status.items():
+        yield t0, n, head
+
+
+for t, n, l in log_lines(a.log):
     last_t = max(last_t, t)
     if l.startswith("BEH emit start"):
         s = re.search(r"source=(\w+)", l)

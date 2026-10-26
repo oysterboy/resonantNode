@@ -43,8 +43,10 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-26: 11a done (remote commands by radio; 12 h with the radio on: every pass mark, no leak).
+Next: 11b (DET-015 host phase); 11d needs the owner's WiFi credentials.
 Status update 2026-10-25, later: step 11e added, parallel to 11a (review fixes, host-only; #63, pass doc
-docs/refactors/review-fixes-2026-10-25.md). 11a stays NEXT on the bench.
+docs/refactors/review-fixes-2026-10-25.md). 11a closed 2026-10-26; 11e runs beside 11b.
 Status update 2026-10-25 (owner away from the bench for a week): 11a OTA params, 11b DET-015 host phase,
 11c unattended runs, 11d OTA firmware. Next: 11a.
 Status update 2026-10-24: 10c done (block 2, 24 h on dbb6305, every pass mark met). Open before step 11's
@@ -1035,7 +1037,7 @@ the previous gate open unless the step says it can run in parallel.
    done 28, rejected 0. Host: test_sound_output 7 tests. Also fixed: an idle call stopped in its gap no longer
    starts its train later.
 
-11a. [NEXT] OTA params: remote param update over the radio (PAR-013). (issue #58)
+11a. [DONE 2026-10-26] OTA params: remote param update over the radio (PAR-013). (issue #58, closed)
    Owner 2026-10-25 (away from the bench for a week; boards stay on USB here). Set, save and read params on every
    node by radio, ESP-NOW (no router), routed into the same PARAM command path as serial (PAR-013: no
    transport-specific store or validation). Any USB node is the gateway (`NET <target> <command>`); replies come
@@ -1052,8 +1054,18 @@ the previous gate open unless the step says it can run in parallel.
    Widened the same day (owner): every Node command by radio, large replies paced (150 ms per frame), long lines
    joined at the gateway, SELFTEST to one named node only (operator rules in notes_manual.md). `NET * RB STATUS`,
    `NET * PARAM DUMP`, `NET E5 SELFTEST`: complete replies, 0 drops on every node. test_net_frame 6 tests.
+   Done 2026-10-26:
+   - long run, radio on, five nodes sounding, 12.0 h (bench/sessions/2026-10-25-radio-on-run): 873/873 chains
+     ended (max 6.2 s), 0 noise-started of 15,858 answers, 0 dropped buffers after boot, 0 resets, no deaf node,
+     max 53 per minute; heap.free identical at the start and the end (87.2-87.7 KB, no leak); loop stack 12,060 B
+     free. Same pass marks as block 2 without the radio.
+   - the role split (5ffab4a) on all five, `tools/bench/netcheck.py` (bench/sessions/2026-10-26-step11a-split-
+     netcheck): every step ok, 0 drops except E3's SAVE (9, the flash write); E5's quiet_boot FAILED at that boot
+     (smooth 453 over the 400 threshold, no quiet within 8 s): E5's long-cable mic, not the build.
+   - found on the way: RB STATUS (~1.7 KB) reached the log in two pieces; nodegroup.py now assembles whole
+     lines, nodegroup_interim.py joins the pieces in older logs.
 
-11b. [TODO] DET-015 shape inspector, host phase. (issue #59)
+11b. [NEXT] DET-015 shape inspector, host phase. (issue #59)
    Owner 2026-10-25. The Node hears the hop train only (decisions/2026-10-23-node-hears-the-hop-train-only.md);
    the height cell showed a train cut to three steps passing on 16 ms of margin. Host work on the corpus and the
    height cell's RAW captures; bench validation when the owner is back. Gate (host): the shape reads the steps of

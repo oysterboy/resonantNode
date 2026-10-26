@@ -1,6 +1,6 @@
 # Remote commands over ESP-NOW, through the serial command path; large replies paced, SELFTEST one node at a time
 
-Status: decided, implemented 2026-10-25 (step 11a, PAR-013); long-run radio cost still open.
+Status: decided, implemented 2026-10-25 (step 11a, PAR-013); long run with the radio on done 2026-10-26 (12 h, every pass mark, no leak).
 Date: 2026-10-25.
 
 ## Decision

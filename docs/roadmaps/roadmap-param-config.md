@@ -461,8 +461,9 @@ Without visibility, live tuning will create hidden drift between nodes.
 
 ### PAR-013 - remote param update
 
-Status: IN PROGRESS 2026-10-25 (step 11a): ESP-NOW transport through the serial PARAM path, on all five boards;
-long-run radio cost open (decisions/2026-10-25-remote-params-espnow.md). The original note:
+Status: DONE 2026-10-26 (step 11a): ESP-NOW transport through the serial command path, on all five boards; 12 h
+with the radio on at every pass mark (decisions/2026-10-25-remote-params-espnow.md). Interim: VEKTOR replaces it
+(decisions/2026-10-25-vektor-replaces-net.md). The original note:
 
 ```text
 Add remote transports only after Serial and persistence are stable.

@@ -248,9 +248,10 @@ private:
 
     // Debug / logging support.
     NodeDebug _debug;
-    // 255 like the Analyzer's USB line; a longer line is refused, never run
-    // cut (issue #31; app/SerialLine.h).
-    serial_line::LineReader<255> _serialLine;
+    // 256 like the Analyzer's USB line; a longer line is refused, never run
+    // cut (issue #31; app/SerialLine.h). Also the command scratch size.
+    static constexpr size_t kSerialLineCapacity = 256;
+    serial_line::LineReader<kSerialLineCapacity - 1> _serialLine;
     unsigned long _rbPendingCount = 0;
     unsigned long _rbPatternAcceptedCount = 0;
     unsigned long _rbValidPatternCount = 0;

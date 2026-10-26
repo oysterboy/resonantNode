@@ -1,0 +1,25 @@
+A: pre_chirp10.bc409a5.log
+B: post_chirp10.597c921.log
+metric                                A          B
+trials                               10         10
+completed                            10         10
+expected_trials                       0          0
+early_trials                          0          0
+late_trials                           0          0
+miss_trials                           0          0
+duplicate_trials                      0          0
+unexpected_trials                     0          0
+rejected_trials                      10         10
+buffer_overrun_trials                 0          0
+detector_accepted_trials              0          0
+detector_reject_trials               10         10
+pattern_valid_trials                  0          0
+pattern_rejected_trials               0          0
+avg_dt_ms                            -1         -1
+avg_strength                     5858.3     4455.4  *
+avg_conf                           0.00       0.00
+trial results A: {'rejected': 10}
+trial results B: {'rejected': 10}
+line counts   A: {'SEQ_TRIAL': 10, 'SEQ_INSPECT': 10, 'SEQ_SOURCE': 10, 'SEQ_SOURCE_CORE': 10, 'SEQ_SOURCE_SPEC': 10, 'SEQ_EXPLAIN': 10, 'SEQ_SUMMARY': 1}
+line counts   B: {'SEQ_TRIAL': 10, 'SEQ_INSPECT': 10, 'SEQ_SOURCE': 10, 'SEQ_SOURCE_CORE': 10, 'SEQ_SOURCE_SPEC': 10, 'SEQ_EXPLAIN': 10, 'SEQ_SUMMARY': 1}
+

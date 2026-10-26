@@ -1,0 +1,28 @@
+[08:18:00] boot banner: {'role': 'analyzer', 'git': 'bc409a5', 'version': '0.4.0', 'board': 'damp'}
+[08:18:03] warmup: OK EMIT CHIRP
+[08:18:03] start pre_hop10: SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[08:18:40] done pre_hop10 (37s): complete=True results={'expected': 10}
+[08:18:42] start pre_chirp10: SEQ start profile=TonalPulseScalar tries=10 dur=100 mode=detail when=all verbose=1
+[08:19:18] done pre_chirp10 (36s): complete=True results={'rejected': 10}
+[08:19:35] session updated, index rebuilt
+[08:21:20] boot banner: {'role': 'analyzer', 'git': 'bc409a5', 'version': '0.4.0', 'board': 'damp'}
+[08:21:22] warmup: OK EMIT CHIRP
+[08:21:22] start pre_chirp10_pre_emitter: SEQ start profile=TonalPulseScalar tries=10 dur=100 mode=detail when=all verbose=1
+[08:21:59] done pre_chirp10_pre_emitter (36s): complete=True results={'rejected': 10}
+[08:22:05] session updated, index rebuilt
+[08:22:54] boot banner: {'role': 'analyzer', 'git': '597c921', 'version': '0.4.0', 'board': 'damp'}
+[08:22:56] warmup: OK EMIT CHIRP
+[08:22:56] start post_hop10: SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[08:23:32] done post_hop10 (36s): complete=True results={'expected': 10}
+[08:23:34] start post_chirp10: SEQ start profile=TonalPulseScalar tries=10 dur=100 mode=detail when=all verbose=1
+[08:24:10] done post_chirp10 (36s): complete=True results={'rejected': 10}
+[08:24:17] session updated, index rebuilt
+[08:25:16] boot banner: {'role': 'analyzer', 'git': '597c921', 'version': '0.4.0', 'board': 'damp'}
+[08:25:18] warmup: OK EMIT CHIRP
+[08:25:18] start post_hop10_onset20000: PARAM SET detection.scalar_onset_threshold 20000 ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[08:25:55] done post_hop10_onset20000 (37s): complete=True results={'miss': 10}
+[08:25:57] start post_hop10_onset2000: PARAM SET detection.scalar_onset_threshold 2000 ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[08:26:34] done post_hop10_onset2000 (37s): complete=True results={'expected': 10}
+[08:26:36] start post_param_bad: PARAM SET detection.scalar_onset_threshold abc ; PARAM GET detection.scalar_onset_threshold ; SEQ start profile=TonalPulseScalar tries=1 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[08:26:46] done post_param_bad (10s): complete=True results={'expected': 1}
+[08:26:55] session updated, index rebuilt

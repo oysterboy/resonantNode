@@ -1,0 +1,8 @@
+ok   radio idle 30 s                        - | drops E1:+0 E4:+0 E5:+0
+ok   NET * NET PING                         answered: E4,E5 | drops E1:+0 E4:+0 E5:+0
+ok   NET * PARAM GET output.silent          E4=['1'] E5=['1'] | drops E1:+0 E4:+0 E5:+0
+ok   SET + SAVE on E4, reboot               boots with rest_ms 6000: True | drops E1:+0 E4:+9 E5:+0
+ok   NET * RB STATUS                        E4:1563 E5:1577 | drops E1:+0 E4:+0 E5:+0
+ok   NET * PARAM DUMP                       E4:39 E5:39 | drops E1:+0 E4:+0 E5:+0
+ok   NET * SELFTEST (refused)               refused: True | drops E1:+0 E4:+0 E5:+0
+result: PASS

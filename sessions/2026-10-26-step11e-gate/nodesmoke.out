@@ -1,0 +1,24 @@
+== boot
+   BUILD role=node git=597c921 date=Oct 26 2026 time=08:10:31 version=0.4.0 board=damp
+   RB node name=E1 rotation_source=roster
+   PARAM load path=output.silent value=1 default=0
+   PARAM load stored=39 applied=39 stale=0 invalid=0
+   RB net started=1 channel=1 net_id=82
+   RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+   RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+   RB silent=1 (output.silent: listening, never sounding)
+   RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+   RB PROFILE detail
+== RB PROFILE
+   RB PROFILE name=TonalPulseScalar
+== RB STATUS: 1563 chars; silent=1 output.phase=idle i2s.dropped_dma_buffers=0 net.started=1 loop.stack_free_min_bytes=14172
+== 10 hop trains from E3: valid verdicts 10, answers 10
+== SAVE with output.silent 1
+   PARAM SAVE written=1 unchanged=38 failed=0 status=ok
+== PARAM RESET
+   PARAM RESET store=cleared values=defaults
+   RB silent=0
+== after RESET: behavior_idle=1 silent=0
+== one train after RESET: answers 1 (the node sounds again)
+== restore silent (stored)
+   PARAM SAVE written=39 unchanged=0 failed=0 status=ok

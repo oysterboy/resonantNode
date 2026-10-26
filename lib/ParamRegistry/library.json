@@ -2,7 +2,7 @@
   "name": "ParamRegistry",
   "version": "0.3.0",
   "description": "Flat, fixed-capacity registry of bound tuning fields: dotted paths, typed parsing, range checks, LIST/DUMP, SAVE/LOAD through an app-supplied store. In-repo library (PAR-016); includes nothing from the app's src/.",
-  "frameworks": "arduino",
+  "frameworks": "*",
   "platforms": "*",
   "build": {
     "srcDir": "src"

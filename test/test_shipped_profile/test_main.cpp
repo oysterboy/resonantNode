@@ -35,6 +35,7 @@ Host: `pio test -e native-test-behavior` (no src build; this file pulls the chai
 // test_build_src is off for the ESP envs: pull the chain into the test build.
 #include "../../src/audio/AudioSignal.cpp"
 #include "../../src/detection/DetectionRuntime.cpp"
+#include "../../src/detection/DetectionDiagnostics.cpp"  // the Analyzer build (ANALYZER_MODE) links its recorder
 #include "../../src/detection/detectors/DetectorNames.cpp"
 #include "../../src/detection/detectors/DetectorReportPrinter.cpp"
 #include "../../src/detection/detectors/scalar/ScalarTransientDetector.cpp"

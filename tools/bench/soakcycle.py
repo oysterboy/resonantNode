@@ -12,10 +12,14 @@ captures. Per cycle: cycle<NN>_<step>.log (the Analyzer transcript), cycle<NN>_h
 tools/bench/hopbins.py), and one row in cycles.csv (local time, per step expected / rejected / miss, the reject
 reasons, avg strength). Then the Nodes run again.
 
+--at-min 7,27,47 puts the checks at those minutes of the clock instead of every --cycle-min (owner 2026-10-26: hourly
+steps in the drift are suspicious, and church bells ring in the distance on the hour and the quarters; a 20 min
+grid off the quarters samples the drift three times as densely and never measures while a bell rings).
+
 All ports are opened with DTR/RTS low (no reset) and held for the whole run.
 
   python tools/bench/soakcycle.py --nodes E1=COM8,E4=COM10,E5=COM11 --analyzer COM3 --hours 24 --cycle-min 60 \\
-      --out bench/sessions/<folder> --name soak
+      --out bench/sessions/<folder> --name soak [--at-min 7,27,47]
 """
 import argparse
 import csv
@@ -41,6 +45,8 @@ ap.add_argument("--analyzer", required=True, help="the Analyzer's port (the Emit
 ap.add_argument("--hours", type=float, default=24.0)
 ap.add_argument("--cycle-min", type=float, default=60.0)
 ap.add_argument("--first-check-min", type=float, default=2.0, help="the first room check, minutes after the start")
+ap.add_argument("--at-min", default="", help="room checks at these minutes of the clock (e.g. 7,27,47); "
+                "replaces --cycle-min and --first-check-min")
 ap.add_argument("--status-every", type=float, default=120.0)
 ap.add_argument("--settle-s", type=float, default=8.0, help="after silencing the Nodes, before the first step")
 ap.add_argument("--raw-reps", type=int, default=2)
@@ -141,6 +147,19 @@ def summarize(lines):
     return row
 
 
+AT_MIN = sorted(int(x) for x in a.at_min.split(",") if x.strip())
+
+
+def next_clock_check(after_unix):
+    """Seconds after t0 of the first clock minute in AT_MIN after after_unix."""
+    t = datetime.datetime.fromtimestamp(after_unix).replace(second=0, microsecond=0)
+    for _ in range(24 * 60 + 1):
+        t += datetime.timedelta(minutes=1)
+        if t.minute in AT_MIN:
+            return t.timestamp() - t0
+    raise ValueError("--at-min: no minute in 0..59")
+
+
 cycles_path = os.path.join(a.out, "cycles.csv")
 cycles_new = not os.path.exists(cycles_path)
 cycles_file = open(cycles_path, "a", newline="", encoding="utf-8")
@@ -154,7 +173,7 @@ for c in ("PARAM SET output.silent 0", "RB log full"):
     to_nodes(c)
 
 next_status = a.status_every
-next_check = a.first_check_min * 60.0
+next_check = next_clock_check(t0) if AT_MIN else a.first_check_min * 60.0
 cycle = 0
 while time.time() - t0 < a.hours * 3600.0:
     pump(0.05)
@@ -184,7 +203,7 @@ while time.time() - t0 < a.hours * 3600.0:
         to_nodes("PARAM SET output.silent 0")
         log.write("%.2f -- room check %d end\n" % (time.time() - t0, cycle))
         log.flush()
-        next_check += a.cycle_min * 60.0
+        next_check = next_clock_check(time.time()) if AT_MIN else next_check + a.cycle_min * 60.0
 
 to_nodes("PARAM SET output.silent 1")  # leave them quiet; a reboot also boots them silent (stored)
 pump(1)

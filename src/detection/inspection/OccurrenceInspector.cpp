@@ -299,7 +299,7 @@ void OccurrenceInspector::runInspectionModule(
 // bottom (a rotation that wraps), counts as rising.
 void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurrence& occurrence,
                                         const ShapeInspectionConfig& config) const {
-    constexpr unsigned long kRunGapMs = 3;
+    constexpr uint32_t kRunGapMs = 3;
     constexpr size_t kMaxRuns = 16;
     constexpr uint32_t kBinSpacingHz = 250;
     OccurrenceShape shape = {};
@@ -309,14 +309,16 @@ void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurren
     }
     struct Run {
         uint32_t hz;
-        unsigned long startMs;
-        unsigned long lengthMs;
+        uint32_t startMs;
+        uint32_t lengthMs;
     };
     Run raw[kMaxRuns * 2];
     size_t rawCount = 0;
-    const unsigned long start = occurrence.startMs > config.preMs ? occurrence.startMs - config.preMs : 0UL;
-    const unsigned long end = occurrence.startMs + occurrence.durationMs + config.tailMs;
-    for (unsigned long ms = start; ms <= end; ++ms) {
+    // 32-bit ms, wrap-safe (critique D1.1): count over the span instead of comparing absolute times.
+    const uint32_t start = static_cast<uint32_t>(occurrence.startMs) - static_cast<uint32_t>(config.preMs);
+    const uint32_t span = static_cast<uint32_t>(config.preMs + occurrence.durationMs + config.tailMs);
+    for (uint32_t k = 0; k <= span; ++k) {
+        const uint32_t ms = start + k;
         uint32_t hz = 0;
         uint16_t level = 0;
         if (!_binTrack->at(ms, hz, level) || static_cast<float>(level) < config.minLevel) {
@@ -324,7 +326,7 @@ void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurren
         }
         shape.applicable = true;
         Run* last = rawCount > 0 ? &raw[rawCount - 1] : nullptr;
-        if (last != nullptr && last->hz == hz && ms - (last->startMs + last->lengthMs) <= kRunGapMs) {
+        if (last != nullptr && last->hz == hz && static_cast<uint32_t>(ms - (last->startMs + last->lengthMs)) <= kRunGapMs) {
             last->lengthMs = ms - last->startMs + 1;
         } else if (rawCount < kMaxRuns * 2) {
             raw[rawCount++] = {hz, ms, 1};
@@ -337,7 +339,7 @@ void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurren
             continue;
         }
         if (keptCount > 0 && kept[keptCount - 1].hz == raw[i].hz) {
-            kept[keptCount - 1].lengthMs = raw[i].startMs + raw[i].lengthMs - kept[keptCount - 1].startMs;
+            kept[keptCount - 1].lengthMs = static_cast<uint32_t>(raw[i].startMs + raw[i].lengthMs - kept[keptCount - 1].startMs);
         } else if (keptCount < kMaxRuns) {
             kept[keptCount++] = raw[i];
         }

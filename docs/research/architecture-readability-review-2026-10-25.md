@@ -612,6 +612,14 @@ string before it was written down.
    the `-wraptest` envs (`TIMEBASE_OFFSET_US`). Fix: `timing::after` / `timing::delta` in BinTrack, the shape loop
    over a `uint32_t` count, and a `test_shape_inspector` case that notes across `0xFFFFFFFF`. Nothing in the
    current test set would have caught it: the two timebase suites do not touch the track (D4.2).
+   -> done 2026-10-26 (before the 11c restart). Reproduced on the board first: E1 on a Node build with
+   `TIMEBASE_OFFSET_US=4294787296000` (ms wrap 180 s after boot) answered hop trains as valid on both sides of the
+   wrap and then accepted 5/5 plain 3450 Hz chirps, which it rejects 10/10 before the wrap. BinTrack on `uint32_t`
+   with `timing::after`, the shape loop over a count from `startMs - preMs` (wrap-safe, no clamp to 0);
+   `test_shape_holds_across_the_ms_wrap` (a train across 0xFFFFFFFF, a split occurrence after the wrap that looks
+   back before it, a steady tone after it) fails on the old code ("Expected 5 Was 0") and passes. Left as it is:
+   the magnitude window's clamp at `:208` (every plan's `windowPreMs` is 0, and the clamp only bites in the first
+   `windowPreMs` ms after boot or at the wrap).
 
 2. **`output.*` ranges exceed `OutputLimits`; a legal `PARAM SET` turns every answer into a chirp no node hears
    (medium).** `ResonantNodeParams.cpp:51-53` allows `hop_pulse_ms` 1-1000, `hop_gap_ms` 0-2000, `hop_steps`
@@ -632,6 +640,7 @@ string before it was written down.
    its N-th command of the new life rejected by every node (`rxRejected++`), while it prints `NET sent` and
    gets no answer. Fix: seed `_nextSeq` from `esp_random()` (nonzero) at `begin()`, or a boot nonce in the frame.
    No test covers the filter across a reboot.
+   -> done 2026-10-26: `begin()` seeds `_nextSeq` from `esp_random()` (nonzero). Still no test (D4.3).
 
 4. **`SEQ start` during a run discards the run; `SEQ STOP` leaves a pending start armed; `SEQ STATUS` reads two
    copies of the config that disagree (medium-low).** `AnalyzerCommands.cpp:443-756` has no `_sequenceTest.active`
@@ -669,6 +678,7 @@ string before it was written down.
    `DetectionDiagnostics`, whose constructor and hooks live in the omitted file. The 11e gate ran
    `test_analyzer_pass_rules` and `test_timebase` on a board, not this one. By inclusion analysis (no xtensa
    toolchain here). Fix: include `DetectionDiagnostics.cpp` (it is self-guarded).
+   -> done 2026-10-26: included; run on the board on esp32dev-analyzer (see the 11c restart in roadmap-0-steps.md).
 
 8. **SELFTEST values are parsed with bare `strtoul` and clamped (low).** `SelfTestReport.cpp:208-216`:
    `SELFTEST external wait_ms=abc` runs with 100 ms, `chirp n=abc` with one chirp, no error line; the one parser
@@ -835,11 +845,15 @@ string before it was written down.
    survey never worked as committed; E002's text discusses the dips, so its tables came from an uncommitted
    intermediate state of the tool. The committed tool cannot reproduce them. Fix: parse `k=v` pairs; one
    fixture-driven test of the parser.
+   -> done 2026-10-26 (parser): `shape_fields()` reads `k=v` pairs and stops on a shape line missing a field
+   instead of dropping it. No parser test yet.
 
 2. **Two suites run nowhere in CI (medium).** `test_timebase` (the wrap math of issue #30) and
    `test_analyzer_pass_rules` are in no native filter (`platformio.ini:150-158, 166, 183`) and `build.yml` has no
    device job; both build the slice `test_shipped_profile` already builds on the host. Fix: add both to
    `native-test-behavior`. With D1.7, three of the four on-device suites are either unrunnable or unrun.
+   -> done 2026-10-26: both in `native-test-behavior` (8 / 9 tests pass on the host); each got the
+   `runTests()` / `main()` split `test_shipped_profile` has, `setup()` on the board as before.
 
 3. **No host test for (medium, list).** `src/hal/` (all), `NodeNet.cpp` (pacing, outbox, the filter across a
    reboot), the three command dispatchers and every status / report printer the bench tools parse,

@@ -183,8 +183,7 @@ void test_scalar_occurrence_across_ms_wrap() {
     TEST_ASSERT_TRUE(timing::delta(occurrence.endMs, occurrence.startMs) < 100);
 }
 
-void setup() {
-    delay(100);
+static int runTests() {
     UNITY_BEGIN();
     RUN_TEST(test_ms_from_us64_is_continuous_across_us_wrap);
     RUN_TEST(test_ms_from_us64_matches_millis_formula);
@@ -194,7 +193,19 @@ void setup() {
     RUN_TEST(test_feature_history_window_across_ms_wrap);
     RUN_TEST(test_scalar_occurrence_across_us_wrap);
     RUN_TEST(test_scalar_occurrence_across_ms_wrap);
-    UNITY_END();
+    return UNITY_END();
+}
+
+// Runs on the board and on the host (env native-test-behavior, CI; critique D4.2).
+#if defined(ARDUINO_ARCH_ESP32)
+void setup() {
+    delay(100);
+    runTests();
 }
 
 void loop() {}
+#else
+int main(int, char**) {
+    return runTests();
+}
+#endif

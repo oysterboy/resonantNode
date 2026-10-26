@@ -141,7 +141,9 @@ static void printDetectionProfileDetails(const detection::DetectionProfile& prof
         serialOut().print("  inspectionPlan.module[");
         serialOut().print(static_cast<unsigned int>(i));
         serialOut().print("].kind=");
-        serialOut().print(module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength ? "MagnitudeFeatureStrength" : "None");
+        serialOut().print(module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength ? "MagnitudeFeatureStrength"
+                          : module.kind == detection::InspectionModuleKind::BinShape         ? "BinShape"
+                                                                                              : "None");
         serialOut().print(" label=");
         serialOut().print(detection::inspectionTargetName(module.target));
         if (module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength) {

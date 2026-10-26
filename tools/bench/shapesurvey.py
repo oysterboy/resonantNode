@@ -28,14 +28,31 @@ def category(name, d):
     return "other:" + n[:20]
 
 
+SHAPE_KEYS = ("start_ms", "dur_ms", "active_ms", "runs", "distinct", "up_steps", "other_steps", "seq")
+
+
+def shape_fields(line):
+    """A replay `shape <label> k=v ...` line as (label, start_ms, ..., seq), or None. Reads k=v pairs, so a field
+    the replay adds (dips_pct, edips_pct came with the tool) does not make every line drop silently (critique
+    D4.1); a line that lacks one of SHAPE_KEYS stops the survey instead of being skipped."""
+    m = re.match(r"\s+shape (\S+) (.*)", line)
+    if not m:
+        return None
+    f = dict(re.findall(r"(\w+)=(\S*)", m.group(2)))
+    missing = [k for k in SHAPE_KEYS if k not in f]
+    if missing:
+        sys.exit("shapesurvey: shape line without %s: %s" % (",".join(missing), line.strip()))
+    return (m.group(1),) + tuple(f[k] for k in SHAPE_KEYS)
+
+
 rows = []
 for d in dirs:
     out = subprocess.run([PROG, "--shape", "--dir", d], capture_output=True, text=True).stdout.splitlines()
     pending = []
     for line in out:
-        m = re.match(r"\s+shape (\S+) start_ms=(\d+) dur_ms=(\d+) active_ms=(\d+) runs=(\d+) distinct=(\d+) up_steps=(\d+) other_steps=(\d+) seq=(.*)", line)
-        if m:
-            pending.append(m.groups())
+        g = shape_fields(line)
+        if g:
+            pending.append(g)
             continue
         m = re.match(r"(\S+\.(?:csv|wav))\s", line)
         if m:

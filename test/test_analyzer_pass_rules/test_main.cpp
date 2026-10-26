@@ -250,8 +250,7 @@ void test_scalar_detector_accepted_report_clears_stale_reject_reason() {
     TEST_ASSERT_EQUAL_STRING("none", acceptedReport.scalar.inspect.gateReason);
 }
 
-void setup() {
-    delay(100);
+static int runTests() {
     UNITY_BEGIN();
     RUN_TEST(test_feature_history_empty_window);
     RUN_TEST(test_feature_history_single_value_quantiles);
@@ -262,7 +261,19 @@ void setup() {
     RUN_TEST(test_scalar_detector_emits_distinct_occurrence_ids);
     RUN_TEST(test_pattern_rejected_helper_excludes_source_rejects);
     RUN_TEST(test_scalar_detector_accepted_report_clears_stale_reject_reason);
-    UNITY_END();
+    return UNITY_END();
+}
+
+// Runs on the board and on the host (env native-test-behavior, CI; critique D4.2).
+#if defined(ARDUINO_ARCH_ESP32)
+void setup() {
+    delay(100);
+    runTests();
 }
 
 void loop() {}
+#else
+int main(int, char**) {
+    return runTests();
+}
+#endif

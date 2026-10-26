@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../../app/TimingUtils.h"
 #include "../../audio/AudioPcm.h"
 
 namespace detection {
@@ -21,6 +22,11 @@ An entry holds the bin with the largest target value in that ms, as a code
 (Hz / kHzPerCode, 0 = none): the band's bins are 250 Hz apart, so the code keeps
 them distinct in a byte. Outside band mode the stream reports no bin and the
 track stays empty, which the inspector reads as "no shape".
+
+Times are 32-bit ms and compared wrap-safe (TimingUtils.h): with plain
+comparisons the track stopped at the 2^32 ms wrap (49.7 days up) and the shape
+rule went silent (critique D1.1, reproduced on the board 2026-10-26). 2^32 is a
+multiple of kMs, so the slots stay continuous across the wrap.
 */
 class BinTrack {
 public:
@@ -37,7 +43,7 @@ public:
     }
 
     // One frame: the strongest bin (0 when none) and the target value at nowMs.
-    void note(unsigned long nowMs, unsigned long peakBinHz, audio::FrequencyScore16 level) {
+    void note(uint32_t nowMs, unsigned long peakBinHz, audio::FrequencyScore16 level) {
         advanceTo(nowMs);
         if (peakBinHz == 0) {
             return;
@@ -50,8 +56,8 @@ public:
     }
 
     // The entry for ms: false for a ms with no bin, in the future, or older than the ring.
-    bool at(unsigned long ms, uint32_t& binHz, uint16_t& level) const {
-        if (!_started || ms > _newestMs || _newestMs - ms >= kMs) {
+    bool at(uint32_t ms, uint32_t& binHz, uint16_t& level) const {
+        if (!_started || timing::after(ms, _newestMs) || _newestMs - ms >= kMs) {
             return false;
         }
         const size_t slot = static_cast<size_t>(ms % kMs);
@@ -63,10 +69,10 @@ public:
         return true;
     }
 
-    unsigned long newestMs() const { return _newestMs; }
+    uint32_t newestMs() const { return _newestMs; }
 
 private:
-    void advanceTo(unsigned long nowMs) {
+    void advanceTo(uint32_t nowMs) {
         if (!_started) {
             _started = true;
             _newestMs = nowMs;
@@ -75,12 +81,13 @@ private:
             _level[slot] = 0;
             return;
         }
-        if (nowMs <= _newestMs) {
+        if (!timing::after(nowMs, _newestMs)) {
             return;
         }
-        const unsigned long steps = nowMs - _newestMs >= kMs ? kMs : nowMs - _newestMs;
-        for (unsigned long k = 1; k <= steps; ++k) {
-            const size_t slot = static_cast<size_t>((_newestMs + k) % kMs);
+        const uint32_t ahead = nowMs - _newestMs;
+        const uint32_t steps = ahead >= kMs ? static_cast<uint32_t>(kMs) : ahead;
+        for (uint32_t k = 1; k <= steps; ++k) {
+            const size_t slot = static_cast<size_t>(static_cast<uint32_t>(_newestMs + k) % kMs);
             _code[slot] = 0;
             _level[slot] = 0;
         }
@@ -89,7 +96,7 @@ private:
 
     uint8_t _code[kMs] = {};
     uint16_t _level[kMs] = {};
-    unsigned long _newestMs = 0;
+    uint32_t _newestMs = 0;
     bool _started = false;
 };
 

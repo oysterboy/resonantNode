@@ -3,7 +3,8 @@ The ShapeInspector on the host (DET-015, step 11b; decisions/2026-10-26-det015-b
 BinTrack plus the BinShape module over synthetic bin sequences, and makeVerdict's shape requirement. Pins the
 rule: a steady tone is one bin (None), a hop train visits the band's bins rising (Strong), a train cut to three
 steps is still Medium (the height-offset case, E002), a rotation that wraps counts as rising, and single-target
-mode (no bins) is "not applicable" and passes. Runs in native-test-behavior.
+mode (no bins) is "not applicable" and passes, and all of it holds across the 32-bit ms wrap (critique D1.1).
+Runs in native-test-behavior.
 */
 #include <unity.h>
 
@@ -20,9 +21,9 @@ using namespace detection;
 namespace {
 
 // Fill the track: each step holds one bin for stepMs, then gapMs of nothing, from startMs.
-void playSteps(BinTrack& track, unsigned long startMs, const uint32_t* bins, size_t n, unsigned long stepMs,
+void playSteps(BinTrack& track, uint32_t startMs, const uint32_t* bins, size_t n, unsigned long stepMs,
                unsigned long gapMs, uint16_t level = 9000) {
-    unsigned long t = startMs;
+    uint32_t t = startMs;  // 32 bits like the board's clock, so a test can cross the wrap
     for (size_t i = 0; i < n; ++i) {
         for (unsigned long k = 0; k < stepMs; ++k) {
             track.note(t++, bins[i], level);
@@ -220,6 +221,32 @@ void test_shipped_settings_still_reject_jumps_and_steady_tones() {
     TEST_ASSERT_EQUAL(StrengthClass::None, inspect(steady, shippedShapePlan(), occurrence(300, 130)).occurrence.shape.shapeClass);
 }
 
+// Critique D1.1 (reproduced on the board 2026-10-26: after the ms wrap the track froze, the shape was "not
+// applicable" and plain chirps passed). A train that crosses 0xFFFFFFFF is still Strong, an occurrence just after
+// the wrap still finds its first steps before it with the look-back, and a steady tone after the wrap still fails.
+void test_shape_holds_across_the_ms_wrap() {
+    const uint32_t nearWrap = 0xFFFFFFFFu - 60u;
+    BinTrack track;
+    track.note(nearWrap - 400u, 0, 0);  // the track has been running before the train
+    playSteps(track, nearWrap, kHop, 5, 25, 10);
+    const InspectedOccurrence crossing = inspect(track, shippedShapePlan(), occurrence(nearWrap, 165));
+    TEST_ASSERT_EQUAL_UINT8(5, crossing.occurrence.shape.distinctBins);
+    TEST_ASSERT_EQUAL(StrengthClass::Strong, crossing.occurrence.shape.shapeClass);
+    // The detector split the train: the occurrence is steps 3-5, starting after the wrap.
+    const InspectedOccurrence split = inspect(track, shippedShapePlan(), occurrence(nearWrap + 70u, 95));
+    TEST_ASSERT_EQUAL_UINT8(5, split.occurrence.shape.distinctBins);
+    TEST_ASSERT_TRUE(split.occurrence.shape.shapeClass >= StrengthClass::Medium);
+    // Well after the wrap the track still moves: a steady tone is one bin, not "not applicable".
+    const uint32_t tone[1] = {3450};
+    playSteps(track, 2000, tone, 1, 130, 0);
+    const InspectedOccurrence steady = inspect(track, shippedShapePlan(), occurrence(2000, 130));
+    TEST_ASSERT_TRUE(steady.occurrence.shape.applicable);
+    TEST_ASSERT_EQUAL(StrengthClass::None, steady.occurrence.shape.shapeClass);
+    OccurrenceVerdict v;
+    TEST_ASSERT_TRUE(makeVerdict(steady, shippedShapePlan(), v));
+    TEST_ASSERT_FALSE(v.accepted);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_steady_tone_is_one_bin_and_fails_the_requirement);
@@ -232,5 +259,6 @@ int main(int, char**) {
     RUN_TEST(test_track_forgets_what_left_the_ring);
     RUN_TEST(test_train_split_by_a_middle_null_passes_with_the_look_back);
     RUN_TEST(test_shipped_settings_still_reject_jumps_and_steady_tones);
+    RUN_TEST(test_shape_holds_across_the_ms_wrap);
     return UNITY_END();
 }

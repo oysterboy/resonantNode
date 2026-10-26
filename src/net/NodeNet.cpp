@@ -55,6 +55,12 @@ bool NodeNet::begin() {
     if (_started) {
         return true;
     }
+    // A random first seq (critique D1.3): the peers' duplicate filter keeps this node's last seq across its reboot;
+    // counting from 1 again would drop the one command of the new life whose seq equals it.
+    _nextSeq = static_cast<uint16_t>(esp_random());
+    if (_nextSeq == 0) {
+        _nextSeq = 1;
+    }
     gRxQueue = xQueueCreate(kQueueDepth, sizeof(RawFrame));
     _outbox = new (std::nothrow) RingQueue<Outgoing, kOutbox>();
     if (gRxQueue == nullptr || _outbox == nullptr) {

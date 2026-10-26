@@ -135,7 +135,6 @@ Outcome replay(const Fixture& fx, Band band, unsigned long skipMs = 0) {
     gRuntime.setScalarTransientConfig(profile.scalarTransient);
     gRuntime.setInspectionPlan(profile.inspectionPlan);
     gRuntime.setFieldStateConfig(profile.fieldStateConfig);
-    gRuntime.setProfileName(detection::detectionProfileName(profile.kind));
     gRuntime.setVerdictQueueEnabled(true);
 
     Outcome out;

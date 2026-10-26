@@ -701,7 +701,7 @@ void AnalyzerApp::update() {
             }
             _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
             detection::DetectionPipelineEvent& runtimePipelineEvent = _runtimePipelineEventScratch;
-            while (_detection.popPipelineEvent(runtimePipelineEvent)) {
+            while (_detection.diagnostics().popPipelineEvent(runtimePipelineEvent)) {
                 if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && runtimePipelineEvent.hasVerdict) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                 }
@@ -875,8 +875,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.integrity.occurrenceMatched = selectedTrial.reportMatched;
     report.integrity.inspectionPresent = hasInspectedOccurrence;
     report.integrity.verdictPresent = hasVerdict;
-    const unsigned long pipelineOverflowDelta = _detection.pipelineEventOverflowCount() > _sequenceTest.trialPipelineOverflowCountAtStart
-        ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialPipelineOverflowCountAtStart
+    const unsigned long pipelineOverflowDelta = _detection.diagnostics().pipelineEventOverflowCount() > _sequenceTest.trialPipelineOverflowCountAtStart
+        ? _detection.diagnostics().pipelineEventOverflowCount() - _sequenceTest.trialPipelineOverflowCountAtStart
         : 0UL;
     report.integrity.queueOverflowAffected = pipelineOverflowDelta > 0UL;
     report.integrity.correlationComplete = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate

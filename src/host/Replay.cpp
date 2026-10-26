@@ -342,7 +342,6 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     runtime.setScalarTransientConfig(profile.scalarTransient);
     runtime.setInspectionPlan(profile.inspectionPlan);
     runtime.setFieldStateConfig(profile.fieldStateConfig);
-    runtime.setProfileName(detection::detectionProfileName(profile.kind));
     runtime.setVerdictQueueEnabled(true);
 
     const size_t tailSamples = static_cast<size_t>((static_cast<uint64_t>(opt.tailMs) * cap.sampleRateHz) / 1000ULL);

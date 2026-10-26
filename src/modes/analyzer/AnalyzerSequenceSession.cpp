@@ -147,7 +147,6 @@ void AnalyzerApp::configureSequenceDetection() {
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
     _detection.setInspectionPlan(selectedProfile.inspectionPlan);
     _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
-    _detection.setProfileName(detection::detectionProfileName(selectedProfile.kind));
     _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     _sequenceTest.sampleDumpDetectorSelection = selectedProfile.detectorSelection;
     _sequenceTest.sampleDumpObservedStream = selectedProfile.scalarTransient.observedStream;
@@ -486,7 +485,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     }
     // Detection-side overflow baselines after the diagnostics reset, which
     // zeroes both counters (issue #31); the I2S baseline above is separate.
-    _sequenceTest.trialPipelineOverflowCountAtStart = _detection.pipelineEventOverflowCount();
+    _sequenceTest.trialPipelineOverflowCountAtStart = _detection.diagnostics().pipelineEventOverflowCount();
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
     beginSequenceSampleDump(trialNumber);
@@ -653,7 +652,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
 // rejected_count without a new reject event (decision 2026-10-13, issue #31
 // B11), so bring their aggregate counts up to trial end.
 void AnalyzerApp::refreshCapturedDetectorReportAggregates() {
-    const detection::DetectorReport& live = _detection.activeDetectorReport();
+    const detection::DetectorReport& live = _detection.diagnostics().activeDetectorReport();
     if (live.detectorId == detection::DetectorId::Unknown) {
         return;
     }

@@ -57,7 +57,7 @@ void AnalyzerApp::handleSequencePending(
 
     const detection::DetectorReport* selectedDetectorReport = event.hasSourceRecord
         ? &event.sourceRecord.detectorReport
-        : &_detection.activeDetectorReport();
+        : &_detection.diagnostics().activeDetectorReport();
     const bool selectedDetectorReportAvailable = selectedDetectorReport != nullptr &&
         selectedDetectorReport->detectorId != detection::DetectorId::Unknown;
     const detection::InspectedOccurrence* selectedInspectedOccurrence =

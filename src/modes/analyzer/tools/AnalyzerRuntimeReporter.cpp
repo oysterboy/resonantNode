@@ -13,7 +13,7 @@
 // so report exactly those rather than a fixed pair: a stream the plan doesn't
 // use has no buffer and would read as 0, which says nothing about the run.
 void AnalyzerApp::printFeatureHistoryRecordCounts() const {
-    const detection::FeatureHistory& history = _detection.featureHistory();
+    const detection::FeatureHistory& history = _detection.diagnostics().featureHistory();
     serialOut().print(" history_records=");
     const size_t count = history.activeStreamCount();
     if (count == 0) {

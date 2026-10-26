@@ -141,6 +141,19 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   Occurrence 504 -> 224, InspectedOccurrence 1,336 -> 1,056, DetectionPipelineEvent 2,120 -> 1,840,
   ScalarTransientDetector 2,048 -> 1,768, DetectionRuntime 68,024 -> 65,512 (xtensa: T5 at the bench).
   Host 68/68, T2h byte-identical.
+- 2026-10-26, merge of origin/main (step 11a closed); two doc conflicts (roadmap status lines, decisions index).
+- 2026-10-26, item 7: `src/detection/DetectionDiagnostics.h/.cpp`. The Analyzer-facing records
+  (`DetectionPipelineEvent`, `SourceDiagnosticRecord`, `PipelineIntegrity`, `HistoryIncompleteSnapshot`) and
+  the recording (counters, pipeline event queue, detector report capture, history-incomplete snapshot) move into
+  `DetectionDiagnostics`; the Node build holds `NullDetectionDiagnostics` (inline no-ops, an empty `ReportSlot`).
+  `DetectionRuntime` calls the hooks unconditionally and has no `#if` left (was 21 in the .cpp, 6 in the .h); the
+  one build decision is the `ActiveDetectionDiagnostics` alias. The Analyzer reads through
+  `_detection.diagnostics()` (owner's choice); `resetDiagnosticsCounters`, `resetSourceRejectSummaries` and
+  `setDiagnosticsEnabled` stay on the runtime (they touch runtime-owned state). Gone with it: the
+  `DetectionPipelineResult` snapshot, `latestPipelineResult` / `hasLatestPipelineResult` / `scalarReportGeneration`
+  / `resetDiagnostics` (no callers) and `setProfileName` (only the snapshot read it; four callers drop the line).
+  Host sizes: DetectionRuntime Analyzer variant 65,512 -> 64,008, Node variant 54,880. Host 68/68, T2h
+  byte-identical, the Analyzer variant syntax-checked on the host (CI builds it).
 
 ## Decisions recorded in this pass
 

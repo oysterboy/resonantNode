@@ -1,6 +1,7 @@
 """Per-bin received level of hop captures (step 5h cells): Goertzel power at each hop bin over the whole capture, in dB re the
 strongest bin, averaged over the reps of a session folder. One number per bin, so a null shows directly."""
 import csv
+import os
 import glob
 import math
 import sys
@@ -36,7 +37,7 @@ def pcm(path):
 
 # python tools/bench/hopbins.py bench/sessions/<cell-a> bench/sessions/<cell-b>
 for folder in sys.argv[1:]:
-    files = sorted(glob.glob(folder + "/hop5_cell_r*.csv"))
+    files = sorted(glob.glob(folder + "/" + os.environ.get("HOPBINS_GLOB", "hop5_cell_r*.csv")))
     acc = [0.0] * len(BINS)
     for p in files:
         x = pcm(p)

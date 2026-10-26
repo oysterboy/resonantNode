@@ -43,10 +43,11 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-26, later: 11e done (PR #64 merged; bench gate met; diagnostics host suite added).
 Status update 2026-10-26: 11a done (remote commands by radio; 12 h with the radio on: every pass mark, no leak).
 Next: 11b (DET-015 host phase); 11d needs the owner's WiFi credentials.
 Status update 2026-10-25, later: step 11e added, parallel to 11a (review fixes, host-only; #63, pass doc
-docs/refactors/review-fixes-2026-10-25.md). 11a closed 2026-10-26; 11e runs beside 11b.
+docs/refactors/archive/review-fixes-2026-10-25.md). 11a closed 2026-10-26; 11e runs beside 11b.
 Status update 2026-10-25 (owner away from the bench for a week): 11a OTA params, 11b DET-015 host phase,
 11c unattended runs, 11d OTA firmware. Next: 11a.
 Status update 2026-10-24: 10c done (block 2, 24 h on dbb6305, every pass mark met). Open before step 11's
@@ -1081,10 +1082,10 @@ the previous gate open unless the step says it can run in parallel.
    repo) and a two-slot partition table (a first USB flash of every board). Gate: an image flashed over WiFi to
    every board, a failed or interrupted update falls back to the old image.
 
-11e. [NEXT, parallel] Review fixes 2026-10-25: boundaries, duplication, dead code. (issue #63)
+11e. [DONE 2026-10-26] Review fixes 2026-10-25: boundaries, duplication, dead code. (issue #63, closed)
    Owner 2026-10-25. The fixes from the architecture and readability review
    (docs/research/architecture-readability-review-2026-10-25.md), items 1-6 of its order, as a pass doc:
-   docs/refactors/review-fixes-2026-10-25.md. Host-only work parallel to 11a (no bench): myspec 6.2 / 7.2
+   docs/refactors/archive/review-fixes-2026-10-25.md. Host-only work parallel to 11a (no bench): myspec 6.2 / 7.2
    rewritten around OutputRequest / OutputStatus and ChirpPattern out of Behavior's includes; comment drift
    and dead code (DET-018's 7b part); RingQueue; the config structs held, not re-plumbed as setters;
    Occurrence.magnitude.evidence dropped; DetectionDiagnostics replaces the ANALYZER_MODE ifdefs in
@@ -1094,6 +1095,11 @@ the previous gate open unless the step says it can run in parallel.
    Gate: every env builds, host suites pass, T2h byte-identical, the Node's PARAM DUMP unchanged (host side,
    this session); then the owner's bench check on the branch: Node smoke (boot, RB STATUS, 10 hop trains
    answered), Analyzer SEQ 10/10 with a PARAM SET detection.scalar_* on the Analyzer, a radio PARAM round trip.
+   Done 2026-10-26 (PR #64 merged as 597c921; host follow-up 417ef7e; bench/sessions/2026-10-26-step11e-gate; the
+   pass doc's Archived line and "Gate results"): Analyzer A/B identical incl. every diagnostics field, PARAM SET
+   reaches the detector, Node smoke and PARAM RESET side effect, radio round trip, on-device suites 9/9 + 8/8;
+   test_detection_diagnostics 9/9 and the replay identical with the diagnostics compiled in. Room finding: the
+   plain chirp is rejected 10/10 at 79 cm (reads 31-46 ms), with old and new firmware; the hop train is not.
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here

@@ -1,7 +1,7 @@
 # Architecture critique and readability review, 2026-10-25
 
 Status:  promoted (2026-10-25)
-Became:  step 11e, docs/refactors/review-fixes-2026-10-25.md (items 1-6 of the suggested order; #63)
+Became:  step 11e, docs/refactors/archive/review-fixes-2026-10-25.md (items 1-6 of the suggested order; #63)
 Lab:     none; a code reading at main c0b75e9 (after 5ffab4a "Node: split by role"), host `sizeof` probe
 
 A review of the whole tree for two questions: does the code match the boundaries `docs/specs/myspec.md`

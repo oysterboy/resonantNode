@@ -37,4 +37,4 @@ Analyzer grows knobs that are not `ScalarTransientConfig` fields and would need 
 
 ## Source
 
-Step 11e (docs/refactors/review-fixes-2026-10-25.md), issue #63; roadmap-param-config.md PAR-003.
+Step 11e (docs/refactors/archive/review-fixes-2026-10-25.md), issue #63; roadmap-param-config.md PAR-003.

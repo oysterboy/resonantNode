@@ -1,6 +1,16 @@
+Archived: 2026-10-26 — step 11e closed. Items 1-9 landed (PR #64, merged as 597c921): OutputRequest vocabulary,
+hygiene, dead code (DET-018's 7b part), RingQueue, config structs held, Occurrence trimmed, DetectionDiagnostics,
+one LineReader and token parser, the Analyzer's params on ParamRegistry (PAR-003). Host follow-up for item 7
+(417ef7e, e5d15e1): test_detection_diagnostics 9 tests and the Null-vs-ANALYZER_MODE replay diff in CI. Bench gate
+met 2026-10-26 (bench/sessions/2026-10-26-step11e-gate): Analyzer A/B before / after identical incl. every
+diagnostics field, PARAM SET on the Analyzer reaches the detector, Node smoke, radio round trip, the two on-device
+suites. Still open: DET-018's 7a part (the "valid pattern" vocabulary); two side-channel quirks the tests pinned
+(see "Gate results" below), not fixed; the research note's items beyond 1-9 (the next Node cut, the Analyzer
+TrialState split). Not re-verified: the piezo builds on a board (compile only).
+
 # Step 11e: review fixes 2026-10-25 (pass doc)
 
-Status: open 2026-10-25. Step 11e of docs/roadmaps/roadmap-0-steps.md, parallel to 11a; issue #63.
+Status: closed 2026-10-26 (see the Archived line). Step 11e of docs/roadmaps/roadmap-0-steps.md, parallel to 11a; issue #63.
 Source: docs/research/architecture-readability-review-2026-10-25.md (the findings, with evidence). This
 doc holds the plan, the order, the gates and the progress; the research note stays as the reasoning.
 
@@ -274,6 +284,42 @@ thresholds; syntax-checked only).
 
 Closing the step: gate results as a dated line here, `Archived:` header, move this file to `archive/`, close
 #63 with the commit, PAR-003 is already DONE.
+
+## Gate results 2026-10-26 (session on main with the bench)
+
+Host (Windows, local PlatformIO): every env builds (eight ESP + native), native-test-behavior 59/59, native-test
+22/22 (21 + the Node-variant size probe), native-test-diag 9/9 (new, test/test_detection_diagnostics), T2h
+byte-identical to t2h_replay.518ffe6.txt, the replay with ANALYZER_MODE byte-identical to the Null build (34 lines).
+
+The diagnostics tests (417ef7e, the seven items of the handoff) found no event that describes another trial than
+the runtime decided. Where the handoff's guesses differ from the code, the tests pin what the code does:
+- overflow: the runtime never sets `queueOverflowAffected` / `PipelineEventQueueOverflow` on an event; the
+  Analyzer derives a trial's overflow from the change of `pipelineEventOverflowCount` (AnalyzerModeApp ~886). A lost
+  event shows as an event id gap.
+- the history-incomplete snapshot survives `resetDetectionState` (a trial boundary) and is cleared by
+  `resetDiagnosticsCounters` / `resetState`; SEQ_HISTDBG prints on growth, so this looks intended.
+- `eventTrialAttribution` leaves the runtime as 0; the Analyzer stamps it on capture.
+Two quirks, not fixed (candidates for DET-016 / DET-018 or the Analyzer TrialState split):
+- in the pending case an event pairs the pop-time report with the verdict-time `reportGeneration` (SEQ_SOURCE
+  prints the second occurrence's generation next to the first's report);
+- `resetDiagnosticsCounters` clears the cached report but not the last seen generation; the Analyzer always calls
+  `resetSourceRejectSummaries` first (bumps it), so the real path is fine.
+Host sizes with WinLibs g++ (4-byte long): DetectionRuntime 48,768 (Analyzer) / 41,768 (Node), DetectionDiagnostics
+6,240; the handoff's 63,936 / 54,808 are from a Linux build.
+
+Bench (bench/sessions/2026-10-26-step11e-gate, E2 Analyzer / E3 Emitter at 79 cm, one height):
+- Analyzer A/B, bc409a5 vs 597c921, SEQ 10 trials mode=detail: hop 10/10 expected both; every SEQ_* line type, key
+  set and diagnostics value (report_matched, event_trial_attribution, integrity, SEQ_HISTDBG) identical; strength
+  14,640 vs 14,834.
+- PARAM SET on the Analyzer: onset 20000 -> hop 10/10 missed, back to 2000 -> 10/10; `abc` -> parse_error, unchanged.
+- Node smoke (E1, 597c921): boot shows PARAM load / RB net / checks, RB STATUS 1,563 chars, 0 drops, stack 14,172 B
+  free; 10 of 10 Emitter hop trains heard and answered; PARAM RESET with output.silent 1 saved -> silent=0 and the
+  node answers again (item 9's LOAD / RESET side effect).
+- radio round trip (netcheck, E1 gateway, E4 / E5): every step ok, 0 drops except E4's SAVE (9).
+- on-device: test_analyzer_pass_rules 9/9, test_timebase 8/8 on E2.
+- room finding, not the pass: the plain 3200 Hz chirp reads 31-46 ms at this geometry (79 cm, one height) and is
+  rejected 10/10 as duration_too_short, before and after the pass and with the old Emitter too; the hop train is not
+  affected. At 110 cm (2026-10-23 reference cell) the chirp was 50/50.
 
 ## Decisions recorded in this pass
 

@@ -202,7 +202,7 @@ are checked; ParamId values are still assigned by hand per module).
 
 ### PAR-003 - Analyzer param registration
 
-Status: DONE 2026-10-26, step 11e item 9 (docs/refactors/review-fixes-2026-10-25.md): the Analyzer's 13
+Status: DONE 2026-10-26, step 11e item 9 (docs/refactors/archive/review-fixes-2026-10-25.md): the Analyzer's 13
 `detection.scalar_*` knobs bind through `src/app/ParamBindings.h` (`bindScalarTransientParams`, shared with
 the Node and the host replay) into its own `ParamRegistry`, and `PARAM LIST | GET | SET | DUMP | RESET` run
 through the shared handler `src/app/ParamCommands` (no store; SAVE / LOAD answer `status=no_store`). The

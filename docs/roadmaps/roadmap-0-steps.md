@@ -1073,6 +1073,12 @@ the previous gate open unless the step says it can run in parallel.
    the height cell showed a train cut to three steps passing on 16 ms of margin. Host work on the corpus and the
    height cell's RAW captures; bench validation when the owner is back. Gate (host): the shape reads the steps of
    every recorded hop train, rejects the plain chirp and the 40 ms beep, T2h diff explained.
+   Progress 2026-10-26: verification first (owner): E002 (docs/lab/experiments/E002_shape_separation.md) on the host
+   corpus: hop vs steady tone clean (64/64 chirps one bin, 19/19 hop trains 4-5 bins rising), hop vs an in-band
+   sweep not separable; the height trains keep all five steps past the detector's release. Decided
+   (decisions/2026-10-26-det015-bin-track-inspector.md): bin track + ShapeInspector, rule >= 3 bins / 2 steps up in
+   band mode, sweeps accepted. Build in three commits: track (no behavior change), facts (no behavior change),
+   the requirement (plain chirps rejected; the self-test's amp check adapted).
 
 11c. [TODO, parallel] Unattended bench runs. (issue #60)
    Owner 2026-10-25: the reference cell (bench/sessions/2026-10-23-cell-desk-ref-110cm) repeated every few hours

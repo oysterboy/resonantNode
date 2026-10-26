@@ -1,0 +1,22 @@
+[11:12:46] boot banner: {'role': 'analyzer', 'git': 'a33f293', 'version': '0.4.0', 'board': 'damp'}
+[11:12:48] warmup: OK EMIT CHIRP
+[11:12:48] start hop10: SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[11:13:25] done hop10 (37s): complete=True results={'expected': 10}
+[11:13:27] start chirp10: SEQ start profile=TonalPulseScalar tries=10 dur=100 band=2950-3950 mode=detail when=all verbose=1
+[11:14:03] done chirp10 (36s): complete=True results={'rejected': 10}
+[11:14:05] start hop10_rot2: SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=3450,3700,3950,2950,3200 mode=detail when=all verbose=1
+[11:14:43] done hop10_rot2 (37s): complete=True results={'expected': 10}
+[11:14:45] start hop10_random: SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=3700,2950,3450,3200,3950 mode=detail when=all verbose=1
+[11:15:22] done hop10_random (37s): complete=True results={'rejected': 10}
+[11:15:24] start sweep10: SEQ start profile=TonalPulseScalar tries=10 freq=2950 dur=150 sweep=3950 band=2950-3950 mode=detail when=all verbose=1
+[11:16:01] done sweep10 (37s): complete=True results={'expected': 10}
+[11:16:07] session updated, index rebuilt
+[11:16:31] boot banner: {'role': 'analyzer', 'git': 'a33f293', 'version': '0.4.0', 'board': 'damp'}
+[11:16:33] warmup: OK EMIT CHIRP
+[11:16:33] start chirp10_3450: SEQ start profile=TonalPulseScalar tries=10 freq=3450 dur=150 band=2950-3950 mode=detail when=all verbose=1
+[11:17:09] done chirp10_3450 (36s): complete=True results={'rejected': 10}
+[11:17:11] start chirp10_3700: SEQ start profile=TonalPulseScalar tries=10 freq=3700 dur=150 band=2950-3950 mode=detail when=all verbose=1
+[11:17:49] done chirp10_3700 (37s): complete=True results={'rejected': 10}
+[11:17:51] start chirp10_3200_150: SEQ start profile=TonalPulseScalar tries=10 freq=3200 dur=150 band=2950-3950 mode=detail when=all verbose=1
+[11:18:27] done chirp10_3200_150 (36s): complete=True results={'rejected': 10}
+[11:18:33] session updated, index rebuilt

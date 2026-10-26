@@ -1,0 +1,35 @@
+elapsed 11.99 h, 16834 emissions, 21633 valid verdicts
+  E1: emits 3397 (heard 3190, idle 207), valid verdicts per bin: 352 397 362 370 375 348 391 356 351 357 372 378
+  E2: emits 3370 (heard 3164, idle 206), valid verdicts per bin: 311 343 322 338 363 331 364 325 346 345 333 328
+  E3: emits 3364 (heard 3179, idle 185), valid verdicts per bin: 351 372 361 370 366 343 370 356 359 378 356 377
+  E4: emits 3342 (heard 3132, idle 209), valid verdicts per bin: 363 383 345 370 386 350 374 359 349 344 357 378
+  E5: emits 3361 (heard 3193, idle 168), valid verdicts per bin: 367 418 355 380 397 351 368 362 342 364 381 373
+  E1 health: STATUS 359, dropped 0, read_errors 0, verdict_queue_overflows 0, resets 0, stack_free_min 12060, uptime 11.97 h
+  E2 health: STATUS 359, dropped 18, read_errors 0, verdict_queue_overflows 0, resets 0, stack_free_min 12060, uptime 11.97 h
+  E3 health: STATUS 359, dropped 0, read_errors 0, verdict_queue_overflows 0, resets 0, stack_free_min 12060, uptime 11.97 h
+  E4 health: STATUS 359, dropped 18, read_errors 0, verdict_queue_overflows 0, resets 0, stack_free_min 12060, uptime 11.97 h
+  E5 health: STATUS 359, dropped 18, read_errors 0, verdict_queue_overflows 0, resets 0, stack_free_min 12060, uptime 11.97 h
+  answers without another board's emission in the 2 s before (noise-started): 0 of 15858
+  chains: 873, ended within 30 s: 873 (max 6.2 s)
+  max emissions per minute: 53
+  median strength per listener <- sender and bin, unambiguous verdicts only (first -> last full bin):
+    E1 <- E2: 4994 5031 5075 5102 5139 5211 5273 5334 5416 5543 5615 5747  (+12 %)
+    E1 <- E3: 10993 10991 11081 11216 11302 11338 11353 11444 11416 11348 11402 11394  (+4 %)
+    E1 <- E4: 23194 23459 23564 23936 23998 23794 24045 24184 24325 24397 24665 24410  (+6 %)
+    E1 <- E5: 14325 14344 14381 14336 14301 14298 14251 14149 14185 14149 14126 13961  (-1 %)
+    E2 <- E1: 14586 14608 3011 3068 4817 4800 4876 4989 4904 14435 5165 5206  (-65 %)
+    E2 <- E3: 14531 14499 14562 14579 14545 14524 14449 14427 14450 14360 14291 14272  (-2 %)
+    E2 <- E4: 14586 3010 3025 3094 3102 3182 3197 3293 3391 3509 3537 3667  (-76 %)
+    E2 <- E5: 4546 4575 4619 4690 4742 4799 4876 4952 4987 5058 5077 5130  (+12 %)
+    E3 <- E1: 5369 5571 5678 5705 5778 5781 5802 5774 5719 5722 5672 5616  (+6 %)
+    E3 <- E2: 8909 9093 9212 9380 9564 9738 9853 10010 10194 10311 10464 10561  (+17 %)
+    E3 <- E4: 6665 6682 6739 6763 6817 6839 6859 6877 6885 6904 6869 6941  (+3 %)
+    E3 <- E5: 7000 6983 6968 6991 7005 6965 6959 6907 6851 6840 6795 6758  (-3 %)
+    E4 <- E1: 17163 17373 17665 17830 17893 17841 17975 17938 17902 18017 18003 17977  (+5 %)
+    E4 <- E2: 6496 6254 6127 5994 5799 5560 5392 5286 5048 5038 5005 5043  (-23 %)
+    E4 <- E3: 7035 6802 6830 6711 6760 6763 6786 6748 6669 6678 6705 6618  (-5 %)
+    E4 <- E5: 22458 22696 22917 23138 23253 23426 23615 23924 24105 24328 24524 24857  (+9 %)
+    E5 <- E1: 10836 10758 10698 10593 10277 10042 9789 9528 9281 9229 8991 8701  (-17 %)
+    E5 <- E2: 6290 6394 6441 6507 6576 6651 6710 6702 6663 6727 6733 6674  (+7 %)
+    E5 <- E3: 7783 7963 7918 7885 7917 7968 7952 7970 7975 7956 7982 7985  (+3 %)
+    E5 <- E4: 31327 31796 32055 32106 32630 32638 32767 32767 32767 32767 32767 32767  (+5 %)

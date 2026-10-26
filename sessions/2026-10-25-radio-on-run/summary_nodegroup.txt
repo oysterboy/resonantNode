@@ -1,0 +1,1019 @@
+radio_on_12h: 43200 s, boards E1,E2,E3,E4,E5
+  E1: emits heard_pattern=3190 idle=207  verdicts=4409  rests={'rest_own_budget': 84, 'rest_field_dense': 478}
+  E2: emits heard_pattern=3164 idle=206  verdicts=4049  rests={'rest_own_budget': 77, 'rest_field_dense': 461}
+  E3: emits heard_pattern=3179 idle=185  verdicts=4359  rests={'rest_own_budget': 76, 'rest_field_dense': 486}
+  E4: emits heard_pattern=3132 idle=209  verdicts=4358  rests={'rest_own_budget': 75, 'rest_field_dense': 518}
+  E5: emits heard_pattern=3193 idle=168  verdicts=4458  rests={'rest_own_budget': 80, 'rest_field_dense': 531}
+  who heard whom (listener <- sender: verdicts / sender's emissions):
+    E1 <- E2 867/3370  E3 736/3364  E4 1119/3342  E5 1067/3361
+    E2 <- E1 360/3397  E3 899/3364  E4 1009/3342  E5 1365/3361
+    E3 <- E1 389/3397  E2 1162/3370  E4 1181/3342  E5 995/3361
+    E4 <- E1 460/3397  E2 1154/3370  E3 1095/3364  E5 1048/3361
+    E5 <- E1 473/3397  E2 1212/3370  E3 893/3364  E4 1241/3342
+  unattributed verdicts: 2908
+  strength drift, bins of 3600 s (median strength, verdict count in brackets):
+    E1 <- E2: 10974(7) 11152(3) 14454(1) - 11387(3) 24152(3) 24101(2) 14254(4) 6339(1) 11542(5) 24696(3) 5762(3)  first->last bin -47 %
+    E1 <- E3: 10990(2) 5033(4) 11072(8) 11247(7) 11314(5) 23905(3) 24162(6) 24183(6) 11419(3) 5578(6) 11481(5) 11380(5)  first->last bin +4 %
+    E1 <- E4: 23195(4) - 23240(4) 14439(5) 23998(7) 11337(4) 11497(5) 24070(6) 24224(6) 24407(6) 24730(9) 24499(2)  first->last bin +6 %
+    E1 <- E5: 14411(7) 11117(6) 23422(5) 11211(1) 11372(4) 24395(1) 24074(8) 5320(3) 14217(5) 24560(6) 24831(1) 5805(6)  first->last bin -60 %
+    E2 <- E1: 14586(2) 14608(2) 3011(1) 3068(4) 14512(6) 4800(1) 4876(3) 4989(3) 4904(3) 14391(3) 5165(2) 5206(2)  first->last bin -64 %
+    E2 <- E3: 14546(3) 14610(2) - 14660(4) 14645(7) 3090(3) 3181(4) 14391(4) 14594(2) 14434(4) 3631(3) 14208(3)  first->last bin -2 %
+    E2 <- E4: 14597(10) 14656(1) 14746(2) 14629(3) 14530(5) 4849(5) 14544(7) 4955(6) 5006(5) 5057(4) 3829(8) 5257(4)  first->last bin -64 %
+    E2 <- E5: 14552(3) 14669(7) 4653(5) 4701(5) 14578(4) 4826(6) 4891(7) 4955(11) 3535(1) 5007(4) 3571(1) 5186(4)  first->last bin -64 %
+    E3 <- E1: 6992(3) 6730(7) 5687(7) 5705(6) 5805(3) 5762(4) 5810(1) 5775(6) 6882(2) 10432(1) 5672(3) 5660(5)  first->last bin -19 %
+    E3 <- E2: 8843(5) 9172(4) 7058(1) 6989(11) 9524(9) 6890(3) 6906(2) 6851(5) 10193(4) 10373(8) 10481(3) 10669(6)  first->last bin +21 %
+    E3 <- E4: 6992(4) - 5543(1) 5773(4) 6817(7) 6888(11) 6906(10) 6892(4) 6835(5) 6851(7) 6869(8) 6962(4)  first->last bin -0 %
+    E3 <- E5: 7011(6) 6991(6) 6869(3) 7000(4) 7040(4) 6965(5) 6875(3) 10128(2) 7054(2) 7021(4) 6900(6) 10589(2)  first->last bin +51 %
+    E4 <- E1: 17046(3) 17373(2) 17665(2) 17811(6) 17981(3) 17758(3) - 17983(1) 17894(6) 18073(7) 18061(8) 17822(1)  first->last bin +5 %
+    E4 <- E2: 7169(9) 7037(2) 17340(3) 17875(6) 7367(3) 5556(3) 17928(1) 23881(4) 7269(2) 6724(1) 5101(5) 10061(3)  first->last bin +40 %
+    E4 <- E3: 7047(4) 6874(2) 17587(2) 6622(4) 6775(7) 6805(10) 6742(11) 6867(4) 6669(1) 4962(5) 18043(6) 18050(4)  first->last bin +156 %
+    E4 <- E5: 22381(6) 22736(7) 22908(6) 23090(3) 23233(6) 23441(2) 23718(4) 5234(3) 24418(4) 24375(9) 24768(4) 24894(11)  first->last bin +11 %
+    E5 <- E1: 10871(6) 31377(5) 32669(2) 10589(2) 10376(1) 10058(4) 9801(2) 9479(3) 9417(4) 32767(5) 9083(3) 6708(5)  first->last bin -38 %
+    E5 <- E2: 7806(6) 7875(2) - 10235(7) 6645(6) 32767(2) 32767(2) 6723(13) - 7830(4) 8899(2) 6674(9)  first->last bin -15 %
+    E5 <- E3: 7875(2) 7990(6) 7951(3) 7964(6) 8015(4) 32767(2) 32767(4) 8077(2) 8042(6) 6743(5) 8936(7) 8538(6)  first->last bin +8 %
+    E5 <- E4: 31327(4) 32105(4) 31695(4) 10744(7) 32665(8) 8037(4) 32767(8) 32767(7) 32767(4) 9310(9) 32767(10) 32767(8)  first->last bin +5 %
+  mean valid strength per board and bin (RB STATUS heard.*; a counter drop = reboot or rebase):
+    E1: 15579(329) 15498(406) 15512(374) 15372(378) 14622(377) 14908(346) 14632(387) 15661(341) 17274(344) 16989(379) 16194(385) 13541(321)
+    E2: 11640(290) 11956(348) 10536(329) 10811(337) 9882(369) 9685(342) 9574(348) 9706(309) 8373(382) 8605(360) 9882(324) 10727(350)
+    E3: 8056(324) 8336(380) 8143(370) 8288(373) 8243(370) 8357(354) 8377(368) 8399(371) 7994(351) 8246(397) 8574(363) 9054(384)
+    E4: 15971(341) 15753(395) 15864(364) 15186(381) 15098(390) 14998(368) 15984(390) 16721(388) 18122(359) 16381(357) 14884(373) 14672(395)
+    E5: 18021(351) 17639(427) 17032(369) 15582(388) 16475(395) 17343(365) 17673(373) 17592(375) 19540(348) 18389(373) 16560(390) 14331(382)
+  group emissions per minute: 20 25 17 17 26 40 17 18 27 18 27 5 34 5 17 21 37 19 19 37 18 21 5 28 29 17 17 21 35 16 19 34 26 5 18 23 29 16 15 24 24 43 26 26 18 20 34 27 18 16 40 28 18 23 18 17 43 5 19 44 11 19 22 23 28 23 17 19 53 24 22 20 28 48 16 17 17 47 20 17 38 17 17 20 34 27 20 40 19 17 24 39 21 21 23 23 19 18 40 17 24 19 18 40 20 18 18 22 35 18 19 38 18 24 20 18 38 20 18 37 16 18 16 38 22 18 19 18 22 17 19 24 44 22 18 17 18 41 19 18 41 22 25 7 26 36 18 19 19 41 18 19 20 20 20 16 19 39 21 20 18 38 18 18 19 18 24 18 19 18 37 21 16 30 29 16 22 37 18 21 37 26 21 19 37 23 18 38 19 19 33 27 16 20 18 19 34 27 20 23 36 17 16 18 20 22 18 19 40 22 20 21 40 22 21 17 37 17 26 20 34 19 18 42 5 16 18 21 21 17 34 17 17 20 22 19 35 19 24 17 37 23 18 20 42 19 20 20 20 20 44 16 20 39 18 22 5 45 20 19 18 18 21 38 5 19 23 39 22 18 19 22 42 23 20 18 38 19 20 19 18 36 18 17 21 20 19 40 19 19 25 31 19 18 22 42 22 20 19 44 18 21 19 9 41 16 18 11 16 39 18 18 19 38 20 19 40 19 19 18 19 20 18 21 16 20 37 18 18 23 23 16 41 18 20 24 20 19 44 18 23 39 23 17 20 17 45 16 19 23 40 21 17 18 20 20 35 24 18 24 19 35 25 17 9 17 39 16 21 17 26 23 42 23 20 16 16 43 19 22 30 36 19 20 37 20 21 24 20 23 22 25 40 18 24 17 18 26 41 1 42 23 20 24 32 19 17 23 17 23 28 23 23 23 17 23 30 17 18 46 24 27 26 26 32 23 24 38 20 20 19 38 18 18 22 37 19 18 5 43 0 37 18 24 18 20 22 44 18 18 16 18 23 42 18 20 25 24 20 24 17 36 23 5 20 19 19 22 18 37 19 21 26 17 19 46 23 19 19 16 23 22 20 35 28 7 38 29 19 20 16 35 34 16 24 30 29 27 17 21 19 18 39 24 19 17 24 38 25 19 25 26 19 27 20 16 5 25 38 19 22 22 22 36 23 17 19 36 18 20 23 39 19 18 21 23 17 18 18 37 19 21 18 16 22 20 45 18 20 19 37 19 21 19 18 20 21 29 26 19 37 0 20 41 18 25 17 35 20 19 20 17 38 22 17 19 35 21 18 19 41 19 23 39 19 19 17 17 20 36 18 18 24 22 22 43 19 23 18 23 22 18 18 39 20 20 22 25 5 18 18 35 19 23 39 20 21 44 17 9 28 25 25 38 26 23 21 28 11 25 19 27 29 35 20 5 19 20 21 18 43 18 21 25 16 23 35 19 17 20 45 18 20 21 18 18 22 42 18 18 20 24 28 31 22 19 18 22 25 19 22 24 0 36 27 19 20 38 22 18 22 19 19 23 22 23 20 34 29 20 19 20 18 20 42 23 18 19 46 24 24 26 20 23 42 24 16 16 38 16 28 19 16 46 21 20 5 36 19 22
+  start 1 at 48 s (idle): never quiet before the next kick, 0 emissions until then
+  start 2 at 49 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 3 at 93 s (idle): quiet after 5.0 s, 25 emissions until then
+  start 4 at 148 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 5 at 208 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 6 at 254 s (idle): quiet after 4.8 s, 26 emissions until then
+  start 7 at 304 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 8 at 349 s (idle): quiet after 5.0 s, 22 emissions until then
+  start 9 at 412 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 10 at 460 s (idle): never quiet before the next kick, 0 emissions until then
+  start 11 at 461 s (idle): quiet after 3.1 s, 17 emissions until then
+  start 12 at 530 s (idle): quiet after 4.8 s, 26 emissions until then
+  start 13 at 578 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 14 at 630 s (idle): quiet after 5.3 s, 26 emissions until then
+  start 15 at 680 s (idle): quiet after 1.0 s, 4 emissions until then
+  start 16 at 724 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 17 at 768 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 18 at 813 s (idle): quiet after 1.1 s, 5 emissions until then
+  start 19 at 865 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 20 at 916 s (idle): never quiet before the next kick, 0 emissions until then
+  start 21 at 916 s (idle): quiet after 3.5 s, 20 emissions until then
+  start 22 at 961 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 23 at 1008 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 24 at 1051 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 25 at 1097 s (idle): quiet after 3.6 s, 17 emissions until then
+  start 26 at 1140 s (idle): quiet after 3.6 s, 21 emissions until then
+  start 27 at 1186 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 28 at 1237 s (idle): never quiet before the next kick, 1 emissions until then
+  start 29 at 1237 s (idle): quiet after 3.4 s, 16 emissions until then
+  start 30 at 1291 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 31 at 1336 s (idle): quiet after 1.0 s, 4 emissions until then
+  start 32 at 1392 s (idle): quiet after 3.4 s, 19 emissions until then
+  start 33 at 1438 s (idle): quiet after 4.7 s, 20 emissions until then
+  start 34 at 1481 s (idle): quiet after 3.0 s, 16 emissions until then
+  start 35 at 1533 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 36 at 1585 s (idle): quiet after 3.6 s, 17 emissions until then
+  start 37 at 1634 s (idle): quiet after 4.7 s, 21 emissions until then
+  start 38 at 1682 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 39 at 1726 s (idle): quiet after 3.1 s, 17 emissions until then
+  start 40 at 1770 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 41 at 1824 s (idle): never quiet before the next kick, 4 emissions until then
+  start 42 at 1825 s (idle): quiet after 2.6 s, 15 emissions until then
+  start 43 at 1873 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 44 at 1917 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 45 at 1968 s (idle): quiet after 4.8 s, 24 emissions until then
+  start 46 at 2027 s (idle): quiet after 1.1 s, 5 emissions until then
+  start 47 at 2069 s (idle): quiet after 3.7 s, 17 emissions until then
+  start 48 at 2124 s (idle): never quiet before the next kick, 1 emissions until then
+  start 49 at 2125 s (idle): quiet after 3.8 s, 22 emissions until then
+  start 50 at 2172 s (idle): quiet after 3.9 s, 22 emissions until then
+  start 51 at 2218 s (idle): quiet after 3.4 s, 16 emissions until then
+  start 52 at 2264 s (idle): quiet after 1.0 s, 4 emissions until then
+  start 53 at 2312 s (idle): never quiet before the next kick, 1 emissions until then
+  start 54 at 2313 s (idle): quiet after 2.4 s, 13 emissions until then
+  start 55 at 2372 s (idle): quiet after 4.0 s, 24 emissions until then
+  start 56 at 2424 s (idle): quiet after 5.1 s, 24 emissions until then
+  start 57 at 2472 s (idle): quiet after 4.7 s, 22 emissions until then
+  start 58 at 2516 s (idle): quiet after 4.9 s, 25 emissions until then
+  start 59 at 2568 s (idle): quiet after 4.1 s, 21 emissions until then
+  start 60 at 2624 s (idle): never quiet before the next kick, 1 emissions until then
+  start 61 at 2625 s (idle): quiet after 4.7 s, 25 emissions until then
+  start 62 at 2670 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 63 at 2716 s (idle): quiet after 3.9 s, 19 emissions until then
+  start 64 at 2765 s (idle): quiet after 3.9 s, 24 emissions until then
+  start 65 at 2818 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 66 at 2870 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 67 at 2914 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 68 at 2963 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 69 at 3005 s (idle): quiet after 4.5 s, 21 emissions until then
+  start 70 at 3051 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 71 at 3105 s (idle): quiet after 5.4 s, 28 emissions until then
+  start 72 at 3151 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 73 at 3194 s (idle): quiet after 4.7 s, 23 emissions until then
+  start 74 at 3248 s (idle): never quiet before the next kick, 1 emissions until then
+  start 75 at 3249 s (idle): quiet after 2.3 s, 16 emissions until then
+  start 76 at 3300 s (idle): quiet after 3.8 s, 18 emissions until then
+  start 77 at 3360 s (idle): quiet after 4.8 s, 22 emissions until then
+  start 78 at 3405 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 79 at 3455 s (idle): quiet after 1.0 s, 4 emissions until then
+  start 80 at 3496 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 81 at 3541 s (idle): never quiet before the next kick, 1 emissions until then
+  start 82 at 3542 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 83 at 3593 s (idle): quiet after 4.4 s, 24 emissions until then
+  start 84 at 3658 s (idle): never quiet before the next kick, 0 emissions until then
+  start 85 at 3658 s (idle): quiet after 1.5 s, 10 emissions until then
+  start 86 at 3702 s (idle): never quiet before the next kick, 0 emissions until then
+  start 87 at 3703 s (idle): quiet after 3.0 s, 18 emissions until then
+  start 88 at 3758 s (idle): quiet after 4.4 s, 21 emissions until then
+  start 89 at 3810 s (idle): quiet after 4.3 s, 22 emissions until then
+  start 90 at 3880 s (idle): never quiet before the next kick, 1 emissions until then
+  start 91 at 3881 s (idle): never quiet before the next kick, 2 emissions until then
+  start 92 at 3890 s (idle): quiet after 4.3 s, 24 emissions until then
+  start 93 at 3934 s (idle): quiet after 4.4 s, 23 emissions until then
+  start 94 at 3983 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 95 at 4027 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 96 at 4081 s (idle): quiet after 4.7 s, 25 emissions until then
+  start 97 at 4133 s (idle): quiet after 5.3 s, 27 emissions until then
+  start 98 at 4178 s (idle): quiet after 4.4 s, 24 emissions until then
+  start 99 at 4230 s (idle): quiet after 4.4 s, 21 emissions until then
+  start 100 at 4282 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 101 at 4325 s (idle): quiet after 4.5 s, 27 emissions until then
+  start 102 at 4381 s (idle): quiet after 5.2 s, 28 emissions until then
+  start 103 at 4431 s (idle): never quiet before the next kick, 0 emissions until then
+  start 104 at 4431 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 105 at 4479 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 106 at 4523 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 107 at 4576 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 108 at 4623 s (idle): quiet after 3.9 s, 21 emissions until then
+  start 109 at 4666 s (idle): quiet after 4.6 s, 24 emissions until then
+  start 110 at 4710 s (idle): quiet after 3.3 s, 20 emissions until then
+  start 111 at 4756 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 112 at 4804 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 113 at 4849 s (idle): quiet after 4.3 s, 22 emissions until then
+  start 114 at 4900 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 115 at 4945 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 116 at 4992 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 117 at 5040 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 118 at 5090 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 119 at 5134 s (idle): quiet after 5.1 s, 27 emissions until then
+  start 120 at 5179 s (idle): quiet after 3.9 s, 20 emissions until then
+  start 121 at 5223 s (idle): quiet after 4.3 s, 21 emissions until then
+  start 122 at 5269 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 123 at 5319 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 124 at 5364 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 125 at 5409 s (idle): quiet after 5.1 s, 24 emissions until then
+  start 126 at 5460 s (idle): quiet after 4.4 s, 19 emissions until then
+  start 127 at 5514 s (idle): quiet after 4.1 s, 18 emissions until then
+  start 128 at 5567 s (idle): quiet after 3.9 s, 20 emissions until then
+  start 129 at 5619 s (idle): quiet after 3.9 s, 20 emissions until then
+  start 130 at 5678 s (idle): quiet after 4.6 s, 22 emissions until then
+  start 131 at 5739 s (idle): quiet after 4.3 s, 23 emissions until then
+  start 132 at 5785 s (idle): quiet after 4.0 s, 18 emissions until then
+  start 133 at 5833 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 134 at 5890 s (idle): quiet after 4.6 s, 22 emissions until then
+  start 135 at 5937 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 136 at 5980 s (idle): never quiet before the next kick, 1 emissions until then
+  start 137 at 5980 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 138 at 6022 s (idle): quiet after 5.0 s, 24 emissions until then
+  start 139 at 6078 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 140 at 6125 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 141 at 6183 s (idle): quiet after 4.8 s, 22 emissions until then
+  start 142 at 6237 s (idle): quiet after 3.8 s, 18 emissions until then
+  start 143 at 6289 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 144 at 6333 s (idle): quiet after 3.1 s, 17 emissions until then
+  start 145 at 6429 s (idle): quiet after 4.4 s, 21 emissions until then
+  start 146 at 6484 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 147 at 6532 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 148 at 6577 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 149 at 6620 s (idle): quiet after 3.4 s, 19 emissions until then
+  start 150 at 6665 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 151 at 6710 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 152 at 6774 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 153 at 6818 s (idle): quiet after 5.0 s, 23 emissions until then
+  start 154 at 6861 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 155 at 6910 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 156 at 6962 s (idle): quiet after 3.1 s, 19 emissions until then
+  start 157 at 7011 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 158 at 7054 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 159 at 7098 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 160 at 7143 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 161 at 7191 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 162 at 7235 s (idle): quiet after 3.0 s, 15 emissions until then
+  start 163 at 7278 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 164 at 7340 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 165 at 7390 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 166 at 7437 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 167 at 7486 s (idle): quiet after 4.4 s, 21 emissions until then
+  start 168 at 7547 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 169 at 7605 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 170 at 7666 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 171 at 7721 s (idle): never quiet before the next kick, 1 emissions until then
+  start 172 at 7722 s (idle): quiet after 4.2 s, 20 emissions until then
+  start 173 at 7775 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 174 at 7819 s (idle): quiet after 3.9 s, 18 emissions until then
+  start 175 at 7864 s (idle): quiet after 4.4 s, 23 emissions until then
+  start 176 at 7929 s (idle): quiet after 4.8 s, 26 emissions until then
+  start 177 at 7976 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 178 at 8029 s (idle): quiet after 4.4 s, 21 emissions until then
+  start 179 at 8088 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 180 at 8131 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 181 at 8175 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 182 at 8222 s (idle): quiet after 3.9 s, 20 emissions until then
+  start 183 at 8269 s (idle): quiet after 3.7 s, 19 emissions until then
+  start 184 at 8313 s (idle): quiet after 3.9 s, 18 emissions until then
+  start 185 at 8360 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 186 at 8407 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 187 at 8454 s (idle): quiet after 4.8 s, 23 emissions until then
+  start 188 at 8509 s (idle): quiet after 4.3 s, 21 emissions until then
+  start 189 at 8553 s (idle): never quiet before the next kick, 1 emissions until then
+  start 190 at 8554 s (idle): quiet after 4.0 s, 24 emissions until then
+  start 191 at 8609 s (idle): never quiet before the next kick, 2 emissions until then
+  start 192 at 8610 s (idle): quiet after 1.2 s, 5 emissions until then
+  start 193 at 8654 s (idle): quiet after 4.8 s, 25 emissions until then
+  start 194 at 8700 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 195 at 8745 s (idle): quiet after 4.0 s, 18 emissions until then
+  start 196 at 8788 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 197 at 8844 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 198 at 8895 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 199 at 8943 s (idle): quiet after 4.3 s, 21 emissions until then
+  start 200 at 8993 s (idle): quiet after 3.9 s, 18 emissions until then
+  start 201 at 9052 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 202 at 9112 s (idle): never quiet before the next kick, 1 emissions until then
+  start 203 at 9113 s (idle): never quiet before the next kick, 2 emissions until then
+  start 204 at 9114 s (idle): quiet after 3.7 s, 16 emissions until then
+  start 205 at 9174 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 206 at 9219 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 207 at 9268 s (idle): quiet after 4.2 s, 20 emissions until then
+  start 208 at 9321 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 209 at 9378 s (idle): quiet after 3.5 s, 18 emissions until then
+  start 210 at 9424 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 211 at 9473 s (idle): quiet after 4.7 s, 20 emissions until then
+  start 212 at 9520 s (idle): quiet after 4.4 s, 21 emissions until then
+  start 213 at 9568 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 214 at 9616 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 215 at 9669 s (idle): quiet after 4.6 s, 20 emissions until then
+  start 216 at 9717 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 217 at 9767 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 218 at 9828 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 219 at 9892 s (idle): quiet after 3.7 s, 19 emissions until then
+  start 220 at 9937 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 221 at 9999 s (idle): quiet after 4.6 s, 24 emissions until then
+  start 222 at 10050 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 223 at 10102 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 224 at 10160 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 225 at 10209 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 226 at 10254 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 227 at 10299 s (idle): quiet after 4.7 s, 21 emissions until then
+  start 228 at 10347 s (idle): quiet after 2.8 s, 16 emissions until then
+  start 229 at 10392 s (idle): quiet after 3.3 s, 20 emissions until then
+  start 230 at 10438 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 231 at 10484 s (idle): quiet after 3.8 s, 20 emissions until then
+  start 232 at 10535 s (idle): quiet after 2.8 s, 16 emissions until then
+  start 233 at 10584 s (idle): quiet after 3.9 s, 22 emissions until then
+  start 234 at 10630 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 235 at 10674 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 236 at 10717 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 237 at 10765 s (idle): quiet after 3.8 s, 21 emissions until then
+  start 238 at 10811 s (idle): quiet after 4.6 s, 20 emissions until then
+  start 239 at 10857 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 240 at 10903 s (idle): quiet after 4.2 s, 21 emissions until then
+  start 241 at 10950 s (idle): quiet after 4.0 s, 21 emissions until then
+  start 242 at 10996 s (idle): quiet after 3.7 s, 19 emissions until then
+  start 243 at 11042 s (idle): quiet after 4.4 s, 21 emissions until then
+  start 244 at 11088 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 245 at 11136 s (idle): quiet after 4.7 s, 23 emissions until then
+  start 246 at 11182 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 247 at 11226 s (idle): quiet after 3.7 s, 17 emissions until then
+  start 248 at 11268 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 249 at 11320 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 250 at 11364 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 251 at 11411 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 252 at 11457 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 253 at 11508 s (idle): quiet after 4.9 s, 22 emissions until then
+  start 254 at 11567 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 255 at 11616 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 256 at 11666 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 257 at 11709 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 258 at 11760 s (idle): quiet after 4.0 s, 21 emissions until then
+  start 259 at 11809 s (idle): never quiet before the next kick, 0 emissions until then
+  start 260 at 11809 s (idle): never quiet before the next kick, 1 emissions until then
+  start 261 at 11818 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 262 at 11866 s (idle): quiet after 3.8 s, 18 emissions until then
+  start 263 at 11916 s (idle): quiet after 4.2 s, 19 emissions until then
+  start 264 at 11961 s (idle): quiet after 3.9 s, 22 emissions until then
+  start 265 at 12007 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 266 at 12055 s (idle): quiet after 3.1 s, 16 emissions until then
+  start 267 at 12115 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 268 at 12164 s (idle): quiet after 3.0 s, 15 emissions until then
+  start 269 at 12215 s (idle): quiet after 3.7 s, 17 emissions until then
+  start 270 at 12262 s (idle): never quiet before the next kick, 1 emissions until then
+  start 271 at 12262 s (idle): quiet after 2.8 s, 18 emissions until then
+  start 272 at 12331 s (idle): quiet after 4.3 s, 21 emissions until then
+  start 273 at 12375 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 274 at 12423 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 275 at 12483 s (idle): quiet after 3.6 s, 17 emissions until then
+  start 276 at 12530 s (idle): quiet after 4.4 s, 21 emissions until then
+  start 277 at 12579 s (idle): never quiet before the next kick, 0 emissions until then
+  start 278 at 12580 s (idle): quiet after 4.3 s, 21 emissions until then
+  start 279 at 12630 s (idle): quiet after 3.8 s, 20 emissions until then
+  start 280 at 12676 s (idle): quiet after 4.3 s, 20 emissions until then
+  start 281 at 12721 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 282 at 12769 s (idle): quiet after 4.6 s, 21 emissions until then
+  start 283 at 12822 s (idle): quiet after 4.6 s, 22 emissions until then
+  start 284 at 12877 s (idle): quiet after 3.9 s, 20 emissions until then
+  start 285 at 12925 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 286 at 12968 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 287 at 13014 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 288 at 13064 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 289 at 13114 s (idle): quiet after 5.1 s, 26 emissions until then
+  start 290 at 13165 s (idle): quiet after 4.3 s, 19 emissions until then
+  start 291 at 13209 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 292 at 13253 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 293 at 13300 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 294 at 13345 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 295 at 13389 s (idle): never quiet before the next kick, 0 emissions until then
+  start 296 at 13389 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 297 at 13435 s (idle): quiet after 4.3 s, 22 emissions until then
+  start 298 at 13488 s (idle): never quiet before the next kick, 1 emissions until then
+  start 299 at 13489 s (idle): quiet after 0.6 s, 4 emissions until then
+  start 300 at 13553 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 301 at 13598 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 302 at 13642 s (idle): quiet after 4.0 s, 21 emissions until then
+  start 303 at 13691 s (idle): quiet after 4.1 s, 21 emissions until then
+  start 304 at 13748 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 305 at 13802 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 306 at 13845 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 307 at 13889 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 308 at 13950 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 309 at 14004 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 310 at 14058 s (idle): quiet after 4.8 s, 21 emissions until then
+  start 311 at 14116 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 312 at 14160 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 313 at 14210 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 314 at 14261 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 315 at 14307 s (idle): never quiet before the next kick, 1 emissions until then
+  start 316 at 14307 s (idle): quiet after 4.8 s, 22 emissions until then
+  start 317 at 14355 s (idle): quiet after 3.1 s, 17 emissions until then
+  start 318 at 14407 s (idle): quiet after 4.2 s, 21 emissions until then
+  start 319 at 14457 s (idle): quiet after 4.4 s, 20 emissions until then
+  start 320 at 14507 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 321 at 14551 s (idle): never quiet before the next kick, 1 emissions until then
+  start 322 at 14551 s (idle): quiet after 2.6 s, 17 emissions until then
+  start 323 at 14596 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 324 at 14643 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 325 at 14691 s (idle): quiet after 4.1 s, 21 emissions until then
+  start 326 at 14750 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 327 at 14816 s (idle): quiet after 4.4 s, 20 emissions until then
+  start 328 at 14865 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 329 at 14910 s (idle): never quiet before the next kick, 1 emissions until then
+  start 330 at 14910 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 331 at 14954 s (idle): quiet after 4.3 s, 20 emissions until then
+  start 332 at 15001 s (idle): quiet after 4.6 s, 23 emissions until then
+  start 333 at 15048 s (idle): quiet after 4.4 s, 21 emissions until then
+  start 334 at 15094 s (idle): never quiet before the next kick, 2 emissions until then
+  start 335 at 15094 s (idle): quiet after 2.1 s, 14 emissions until then
+  start 336 at 15138 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 337 at 15186 s (idle): quiet after 3.2 s, 20 emissions until then
+  start 338 at 15231 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 339 at 15276 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 340 at 15326 s (idle): quiet after 4.5 s, 21 emissions until then
+  start 341 at 15371 s (idle): never quiet before the next kick, 1 emissions until then
+  start 342 at 15371 s (idle): quiet after 0.4 s, 4 emissions until then
+  start 343 at 15425 s (idle): quiet after 4.6 s, 25 emissions until then
+  start 344 at 15471 s (idle): never quiet before the next kick, 2 emissions until then
+  start 345 at 15472 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 346 at 15518 s (idle): quiet after 3.9 s, 20 emissions until then
+  start 347 at 15567 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 348 at 15629 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 349 at 15684 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 350 at 15738 s (idle): quiet after 3.9 s, 21 emissions until then
+  start 351 at 15783 s (idle): quiet after 3.9 s, 20 emissions until then
+  start 352 at 15831 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 353 at 15874 s (idle): never quiet before the next kick, 0 emissions until then
+  start 354 at 15875 s (idle): quiet after 0.6 s, 4 emissions until then
+  start 355 at 15921 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 356 at 15967 s (idle): quiet after 4.8 s, 22 emissions until then
+  start 357 at 16023 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 358 at 16073 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 359 at 16127 s (idle): quiet after 4.4 s, 22 emissions until then
+  start 360 at 16178 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 361 at 16226 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 362 at 16270 s (idle): quiet after 4.3 s, 21 emissions until then
+  start 363 at 16322 s (idle): quiet after 4.1 s, 21 emissions until then
+  start 364 at 16370 s (idle): never quiet before the next kick, 1 emissions until then
+  start 365 at 16371 s (idle): quiet after 2.9 s, 18 emissions until then
+  start 366 at 16418 s (idle): quiet after 4.4 s, 23 emissions until then
+  start 367 at 16466 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 368 at 16513 s (idle): never quiet before the next kick, 2 emissions until then
+  start 369 at 16514 s (idle): quiet after 3.1 s, 16 emissions until then
+  start 370 at 16563 s (idle): quiet after 3.5 s, 19 emissions until then
+  start 371 at 16613 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 372 at 16659 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 373 at 16710 s (idle): quiet after 3.9 s, 19 emissions until then
+  start 374 at 16767 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 375 at 16816 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 376 at 16869 s (idle): quiet after 3.1 s, 19 emissions until then
+  start 377 at 16916 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 378 at 16968 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 379 at 17031 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 380 at 17075 s (idle): never quiet before the next kick, 2 emissions until then
+  start 381 at 17075 s (idle): never quiet before the next kick, 0 emissions until then
+  start 382 at 17081 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 383 at 17127 s (idle): quiet after 3.5 s, 20 emissions until then
+  start 384 at 17175 s (idle): quiet after 4.0 s, 18 emissions until then
+  start 385 at 17220 s (idle): never quiet before the next kick, 0 emissions until then
+  start 386 at 17221 s (idle): quiet after 2.8 s, 18 emissions until then
+  start 387 at 17266 s (idle): quiet after 4.2 s, 20 emissions until then
+  start 388 at 17320 s (idle): quiet after 3.9 s, 18 emissions until then
+  start 389 at 17366 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 390 at 17413 s (idle): quiet after 4.1 s, 18 emissions until then
+  start 391 at 17458 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 392 at 17504 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 393 at 17568 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 394 at 17612 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 395 at 17657 s (idle): quiet after 4.7 s, 22 emissions until then
+  start 396 at 17700 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 397 at 17752 s (idle): quiet after 4.8 s, 22 emissions until then
+  start 398 at 17799 s (idle): quiet after 4.8 s, 21 emissions until then
+  start 399 at 17845 s (idle): quiet after 4.4 s, 20 emissions until then
+  start 400 at 17902 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 401 at 17949 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 402 at 17995 s (idle): quiet after 5.1 s, 25 emissions until then
+  start 403 at 18040 s (idle): never quiet before the next kick, 2 emissions until then
+  start 404 at 18041 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 405 at 18085 s (idle): quiet after 4.7 s, 21 emissions until then
+  start 406 at 18135 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 407 at 18193 s (idle): never quiet before the next kick, 1 emissions until then
+  start 408 at 18194 s (idle): quiet after 0.9 s, 7 emissions until then
+  start 409 at 18239 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 410 at 18283 s (idle): quiet after 4.6 s, 23 emissions until then
+  start 411 at 18333 s (idle): quiet after 3.0 s, 16 emissions until then
+  start 412 at 18382 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 413 at 18437 s (idle): never quiet before the next kick, 2 emissions until then
+  start 414 at 18437 s (idle): quiet after 1.2 s, 5 emissions until then
+  start 415 at 18479 s (idle): never quiet before the next kick, 2 emissions until then
+  start 416 at 18479 s (idle): quiet after 3.0 s, 18 emissions until then
+  start 417 at 18541 s (idle): quiet after 3.3 s, 20 emissions until then
+  start 418 at 18589 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 419 at 18642 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 420 at 18690 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 421 at 18742 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 422 at 18790 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 423 at 18833 s (idle): quiet after 3.1 s, 19 emissions until then
+  start 424 at 18877 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 425 at 18920 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 426 at 18964 s (idle): quiet after 4.6 s, 22 emissions until then
+  start 427 at 19011 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 428 at 19058 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 429 at 19124 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 430 at 19177 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 431 at 19239 s (idle): quiet after 4.0 s, 18 emissions until then
+  start 432 at 19288 s (idle): quiet after 3.8 s, 19 emissions until then
+  start 433 at 19350 s (idle): never quiet before the next kick, 0 emissions until then
+  start 434 at 19350 s (idle): quiet after 3.1 s, 17 emissions until then
+  start 435 at 19393 s (idle): quiet after 3.8 s, 21 emissions until then
+  start 436 at 19443 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 437 at 19505 s (idle): never quiet before the next kick, 0 emissions until then
+  start 438 at 19506 s (idle): quiet after 3.4 s, 19 emissions until then
+  start 439 at 19563 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 440 at 19609 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 441 at 19658 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 442 at 19722 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 443 at 19771 s (idle): quiet after 4.3 s, 23 emissions until then
+  start 444 at 19817 s (idle): quiet after 4.4 s, 22 emissions until then
+  start 445 at 19873 s (idle): never quiet before the next kick, 2 emissions until then
+  start 446 at 19874 s (idle): quiet after 2.2 s, 14 emissions until then
+  start 447 at 19927 s (idle): quiet after 4.3 s, 20 emissions until then
+  start 448 at 19973 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 449 at 20028 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 450 at 20071 s (idle): quiet after 3.9 s, 19 emissions until then
+  start 451 at 20124 s (idle): quiet after 4.6 s, 24 emissions until then
+  start 452 at 20178 s (idle): never quiet before the next kick, 1 emissions until then
+  start 453 at 20178 s (idle): never quiet before the next kick, 2 emissions until then
+  start 454 at 20191 s (idle): quiet after 3.5 s, 17 emissions until then
+  start 455 at 20237 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 456 at 20280 s (idle): quiet after 3.2 s, 20 emissions until then
+  start 457 at 20325 s (idle): quiet after 4.8 s, 24 emissions until then
+  start 458 at 20370 s (idle): quiet after 3.7 s, 17 emissions until then
+  start 459 at 20417 s (idle): quiet after 3.9 s, 23 emissions until then
+  start 460 at 20464 s (idle): quiet after 3.9 s, 18 emissions until then
+  start 461 at 20517 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 462 at 20561 s (idle): quiet after 4.4 s, 23 emissions until then
+  start 463 at 20614 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 464 at 20657 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 465 at 20711 s (idle): quiet after 3.5 s, 16 emissions until then
+  start 466 at 20760 s (idle): quiet after 4.5 s, 24 emissions until then
+  start 467 at 20816 s (idle): quiet after 4.2 s, 19 emissions until then
+  start 468 at 20867 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 469 at 20910 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 470 at 20957 s (idle): quiet after 4.4 s, 22 emissions until then
+  start 471 at 21008 s (idle): quiet after 4.7 s, 21 emissions until then
+  start 472 at 21052 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 473 at 21098 s (idle): quiet after 3.9 s, 20 emissions until then
+  start 474 at 21147 s (idle): quiet after 3.1 s, 17 emissions until then
+  start 475 at 21191 s (idle): quiet after 3.6 s, 17 emissions until then
+  start 476 at 21256 s (idle): quiet after 4.3 s, 19 emissions until then
+  start 477 at 21302 s (idle): quiet after 3.2 s, 20 emissions until then
+  start 478 at 21363 s (idle): quiet after 2.8 s, 15 emissions until then
+  start 479 at 21409 s (idle): never quiet before the next kick, 1 emissions until then
+  start 480 at 21409 s (idle): never quiet before the next kick, 2 emissions until then
+  start 481 at 21411 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 482 at 21458 s (idle): quiet after 4.2 s, 23 emissions until then
+  start 483 at 21504 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 484 at 21566 s (idle): quiet after 4.2 s, 23 emissions until then
+  start 485 at 21616 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 486 at 21663 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 487 at 21710 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 488 at 21753 s (idle): quiet after 4.0 s, 24 emissions until then
+  start 489 at 21807 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 490 at 21852 s (idle): never quiet before the next kick, 1 emissions until then
+  start 491 at 21852 s (idle): quiet after 0.9 s, 8 emissions until then
+  start 492 at 21920 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 493 at 21964 s (idle): quiet after 3.0 s, 16 emissions until then
+  start 494 at 22010 s (idle): quiet after 4.1 s, 22 emissions until then
+  start 495 at 22077 s (idle): quiet after 4.7 s, 21 emissions until then
+  start 496 at 22124 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 497 at 22176 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 498 at 22221 s (idle): quiet after 4.8 s, 26 emissions until then
+  start 499 at 22277 s (idle): quiet after 4.7 s, 23 emissions until then
+  start 500 at 22322 s (idle): quiet after 3.9 s, 22 emissions until then
+  start 501 at 22369 s (idle): quiet after 3.8 s, 18 emissions until then
+  start 502 at 22421 s (idle): quiet after 4.8 s, 23 emissions until then
+  start 503 at 22474 s (idle): quiet after 3.2 s, 20 emissions until then
+  start 504 at 22533 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 505 at 22576 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 506 at 22620 s (idle): quiet after 2.8 s, 15 emissions until then
+  start 507 at 22674 s (idle): quiet after 4.7 s, 27 emissions until then
+  start 508 at 22720 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 509 at 22763 s (idle): quiet after 4.5 s, 22 emissions until then
+  start 510 at 22814 s (idle): quiet after 5.0 s, 25 emissions until then
+  start 511 at 22859 s (idle): quiet after 4.3 s, 24 emissions until then
+  start 512 at 22904 s (idle): quiet after 3.4 s, 16 emissions until then
+  start 513 at 22956 s (idle): quiet after 3.7 s, 19 emissions until then
+  start 514 at 23000 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 515 at 23050 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 516 at 23094 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 517 at 23144 s (idle): quiet after 3.9 s, 19 emissions until then
+  start 518 at 23200 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 519 at 23246 s (idle): quiet after 4.8 s, 24 emissions until then
+  start 520 at 23298 s (idle): quiet after 4.3 s, 19 emissions until then
+  start 521 at 23351 s (idle): quiet after 4.3 s, 23 emissions until then
+  start 522 at 23405 s (idle): never quiet before the next kick, 1 emissions until then
+  start 523 at 23405 s (idle): never quiet before the next kick, 4 emissions until then
+  start 524 at 23418 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 525 at 23474 s (idle): quiet after 4.7 s, 25 emissions until then
+  start 526 at 23526 s (idle): never quiet before the next kick, 1 emissions until then
+  start 527 at 23527 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 528 at 23572 s (idle): quiet after 3.8 s, 21 emissions until then
+  start 529 at 23617 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 530 at 23675 s (idle): never quiet before the next kick, 2 emissions until then
+  start 531 at 23676 s (idle): quiet after 3.7 s, 22 emissions until then
+  start 532 at 23721 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 533 at 23765 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 534 at 23827 s (idle): quiet after 5.2 s, 26 emissions until then
+  start 535 at 23883 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 536 at 23935 s (idle): quiet after 4.0 s, 23 emissions until then
+  start 537 at 24000 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 538 at 24051 s (idle): quiet after 4.7 s, 24 emissions until then
+  start 539 at 24100 s (idle): quiet after 4.5 s, 23 emissions until then
+  start 540 at 24145 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 541 at 24195 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 542 at 24239 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 543 at 24282 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 544 at 24331 s (idle): quiet after 4.0 s, 18 emissions until then
+  start 545 at 24390 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 546 at 24436 s (idle): quiet after 4.6 s, 23 emissions until then
+  start 547 at 24494 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 548 at 24563 s (idle): quiet after 4.6 s, 22 emissions until then
+  start 549 at 24607 s (idle): quiet after 4.6 s, 23 emissions until then
+  start 550 at 24657 s (idle): quiet after 1.0 s, 5 emissions until then
+  start 551 at 24716 s (idle): quiet after 4.6 s, 25 emissions until then
+  start 552 at 24764 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 553 at 24816 s (idle): quiet after 4.4 s, 23 emissions until then
+  start 554 at 24867 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 555 at 24914 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 556 at 24958 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 557 at 25002 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 558 at 25050 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 559 at 25102 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 560 at 25146 s (idle): quiet after 4.4 s, 22 emissions until then
+  start 561 at 25193 s (idle): quiet after 4.5 s, 24 emissions until then
+  start 562 at 25241 s (idle): never quiet before the next kick, 1 emissions until then
+  start 563 at 25242 s (idle): quiet after 4.1 s, 23 emissions until then
+  start 564 at 25292 s (idle): quiet after 5.1 s, 26 emissions until then
+  start 565 at 25345 s (idle): quiet after 4.6 s, 26 emissions until then
+  start 566 at 25396 s (idle): never quiet before the next kick, 2 emissions until then
+  start 567 at 25396 s (idle): quiet after 4.7 s, 24 emissions until then
+  start 568 at 25443 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 569 at 25495 s (idle): quiet after 3.0 s, 16 emissions until then
+  start 570 at 25538 s (idle): quiet after 3.8 s, 22 emissions until then
+  start 571 at 25584 s (idle): quiet after 4.6 s, 24 emissions until then
+  start 572 at 25629 s (idle): quiet after 3.2 s, 20 emissions until then
+  start 573 at 25672 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 574 at 25722 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 575 at 25765 s (idle): never quiet before the next kick, 1 emissions until then
+  start 576 at 25765 s (idle): quiet after 3.0 s, 19 emissions until then
+  start 577 at 25819 s (idle): never quiet before the next kick, 0 emissions until then
+  start 578 at 25819 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 579 at 25863 s (idle): quiet after 3.7 s, 17 emissions until then
+  start 580 at 25908 s (idle): quiet after 4.5 s, 19 emissions until then
+  start 581 at 25955 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 582 at 26000 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 583 at 26050 s (idle): never quiet before the next kick, 2 emissions until then
+  start 584 at 26050 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 585 at 26103 s (idle): never quiet before the next kick, 2 emissions until then
+  start 586 at 26104 s (idle): quiet after 2.9 s, 17 emissions until then
+  start 587 at 26147 s (idle): quiet after 3.7 s, 17 emissions until then
+  start 588 at 26190 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 589 at 26247 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 590 at 26301 s (idle): never quiet before the next kick, 0 emissions until then
+  start 591 at 26302 s (idle): quiet after 0.6 s, 4 emissions until then
+  start 592 at 26350 s (idle): quiet after 3.7 s, 19 emissions until then
+  start 593 at 26394 s (idle): quiet after 4.0 s, 22 emissions until then
+  start 594 at 26462 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 595 at 26508 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 596 at 26564 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 597 at 26614 s (idle): never quiet before the next kick, 1 emissions until then
+  start 598 at 26614 s (idle): quiet after 3.6 s, 23 emissions until then
+  start 599 at 26669 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 600 at 26721 s (idle): quiet after 4.2 s, 19 emissions until then
+  start 601 at 26777 s (idle): quiet after 4.8 s, 22 emissions until then
+  start 602 at 26821 s (idle): quiet after 4.7 s, 20 emissions until then
+  start 603 at 26866 s (idle): quiet after 4.0 s, 23 emissions until then
+  start 604 at 26916 s (idle): never quiet before the next kick, 1 emissions until then
+  start 605 at 26916 s (idle): quiet after 2.5 s, 16 emissions until then
+  start 606 at 26983 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 607 at 27040 s (idle): quiet after 3.0 s, 15 emissions until then
+  start 608 at 27096 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 609 at 27143 s (idle): quiet after 4.7 s, 23 emissions until then
+  start 610 at 27187 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 611 at 27233 s (idle): quiet after 5.1 s, 23 emissions until then
+  start 612 at 27276 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 613 at 27322 s (idle): quiet after 4.2 s, 19 emissions until then
+  start 614 at 27367 s (idle): quiet after 4.6 s, 22 emissions until then
+  start 615 at 27420 s (idle): never quiet before the next kick, 1 emissions until then
+  start 616 at 27420 s (idle): quiet after 2.8 s, 15 emissions until then
+  start 617 at 27476 s (idle): never quiet before the next kick, 4 emissions until then
+  start 618 at 27478 s (idle): quiet after 0.4 s, 5 emissions until then
+  start 619 at 27519 s (idle): quiet after 3.3 s, 20 emissions until then
+  start 620 at 27567 s (idle): quiet after 4.8 s, 23 emissions until then
+  start 621 at 27621 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 622 at 27665 s (idle): never quiet before the next kick, 0 emissions until then
+  start 623 at 27666 s (idle): quiet after 2.9 s, 19 emissions until then
+  start 624 at 27717 s (idle): quiet after 3.4 s, 19 emissions until then
+  start 625 at 27760 s (idle): quiet after 3.1 s, 19 emissions until then
+  start 626 at 27804 s (idle): never quiet before the next kick, 2 emissions until then
+  start 627 at 27804 s (idle): quiet after 0.6 s, 3 emissions until then
+  start 628 at 27861 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 629 at 27920 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 630 at 27983 s (idle): quiet after 4.0 s, 18 emissions until then
+  start 631 at 28046 s (idle): quiet after 5.0 s, 22 emissions until then
+  start 632 at 28103 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 633 at 28146 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 634 at 28192 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 635 at 28241 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 636 at 28285 s (idle): never quiet before the next kick, 2 emissions until then
+  start 637 at 28285 s (idle): never quiet before the next kick, 1 emissions until then
+  start 638 at 28288 s (idle): quiet after 3.9 s, 18 emissions until then
+  start 639 at 28340 s (idle): quiet after 5.1 s, 25 emissions until then
+  start 640 at 28406 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 641 at 28462 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 642 at 28508 s (idle): quiet after 4.9 s, 28 emissions until then
+  start 643 at 28555 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 644 at 28612 s (idle): quiet after 4.3 s, 22 emissions until then
+  start 645 at 28660 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 646 at 28706 s (idle): quiet after 4.0 s, 18 emissions until then
+  start 647 at 28759 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 648 at 28812 s (idle): quiet after 4.7 s, 22 emissions until then
+  start 649 at 28876 s (idle): quiet after 4.7 s, 21 emissions until then
+  start 650 at 28925 s (idle): quiet after 3.1 s, 19 emissions until then
+  start 651 at 28981 s (idle): quiet after 3.4 s, 19 emissions until then
+  start 652 at 29027 s (idle): quiet after 3.0 s, 16 emissions until then
+  start 653 at 29077 s (idle): quiet after 4.7 s, 27 emissions until then
+  start 654 at 29125 s (idle): never quiet before the next kick, 1 emissions until then
+  start 655 at 29126 s (idle): quiet after 1.2 s, 5 emissions until then
+  start 656 at 29168 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 657 at 29214 s (idle): never quiet before the next kick, 1 emissions until then
+  start 658 at 29214 s (idle): quiet after 2.9 s, 19 emissions until then
+  start 659 at 29269 s (idle): quiet after 5.3 s, 28 emissions until then
+  start 660 at 29318 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 661 at 29370 s (idle): quiet after 3.8 s, 20 emissions until then
+  start 662 at 29428 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 663 at 29471 s (idle): quiet after 3.0 s, 16 emissions until then
+  start 664 at 29517 s (idle): quiet after 4.6 s, 27 emissions until then
+  start 665 at 29565 s (idle): quiet after 5.1 s, 26 emissions until then
+  start 666 at 29611 s (idle): quiet after 3.0 s, 16 emissions until then
+  start 667 at 29661 s (idle): quiet after 4.6 s, 23 emissions until then
+  start 668 at 29705 s (idle): quiet after 4.9 s, 27 emissions until then
+  start 669 at 29759 s (idle): never quiet before the next kick, 2 emissions until then
+  start 670 at 29760 s (idle): quiet after 2.7 s, 13 emissions until then
+  start 671 at 29816 s (idle): quiet after 3.0 s, 16 emissions until then
+  start 672 at 29874 s (idle): quiet after 4.7 s, 26 emissions until then
+  start 673 at 29920 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 674 at 29963 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 675 at 30019 s (idle): quiet after 3.8 s, 18 emissions until then
+  start 676 at 30073 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 677 at 30123 s (idle): quiet after 4.0 s, 21 emissions until then
+  start 678 at 30172 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 679 at 30222 s (idle): quiet after 4.7 s, 24 emissions until then
+  start 680 at 30268 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 681 at 30313 s (idle): quiet after 3.4 s, 16 emissions until then
+  start 682 at 30366 s (idle): quiet after 4.8 s, 24 emissions until then
+  start 683 at 30421 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 684 at 30467 s (idle): quiet after 4.5 s, 20 emissions until then
+  start 685 at 30515 s (idle): quiet after 4.7 s, 25 emissions until then
+  start 686 at 30563 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 687 at 30608 s (idle): quiet after 3.1 s, 18 emissions until then
+  start 688 at 30658 s (idle): never quiet before the next kick, 1 emissions until then
+  start 689 at 30659 s (idle): quiet after 2.2 s, 14 emissions until then
+  start 690 at 30714 s (idle): never quiet before the next kick, 1 emissions until then
+  start 691 at 30715 s (idle): quiet after 2.3 s, 14 emissions until then
+  start 692 at 30762 s (idle): quiet after 3.9 s, 18 emissions until then
+  start 693 at 30811 s (idle): never quiet before the next kick, 1 emissions until then
+  start 694 at 30812 s (idle): quiet after 0.9 s, 3 emissions until then
+  start 695 at 30831 s (idle): quiet after 4.0 s, 23 emissions until then
+  start 696 at 30880 s (idle): quiet after 3.1 s, 19 emissions until then
+  start 697 at 30933 s (idle): quiet after 2.9 s, 16 emissions until then
+  start 698 at 30980 s (idle): never quiet before the next kick, 0 emissions until then
+  start 699 at 30981 s (idle): quiet after 0.8 s, 4 emissions until then
+  start 700 at 31027 s (idle): quiet after 5.0 s, 24 emissions until then
+  start 701 at 31082 s (idle): never quiet before the next kick, 1 emissions until then
+  start 702 at 31082 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 703 at 31132 s (idle): quiet after 3.7 s, 19 emissions until then
+  start 704 at 31175 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 705 at 31235 s (idle): never quiet before the next kick, 0 emissions until then
+  start 706 at 31236 s (idle): quiet after 3.9 s, 21 emissions until then
+  start 707 at 31279 s (idle): quiet after 4.0 s, 22 emissions until then
+  start 708 at 31324 s (idle): quiet after 4.1 s, 22 emissions until then
+  start 709 at 31385 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 710 at 31432 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 711 at 31491 s (idle): quiet after 4.8 s, 23 emissions until then
+  start 712 at 31537 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 713 at 31585 s (idle): quiet after 3.8 s, 19 emissions until then
+  start 714 at 31630 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 715 at 31674 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 716 at 31717 s (idle): quiet after 3.8 s, 17 emissions until then
+  start 717 at 31765 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 718 at 31824 s (idle): quiet after 4.8 s, 23 emissions until then
+  start 719 at 31870 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 720 at 31915 s (idle): quiet after 4.2 s, 20 emissions until then
+  start 721 at 31966 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 722 at 32017 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 723 at 32060 s (idle): quiet after 3.9 s, 21 emissions until then
+  start 724 at 32108 s (idle): never quiet before the next kick, 2 emissions until then
+  start 725 at 32108 s (idle): quiet after 0.6 s, 3 emissions until then
+  start 726 at 32152 s (idle): quiet after 3.5 s, 18 emissions until then
+  start 727 at 32196 s (idle): quiet after 2.9 s, 17 emissions until then
+  start 728 at 32243 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 729 at 32299 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 730 at 32349 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 731 at 32393 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 732 at 32447 s (idle): quiet after 3.4 s, 19 emissions until then
+  start 733 at 32508 s (idle): quiet after 4.3 s, 21 emissions until then
+  start 734 at 32558 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 735 at 32604 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 736 at 32661 s (idle): quiet after 4.8 s, 21 emissions until then
+  start 737 at 32715 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 738 at 32761 s (idle): quiet after 4.8 s, 21 emissions until then
+  start 739 at 32809 s (idle): quiet after 4.9 s, 22 emissions until then
+  start 740 at 32853 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 741 at 32901 s (idle): quiet after 4.4 s, 19 emissions until then
+  start 742 at 32966 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 743 at 33009 s (idle): quiet after 3.1 s, 17 emissions until then
+  start 744 at 33056 s (idle): quiet after 3.8 s, 19 emissions until then
+  start 745 at 33105 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 746 at 33157 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 747 at 33217 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 748 at 33267 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 749 at 33317 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 750 at 33362 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 751 at 33423 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 752 at 33478 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 753 at 33523 s (idle): quiet after 3.5 s, 18 emissions until then
+  start 754 at 33566 s (idle): quiet after 3.7 s, 19 emissions until then
+  start 755 at 33610 s (idle): quiet after 3.1 s, 20 emissions until then
+  start 756 at 33655 s (idle): quiet after 3.4 s, 16 emissions until then
+  start 757 at 33722 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 758 at 33789 s (idle): quiet after 4.7 s, 24 emissions until then
+  start 759 at 33836 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 760 at 33883 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 761 at 33933 s (idle): quiet after 4.9 s, 24 emissions until then
+  start 762 at 33975 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 763 at 34024 s (idle): quiet after 3.6 s, 17 emissions until then
+  start 764 at 34072 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 765 at 34121 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 766 at 34166 s (idle): quiet after 3.1 s, 19 emissions until then
+  start 767 at 34213 s (idle): quiet after 4.2 s, 19 emissions until then
+  start 768 at 34272 s (idle): never quiet before the next kick, 2 emissions until then
+  start 769 at 34273 s (idle): quiet after 2.1 s, 14 emissions until then
+  start 770 at 34319 s (idle): quiet after 3.7 s, 17 emissions until then
+  start 771 at 34369 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 772 at 34418 s (idle): quiet after 4.1 s, 21 emissions until then
+  start 773 at 34468 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 774 at 34516 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 775 at 34559 s (idle): quiet after 3.7 s, 19 emissions until then
+  start 776 at 34607 s (idle): never quiet before the next kick, 2 emissions until then
+  start 777 at 34607 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 778 at 34654 s (idle): quiet after 4.5 s, 21 emissions until then
+  start 779 at 34701 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 780 at 34746 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 781 at 34801 s (idle): quiet after 4.6 s, 20 emissions until then
+  start 782 at 34847 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 783 at 34891 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 784 at 34934 s (idle): quiet after 4.9 s, 22 emissions until then
+  start 785 at 34989 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 786 at 35032 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 787 at 35084 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 788 at 35132 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 789 at 35185 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 790 at 35241 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 791 at 35300 s (idle): never quiet before the next kick, 1 emissions until then
+  start 792 at 35301 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 793 at 35348 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 794 at 35394 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 795 at 35445 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 796 at 35502 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 797 at 35547 s (idle): quiet after 4.8 s, 24 emissions until then
+  start 798 at 35611 s (idle): quiet after 4.9 s, 22 emissions until then
+  start 799 at 35657 s (idle): quiet after 3.9 s, 21 emissions until then
+  start 800 at 35701 s (idle): quiet after 4.3 s, 22 emissions until then
+  start 801 at 35749 s (idle): quiet after 4.3 s, 20 emissions until then
+  start 802 at 35809 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 803 at 35861 s (idle): quiet after 4.1 s, 22 emissions until then
+  start 804 at 35910 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 805 at 35956 s (idle): quiet after 4.3 s, 23 emissions until then
+  start 806 at 36005 s (idle): quiet after 4.1 s, 22 emissions until then
+  start 807 at 36062 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 808 at 36122 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 809 at 36184 s (idle): quiet after 4.4 s, 19 emissions until then
+  start 810 at 36228 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 811 at 36286 s (idle): quiet after 3.9 s, 19 emissions until then
+  start 812 at 36328 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 813 at 36379 s (idle): quiet after 4.7 s, 21 emissions until then
+  start 814 at 36430 s (idle): never quiet before the next kick, 1 emissions until then
+  start 815 at 36431 s (idle): quiet after 0.8 s, 4 emissions until then
+  start 816 at 36471 s (idle): quiet after 4.0 s, 18 emissions until then
+  start 817 at 36514 s (idle): never quiet before the next kick, 0 emissions until then
+  start 818 at 36515 s (idle): quiet after 0.8 s, 4 emissions until then
+  start 819 at 36559 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 820 at 36603 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 821 at 36664 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 822 at 36707 s (idle): quiet after 3.4 s, 17 emissions until then
+  start 823 at 36751 s (idle): quiet after 3.6 s, 18 emissions until then
+  start 824 at 36794 s (idle): quiet after 4.1 s, 23 emissions until then
+  start 825 at 36843 s (idle): quiet after 4.1 s, 21 emissions until then
+  start 826 at 36887 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 827 at 36931 s (idle): quiet after 3.3 s, 20 emissions until then
+  start 828 at 36975 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 829 at 37019 s (idle): quiet after 3.1 s, 19 emissions until then
+  start 830 at 37074 s (idle): quiet after 4.7 s, 25 emissions until then
+  start 831 at 37120 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 832 at 37167 s (idle): never quiet before the next kick, 2 emissions until then
+  start 833 at 37168 s (idle): quiet after 0.8 s, 7 emissions until then
+  start 834 at 37209 s (idle): never quiet before the next kick, 1 emissions until then
+  start 835 at 37209 s (idle): quiet after 0.9 s, 1 emissions until then
+  start 836 at 37238 s (idle): quiet after 4.6 s, 24 emissions until then
+  start 837 at 37290 s (idle): quiet after 5.3 s, 25 emissions until then
+  start 838 at 37334 s (idle): quiet after 4.8 s, 24 emissions until then
+  start 839 at 37381 s (idle): quiet after 3.6 s, 16 emissions until then
+  start 840 at 37434 s (idle): quiet after 4.6 s, 20 emissions until then
+  start 841 at 37479 s (idle): quiet after 5.1 s, 25 emissions until then
+  start 842 at 37528 s (idle): quiet after 4.0 s, 22 emissions until then
+  start 843 at 37580 s (idle): never quiet before the next kick, 1 emissions until then
+  start 844 at 37580 s (idle): quiet after 3.8 s, 19 emissions until then
+  start 845 at 37629 s (idle): quiet after 3.3 s, 16 emissions until then
+  start 846 at 37678 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 847 at 37727 s (idle): never quiet before the next kick, 1 emissions until then
+  start 848 at 37727 s (idle): quiet after 0.8 s, 4 emissions until then
+  start 849 at 37771 s (idle): quiet after 4.7 s, 25 emissions until then
+  start 850 at 37826 s (idle): quiet after 3.5 s, 19 emissions until then
+  start 851 at 37874 s (idle): never quiet before the next kick, 1 emissions until then
+  start 852 at 37875 s (idle): quiet after 4.5 s, 26 emissions until then
+  start 853 at 37927 s (idle): quiet after 4.1 s, 22 emissions until then
+  start 854 at 37978 s (idle): quiet after 4.7 s, 23 emissions until then
+  start 855 at 38033 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 856 at 38095 s (idle): quiet after 3.7 s, 20 emissions until then
+  start 857 at 38150 s (idle): never quiet before the next kick, 0 emissions until then
+  start 858 at 38151 s (idle): quiet after 0.5 s, 4 emissions until then
+  start 859 at 38201 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 860 at 38245 s (idle): quiet after 4.1 s, 20 emissions until then
+  start 861 at 38292 s (idle): quiet after 3.9 s, 21 emissions until then
+  start 862 at 38358 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 863 at 38403 s (idle): quiet after 4.5 s, 21 emissions until then
+  start 864 at 38448 s (idle): quiet after 4.3 s, 21 emissions until then
+  start 865 at 38506 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 866 at 38563 s (idle): quiet after 4.1 s, 21 emissions until then
+  start 867 at 38612 s (idle): quiet after 4.6 s, 25 emissions until then
+  start 868 at 38659 s (idle): quiet after 3.0 s, 15 emissions until then
+  start 869 at 38708 s (idle): quiet after 4.0 s, 23 emissions until then
+  start 870 at 38770 s (idle): never quiet before the next kick, 0 emissions until then
+  start 871 at 38771 s (idle): quiet after 2.7 s, 16 emissions until then
+  start 872 at 38814 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 873 at 38858 s (idle): never quiet before the next kick, 1 emissions until then
+  start 874 at 38859 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 875 at 38907 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 876 at 38950 s (idle): quiet after 3.9 s, 19 emissions until then
+  start 877 at 39005 s (idle): quiet after 4.5 s, 25 emissions until then
+  start 878 at 39051 s (idle): quiet after 4.5 s, 19 emissions until then
+  start 879 at 39105 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 880 at 39149 s (idle): quiet after 4.0 s, 19 emissions until then
+  start 881 at 39196 s (idle): quiet after 4.5 s, 21 emissions until then
+  start 882 at 39244 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 883 at 39308 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 884 at 39368 s (idle): never quiet before the next kick, 1 emissions until then
+  start 885 at 39369 s (idle): never quiet before the next kick, 2 emissions until then
+  start 886 at 39380 s (idle): quiet after 3.2 s, 18 emissions until then
+  start 887 at 39428 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 888 at 39473 s (idle): quiet after 4.7 s, 23 emissions until then
+  start 889 at 39516 s (idle): quiet after 3.3 s, 17 emissions until then
+  start 890 at 39570 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 891 at 39621 s (idle): quiet after 3.8 s, 20 emissions until then
+  start 892 at 39674 s (idle): quiet after 4.7 s, 24 emissions until then
+  start 893 at 39724 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 894 at 39778 s (idle): quiet after 3.3 s, 20 emissions until then
+  start 895 at 39825 s (idle): quiet after 4.1 s, 21 emissions until then
+  start 896 at 39877 s (idle): quiet after 4.3 s, 22 emissions until then
+  start 897 at 39930 s (idle): quiet after 3.2 s, 19 emissions until then
+  start 898 at 39973 s (idle): quiet after 3.1 s, 17 emissions until then
+  start 899 at 40026 s (idle): never quiet before the next kick, 1 emissions until then
+  start 900 at 40027 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 901 at 40080 s (idle): never quiet before the next kick, 1 emissions until then
+  start 902 at 40081 s (idle): quiet after 0.5 s, 4 emissions until then
+  start 903 at 40126 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 904 at 40171 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 905 at 40215 s (idle): quiet after 3.9 s, 21 emissions until then
+  start 906 at 40270 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 907 at 40316 s (idle): never quiet before the next kick, 2 emissions until then
+  start 908 at 40317 s (idle): quiet after 0.8 s, 3 emissions until then
+  start 909 at 40383 s (idle): quiet after 4.7 s, 24 emissions until then
+  start 910 at 40437 s (idle): never quiet before the next kick, 1 emissions until then
+  start 911 at 40438 s (idle): quiet after 4.3 s, 18 emissions until then
+  start 912 at 40481 s (idle): quiet after 4.1 s, 18 emissions until then
+  start 913 at 40527 s (idle): quiet after 3.4 s, 18 emissions until then
+  start 914 at 40574 s (idle): quiet after 3.9 s, 19 emissions until then
+  start 915 at 40624 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 916 at 40667 s (idle): quiet after 4.4 s, 20 emissions until then
+  start 917 at 40722 s (idle): never quiet before the next kick, 1 emissions until then
+  start 918 at 40723 s (idle): quiet after 3.6 s, 21 emissions until then
+  start 919 at 40772 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 920 at 40835 s (idle): quiet after 3.9 s, 21 emissions until then
+  start 921 at 40896 s (idle): quiet after 3.1 s, 19 emissions until then
+  start 922 at 40945 s (idle): quiet after 4.1 s, 18 emissions until then
+  start 923 at 41018 s (idle): quiet after 4.6 s, 23 emissions until then
+  start 924 at 41082 s (idle): quiet after 4.3 s, 22 emissions until then
+  start 925 at 41134 s (idle): quiet after 4.7 s, 22 emissions until then
+  start 926 at 41179 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 927 at 41226 s (idle): quiet after 4.7 s, 22 emissions until then
+  start 928 at 41278 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 929 at 41331 s (idle): quiet after 4.3 s, 22 emissions until then
+  start 930 at 41382 s (idle): quiet after 4.4 s, 20 emissions until then
+  start 931 at 41442 s (idle): quiet after 4.1 s, 18 emissions until then
+  start 932 at 41499 s (idle): quiet after 3.9 s, 20 emissions until then
+  start 933 at 41546 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 934 at 41599 s (idle): quiet after 4.1 s, 19 emissions until then
+  start 935 at 41650 s (idle): quiet after 5.1 s, 23 emissions until then
+  start 936 at 41696 s (idle): never quiet before the next kick, 2 emissions until then
+  start 937 at 41697 s (idle): quiet after 3.2 s, 16 emissions until then
+  start 938 at 41740 s (idle): never quiet before the next kick, 1 emissions until then
+  start 939 at 41740 s (idle): quiet after 3.5 s, 22 emissions until then
+  start 940 at 41789 s (idle): quiet after 3.7 s, 17 emissions until then
+  start 941 at 41832 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 942 at 41887 s (idle): quiet after 5.1 s, 23 emissions until then
+  start 943 at 41932 s (idle): quiet after 3.9 s, 21 emissions until then
+  start 944 at 41980 s (idle): quiet after 4.4 s, 24 emissions until then
+  start 945 at 42036 s (idle): quiet after 4.3 s, 24 emissions until then
+  start 946 at 42087 s (idle): quiet after 4.8 s, 25 emissions until then
+  start 947 at 42145 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 948 at 42195 s (idle): never quiet before the next kick, 0 emissions until then
+  start 949 at 42195 s (idle): quiet after 4.5 s, 22 emissions until then
+  start 950 at 42241 s (idle): never quiet before the next kick, 2 emissions until then
+  start 951 at 42241 s (idle): never quiet before the next kick, 0 emissions until then
+  start 952 at 42245 s (idle): quiet after 3.2 s, 17 emissions until then
+  start 953 at 42295 s (idle): quiet after 4.3 s, 23 emissions until then
+  start 954 at 42340 s (idle): quiet after 4.3 s, 24 emissions until then
+  start 955 at 42386 s (idle): quiet after 3.0 s, 15 emissions until then
+  start 956 at 42430 s (idle): never quiet before the next kick, 1 emissions until then
+  start 957 at 42430 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 958 at 42489 s (idle): never quiet before the next kick, 1 emissions until then
+  start 959 at 42490 s (idle): quiet after 2.6 s, 15 emissions until then
+  start 960 at 42532 s (idle): quiet after 4.1 s, 21 emissions until then
+  start 961 at 42590 s (idle): quiet after 3.0 s, 15 emissions until then
+  start 962 at 42636 s (idle): quiet after 4.6 s, 27 emissions until then
+  start 963 at 42693 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 964 at 42738 s (idle): quiet after 2.9 s, 15 emissions until then
+  start 965 at 42783 s (idle): quiet after 4.8 s, 21 emissions until then
+  start 966 at 42827 s (idle): quiet after 5.1 s, 24 emissions until then
+  start 967 at 42880 s (idle): quiet after 4.0 s, 20 emissions until then
+  start 968 at 42923 s (idle): quiet after 3.6 s, 19 emissions until then
+  start 969 at 42981 s (idle): never quiet before the next kick, 1 emissions until then
+  start 970 at 42981 s (idle): quiet after 0.9 s, 3 emissions until then
+  start 971 at 43025 s (idle): quiet after 3.3 s, 18 emissions until then
+  start 972 at 43074 s (idle): quiet after 3.7 s, 18 emissions until then
+  start 973 at 43121 s (idle): quiet after 3.3 s, 19 emissions until then
+  start 974 at 43164 s (idle): quiet after 4.1 s, 21 emissions until then
+  time to quiet (gap 15 s): 866 of 974 starts quiet, median 3.6 s; within 30 s: 866 of 974 (pass mark 80 %: PASS)
+  chains: 875 distinct starts; length median 3.6 s, max 6.2 s; ended within 30 s: 875 of 875 (80 %: PASS)
+  max emissions per minute 53, M = 100: PASS
+  log: bench/sessions/2026-10-25-radio-on-run\radio_on_12h.log

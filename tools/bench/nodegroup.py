@@ -75,6 +75,7 @@ for l in setup_log:
     print(l, flush=True)
 
 events = []
+partial = {n: b"" for n, _ in boards}
 strengths = {}      # (t, listener) -> strength of a valid verdict
 trains = []         # (t, name): hop train starts, for the drift attribution
 status_heard = {}   # name -> [(t, heard.valid, heard.strength_sum)]
@@ -98,10 +99,16 @@ with open(log_path, "w", encoding="utf-8") as f:
                 s.write(b"RB STATUS\n")
             next_status += a.status_every
         for n, s in ports.items():
-            l = s.readline()
+            # Whole lines only: readline() with the 5 ms timeout returned the first piece of a line that
+            # arrives in two UART bursts (RB STATUS, ~1.7 KB since 2026-10-25) and logged the rest as a
+            # separate line.
+            partial[n] += s.read(s.in_waiting or 1)
+            if b"\n" not in partial[n]:
+                continue
+            l, partial[n] = partial[n].split(b"\n", 1)
+            l = l.decode("ascii", errors="replace").strip()
             if not l:
                 continue
-            l = l.decode("ascii", errors="replace").strip()
             t = time.time() - t0
             f.write("%.2f %s %s\n" % (t, n, l))
             if l.startswith("BEH emit start"):

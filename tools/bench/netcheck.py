@@ -42,6 +42,7 @@ for n, p in boards:
 buf = {n: "" for n in names}
 report = []
 failures = []
+warnings = []
 
 
 def say(line):
@@ -92,10 +93,15 @@ def step(title, action, check):
     after = drops()
     cost = {n: after[n] - before[n] for n in names}
     ok, detail = check(result)
-    say("%-4s %-38s %s | drops %s" % ("ok" if ok else "FAIL", title, detail,
+    # A step can arrive whole and still report a failed check (a SELFTEST result=FAIL): the radio path
+    # worked, the board did not; say so instead of a plain ok.
+    warn = ok and "=FAIL" in detail
+    say("%-4s %-38s %s | drops %s" % ("warn" if warn else ("ok" if ok else "FAIL"), title, detail,
                                      " ".join("%s:+%d" % (n, cost[n]) for n in names)))
     if not ok:
         failures.append(title)
+    if warn:
+        warnings.append("%s (%s)" % (title, detail))
     return result
 
 
@@ -144,7 +150,8 @@ if a.selftest:
 
 for s in ports.values():
     s.close()
-say("result: %s" % ("PASS" if not failures else "FAIL: " + ", ".join(failures)))
+say("result: %s%s" % ("PASS" if not failures else "FAIL: " + ", ".join(failures),
+                      "; warnings: " + "; ".join(warnings) if warnings else ""))
 if a.out:
     os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(a.out, "netcheck.txt"), "w", encoding="utf-8") as f:

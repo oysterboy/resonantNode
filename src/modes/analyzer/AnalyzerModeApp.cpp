@@ -576,10 +576,8 @@ void AnalyzerApp::begin() {
     _loopLastUs = timebase::nowUs();
     _loopMaxSinceBootUs = 0;
     _loopHealth.reset();
-    _usbLineLength = 0;
-    _usbLineBuffer[0] = '\0';
-    _emitterLineLength = 0;
-    _emitterLineBuffer[0] = '\0';
+    _usbLine.reset();
+    _emitterLine.reset();
     // ANA-005 (step 7a): the boot claim was announced ("scheduled") but never
     // queued, so the Emitter kept chirping in AUTO until the first EMIT/SEQ.
     // Send MODE REMOTE half a second after boot.

@@ -44,6 +44,15 @@ Host-side builds and tests (no board): see "Build & verify" in `CLAUDE.md`.
 Node and Analyzer share the detection profiles and `DetectionRuntime`; they differ in what happens
 after the verdict (behavior and output on the Node, reporting on the Analyzer).
 
+Serial lines, every mode and every port (USB console, the Analyzer <-> Emitter
+link): one reader (`src/app/SerialLine.h`). A line ends at `\n`; CR and
+non-printable bytes are dropped. A line longer than the buffer (255 characters
+on the USB consoles, 95 on the Emitter link) is refused whole with
+`ERR line_too_long max=N` (`RB ERR ...` on the Node), never run cut. A number
+in a command that is not a plain decimal is refused with `... bad value
+token=<token>`; nothing is read as 0 (since 2026-10-26, step 11e;
+decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md).
+
 ## Node (RB)
 
 `RB help` prints the command surface. As of 2026-10-25:

@@ -8,6 +8,7 @@
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/I2sToneOutput.h"
 #endif
+#include "../../app/SerialLine.h"
 #include "../../output/ChirpOutput.h"
 
 /*
@@ -94,8 +95,6 @@ private:
     I2sToneOutput _toneOutput;
 #endif
     ChirpOutput _chirpOutput;
-    char _lineBuffer[96];
-    size_t _lineLength = 0;
-    char _usbLineBuffer[96];
-    size_t _usbLineLength = 0;
+    serial_line::LineReader<95> _controlLine;  // Serial2, the Analyzer's commands
+    serial_line::LineReader<95> _usbLine;      // USB: SELFTEST and EMIT <command>
 };

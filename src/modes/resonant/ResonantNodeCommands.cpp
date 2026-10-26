@@ -8,32 +8,21 @@
 #include "../../app/ParamIds.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
+#include "../../app/TextParse.h"
 #include "ResonantNodeInternal.h"
 
 using namespace node_internal;
 
 void Node::pollSerialCommands() {
     while (Serial.available() > 0) {
-        const char c = static_cast<char>(Serial.read());
-        if (c == '\r') {
+        if (!_serialLine.feed(static_cast<char>(Serial.read()))) {
             continue;
         }
-        if (c == '\n') {
-            _serialLineBuffer[_serialLineLength] = '\0';
-            if (_serialLineOverflow) {
-                serialOut().print("RB ERR line_too_long max=");
-                serialOut().println(static_cast<unsigned long>(sizeof(_serialLineBuffer) - 1));
-            } else if (_serialLineLength > 0) {
-                handleSerialLine(_serialLineBuffer);
-            }
-            _serialLineLength = 0;
-            _serialLineOverflow = false;
-            continue;
-        }
-        if (_serialLineLength < sizeof(_serialLineBuffer) - 1) {
-            _serialLineBuffer[_serialLineLength++] = c;
-        } else {
-            _serialLineOverflow = true;
+        if (_serialLine.tooLong()) {
+            serialOut().print("RB ERR line_too_long max=");
+            serialOut().println(static_cast<unsigned long>(_serialLine.kCapacity));
+        } else if (_serialLine.length() > 0) {
+            handleSerialLine(_serialLine.line());
         }
     }
 }
@@ -155,10 +144,7 @@ void Node::handleSerialLine(const char* line) {
 }
 
 void Node::handleDebugCommand(const char* line) {
-    const char* mode = line + 8;
-    while (*mode == ' ') {
-        ++mode;
-    }
+    const char* mode = text_parse::rest(line, "RB debug");
 
     if (equalsIgnoreCase(mode, "off")) {
         _debug.setDebugMode(NodeDebug::DebugMode::Off);
@@ -176,10 +162,7 @@ void Node::handleDebugCommand(const char* line) {
 }
 
 void Node::handleLogCommand(const char* line) {
-    const char* mode = line + 6;
-    while (*mode == ' ') {
-        ++mode;
-    }
+    const char* mode = text_parse::rest(line, "RB log");
 
     if (equalsIgnoreCase(mode, "off")) {
         _rbLogMode = RbLogMode::Off;
@@ -199,10 +182,7 @@ void Node::handleLogCommand(const char* line) {
 }
 
 void Node::handleProfileCommand(const char* line) {
-    const char* name = line + 10; // strlen("RB PROFILE")
-    while (*name == ' ') {
-        ++name;
-    }
+    const char* name = text_parse::rest(line, "RB PROFILE");
 
     if (*name == '\0') {
         serialOut().print("RB PROFILE name=");
@@ -211,7 +191,7 @@ void Node::handleProfileCommand(const char* line) {
     }
 
     if (startsWithTokenIgnoreCase(name, "name=")) {
-        name += 5;
+        name = text_parse::tokenValue(name);
     }
 
     if (setProfileFromName(name)) {

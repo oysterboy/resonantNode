@@ -10,6 +10,7 @@
 #include "../../app/ParamIds.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
+#include "../../app/TextParse.h"
 #include "ResonantNodeInternal.h"
 
 using namespace node_internal;
@@ -110,10 +111,7 @@ void printMac(const uint8_t mac[6]) {
 // NET STATUS, or NET <target> <command line>: this node is the gateway. The
 // command is broadcast; a target that includes this node runs it here as well.
 void Node::handleNetCommand(const char* line) {
-    const char* rest = line + 3;
-    while (*rest == ' ') {
-        ++rest;
-    }
+    const char* rest = text_parse::rest(line, "NET");
     if (*rest == '\0' || equalsIgnoreCase(rest, "STATUS")) {
         printNetStatus();
         return;

@@ -16,6 +16,7 @@
 #include "../../detection/occurrences/Occurrence.h"
 #include "../../audio/AudioSource.h"
 #include "../../app/RuntimeDefaults.h"
+#include "../../app/SerialLine.h"
 #include "../../detection/analyzer/AnalyzerReportTypes.h"
 
 struct DetectorInputSample {
@@ -484,11 +485,9 @@ private:
     unsigned long _controlBaudRate = EMITTER_UART_BAUD; // Serial2 baud rate to the emitter.
     int _controlRxPin = EMITTER_UART_RX_PIN; // UART RX pin for emitter control.
     int _controlTxPin = EMITTER_UART_TX_PIN; // UART TX pin for emitter control.
-    char _usbLineBuffer[256]; // Buffered USB command line input.
-    size_t _usbLineLength = 0; // Current USB line length.
-    char _commandScratch[256]; // Mutable scratch buffer for token parsing.
-    char _emitterLineBuffer[256]; // Buffered emitter response line input.
-    size_t _emitterLineLength = 0; // Current emitter line length.
+    serial_line::LineReader<255> _usbLine;      // the USB console (app/SerialLine.h: long lines refused)
+    char _commandScratch[256];                   // mutable scratch for strtok_r over a finished line
+    serial_line::LineReader<255> _emitterLine;  // the Emitter's replies on Serial2
 
     bool _controlClaimPending = false; // Waiting to request emitter control.
     bool _controlClaimSent = false; // Control claim has already been sent.

@@ -357,9 +357,7 @@ void Node::begin() {
         serialOut().println("RB silent=1 (output.silent: listening, never sounding)");
     }
     _debug.markLoopStart(timebase::nowUs());
-    _serialLineLength = 0;
-    _serialLineOverflow = false;
-    _serialLineBuffer[0] = '\0';
+    _serialLine.reset();
 
     serialOut().print("RB PROFILE name=");
     serialOut().print(profileName());

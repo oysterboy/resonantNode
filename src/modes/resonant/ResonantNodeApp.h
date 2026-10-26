@@ -16,6 +16,7 @@
 #include "../../audio/AudioSignal.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../output/ChirpOutput.h"
+#include "../../app/SerialLine.h"
 #include "../../output/SoundOutput.h"
 #include "../../net/NodeNet.h"
 #include "../../behavior/ResonantBehavior.h"
@@ -247,12 +248,9 @@ private:
 
     // Debug / logging support.
     NodeDebug _debug;
-    // 256 like the Analyzer's USB line. A longer line is rejected, never run
-    // cut (issue #31).
-    static constexpr size_t kSerialLineCapacity = 256;
-    char _serialLineBuffer[kSerialLineCapacity] = {};
-    size_t _serialLineLength = 0;
-    bool _serialLineOverflow = false;
+    // 255 like the Analyzer's USB line; a longer line is refused, never run
+    // cut (issue #31; app/SerialLine.h).
+    serial_line::LineReader<255> _serialLine;
     unsigned long _rbPendingCount = 0;
     unsigned long _rbPatternAcceptedCount = 0;
     unsigned long _rbValidPatternCount = 0;

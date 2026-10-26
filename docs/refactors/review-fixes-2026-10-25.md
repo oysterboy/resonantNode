@@ -154,6 +154,15 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   / `resetDiagnostics` (no callers) and `setProfileName` (only the snapshot read it; four callers drop the line).
   Host sizes: DetectionRuntime Analyzer variant 65,512 -> 64,008, Node variant 54,880. Host 68/68, T2h
   byte-identical, the Analyzer variant syntax-checked on the host (CI builds it).
+- 2026-10-26, item 8: `serial_line::LineReader<N>` (app/SerialLine.h) replaces the seven hand-rolled readers (Node
+  USB, Analyzer USB and Serial2, the ack wait, the RAW pump, Emitter Serial2 and USB): one byte filter, one
+  policy, a too-long line refused whole with `ERR line_too_long max=N`. `text_parse::parseUnsigned`,
+  `tokenValue` and `rest` (app/TextParse.h) replace the Analyzer's local helpers, 44 hand-counted `token + N`
+  / `line + N` offsets and the bare `strtoul` calls: RAW `f=abc` and the Emitter's `freq=abc` are refused with
+  `ERR <cmd> bad value token=` instead of being read as 0; SEQ TRIES / VERBOSE / FREQUPDATEEVERYSAMPLES and
+  `verbose=` the same. Left as is: the `lo-hi` band parse (range-checked) and the hop list (end-checked).
+  New host suite `test_text_parse` (7 tests) in native-test-behavior. notes_manual: a "Serial lines" paragraph.
+  Host 75/75, T2h byte-identical; the mode layer builds on CI.
 
 ## Decisions recorded in this pass
 

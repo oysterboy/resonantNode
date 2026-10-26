@@ -97,32 +97,9 @@ bool parseFeatureStreamToken(const char* token, detection::FeatureStreamId& out)
     return false;
 }
 
-// A plain decimal with nothing after it; on anything else the value is left
-// unchanged (issue #31 R2-4: "x" used to become 0).
-template <typename T>
-bool parseUnsignedValue(const char* text, T& out) {
-    if (text == nullptr || *text < '0' || *text > '9') {
-        return false;
-    }
-    char* end = nullptr;
-    const unsigned long parsed = strtoul(text, &end, 10);
-    if (*end != '\0') {
-        return false;
-    }
-    out = static_cast<T>(parsed);
-    return true;
-}
-
-// Every key below is matched with its trailing '=', so the value starts
-// right after the first '='; counting key lengths by hand got four wrong.
-const char* tokenValue(const char* token) {
-    const char* equals = strchr(token, '=');
-    return equals != nullptr ? equals + 1 : token + strlen(token);
-}
-
 bool parseScalarTransientToken(const char* token, detection::ScalarTransientConfig& config) {
     if (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") || startsWithTokenIgnoreCase(token, "scalarObservedStream=") || startsWithTokenIgnoreCase(token, "scalarStream=")) {
-        const char* value = tokenValue(token);
+        const char* value = text_parse::tokenValue(token);
         detection::FeatureStreamId stream = config.observedStream;
         if (parseFeatureStreamToken(value, stream)) {
             config.observedStream = stream;
@@ -131,49 +108,49 @@ bool parseScalarTransientToken(const char* token, detection::ScalarTransientConf
         return false;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_onset_threshold=") || startsWithTokenIgnoreCase(token, "scalarOnsetThreshold=")) {
-        return text_parse::parseFiniteFloat(tokenValue(token), config.onsetDetectionThreshold);
+        return text_parse::parseFiniteFloat(text_parse::tokenValue(token), config.onsetDetectionThreshold);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_release_threshold=") || startsWithTokenIgnoreCase(token, "scalarReleaseThreshold=")) {
-        return text_parse::parseFiniteFloat(tokenValue(token), config.onsetReleaseThreshold);
+        return text_parse::parseFiniteFloat(text_parse::tokenValue(token), config.onsetReleaseThreshold);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_cooldown_ms=") || startsWithTokenIgnoreCase(token, "scalarCooldownMs=")) {
-        return parseUnsignedValue(tokenValue(token), config.cooldownAfterOnsetMs);
+        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.cooldownAfterOnsetMs);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_duration_ms=") || startsWithTokenIgnoreCase(token, "scalarMinDurationMs=")) {
-        return parseUnsignedValue(tokenValue(token), config.minTransientDurationMs);
+        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.minTransientDurationMs);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_max_duration_ms=") || startsWithTokenIgnoreCase(token, "scalarMaxDurationMs=")) {
-        return parseUnsignedValue(tokenValue(token), config.maxTransientDurationMs);
+        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.maxTransientDurationMs);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_peak_strength=") || startsWithTokenIgnoreCase(token, "scalarMinPeakStrength=")) {
-        return text_parse::parseFiniteFloat(tokenValue(token), config.minTransientPeakStrength);
+        return text_parse::parseFiniteFloat(text_parse::tokenValue(token), config.minTransientPeakStrength);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_release_debounce_ms=") || startsWithTokenIgnoreCase(token, "scalarReleaseDebounceMs=")) {
-        return parseUnsignedValue(tokenValue(token), config.releaseDebounceMs);
+        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.releaseDebounceMs);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_require_carrier_quality=") || startsWithTokenIgnoreCase(token, "scalarRequireCarrierQuality=")) {
-        const char* value = tokenValue(token);
+        const char* value = text_parse::tokenValue(token);
         bool valid = false;
         config.requireCarrierQuality = parseOnOffToken(value, &valid);
         return valid;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_require_min_strength=") || startsWithTokenIgnoreCase(token, "scalarRequireMinStrength=")) {
-        const char* value = tokenValue(token);
+        const char* value = text_parse::tokenValue(token);
         bool valid = false;
         config.requireMinStrength = parseOnOffToken(value, &valid);
         return valid;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_strength=") || startsWithTokenIgnoreCase(token, "scalarMinStrength=")) {
-        return text_parse::parseFiniteFloat(tokenValue(token), config.minMatchedMeanStrength);
+        return text_parse::parseFiniteFloat(text_parse::tokenValue(token), config.minMatchedMeanStrength);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_release_coverage_ms=") || startsWithTokenIgnoreCase(token, "scalarMinReleaseCoverageMs=")) {
-        return parseUnsignedValue(tokenValue(token), config.minCoverageAboveReleaseMs);
+        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.minCoverageAboveReleaseMs);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_longest_island_ms=") || startsWithTokenIgnoreCase(token, "scalarMinLongestIslandMs=")) {
-        return parseUnsignedValue(tokenValue(token), config.minLongestIslandMs);
+        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.minLongestIslandMs);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_max_gap_ms=") || startsWithTokenIgnoreCase(token, "scalarMaxGapMs=")) {
-        return parseUnsignedValue(tokenValue(token), config.maxGapMs);
+        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.maxGapMs);
     }
     return false;
 }
@@ -223,22 +200,14 @@ void AnalyzerApp::printSequenceHelp() {
 
 void AnalyzerApp::pollUsbConsole() {
     while (Serial.available() > 0) {
-        const char c = static_cast<char>(Serial.read());
-        if (c == '\r') {
+        if (!_usbLine.feed(static_cast<char>(Serial.read()))) {
             continue;
         }
-
-        if (c == '\n') {
-            _usbLineBuffer[_usbLineLength] = '\0';
-            if (_usbLineLength > 0) {
-                handleUsbLine(_usbLineBuffer);
-            }
-            _usbLineLength = 0;
-            continue;
-        }
-
-        if (_usbLineLength < sizeof(_usbLineBuffer) - 1) {
-            _usbLineBuffer[_usbLineLength++] = c;
+        if (_usbLine.tooLong()) {
+            serialOut().print("ERR line_too_long max=");
+            serialOut().println(static_cast<unsigned long>(_usbLine.kCapacity));
+        } else if (_usbLine.length() > 0) {
+            handleUsbLine(_usbLine.line());
         }
     }
 }
@@ -358,23 +327,55 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         char* token = strtok_r(_commandScratch, " ", &savePtr);
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             if (startsWithTokenIgnoreCase(token, "f=")) {
-                toneHz = static_cast<unsigned long>(strtoul(token + 2, nullptr, 10));
+                if (!text_parse::parseUnsigned(text_parse::tokenValue(token), toneHz)) {
+                    serialOut().print("ERR RAW bad value token=");
+                    serialOut().println(token);
+                    return;
+                }
             } else if (startsWithTokenIgnoreCase(token, "dur=")) {
-                durationMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
+                if (!text_parse::parseUnsigned(text_parse::tokenValue(token), durationMs)) {
+                    serialOut().print("ERR RAW bad value token=");
+                    serialOut().println(token);
+                    return;
+                }
             } else if (startsWithTokenIgnoreCase(token, "post=")) {
-                postMs = static_cast<unsigned long>(strtoul(token + 5, nullptr, 10));
+                if (!text_parse::parseUnsigned(text_parse::tokenValue(token), postMs)) {
+                    serialOut().print("ERR RAW bad value token=");
+                    serialOut().println(token);
+                    return;
+                }
             } else if (startsWithTokenIgnoreCase(token, "pre=")) {
-                preMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
+                if (!text_parse::parseUnsigned(text_parse::tokenValue(token), preMs)) {
+                    serialOut().print("ERR RAW bad value token=");
+                    serialOut().println(token);
+                    return;
+                }
             } else if (startsWithTokenIgnoreCase(token, "decim=")) {
-                decim = static_cast<unsigned long>(strtoul(token + 6, nullptr, 10));
+                if (!text_parse::parseUnsigned(text_parse::tokenValue(token), decim)) {
+                    serialOut().print("ERR RAW bad value token=");
+                    serialOut().println(token);
+                    return;
+                }
             } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
-                shape.pulseCount = static_cast<unsigned long>(strtoul(token + 7, nullptr, 10));
+                if (!text_parse::parseUnsigned(text_parse::tokenValue(token), shape.pulseCount)) {
+                    serialOut().print("ERR RAW bad value token=");
+                    serialOut().println(token);
+                    return;
+                }
             } else if (startsWithTokenIgnoreCase(token, "gap=")) {
-                shape.pulseGapMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
+                if (!text_parse::parseUnsigned(text_parse::tokenValue(token), shape.pulseGapMs)) {
+                    serialOut().print("ERR RAW bad value token=");
+                    serialOut().println(token);
+                    return;
+                }
             } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
-                shape.sweepToHz = static_cast<unsigned long>(strtoul(token + 6, nullptr, 10));
+                if (!text_parse::parseUnsigned(text_parse::tokenValue(token), shape.sweepToHz)) {
+                    serialOut().print("ERR RAW bad value token=");
+                    serialOut().println(token);
+                    return;
+                }
             } else if (startsWithTokenIgnoreCase(token, "band=")) {
-                const char* spec = token + 5;
+                const char* spec = text_parse::tokenValue(token);
                 shape.bandSet = true;
                 if (equalsIgnoreCase(spec, "off")) {
                     shape.bandLowHz = 0;
@@ -393,7 +394,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 }
             } else if (startsWithTokenIgnoreCase(token, "hop=")) {
                 // Same validation as SEQ start: digits and commas, fits the buffer.
-                const char* list = token + 4;
+                const char* list = text_parse::tokenValue(token);
                 const size_t len = strlen(list);
                 bool ok = len > 0 && len < sizeof(shape.hop);
                 for (size_t i = 0; ok && i < len; ++i) {
@@ -407,7 +408,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 strncpy(shape.hop, list, sizeof(shape.hop) - 1);
                 shape.hop[sizeof(shape.hop) - 1] = '\0';
             } else if (startsWithTokenIgnoreCase(token, "mode=")) {
-                const char* modeValue = token + 5;
+                const char* modeValue = text_parse::tokenValue(token);
                 if (equalsIgnoreCase(modeValue, "feat") || equalsIgnoreCase(modeValue, "features") || equalsIgnoreCase(modeValue, "csv")) {
                     rawMode = AnalyzerApp::RawCaptureMode::Features;
                 } else if (equalsIgnoreCase(modeValue, "pcm")) {
@@ -489,8 +490,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             serialOut().println("ERR SEQ missing freqUpdateEverySamples use FREQUPDATEEVERYSAMPLES 1|4|8|16");
             return;
         }
-        const unsigned long decimation = strtoul(decimateToken, nullptr, 10);
-        if (decimation == 0UL) {
+        unsigned long decimation = 0;
+        if (!text_parse::parseUnsigned(decimateToken, decimation) || decimation == 0UL) {
             serialOut().println("ERR SEQ freqUpdateEverySamples out of range use N>=1");
             return;
         }
@@ -578,8 +579,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR SEQ missing verbosity use VERBOSE 0|1|2");
                 return;
             }
-            const unsigned long verbosity = strtoul(verbosityToken, nullptr, 10);
-            if (verbosity > 2UL) {
+            unsigned long verbosity = 0;
+            if (!text_parse::parseUnsigned(verbosityToken, verbosity) || verbosity > 2UL) {
                 serialOut().println("ERR SEQ verbosity out of range use 0|1|2");
                 return;
             }
@@ -598,8 +599,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR SEQ missing tries use TRIES N");
                 return;
             }
-            const unsigned long totalTrials = strtoul(trialsToken, nullptr, 10);
-            if (totalTrials == 0UL) {
+            unsigned long totalTrials = 0;
+            if (!text_parse::parseUnsigned(trialsToken, totalTrials) || totalTrials == 0UL) {
                 serialOut().println("ERR SEQ tries out of range use N>=1");
                 return;
             }
@@ -670,42 +671,42 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool profileValid = true;
             while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
                 if (!totalTrialsSet && strchr(token, '=') == nullptr && strspn(token, "0123456789") == strlen(token)) {
-                    _pendingSequenceStart.totalTrials = static_cast<unsigned long>(strtoul(token, nullptr, 10));
+                    text_parse::parseUnsigned(token, _pendingSequenceStart.totalTrials);  // digits only, checked above
                     totalTrialsSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "tries=")) {
-                    if (!parseUnsignedValue(token + 6, _pendingSequenceStart.totalTrials)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.totalTrials)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                     totalTrialsSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "period=")) {
-                    if (!parseUnsignedValue(token + 7, _pendingSequenceStart.periodMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.periodMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "window=")) {
                     windowSet = true;
-                    if (!parseUnsignedValue(token + 7, _pendingSequenceStart.windowEndOffsetMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.windowEndOffsetMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "freq=")) {
-                    if (!parseUnsignedValue(token + 5, _pendingSequenceStart.toneHz)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.toneHz)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "dur=")) {
-                    if (!parseUnsignedValue(token + 4, _pendingSequenceStart.durationMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.durationMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "band=")) {
-                    const char* spec = token + 5;
+                    const char* spec = text_parse::tokenValue(token);
                     if (equalsIgnoreCase(spec, "off")) {
                         _pendingSequenceStart.bandLowHz = 0;
                         _pendingSequenceStart.bandHighHz = 0;
@@ -722,7 +723,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         _pendingSequenceStart.bandHighHz = hi;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "hop=")) {
-                    const char* list = token + 4;
+                    const char* list = text_parse::tokenValue(token);
                     const size_t len = strlen(list);
                     bool ok = len > 0 && len < sizeof(_pendingSequenceStart.pulseHop);
                     for (size_t i = 0; ok && i < len; ++i) {
@@ -736,39 +737,39 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     strncpy(_pendingSequenceStart.pulseHop, list, sizeof(_pendingSequenceStart.pulseHop) - 1);
                     _pendingSequenceStart.pulseHop[sizeof(_pendingSequenceStart.pulseHop) - 1] = '\0';
                 } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
-                    if (!parseUnsignedValue(token + 6, _pendingSequenceStart.sweepToHz) ||
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sweepToHz) ||
                         _pendingSequenceStart.sweepToHz > 7900UL) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
-                    if (!parseUnsignedValue(token + 7, _pendingSequenceStart.pulseCount)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.pulseCount)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "gap=")) {
-                    if (!parseUnsignedValue(token + 4, _pendingSequenceStart.pulseGapMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.pulseGapMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "ramp=")) {
-                    if (!parseUnsignedValue(token + 5, _pendingSequenceStart.pulseRampMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.pulseRampMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                     _pendingSequenceStart.pulseRampSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "delay=") || startsWithTokenIgnoreCase(token, "warmup=")) {
-                    if (!parseUnsignedValue(strchr(token, '=') + 1, _pendingSequenceStart.startupDelayMs)) {
+                    if (!text_parse::parseUnsigned(strchr(token, '=') + 1, _pendingSequenceStart.startupDelayMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "report_settle=") || startsWithTokenIgnoreCase(token, "settle=")) {
-                    if (!parseUnsignedValue(strchr(token, '=') + 1, _pendingSequenceStart.reportSettleMs)) {
+                    if (!text_parse::parseUnsigned(strchr(token, '=') + 1, _pendingSequenceStart.reportSettleMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
@@ -780,7 +781,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 } else if (equalsIgnoreCase(token, "show=1")) {
                     _pendingSequenceStart.showDetails = true;
                 } else if (startsWithTokenIgnoreCase(token, "profile=")) {
-                    const char* profileValue = token + 8;
+                    const char* profileValue = text_parse::tokenValue(token);
                     if (detection::detectionProfileKindFromName(profileValue, _pendingSequenceStart.profileKind)) {
                         profileSeen = true;
                     } else {
@@ -792,10 +793,10 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     }
                 } else if (startsWithTokenIgnoreCase(token, "mode=")) {
                     bool valid = false;
-                    outputConfig.mode = AnalyzerApp::sequenceOutputModeFromToken(token + 5, &valid);
+                    outputConfig.mode = AnalyzerApp::sequenceOutputModeFromToken(text_parse::tokenValue(token), &valid);
                     if (!valid) {
                         serialOut().print("ERR SEQ unknown mode=");
-                        serialOut().print(token + 5);
+                        serialOut().print(text_parse::tokenValue(token));
                     serialOut().println(" use mode=quiet, mode=trial, mode=inspect, mode=source, mode=system or mode=detail");
                         return;
                     }
@@ -805,16 +806,16 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     }
                 } else if (startsWithTokenIgnoreCase(token, "when=")) {
                     bool valid = false;
-                    outputConfig.when = AnalyzerApp::sequenceOutputWhenFromToken(token + 5, &valid);
+                    outputConfig.when = AnalyzerApp::sequenceOutputWhenFromToken(text_parse::tokenValue(token), &valid);
                     if (!valid) {
                         serialOut().print("ERR SEQ unknown when=");
-                        serialOut().print(token + 5);
+                        serialOut().print(text_parse::tokenValue(token));
                         serialOut().println(" use when=off, when=miss or when=all");
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "verbose=")) {
-                    const unsigned long verbosity = strtoul(token + 8, nullptr, 10);
-                    if (verbosity > 2UL) {
+                    unsigned long verbosity = 0;
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), verbosity) || verbosity > 2UL) {
                         serialOut().print("ERR SEQ verbose=");
                         serialOut().print(verbosity);
                         serialOut().println(" use 0|1|2");
@@ -832,42 +833,42 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     outputConfig.diagnosticsEnabled = enabled;
                 } else if (startsWithTokenIgnoreCase(token, "sampleFirst=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!parseUnsignedValue(token + 12, _pendingSequenceStart.sampleDumpFirstTrials)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpFirstTrials)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleEvery=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!parseUnsignedValue(token + 12, _pendingSequenceStart.sampleDumpEveryNth)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpEveryNth)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleLead=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!parseUnsignedValue(token + 11, _pendingSequenceStart.sampleDumpLeadMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpLeadMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleTail=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!parseUnsignedValue(token + 11, _pendingSequenceStart.sampleDumpTailMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpTailMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleStep=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!parseUnsignedValue(token + 11, _pendingSequenceStart.sampleDumpStepMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpStepMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleMax=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!parseUnsignedValue(token + 10, _pendingSequenceStart.sampleDumpMaxRows)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpMaxRows)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
@@ -877,7 +878,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     // Keep the current mode if the caller already requested OBS.
                     _pendingSequenceStart.externalEmitter = true;
                 } else if (startsWithTokenIgnoreCase(token, "test=")) {
-                    strncpy(_pendingSequenceStart.setupLabelStorage, token + 5, sizeof(_pendingSequenceStart.setupLabelStorage));
+                    strncpy(_pendingSequenceStart.setupLabelStorage, text_parse::tokenValue(token), sizeof(_pendingSequenceStart.setupLabelStorage));
                     _pendingSequenceStart.setupLabelStorage[sizeof(_pendingSequenceStart.setupLabelStorage) - 1] = '\0';
                 } else if (equalsIgnoreCase(token, "labels")) {
                     strncpy(_pendingSequenceStart.setupLabelStorage, "labels", sizeof(_pendingSequenceStart.setupLabelStorage));
@@ -940,7 +941,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR EMIT CHIRP emitter_remote_claim_timeout");
                 return;
             }
-            sendEmitterCommand(line + 5);
+            sendEmitterCommand(text_parse::rest(line, "EMIT"));
             serialOut().println("OK EMIT CHIRP");
             return;
         }
@@ -950,7 +951,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR EMIT PULSES emitter_remote_claim_timeout");
                 return;
             }
-            sendEmitterCommand(line + 5);
+            sendEmitterCommand(text_parse::rest(line, "EMIT"));
             serialOut().println("OK EMIT PULSES");
             return;
         }
@@ -960,12 +961,12 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
         if (startsWithTokenIgnoreCase(line, "EMIT MODE AUTO")) {
-            sendEmitterCommand(line + 5);
+            sendEmitterCommand(text_parse::rest(line, "EMIT"));
             serialOut().println("OK EMIT MODE AUTO");
             return;
         }
         if (startsWithTokenIgnoreCase(line, "EMIT SWEEP")) {
-            sendEmitterCommand(line + 5);
+            sendEmitterCommand(text_parse::rest(line, "EMIT"));
             serialOut().println("OK EMIT SWEEP");
             return;
         }

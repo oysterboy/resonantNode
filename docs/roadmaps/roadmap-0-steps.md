@@ -1091,10 +1091,13 @@ the previous gate open unless the step says it can run in parallel.
    The self-test's amp check measures SNR and needed no change. Open: `tailMs` (0) on the board's truncated
    trains (the height cell); a long run with the rule; the Analyzer's shape facts in SEQ output (with A8).
 
-11c. [TODO, parallel] Unattended bench runs. (issue #60)
+11c. [NEXT] Unattended bench runs. (issue #60)
    Owner 2026-10-25: the reference cell (bench/sessions/2026-10-23-cell-desk-ref-110cm) repeated every few hours
    for day-to-day variation, and listen logs of the silent nodes. No physical change; plays sound in the empty room.
    Needs E2/E3 back as Analyzer/Emitter between runs of 11a.
+   Running 2026-10-26 11:38 to 10-27 11:38 (bench/sessions/2026-10-26-soak24-shape, tools/bench/soakcycle.py): three
+   Nodes free on a33f293 (shape rule), and every hour (owner) a room check: Nodes silenced, Analyzer hop / chirp SEQ and
+   RAW hop captures for per-bin levels.
 
 11d. [TODO] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

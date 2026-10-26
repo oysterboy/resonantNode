@@ -258,6 +258,10 @@ struct FrequencyBandMeasurementPacket {
     float upperBandPowerValue = 0.0f;
     float totalEnergyValue = 0.0f;
     float targetBandContrastValue = 0.0f;
+
+    // Band mode: the centre of the strongest band bin at the last update, 0 outside band mode (DET-015, the
+    // ShapeInspector's bin track).
+    unsigned long peakBinHz = 0;
 };
 
 } // namespace detection

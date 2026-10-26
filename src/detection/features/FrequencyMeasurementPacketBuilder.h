@@ -27,6 +27,7 @@ inline FrequencyBandMeasurementPacket buildFrequencyMeasurementPacket(
     evidence.upperBandPowerValue = freqBandStream.lastUpperBandPowerValue();
     evidence.totalEnergyValue = freqBandStream.lastTotalEnergyValue();
     evidence.targetBandContrastValue = freqBandStream.lastTargetBandContrastValue();
+    evidence.peakBinHz = present ? freqBandStream.lastPeakBinHz() : 0;
     return evidence;
 }
 

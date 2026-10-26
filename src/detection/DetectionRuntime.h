@@ -10,6 +10,7 @@
 #include "evaluation/OccurrenceVerdict.h"
 #include "features/FeatureExtractor.h"
 #include "features/FeatureHistory.h"
+#include "features/BinTrack.h"
 #include "field/FieldState.h"
 #include "field/FieldStateTracker.h"
 #include "inspection/InspectorTypes.h"
@@ -104,6 +105,7 @@ private:
     OccurrenceInspector _occurrenceInspector;
     FieldStateTracker _fieldStateTracker;
     FeatureHistory _featureHistory;
+    BinTrack _binTrack;  // the strongest band bin per ms, for the ShapeInspector (DET-015)
     ActiveDetectionDiagnostics _diagnostics;
 
     RingQueue<OccurrenceVerdict, kResultQueueCapacity> _verdictQueue;

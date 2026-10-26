@@ -44,6 +44,7 @@ void DetectionRuntime::resetDetectionState() {
     resetDetectors();
     _fieldStateTracker.reset();
     _featureHistory.reset();
+    _binTrack.reset();
     resetDetectionQueues();
     _diagnostics.resetBookkeeping();
 }
@@ -138,6 +139,9 @@ void IRAM_ATTR DetectionRuntime::observeFrame(
 
     FeatureExtractor::observeFrame(audioSamplePacket, _featureHistory);
     FeatureExtractor::observeFrequencyMeasurementPacket(frequencyEvidence, nowMs, _featureHistory);
+    if (frequencyEvidence.present) {
+        _binTrack.note(nowMs, frequencyEvidence.peakBinHz, frequencyEvidence.targetBandValue);
+    }
 
     bool detectorInputProcessed = false;
 

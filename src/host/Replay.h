@@ -81,6 +81,10 @@ struct Options {
     bool compare = false;        // amp feature vs the board's column (mode=both transcripts)
     bool verbose = false;        // one line per verdict
     std::string dumpFreqPath;    // if set: per-sample host vs board frequency path as CSV (step 7b)
+    // DET-015 verification (step 11b, owner: verify that shape separates the signals before choosing a data
+    // path): one `shape` line per verdict with the strongest band bin per ms over the occurrence's window,
+    // as runs. Host-only probe; reads FreqBandStream::lastPeakBinHz(), which the board does not pass on.
+    bool shape = false;
 };
 
 struct Result {

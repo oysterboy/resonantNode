@@ -106,6 +106,8 @@ int main(int argc, char** argv) {
             opt.dumpFreqPath = argv[++i];
         } else if (a == "--verbose") {
             opt.verbose = true;
+        } else if (a == "--shape") {
+            opt.shape = true;
         } else if (a == "--quiet") {
             quiet = true;
         } else if (a == "--dir") {

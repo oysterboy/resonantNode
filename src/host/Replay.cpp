@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Replay.h"
 
 #include <Arduino.h>
@@ -291,8 +292,169 @@ void printVerdict(const detection::OccurrenceVerdict& v) {
     printf("\n");
 }
 
+namespace {
+
+// Strongest band bin per millisecond while the target is above the release level (0 = quiet or not in band).
+struct BinTrack {
+    std::vector<uint32_t> peakHz;   // per ms: the bin with the largest target value in that ms
+    std::vector<float> value;       // per ms: that largest target value
+    std::vector<float> energy;      // per ms: the largest total window energy (broadband)
+
+    void note(unsigned long ms, uint32_t hz, float v, float e) {
+        if (ms >= peakHz.size()) {
+            peakHz.resize(ms + 1, 0);
+            value.resize(ms + 1, 0.0f);
+            energy.resize(ms + 1, 0.0f);
+        }
+        energy[ms] = std::max(energy[ms], e);
+        if (v > value[ms]) {
+            value[ms] = v;
+            peakHz[ms] = hz;
+        }
+    }
+};
+
+// One line per verdict: the bin runs over [start, start + duration], runs shorter than kMinRunMs folded away.
+void printShapeWindow(const char* label, unsigned long start, unsigned long end, const BinTrack& t, float activeLevel,
+                      unsigned long spacingHz);
+
+void printShape(const detection::OccurrenceVerdict& v, const BinTrack& t, float activeLevel, unsigned long spacingHz) {
+    printShapeWindow(v.accepted ? "accepted" : detection::verdictRejectReasonName(v.rejectReason), v.primaryStartMs,
+                     v.primaryStartMs + v.primaryDurationMs, t, activeLevel, spacingHz);
+}
+
+// The whole capture's active stretch (first to last ms above the level), for a capture with no verdict.
+void printCaptureShape(const BinTrack& t, float activeLevel, unsigned long spacingHz) {
+    unsigned long first = 0;
+    unsigned long last = 0;
+    bool any = false;
+    for (unsigned long ms = 0; ms < t.peakHz.size(); ++ms) {
+        if (t.value[ms] >= activeLevel && t.peakHz[ms] != 0) {
+            if (!any) {
+                first = ms;
+            }
+            last = ms;
+            any = true;
+        }
+    }
+    if (any) {
+        printShapeWindow("capture", first, last, t, activeLevel, spacingHz);
+    }
+}
+
+void printShapeWindow(const char* label, unsigned long start, unsigned long end, const BinTrack& t, float activeLevel,
+                      unsigned long spacingHz) {
+    constexpr unsigned long kMinRunMs = 4;
+    struct Run {
+        uint32_t hz;
+        unsigned long startMs;
+        unsigned long lengthMs;
+    };
+    std::vector<Run> runs;
+    unsigned long activeMs = 0;
+    for (unsigned long ms = start; ms <= end && ms < t.peakHz.size(); ++ms) {
+        if (t.value[ms] < activeLevel || t.peakHz[ms] == 0) {
+            continue;
+        }
+        ++activeMs;
+        const uint32_t hz = t.peakHz[ms];
+        if (!runs.empty() && runs.back().hz == hz && ms - (runs.back().startMs + runs.back().lengthMs) <= 3) {
+            runs.back().lengthMs = ms - runs.back().startMs + 1;
+        } else {
+            runs.push_back({hz, ms, 1});
+        }
+    }
+    std::vector<Run> kept;
+    for (const Run& run : runs) {
+        if (run.lengthMs < kMinRunMs) {
+            continue;
+        }
+        if (!kept.empty() && kept.back().hz == run.hz) {
+            kept.back().lengthMs = run.startMs + run.lengthMs - kept.back().startMs;
+        } else {
+            kept.push_back(run);
+        }
+    }
+    unsigned distinct = 0;
+    std::vector<uint32_t> seen;
+    for (const Run& run : kept) {
+        if (std::find(seen.begin(), seen.end(), run.hz) == seen.end()) {
+            seen.push_back(run.hz);
+            ++distinct;
+        }
+    }
+    unsigned upSteps = 0;   // a run one bin above the previous one
+    unsigned otherSteps = 0;
+    for (size_t k = 1; k < kept.size(); ++k) {
+        const long d = static_cast<long>(kept[k].hz) - static_cast<long>(kept[k - 1].hz);
+        if (d == static_cast<long>(spacingHz) || d < -static_cast<long>(3 * spacingHz)) {
+            ++upSteps;  // up one bin, or the wrap from the top of the band back to the bottom (rotation)
+        } else {
+            ++otherSteps;
+        }
+    }
+    // The dip at each bin change: the lowest target value from the end of one run to the start of the next,
+    // as a share of the smaller of the two runs' peaks. A hop train's gaps dip even when the room fills them;
+    // a sweep glides from bin to bin without one.
+    std::vector<int> dips;
+    std::vector<int> edips;
+    for (size_t k = 1; k < kept.size(); ++k) {
+        float peakA = 0.0f;
+        float peakB = 0.0f;
+        for (unsigned long ms = kept[k - 1].startMs; ms < kept[k - 1].startMs + kept[k - 1].lengthMs && ms < t.value.size(); ++ms) {
+            peakA = std::max(peakA, t.value[ms]);
+        }
+        for (unsigned long ms = kept[k].startMs; ms < kept[k].startMs + kept[k].lengthMs && ms < t.value.size(); ++ms) {
+            peakB = std::max(peakB, t.value[ms]);
+        }
+        // the lowest point within 6 ms either side of the boundary
+        const unsigned long boundary = kept[k].startMs;
+        float low = peakA;
+        for (unsigned long ms = boundary > 6 ? boundary - 6 : 0; ms <= boundary + 6 && ms < t.value.size(); ++ms) {
+            low = std::min(low, t.value[ms]);
+        }
+        const float ref = std::min(peakA, peakB);
+        dips.push_back(ref > 0.0f ? static_cast<int>(100.0f * low / ref + 0.5f) : -1);
+        // the same on the broadband energy: a gap in the sound, not a bin change
+        float eA = 0.0f;
+        float eB = 0.0f;
+        for (unsigned long ms = kept[k - 1].startMs; ms < kept[k - 1].startMs + kept[k - 1].lengthMs && ms < t.energy.size(); ++ms) {
+            eA = std::max(eA, t.energy[ms]);
+        }
+        for (unsigned long ms = kept[k].startMs; ms < kept[k].startMs + kept[k].lengthMs && ms < t.energy.size(); ++ms) {
+            eB = std::max(eB, t.energy[ms]);
+        }
+        float eLow = eA;
+        for (unsigned long ms = boundary > 6 ? boundary - 6 : 0; ms <= boundary + 6 && ms < t.energy.size(); ++ms) {
+            eLow = std::min(eLow, t.energy[ms]);
+        }
+        const float eRef = std::min(eA, eB);
+        edips.push_back(eRef > 0.0f ? static_cast<int>(100.0f * eLow / eRef + 0.5f) : -1);
+    }
+    printf("    shape %s start_ms=%lu dur_ms=%lu active_ms=%lu runs=%zu distinct=%u up_steps=%u other_steps=%u dips_pct=",
+           label, start, end - start, activeMs, kept.size(), distinct, upSteps, otherSteps);
+    for (size_t k = 0; k < dips.size(); ++k) {
+        printf("%s%d", k > 0 ? "," : "", dips[k]);
+    }
+    printf(" edips_pct=");
+    for (size_t k = 0; k < edips.size(); ++k) {
+        printf("%s%d", k > 0 ? "," : "", edips[k]);
+    }
+    printf(" seq=");
+    for (size_t k = 0; k < kept.size(); ++k) {
+        printf("%s%ux%lu", k > 0 ? "," : "", static_cast<unsigned>(kept[k].hz), kept[k].lengthMs);
+        if (k + 1 < kept.size()) {
+            printf("+%lu", kept[k + 1].startMs - (kept[k].startMs + kept[k].lengthMs));
+        }
+    }
+    printf("\n");
+}
+
+}  // namespace
+
 Result replay(const Capture& cap, const Options& opt, const detection::DetectionProfile& profile) {
     Result r;
+    BinTrack track;
     VectorAudioSource source(cap.pcm, cap.sampleRateHz);
     AudioSignal audioSignal(source);
     FreqBandStream band;
@@ -350,6 +512,7 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     }
     double contrastRelSum = 0.0;
     size_t contrastCompared = 0;
+    std::vector<detection::OccurrenceVerdict> pendingShape;  // printed after the loop, when the track is complete
     for (size_t i = 0; i < total; ++i) {
         const int32_t raw = i < cap.pcm.size() ? cap.pcm[i] : 0;
         const int sample = static_cast<int>(preprocessor.process(raw));
@@ -360,6 +523,9 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
         band.observeCenteredSample(packet.baselineCorrectedValue, packet.timeMs);
         const detection::FrequencyBandMeasurementPacket evidence = detection::buildFrequencyMeasurementPacket(band, packet);
         runtime.observeFrame(packet, evidence, packet.timeMs);
+        if (opt.shape && evidence.present) {
+            track.note(packet.timeMs, static_cast<uint32_t>(band.lastPeakBinHz()), evidence.targetBandValue, evidence.totalEnergyValue);
+        }
         if (opt.compare && i < cap.boardAmp.size()) {
             const double d = fabs(static_cast<double>(packet.audioMagnitudeValue) - static_cast<double>(cap.boardAmp[i]));
             ampDiffSum += d;
@@ -406,9 +572,18 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
             if (opt.verbose) {
                 printVerdict(verdict);
             }
+            if (opt.shape) {
+                pendingShape.push_back(verdict);
+            }
         }
     }
     r.samples = cap.pcm.size();
+    for (const auto& v : pendingShape) {
+        printShape(v, track, profile.scalarTransient.onsetReleaseThreshold, static_cast<unsigned long>(band.bandSpacingHz() + 0.5f));
+    }
+    if (opt.shape && pendingShape.empty()) {
+        printCaptureShape(track, profile.scalarTransient.onsetReleaseThreshold, static_cast<unsigned long>(band.bandSpacingHz() + 0.5f));
+    }
     if (r.ampCompared > 0) {
         r.ampMeanAbsDiff = ampDiffSum / static_cast<double>(r.ampCompared);
     }

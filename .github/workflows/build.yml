@@ -55,8 +55,18 @@ jobs:
       - run: pip install platformio
       - run: g++ --version
       - run: pio run -e native-replay
+      # Step 11e item 7 follow-up: the replay with the Analyzer's diagnostics compiled in must print exactly
+      # what the Null build prints over the fixtures (the side channel does not change a verdict).
+      - run: pio run -e native-replay-diag
+      - name: replay output, Null vs ANALYZER_MODE diagnostics
+        run: |
+          .pio/build/native-replay/program --verbose --dir test/fixtures > replay-null.txt
+          .pio/build/native-replay-diag/program --verbose --dir test/fixtures > replay-diag.txt
+          diff replay-null.txt replay-diag.txt
+          wc -l replay-null.txt
       - run: pio test -e native-test
       - run: pio test -e native-test-behavior
+      - run: pio test -e native-test-diag
 
   include-direction:
     runs-on: ubuntu-24.04

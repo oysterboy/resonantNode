@@ -135,7 +135,9 @@ Research: docs/research/frequency-drift-detection.md (Inspectors that help)
 
 ### DET-015 - shape inspectors: peak trajectory, band coverage, pulse structure
 
-Status: TODO (step 8a, after Phase 7c folds the evaluator into the inspector)
+Status: DONE 2026-10-26 (step 11b): BinTrack + BinShape inspector, the shipped plan requires shape (>= 3 band bins,
+2 steps up); decisions/2026-10-26-det015-bin-track-inspector.md, E002. Not built: peak trajectory within a bin
+(steady vs sweep, not separable here), band coverage beyond distinct bins.
 
 Facts per occurrence: steady / sweep / hop, span, direction, distinct bins, pulse and gap regularity. Reject random jumping (speech formants) and syllable-like trains; give Behavior shape facts for BEH-007. Data-path decision (detector accumulation vs a stream) gets a `docs/decisions/` file.
 

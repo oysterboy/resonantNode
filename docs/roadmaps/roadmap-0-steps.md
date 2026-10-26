@@ -43,6 +43,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-26, evening: 11b done (DET-015: the Node hears the hop train only, by shape; bench gate met).
+Next: 11d (OTA firmware, needs the owner's WiFi credentials) or 11c (unattended runs).
 Status update 2026-10-26, later: 11f done (review leftovers batch 1). Next: 11b, DET-015 host phase.
 Status update 2026-10-26: 11f opened (review leftovers, small fixes; owner order: 11f, then 11b DET-015).
 Status update 2026-10-26, later: 11e done (PR #64 merged; bench gate met; diagnostics host suite added).
@@ -1068,7 +1070,7 @@ the previous gate open unless the step says it can run in parallel.
    - found on the way: RB STATUS (~1.7 KB) reached the log in two pieces; nodegroup.py now assembles whole
      lines, nodegroup_interim.py joins the pieces in older logs.
 
-11b. [NEXT] DET-015 shape inspector, host phase. (issue #59)
+11b. [DONE 2026-10-26] DET-015 shape inspector, host phase and bench. (issue #59, closed)
    Owner 2026-10-25. The Node hears the hop train only (decisions/2026-10-23-node-hears-the-hop-train-only.md);
    the height cell showed a train cut to three steps passing on 16 ms of margin. Host work on the corpus and the
    height cell's RAW captures; bench validation when the owner is back. Gate (host): the shape reads the steps of
@@ -1079,6 +1081,15 @@ the previous gate open unless the step says it can run in parallel.
    (decisions/2026-10-26-det015-bin-track-inspector.md): bin track + ShapeInspector, rule >= 3 bins / 2 steps up in
    band mode, sweeps accepted. Build in three commits: track (no behavior change), facts (no behavior change),
    the requirement (plain chirps rejected; the self-test's amp check adapted).
+   Done 2026-10-26 (a704720 track, cf06b5d inspector, a33f293 requirement; bench/sessions/2026-10-26-step11b-det015):
+   host: test_shape_inspector 10 tests, T2h changes on exactly the 27 steady-tone captures (now rejected by shape),
+   no hop train or sweep changes, every single-null hop variant passes (with the 120 ms look-back and the step over
+   a missing bin, found while building); new T2h reference t2h_replay.a33f293.txt. Bench: hop 10/10 in rotation 0
+   and 2, random order 10/10 rejected by shape, sweep 10/10 accepted, chirps at 3200 / 3450 / 3700 Hz 10/10
+   rejected by shape (a 100 ms 3200 chirp was already rejected by duration in this morning's room state); E1
+   answers 10/10 hop trains and 0/10 chirps; SELFTEST external on E4 hears E5's SELFTEST chirp (now hop trains).
+   The self-test's amp check measures SNR and needed no change. Open: `tailMs` (0) on the board's truncated
+   trains (the height cell); a long run with the rule; the Analyzer's shape facts in SEQ output (with A8).
 
 11c. [TODO, parallel] Unattended bench runs. (issue #60)
    Owner 2026-10-25: the reference cell (bench/sessions/2026-10-23-cell-desk-ref-110cm) repeated every few hours

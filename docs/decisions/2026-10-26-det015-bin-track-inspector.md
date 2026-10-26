@@ -1,6 +1,6 @@
 # DET-015: a bin track read by a shape inspector; an in-band sweep counts as a network signal
 
-Status: decided (owner 2026-10-26), implemented on the host 2026-10-26 (step 11b); bench pending.
+Status: decided (owner 2026-10-26), implemented and bench-checked 2026-10-26 (step 11b, bench/sessions/2026-10-26-step11b-det015).
 Date: 2026-10-26.
 
 ## Decision

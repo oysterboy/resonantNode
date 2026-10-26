@@ -78,6 +78,8 @@ what replaced it.
 | 2026-10-22 | [Live params apply in place; RB PROFILE announces its reset; RB BEHAV removed for behavior.* params (step 10)](2026-10-22-live-params-profile-reset-no-rb-behav.md) |
 | 2026-10-23 | [Params persist on PARAM SAVE only; all registered; stored wins over a changed default, with a PARAM stale warning (PAR-010/011)](2026-10-23-param-persistence-save-only.md) |
 | 2026-10-26 | [DET-015: a bin track read by a shape inspector (>= 3 bins, 2 steps up, band mode); an in-band sweep counts as a network signal](2026-10-26-det015-bin-track-inspector.md) |
+| 2026-10-26 | [The Node's boot baseline runs: mic warmup, then the quiet gate (review D2.4)](2026-10-26-node-boot-warmup-runs.md) (not yet implemented, 11g) |
+| 2026-10-26 | [Drop `RB debug off\|events` and the compile-time Node tracing (review D2.5)](2026-10-26-drop-rb-debug.md) (not yet implemented, 11g) |
 | 2026-10-25 | [VEKTOR will replace NET; NET is the interim remote console; 11a's lessons go to the spec](2026-10-25-vektor-replaces-net.md) (not yet implemented) |
 | 2026-10-25 | [Remote params over ESP-NOW through the serial PARAM path; one-line replies only, DUMP/LIST stay on USB (step 11a)](2026-10-25-remote-params-espnow.md) |
 | 2026-10-25 | [Analyzer knobs on ParamRegistry with the Node's grammar, old key=value form dropped; long serial lines refused on every port (step 11e)](2026-10-25-analyzer-params-on-registry-and-line-policy.md) (implemented in 11e items 8-9) |

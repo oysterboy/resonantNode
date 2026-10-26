@@ -725,6 +725,7 @@ string before it was written down.
    the comment "boot warmup 2 s + quiet timeout 8 s + margin" (`:38`) describes a sequence that does not happen.
    Either the quiet gate replaced the warmup on purpose (delete the state, fix the comment) or the warmup was
    lost (run Boot first). The baseline timing is the owner's.
+   -> decided 2026-10-26: Boot runs (decisions/2026-10-26-node-boot-warmup-runs.md); step 11g batch D.
 
 5. **`RB debug off|events` is a no-op in every shipped build (medium).** `RB_VERBOSE_DEBUG` defaults to 0
    (`RuntimeDefaults.h:20-22`) and no env sets it, so every `NodeDebug::observe*` returns at its first line
@@ -733,6 +734,7 @@ string before it was written down.
    D1.9's `AUDIO_VERBOSE_DEBUG`: a compile-time knob behind a runtime switch, in a repo whose rule is "every knob
    is a registered param". Fix: one gate, the runtime one; delete the unread stats, or delete the command and
    the manual line.
+   -> decided 2026-10-26: the command goes (decisions/2026-10-26-drop-rb-debug.md); step 11g batch D.
 
 6. **Write-only Analyzer fields that survived 11e item 3b (medium, with A8).** `TrialDiagnostics.duplicate*`
    (`AnalyzerModeApp.h:188-192`, written `AnalyzerTrialCapture.cpp:200-204`), `emitSeen / emitTrialId /
@@ -893,7 +895,7 @@ Cheap and safe first, each a compile-only change with `T2h` byte-identical repla
 8. A7's next cut of the Node and A8's `TrialState` split, each with its own pass doc.
 
 Status 2026-10-26: 1-6 done (step 11e, one commit per item), 7 settled in the spec (11e item 1), 8 open (A7,
-A8). Part D has its own order above.
+A8). Part D has its own order above; its first item landed in 5fcd3fc, the rest is step 11g (four batches).
 
 Process notes: `docs/refactors/` has no active top-level doc while NODE-004 is open (CLAUDE.md says to flag
 this); since 2026-10-22 the step text in `roadmap-0-steps.md` carries the plan, so this is the convention, not

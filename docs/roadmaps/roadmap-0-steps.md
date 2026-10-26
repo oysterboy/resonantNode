@@ -43,6 +43,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-26, night: 11c restarted (soak to 10-27 13:39); 11g opened (review Part D, the rest; #67):
+batch A and the host part of B during the soak.
 Status update 2026-10-26, evening: 11b done (DET-015: the Node hears the hop train only, by shape; bench gate met).
 Next: 11d (OTA firmware, needs the owner's WiFi credentials) or 11c (unattended runs).
 Status update 2026-10-26, later: 11f done (review leftovers batch 1). Next: 11b, DET-015 host phase.
@@ -1151,6 +1153,30 @@ the previous gate open unless the step says it can run in parallel.
    Room finding: the plain chirp at 79 cm went from 10/10 rejected (08:18-08:24, reads 31-46 ms) to 10/10 accepted
    (09:05-09:16, 118-127 ms), with this morning's build as well: the room changed, not the firmware; the third
    unexplained room shift in two days (10-24 10:50, E2 <- E5 on 10-23 ~20:00).
+
+11g. [NEXT] Review Part D, the rest. (issue #67)
+   Owner 2026-10-26: sequence the review's remaining Part D findings
+   (docs/research/architecture-readability-review-2026-10-25.md, Part D; D1.1, D1.3, D1.7, D4.1, D4.2 done in 5fcd3fc
+   before the 11c restart). Four batches; A and the host part of B run while 11c's soak holds the boards (no flash
+   until it ends).
+   A. Docs and host tests, no firmware: D3.1-D3.5 (spec's dead-diagnostics line, names the code lacks, guide and
+      help against the parsers, implementation-status.md back to a live table, roadmap / decision states); D4.3
+      host tests (the radio filter across a reboot, pacing, outbox; the printers the bench tools parse); a parser
+      test for shapesurvey (D4.1's second half).
+   B. Detection, one pass each, T2h byte-identical as the gate unless stated:
+      B1. D2.1 + D2.2 + D1.6: drop Occurrence.band (96 B) and RawSampleHistory (8 KB); the Amp inspector stops
+          overwriting detector facts (changes one Analyzer field: recorded); T5 memory probe.
+      B2. Shape params: D1.2 (output.* ranges within OutputLimits, the spec sentence), D1.5 (shape.minLevel follows
+          the release threshold), D2.7 (the nine shape knobs as registered params), D2.3 (the replay uses the
+          inspector's rule, not its own copy). Gate adds PARAM DUMP unchanged but for the new paths, and a bench
+          smoke after the soak.
+   C. Analyzer, with A8's TrialState split (its own pass doc): D1.4 (SEQ start during a run, SEQ STOP leaves a start
+      armed, SEQ STATUS reads two sources), D2.6 (write-only fields), D2.8 (presentation out of detection/).
+      Gate: an Analyzer A/B on the bench.
+   D. Node, with A7's next cut: D2.4 the boot baseline runs (decisions/2026-10-26-node-boot-warmup-runs.md), D2.5
+      RB debug dropped (decisions/2026-10-26-drop-rb-debug.md), D2.9 Behavior's busy mirror, D2.10 one line bound,
+      D1.8 SELFTEST value parsing. Gate: Node smoke and SELFTEST on the bench, boot timing recorded.
+   Small ones (D1.9, D2.11) go with whichever batch touches their files.
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here

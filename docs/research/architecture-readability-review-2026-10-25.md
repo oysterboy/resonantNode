@@ -1,15 +1,25 @@
 # Architecture critique and readability review, 2026-10-25
 
-Status:  promoted (2026-10-25)
-Became:  step 11e, docs/refactors/archive/review-fixes-2026-10-25.md (items 1-6 of the suggested order; #63);
+Status:  promoted (2026-10-25); re-read 2026-10-26 at main 4612ce9 (after steps 11b, 11e, 11f), Part D added
+Became:  step 11e, docs/refactors/archive/review-fixes-2026-10-25.md (items 1-9 of the suggested order; #63);
          step 11f (2026-10-26, #65): the small parts of A9, A12, A13, B7, B12
-Lab:     none; a code reading at main c0b75e9 (after 5ffab4a "Node: split by role"), host `sizeof` probe
+Lab:     none; a code reading at main c0b75e9 (after 5ffab4a "Node: split by role"), host `sizeof` probe;
+         re-read at 4612ce9 by three parallel readings (detection / audio / host; the mode layer; docs, tests,
+         tools), every claim checked against the source before it was written down here
 
 A review of the whole tree for two questions: does the code match the boundaries `docs/specs/myspec.md`
 states, and what does a human maintainer trip over when reading or changing it. Line numbers are as of
 c0b75e9 and will drift; the file and function names are the durable pointers. Everything below was checked
 against the source, dead-code claims by grep. Nothing here is a commitment; items that get picked up should
 be promoted to roadmap items or decisions per `docs/research/README.md`.
+
+Re-read 2026-10-26 (main 4612ce9): the `->` line under each heading in Parts A and B says what steps 11e and
+11f did to it. Short form: A1-A3, A5 (the payload), A6 (the param side), B1, B3, B6, B9, B10, B11 (the listed
+items), B12 are done; A4, A5 (the twins), A13, B2, B7, B8, B16 are part done; A7, A8, A10, A11, B4, B5, B13, B14,
+B15 are untouched and stay the big-ticket items. Part D holds what the re-read found that this note did not
+have, including two correctness findings in code that did not exist on 2026-10-25 (the shape inspector's bin
+track) and one in a test that cannot link since item 7. Line numbers in Parts A-C are still those of c0b75e9;
+Part D's are of 4612ce9.
 
 Calibration first: the repo is in better shape than its biggest files suggest. The things that are done well
 are listed at the end and should not be undone while fixing the rest.
@@ -23,6 +33,8 @@ boundary rule), NODE-004 (Node file split, "a file split, not separate classes" 
 ## Part A. Architecture: where the code and the spec disagree
 
 ### A1. Output composition sits in the Node; spec 6.2 assigns it to Behavior (high)
+
+-> done in step 11e item 1 (myspec 6.2 / 7 rewritten: Behavior decides the kind, the Node composes, "the composer's rule" for the fallback); the code matches. But see D1.1: the spec's "a reject is a composition bug" is not true today, 2026-10-26
 
 `src/modes/resonant/ResonantNodeApp.cpp`: `hopFrequencies` / `composeHopTrain` (around 583-615) own
 rotation and bin order; `startEmission` (around 770-848) picks HopTrain vs IdleCall vs Pattern from
@@ -42,6 +54,8 @@ band grid, with a pointer to the decision; (b) a `HopSignalComposer` that Behavi
 
 ### A2. Behavior includes a concrete output device header (high)
 
+-> done in step 11e item 1 (`src/output/OutputRequest.h`; Behavior includes no device header), 2026-10-26
+
 `src/behavior/ResonantBehavior.h:7` includes `../output/ChirpOutput.h` to get `ChirpOutput::ChirpPattern`
 (used at .h 157/266 and throughout the .cpp). `OutputRequest` (`src/output/SoundOutput.h:32`) carries the
 same device enum. Spec 7.1: "Behavior should not care which output hardware path is active." The request
@@ -49,6 +63,8 @@ vocabulary (Single / Idle / Triple, or better `OutputRequest::Kind`) belongs in 
 `output/OutputRequest.h`, and `ChirpOutput` consumes it.
 
 ### A3. The Analyzer's diagnostics build is woven through DetectionRuntime with the preprocessor (high)
+
+-> done in step 11e item 7 (`DetectionDiagnostics` / `NullDetectionDiagnostics`, no `#if` left in the runtime; host suite and the Null-vs-diag replay diff in CI). Spec 5.5 still calls the file archive material: D3.1, 2026-10-26
 
 `src/detection/DetectionRuntime.cpp` has 21 `#if/#ifdef/#endif` lines, `DetectionRuntime.h` 6. One
 `#ifdef ANALYZER_MODE` sits inside a method signature (`inspectAndRender(..., #ifdef const DetectorReport&)`,
@@ -63,6 +79,8 @@ type. The isolation cleanup (archive/cleanup-analyzer-node-isolation.md) got the
 the readability half of it.
 
 ### A4. Residue of the removed OccurrenceEvaluator / correlation queue is still load-bearing (high)
+
+-> partly done in 11e item 3 (`capturePipelineResult` gone, `firstEnabledRequirement`, the dead enumerators). Still: `PipelineIntegrity.correlationComplete` and the three never-assigned overflow reasons (`DetectionDiagnostics.h:48-65`), `inspectionPresent = detectorReportMatched` (`.cpp:169`), the occurrence id three times per event, `TransientEvidence` with no users, `InspectionTarget::TargetBand` produced by no profile; `AnalyzerTrialClassifier.cpp:22, 66` still names the evaluator (DET-018 7a), 2026-10-26
 
 - `DetectionRuntime::capturePipelineResult` (.cpp 573-650) takes two references, aliases them to pointers
   `matchedInspectedOccurrence` / `matchedDetectorReport`, and null-checks them about ten times. They can never
@@ -87,6 +105,8 @@ the readability half of it.
   DET-018 covers the verdict vocabulary (7a/7b); the runtime residue above is on no roadmap item.
 
 ### A5. Occurrence has become the diagnostics dump spec 5.4 forbids (high)
+
+-> partly done in 11e item 6 (`Occurrence.magnitude.evidence` gone: Occurrence 248 B, InspectedOccurrence 1,080 B on the 64-bit host). Still: the `AcceptedOccurrenceSummary` / `SelectedRejectSummary` twins with the `strength` alias and `mean == meanStrength` (`DetectorReport.h:14-70`); and a second dead payload found now, `Occurrence.band` (D2.1), 2026-10-26
 
 `Occurrence.magnitude.evidence` (`occurrences/Occurrence.h`) embeds a full `MagnitudeInspectionObservation`
 (272 bytes on the host). The Inspector writes into its copy of the occurrence
@@ -120,6 +140,8 @@ pipeline types above are where the static RAM went. `AcceptedOccurrenceSummary` 
 
 ### A6. No single source of truth for a knob's default; one param is six to eight touch points (high)
 
+-> partly done in 11e items 5 and 9 (config structs held, `src/app/ParamBindings.h` for the 13 + 13 paths, the Analyzer on the registry, the replay through the same binding). Still: `detection.contrast_medium` / `amp_medium` bound in two places against different fields (`ResonantNodeParams.cpp:28-30` Node copies, `Replay.cpp:266-274` the plan module); an `output.*` knob is still six touch points; no add-a-param recipe in the guide; `ScalarTransientConfig.h` initialisers are a non-shipped set labelled "fallback", 2026-10-26
+
 - `AudioSignal.h:262` initialises `_baselineTrackingQuietThreshold = 40`; all three callers set 20
   (`ResonantNodeApp.cpp:646`, `AnalyzerModeApp.cpp:603`, `host/Replay.cpp:320`); the comment at .h 239 says
   "quiet < 20". The header default never runs. Same pattern for the smoothing factors.
@@ -145,6 +167,8 @@ them so); delete the detector/behavior member defaults by holding the config str
 
 ### A7. The Node split is a file split, not a decomposition (medium; NODE-004 says so)
 
+-> open (NODE-004). As described: 35 members plus `SelfTestState` in the header, the baseline machine run by hand in `ResonantNodeCommands.cpp:92-94`, reply / join state in file-scope globals `ResonantNodeNet.cpp:59-70` never reset by `begin()`, `setTee` paired by hand in four places, `makeTonalPulseBehaviorProfile()` still `return BehaviorGateConfig{}`. New on top: the `Boot` state is unreachable (D2.4), 2026-10-26
+
 - All 35 data members plus the 25-field `SelfTestState` body stay in `ResonantNodeApp.h` (190-293, 116-156);
   every one of the 7 Node TUs includes it and touches members across roles.
 - `ResonantNodeCommands.cpp:108-142` runs the baseline state machine directly (`_rbBaselineState = Rebase;
@@ -167,6 +191,8 @@ The split lowered the biggest file's line count. The next cut should give each f
 baseline state machine as one struct with its own `update()`.
 
 ### A8. AnalyzerApp is one object across sixteen files (medium)
+
+-> open. `SequenceTest` 46 fields + 50-field `TrialDiagnostics` (`AnalyzerModeApp.h:141-323`, the 39 write-only ones went in 11e item 3b, eight more found now: D2.6), `PendingSequenceStart` repeats 25, `SeqOutputConfig` twice and every SEQ sub-command writes both (D1.4 shows them disagreeing), six `mutable` members, classification decided three times (`AnalyzerSequenceSession.cpp:693-714`, `AnalyzerModeApp.cpp:943-948`), `behaviorEligible = valid` (`AnalyzerModeApp.cpp:960`), 2026-10-26
 
 - `SequenceTest` (`AnalyzerModeApp.h:160-420`): 46 top-level fields plus `TrialDiagnostics` with 66, plus
   full copies of `OccurrenceVerdict`, `InspectedOccurrence` and `DetectorReport`, plus `sampleHistory[128]`
@@ -214,6 +240,8 @@ fills and the Node prints; delete `stateCode()`.
 
 ### A10. The Node writes into inspection-plan internals (medium)
 
+-> open (`ResonantNodeParams.cpp:62-105`, the two Node floats `ResonantNodeApp.h:266-267`). Related new finding: `shape.minLevel` is a boot-time copy of the release threshold (D1.5), 2026-10-26
+
 `ResonantNodeParams.cpp:147-184`: `moduleForTarget()` walks `_activeDetectionProfile.inspectionPlan.
 modules[]` and `applyLiveDetectionParams` writes `magnitude.supportStrength.mediumPeakThreshold`, then
 re-pushes the whole plan. Two Node floats (`_contrastMediumThreshold`, `_ampMediumThreshold`) exist only to
@@ -221,6 +249,8 @@ give the registry a stable address. Three detection-internal layers for one knob
 `DetectionRuntime::setInspectionMediumThreshold(InspectionTarget, float)`.
 
 ### A11. Board selection is repeated in every mode app (medium)
+
+-> open: 18 `#if BOARD_PIEZO` blocks across the three mode apps and their self-tests; `PiezoToneOutput.cpp:16-26` and `PiezoToneOutputBTL.cpp:35-45` still byte-identical, 2026-10-26
 
 18 `#if BOARD_PIEZO` blocks across `src/modes` (Emitter .cpp 5, .h 2; Node .h 3, .cpp 2, SelfTest 1;
 Analyzer .cpp 1, .h 2, SelfTest 2). Each piezo build instantiates both `PiezoToneOutput` and
@@ -261,6 +291,8 @@ names into the wire-format header.
 
 ### B1. Five hand-rolled ring buffers
 
+-> done in 11e item 4 (`src/app/RingQueue.h`), 2026-10-26
+
 Three in `DetectionRuntime` (verdict queue, pending inspections, pipeline events: each with
 readIndex/count/overflow and its own push and pop), `_emitTimes` in `ResonantBehavior`, the outbox in
 `NodeNet`. One `template <class T, size_t N> struct RingQueue` removes about sixty lines and the index
@@ -268,6 +300,8 @@ arithmetic. `resetDetectionQueues` zeroes only slot 0 of each array, which is co
 reads like a bug.
 
 ### B2. Reset proliferation with overlapping sets
+
+-> partly: DetectionRuntime has six resets (was eight), `resetDiagnostics` gone; `_verdictQueueOverflowCount` still cleared in two (`DetectionRuntime.cpp:54, 58`), `ScalarTransientDetector::resetState` clears `_reportDetail` three times (`.cpp:54, 59, 64`); the Analyzer's two 50-line reset lists (`AnalyzerSequenceSession.cpp:168-219`, `444-478`) and the Node's four Behavior reset paths are as described, 2026-10-26
 
 `DetectionRuntime` has eight: `resetState`, `resetDetectors`, `resetDetectionState`, `resetDetectionQueues`,
 `resetDiagnostics`, `resetDiagnosticsCounters`, `resetDetectionBookkeeping`, `resetSourceRejectSummaries`.
@@ -281,6 +315,8 @@ to call. Direction: state as structs reset with `= State{}` (the Node's `SelfTes
 
 ### B3. Config structs re-plumbed as 13 individual setters
 
+-> done in 11e item 5 (`setConfig` / `config()`, `configure()` / `config()`), 2026-10-26
+
 `applyScalarTransientConfig` (`DetectionRuntime.cpp:33-47`) mirrors 13 `ScalarTransientConfig` fields into
 13 detector setters into 13 members with their own defaults. `ResonantBehavior::configure` does the same for
 `BehaviorGateConfig` (14 setters, 15 getters). Holding the struct removes 26 setters, two default layers and
@@ -288,6 +324,8 @@ the drift in A6. The only setter with logic (`setIdleTimeMs` rescheduling the ru
 method.
 
 ### B4. ScalarTransientDetector tracks the same event twice on two clocks
+
+-> open. Two clocks still (`ScalarTransientOccurrence.cpp:72-75` from `_peakStartedUs`, `:194-200, 230` from `timeMs`; the two durations can differ by 1 ms), `refreshReportDetail` ~70 lines setting `rejectReason` twice (`ScalarTransientReport.cpp:26, 71`) and `buildReport` overriding (`140-150`), ~75 members, 2026-10-26
 
 About ninety members. The candidate lifecycle (`_peak*`, `_candidate*`) and the "accepted occurrence pending"
 tracker (`updateAcceptedOccurrencePending`, `_acceptedOccurrence*` scalars) both record start, peak and
@@ -301,6 +339,8 @@ twice), and `buildReport` then overrides them again. Direction: a `Candidate` st
 close, one clock, and `ScalarInspectEvidence` reduced to the one reason field.
 
 ### B5. Giant functions
+
+-> open: `handleUsbLine` 98-801 (SEQ START 443-756), `runRawTrigger` 103-770 with its paired free ladders, `buildSequenceAnalyzerReport` 825-1148, `printRbStatus` 53-220; indentation drift at `AnalyzerCommands.cpp:260-319`. `build="pass-c"` fixed in 11e item 2, 2026-10-26
 
 ```text
 AnalyzerCommands.cpp      AnalyzerApp::handleUsbLine            735 lines (246-980); SEQ START alone ~300
@@ -316,6 +356,8 @@ has case bodies at the `case` column. `report.context.build = "pass-c"` (`Analyz
 frozen string from an earlier pass.
 
 ### B6. Command parsing
+
+-> done in 11e item 8 (`serial_line::LineReader<N>`, `text_parse::*`; 11f named the three prefix kinds). Left: bare `strtoul` + clamp in `SelfTestReport.cpp:209-215` (D1.8), the band / hop parses (range- and end-checked) on purpose, 2026-10-26
 
 - 44 hand-counted token offsets (`token + 6`, `+ 7`, `+ 12`, ...) in `AnalyzerCommands.cpp` 630-840 and
   360-378, `ResonantNodeCommands.cpp:171-227`, `ResonantNodeNet.cpp:123`, next to `tokenValue()`
@@ -364,6 +406,8 @@ Direction: `serial_line::LineReader<N>` with one overflow policy; `tokenValue()`
 
 ### B8. Time has no named type
 
+-> partly: the two in-scope raw subtractions are now `timing::atOrAfter`; no `TimeMs` alias; hand-rolled compares remain in `ResonantNodeSelfTest.cpp:66-68, 405-406` and `AudioSelfTest.cpp:43-45, 85-91, 132, 157` (correct on the 32-bit target). New wrap-unsafe code arrived with BinTrack: D1.1, 2026-10-26
+
 `unsigned long` appears 1,326 times in `src/` for milliseconds; the `timing::` helpers take `uint32_t`. On
 the board both are 32 bits. On the host `unsigned long` is 64 bits, so the replay suite truncates at the
 helper boundary but runs the raw subtractions at `ScalarTransientOccurrence.cpp:201`,
@@ -374,6 +418,8 @@ local `inWindow` (half-open) that shadows `timing::inWindow` (closed). A `using 
 otherwise the best cross-cutting fix in the repo; see Part C.)
 
 ### B9. Comment drift in the files a maintainer reads first
+
+-> done in 11e item 2 for every pointer listed. New drift found at 4612ce9: D3, 2026-10-26
 
 - `DetectionProfile.h` 135 / 158: "default 20000" and "default 2500" while the macros say 30,500 and 1,500;
   `minTransientPeakStrength` assigned twice in `makeAmpExperimentalProfile`; the "New profile checklist" still
@@ -401,6 +447,8 @@ otherwise the best cross-cutting fix in the repo; see Part C.)
 
 ### B10. Dead code
 
+-> done in 11e item 3 for every item listed except `FieldStateConfig::quietActivityThreshold` (never read, `FieldState.h:21`), `density` from the pattern count against an occurrence threshold (`FieldStateTracker.cpp:84-88`) and the 16 `FREQBAND_ENABLE_PROFILING` lines. New dead code found at 4612ce9: D2, 2026-10-26
+
 - `AudioSignal`: `processBlock` (never called; every path uses per-sample `update()`, which then fakes a
   one-sample block into `_lastBlock*` that nothing reads), `DetectorOccurrenceDetail` (no users),
   `setCurveSampleCallback` / `CurveSnapshot` (never set), `processSample` `(void)`s three of its parameters
@@ -423,6 +471,8 @@ otherwise the best cross-cutting fix in the repo; see Part C.)
   pattern count against `denseOccurrenceCountThreshold` (an occurrence threshold) and read by one site.
 
 ### B11. Header and file hygiene
+
+-> partly: BOMs, control bytes, double guards, the inspector's five names, the public constants fixed. Still: the 272-byte twins `MagnitudeWindow` / `MagnitudeInspectionObservation` copied field by field (`OccurrenceInspector.cpp:52-167`), the `scalar_freq_experimental` alias (`DetectionProfile.h:308`), the four host predicates, class `Node` in `ResonantNodeApp.h` and the `AnalyzerModeApp` alias, `printRbStatus(const char*)` discarding its argument, `rebaseResultName` decoding literals, 2026-10-26
 
 - `#pragma once` plus include guards in `DetectionProfile.h`, `FeatureHistory.h`, `RuntimeDefaults.h`.
 - UTF-8 BOM on `ResonantBehavior.h` and `MagnitudeWindow.h`; `test/test_net_frame/test_main.cpp` contains
@@ -460,6 +510,8 @@ independent, with `setPulseHop` silently dropping to 0 hops when `n > kMaxHop`.
 
 ### B13. Behavior state machine details
 
+-> open: `_outputBusy` assigned in ten places and always `_state == Chirping` (`ResonantBehavior.cpp:121 ... 444`), the decision / reason pair set fourteen times, the second Idle-to-HeardPattern transition (`:231-235`) still cannot fire, refractory on two fields (`:292` vs `:473`), `_lastFieldState` captured by one of the two overloads only, 2026-10-26
+
 `State` has four values but eight orthogonal timers and flags sit beside it (`_restArmed`,
 `_behaviorSuppressArmed`, `_ownEmitDetectionSuppressArmed`, `_testChirpPending`, `_networkCallPending`,
 `_chirpRequested`, `_wouldEmit`, `_outputBusy`). `_outputBusy` is recomputed in six places and always equals
@@ -471,6 +523,8 @@ share `_lastFieldState` captured from the previous call, a hidden temporal coupl
 
 ### B14. Hidden second scale in the audio path
 
+-> open (`AudioPcm.h:71-79`, no contract line), 2026-10-26
+
 `AudioPcm.h:71-79` `pcmToHistorySample` scales by `kCanonicalPcmMax` (8,388,607) while `Strength16` scales
 by `kAmpStrengthGainReferencePcm` (262,143): the `RawSampleHistory` int16 values are about 32x smaller than
 Strength16 for the same PCM. Spec 5.2 names Strength16, FrequencyScore16, contrast and the DC-blocker output
@@ -478,6 +532,8 @@ scale; it does not name this fourth domain and nothing in the header says "not c
 contract in `AudioPcm.h` fixes it.
 
 ### B15. Blocking calls inside the Arduino loop
+
+-> open: `waitForEmitterAck` + `delay(100)` in `startSequenceTest` (`AnalyzerSequenceSession.cpp:259-275`), `runRawTrigger` blocking and silently stopping the run (`AnalyzerRawCapture.cpp:110`), `I2sToneOutput::end()` busy-wait (`:40-52`), the SEQ start path still not resetting `_loopLastUs`, 2026-10-26
 
 `AnalyzerSequenceSession.cpp:273, 288` (`waitForEmitterAck(..., 1500)` then `delay(100)`) inside
 `startSequenceTest`, called from `update()`; `AnalyzerCommands.cpp:943, 953`; `runRawTrigger` blocks for the
@@ -488,6 +544,8 @@ exactly this reason while the SEQ start path does not. `I2sToneOutput::end()` bu
 methods carry `IRAM_ATTR` with no comment on why.
 
 ### B16. Test coverage
+
+-> partly: new host suites `test_text_parse`, `test_param_commands`, `test_detection_diagnostics` (9), `test_shape_inspector` (10), the SoundOutput restore test, the Null-vs-diag replay diff in CI. Still untested: `ChirpOutput`'s loop-timed fallback (the fake tone always accepts), `I2sToneOutput::renderBlock`, `AudioSourceI2S::stampBlock`, `NodeNet` pacing and the `SeqFilter` across a reboot, `NvsParamStore`, `selftest::parseCommand`, `PcmPreprocessor` alone, `AnalyzerTrialClassifier` on the host. Two suites run nowhere in CI and one cannot link on its board env: D4, 2026-10-26
 
 Covered on the host: ParamRegistry (9 tests incl. persistence), SoundOutput sequencing (7), NetFrame codec /
 filter / joiner (6), TimeBase wrap math (and on device), the replay corpus (19) through the real chain,
@@ -533,6 +591,280 @@ six host test names twice (`test_ignore`, `test_filter`) with nothing checking t
 
 ---
 
+## Part D. Findings at 4612ce9 (re-read 2026-10-26)
+
+What steps 11b, 11e and 11f added or left, read with the same two questions. Severity in brackets. D1 is
+correctness (a concrete input or state makes the code do the wrong thing); D2 architecture and readability; D3
+the written word against the code; D4 tests and tools. Each was traced from a real caller, input or print
+string before it was written down.
+
+### D1. Correctness
+
+1. **BinTrack compares absolute milliseconds and freezes at the 32-bit wrap; the shape gate then passes
+   everything (high).** `src/detection/features/BinTrack.h:54` (`ms > _newestMs || _newestMs - ms >= kMs`) and
+   `:78` (`if (nowMs <= _newestMs) return;`) are the plain comparisons `app/TimingUtils.h:5-8` forbids (issue
+   #30). The runtime feeds it `audioSamplePacket.timeMs`, a `uint32_t`: 49.7 days after boot `advanceTo` never
+   advances again, `at()` answers false for every ms, `annotateShape` sets `applicable = false`
+   (`OccurrenceInspector.cpp:319-325`), `makeVerdict` skips the Shape requirement when it is not applicable
+   (`VerdictProjection.cpp:65`), and plain chirps and steady tones pass the hop-train-only rule (decision
+   2026-10-23) until a reset. The shape loop `for (ms = start; ms <= end; ++ms)` (`:319`) and the clamps
+   `startMs > preMs ? startMs - preMs : 0` (`:208, 317`) are the same class. Reproducible in three minutes with
+   the `-wraptest` envs (`TIMEBASE_OFFSET_US`). Fix: `timing::after` / `timing::delta` in BinTrack, the shape loop
+   over a `uint32_t` count, and a `test_shape_inspector` case that notes across `0xFFFFFFFF`. Nothing in the
+   current test set would have caught it: the two timebase suites do not touch the track (D4.2).
+
+2. **`output.*` ranges exceed `OutputLimits`; a legal `PARAM SET` turns every answer into a chirp no node hears
+   (medium).** `ResonantNodeParams.cpp:51-53` allows `hop_pulse_ms` 1-1000, `hop_gap_ms` 0-2000, `hop_steps`
+   1-8; `OutputLimits.maxSpanMs = 6000` (`OutputRequest.h:69`), checked at `SoundOutput.cpp:119`. `PARAM SET
+   output.hop_gap_ms 2000` with the shipped 5 steps of 25 ms is an 8,125 ms train: `SpanTooLong` on every
+   emission, `startEmission` falls back to `Kind::Pattern` (`ResonantNodeApp.cpp:770-777`), a single chirp that
+   since DET-015 no node accepts. `RB hop_check` validates the train against the detector, not against
+   `OutputLimits`, so boot and the SET print `status=ok`. `OutputRequest.h:61` and myspec 7.2 say "a reject
+   means a composition bug". Fix: bind the ranges so the worst train fits, or validate the composed request in
+   `composeHopTrain` / `printHopGapCheck` and refuse the SET with a reason; drop the sentence from the header
+   and the spec. Related: `startEmission` books a rejected request as an emission before it checks `started`
+   (`:791-801`: Behavior counts it toward the own-emit budget, `_rbChirpStartedCount++`, the self-test opens a
+   chirp window that never closes) and prints "RB emit rejected" twice.
+
+3. **The radio sequence filter drops one real command per gateway reboot (medium).** `NodeNet::_nextSeq`
+   starts at 1 on every boot (`NodeNet.h:80`, `.cpp:134-137`); receivers remember the last seq per sender MAC
+   and drop an equal one (`NetFrame.h:173-181`). A gateway that sent N commands, is reset and sends again has
+   its N-th command of the new life rejected by every node (`rxRejected++`), while it prints `NET sent` and
+   gets no answer. Fix: seed `_nextSeq` from `esp_random()` (nonzero) at `begin()`, or a boot nonce in the frame.
+   No test covers the filter across a reboot.
+
+4. **`SEQ start` during a run discards the run; `SEQ STOP` leaves a pending start armed; `SEQ STATUS` reads two
+   copies of the config that disagree (medium-low).** `AnalyzerCommands.cpp:443-756` has no `_sequenceTest.active`
+   check; the pending start runs `initializeSequenceTest`, which zeroes `cleanSummary`
+   (`AnalyzerSequenceSession.cpp:218`) without printing the summary and never finalizes the trial in flight.
+   `SEQ STOP` (`:436-441`) clears `active` but not `_pendingSequenceStart.active`, so a `start` + `stop` pair in
+   one buffer still starts. `printSequenceStatus` prints mode / when / verbosity from `_sequenceTest.outputConfig`
+   and tries / diag / freqband from `_seqOutputConfig` (`AnalyzerSeqReporter.cpp:576-592`); `SEQ MODE quiet`
+   while active disables the runtime diagnostics but leaves `outputConfig.diagnosticsEnabled` true, from which a
+   later `SEQ WHEN` re-enables them (`AnalyzerCommands.cpp:336-359`). Fix: refuse `SEQ start` while active (as
+   SELFTEST does), clear the pending start in STOP, one `SeqOutputConfig` copied once at start (A8).
+
+5. **`shape.minLevel` is a boot-time copy of the release threshold (medium).** `DetectionProfile.h:176-178`
+   copies `onsetReleaseThreshold` into `modules[2].shape.minLevel` and says so; `applyLiveDetectionParams`
+   rewrites only the two medium limits (`ResonantNodeParams.cpp:91-105`). After `PARAM SET
+   detection.scalar_release_threshold 3000` the detector holds a candidate above 3000 while the shape inspector
+   counts bins at 1500 (and the reverse for a lower release): the two stages disagree on which milliseconds are
+   the occurrence. Fix: derive the level from `_scalarTransientConfig.onsetReleaseThreshold` in
+   `setInspectionPlan` / `annotateShape` instead of storing a copy.
+
+6. **The Amp inspector overwrites detector facts with window statistics from another domain (medium).**
+   `OccurrenceInspector.cpp:251-258` writes `magnitude.value / strength = classificationValue` (the window P75),
+   `magnitude.baseline = observation.mean` and `lift` into the occurrence copy. The detector had set
+   `magnitude.baseline = audioSamplePacket.baseline`, the quiet floor in PCM units
+   (`ScalarTransientOccurrence.cpp:205`). `makeVerdict` exports it as `primaryAmbientBaseline`
+   (`VerdictProjection.cpp:52`), the Analyzer stores it as `acceptedAmbientBaseline` into a field it initialised
+   from `_audioSignal.baseline()` and prints it as `ampBase`: one field, PCM or Strength16 depending on whether
+   the plan has an Amp module. Spec 5.2 ("no second private scaling"), 5.6 (modules produce support facts). Fix:
+   the inspector writes `strengthClass` only; the window mean stays on `InspectedOccurrence`. Changes one
+   Analyzer field, nothing on the Node.
+
+7. **On-device `test_shipped_profile` cannot link on `esp32dev-analyzer` since 11e item 7 (medium).**
+   `test/test_shipped_profile/test_main.cpp:36-48` includes `DetectionRuntime.cpp` but not
+   `DetectionDiagnostics.cpp`; the env its header names carries `-D ANALYZER_MODE`, which selects
+   `DetectionDiagnostics`, whose constructor and hooks live in the omitted file. The 11e gate ran
+   `test_analyzer_pass_rules` and `test_timebase` on a board, not this one. By inclusion analysis (no xtensa
+   toolchain here). Fix: include `DetectionDiagnostics.cpp` (it is self-guarded).
+
+8. **SELFTEST values are parsed with bare `strtoul` and clamped (low).** `SelfTestReport.cpp:208-216`:
+   `SELFTEST external wait_ms=abc` runs with 100 ms, `chirp n=abc` with one chirp, no error line; the one parser
+   the step 11e policy (decision 2026-10-25) missed. Fix: `text_parse::parseUnsigned`, `Kind::Unknown` on failure.
+
+9. **Small ones (low).** `_pendingInspectionOverflowCount` never reset and read only by a test
+   (`DetectionRuntime.cpp:52-55, 175, 208`); `inspectWithHistory` iterates `_inspectionPlan.count` unclamped
+   (`OccurrenceInspector.cpp:406`) while its three siblings clamp to `kMaxInspectionModules`;
+   `checkInspectionPlan`'s shape bound omits `releaseDebounceMs + 1` (`InspectionPlanContract.h:55` vs `:65-66`,
+   81 ms of slack today); `setDiagnosticsEnabled` and `SEQ DIAG on` promise an `EVT transient` line that
+   `AUDIO_VERBOSE_DEBUG = 0` compiles out (`ScalarTransientReport.cpp:83`); `--dump-freq` prints a `uint32_t`
+   with `%lu` (`Replay.cpp:538`); `HEAP_STATUS` is printed as two lines (`AnalyzerModeApp.cpp:101-106`); an
+   unknown `RB` command gets no reply on the Node (`ResonantNodeCommands.cpp:30-144`, the Analyzer prints
+   `EVT analyzer_unknown_cmd`); a radio reply frame refused by the outbox is dropped silently and can lose the
+   `last` flag (`ResonantNodeNet.cpp:37-40`; not reachable with today's reply sizes).
+
+### D2. Architecture and readability
+
+1. **`Occurrence.band` is a dead 96-byte payload (medium).** `FrequencyBandOccurrenceDetail.present / score /
+   contrast / measurement` (`Occurrence.h:51-59`) are assigned nowhere in src/ or test/; only its three
+   `StrengthClass` fields are written (`OccurrenceInspector.cpp:261-267`). The embedded 72-byte measurement
+   packet rides in every Occurrence (248 B), every InspectedOccurrence, both pending-inspection slots and all
+   four pipeline events. The rule A5 was fixed under (spec 5.4) applies again. Fix: the three classes only;
+   re-measure with the T5 probe.
+
+2. **`RawSampleHistory` costs 8 KB in every build and nothing reads it (medium).** `AudioSignal.h:46-123, 213`,
+   `copyRawSampleHistory` / `rawSampleHistoryAvailable` / `AudioSamplePacket.rawHistoryReady` have no callers
+   in src/ (two tests set the flag); the push runs on the per-sample IRAM path (`AudioSignal.cpp:72`).
+   `AudioSignalStats.blocksProcessed` counts samples since the block path went and is still printed as blocks
+   (`AnalyzerRuntimeReporter.cpp:213`). Fix: delete, or move behind the Analyzer's RAW tool.
+
+3. **The host replay re-implements the shape rule and has drifted from it (medium).** `Replay.cpp:345-451`
+   (`printShapeWindow`) counts runs and steps with `d == spacing || d < -3*spacing` (`:390`) while the inspector
+   accepts up to `maxRisingStepBins` bins with `d % spacing == 0` (`OccurrenceInspector.cpp:356-359`); on the
+   same capture `--shape` can report fewer rising steps than the verdict used, and `tools/bench/shapesurvey.py`
+   builds E002's tables from it. A second `struct BinTrack` (`Replay.cpp:298`) shares the runtime class's name.
+   Fix: one run / step function over a bin source, used by the inspector and printed by the replay from the
+   verdict path.
+
+4. **The Node's `Boot` baseline state and the mic warmup never run (medium; ask before touching).**
+   `Node::begin()` calls `_audioSignal.begin(false)` (`ResonantNodeApp.cpp:265`; `doRebase = false` skips the 2 s
+   warmup) and sets `ListenForQuiet` directly (`:321`), so `RBBaselineState::Boot`, its "RB warmup waiting" case
+   (`:453-463`), `kRbStartupMicWarmupMs` and the `== Boot` test in `ResonantNodeSelfTest.cpp:129` are dead, and
+   the comment "boot warmup 2 s + quiet timeout 8 s + margin" (`:38`) describes a sequence that does not happen.
+   Either the quiet gate replaced the warmup on purpose (delete the state, fix the comment) or the warmup was
+   lost (run Boot first). The baseline timing is the owner's.
+
+5. **`RB debug off|events` is a no-op in every shipped build (medium).** `RB_VERBOSE_DEBUG` defaults to 0
+   (`RuntimeDefaults.h:20-22`) and no env sets it, so every `NodeDebug::observe*` returns at its first line
+   (`ResonantNodeDebug.cpp:104, 144, 194, 206`); `notes_manual.md:65` documents the command as event tracing.
+   `_coreLoopUs*` / `_fullLoopUs*` and `_debugChirpVisibleUntilMs` are written and never read. Same shape as
+   D1.9's `AUDIO_VERBOSE_DEBUG`: a compile-time knob behind a runtime switch, in a repo whose rule is "every knob
+   is a registered param". Fix: one gate, the runtime one; delete the unread stats, or delete the command and
+   the manual line.
+
+6. **Write-only Analyzer fields that survived 11e item 3b (medium, with A8).** `TrialDiagnostics.duplicate*`
+   (`AnalyzerModeApp.h:188-192`, written `AnalyzerTrialCapture.cpp:200-204`), `emitSeen / emitTrialId /
+   emitDoneDtMs` (`:154-159`, written `AnalyzerEmitterControl.cpp:74-82`), `handleSequencePending`'s
+   `liveFrequencyMeasurementPacket` and `dtFromTriggerMs` computed and `(void)`ed (`AnalyzerTrialCapture.cpp:
+   80-94`), `windowStartOffsetMs` a constant 0 kept as a field. Also `_detectorSelection` written and never read
+   (`DetectionRuntime.cpp:79`); `FrequencyBandMeasurementPacket.matched / confidence / targetHz / ageSamples`
+   set by the builder and read nowhere; `FeatureStream` aliases and `FeatureHistory::record(const
+   FeatureStream&)`, `hasSamples`, `latestValue` without callers; the commented-out `history.record(...)` lines
+   naming removed enumerators (`FeatureExtractor.h:40-44`); `ScalarTransientDetector::begin()` called only by
+   tests (so `_statsStartUs` is 0 on the board); the Emitter constructor with hard-coded pins
+   (`EmitterApp.h:29-32`, no caller); `ResonantNodeCommands.cpp:102-105` skipping tabs `dropByte` never
+   delivers.
+
+7. **Nine shape knobs are not registered params (medium; repo rule).** `ShapeInspectionConfig`
+   (`InspectorTypes.h:146-156`: `preMs, tailMs, maxRisingStepBins, minLevel, minRunMs, mediumMin*, strongMin*`)
+   has no `bind*` in `ParamBindings.h`; `DetectionProfile.h:169` calls `tailMs` "a tuning question for the
+   board", which today means a reflash per value. Fix: `bindShapeParams` (`detection.shape_*`), applied through
+   `setInspectionPlan` (threshold-only, history kept); D1.5 falls out of it.
+
+8. **Analyzer presentation lives in detection/ and the detector prints (medium-low).**
+   `DetectorReportPrinter.cpp:12-149` and `ScalarTransientPrinter.cpp:9-94` render `SEQ_SOURCE_CORE` /
+   `detail.scalar.*` through `serialOut()`, are compiled into every ESP env (`build_src_filter` excludes only
+   `detection/analyzer/`) and have one caller (`AnalyzerSeqReporter.cpp:406`); `printTransientStatsIfDue`
+   prints `EVT transient ...` from inside the detector. Spec 5.3 and 5.9. Fix: move both printers to
+   `modes/analyzer/` (they read only `DetectorReport`), the EVT line to the Analyzer's reporter.
+
+9. **Behavior mirrors SoundOutput's busy state (low).** `_outputBusy` (B13) duplicates `output.phase`; RB STATUS
+   prints both (`ResonantNodeStatus.cpp:77-78, 84-85`). Spec 7.2 says Behavior reads `OutputStatus`; the code has
+   the Node forwarding `spanMs` and `finishedAtMs` (`ResonantNodeApp.cpp:791, 815-817`), which is fine, but the
+   sentence and `outputBusy()` should agree. Fix: `outputBusy()` returns `_state == Chirping`; one sentence in 7.2.
+
+10. **Three statements of the line bound (low).** `ParamCommands.cpp:12` `kMaxLineLength = 255`, the Node's
+    `kSerialLineCapacity - 1`, the Analyzer's `LineReader<255>` + `_commandScratch[256]`, `net::kMaxText` 233
+    checked separately, five `char buffer[96]` in `EmitterApp.cpp` against `LineReader<95>`. Fix: one
+    `serial_line::kCommandLineMax` the others derive from.
+
+11. **Smaller (low).** `PendingSequenceStart.setupLabel` points into the struct's own storage
+    (`AnalyzerModeApp.h:343, 354`; works only because it is passed by reference); 42 `IRAM_ATTR` in
+    `FreqBandStream.cpp`, about 25 on trivial getters and setters (B10 fixed this in AudioSignal only);
+    `annotateShape` carries ~1.2 KB of run arrays on the detection loop's stack (`OccurrenceInspector.cpp:
+    300-384`), the resource step 8b freed; `FrequencyBandMeasurementPacket` defined in `inspection/InspectorTypes.h`
+    though the inspector never reads it; `setInspectionPlan` wires `setBinTrack` as a side effect
+    (`DetectionRuntime.cpp:95`); `inspectionPlanName` returns "custom" for the shipped plan, which RB PROFILE and
+    SEQ print; `ScalarTransientDetector` and `FreqBandStream` are the two detection classes outside `namespace
+    detection`; the 11e / 11f fixes left "was defined three times (review B7, step 11f)" history in nine headers
+    (B9's own rule); unused includes in `ResonantNodeApp.cpp:12-13` and `ResonantNodeStatus.cpp:12, 15, 17`; the
+    Emitter's post-selftest restore differs from the Node's and the Analyzer's (three definitions of "restored").
+
+### D3. Spec, guide, roadmap against the code
+
+1. **The spec declares the live diagnostics file dead (high).** `myspec.md:743`: "`DetectionDiagnostics` is
+   historical archive material, not active source code" while `src/detection/DetectionDiagnostics.h` is the
+   Analyzer's side channel since 11e item 7, selected by `-D ANALYZER_MODE`, host-tested, with the Null-vs-diag
+   replay diff in CI. Fix: rewrite the 5.5 line as the collaborator contract: records, never changes a verdict,
+   hook order, the CI diff that enforces it.
+
+2. **Names in the spec that the code does not have (medium).** `RejectedCandidateSummary` eight times
+   (`:505, 537, 709`, present tense) for `SelectedRejectSummary`; the evidence targets `SupportStrength /
+   FrequencyScoreStrength / FrequencyContrastQuality / TargetBandStrength` (`:773-777`) for the enum `Amp /
+   TargetScore / Contrast / TargetBand / Shape`, which the SEQ lines print; `detail.frequency.*` (`:728-730`),
+   `PatternCandidate` (`:1099`), "pattern rule config" (`:309`); 5.3's "Adding a detector family" describes
+   `DetectionFamily.h`, `ActiveDetector`, `DETECTOR_FAMILY_*` in the present tense though none exist (step 9's
+   plan inside the spec); `docs/myspec.md` (`:1282`) is the wrong path. Fix: the code's names, or a mapping stated
+   once; the family block marked as agreed future terms.
+
+3. **Guide and help against the parsers (medium).** `notes_manual.md:49-51` says 95 characters "on the Emitter
+   link"; the Emitter's USB reader is also `LineReader<95>` (`EmitterApp.h:98-99`). Not in the guide: SELFTEST
+   `dur_ms=` and the Analyzer's `SELFTEST external`, RAW `decim=` / `sweep=` / `band=`, SEQ start `band=` (also
+   missing from `SEQ help`), the Emitter's `EMIT_START` / `EMIT_DRIVE_ON` markers. `RB help` omits PARAM SAVE |
+   LOAD | RESET. Spec 5.9 lists SEQ_EXPLAIN and "SEQ STATUS"; `SEQ help` lists `SEQ_DETAIL`, `SEQ_SOURCE_CORE`,
+   `SEQ_SOURCE_SPEC`, not SEQ_EXPLAIN, and the status line is `SEQ_STATUS`; `benchlib.py` still carries
+   `SEQ_DETAIL`. RAW: the spec names two CSV layouts, the firmware prints four (`AnalyzerRawCapture.cpp:674, 686,
+   694, 708`), and the pcm mode's `RAW_BEGIN fields=ms,pcm,baseline` (`:663`) disagrees with its four-column
+   header (`:674`); `rawcorpus.py` reads the header, so harmless today. The 11e guide text says the Analyzer's
+   PARAM has no store: true, but `PARAM LIST|GET|SET|DUMP|RESET` in the summary block omits SAVE | LOAD, which
+   the handler answers with `status=no_store`.
+
+4. **`implementation-status.md` is history, not a live table (high for the rows named).** Params row: "a
+   registry on the Analyzer: not implemented", "38 Node params" (PAR-003 is DONE; the Node registers 39, 17
+   `detection.` + 13 `behavior.` + 8 `output.` + 1 `node.`). Tests / CI row: two on-device suites (misses
+   `test_shipped_profile`), two host suites "15 tests" (there are eleven suites in three native envs plus the
+   replay diff), "include_direction ... warning only until ANA-003" (strict since step 10). Detection rows:
+   "two-inspector path" (three modules incl. Shape since a33f293), "Future TargetBandStrength", "Node build,
+   sweep and the final gate run pending" (11b closed it), a `FrequencyMatchDetector` fix (removed code), a dated
+   history entry at `:21` in a table whose README says "never dated history".
+
+5. **Roadmaps and decisions (medium).** `roadmap-0-steps.md:1094` `11c. [NEXT]` while `:1098` and HEAD say
+   running (the legend has no running tag); `:1172-1173` lists PAR-003 under "still open, not sequenced";
+   `:1154` names PAR-013 and OUT-002/003 (done). Every domain roadmap's "Current code state" block predates
+   steps 7d-11e: `roadmap-param-config.md:138-148` (`[PARTIAL] RB PARAM / RB BEHAV`, "in src/param/",
+   `[DEFERRED] PARAM SAVE/LOAD/RESET`, four FrequencyMatch thresholds), `roadmap-node.md:35-43`,
+   `roadmap-detection.md:25, 32, 459` ("OccurrenceEvaluator decides", "[REMOVED] DetectionDiagnostics"),
+   `roadmap-behavior.md:36, 43`, `roadmap-output.md:34-36` ("OutputStatus not landed"); their focus lines end at
+   step 10. `decisions/README.md` open table: the Node profile (`:97`), FrequencyMatch keep / consolidate (`:98`)
+   and persistent config (`:102`) are decided; rows `:80-88` out of date order; two "pending" annotations
+   (`:69, :71`) unverified against 5g / 6 / 11b. `research/README.md` omits `scalar-detector-extensions.md` and
+   the `Became:` marks of `frequency-drift-detection.md` and `vektor-lessons-from-11a.md`; `soak-24h.md` has no
+   link to 11c / `soakcycle.py`. Stale pointers to pre-archive paths: `platformio.ini:41`
+   (`cleanup-analyzer-node-isolation.md`), `tools/bench/selftest.py:5` (`selftest.md`); `test/README:4-6` lists
+   six host suites of eleven; `DetectionProfile.h:20-28` lists enums without `BinShape`, `AmpMagnitude`, `Shape`;
+   `DetectionCoreTypes.h:48-50` and `Occurrence.h:19-29` describe earlier passes.
+
+### D4. Tests and tools
+
+1. **`shapesurvey.py` silently drops every shape line (high for E002's tables).** `tools/bench/shapesurvey.py:36`
+   expects `other_steps=(\d+) seq=` while `Replay.cpp:434-444` prints `other_steps=N dips_pct=... edips_pct=...
+   seq=...` since 466495a, the commit that added both; `re.match` returns None, the survey reports zero verdicts
+   per category with no error. Both files were created in that one commit and neither changed since, so the
+   survey never worked as committed; E002's text discusses the dips, so its tables came from an uncommitted
+   intermediate state of the tool. The committed tool cannot reproduce them. Fix: parse `k=v` pairs; one
+   fixture-driven test of the parser.
+
+2. **Two suites run nowhere in CI (medium).** `test_timebase` (the wrap math of issue #30) and
+   `test_analyzer_pass_rules` are in no native filter (`platformio.ini:150-158, 166, 183`) and `build.yml` has no
+   device job; both build the slice `test_shipped_profile` already builds on the host. Fix: add both to
+   `native-test-behavior`. With D1.7, three of the four on-device suites are either unrunnable or unrun.
+
+3. **No host test for (medium, list).** `src/hal/` (all), `NodeNet.cpp` (pacing, outbox, the filter across a
+   reboot), the three command dispatchers and every status / report printer the bench tools parse,
+   `src/selftest/`, `NvsParamStore.h`, `PcmPreprocessor.h` alone, `AnalyzerTrialClassifier.cpp` on the host,
+   `*Printer.cpp`, `FieldStateTracker.cpp` directly, BinTrack at the wrap (D1.1). The `test_ignore` /
+   `test_filter` twin lists in `platformio.ini` agree today and nothing checks that they do.
+
+4. **Tool parsers that do match today (verified, for the record).** `netcheck.py` (`NET reply`, `PARAM path=`,
+   the `RB STATUS ... board=` tail), `nodegroup.py` (`BEH emit start`, `RB emit shape=hop`, `RB verdict=`, `RB
+   rest start`; all behind `RB log full`), `soakcycle.py` (`SEQ_SUMMARY`, `SEQ_TRIAL reject_reason=`;
+   `SEQ_EXPLAIN failed_label=` matches inside `verdict.first_failed_label=`, brittle), `rawcorpus.py`,
+   `notchsweep.py` (now `--set detection.contrast_medium=`). `build.yml:1-3` says the include direction "is
+   reported" where it is enforced.
+
+### Suggested order for Part D
+
+1. D1.1 with its wrap test and D1.7 before the next long run or bench day; D1.3 (one line) with them.
+2. D1.2 (ranges or validation, and the spec sentence), D1.5 and D2.7 together as "shape params"; D3.1 as a
+   one-line spec fix in the same commit as whichever lands first.
+3. D2.1 and D2.2 as one byte-identical-replay pass with the T5 probe; D1.6 in the same pass (it changes one
+   Analyzer field; record it).
+4. D4.1 and D4.2 (tools and CI), D3.4 and D3.5 (one documentation pass regenerating the status table and the
+   "Current code state" blocks from the code).
+5. D2.4 and D2.5 after the owner says what Boot and RB debug are for; everything else with A7 / A8.
+
 ## Suggested order, if any of this is taken up
 
 Cheap and safe first, each a compile-only change with `T2h` byte-identical replay as the gate:
@@ -546,6 +878,9 @@ Cheap and safe first, each a compile-only change with `T2h` byte-identical repla
 7. The spec question in A1 / A2, decided in `myspec.md` before anyone refactors toward either answer.
 8. A7's next cut of the Node and A8's `TrialState` split, each with its own pass doc.
 
+Status 2026-10-26: 1-6 done (step 11e, one commit per item), 7 settled in the spec (11e item 1), 8 open (A7,
+A8). Part D has its own order above.
+
 Process notes: `docs/refactors/` has no active top-level doc while NODE-004 is open (CLAUDE.md says to flag
-this). A1's spec / decision conflict is the one item here that should be settled in writing before code
-moves.
+this); since 2026-10-22 the step text in `roadmap-0-steps.md` carries the plan, so this is the convention, not
+a gap. A1's spec / decision conflict was settled in writing in 11e item 1 before the code moved.

@@ -180,10 +180,14 @@ unsigned long OccurrenceInspector::windowCompleteAtMs(const Occurrence& occurren
     const size_t count = _inspectionPlan.count > kMaxInspectionModules ? kMaxInspectionModules : _inspectionPlan.count;
     for (size_t i = 0; i < count; ++i) {
         const InspectionModuleConfig& module = _inspectionPlan.modules[i];
-        if (module.kind != InspectionModuleKind::MagnitudeFeatureStrength) {
+        unsigned long endMs = 0;
+        if (module.kind == InspectionModuleKind::MagnitudeFeatureStrength) {
+            endMs = anchorMsForOccurrence(occurrence, module.magnitude.anchor) + module.magnitude.windowPostMs;
+        } else if (module.kind == InspectionModuleKind::BinShape) {
+            endMs = occurrence.startMs + occurrence.durationMs + module.shape.tailMs;  // the margin after the release
+        } else {
             continue;
         }
-        const unsigned long endMs = anchorMsForOccurrence(occurrence, module.magnitude.anchor) + module.magnitude.windowPostMs;
         if (!any || timing::after(endMs, latest)) {
             latest = endMs;
             any = true;
@@ -280,10 +284,101 @@ void OccurrenceInspector::runInspectionModule(
     case InspectionModuleKind::MagnitudeFeatureStrength:
         annotateMagnitudeFeatureStrength(out, occurrence, featureHistory, inspectionNowMs, module.magnitude, module.target);
         break;
+    case InspectionModuleKind::BinShape:
+        annotateShape(out, occurrence, module.shape);
+        break;
         case InspectionModuleKind::None:
         default:
             break;
     }
+}
+
+// DET-015 (decisions/2026-10-26-det015-bin-track-inspector.md, E002): the bins the occurrence visited, in order.
+// A run is one bin held with gaps of at most kRunGapMs; runs shorter than minRunMs are folded away (bin
+// boundaries flicker between neighbours for a few ms). A step one bin up, or from the top of the band back to the
+// bottom (a rotation that wraps), counts as rising.
+void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurrence& occurrence,
+                                        const ShapeInspectionConfig& config) const {
+    constexpr unsigned long kRunGapMs = 3;
+    constexpr size_t kMaxRuns = 16;
+    constexpr uint32_t kBinSpacingHz = 250;
+    OccurrenceShape shape = {};
+    if (_binTrack == nullptr) {
+        out.occurrence.shape = shape;
+        return;
+    }
+    struct Run {
+        uint32_t hz;
+        unsigned long startMs;
+        unsigned long lengthMs;
+    };
+    Run raw[kMaxRuns * 2];
+    size_t rawCount = 0;
+    const unsigned long start = occurrence.startMs;
+    const unsigned long end = occurrence.startMs + occurrence.durationMs + config.tailMs;
+    for (unsigned long ms = start; ms <= end; ++ms) {
+        uint32_t hz = 0;
+        uint16_t level = 0;
+        if (!_binTrack->at(ms, hz, level) || static_cast<float>(level) < config.minLevel) {
+            continue;
+        }
+        shape.applicable = true;
+        Run* last = rawCount > 0 ? &raw[rawCount - 1] : nullptr;
+        if (last != nullptr && last->hz == hz && ms - (last->startMs + last->lengthMs) <= kRunGapMs) {
+            last->lengthMs = ms - last->startMs + 1;
+        } else if (rawCount < kMaxRuns * 2) {
+            raw[rawCount++] = {hz, ms, 1};
+        }
+    }
+    Run kept[kMaxRuns];
+    size_t keptCount = 0;
+    for (size_t i = 0; i < rawCount; ++i) {
+        if (raw[i].lengthMs < config.minRunMs) {
+            continue;
+        }
+        if (keptCount > 0 && kept[keptCount - 1].hz == raw[i].hz) {
+            kept[keptCount - 1].lengthMs = raw[i].startMs + raw[i].lengthMs - kept[keptCount - 1].startMs;
+        } else if (keptCount < kMaxRuns) {
+            kept[keptCount++] = raw[i];
+        }
+    }
+    uint32_t seen[kMaxRuns];
+    size_t seenCount = 0;
+    for (size_t i = 0; i < keptCount; ++i) {
+        bool known = false;
+        for (size_t k = 0; k < seenCount; ++k) {
+            known = known || seen[k] == kept[i].hz;
+        }
+        if (!known) {
+            seen[seenCount++] = kept[i].hz;
+        }
+        if (i > 0) {
+            const long d = static_cast<long>(kept[i].hz) - static_cast<long>(kept[i - 1].hz);
+            if (d == static_cast<long>(kBinSpacingHz) || d < -static_cast<long>(3 * kBinSpacingHz)) {
+                ++shape.risingSteps;
+            } else {
+                ++shape.otherSteps;
+            }
+        }
+    }
+    shape.distinctBins = static_cast<uint8_t>(seenCount);
+    shape.runs = static_cast<uint8_t>(keptCount);
+    if (keptCount > 0) {
+        shape.firstBinHz = static_cast<uint16_t>(kept[0].hz);
+        shape.lastBinHz = static_cast<uint16_t>(kept[keptCount - 1].hz);
+    }
+    if (!shape.applicable) {
+        shape.shapeClass = StrengthClass::Unknown;
+    } else if (shape.distinctBins >= config.strongMinBins && shape.risingSteps >= config.strongMinRisingSteps) {
+        shape.shapeClass = StrengthClass::Strong;
+    } else if (shape.distinctBins >= config.mediumMinBins && shape.risingSteps >= config.mediumMinRisingSteps) {
+        shape.shapeClass = StrengthClass::Medium;
+    } else if (shape.distinctBins >= 2) {
+        shape.shapeClass = StrengthClass::Weak;
+    } else {
+        shape.shapeClass = StrengthClass::None;
+    }
+    out.occurrence.shape = shape;
 }
 
 InspectedOccurrence OccurrenceInspector::inspectWithHistory(

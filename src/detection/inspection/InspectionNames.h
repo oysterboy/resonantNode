@@ -94,6 +94,8 @@ inline const char* inspectionTargetName(InspectionTarget value) {
             return "contrast";
         case InspectionTarget::TargetBand:
             return "band";
+        case InspectionTarget::Shape:
+            return "shape";
         case InspectionTarget::None:
         default:
             return "none";

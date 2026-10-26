@@ -58,6 +58,19 @@ struct FrequencyBandOccurrenceDetail {
     FrequencyBandMeasurementPacket measurement = {};
 };
 
+// DET-015: the shape facts the ShapeInspector found (BinTrack over the occurrence's window). Not applicable
+// when the track had no band bins there (single-target mode): the requirement is then skipped, not failed.
+struct OccurrenceShape {
+    bool applicable = false;
+    uint8_t distinctBins = 0;
+    uint8_t risingSteps = 0;   // runs one bin above the previous (or the wrap from the top back to the bottom)
+    uint8_t otherSteps = 0;
+    uint8_t runs = 0;
+    uint16_t firstBinHz = 0;
+    uint16_t lastBinHz = 0;
+    StrengthClass shapeClass = StrengthClass::Unknown;
+};
+
 struct Occurrence {
     // Canonical generic accepted-event shell.
     DetectorId detectorId = DetectorId::Unknown;
@@ -83,6 +96,7 @@ struct Occurrence {
     // the first compact reusable detail shape for scalar-transient output.
     MagnitudeOccurrenceDetail magnitude = {};
     FrequencyBandOccurrenceDetail band = {};
+    OccurrenceShape shape = {};
 };
 
 } // namespace detection

@@ -14,6 +14,8 @@ StrengthClass strengthForTarget(const Occurrence& source, InspectionTarget targe
             return source.band.contrastQuality;
         case InspectionTarget::TargetBand:
             return source.band.targetBandStrength;
+        case InspectionTarget::Shape:
+            return source.shape.shapeClass;
         case InspectionTarget::None:
         default:
             return StrengthClass::Unknown;
@@ -57,6 +59,10 @@ bool makeVerdict(const InspectedOccurrence& inspected, const InspectionPlan& pla
     for (size_t i = 0; i < count; ++i) {
         const InspectionModuleConfig& requirement = plan.modules[i];
         if (!requirement.enabled) {
+            continue;
+        }
+        // Shape has no meaning without band bins (single-target mode): skipped, not failed (DET-015).
+        if (requirement.target == InspectionTarget::Shape && !source.shape.applicable) {
             continue;
         }
         const StrengthClass observed = strengthForTarget(source, requirement.target);

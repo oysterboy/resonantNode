@@ -92,6 +92,7 @@ static_assert(FeatureHistory::kMaxActiveStreams >= kMaxInspectionModules,
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _inspectionPlan = plan;
     _occurrenceInspector.configure(_inspectionPlan);
+    _occurrenceInspector.setBinTrack(&_binTrack);
 
     FeatureStreamId streams[kMaxInspectionModules] = {};
     size_t streamCount = 0;

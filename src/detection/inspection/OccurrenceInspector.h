@@ -3,6 +3,7 @@
 #include "../DetectionProfile.h"
 #include "../occurrences/InspectedOccurrence.h"
 #include "../features/FeatureHistory.h"
+#include "../features/BinTrack.h"
 
 namespace detection {
 
@@ -16,6 +17,8 @@ Does not decide pattern validity or behavior eligibility.
 class OccurrenceInspector {
 public:
     void configure(const InspectionPlan& plan);
+    // The bin track the BinShape module reads (DET-015); owned by DetectionRuntime. nullptr: no shape.
+    void setBinTrack(const BinTrack* track) { _binTrack = track; }
 
     // Annotates an accepted occurrence with the plan's evidence from the
     // history; an absent or invalid occurrence comes back Rejected.
@@ -47,7 +50,9 @@ private:
         unsigned long inspectionNowMs,
         const InspectionModuleConfig& module
     ) const;
+    void annotateShape(InspectedOccurrence& out, const Occurrence& occurrence, const ShapeInspectionConfig& config) const;
     InspectionPlan _inspectionPlan = {};
+    const BinTrack* _binTrack = nullptr;
 };
 
 } // namespace detection

@@ -116,6 +116,7 @@ inline StrengthClass classifySupportStrength(float peak, bool evidenceValid, con
 enum class InspectionModuleKind {
     None,
     MagnitudeFeatureStrength,
+    BinShape,  // DET-015: which band bins the occurrence visited, from the BinTrack
 };
 
 enum class InspectionTarget {
@@ -124,6 +125,7 @@ enum class InspectionTarget {
     TargetScore,
     Contrast,
     TargetBand,
+    Shape,  // DET-015, the BinShape module
 };
 
 struct MagnitudeFeatureInspectionConfig {
@@ -138,12 +140,26 @@ struct MagnitudeFeatureInspectionConfig {
     size_t minSustainedCount = 0;
 };
 
+// DET-015 (decisions/2026-10-26-det015-bin-track-inspector.md): the bin runs over [start, start + duration +
+// tailMs] with the target at or above minLevel; runs shorter than minRunMs are folded away. The class: Strong
+// from strongMin* bins / steps up, Medium from mediumMin*, Weak from 2 bins, None for one bin.
+struct ShapeInspectionConfig {
+    uint32_t tailMs = 0;
+    float minLevel = 0.0f;
+    uint32_t minRunMs = 4;
+    uint8_t mediumMinBins = 3;
+    uint8_t mediumMinRisingSteps = 2;
+    uint8_t strongMinBins = 4;
+    uint8_t strongMinRisingSteps = 3;
+};
+
 struct InspectionModuleConfig {
     InspectionModuleKind kind = InspectionModuleKind::None;
     InspectionTarget target = InspectionTarget::None;
     bool enabled = false;
     StrengthClass minimumStrength = StrengthClass::Unknown;
     MagnitudeFeatureInspectionConfig magnitude = {};
+    ShapeInspectionConfig shape = {};
 };
 
 static constexpr size_t kMaxInspectionModules = 3;

@@ -28,6 +28,7 @@ void Node::configureParameters() {
                             "detection.contrast_medium", &_contrastMediumThreshold, 0.0f, 32767.0f);
     _paramRegistry.addFloat(param::ParamId::Detection_AmpMedium, param::ModuleId::Detection,
                             "detection.amp_medium", &_ampMediumThreshold, 0.0f, 32767.0f);
+    param::bindShapeParams(_paramRegistry, _shapeConfig);
 }
 
 // The live detection params. The scalar fields bind inside _activeDetectionProfile,
@@ -48,8 +49,11 @@ void Node::registerOutputParams() {
     using param::ParamId;
     _paramRegistry.addBool(ParamId::Output_HopEnabled, ModuleId::Output, "output.hop_enabled", &_hopEnabled);
     _paramRegistry.addUInt32(ParamId::Output_HopRotation, ModuleId::Output, "output.hop_rotation", &_hopRotation, 0U, 15U);
-    _paramRegistry.addUInt32(ParamId::Output_HopPulseMs, ModuleId::Output, "output.hop_pulse_ms", &_hopPulseMs, 1U, 1000U);
-    _paramRegistry.addUInt32(ParamId::Output_HopGapMs, ModuleId::Output, "output.hop_gap_ms", &_hopGapMs, 0U, 2000U);
+    // Bound so the longest emission fits OutputLimits.maxSpanMs (6000): 8 steps of 250 + 7 gaps of 250 = 3750 ms, and the
+    // idle call adds announce (<= 2000) + its 200 ms gap = 5950 (review D1.2, 2026-10-26: 1000 / 2000 let a legal SET
+    // turn every answer into a chirp).
+    _paramRegistry.addUInt32(ParamId::Output_HopPulseMs, ModuleId::Output, "output.hop_pulse_ms", &_hopPulseMs, 1U, 250U);
+    _paramRegistry.addUInt32(ParamId::Output_HopGapMs, ModuleId::Output, "output.hop_gap_ms", &_hopGapMs, 0U, 250U);
     _paramRegistry.addUInt32(ParamId::Output_HopSteps, ModuleId::Output, "output.hop_steps", &_hopSteps, 1U, 8U);
     _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &_idleAnnounceHz, 0U, runtime::kMaxToneHz);
     _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &_idleAnnounceMs, 20U, 2000U);
@@ -80,6 +84,8 @@ void Node::loadInspectionLimitsFromProfile() {
     detection::InspectionModuleConfig* amp = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Amp);
     _contrastMediumThreshold = contrast != nullptr ? contrast->magnitude.supportStrength.mediumPeakThreshold : 0.0f;
     _ampMediumThreshold = amp != nullptr ? amp->magnitude.supportStrength.mediumPeakThreshold : 0.0f;
+    detection::InspectionModuleConfig* shape = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Shape);
+    _shapeConfig = shape != nullptr ? shape->shape : detection::ShapeInspectionConfig{};
 }
 
 // The registered detection params (detection.scalar_*, detection.band_*) applied
@@ -97,6 +103,10 @@ void Node::applyLiveDetectionParams() {
     }
     if (amp != nullptr) {
         amp->magnitude.supportStrength.mediumPeakThreshold = _ampMediumThreshold;
+    }
+    detection::InspectionModuleConfig* shape = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Shape);
+    if (shape != nullptr) {
+        shape->shape = _shapeConfig;
     }
     _detection.setInspectionPlan(_activeDetectionProfile.inspectionPlan);  // same streams: history kept
     applyBandParams();

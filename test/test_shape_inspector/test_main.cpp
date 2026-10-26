@@ -43,7 +43,6 @@ InspectionPlan shapePlan(StrengthClass minimum = StrengthClass::Medium) {
     plan.modules[0].target = InspectionTarget::Shape;
     plan.modules[0].enabled = true;
     plan.modules[0].minimumStrength = minimum;
-    plan.modules[0].shape.minLevel = 1000.0f;
     plan.count = 1;
     return plan;
 }
@@ -64,6 +63,7 @@ InspectedOccurrence inspect(const BinTrack& track, const InspectionPlan& plan, c
     OccurrenceInspector inspector;
     inspector.configure(plan);
     inspector.setBinTrack(&track);
+    inspector.setShapeMinLevel(1000.0f);  // the runtime sets the detector's release threshold here
     return inspector.inspectWithHistory(occ, nullptr, occ.startMs + occ.durationMs + 50);
 }
 
@@ -247,6 +247,20 @@ void test_shape_holds_across_the_ms_wrap() {
     TEST_ASSERT_FALSE(v.accepted);
 }
 
+// Review D1.5: the level a bin must reach is the detector's release threshold, handed to the inspector live
+// (DetectionRuntime::setScalarTransientConfig), not a copy in the plan. Above the train's level nothing counts.
+void test_shape_level_follows_the_release_threshold() {
+    BinTrack track;
+    playSteps(track, 100, kHop, 5, 25, 10, 9000);
+    OccurrenceInspector inspector;
+    inspector.configure(shapePlan());
+    inspector.setBinTrack(&track);
+    inspector.setShapeMinLevel(8000.0f);
+    TEST_ASSERT_EQUAL(StrengthClass::Strong, inspector.inspectWithHistory(occurrence(100, 165), nullptr, 400).occurrence.shape.shapeClass);
+    inspector.setShapeMinLevel(9500.0f);
+    TEST_ASSERT_FALSE(inspector.inspectWithHistory(occurrence(100, 165), nullptr, 400).occurrence.shape.applicable);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_steady_tone_is_one_bin_and_fails_the_requirement);
@@ -260,5 +274,6 @@ int main(int, char**) {
     RUN_TEST(test_train_split_by_a_middle_null_passes_with_the_look_back);
     RUN_TEST(test_shipped_settings_still_reject_jumps_and_steady_tones);
     RUN_TEST(test_shape_holds_across_the_ms_wrap);
+    RUN_TEST(test_shape_level_follows_the_release_threshold);
     return UNITY_END();
 }

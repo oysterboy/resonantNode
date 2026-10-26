@@ -4,6 +4,7 @@
 
 #include "../behavior/BehaviorProfile.h"
 #include "../detection/detectors/scalar/ScalarTransientConfig.h"
+#include "../detection/inspection/InspectorTypes.h"
 #include "ParamIds.h"
 
 /*
@@ -52,6 +53,24 @@ inline void bindScalarTransientParams(ParamRegistry& registry, detection::Scalar
                        "detection.scalar_min_longest_island_ms", &sc.minLongestIslandMs, 0U, 5000U);
     registry.addUInt32(ParamId::Detection_ScalarMaxGapMs, ModuleId::Detection,
                        "detection.scalar_max_gap_ms", &sc.maxGapMs, 0U, 5000U);
+}
+
+// detection.shape_*: the BinShape module's settings (DET-015; step 11g B2, review D2.7). The window must fit the
+// BinTrack (preMs + max duration + tailMs <= BinTrack::kMs): RB plan_check prints shape_window_too_long if not.
+inline void bindShapeParams(ParamRegistry& registry, detection::ShapeInspectionConfig& shape) {
+    registry.addUInt32(ParamId::Detection_ShapePreMs, ModuleId::Detection, "detection.shape_pre_ms", &shape.preMs, 0U, 200U);
+    registry.addUInt32(ParamId::Detection_ShapeTailMs, ModuleId::Detection, "detection.shape_tail_ms", &shape.tailMs, 0U, 200U);
+    registry.addUInt16(ParamId::Detection_ShapeMaxRisingStepBins, ModuleId::Detection, "detection.shape_max_rising_step_bins",
+                       &shape.maxRisingStepBins, 1U, 4U);
+    registry.addUInt32(ParamId::Detection_ShapeMinRunMs, ModuleId::Detection, "detection.shape_min_run_ms", &shape.minRunMs, 1U, 50U);
+    registry.addUInt16(ParamId::Detection_ShapeMediumMinBins, ModuleId::Detection, "detection.shape_medium_min_bins",
+                       &shape.mediumMinBins, 1U, 16U);
+    registry.addUInt16(ParamId::Detection_ShapeMediumMinRisingSteps, ModuleId::Detection, "detection.shape_medium_min_rising_steps",
+                       &shape.mediumMinRisingSteps, 0U, 16U);
+    registry.addUInt16(ParamId::Detection_ShapeStrongMinBins, ModuleId::Detection, "detection.shape_strong_min_bins",
+                       &shape.strongMinBins, 1U, 16U);
+    registry.addUInt16(ParamId::Detection_ShapeStrongMinRisingSteps, ModuleId::Detection, "detection.shape_strong_min_rising_steps",
+                       &shape.strongMinRisingSteps, 0U, 16U);
 }
 
 // behavior.*: one param per BehaviorGateConfig field (PAR-006, step 10 item 4).

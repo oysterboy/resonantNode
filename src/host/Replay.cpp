@@ -21,6 +21,7 @@
 #include "../detection/evaluation/VerdictNames.h"
 #include "../detection/features/FreqBandStream.h"
 #include "../detection/features/FrequencyMeasurementPacketBuilder.h"
+#include "../detection/inspection/BinShape.h"
 #include "../detection/inspection/InspectionNames.h"
 
 namespace hostreplay {
@@ -270,6 +271,8 @@ const char* applyProfileSet(detection::DetectionProfile& profile, const std::str
         } else if (module.target == detection::InspectionTarget::Amp) {
             registry.addFloat(param::ParamId::Detection_AmpMedium, param::ModuleId::Detection,
                               "detection.amp_medium", medium, 0.0f, 32767.0f);
+        } else if (module.kind == detection::InspectionModuleKind::BinShape) {
+            param::bindShapeParams(registry, module.shape);
         }
     }
     const param::ParamBinding* binding = registry.find(path.c_str());
@@ -294,8 +297,11 @@ void printVerdict(const detection::OccurrenceVerdict& v) {
 
 namespace {
 
-// Strongest band bin per millisecond while the target is above the release level (0 = quiet or not in band).
-struct BinTrack {
+// The strongest band bin per millisecond over the whole capture (0 = quiet or not in band), with its target value
+// and the broadband energy for the dips. A whole-capture log, not the runtime's 512 ms BinTrack: --shape also
+// prints a capture's active stretch after the end. It is read through the same at() as BinTrack, by the same rule
+// (BinShape.h; review D2.3, 2026-10-26: this file had its own copy of the rule, and it had drifted).
+struct ReplayBinLog {
     std::vector<uint32_t> peakHz;   // per ms: the bin with the largest target value in that ms
     std::vector<float> value;       // per ms: that largest target value
     std::vector<float> energy;      // per ms: the largest total window energy (broadband)
@@ -312,24 +318,46 @@ struct BinTrack {
             peakHz[ms] = hz;
         }
     }
+
+    // BinTrack's reading: the bin and its level (a FrequencyScore16, stored as uint16 like the runtime's track).
+    bool at(uint32_t ms, uint32_t& binHz, uint16_t& level) const {
+        if (ms >= peakHz.size() || peakHz[ms] == 0) {
+            return false;
+        }
+        binHz = peakHz[ms];
+        level = static_cast<uint16_t>(std::min(value[ms], 65535.0f));
+        return true;
+    }
 };
 
-// One line per verdict: the bin runs over [start, start + duration], runs shorter than kMinRunMs folded away.
-void printShapeWindow(const char* label, unsigned long start, unsigned long end, const BinTrack& t, float activeLevel,
-                      unsigned long spacingHz);
+// The plan's shape settings (the BinShape module's), or the defaults when the plan has none.
+detection::ShapeInspectionConfig shapeConfigOf(const detection::InspectionPlan& plan) {
+    for (size_t i = 0; i < plan.count && i < detection::kMaxInspectionModules; ++i) {
+        if (plan.modules[i].kind == detection::InspectionModuleKind::BinShape) {
+            return plan.modules[i].shape;
+        }
+    }
+    return detection::ShapeInspectionConfig{};
+}
 
-void printShape(const detection::OccurrenceVerdict& v, const BinTrack& t, float activeLevel, unsigned long spacingHz) {
-    printShapeWindow(v.accepted ? "accepted" : detection::verdictRejectReasonName(v.rejectReason), v.primaryStartMs,
-                     v.primaryStartMs + v.primaryDurationMs, t, activeLevel, spacingHz);
+void printShapeWindow(const char* label, uint32_t start, uint32_t span, const ReplayBinLog& t, float minLevel,
+                      const detection::ShapeInspectionConfig& config);
+
+// One line per verdict, over the window the inspector reads: [start - preMs, start + duration + tailMs].
+void printShape(const detection::OccurrenceVerdict& v, const ReplayBinLog& t, float minLevel,
+                const detection::ShapeInspectionConfig& config) {
+    printShapeWindow(v.accepted ? "accepted" : detection::verdictRejectReasonName(v.rejectReason),
+                     static_cast<uint32_t>(v.primaryStartMs) - config.preMs,
+                     config.preMs + static_cast<uint32_t>(v.primaryDurationMs) + config.tailMs, t, minLevel, config);
 }
 
 // The whole capture's active stretch (first to last ms above the level), for a capture with no verdict.
-void printCaptureShape(const BinTrack& t, float activeLevel, unsigned long spacingHz) {
+void printCaptureShape(const ReplayBinLog& t, float minLevel, const detection::ShapeInspectionConfig& config) {
     unsigned long first = 0;
     unsigned long last = 0;
     bool any = false;
     for (unsigned long ms = 0; ms < t.peakHz.size(); ++ms) {
-        if (t.value[ms] >= activeLevel && t.peakHz[ms] != 0) {
+        if (t.value[ms] >= minLevel && t.peakHz[ms] != 0) {
             if (!any) {
                 first = ms;
             }
@@ -338,67 +366,20 @@ void printCaptureShape(const BinTrack& t, float activeLevel, unsigned long spaci
         }
     }
     if (any) {
-        printShapeWindow("capture", first, last, t, activeLevel, spacingHz);
+        printShapeWindow("capture", static_cast<uint32_t>(first), static_cast<uint32_t>(last - first), t, minLevel, config);
     }
 }
 
-void printShapeWindow(const char* label, unsigned long start, unsigned long end, const BinTrack& t, float activeLevel,
-                      unsigned long spacingHz) {
-    constexpr unsigned long kMinRunMs = 4;
-    struct Run {
-        uint32_t hz;
-        unsigned long startMs;
-        unsigned long lengthMs;
-    };
-    std::vector<Run> runs;
-    unsigned long activeMs = 0;
-    for (unsigned long ms = start; ms <= end && ms < t.peakHz.size(); ++ms) {
-        if (t.value[ms] < activeLevel || t.peakHz[ms] == 0) {
-            continue;
-        }
-        ++activeMs;
-        const uint32_t hz = t.peakHz[ms];
-        if (!runs.empty() && runs.back().hz == hz && ms - (runs.back().startMs + runs.back().lengthMs) <= 3) {
-            runs.back().lengthMs = ms - runs.back().startMs + 1;
-        } else {
-            runs.push_back({hz, ms, 1});
-        }
-    }
-    std::vector<Run> kept;
-    for (const Run& run : runs) {
-        if (run.lengthMs < kMinRunMs) {
-            continue;
-        }
-        if (!kept.empty() && kept.back().hz == run.hz) {
-            kept.back().lengthMs = run.startMs + run.lengthMs - kept.back().startMs;
-        } else {
-            kept.push_back(run);
-        }
-    }
-    unsigned distinct = 0;
-    std::vector<uint32_t> seen;
-    for (const Run& run : kept) {
-        if (std::find(seen.begin(), seen.end(), run.hz) == seen.end()) {
-            seen.push_back(run.hz);
-            ++distinct;
-        }
-    }
-    unsigned upSteps = 0;   // a run one bin above the previous one
-    unsigned otherSteps = 0;
-    for (size_t k = 1; k < kept.size(); ++k) {
-        const long d = static_cast<long>(kept[k].hz) - static_cast<long>(kept[k - 1].hz);
-        if (d == static_cast<long>(spacingHz) || d < -static_cast<long>(3 * spacingHz)) {
-            ++upSteps;  // up one bin, or the wrap from the top of the band back to the bottom (rotation)
-        } else {
-            ++otherSteps;
-        }
-    }
+void printShapeWindow(const char* label, uint32_t start, uint32_t span, const ReplayBinLog& t, float minLevel,
+                      const detection::ShapeInspectionConfig& config) {
+    const detection::BinShapeMeasure m = detection::measureBinShape(t, start, span, minLevel, config);
+    const detection::BinRun* kept = m.runs;
     // The dip at each bin change: the lowest target value from the end of one run to the start of the next,
     // as a share of the smaller of the two runs' peaks. A hop train's gaps dip even when the room fills them;
-    // a sweep glides from bin to bin without one.
+    // a sweep glides from bin to bin without one. Replay-only facts (E002), not part of the rule.
     std::vector<int> dips;
     std::vector<int> edips;
-    for (size_t k = 1; k < kept.size(); ++k) {
+    for (size_t k = 1; k < m.runCount; ++k) {
         float peakA = 0.0f;
         float peakB = 0.0f;
         for (unsigned long ms = kept[k - 1].startMs; ms < kept[k - 1].startMs + kept[k - 1].lengthMs && ms < t.value.size(); ++ms) {
@@ -431,8 +412,11 @@ void printShapeWindow(const char* label, unsigned long start, unsigned long end,
         const float eRef = std::min(eA, eB);
         edips.push_back(eRef > 0.0f ? static_cast<int>(100.0f * eLow / eRef + 0.5f) : -1);
     }
-    printf("    shape %s start_ms=%lu dur_ms=%lu active_ms=%lu runs=%zu distinct=%u up_steps=%u other_steps=%u dips_pct=",
-           label, start, end - start, activeMs, kept.size(), distinct, upSteps, otherSteps);
+    printf("    shape %s start_ms=%lu dur_ms=%lu active_ms=%lu runs=%zu distinct=%u up_steps=%u other_steps=%u class=%s dips_pct=",
+           label, static_cast<unsigned long>(start), static_cast<unsigned long>(span),
+           static_cast<unsigned long>(m.activeMs), m.runCount, static_cast<unsigned>(m.shape.distinctBins),
+           static_cast<unsigned>(m.shape.risingSteps), static_cast<unsigned>(m.shape.otherSteps),
+           detection::strengthClassName(m.shape.shapeClass));
     for (size_t k = 0; k < dips.size(); ++k) {
         printf("%s%d", k > 0 ? "," : "", dips[k]);
     }
@@ -441,10 +425,10 @@ void printShapeWindow(const char* label, unsigned long start, unsigned long end,
         printf("%s%d", k > 0 ? "," : "", edips[k]);
     }
     printf(" seq=");
-    for (size_t k = 0; k < kept.size(); ++k) {
-        printf("%s%ux%lu", k > 0 ? "," : "", static_cast<unsigned>(kept[k].hz), kept[k].lengthMs);
-        if (k + 1 < kept.size()) {
-            printf("+%lu", kept[k + 1].startMs - (kept[k].startMs + kept[k].lengthMs));
+    for (size_t k = 0; k < m.runCount; ++k) {
+        printf("%s%ux%lu", k > 0 ? "," : "", static_cast<unsigned>(kept[k].hz), static_cast<unsigned long>(kept[k].lengthMs));
+        if (k + 1 < m.runCount) {
+            printf("+%lu", static_cast<unsigned long>(kept[k + 1].startMs - (kept[k].startMs + kept[k].lengthMs)));
         }
     }
     printf("\n");
@@ -454,7 +438,7 @@ void printShapeWindow(const char* label, unsigned long start, unsigned long end,
 
 Result replay(const Capture& cap, const Options& opt, const detection::DetectionProfile& profile) {
     Result r;
-    BinTrack track;
+    ReplayBinLog track;
     VectorAudioSource source(cap.pcm, cap.sampleRateHz);
     AudioSignal audioSignal(source);
     FreqBandStream band;
@@ -579,10 +563,10 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     }
     r.samples = cap.pcm.size();
     for (const auto& v : pendingShape) {
-        printShape(v, track, profile.scalarTransient.onsetReleaseThreshold, static_cast<unsigned long>(band.bandSpacingHz() + 0.5f));
+        printShape(v, track, profile.scalarTransient.onsetReleaseThreshold, shapeConfigOf(profile.inspectionPlan));
     }
     if (opt.shape && pendingShape.empty()) {
-        printCaptureShape(track, profile.scalarTransient.onsetReleaseThreshold, static_cast<unsigned long>(band.bandSpacingHz() + 0.5f));
+        printCaptureShape(track, profile.scalarTransient.onsetReleaseThreshold, shapeConfigOf(profile.inspectionPlan));
     }
     if (r.ampCompared > 0) {
         r.ampMeanAbsDiff = ampDiffSum / static_cast<double>(r.ampCompared);

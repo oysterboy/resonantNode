@@ -73,6 +73,7 @@ void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
 void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& config) {
     _scalarTransientConfig = config;
     _scalarDetector.setConfig(_scalarTransientConfig);
+    _occurrenceInspector.setShapeMinLevel(_scalarTransientConfig.onsetReleaseThreshold);
 }
 
 void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
@@ -93,6 +94,7 @@ void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _inspectionPlan = plan;
     _occurrenceInspector.configure(_inspectionPlan);
     _occurrenceInspector.setBinTrack(&_binTrack);
+    _occurrenceInspector.setShapeMinLevel(_scalarTransientConfig.onsetReleaseThreshold);
 
     FeatureStreamId streams[kMaxInspectionModules] = {};
     size_t streamCount = 0;

@@ -184,7 +184,7 @@ private:
     void startEmission(unsigned long now, bool sawPatternThisLoop, bool selfChirpSuppressed);  // step 10 item 9
     void updateEmissions(unsigned long now);                                                     // step 10 item 9
     void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset (step 10 item 2)
-    void loadInspectionLimitsFromProfile();  // detection.contrast_medium / amp_medium from the plan (item 7)
+    void loadInspectionLimitsFromProfile();  // detection.contrast_medium / amp_medium / shape_* from the plan
 
     // Hardware wiring.
     int _ledPin;
@@ -265,6 +265,7 @@ private:
     BehaviorGateConfig _activeBehaviorProfile = {};  // the behavior.* params bind into it (step 10 item 4)
     float _contrastMediumThreshold = 0.0f;  // detection.contrast_medium (step 10 item 7)
     float _ampMediumThreshold = 0.0f;       // detection.amp_medium
+    detection::ShapeInspectionConfig _shapeConfig = {};  // detection.shape_* (step 11g B2)
     // When the last own chirp stopped; SELFTEST Settle waits out its echo.
     unsigned long _lastOwnChirpEndMs = 0;
     unsigned long _rbLastWouldEmitHeardMs = 0;

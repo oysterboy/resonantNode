@@ -140,19 +140,18 @@ struct MagnitudeFeatureInspectionConfig {
     size_t minSustainedCount = 0;
 };
 
-// DET-015 (decisions/2026-10-26-det015-bin-track-inspector.md): the bin runs over [start, start + duration +
-// tailMs] with the target at or above minLevel; runs shorter than minRunMs are folded away. The class: Strong
+// DET-015 (decisions/2026-10-26-det015-bin-track-inspector.md): the bin runs over [start - preMs, start + duration
+// + tailMs] with the target at or above the detector's release threshold (OccurrenceInspector::setShapeMinLevel); runs shorter than minRunMs are folded away. The class: Strong
 // from strongMin* bins / steps up, Medium from mediumMin*, Weak from 2 bins, None for one bin.
 struct ShapeInspectionConfig {
     uint32_t preMs = 0;   // look back before the start: a train the detector split keeps its first steps here
     uint32_t tailMs = 0;
-    uint8_t maxRisingStepBins = 1;  // a step up by up to this many bins counts as rising (2: one bin missing)
-    float minLevel = 0.0f;
+    uint16_t maxRisingStepBins = 1;  // a step up by up to this many bins counts as rising (2: one bin missing)
     uint32_t minRunMs = 4;
-    uint8_t mediumMinBins = 3;
-    uint8_t mediumMinRisingSteps = 2;
-    uint8_t strongMinBins = 4;
-    uint8_t strongMinRisingSteps = 3;
+    uint16_t mediumMinBins = 3;
+    uint16_t mediumMinRisingSteps = 2;
+    uint16_t strongMinBins = 4;
+    uint16_t strongMinRisingSteps = 3;
 };
 
 struct InspectionModuleConfig {

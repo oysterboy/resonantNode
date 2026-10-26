@@ -84,6 +84,8 @@ the current values. The groups, registered in `src/modes/resonant/ResonantNodePa
 ```text
 detection.scalar_*        ScalarTransientDetector thresholds and timing (13 params)
 detection.band_low_hz / band_high_hz / amp_medium / contrast_medium
+detection.shape_*         the shape inspector (DET-015): look-back, tail, run and step limits (8 params;
+                          its level is detection.scalar_release_threshold)
 behavior.*                wait, refractory, self-suppression, idle call, rest (13 params)
 output.*                  hop train, idle announce, silent (8 params)
 node.radio_enabled        ESP-NOW on or off
@@ -260,6 +262,7 @@ Older docs name the first two `patternAccepted` and `patternMatched`; same gates
 detector thresholds, timing       PARAM SET detection.scalar_* (live)   defaults: DetectionProfile.h
 listening band                    PARAM SET detection.band_*             defaults: RuntimeDefaults.h (kDefaultNetworkBand*)
 inspector medium limits           PARAM SET detection.amp_medium | contrast_medium
+shape rule (hop train only)       PARAM SET detection.shape_*            defaults: DetectionProfile.h (module 2)
 answer timing, idle, rest         PARAM SET behavior.*                   defaults: BehaviorProfile.h
 hop train, idle announce, silent  PARAM SET output.*                     defaults: RuntimeDefaults.h, NodeRoster.h
 radio                             PARAM SET node.radio_enabled

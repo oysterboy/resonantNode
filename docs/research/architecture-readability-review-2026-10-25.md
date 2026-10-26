@@ -633,6 +633,9 @@ string before it was written down.
    and the spec. Related: `startEmission` books a rejected request as an emission before it checks `started`
    (`:791-801`: Behavior counts it toward the own-emit budget, `_rbChirpStartedCount++`, the self-test opens a
    chirp window that never closes) and prints "RB emit rejected" twice.
+   -> done 2026-10-26 (11g B2): `hop_pulse_ms` / `hop_gap_ms` 1-250 / 0-250, so 8 steps (3,750 ms) and the longest idle
+   call (5,950 ms) fit 6,000; the sentence stays, now true. A start that fails books nothing (no budget, count or
+   self-test window); the second line reads `fallback=none`.
 
 3. **The radio sequence filter drops one real command per gateway reboot (medium).** `NodeNet::_nextSeq`
    starts at 1 on every boot (`NodeNet.h:80`, `.cpp:134-137`); receivers remember the last seq per sender MAC
@@ -662,6 +665,8 @@ string before it was written down.
    counts bins at 1500 (and the reverse for a lower release): the two stages disagree on which milliseconds are
    the occurrence. Fix: derive the level from `_scalarTransientConfig.onsetReleaseThreshold` in
    `setInspectionPlan` / `annotateShape` instead of storing a copy.
+   -> done 2026-10-26 (11g B2): `minLevel` left the plan; DetectionRuntime hands the inspector the release threshold
+   on every config or plan change (`setShapeMinLevel`); `test_shape_level_follows_the_release_threshold`.
 
 6. **The Amp inspector overwrites detector facts with window statistics from another domain (medium).**
    `OccurrenceInspector.cpp:251-258` writes `magnitude.value / strength = classificationValue` (the window P75),
@@ -724,6 +729,10 @@ string before it was written down.
    builds E002's tables from it. A second `struct BinTrack` (`Replay.cpp:298`) shares the runtime class's name.
    Fix: one run / step function over a bin source, used by the inspector and printed by the replay from the
    verdict path.
+   -> done 2026-10-26 (11g B2): `detection/inspection/BinShape.h` (`measureBinShape` over any source with BinTrack's
+   `at()`); the replay's log is `ReplayBinLog`, `--shape` prints the inspector's window (with `preMs` / `tailMs`) and
+   the class. shapesurvey after it: the split variants read 5 bins as the verdicts did; one noise verdict reads
+   3 bins / 3 up (Medium) and is rejected by the other gates.
 
 4. **The Node's `Boot` baseline state and the mic warmup never run (medium; ask before touching).**
    `Node::begin()` calls `_audioSignal.begin(false)` (`ResonantNodeApp.cpp:265`; `doRebase = false` skips the 2 s
@@ -761,6 +770,8 @@ string before it was written down.
    has no `bind*` in `ParamBindings.h`; `DetectionProfile.h:169` calls `tailMs` "a tuning question for the
    board", which today means a reflash per value. Fix: `bindShapeParams` (`detection.shape_*`), applied through
    `setInspectionPlan` (threshold-only, history kept); D1.5 falls out of it.
+   -> done 2026-10-26 (11g B2): `param::bindShapeParams`, eight `detection.shape_*` (Node and replay; the Analyzer's
+   SEQ tuning does not bind them yet, with A8); counts widened to uint16; `kMaxParams` 48 -> 64 (47 used).
 
 8. **Analyzer presentation lives in detection/ and the detector prints (medium-low).**
    `DetectorReportPrinter.cpp:12-149` and `ScalarTransientPrinter.cpp:9-94` render `SEQ_SOURCE_CORE` /

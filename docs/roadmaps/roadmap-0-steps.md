@@ -1180,6 +1180,10 @@ the previous gate open unless the step says it can run in parallel.
       RB debug dropped (decisions/2026-10-26-drop-rb-debug.md), D2.9 Behavior's busy mirror, D2.10 one line bound,
       D1.8 SELFTEST value parsing. Gate: Node smoke and SELFTEST on the bench, boot timing recorded.
    Small ones (D1.9, D2.11) go with whichever batch touches their files.
+   Progress 2026-10-26 (host gate each: every env, host suites, T2h byte-identical, replay Null == diag): A done
+   (64535d3 tests, 074c401 docs; left: the pcm RAW_BEGIN fields line, stale pointers in platformio.ini /
+   selftest.py / test/README / three header comments, D4.3's ESP-only parts); B1 done (1f7114d); B2 done on the
+   host (this commit), bench smoke after the 11c soak. Nothing flashed: the soak runs on 5fcd3fc.
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here

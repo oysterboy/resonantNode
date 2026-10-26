@@ -57,8 +57,10 @@ struct OutputRequest {
     unsigned long announceGapMs = 0;
 };
 
-// What the device can play: the I2S tone runs at 16 kHz (Nyquist 8 kHz), the
-// output.* params are bound inside these, so a reject means a composition bug.
+// What the device can play: the I2S tone runs at 16 kHz (Nyquist 8 kHz). The
+// output.* params are bound so that every train and idle call the Node composes
+// fits (ResonantNodeParams.cpp, review D1.2), so a reject means a composition bug;
+// RB emit rejected ... fallback= on the Node says so if it happens.
 struct OutputLimits {
     uint32_t minHz = 100;
     uint32_t maxHz = runtime::kMaxToneHz;

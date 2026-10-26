@@ -19,6 +19,10 @@ public:
     void configure(const InspectionPlan& plan);
     // The bin track the BinShape module reads (DET-015); owned by DetectionRuntime. nullptr: no shape.
     void setBinTrack(const BinTrack* track) { _binTrack = track; }
+    // The level a bin must reach to count for the shape: the detector's release threshold, set by
+    // DetectionRuntime whenever the scalar config or the plan changes, so a live PARAM SET of
+    // detection.scalar_release_threshold moves both stages together (review D1.5, 2026-10-26).
+    void setShapeMinLevel(float level) { _shapeMinLevel = level; }
 
     // Annotates an accepted occurrence with the plan's evidence from the
     // history; an absent or invalid occurrence comes back Rejected.
@@ -53,6 +57,7 @@ private:
     void annotateShape(InspectedOccurrence& out, const Occurrence& occurrence, const ShapeInspectionConfig& config) const;
     InspectionPlan _inspectionPlan = {};
     const BinTrack* _binTrack = nullptr;
+    float _shapeMinLevel = 0.0f;
 };
 
 } // namespace detection

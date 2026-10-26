@@ -790,16 +790,19 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
         serialOut().print(request.announceGapMs);
         serialOut().println(request.hopSteps > 0 ? " then=hop" : " then=chirp");
     }
-    _behavior.notifyChirpStarted(now, emitSpanMs);
-    ++_rbChirpStartedCount;
     if (!started) {
-        // Nothing sounds: end the emission at once so Behavior does not wait in Chirping.
+        // Nothing sounds: end the emission at once so Behavior does not wait in Chirping, and book nothing (no own-emit
+        // budget, no started count, no self-test window that would never close; review D1.2, 2026-10-26).
         serialOut().print("RB emit rejected reason=");
-        serialOut().println(outputRejectName(_soundOutput.status().lastReject));
+        serialOut().print(outputRejectName(_soundOutput.status().lastReject));
+        serialOut().println(" fallback=none");
         const unsigned long finishedMs = timebase::nowMs();
         _lastOwnChirpEndMs = finishedMs;
         _behavior.notifyChirpFinished(finishedMs);
+        return;
     }
+    _behavior.notifyChirpStarted(now, emitSpanMs);
+    ++_rbChirpStartedCount;
     selfTestNoteChirpStarted(now, sourceName);
 }
 

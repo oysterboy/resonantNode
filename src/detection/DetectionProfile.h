@@ -173,9 +173,8 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     // every single-null variant passes again; no recorded capture changes (E002, step 11b).
     profile.inspectionPlan.modules[2].shape.preMs = 120;
     profile.inspectionPlan.modules[2].shape.maxRisingStepBins = 2;
-    // The level a bin must reach to count: the release threshold, copied here (a live PARAM SET of
-    // detection.scalar_release_threshold does not move it).
-    profile.inspectionPlan.modules[2].shape.minLevel = profile.scalarTransient.onsetReleaseThreshold;
+    // The level a bin must reach to count is the detector's release threshold, read live by the runtime (not a
+    // field of the plan: review D1.5).
     profile.inspectionPlan.count = 3; // contrast, amp, shape.
 
 

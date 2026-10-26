@@ -105,6 +105,16 @@ enum class ParamId : uint16_t {
     // The radio for remote params (PAR-013, step 11a): on by default, read at
     // boot only (PARAM SET + SAVE, then a reboot, turns it off).
     Node_RadioEnabled,
+    // The shape inspector's settings, live (step 11g B2, review D2.7; DET-015). Applied to the plan's BinShape
+    // module. Its level is the scalar release threshold, not a param of its own (review D1.5).
+    Detection_ShapePreMs,
+    Detection_ShapeTailMs,
+    Detection_ShapeMaxRisingStepBins,
+    Detection_ShapeMinRunMs,
+    Detection_ShapeMediumMinBins,
+    Detection_ShapeMediumMinRisingSteps,
+    Detection_ShapeStrongMinBins,
+    Detection_ShapeStrongMinRisingSteps,
 };
 
 }  // namespace param

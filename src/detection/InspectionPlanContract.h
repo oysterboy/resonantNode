@@ -2,6 +2,7 @@
 
 #include "DetectionProfile.h"
 #include "features/FeatureHistory.h"
+#include "features/BinTrack.h"
 
 /*
 InspectionPlanContract (step 8b item 2; audit 3.1, 3.7; #32 P4)
@@ -33,9 +34,10 @@ struct InspectionPlanCheck {
     // minimum-duration occurrence (0 when every window is complete).
     unsigned long earlyWindowMs = 0;
     bool historyFits = true;
+    bool shapeFits = true;  // DET-015: the BinShape window fits BinTrack
     bool windowCompleteAtRelease = true;
 
-    bool hardOk() const { return historyFits; }
+    bool hardOk() const { return historyFits && shapeFits; }
     bool softOk() const { return windowCompleteAtRelease; }
 };
 
@@ -48,6 +50,14 @@ inline InspectionPlanCheck checkInspectionPlan(const ScalarTransientConfig& scal
     const size_t count = plan.count > kMaxInspectionModules ? kMaxInspectionModules : plan.count;
     for (size_t i = 0; i < count; ++i) {
         const InspectionModuleConfig& module = plan.modules[i];
+        if (module.kind == InspectionModuleKind::BinShape) {
+            // DET-015: the shape window (look-back + the longest occurrence + margin) must fit the bin track.
+            const unsigned long shapeNeeded = module.shape.preMs + scalar.maxTransientDurationMs + module.shape.tailMs;
+            if (shapeNeeded > BinTrack::kMs) {
+                c.shapeFits = false;
+            }
+            continue;
+        }
         if (module.kind != InspectionModuleKind::MagnitudeFeatureStrength) {
             continue;
         }

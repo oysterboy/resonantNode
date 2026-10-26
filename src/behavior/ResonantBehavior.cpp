@@ -373,7 +373,10 @@ void ResonantBehavior::extendBehaviorSuppress(unsigned long suppressUntilMs) {
 }
 
 ResonantBehavior::SignalShape ResonantBehavior::signalShape() const {
-    return (_chirpRequestSource == ChirpRequestSource::HeardPattern || _chirpRequestSource == ChirpRequestSource::Call)
+    // The self-test's chirps are the network signal too: with hop-train-only detection (DET-015) another node's
+    // SELFTEST external would not hear a plain chirp.
+    return (_chirpRequestSource == ChirpRequestSource::HeardPattern || _chirpRequestSource == ChirpRequestSource::Call ||
+            _chirpRequestSource == ChirpRequestSource::SelfTest)
         ? SignalShape::NetworkSignal : SignalShape::Chirp;
 }
 

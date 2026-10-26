@@ -178,11 +178,11 @@ void test_chirp_is_accepted_once_on_the_single_target() {
     TEST_ASSERT_TRUE(r.first.primaryDurationMs >= 85 && r.first.primaryDurationMs <= 300);
 }
 
-// Band mode: the on-bin 3,200 Hz chirp is accepted.
-void test_on_bin_tone_is_accepted_in_band_mode() {
+// Band mode: the on-bin 3,200 Hz chirp is rejected by shape (one bin; DET-015, until 2026-10-26 accepted).
+void test_on_bin_tone_is_rejected_by_shape_in_band_mode() {
     const Outcome r = replay(FIXTURE(Chirp), kNetworkBand);
-    TEST_ASSERT_EQUAL_UINT32(1, r.accepted);
-    TEST_ASSERT_EQUAL_UINT32(0, r.rejected);
+    TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
+    TEST_ASSERT_EQUAL_UINT32(1, r.rejected);
 }
 
 // Band mode: the off-bin 3,300 Hz tone fails the contrast gate, the hard threshold on a P75
@@ -283,7 +283,7 @@ void test_every_reject_counts_only_a_new_best_makes_an_event() {
 int runTests() {
     UNITY_BEGIN();
     RUN_TEST(test_chirp_is_accepted_once_on_the_single_target);
-    RUN_TEST(test_on_bin_tone_is_accepted_in_band_mode);
+    RUN_TEST(test_on_bin_tone_is_rejected_by_shape_in_band_mode);
     RUN_TEST(test_off_bin_tone_fails_the_contrast_gate_in_band_mode);
     RUN_TEST(test_hop_train_is_accepted_once_in_band_mode);
     RUN_TEST(test_hop_train_is_not_heard_on_the_single_target);

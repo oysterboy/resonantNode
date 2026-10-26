@@ -225,7 +225,9 @@ rendered by `makeVerdict()` at the end of inspection (`src/detection/inspection/
 ```text
 accepted          the detector emitted an accepted Occurrence
 proposalMatched   the inspected occurrence met the plan's requirements
-supportMatched    the support requirement passed
+supportMatched    the support requirements passed (the shipped plan: contrast, amp, and since
+                  2026-10-26 shape: >= 3 band bins with 2 steps up, so a plain chirp is rejected;
+                  modules[] in makeTonalPulseScalarProfile(), src/detection/DetectionProfile.h)
 valid             the verdict is a usable pattern result
 behaviorEligible  ResonantBehavior lets it trigger a reaction now
 ```

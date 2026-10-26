@@ -142,14 +142,17 @@ void test_chirp_is_accepted_once_on_the_single_target() {
     TEST_ASSERT_TRUE(r.verdicts.front().primaryDurationMs >= 85 && r.verdicts.front().primaryDurationMs <= 300);
 }
 
-// Band mode: the on-bin 3,200 Hz chirp is accepted.
-void test_on_bin_tone_is_accepted_in_band_mode() {
+// Band mode: the on-bin 3,200 Hz chirp passes contrast and amp and is rejected by shape: one bin, a steady
+// tone, not the hop train (DET-015, decisions/2026-10-26-det015-bin-track-inspector.md; until 2026-10-26 it
+// was accepted).
+void test_on_bin_tone_is_rejected_by_shape_in_band_mode() {
     hostreplay::Capture cap;
     TEST_ASSERT_TRUE(hostreplay::loadCapture(kChirpCsv, cap));
     const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
     const hostreplay::Result r = hostreplay::replay(cap, networkBand(), profile);
-    TEST_ASSERT_EQUAL_UINT32(1, r.accepted);
-    TEST_ASSERT_EQUAL_UINT32(0, r.rejected);
+    TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
+    TEST_ASSERT_EQUAL_UINT32(1, r.rejected);
+    TEST_ASSERT_EQUAL(detection::InspectionTarget::Shape, r.verdicts.front().firstFailedRequirementTarget);
 }
 
 // Band mode: the off-bin 3,300 Hz tone fails the contrast gate (support_too_low on contrast).
@@ -197,7 +200,8 @@ void test_host_frequency_path_matches_the_board_on_the_band() {
         hostreplay::Options opt = networkBand();
         opt.compare = true;
         const hostreplay::Result r = hostreplay::replay(cap, opt, profile);
-        TEST_ASSERT_EQUAL_UINT32_MESSAGE(1, r.accepted, f);
+        // one occurrence each; the chirp is then rejected by shape (DET-015), which this test does not judge
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(1, r.accepted + r.rejected, f);
         TEST_ASSERT_TRUE_MESSAGE(r.freqCompared > 900, f);
         TEST_ASSERT_TRUE_MESSAGE(r.freqMaxAbsDiff <= 2.0, "max |host - board| target FrequencyScore16");
         TEST_ASSERT_TRUE_MESSAGE(r.contrastMaxRelDiff <= 0.02, "max relative contrast difference (|board| >= 1000)");
@@ -457,7 +461,7 @@ int main(int, char**) {
     RUN_TEST(test_wav_loads_the_capture);
     RUN_TEST(test_csv_and_wav_hold_the_same_samples);
     RUN_TEST(test_chirp_is_accepted_once_on_the_single_target);
-    RUN_TEST(test_on_bin_tone_is_accepted_in_band_mode);
+    RUN_TEST(test_on_bin_tone_is_rejected_by_shape_in_band_mode);
     RUN_TEST(test_off_bin_tone_fails_the_contrast_gate_in_band_mode);
     RUN_TEST(test_host_amp_feature_matches_the_board);
     RUN_TEST(test_profile_override_reaches_the_inspector);

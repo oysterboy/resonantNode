@@ -157,7 +157,26 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 5000.0f; // Strong amplitude threshold.
     profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = SCALAR_AMP_MEDIUM_THRESHOLD; // Medium amplitude limit, SCALAR_AMP_MEDIUM_THRESHOLD above; live as detection.amp_medium.
     profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1000.0f; // Weak amplitude threshold.
-    profile.inspectionPlan.count = 2; // This profile uses two inspectors.
+
+    // Third: shape (DET-015, decisions/2026-10-26-det015-bin-track-inspector.md, E002). The Node hears the hop
+    // train only (decisions/2026-10-23-node-hears-the-hop-train-only.md): at least 3 distinct band bins with 2
+    // steps up over the occurrence. A steady tone (plain chirp, beep) is one bin and is rejected; a train cut to
+    // three steps still passes. Band mode only: with no band bins the module is not applicable and passes.
+    profile.inspectionPlan.modules[2].kind = InspectionModuleKind::BinShape;
+    profile.inspectionPlan.modules[2].target = InspectionTarget::Shape;
+    profile.inspectionPlan.modules[2].enabled = true;
+    profile.inspectionPlan.modules[2].minimumStrength = StrengthClass::Medium;
+    profile.inspectionPlan.modules[2].shape.tailMs = 0;  // margin after the release; a tuning question for the board
+    // A deep null in the middle of a train splits it at the detector: the first steps fall under the minimum
+    // duration and only the rest is an occurrence (the 5h notch sweep, null at 3450). The track still holds the
+    // first part, so the inspector looks back 120 ms, and a step over one missing bin counts as rising. With these
+    // every single-null variant passes again; no recorded capture changes (E002, step 11b).
+    profile.inspectionPlan.modules[2].shape.preMs = 120;
+    profile.inspectionPlan.modules[2].shape.maxRisingStepBins = 2;
+    // The level a bin must reach to count: the release threshold, copied here (a live PARAM SET of
+    // detection.scalar_release_threshold does not move it).
+    profile.inspectionPlan.modules[2].shape.minLevel = profile.scalarTransient.onsetReleaseThreshold;
+    profile.inspectionPlan.count = 3; // contrast, amp, shape.
 
 
     // Field-state windowing.

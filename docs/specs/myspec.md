@@ -753,16 +753,18 @@ Current intended shape:
 ```text
 Occurrence
 + FeatureHistory / ScalarWindow
++ BinTrack (the strongest band bin per ms)
 + InspectionPlan
 → InspectedOccurrence
 ```
 
 `OccurrenceInspector` coordinates an ordered `InspectionPlan`.
 
-Current inspection module concept:
+Current inspection module concepts:
 
 ```text
-ScalarFeatureStrength
+MagnitudeFeatureStrength   a window of one FeatureHistory stream, summarised and classed
+BinShape                   the band bins the occurrence visited, in order (DET-015)
 ```
 
 Current evidence targets may include:
@@ -772,7 +774,12 @@ SupportStrength
 FrequencyScoreStrength
 FrequencyContrastQuality
 TargetBandStrength
+Shape                      distinct bins and rising steps, classed None / Weak / Medium / Strong
 ```
+
+Shape exists only in band mode: when the track has no band bins over the window, the shape evidence is
+"not applicable", and `makeVerdict()` skips a shape requirement instead of failing it. The bin track is
+written by `DetectionRuntime` from the frequency packet, like `FeatureHistory`, and read only by inspection.
 
 Inspectors produce evidence.
 

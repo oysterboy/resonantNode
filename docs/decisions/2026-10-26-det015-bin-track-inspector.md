@@ -1,6 +1,6 @@
 # DET-015: a bin track read by a shape inspector; an in-band sweep counts as a network signal
 
-Status: decided (owner 2026-10-26), not yet implemented (step 11b).
+Status: decided (owner 2026-10-26), implemented on the host 2026-10-26 (step 11b); bench pending.
 Date: 2026-10-26.
 
 ## Decision
@@ -13,6 +13,13 @@ Date: 2026-10-26.
   is a requirement on those facts in the shipped plan: at least 3 distinct bins with at least 2 steps up. It
   applies in band mode only (a single-target setup has one bin and no shape).
 - An in-band sweep at the hop train's rate passes as a network signal. No node emits sweeps today.
+- Two settings found while building (no recorded capture changes with them): the inspector looks back 120 ms
+  before the occurrence (`preMs`), and a step up over one missing bin counts as rising (`maxRisingStepBins` 2). A
+  deep null in the middle of a train splits it at the detector, the first steps fall under the minimum duration,
+  and only the rest is an occurrence; without these the 5h single-null variant at 3450 Hz (accepted before)
+  failed the shape rule. With them every single-null variant passes again.
+- The self-test's chirps are the network signal too (Behavior's SignalShape), or another node's SELFTEST
+  external would not hear them.
 
 ## Why
 

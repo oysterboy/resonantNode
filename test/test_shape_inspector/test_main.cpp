@@ -176,6 +176,50 @@ void test_track_forgets_what_left_the_ring() {
     TEST_ASSERT_FALSE(track.at(11, hz, level));  // cleared on the way
 }
 
+InspectionPlan shippedShapePlan() {
+    InspectionPlan plan = shapePlan();
+    plan.modules[0].shape.preMs = 120;
+    plan.modules[0].shape.maxRisingStepBins = 2;
+    return plan;
+}
+
+// A deep null at 3450 splits the train at the detector: the occurrence is only 3700, 3950 (the 5h notch case).
+// Looking back 120 ms finds 2950, 3200 in the track, and the step over the missing bin counts as rising.
+void test_train_split_by_a_middle_null_passes_with_the_look_back() {
+    BinTrack track;
+    const uint32_t nulled[4] = {2950, 3200, 3700, 3950};
+    unsigned long t = 100;
+    for (int s = 0; s < 2; ++s) {  // steps 1-2, then the null step's 35 ms of nothing
+        for (int k = 0; k < 25; ++k) track.note(t++, nulled[s], 9000);
+        for (int k = 0; k < 10; ++k) track.note(t++, 0, 0);
+    }
+    for (int k = 0; k < 35; ++k) track.note(t++, 0, 0);
+    const unsigned long occStart = t;
+    for (int s = 2; s < 4; ++s) {
+        for (int k = 0; k < 25; ++k) track.note(t++, nulled[s], 9000);
+        for (int k = 0; k < 10; ++k) track.note(t++, 0, 0);
+    }
+    for (int k = 0; k < 20; ++k) track.note(t++, 0, 0);
+    const Occurrence occ = occurrence(occStart, 60);
+    TEST_ASSERT_EQUAL(StrengthClass::Weak, inspect(track, shapePlan(), occ).occurrence.shape.shapeClass);
+    const InspectedOccurrence in = inspect(track, shippedShapePlan(), occ);
+    TEST_ASSERT_EQUAL_UINT8(4, in.occurrence.shape.distinctBins);
+    TEST_ASSERT_EQUAL_UINT8(3, in.occurrence.shape.risingSteps);
+    TEST_ASSERT_TRUE(in.occurrence.shape.shapeClass >= StrengthClass::Medium);
+}
+
+// The shipped settings still keep random jumps and a steady tone out.
+void test_shipped_settings_still_reject_jumps_and_steady_tones() {
+    BinTrack track;
+    const uint32_t jumps[5] = {3700, 2950, 3450, 3200, 3950};
+    playSteps(track, 300, jumps, 5, 25, 10);
+    TEST_ASSERT_TRUE(inspect(track, shippedShapePlan(), occurrence(300, 165)).occurrence.shape.shapeClass < StrengthClass::Medium);
+    BinTrack steady;
+    const uint32_t tone[1] = {3200};
+    playSteps(steady, 300, tone, 1, 130, 0);
+    TEST_ASSERT_EQUAL(StrengthClass::None, inspect(steady, shippedShapePlan(), occurrence(300, 130)).occurrence.shape.shapeClass);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_steady_tone_is_one_bin_and_fails_the_requirement);
@@ -186,5 +230,7 @@ int main(int, char**) {
     RUN_TEST(test_flicker_shorter_than_a_run_is_folded_away);
     RUN_TEST(test_single_target_mode_is_not_applicable_and_passes);
     RUN_TEST(test_track_forgets_what_left_the_ring);
+    RUN_TEST(test_train_split_by_a_middle_null_passes_with_the_look_back);
+    RUN_TEST(test_shipped_settings_still_reject_jumps_and_steady_tones);
     return UNITY_END();
 }

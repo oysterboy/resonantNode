@@ -134,7 +134,7 @@ public:
     ChirpPattern chirpPattern() const;
     // What the requested emission is for (BEH-005): the network signal (a
     // response to a heard pattern, played as the node's hop train inside
-    // the shared band) or a plain chirp (idle voice, self-test). Behavior
+    // the shared band; also the self-test's chirps since DET-015) or a plain chirp (idle voice). Behavior
     // decides the kind; the Node wires the shape, SoundOutput performs it.
     enum class SignalShape {
         Chirp,

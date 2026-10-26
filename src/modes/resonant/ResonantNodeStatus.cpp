@@ -292,9 +292,21 @@ void Node::printInspectionPlanCheck() {
         serialOut().println("none");
         return;
     }
-    serialOut().print(!c.historyFits ? "history_too_short" : "");
-    serialOut().print(!c.historyFits && !c.windowCompleteAtRelease ? "," : "");
-    serialOut().println(!c.windowCompleteAtRelease ? "window_after_inspection" : "");
+    const char* sep = "";
+    if (!c.historyFits) {
+        serialOut().print("history_too_short");
+        sep = ",";
+    }
+    if (!c.shapeFits) {
+        serialOut().print(sep);
+        serialOut().print("shape_window_too_long");
+        sep = ",";
+    }
+    if (!c.windowCompleteAtRelease) {
+        serialOut().print(sep);
+        serialOut().print("window_after_inspection");
+    }
+    serialOut().println();
 }
 
 void Node::printRbSummary() const {

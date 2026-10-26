@@ -314,7 +314,7 @@ void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurren
     };
     Run raw[kMaxRuns * 2];
     size_t rawCount = 0;
-    const unsigned long start = occurrence.startMs;
+    const unsigned long start = occurrence.startMs > config.preMs ? occurrence.startMs - config.preMs : 0UL;
     const unsigned long end = occurrence.startMs + occurrence.durationMs + config.tailMs;
     for (unsigned long ms = start; ms <= end; ++ms) {
         uint32_t hz = 0;
@@ -354,7 +354,9 @@ void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurren
         }
         if (i > 0) {
             const long d = static_cast<long>(kept[i].hz) - static_cast<long>(kept[i - 1].hz);
-            if (d == static_cast<long>(kBinSpacingHz) || d < -static_cast<long>(3 * kBinSpacingHz)) {
+            const bool up = d > 0 && d <= static_cast<long>(config.maxRisingStepBins * kBinSpacingHz) &&
+                            d % static_cast<long>(kBinSpacingHz) == 0;
+            if (up || d < -static_cast<long>(3 * kBinSpacingHz)) {
                 ++shape.risingSteps;
             } else {
                 ++shape.otherSteps;

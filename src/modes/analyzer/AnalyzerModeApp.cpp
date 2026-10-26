@@ -124,8 +124,6 @@ static void printRuntimeSize() {
     serialOut().println(static_cast<unsigned long>(sizeof(detection::OccurrenceVerdict)));
     serialOut().print("SIZE AudioSignal=");
     serialOut().println(static_cast<unsigned long>(sizeof(AudioSignal)));
-    serialOut().print("  SIZE RawSampleHistory=");
-    serialOut().println(static_cast<unsigned long>(sizeof(RawSampleHistory)));
     serialOut().print("SIZE AnalyzerApp::SequenceTest=");
     serialOut().println(static_cast<unsigned long>(AnalyzerApp::debugSequenceTestSize()));
     serialOut().print("  SIZE DetectorInputSample sampleHistory=");

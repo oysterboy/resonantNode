@@ -32,7 +32,6 @@ AudioSamplePacket makePacket(unsigned long timeMs, uint64_t sampleIndex, int lev
     packet.smoothedLevel = level;
     packet.baseline = 0.0f;
     packet.valid = true;
-    packet.rawHistoryReady = true;
     packet.overflowDuringBlock = false;
     return packet;
 }

@@ -248,13 +248,8 @@ void OccurrenceInspector::annotateMagnitudeFeatureStrength(
 
     switch (target) {
         case InspectionTarget::Amp:
-        out.occurrence.magnitude.present = observation.available;
-        out.occurrence.magnitude.value = observation.available ? observation.classificationValue : 0.0f;
-        out.occurrence.magnitude.baseline = observation.available ? observation.mean : 0.0f;
-        out.occurrence.magnitude.lift = observation.available
-            ? (out.occurrence.magnitude.value - out.occurrence.magnitude.baseline)
-            : 0.0f;
-        out.occurrence.magnitude.strength = observation.available ? observation.classificationValue : 0.0f;
+        // The class only: value / baseline / lift stay the detector's facts (PCM floor, peak strength). The window
+        // statistics are on InspectedOccurrence.magnitudeObservations (review D1.6, 2026-10-26; myspec 5.2, 5.6).
         out.occurrence.magnitude.strengthClass = observation.strength;
             break;
         case InspectionTarget::TargetScore:

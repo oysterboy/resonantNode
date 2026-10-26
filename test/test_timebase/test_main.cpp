@@ -34,7 +34,6 @@ AudioSamplePacket makePacketUs(uint64_t timeUs64, uint64_t sampleIndex, int leve
     packet.level = level;
     packet.smoothedLevel = level;
     packet.valid = true;
-    packet.rawHistoryReady = true;
     return packet;
 }
 

@@ -209,9 +209,7 @@ void AnalyzerApp::printAudioRunSummary() const {
 void AnalyzerApp::printOccurrenceSummary() const {
     const AudioSignalStats& stats = _audioSignal.stats();
     serialOut().println("OCCURRENCE summary:");
-    serialOut().print("blocks=");
-    serialOut().print(stats.blocksProcessed);
-    serialOut().print(" samples=");
+    serialOut().print("samples=");
     serialOut().print(static_cast<unsigned long long>(stats.samplesProcessed));
     // The signal layer runs per sample (one-sample "blocks"): the last block is
     // the latest frame. Labels kept for the log readers.

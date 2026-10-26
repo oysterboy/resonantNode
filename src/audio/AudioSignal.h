@@ -8,7 +8,6 @@
 #include "AudioSource.h"
 
 struct AudioSignalStats {
-    uint32_t blocksProcessed = 0;
     uint64_t samplesProcessed = 0;
 };
 
@@ -37,89 +36,8 @@ struct AudioSamplePacket {
     float baseline = 0.0f;
     // Frame validity flag from the signal layer.
     bool valid = false;
-    // True when the raw sample history has at least one sample.
-    bool rawHistoryReady = false;
     // True when the underlying transport block overflowed.
     bool overflowDuringBlock = false;
-};
-
-struct RawSampleHistory {
-    static constexpr size_t kCapacity = 4000; // 250 ms at 16 kHz.
-
-    void reset() {
-        _oldestSampleIndex = 0;
-        _writeIndex = 0;
-        _sampleCount = 0;
-        for (size_t i = 0; i < kCapacity; ++i) {
-            _centeredSamples[i] = 0;
-        }
-    }
-
-    void push(uint64_t sampleIndex, int centeredSample) {
-        if (_sampleCount == 0) {
-            _oldestSampleIndex = sampleIndex;
-        } else if (_sampleCount == kCapacity) {
-            ++_oldestSampleIndex;
-        }
-
-        _centeredSamples[_writeIndex] = audio::pcmToHistorySample(static_cast<audio::PcmSample>(centeredSample));
-        _writeIndex = (_writeIndex + 1) % kCapacity;
-        if (_sampleCount < kCapacity) {
-            ++_sampleCount;
-        }
-    }
-
-    bool hasWindow(uint64_t startSampleIndex, uint64_t endSampleIndex) const {
-        if (_sampleCount == 0 || endSampleIndex < startSampleIndex) {
-            return false;
-        }
-
-        const uint64_t newestSampleIndex = _oldestSampleIndex + static_cast<uint64_t>(_sampleCount - 1);
-        return startSampleIndex >= _oldestSampleIndex && endSampleIndex <= newestSampleIndex;
-    }
-
-    size_t copyWindow(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const {
-        if (outSamples == nullptr || outCapacity == 0 || !hasWindow(startSampleIndex, endSampleIndex)) {
-            return 0;
-        }
-
-        const size_t sampleCount = static_cast<size_t>(endSampleIndex - startSampleIndex + 1ULL);
-        if (sampleCount > outCapacity) {
-            return 0;
-        }
-
-        const size_t oldestBufferIndex = _sampleCount == kCapacity ? _writeIndex : 0;
-        const size_t startOffset = static_cast<size_t>(startSampleIndex - _oldestSampleIndex);
-        size_t bufferIndex = (oldestBufferIndex + startOffset) % kCapacity;
-        for (size_t i = 0; i < sampleCount; ++i) {
-            outSamples[i] = _centeredSamples[bufferIndex];
-            bufferIndex = (bufferIndex + 1) % kCapacity;
-        }
-
-        return sampleCount;
-    }
-
-    uint64_t oldestSampleIndex() const {
-        return _oldestSampleIndex;
-    }
-
-    uint64_t newestSampleIndex() const {
-        if (_sampleCount == 0) {
-            return 0;
-        }
-
-        return _oldestSampleIndex + static_cast<uint64_t>(_sampleCount - 1);
-    }
-
-    size_t sampleCount() const {
-        return _sampleCount;
-    }
-
-private:
-    audio::HistorySample _centeredSamples[kCapacity] = {};
-    uint64_t _oldestSampleIndex = 0;
-    size_t _writeIndex = 0;
-    size_t _sampleCount = 0;
 };
 
 /*
@@ -129,7 +47,6 @@ Owns the neutral signal interpretation layer and the signal/history state:
 - receives raw samples from the source
 - tracks a slow baseline for the quiet floor
 - exposes neutral sample frames and smoothed values for downstream consumers
-- keeps bounded centered sample history for downstream evidence builders
 
 IRAM_ATTR only on the per-sample path (update, processSample, emitFrame).
 
@@ -170,12 +87,6 @@ public:
     uint64_t sampleTimeUs64() const;
     const AudioSamplePacket& latestFrame() const;
     const AudioSignalStats& stats() const;
-    bool rawSampleHistoryAvailable(uint64_t startSampleIndex, uint64_t endSampleIndex) const;
-    size_t copyRawSampleHistory(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const;
-    uint64_t rawSampleHistoryStartSampleIndex() const;
-    uint64_t rawSampleHistoryEndSampleIndex() const;
-    size_t rawSampleHistorySampleCount() const;
-    size_t rawSampleHistoryCapacity() const;
     void resetStats();
     void resetSignalState();
 
@@ -183,7 +94,7 @@ private:
     AudioSource& _source;
 
     // Processes one sample and updates the internal signal state.
-    void processSample(int sample, uint64_t sampleTimeUs64, uint64_t sampleIndex);
+    void processSample(int sample, uint64_t sampleTimeUs64);
     // Copies the current signal state into a public frame.
     void emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint64_t sampleTimeUs64, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow);
 
@@ -209,8 +120,6 @@ private:
     AudioSamplePacket _latestFrame;
     // Cumulative audio-signal stats.
     AudioSignalStats _stats;
-    // Bounded raw centered-sample history.
-    RawSampleHistory _rawSampleHistory;
 
     // Tuning knobs for baseline tracking and smoothing.
     // Magnitude below which baseline tracking is considered quiet. Every mode

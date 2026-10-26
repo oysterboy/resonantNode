@@ -128,7 +128,7 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
         serialOut().print(" expected_samples=");
         serialOut().print(expectedSamples);
         serialOut().print(" frames_emitted=");
-        serialOut().print(signalStats.blocksProcessed);
+        serialOut().print(static_cast<unsigned long long>(signalStats.samplesProcessed));  // one frame per sample
         serialOut().print(" partial_frames=");
         serialOut().print(sourceStats.shortReads);
         serialOut().print(" duplicate_frames=0");

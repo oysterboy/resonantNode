@@ -48,14 +48,12 @@ struct MagnitudeOccurrenceDetail {
     StrengthClass strengthClass = StrengthClass::Unknown;
 };
 
+// The band inspection's classes (the inspector writes them; makeVerdict reads them). Only the classes: the score,
+// contrast and measurement packet that sat here were assigned nowhere (review D2.1, 2026-10-26; myspec 5.4).
 struct FrequencyBandOccurrenceDetail {
-    bool present = false;
-    float score = 0.0f;
-    float contrast = 0.0f;
     StrengthClass scoreStrength = StrengthClass::Unknown;
     StrengthClass contrastQuality = StrengthClass::Unknown;
     StrengthClass targetBandStrength = StrengthClass::Unknown;
-    FrequencyBandMeasurementPacket measurement = {};
 };
 
 // DET-015: the shape facts the ShapeInspector found (BinTrack over the occurrence's window). Not applicable

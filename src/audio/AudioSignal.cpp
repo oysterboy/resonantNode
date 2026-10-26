@@ -56,8 +56,7 @@ bool AudioSignal::rebase() {
 
 bool IRAM_ATTR AudioSignal::update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame, bool overflowDuringBlock) {
     const uint64_t sampleIndex = _stats.samplesProcessed;
-    processSample(sample, sampleTimeUs64, sampleIndex);
-    _stats.blocksProcessed++;
+    processSample(sample, sampleTimeUs64);
     _stats.samplesProcessed++;
 
     const uint32_t sampleTimeMs = _msFromUs(sampleTimeUs64);
@@ -65,11 +64,10 @@ bool IRAM_ATTR AudioSignal::update(int sample, uint64_t sampleTimeUs64, AudioSam
     return true;
 }
 
-void IRAM_ATTR AudioSignal::processSample(int sample, uint64_t sampleTimeUs64, uint64_t sampleIndex) {
+void IRAM_ATTR AudioSignal::processSample(int sample, uint64_t sampleTimeUs64) {
     _rawSignal = sample;
     _sampleTimeUs64 = sampleTimeUs64;
     _centeredSignal = _rawSignal - static_cast<int>(_baseline);
-    _rawSampleHistory.push(sampleIndex, _centeredSignal);
 
     // Below the quiet threshold the sample feeds the baseline and counts as silence.
     int magnitude = static_cast<int>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_centeredSignal)));
@@ -143,7 +141,6 @@ void IRAM_ATTR AudioSignal::emitFrame(AudioSamplePacket& outFrame, uint64_t samp
     outFrame.smoothedLevel = audio::strengthFromFloat(_smoothedSignalMagnitude);
     outFrame.baseline = _baseline;
     outFrame.valid = true;
-    outFrame.rawHistoryReady = _rawSampleHistory.sampleCount() > 0;
     outFrame.overflowDuringBlock = blockOverflow;
     _latestFrame = outFrame;
 }
@@ -156,38 +153,12 @@ const AudioSignalStats& AudioSignal::stats() const {
     return _stats;
 }
 
-bool AudioSignal::rawSampleHistoryAvailable(uint64_t startSampleIndex, uint64_t endSampleIndex) const {
-    return _rawSampleHistory.hasWindow(startSampleIndex, endSampleIndex);
-}
-
-size_t AudioSignal::copyRawSampleHistory(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const {
-    return _rawSampleHistory.copyWindow(startSampleIndex, endSampleIndex, outSamples, outCapacity);
-}
-
-uint64_t AudioSignal::rawSampleHistoryStartSampleIndex() const {
-    return _rawSampleHistory.oldestSampleIndex();
-}
-
-uint64_t AudioSignal::rawSampleHistoryEndSampleIndex() const {
-    return _rawSampleHistory.newestSampleIndex();
-}
-
-size_t AudioSignal::rawSampleHistorySampleCount() const {
-    return _rawSampleHistory.sampleCount();
-}
-
-size_t AudioSignal::rawSampleHistoryCapacity() const {
-    return RawSampleHistory::kCapacity;
-}
-
 void AudioSignal::resetStats() {
     _stats = {};
-    _rawSampleHistory.reset();
     _msFromUs.reset();
     _latestFrame = {};
 }
 
 void AudioSignal::resetSignalState() {
-    _rawSampleHistory.reset();
     _latestFrame = {};
 }

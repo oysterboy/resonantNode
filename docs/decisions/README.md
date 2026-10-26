@@ -66,39 +66,40 @@ what replaced it.
 | 2026-10-14 | [The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector](2026-10-14-node-ships-tonalpulsescalar.md) (demo half superseded 2026-10-22: Freq removed) |
 | 2026-10-14 | [Replace First Difference with a DC blocker inside step 5a, before the new-geometry baseline](2026-10-14-dc-blocker-before-5a-baseline.md) |
 | 2026-10-15 | [Signals vary per node and over time inside a shared band; the detector is shape-agnostic](2026-10-15-signal-variation-inside-a-shared-band.md) |
-| 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise (30,500), the amp limit drops to 1,500; long gaps leave the acceptance set, max duration 300, history 512](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (shipped in the profile; confirmation battery pending) |
-| 2026-10-17 | [Step 6's third question: after a kick or idle call the group is quiet (15 s silence) within 30 s in 80 % of cases](2026-10-17-trial-third-question-pass-mark.md) (M open) |
-| 2026-10-17 | [The idle call wakes the network: 300 Hz announcement, then the node's hop train](2026-10-17-idle-call-wakes-the-network.md) (bench pending) |
+| 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise (30,500), the amp limit drops to 1,500; long gaps leave the acceptance set, max duration 300, history 512](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (shipped in the profile; confirmed 2026-10-21, step 5b gate: second-day battery and speech / music OBS on the Node build) |
+| 2026-10-16 | [The network band is 2950-3950 Hz: bins 2950/3200/3450/3700/3950, the 3,200 Hz chirp on a bin](2026-10-16-network-band-2950-3950.md) |
+| 2026-10-17 | [Step 6's third question: after a kick or idle call the group is quiet (15 s silence) within 30 s in 80 % of cases](2026-10-17-trial-third-question-pass-mark.md) (M = 100 set 2026-10-22, 2026-10-22-network-pacing.md) |
+| 2026-10-17 | [The idle call wakes the network: 300 Hz announcement, then the node's hop train](2026-10-17-idle-call-wakes-the-network.md) (bench-checked 2026-10-21, step 5g: 27 idle calls, all answered) |
 | 2026-10-17 | [A busy network makes a node rest: field density (4 patterns) or own budget (6 in 10 s), hard 10 s pause, same values everywhere](2026-10-17-two-node-exchange-chain-length.md) |
 | 2026-10-17 | [Behavior: one program, the shipped struct as its profile, values as params; a bench session records the whole effective state](2026-10-17-behavior-contract-and-reproducible-sessions.md) |
+| 2026-10-21 | [D-AMP tone level 0.5 of full scale: at 0.3 the five-board hearing matrix had 7 of 20 cells at 10/10, at 0.5 19 of 20](2026-10-21-damp-tone-level-0p5.md) |
 | 2026-10-22 | [Console output in whole lines (serialOut) and the per-sample path in IRAM: Analyzer report 190 -> 3.4 ms, per-sample 73 -> 37 us, 0 dropped buffers](2026-10-22-serial-lines-and-iram-hot-path.md) |
 | 2026-10-22 | [FieldState stays as the rest gate; noiseFloor, avgAmbientLevel and chatter go (trim in step 8)](2026-10-22-fieldstate-is-the-rest-gate.md) |
 | 2026-10-22 | [Remove FrequencyMatchDetector and TonalPulseFreq; Scalar is the only family (step 7d)](2026-10-22-remove-frequencymatch.md) |
 | 2026-10-22 | [Inspect an occurrence when its window is complete, not at release (step 8b)](2026-10-22-inspect-when-window-complete.md) (implemented 2026-10-23, bbb5728) |
 | 2026-10-22 | [Live params apply in place; RB PROFILE announces its reset; RB BEHAV removed for behavior.* params (step 10)](2026-10-22-live-params-profile-reset-no-rb-behav.md) |
+| 2026-10-22 | [Network pacing: rest 5 s, idle call every 60 s +- 20 s, pass mark "the chain ends within 30 s in 80 %", M = 100](2026-10-22-network-pacing.md) |
 | 2026-10-23 | [Params persist on PARAM SAVE only; all registered; stored wins over a changed default, with a PARAM stale warning (PAR-010/011)](2026-10-23-param-persistence-save-only.md) |
-| 2026-10-26 | [DET-015: a bin track read by a shape inspector (>= 3 bins, 2 steps up, band mode); an in-band sweep counts as a network signal](2026-10-26-det015-bin-track-inspector.md) |
-| 2026-10-26 | [The Node's boot baseline runs: mic warmup, then the quiet gate (review D2.4)](2026-10-26-node-boot-warmup-runs.md) (not yet implemented, 11g) |
-| 2026-10-26 | [Drop `RB debug off\|events` and the compile-time Node tracing (review D2.5)](2026-10-26-drop-rb-debug.md) (not yet implemented, 11g) |
+| 2026-10-23 | [SoundOutput executes an OutputRequest (hop train, pattern, idle call) with OutputStatus; the Node composes it from Behavior's decision (step 10f)](2026-10-23-soundoutput-executes-node-composes.md) |
+| 2026-10-23 | [The Node's network signal is the hop train; a plain chirp need not be heard](2026-10-23-node-hears-the-hop-train-only.md) (enforce by shape, DET-015; min duration cannot: the readings overlap) |
 | 2026-10-25 | [VEKTOR will replace NET; NET is the interim remote console; 11a's lessons go to the spec](2026-10-25-vektor-replaces-net.md) (not yet implemented) |
 | 2026-10-25 | [Remote params over ESP-NOW through the serial PARAM path; one-line replies only, DUMP/LIST stay on USB (step 11a)](2026-10-25-remote-params-espnow.md) |
 | 2026-10-25 | [Analyzer knobs on ParamRegistry with the Node's grammar, old key=value form dropped; long serial lines refused on every port (step 11e)](2026-10-25-analyzer-params-on-registry-and-line-policy.md) (implemented in 11e items 8-9) |
-| 2026-10-23 | [SoundOutput executes an OutputRequest (hop train, pattern, idle call) with OutputStatus; the Node composes it from Behavior's decision (step 10f)](2026-10-23-soundoutput-executes-node-composes.md) |
-| 2026-10-23 | [The Node's network signal is the hop train; a plain chirp need not be heard](2026-10-23-node-hears-the-hop-train-only.md) (enforce by shape, DET-015; min duration cannot: the readings overlap) |
-| 2026-10-22 | [Network pacing: rest 5 s, idle call every 60 s +- 20 s, pass mark "the chain ends within 30 s in 80 %", M = 100](2026-10-22-network-pacing.md) |
-| 2026-10-21 | [D-AMP tone level 0.5 of full scale: at 0.3 the five-board hearing matrix had 7 of 20 cells at 10/10, at 0.5 19 of 20](2026-10-21-damp-tone-level-0p5.md) |
-| 2026-10-16 | [The network band is 2950-3950 Hz: bins 2950/3200/3450/3700/3950, the 3,200 Hz chirp on a bin](2026-10-16-network-band-2950-3950.md) |
+| 2026-10-26 | [DET-015: a bin track read by a shape inspector (>= 3 bins, 2 steps up, band mode); an in-band sweep counts as a network signal](2026-10-26-det015-bin-track-inspector.md) |
+| 2026-10-26 | [The Node's boot baseline runs: mic warmup, then the quiet gate (review D2.4)](2026-10-26-node-boot-warmup-runs.md) (not yet implemented, 11g) |
+| 2026-10-26 | [Drop `RB debug off\|events` and the compile-time Node tracing (review D2.5)](2026-10-26-drop-rb-debug.md) (not yet implemented, 11g) |
 
 ## Open
 
 These are known forks that have not been taken. Each points at where the
 question is tracked; a file is added here when one resolves.
+Resolved and taken off this table 2026-10-26: the Node's profile
+(2026-10-14-node-ships-tonalpulsescalar.md), keep or consolidate FrequencyMatch
+(2026-10-22-remove-frequencymatch.md), persistent config
+(2026-10-23-param-persistence-save-only.md).
 
 | Question | Tracked in |
 |---|---|
-| Which detection profile the Node ships with (`TonalPulseFreq` vs `TonalPulseScalar`) | DET-007 in `docs/roadmaps/roadmap-detection.md`; step 5 of `roadmap-0-steps.md`, decided on D-AMP |
-| Keep or consolidate `FrequencyMatchDetector` | Made moot by `2026-10-14-node-ships-tonalpulsescalar.md` (Scalar ships, Freq stays a demo detector; the matched-condition trials of `cleanup-0-plan.md` Phase 0 were never run as such). Still open underneath: whether the demo detector stays compiled into the Node binary, which is Phase 5d (family as a build flag, step 9) |
 | Which metrics belong in the generic `Occurrence` core vs detector-specific detail | `docs/specs/myspec.md` §5 ("temporary typed accepted-event detail"); DET-003..006 |
 | How much `FeatureHistory` to retain on-device | `docs/refactors/archive/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
-| Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/archive/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut |
-| Persistent (flash/NVS) config | PAR-010 / PAR-011, deferred until after the field trial (step 11) |
+| Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/archive/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut, `DetectionDiagnostics` (step 11e item 7) the runtime side; Analyzer printers still in `src/detection/` (review D2.8, step 11g batch C) |

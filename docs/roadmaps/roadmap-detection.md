@@ -22,7 +22,7 @@ facts are shared.
 ```text
 Detection produces facts.
 Analyzer reports and classifies trials.
-OccurrenceEvaluator decides pattern meaning.
+makeVerdict(), the last step of inspection, decides pattern meaning.
 Behavior consumes OccurrenceVerdict and FieldState.
 Clean analyzer output should read canonical runtime contracts only.
 ```
@@ -31,8 +31,18 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 
 ## Current code state
 
+As of 2026-10-26:
+
 ```text
-[REMOVED] DetectionDiagnostics and analyzer legacy compatibility are removed from src.
+[REMOVED] The old analyzer legacy compatibility (the 2026-05 DetectionDiagnostics) left src.
+[LANDED] DetectionDiagnostics, new shape (step 11e item 7, eda1397): the Analyzer's side
+          channel out of DetectionRuntime, Null variant on the Node, Null-vs-diag replay
+          diff in CI (myspec 5.5).
+[LANDED] Inspection: OccurrenceInspector with two module kinds (MagnitudeFeatureStrength,
+          BinShape); the shipped TonalPulseScalar plan runs three modules (contrast, amp,
+          shape; shape required since a33f293, step 11b / DET-015).
+[LANDED] One detector family, ScalarTransientDetector (step 7d); family-as-build-flag is
+          step 9, not built.
 [LANDED] OccurrenceEvaluator folded into inspection 2026-10-22 (step 8, cleanup-0-plan.md
           Phase 7c): makeVerdict() renders the single-occurrence verdict;
           OccurrenceVerdict stays the Behavior-facing type. The Evaluator
@@ -450,13 +460,15 @@ Expose only compact explanation facts through OccurrenceEvaluatorReport.
 Order: roadmap-0-steps.md. DET-008 (the cleanup pass) is steps 1, 8, 9;
 DET-007 is step 5 (decided on D-AMP); ANA-003 is step 10. The rest is
 unsequenced.
+Now (2026-10-26): DET-015 done (11b); step 11g batches B (detection: Occurrence.band,
+RawSampleHistory, the shape knobs as params) and C (Analyzer, with A8's TrialState split).
 ```
 
 ## Spec candidates
 
 ```text
 DetectorReport is the detector-stage truth.
-OccurrenceEvaluator is the public pattern-stage boundary.
+makeVerdict() (the end of inspection) is the public pattern-stage boundary.
 AnalyzerReport stays on canonical trial classification plus scoped details.
 Clean analyzer output should not read retired legacy diagnostics.
 ```

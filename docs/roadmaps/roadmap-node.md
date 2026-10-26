@@ -32,16 +32,21 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 ## Current code state
 
 ```text
-[PARTIAL] Node still owns serial command handling and runtime tuning commands directly.
-[LANDED] ParamRegistry (src/param/), with Serial PARAM LIST / GET / SET / DUMP;
-         Node registers the four frequency-match thresholds. RB PARAM / RB BEHAV
-         still run in parallel (PAR-015).
-[LANDED] Host test env and replay harness (NODE-006): native-replay, native-test, native-test-behavior.
-[LANDED] CI (NODE-007): GitHub Actions, all envs plus host tests on every push.
+As of 2026-10-26:
+[PARTIAL] Node still owns serial command dispatch (ResonantNodeCommands.cpp); the
+          Node is split by role into five files (step 10 item 9), next cut with A7.
+[LANDED] ParamRegistry (lib/ParamRegistry/) with PARAM LIST / GET / SET / DUMP and
+         SAVE / LOAD / RESET to NVS; RB PARAM / RB BEHAV removed (step 10).
+[LANDED] NET <target|*> <command> over ESP-NOW (PAR-013, step 11a, src/net/).
+[LANDED] Host test envs and replay harness (NODE-006): native-replay(-diag),
+         native-test, native-test-behavior, native-test-diag (platformio.ini).
+[LANDED] CI (NODE-007): every env, the host suites and the Null-vs-diag replay
+         diff on every push; include direction strict.
+[LANDED] OutputStatus / OutputRequest (OUT-002/003, step 10f).
 [TODO] ConfigStore is not landed.
 [TODO] CommandRouter is not landed.
 [TODO] BehaviorHost is not landed.
-[TODO] OutputStatus / OutputProfile are not landed.
+[TODO] OutputProfile is not landed (OUT-004).
 [TODO] ResonantProgram bundle is not landed.
 [TODO] VEKTOR exposure is not landed.
 ```
@@ -480,6 +485,9 @@ Order: roadmap-0-steps.md. NODE-009, NODE-010, NODE-011 are steps 2-4
 NODE-006 and NODE-007 are step 7; NODE-004 is part of step 10.
 NODE-019 is a known issue (sample-clock backsteps), not stepped; it rides step 10 or the
 next loop-timing pass.
+Steps 2-10 are done. Now (2026-10-26): 11c unattended bench runs (running), 11d OTA
+firmware, 11g batch D (the Node: boot baseline, RB debug dropped, with A7's next
+NODE-004 cut).
 ```
 
 ## Spec candidates

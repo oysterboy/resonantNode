@@ -45,7 +45,7 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println("CMD: SEQ help");
     serialOut().println("CMD: SEQ");
     serialOut().println("CMD: SEQ stop");
-    serialOut().println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
+    serialOut().println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [band=LOW-HIGH|off] [test=LABEL]");
     serialOut().println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
     serialOut().println("SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]");
     serialOut().println("SEQ IN: sweep inside the chirp (OUT-005): start ... freq=START_HZ dur=MS sweep=END_HZ");
@@ -69,9 +69,9 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println("SEQ IN: TRIES N");
     serialOut().println("SEQ IN: STATUS");
     serialOut().println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    serialOut().println("SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_DETAIL, and not canonical Analyzer truth");
+    serialOut().println("SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN, and not canonical Analyzer truth");
     serialOut().println("SEQ IN: sampleMax is the row budget over all dumped trials (default 5000); one trial must also fit the 256-row sampleRows buffer (default sampleStep=4)");
-    serialOut().println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_DETAIL / SEQ_SOURCE / SEQ_SOURCE_CORE / SEQ_SOURCE_SPEC / SEQ_SUMMARY / SEQ REPORT / AUDIO run");
+    serialOut().println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SOURCE / SEQ_SOURCE_CORE / SEQ_SOURCE_SPEC / SEQ_SUMMARY / SEQ_STATUS / SEQ REPORT / AUDIO run");
     serialOut().println("SEQ OUT: SAMPLES_BEGIN / SAMPLES_NOTE / SAMPLES_END");
     serialOut().println("SEQ OUT: sample fields are t,value (value is the selected detector input stream)");
     serialOut().println("SEQ OBS: passive observe mode for an already-running external emitter");
@@ -97,17 +97,17 @@ void AnalyzerApp::pollUsbConsole() {
 
 void AnalyzerApp::handleUsbLine(const char* line) {
     if (equalsIgnoreCase(line, "HELP")) {
-        serialOut().println("CMD: PARAM LIST|GET <path>|SET <path> <value>|DUMP|RESET (detection.scalar_*, applied at the next SEQ start)");
+        serialOut().println("CMD: PARAM LIST|GET <path>|SET <path> <value>|DUMP|RESET (detection.scalar_*, applied at the next SEQ start; SAVE|LOAD answer status=no_store)");
         serialOut().println("CMD: EMIT CHIRP freq=3200 dur=100");
         serialOut().println("CMD: EMIT MODE REMOTE");
         serialOut().println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         serialOut().println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
         serialOut().println("CMD: EMIT PULSES n pulse_ms gap_ms [freq=3200] [ramp=5] (e.g. EMIT PULSES 5 10 20)");
-        serialOut().println("CMD: RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat (default)|mode=pcm|mode=i2s|mode=both [pulses=N gap=MS hop=F1,F2,...] (pulses= plays a PULSES train instead of one CHIRP; dur= is then the pulse length)");
+        serialOut().println("CMD: RAW trigger f=3200 dur=100 post=1000 [pre=MS] [decim=N] mode=feat (default)|mode=pcm|mode=i2s|mode=both [pulses=N gap=MS hop=F1,F2,...] [sweep=END_HZ] [band=LOW-HIGH|off] (pulses= plays a PULSES train instead of one CHIRP; dur= is then the pulse length)");
         serialOut().println("CMD: SEQ");
         serialOut().println("CMD: SEQ help");
         serialOut().println("CMD: SEQ stop");
-        serialOut().println("CMD: SELFTEST | SELFTEST chirp n=5 gap_ms=1500 | SELFTEST help");
+        serialOut().println("CMD: SELFTEST | SELFTEST external | SELFTEST chirp n=5 gap_ms=1500 dur_ms=100 | SELFTEST help");
         return;
     }
 

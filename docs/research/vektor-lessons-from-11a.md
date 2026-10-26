@@ -1,6 +1,8 @@
 # What the first radio implementation (step 11a) teaches VEKTOR
 
 Status:  exploring (2026-10-25)
+Became:  docs/decisions/2026-10-25-vektor-replaces-net.md cites it as the lessons for
+         the VEKTOR spec (2026-10-25); not yet folded into docs/specs/vektor-spec.md
 Lab:     bench/sessions/2026-10-25-step11a-ota-params; decisions/2026-10-25-remote-params-espnow.md
 
 Owner 2026-10-25: VEKTOR will replace NET (the 11a remote console), the hub is not decided, VEKTOR's appendices

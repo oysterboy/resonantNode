@@ -51,18 +51,25 @@ A note whose ideas were all promoted or abandoned gets `promoted` or
 acoustic-test-suite.md         rooms x speakers x distance test design
                                (promoted: NODE-012; observations in lab E001)
 soak-24h.md                    24 h unattended soak: room vs signal
-                               (promoted: NODE-013 / step 3a, on D-AMP)
+                               (promoted: NODE-013 / step 3a, on D-AMP; the
+                               repeated runs are step 11c, tools/bench/soakcycle.py)
 freertos-tasks.md              where FreeRTOS tasks help (report task,
                                audio task later, wireless); rules
                                (promoted: report task -> ANA-004)
+scalar-detector-extensions.md  TonalPulseScalar extensions: real chirps,
+                               lower frequencies, drift (promoted: DET-011..013,
+                               steps 5a / 5b)
 frequency-drift-detection.md   drift: Goertzel bank vs sliding DFT vs FFT
-                               vs band-pass/dechirp; cost (DET-013)
+                               vs band-pass/dechirp; cost (promoted:
+                               decisions/2026-10-15-signal-variation-inside-a-
+                               shared-band.md, DET-013..015, OUT-005/006)
 tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; partly landed, not reviewed)
 unproven-assumptions-audit.md  where code and roadmap rest on unmeasured
                                assumptions (2026-10-16 audit); check order
 vektor-lessons-from-11a.md     what the 11a radio taught VEKTOR (real-time
-                               budget, replies, persistence)
+                               budget, replies, persistence) (cited by
+                               decisions/2026-10-25-vektor-replaces-net.md)
 architecture-readability-review-2026-10-25.md
                                spec vs code boundaries, readability and
                                maintainability findings at c0b75e9, ranked,

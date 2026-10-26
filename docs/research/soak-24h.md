@@ -9,6 +9,8 @@ Lab:     docs/lab/notes_lab.md 2026-10-09 (day-to-day level change at
 Result:  2026-10-12, accepted short at 7.3 h (owner):
          bench:sessions/2026-10-12-soak24h-70cm README; docs/lab/notes_lab.md
          2026-10-12
+Next:    step 11c (roadmap-0-steps.md, 2026-10-26): repeated unattended runs with
+         a room check each cycle, tools/bench/soakcycle.py
 ```
 
 ## Question

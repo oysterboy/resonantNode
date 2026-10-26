@@ -148,7 +148,10 @@ architecture review against embedded-design practice.
 ```text
 [LANDED]    Verified in current code.
 [PARTIAL]   Present, but not yet in the intended final shape.
+[DONE]      Gate closed (date given).
+[RUNNING]   Started and in progress (a bench run that holds the boards).
 [NEXT]      Next implementation step.
+[TODO]      Sequenced, not started.
 [DEFERRED]  Intentionally later.
 [REMOVED]   No longer part of the active plan.
 ```
@@ -1093,7 +1096,7 @@ the previous gate open unless the step says it can run in parallel.
    The self-test's amp check measures SNR and needed no change. Open: `tailMs` (0) on the board's truncated
    trains (the height cell); a long run with the rule; the Analyzer's shape facts in SEQ output (with A8).
 
-11c. [NEXT] Unattended bench runs. (issue #60)
+11c. [RUNNING 2026-10-26 13:39 to 10-27 13:39] Unattended bench runs. (issue #60)
    Owner 2026-10-25: the reference cell (bench/sessions/2026-10-23-cell-desk-ref-110cm) repeated every few hours
    for day-to-day variation, and listen logs of the silent nodes. No physical change; plays sound in the empty room.
    Needs E2/E3 back as Analyzer/Emitter between runs of 11a.
@@ -1181,10 +1184,10 @@ the previous gate open unless the step says it can run in parallel.
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here
    for a second detector family):
-   OutputStatus / OutputProfile (OUT-002..004), BehaviorRuntime
+   OutputProfile (OUT-004; OUT-002/003 done in 10f), BehaviorRuntime
    (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*),
    ParamRegistry as its own repo (PAR-017), PAR-008 output params, PAR-009
-   drift params, PAR-013 remote param update, PAR-014 config stays
+   drift params (PAR-013 done in 11a), PAR-014 config stays
    separate, ANA-002 multi-occurrence patterns, DET-016 the verdict boundary rule (step 8's Part B, deferred
    by the owner 2026-10-22). If 7c makes FieldState a
    gate, its implementation lands here, as a behavior change against the 10b
@@ -1202,8 +1205,6 @@ DET-003, DET-004, DET-005, DET-006, ANA-001   detection/analyzer follow-ups;
                                               the same code.
 BEH-001, BEH-002, OUT-001                     small visibility items; fold
                                               into NODE-001.
-PAR-003                                       Analyzer params onto the
-                                              registry; after PAR-015.
 P2b, D21 (#32)                                audio source: stall vs overflow
                                               counters, sample spans after N
                                               drops; AudioSourceI2S has no

@@ -30,11 +30,17 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 
 ## Current code state
 
+As of 2026-10-26:
+
 ```text
-[PARTIAL] Behavior has outputBusy state, but no stable OutputStatus object.
-[TODO] OutputStatus is not landed.
-[TODO] OutputRequest is not landed.
-[TODO] OutputProfile / ChirpProfile is not landed.
+[LANDED] OutputRequest vocabulary (src/output/OutputRequest.h: ChirpPattern, OutputRequest,
+          OutputLimits, OutputStatus), composed by the Node, executed by SoundOutput on
+          ChirpOutput (OUT-003, step 10f).
+[LANDED] OutputStatus in RB STATUS output.* (OUT-002, step 10f).
+[PARTIAL] Behavior still keeps its own outputBusy mirror next to output.phase (review
+          D2.9, step 11g batch D).
+[LANDED] Hop train and in-chirp sweep (OUT-005); the Node sounds the hop train.
+[TODO] OutputProfile / ChirpProfile is not landed (OUT-004, deferred).
 [TODO] OutputDispatcher is not landed.
 ```
 
@@ -125,6 +131,7 @@ Source: docs/research/frequency-drift-detection.md (Two-layer signal).
 Order: roadmap-0-steps.md. OUT-001 folds into NODE-001 (step 6);
 OUT-002/003 done in step 10f (2026-10-23); OUT-004 is deferred (step 11). OUT-005 is step 5b, OUT-006 step 8a. The D-AMP output (a sine ToneOutput
 over I2S) is NODE-009, step 2: hardware, not output architecture.
+Now (2026-10-26): no output step is sequenced; OUT-006 waits on step 8a, OUT-004 on step 11.
 ```
 
 ## Spec candidates

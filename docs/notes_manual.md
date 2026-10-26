@@ -47,7 +47,8 @@ after the verdict (behavior and output on the Node, reporting on the Analyzer).
 Serial lines, every mode and every port (USB console, the Analyzer <-> Emitter
 link): one reader (`src/app/SerialLine.h`). A line ends at `\n`; CR and
 non-printable bytes are dropped. A line longer than the buffer (255 characters
-on the USB consoles, 95 on the Emitter link) is refused whole with
+on the Node's and the Analyzer's USB console, 95 on both Emitter ports, USB and the
+link from the Analyzer; 2026-10-26) is refused whole with
 `ERR line_too_long max=N` (`RB ERR ...` on the Node), never run cut. A number
 in a command that is not a plain decimal is refused with `... bad value
 token=<token>`; nothing is read as 0 (since 2026-10-26, step 11e;
@@ -55,7 +56,7 @@ decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md).
 
 ## Node (RB)
 
-`RB help` prints the command surface. As of 2026-10-25:
+`RB help` prints the command surface. As of 2026-10-26:
 
 ```text
 RB STATUS                       state, profile, output.* status, silent=
@@ -68,7 +69,7 @@ PARAM LIST|GET|SET|DUMP         every registered knob (see below)
 PARAM SAVE|LOAD|RESET           persistence to NVS
 NET <target|*> <command>        any Node command by radio (PARAM, RB, SELFTEST to one named node), NET PING
 NET STATUS                      the gateway's own radio counters
-SELFTEST [external wait_ms=N | chirp n=N | help]
+SELFTEST [external wait_ms=N | chirp n=N gap_ms=MS dur_ms=MS | help]
 ```
 
 `RB PARAM` and `RB BEHAV` are gone since step 10 (2026-10-22). Old session headers map through
@@ -150,10 +151,11 @@ The Node waits for the room to be quiet before it arms: `kRbStartupQuietThreshol
 
 ## Analyzer
 
-`HELP` prints the top-level commands, `SEQ help` the SEQ surface. As of 2026-10-25:
+`HELP` prints the top-level commands, `SEQ help` the SEQ surface. As of 2026-10-26:
 
 ```text
 SEQ start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]
+SEQ start ... band=LOW-HIGH|off                              score the strongest bin in the band (default off)
 SEQ OBS start ...               passive observe mode for an external emitter already running
 SEQ start ... pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]      pulse train per trial (DET-011)
 SEQ start ... freq=START_HZ dur=MS sweep=END_HZ              sweep inside the chirp (OUT-005)
@@ -162,9 +164,11 @@ SEQ MODE quiet|trial|inspect|source|system|detail            which report lines 
 SEQ PROFILE TonalPulseScalar|AmpExperimental
 SEQ DIAG on|off | SEQ FREQBAND on|off | SEQ WHEN off|miss|all | SEQ VERBOSE 0|1|2
 PARAM LIST|GET|SET|DUMP|RESET   the detection.scalar_* knobs, same paths and grammar as the Node
-RAW trigger f=HZ dur=MS post=MS [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=...]
+PARAM SAVE|LOAD                 answered with status=no_store (no store on the Analyzer)
+RAW trigger f=HZ dur=MS post=MS [pre=MS] [decim=N] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=...]
+RAW trigger ... [sweep=END_HZ] [band=LOW-HIGH|off]          sweep the chirp; band for this capture only
 EMIT CHIRP|MODE AUTO|MODE REMOTE|SWEEP|PULSES ...            the Analyzer drives its own output too
-SELFTEST [chirp n=N gap_ms=MS | help]
+SELFTEST [external | chirp n=N gap_ms=MS dur_ms=MS | help]   external: board only, external_chirp SKIP
 ```
 
 The Analyzer's `PARAM` is the Node's since step 11e (2026-10-26, `src/app/ParamCommands`): the 13
@@ -199,12 +203,24 @@ defaults.
 
 ### RAW capture
 
-`RAW trigger ...` records PCM or feature values around one played signal. Field layouts (they are
-a contract for `tools/bench/rawcorpus.py`): `docs/specs/myspec.md` 5.9, "RAW capture".
+`RAW trigger ...` records PCM or feature values around one played signal. The numeric rule for its
+values: `docs/specs/myspec.md` 5.9, "RAW capture". One CSV layout per `mode=` (2026-10-26, the header
+row before the data, `src/modes/analyzer/tools/AnalyzerRawCapture.cpp`):
+
+```text
+mode=feat (default)  ms,amp_strength,env_strength,freq_score,freq_fresh
+mode=pcm             ms,pcm,baseline,centered
+mode=i2s             ms,pcm               decim=N keeps every Nth I2S word
+mode=both            ms,amp,pcm,freq,contrast,fresh
+```
+
+The header row is what `tools/bench/rawcorpus.py` reads. The `fields=` key on the `RAW_BEGIN` line
+says `ms,pcm,baseline` for `mode=pcm`, one column short of the header (review D3.3, left for the
+code batch).
 
 ## Emitter
 
-Commands over USB, as of 2026-10-25:
+Commands over USB, as of 2026-10-26:
 
 ```text
 EMIT CHIRP freq=HZ dur=MS
@@ -214,8 +230,8 @@ EMIT MODE AUTO interval=MS freq=HZ dur=MS | EMIT MODE REMOTE
 SELFTEST
 ```
 
-The Emitter prints `EVT emitter_ready`, `EVT emitter_cmd`, `EMIT_DONE trial=... t_ms=...` and
-`EMIT_DRIVE_OFF` markers, so a log of an Emitter-driven run can be aligned with the Analyzer's trials.
+The Emitter prints `EVT emitter_ready`, `EVT emitter_cmd` and the trial markers `EMIT_START`,
+`EMIT_DRIVE_ON`, `EMIT_DONE`, `EMIT_DRIVE_OFF` (each `trial=... t_ms=...`), so a log of an Emitter-driven run can be aligned with the Analyzer's trials.
 
 ## Runtime gate chain
 

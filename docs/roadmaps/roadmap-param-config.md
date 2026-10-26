@@ -134,21 +134,24 @@ PARAM DUMP
 
 ## Current code state
 
+As of 2026-10-26 (step 11e):
+
 ```text
-[PARTIAL] RB PARAM can tune frequency thresholds at runtime.
-[PARTIAL] RB BEHAV can tune behavior values at runtime.
-[LANDED] AnalyzerTuning is the active param surface for Analyzer sequence tuning.
-[LANDED] Bound Field ParamRegistry (ParamId, ModuleId, ParamType, ParamBinding,
-ParamRegistry, typed add helpers) in src/param/.
-[LANDED] Node registers Detection frequency-match thresholds as flat params
-under the detection.* namespace (Node::registerDetectionParams).
-[LANDED] Serial PARAM LIST / GET / SET / DUMP, separate from RB PARAM / RB BEHAV.
-[LANDED] Dirty ModuleId apply route for ModuleId::Detection
-(Node::applyParamModule -> applyActiveDetectionProfile).
-[DEFERRED] PARAM SAVE / LOAD / RESET.
-[DEFERRED] ESP32 NVS persistence.
-[DEFERRED] WiFi / ESP-NOW / VEKTOR Param transport.
-[DEFERRED] ConfigStore / installation config.
+[LANDED] Bound Field ParamRegistry in lib/ParamRegistry/ (in-repo library, PAR-016;
+         includes nothing from src/, CI checks it).
+[LANDED] The Node registers detection.* (scalar thresholds, band, inspector medium
+         limits), behavior.*, output.*, node.radio_enabled (src/modes/resonant/
+         ResonantNodeParams.cpp, src/app/ParamBindings.h); PARAM DUMP lists them.
+[LANDED] Serial PARAM LIST / GET / SET / DUMP with range checks; live SET applies its
+         module in place (Node::applyParamModule). One command handler for both
+         boards: src/app/ParamCommands.
+[LANDED] PARAM SAVE / LOAD / RESET to ESP32 NVS (PAR-010/011, step 10d,
+         src/app/NvsParamStore.h); stored values win at boot, PARAM stale warns.
+[LANDED] The Analyzer's detection.scalar_* knobs on a ParamRegistry with the Node's
+         grammar, no store (PAR-003, step 11e).
+[LANDED] Param transport over ESP-NOW: NET <target|*> PARAM ... (PAR-013, step 11a).
+[REMOVED] RB PARAM, RB BEHAV (step 10); AnalyzerTuning is no longer in src/.
+[DEFERRED] VEKTOR param transport, ConfigStore / installation config.
 ```
 
 ## Roadmap items
@@ -578,9 +581,13 @@ of it.
 ## Current focus
 
 ```text
-Order: roadmap-0-steps.md. PAR-015 is step 10, then PAR-003.
-PAR-010 / PAR-011 / PAR-013 are deferred (step 11).
+Order: roadmap-0-steps.md. Done: PAR-015 (step 10), PAR-010 / PAR-011 (10d),
+PAR-013 (11a), PAR-003 (11e). Next on the steps file: the nine shape knobs as
+registered params (review D2.7, step 11g batch B2). The rest waits in step 11.
 ```
+
+(2026-10-26: SAVE / LOAD / RESET and the ESP-NOW transport below "Non-goals now"
+have landed since that list was written; it still holds for the others.)
 
 ## Spec candidates
 

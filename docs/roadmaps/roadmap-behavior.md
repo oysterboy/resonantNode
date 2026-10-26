@@ -31,16 +31,20 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 
 ## Current code state
 
+As of 2026-10-26:
+
 ```text
-[PARTIAL] Behavior requests chirp via the current ChirpOutput path.
-[PARTIAL] RB BEHAV is runtime tuning, not durable ParamRegistry state
-          (behavior.* in step 10a; the contract and the session-header rule:
-          decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md).
+[LANDED] Behavior decides; the Node composes an OutputRequest and SoundOutput executes
+          it on ChirpOutput (step 10f, OUT-002/003).
+[LANDED] The 13 behavior.* params on ParamRegistry, persistent with PARAM SAVE (steps
+          10 / 10d); RB BEHAV removed. Contract and session-header rule:
+          decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md.
+[PARTIAL] OutputStatus: the Node forwards the output's span and finish time; Behavior
+          keeps its own busy mirror next to output.phase (review D2.9, step 11g batch D).
 [TODO] BehaviorHost is not landed.
 [TODO] BehaviorInput is not landed.
 [TODO] BehaviorRuntime is not landed.
 [TODO] BehaviorProgram is not landed.
-[TODO] OutputStatus integration is not landed.
 ```
 
 ## Implementation order
@@ -131,6 +135,8 @@ answers artistically: imitate, contrast, hand on.
 ```text
 Order: roadmap-0-steps.md. BEH-001 / BEH-002 fold into NODE-001 (step 6);
 BEH-003 / BEH-004 are deferred (step 11). BEH-005 is step 5b, BEH-006 step 8a, BEH-007 after DET-015.
+Now (2026-10-26): DET-015 is done (11b), so BEH-007 is unblocked but not sequenced; the
+busy mirror (D2.9) goes with step 11g batch D.
 ```
 
 ## Spec candidates

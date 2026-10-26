@@ -640,7 +640,9 @@ string before it was written down.
    its N-th command of the new life rejected by every node (`rxRejected++`), while it prints `NET sent` and
    gets no answer. Fix: seed `_nextSeq` from `esp_random()` (nonzero) at `begin()`, or a boot nonce in the frame.
    No test covers the filter across a reboot.
-   -> done 2026-10-26: `begin()` seeds `_nextSeq` from `esp_random()` (nonzero). Still no test (D4.3).
+   -> done 2026-10-26: `begin()` seeds `_nextSeq` from `esp_random()` (nonzero). Correction from the test
+   (`test_net_frame`, 11g A): the filter keeps only the last seq per sender, so the old start at 1 lost a command
+   only when the previous life sent exactly one (its last seq 1 = the new first), not "the N-th" as written above.
 
 4. **`SEQ start` during a run discards the run; `SEQ STOP` leaves a pending start armed; `SEQ STATUS` reads two
    copies of the config that disagree (medium-low).** `AnalyzerCommands.cpp:443-756` has no `_sequenceTest.active`
@@ -671,6 +673,7 @@ string before it was written down.
    the plan has an Amp module. Spec 5.2 ("no second private scaling"), 5.6 (modules produce support facts). Fix:
    the inspector writes `strengthClass` only; the window mean stays on `InspectedOccurrence`. Changes one
    Analyzer field, nothing on the Node.
+   -> done 2026-10-26 (11g B1, 1f7114d): `ampBase` is now always the detector's PCM floor. T2h byte-identical.
 
 7. **On-device `test_shipped_profile` cannot link on `esp32dev-analyzer` since 11e item 7 (medium).**
    `test/test_shipped_profile/test_main.cpp:36-48` includes `DetectionRuntime.cpp` but not
@@ -703,12 +706,16 @@ string before it was written down.
    packet rides in every Occurrence (248 B), every InspectedOccurrence, both pending-inspection slots and all
    four pipeline events. The rule A5 was fixed under (spec 5.4) applies again. Fix: the three classes only;
    re-measure with the T5 probe.
+   -> done 2026-10-26 (11g B1, 1f7114d): the three classes only. Host T5: Occurrence 200 -> 136, InspectedOccurrence
+   864 -> 800, pipeline event 1,440 -> 1,376.
 
 2. **`RawSampleHistory` costs 8 KB in every build and nothing reads it (medium).** `AudioSignal.h:46-123, 213`,
    `copyRawSampleHistory` / `rawSampleHistoryAvailable` / `AudioSamplePacket.rawHistoryReady` have no callers
    in src/ (two tests set the flag); the push runs on the per-sample IRAM path (`AudioSignal.cpp:72`).
    `AudioSignalStats.blocksProcessed` counts samples since the block path went and is still printed as blocks
    (`AnalyzerRuntimeReporter.cpp:213`). Fix: delete, or move behind the Analyzer's RAW tool.
+   -> done 2026-10-26 (11g B1, 1f7114d): deleted with `rawHistoryReady` and the SIZE line; `blocksProcessed` gone
+   (`frames_emitted` prints the sample count, OCCURRENCE summary drops `blocks=`). AudioSignal 8,168 -> 136 B (host).
 
 3. **The host replay re-implements the shape rule and has drifted from it (medium).** `Replay.cpp:345-451`
    (`printShapeWindow`) counts runs and steps with `d == spacing || d < -3*spacing` (`:390`) while the inspector
@@ -791,6 +798,8 @@ string before it was written down.
    Analyzer's side channel since 11e item 7, selected by `-D ANALYZER_MODE`, host-tested, with the Null-vs-diag
    replay diff in CI. Fix: rewrite the 5.5 line as the collaborator contract: records, never changes a verdict,
    hook order, the CI diff that enforces it.
+   -> done 2026-10-26 (step 11g A): myspec 5.5 states the side channel's contract (Null vs Analyzer variant,
+   hook order, records only, the native-replay vs native-replay-diag diff).
 
 2. **Names in the spec that the code does not have (medium).** `RejectedCandidateSummary` eight times
    (`:505, 537, 709`, present tense) for `SelectedRejectSummary`; the evidence targets `SupportStrength /
@@ -800,6 +809,9 @@ string before it was written down.
    `DetectionFamily.h`, `ActiveDetector`, `DETECTOR_FAMILY_*` in the present tense though none exist (step 9's
    plan inside the spec); `docs/myspec.md` (`:1282`) is the wrong path. Fix: the code's names, or a mapping stated
    once; the family block marked as agreed future terms.
+   -> done 2026-10-26 (step 11g A): SelectedRejectSummary throughout (old name mapped once in 5.5), the
+   InspectionTarget names with their SEQ spellings, detail.frequency, PatternCandidate and "pattern rule config"
+   gone, the family block marked as agreed terms not yet built (step 9), the path fixed.
 
 3. **Guide and help against the parsers (medium).** `notes_manual.md:49-51` says 95 characters "on the Emitter
    link"; the Emitter's USB reader is also `LineReader<95>` (`EmitterApp.h:98-99`). Not in the guide: SELFTEST
@@ -812,6 +824,11 @@ string before it was written down.
    header (`:674`); `rawcorpus.py` reads the header, so harmless today. The 11e guide text says the Analyzer's
    PARAM has no store: true, but `PARAM LIST|GET|SET|DUMP|RESET` in the summary block omits SAVE | LOAD, which
    the handler answers with `status=no_store`.
+   -> partly 2026-10-26 (step 11g A): guide has the line bounds per port, SELFTEST dur_ms= / external, RAW
+   decim= / sweep= / band= and its four layouts, SEQ start band=, the four Emitter markers, the Analyzer's SAVE|LOAD;
+   help strings fixed (SEQ help: band=, SEQ_EXPLAIN for SEQ_DETAIL, SEQ_STATUS; HELP: RAW keys, SELFTEST external,
+   no_store; RB help: SAVE|LOAD|RESET); spec: SEQ_STATUS, all four RAW layouts acknowledged. Left: the pcm
+   `RAW_BEGIN fields=` value (an output line, code batch) and `benchlib.py`'s SEQ_DETAIL (tools/).
 
 4. **`implementation-status.md` is history, not a live table (high for the rows named).** Params row: "a
    registry on the Analyzer: not implemented", "38 Node params" (PAR-003 is DONE; the Node registers 39, 17
@@ -821,6 +838,9 @@ string before it was written down.
    "two-inspector path" (three modules incl. Shape since a33f293), "Future TargetBandStrength", "Node build,
    sweep and the final gate run pending" (11b closed it), a `FrequencyMatchDetector` fix (removed code), a dated
    history entry at `:21` in a table whose README says "never dated history".
+   -> done 2026-10-26 (step 11g A): table rewritten as current state, no dated history; params (39 on the Node,
+   the Analyzer's registry), tests / CI (three on-device suites, three host envs, diag diff, strict include
+   check), inspection (two module kinds, shape required), signal variation, removed Freq rows regenerated.
 
 5. **Roadmaps and decisions (medium).** `roadmap-0-steps.md:1094` `11c. [NEXT]` while `:1098` and HEAD say
    running (the legend has no running tag); `:1172-1173` lists PAR-003 under "still open, not sequenced";
@@ -837,6 +857,11 @@ string before it was written down.
    (`cleanup-analyzer-node-isolation.md`), `tools/bench/selftest.py:5` (`selftest.md`); `test/README:4-6` lists
    six host suites of eleven; `DetectionProfile.h:20-28` lists enums without `BinShape`, `AmpMagnitude`, `Shape`;
    `DetectionCoreTypes.h:48-50` and `Occurrence.h:19-29` describe earlier passes.
+   -> partly 2026-10-26 (step 11g A): steps file (11c RUNNING with the legend extended, PAR-003 out of "still
+   open", OUT-002/003 and PAR-013 marked done in step 11), the five domain roadmaps' code-state blocks and focus
+   lines, decisions/README (dates sorted, three resolved open rows removed, three "pending" notes checked against
+   5b / 5g / 5f), research/README and soak-24h.md. Left: the pointers in platformio.ini, tools/bench/selftest.py,
+   test/README and the src/ header comments (files outside this batch's docs scope).
 
 ### D4. Tests and tools
 
@@ -862,6 +887,11 @@ string before it was written down.
    `src/selftest/`, `NvsParamStore.h`, `PcmPreprocessor.h` alone, `AnalyzerTrialClassifier.cpp` on the host,
    `*Printer.cpp`, `FieldStateTracker.cpp` directly, BinTrack at the wrap (D1.1). The `test_ignore` /
    `test_filter` twin lists in `platformio.ini` agree today and nothing checks that they do.
+   -> partly 2026-10-26 (11g A, 64535d3): the radio filter across a reboot (`test_net_frame`), the outbox queue
+   (`test_ring_queue`), the SEQ_SOURCE_CORE / SPEC lines seqcmp parses (`test_report_printers`), BinTrack at the wrap
+   (5fcd3fc), shapesurvey's parser (`tools/bench/test_shapesurvey.py`, in CI). Open: NodeNet pacing (the file is
+   ESP-only; the reply spacing would need a pure helper), the mode apps' printers (RB STATUS, NET reply, SEQ_TRIAL /
+   SUMMARY, RAW_*), src/hal, selftest, NVS store, the dispatchers, the twin-list check.
 
 4. **Tool parsers that do match today (verified, for the record).** `netcheck.py` (`NET reply`, `PARAM path=`,
    the `RB STATUS ... board=` tail), `nodegroup.py` (`BEH emit start`, `RB emit shape=hop`, `RB verdict=`, `RB

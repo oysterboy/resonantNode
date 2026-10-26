@@ -149,7 +149,7 @@ Diagnostic sidechain:
 
 ```text
 Detector
-→ DetectorReport / RejectedCandidateSummary
+→ DetectorReport / SelectedRejectSummary
 → Analyzer SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY
 ```
 
@@ -305,8 +305,7 @@ profile kind
 profile label
 detector selection / detector id
 detector config
-inspection plan
-pattern rule config
+inspection plan (it carries the verdict's requirements)
 field-state config
 analyzer-facing profile family/detail namespace
 ```
@@ -502,7 +501,7 @@ Detector output surfaces:
 ```text
 Occurrence
 DetectorReport
-RejectedCandidateSummary
+SelectedRejectSummary
 ```
 
 Detector input/update internals may remain specialized.
@@ -534,7 +533,7 @@ DetectorId
 DetectorDescriptor
 Occurrence
 DetectorReport
-RejectedCandidateSummary
+SelectedRejectSummary
 DetectorRejectClass
 ```
 
@@ -572,7 +571,11 @@ FrequencyMatch removal.
 
 Since 2026-10-22 there is one family, ScalarTransientDetector
 (docs/decisions/2026-10-22-remove-frequencymatch.md). A second detector,
-including a returning frequency detector, joins as a family on these terms:
+including a returning frequency detector, joins as a family on these terms.
+They are agreed terms for the second family, not code yet: `DetectionFamily.h`,
+`ActiveDetector`, the shims and the `DETECTOR_FAMILY_*` flag below do not exist
+while Scalar is the only family; `DetectionRuntime` holds a
+`ScalarTransientDetector` directly (2026-10-26). Step 9 builds them.
 
 ```text
 Boundary
@@ -681,7 +684,7 @@ Those belong to:
 
 ```text
 DetectorReport
-RejectedCandidateSummary
+SelectedRejectSummary
 neutral tooling output
 ```
 
@@ -692,7 +695,7 @@ percentiles, coverage) are on `InspectedOccurrence` only.
 
 ---
 
-### 5.5 DetectorReport / RejectedCandidateSummary Boundary
+### 5.5 DetectorReport / SelectedRejectSummary Boundary
 
 `DetectorReport` is canonical detector-stage truth.
 
@@ -706,7 +709,8 @@ If it did not emit, what selected rejected candidate best explains the miss?
 What detector thresholds/gate facts matter for clean reporting?
 ```
 
-`RejectedCandidateSummary` is canonical selected-reject truth.
+`SelectedRejectSummary` (`DetectorReport::selectedReject`) is canonical
+selected-reject truth. Older docs call it `RejectedCandidateSummary`.
 
 It may include:
 
@@ -722,12 +726,13 @@ confidence
 score / contrast where relevant
 ```
 
-DetectorReport may include typed detector detail:
+DetectorReport may include typed detector detail, one namespace per family:
 
 ```text
-detail.scalar.*
-detail.frequency.*
+scalar.*     DetectorReport::scalar (ScalarDetectorReportDetail), printed as detail.scalar.*
 ```
+
+A new family adds its own namespace (5.3, "Adding a detector family").
 
 Rule:
 
@@ -738,9 +743,29 @@ OccurrenceVerdict is for pattern meaning.
 Occurrence is for accepted-event transport.
 ```
 
-Clean Analyzer output must read DetectorReport / RejectedCandidateSummary.
+Clean Analyzer output must read DetectorReport / SelectedRejectSummary.
 
-`DetectionDiagnostics` is historical archive material, not active source code.
+`DetectionDiagnostics` (`src/detection/DetectionDiagnostics.h`, step 11e item 7)
+is the Analyzer's side channel out of `DetectionRuntime`: the per-frame
+counters, the pipeline event queue SEQ_SOURCE / SEQ_INSPECT read, the detector
+report captured with each occurrence, the incomplete-window history snapshot.
+Its contract:
+
+```text
+DetectionRuntime holds one ActiveDetectionDiagnostics and calls its hooks
+unconditionally, with no #ifdef in the runtime's bodies.
+The Analyzer build (ANALYZER_MODE) gets DetectionDiagnostics; every other
+build gets NullDetectionDiagnostics, whose hooks are empty.
+Hook order per frame: onObserveFrame, onNoFreshFrequencySkip or
+onFreshDetectorInput, onDrain, then inside the drain onOccurrencePopped and
+captureReport per popped occurrence and onInspected, onVerdict per inspected
+one (a waiting occurrence keeps its captured report until its window is
+complete), then afterDrain.
+Diagnostics record. They never change a detector input, an inspection or a
+verdict, and the runtime reads nothing back from them.
+CI enforces it: the replay over test/fixtures prints the same output with
+the Null and the ANALYZER_MODE variant (native-replay vs native-replay-diag).
+```
 
 ---
 
@@ -767,14 +792,15 @@ MagnitudeFeatureStrength   a window of one FeatureHistory stream, summarised and
 BinShape                   the band bins the occurrence visited, in order (DET-015)
 ```
 
-Current evidence targets may include:
+Current evidence targets (`InspectionTarget`, `InspectorTypes.h`; SEQ and the replay
+print the lower-case name given in brackets):
 
 ```text
-SupportStrength
-FrequencyScoreStrength
-FrequencyContrastQuality
-TargetBandStrength
-Shape                      distinct bins and rising steps, classed None / Weak / Medium / Strong
+Amp          (amp)        AMP envelope support strength
+TargetScore  (target)     frequency-score strength
+Contrast     (contrast)   frequency-contrast quality
+TargetBand   (band)       target-band strength
+Shape        (shape)      distinct bins and rising steps, classed None / Weak / Medium / Strong
 ```
 
 Shape exists only in band mode: when the track has no band bins over the window, the shape evidence is
@@ -932,7 +958,7 @@ Clean source/stage facts come from:
 
 ```text
 DetectorReport
-RejectedCandidateSummary
+SelectedRejectSummary
 OccurrenceVerdict
 AnalyzerReport canonical classification
 expected trial/window facts
@@ -1014,7 +1040,7 @@ Neutral output may stay useful but is not clean analyzer truth:
 
 ```text
 SEQ REPORT
-SEQ STATUS
+SEQ_STATUS
 SYSTEM_HEALTH
 AUDIO summary
 OCCURRENCE summary
@@ -1046,6 +1072,10 @@ RAW feature capture reports normalized feature-domain values directly:
 ```text
 ms,amp_strength,env_strength,freq_score,freq_fresh
 ```
+
+The capture has two more layouts, the bare I2S sample and a mixed feature +
+PCM row (columns and modes: `docs/notes_manual.md`, RAW); they print the same
+values under the same rule.
 
 `amp_strength` and `env_strength` are `Strength16` values. `freq_score` is the
 canonical `FrequencyScore16` value, not target power and not a display-only
@@ -1096,11 +1126,10 @@ Behavior must not consume:
 ```text
 Occurrence
 InspectedOccurrence
-PatternCandidate internals
+DetectorReport / SelectedRejectSummary
 raw detector flags
 live FeatureStreams
 AudioSignal internals
-RawSampleHistory
 legacy analyzer bridge data
 ```
 
@@ -1279,7 +1308,7 @@ docs/roadmaps/roadmap-0-steps.md    ordered next steps
 docs/roadmaps/roadmap archive/roadmap-changelog.md
 ```
 
-`docs/myspec.md` should stay focused on current architecture and not carry the
+`docs/specs/myspec.md` should stay focused on current architecture and not carry the
 future roadmap backlog inline.
 
 ---

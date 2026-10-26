@@ -1095,9 +1095,15 @@ the previous gate open unless the step says it can run in parallel.
    Owner 2026-10-25: the reference cell (bench/sessions/2026-10-23-cell-desk-ref-110cm) repeated every few hours
    for day-to-day variation, and listen logs of the silent nodes. No physical change; plays sound in the empty room.
    Needs E2/E3 back as Analyzer/Emitter between runs of 11a.
-   Running 2026-10-26 11:38 to 10-27 11:38 (bench/sessions/2026-10-26-soak24-shape, tools/bench/soakcycle.py): three
-   Nodes free on a33f293 (shape rule), and every hour (owner) a room check: Nodes silenced, Analyzer hop / chirp SEQ and
-   RAW hop captures for per-bin levels.
+   First run 2026-10-26 11:38, stopped after 1.6 h for the review Part D fixes (bench/sessions/2026-10-26-soak24-shape:
+   two room checks, 100/100 chains ended, 0 noise-started of 1,109 answers, 0 drops / resets; the 3200 Hz chirp read
+   too short at 11:40 and long enough at 12:40). The fixes (5fcd3fc): BinTrack froze at the 32-bit ms wrap and the
+   shape rule then passed plain chirps (reproduced on the board with the wrap clock), the radio seq seed, the
+   shipped-profile test on the Analyzer build, the survey parser, two suites on the host.
+   Running 2026-10-26 13:39 to 10-27 13:39 (bench/sessions/2026-10-26-soak24-shape-b, all boards on 5fcd3fc): three
+   Nodes free, a room check at minutes 7 / 27 / 47 of every hour (owner: hourly steps in the drift are suspicious,
+   distant church bells ring on the hour and the quarters; the checks avoid the chimes and sample three times as
+   densely): Nodes silenced, Analyzer hop / chirp SEQ and RAW hop captures for per-bin levels.
 
 11d. [TODO] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

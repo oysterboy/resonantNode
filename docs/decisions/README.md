@@ -88,6 +88,7 @@ what replaced it.
 | 2026-10-26 | [DET-015: a bin track read by a shape inspector (>= 3 bins, 2 steps up, band mode); an in-band sweep counts as a network signal](2026-10-26-det015-bin-track-inspector.md) |
 | 2026-10-26 | [The Node's boot baseline runs: mic warmup, then the quiet gate (review D2.4)](2026-10-26-node-boot-warmup-runs.md) (not yet implemented, 11g) |
 | 2026-10-26 | [Drop `RB debug off\|events` and the compile-time Node tracing (review D2.5)](2026-10-26-drop-rb-debug.md) (not yet implemented, 11g) |
+| 2026-10-26 | [Milestone "installation-ready node": gate = 11c soak, 11g batches, 11d OTA firmware; then the step sequence restarts at 12 in a fresh file](2026-10-26-milestone-installation-ready-node.md) (cut-over waits for the gate) |
 
 ## Open
 
@@ -100,6 +101,7 @@ Resolved and taken off this table 2026-10-26: the Node's profile
 
 | Question | Tracked in |
 |---|---|
+| The goal of the phase after the installation-ready milestone (8a, signal variation part 2, is the candidate) | `2026-10-26-milestone-installation-ready-node.md`; decided at the cut-over, in the new roadmap-0-steps.md |
 | Which metrics belong in the generic `Occurrence` core vs detector-specific detail | `docs/specs/myspec.md` §5 ("temporary typed accepted-event detail"); DET-003..006 |
 | How much `FeatureHistory` to retain on-device | `docs/refactors/archive/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/archive/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut, `DetectionDiagnostics` (step 11e item 7) the runtime side; Analyzer printers still in `src/detection/` (review D2.8, step 11g batch C) |

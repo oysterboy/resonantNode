@@ -9,6 +9,9 @@
 
 #include <filesystem>
 
+#include <ParamRegistry.h>
+#include "../app/ParamBindings.h"
+#include "../app/ParamIds.h"
 #include "../app/TimeBase.h"
 #include "../audio/AudioSignal.h"
 #include "../audio/AudioSource.h"
@@ -248,38 +251,31 @@ bool loadCapture(const std::string& path, Capture& out) {
     return endsWith(path, ".csv") ? loadRawCsv(path, out) : loadWav(path, out);
 }
 
-bool applyProfileSet(detection::DetectionProfile& profile, const std::string& key, double value) {
-    auto& sc = profile.scalarTransient;
-    const unsigned long u = static_cast<unsigned long>(value);
-    const float fv = static_cast<float>(value);
-    if (key == "scalar_onset_threshold") {
-        sc.onsetDetectionThreshold = fv;
-    } else if (key == "scalar_release_threshold") {
-        sc.onsetReleaseThreshold = fv;
-    } else if (key == "scalar_min_duration_ms") {
-        sc.minTransientDurationMs = u;
-    } else if (key == "scalar_max_duration_ms") {
-        sc.maxTransientDurationMs = u;
-    } else if (key == "scalar_min_peak_strength") {
-        sc.minTransientPeakStrength = fv;
-    } else if (key == "scalar_release_debounce_ms") {
-        sc.releaseDebounceMs = u;
-    } else if (key == "scalar_cooldown_ms") {
-        sc.cooldownAfterOnsetMs = u;
-    } else if (key == "scalar_min_release_coverage_ms") {
-        sc.minCoverageAboveReleaseMs = u;
-    } else if (key == "scalar_min_longest_island_ms") {
-        sc.minLongestIslandMs = u;
-    } else if (key == "scalar_max_gap_ms") {
-        sc.maxGapMs = u;
-    } else if (key == "contrast_medium") {
-        profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = fv;
-    } else if (key == "amp_medium") {
-        profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = fv;
-    } else {
-        return false;
+const char* applyProfileSet(detection::DetectionProfile& profile, const std::string& path, const std::string& valueText) {
+    param::ParamRegistry registry;
+    registry.setGroupNamer(param::moduleNameForGroup);
+    param::bindScalarTransientParams(registry, profile.scalarTransient);
+    // The inspectors' medium limits, bound straight into the plan's module for
+    // the target (the Node keeps its own copies, ResonantNodeParams.cpp).
+    const size_t moduleCount = profile.inspectionPlan.count > detection::kMaxInspectionModules
+                                   ? detection::kMaxInspectionModules
+                                   : profile.inspectionPlan.count;
+    for (size_t i = 0; i < moduleCount; ++i) {
+        detection::InspectionModuleConfig& module = profile.inspectionPlan.modules[i];
+        float* medium = &module.magnitude.supportStrength.mediumPeakThreshold;
+        if (module.target == detection::InspectionTarget::Contrast) {
+            registry.addFloat(param::ParamId::Detection_ContrastMedium, param::ModuleId::Detection,
+                              "detection.contrast_medium", medium, 0.0f, 32767.0f);
+        } else if (module.target == detection::InspectionTarget::Amp) {
+            registry.addFloat(param::ParamId::Detection_AmpMedium, param::ModuleId::Detection,
+                              "detection.amp_medium", medium, 0.0f, 32767.0f);
+        }
     }
-    return true;
+    const param::ParamBinding* binding = registry.find(path.c_str());
+    if (binding == nullptr) {
+        return param::paramSetStatusName(param::ParamSetStatus::UnknownParam);
+    }
+    return param::paramSetStatusName(registry.applyValue(*binding, valueText.c_str()));
 }
 
 void printVerdict(const detection::OccurrenceVerdict& v) {

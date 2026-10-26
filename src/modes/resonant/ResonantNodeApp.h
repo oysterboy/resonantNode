@@ -184,7 +184,6 @@ private:
     void startEmission(unsigned long now, bool sawPatternThisLoop, bool selfChirpSuppressed);  // step 10 item 9
     void updateEmissions(unsigned long now);                                                     // step 10 item 9
     void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset (step 10 item 2)
-    void registerBehaviorParams();    // behavior.* on the registry (PAR-006, step 10 item 4)
     void loadInspectionLimitsFromProfile();  // detection.contrast_medium / amp_medium from the plan (item 7)
 
     // Hardware wiring.

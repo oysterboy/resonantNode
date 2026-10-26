@@ -15,6 +15,7 @@
 #include "../../detection/evaluation/OccurrenceVerdict.h"
 #include "../../detection/occurrences/Occurrence.h"
 #include "../../audio/AudioSource.h"
+#include <ParamRegistry.h>
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/SerialLine.h"
 #include "../../detection/analyzer/AnalyzerReportTypes.h"
@@ -87,11 +88,6 @@ public:
         bool diagnosticsEnabled = true;
         bool frequencyBandEnabled = true;
         unsigned long frequencyUpdateEverySamples = 4;
-    };
-
-    //PARAM TUNING TEMPORARY
-    struct AnalyzerTuning {
-        detection::ScalarTransientConfig scalarTransient = {};
     };
 
     AnalyzerApp();
@@ -399,7 +395,6 @@ private:
     void printSequenceSummaryClean() const;
     void printSequenceReport() const;
     const char* activeAnalyzerProfileName() const;
-    void printParamStatus() const;
     const detection::DetectionProfile& effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
@@ -477,7 +472,11 @@ private:
     uint64_t _diagSampleWorkUs = 0; // Issue #26 diagnostics: time spent in the per-sample loop.
     uint64_t _diagSamplesWorked = 0; // Issue #26 diagnostics: samples processed in that time.
     FreqBandStream _freqBandStream; // Live frequency-band stream used by analyzer diagnostics.
-    AnalyzerTuning _analyzerTuning = {}; // Temporary tuning overrides from console commands.
+    // SEQ tuning (PAR-003, step 11e item 9): the TonalPulseScalar profile's
+    // detection.scalar_* values on the registry with the Node's paths; a SEQ
+    // start copies them into the profile (effectiveSequenceProfile).
+    detection::ScalarTransientConfig _scalarTuning = {};
+    param::ParamRegistry _paramRegistry;
     SeqOutputConfig _seqOutputConfig = {}; // Sequence-report output policy.
     PendingSequenceStart _pendingSequenceStart = {}; // Deferred sequence start request.
 

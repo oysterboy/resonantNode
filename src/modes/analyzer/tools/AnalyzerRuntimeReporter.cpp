@@ -32,7 +32,6 @@ void AnalyzerApp::printFeatureHistoryRecordCounts() const {
 }
 
 void AnalyzerApp::printDetectionParameters() const {
-    //PARAM TUNING TEMPORARY
     const detection::DetectionProfile& activeProfile = effectiveSequenceProfile();
 
     const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
@@ -97,40 +96,6 @@ void AnalyzerApp::printDetectionParameters() const {
     serialOut().print(ageSamples);
     serialOut().print(" freq.packet_age_ms=");
     serialOut().println(ageMs, 3);
-}
-
-void AnalyzerApp::printParamStatus() const {
-    const detection::DetectionProfile& activeProfile = effectiveSequenceProfile();
-
-    const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
-    serialOut().print("PARAM scalar_observed_stream=");
-    serialOut().print(scalarObservedStreamDisplayName(scalar.observedStream));
-    serialOut().print(" scalar_onset_threshold=");
-    serialOut().print(scalar.onsetDetectionThreshold, 1);
-    serialOut().print(" scalar_release_threshold=");
-    serialOut().print(scalar.onsetReleaseThreshold, 1);
-    serialOut().print(" scalar_cooldown_ms=");
-    serialOut().print(scalar.cooldownAfterOnsetMs);
-    serialOut().print(" scalar_min_duration_ms=");
-    serialOut().print(scalar.minTransientDurationMs);
-    serialOut().print(" scalar_max_duration_ms=");
-    serialOut().print(scalar.maxTransientDurationMs);
-    serialOut().print(" scalar_min_peak_strength=");
-    serialOut().print(scalar.minTransientPeakStrength, 1);
-    serialOut().print(" scalar_release_debounce_ms=");
-    serialOut().print(scalar.releaseDebounceMs);
-    serialOut().print(" scalar_require_carrier_quality=");
-    serialOut().print(scalar.requireCarrierQuality ? 1 : 0);
-    serialOut().print(" scalar_require_min_strength=");
-    serialOut().print(scalar.requireMinStrength ? 1 : 0);
-    serialOut().print(" scalar_min_strength=");
-    serialOut().print(scalar.minMatchedMeanStrength, 1);
-    serialOut().print(" scalar_min_release_coverage_ms=");
-    serialOut().print(scalar.minCoverageAboveReleaseMs);
-    serialOut().print(" scalar_min_longest_island_ms=");
-    serialOut().print(scalar.minLongestIslandMs);
-    serialOut().print(" scalar_max_gap_ms=");
-    serialOut().println(scalar.maxGapMs);
 }
 
 void AnalyzerApp::printAudioSourceSummary() const {

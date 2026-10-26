@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -59,6 +60,18 @@ inline const char* rest(const char* line, const char* verb) {
         ++p;
     }
     return p;
+}
+
+// Whole-string match, case-insensitive (command verbs).
+inline bool equalsIgnoreCase(const char* a, const char* b) {
+    while (*a != '\0' && *b != '\0') {
+        if (toupper(static_cast<unsigned char>(*a)) != toupper(static_cast<unsigned char>(*b))) {
+            return false;
+        }
+        ++a;
+        ++b;
+    }
+    return *a == '\0' && *b == '\0';
 }
 
 }  // namespace text_parse

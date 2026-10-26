@@ -317,7 +317,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         serialOut().print(detection::detectorSelectionName(selectedProfile.detectorSelection));
         serialOut().print(" detector=");
         serialOut().print(detection::detectorSelectionName(selectedProfile.detectorSelection));
-        //PARAM TUNING TEMPORARY
         serialOut().print(" scalar_observed_stream=");
         serialOut().print(scalarObservedStreamDisplayName(selectedProfile.scalarTransient.observedStream));
         serialOut().print(" scalar_onset_threshold=");

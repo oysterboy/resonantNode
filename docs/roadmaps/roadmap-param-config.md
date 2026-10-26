@@ -202,9 +202,14 @@ are checked; ParamId values are still assigned by hand per module).
 
 ### PAR-003 - Analyzer param registration
 
-Status: IN PROGRESS, step 11e item 9 (docs/refactors/review-fixes-2026-10-25.md): the 14 scalar knobs bind
-through the shared binding function, same paths and grammar as the Node, the key=value parser goes
-(decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md).
+Status: DONE 2026-10-26, step 11e item 9 (docs/refactors/review-fixes-2026-10-25.md): the Analyzer's 13
+`detection.scalar_*` knobs bind through `src/app/ParamBindings.h` (`bindScalarTransientParams`, shared with
+the Node and the host replay) into its own `ParamRegistry`, and `PARAM LIST | GET | SET | DUMP | RESET` run
+through the shared handler `src/app/ParamCommands` (no store; SAVE / LOAD answer `status=no_store`). The
+key=value parser and `PARAM STATUS` are gone (decisions/2026-10-25-analyzer-params-on-registry-and-line-
+policy.md). The observed stream is the profile's, not a param. The `analyzer.*` paths sketched below (trial
+window, count, period) were not registered: SEQ start options carry them per run; register them when a
+run needs to be reproduced from `PARAM DUMP` alone.
 
 ```text
 Add registerAnalyzerParams(...).

@@ -18,6 +18,8 @@
 #include "../../detection/analyzer/AnalyzerTrialClassifier.h"
 #include "../../detection/inspection/OccurrenceInspector.h"
 #include "../../app/BuildInfo.h"
+#include "../../app/ParamBindings.h"
+#include "../../app/ParamIds.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
 
@@ -543,15 +545,18 @@ AnalyzerApp::AnalyzerApp()
 #endif
       _audioSignal(_audioSource),
       _freqBandStream() {
-    //PARAM TUNING TEMPORARY
-    _analyzerTuning.scalarTransient = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseScalar).scalarTransient;
+    _scalarTuning = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseScalar).scalarTransient;
 }
 
+// The selected profile with the registry's detection.scalar_* values on top
+// (TonalPulseScalar only; AmpExperimental runs as defined). The observed
+// stream stays the profile's: it is not a param (owner 2026-10-25).
 detection::DetectionProfile const& AnalyzerApp::effectiveSequenceProfile() const {
-    //PARAM TUNING TEMPORARY
     _sequenceProfileScratch = detection::detectionProfileForKind(_sequenceTest.profileKind);
     if (_sequenceTest.profileKind == detection::DetectionProfileKind::TonalPulseScalar) {
-        _sequenceProfileScratch.scalarTransient = _analyzerTuning.scalarTransient;
+        const detection::FeatureStreamId stream = _sequenceProfileScratch.scalarTransient.observedStream;
+        _sequenceProfileScratch.scalarTransient = _scalarTuning;
+        _sequenceProfileScratch.scalarTransient.observedStream = stream;
     }
     return _sequenceProfileScratch;
 }
@@ -587,11 +592,16 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = timebase::nowMs() + 500UL;
 
     serialOut().println("EVT analyzer_ready");
-    serialOut().println("EVT analyzer_help type='HELP', 'PARAM scalar_onset_threshold=2000 scalar_min_duration_ms=85', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT'");
+    serialOut().println("EVT analyzer_help type='HELP', 'PARAM LIST|GET <path>|SET <path> <value>|DUMP|RESET', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT'");
 }
 
 void AnalyzerApp::configureParameters() {
     configureI2SParameters();
+    // The SEQ tuning on the registry (PAR-003): the Node's paths through the
+    // shared binding; the profile's values are the defaults PARAM RESET returns to.
+    _paramRegistry.setGroupNamer(param::moduleNameForGroup);
+    param::bindScalarTransientParams(_paramRegistry, _scalarTuning);
+    _paramRegistry.captureDefaults();
 }
 
 void AnalyzerApp::configureI2SParameters() {

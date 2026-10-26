@@ -49,7 +49,7 @@ on T2h); then 8, 9 (mode layer, the two owner-decided behavior changes). 5 befor
 Open points, to ask before the item starts:
 - item 9: `scalar_observed_stream` is an Analyzer-only knob of enum type; the registry has no enum type.
   Register it as a uint16 code, keep it as a `SEQ ... stream=` option only, or add an enum type to the
-  library.
+  library. Owner 2026-10-26: not a param; the profile sets it (`SEQ PROFILE`).
 - item 7: whether the Analyzer reads diagnostics through `DetectionRuntime` forwarding methods (small
   Analyzer diff, Analyzer-only methods stay in the runtime header) or through `detection.diagnostics()`
   (the runtime header loses every Analyzer-only method).
@@ -163,6 +163,28 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   `verbose=` the same. Left as is: the `lo-hi` band parse (range-checked) and the hop list (end-checked).
   New host suite `test_text_parse` (7 tests) in native-test-behavior. notes_manual: a "Serial lines" paragraph.
   Host 75/75, T2h byte-identical; the mode layer builds on CI.
+- 2026-10-26, item 9 prep (8758f09): `ScalarTransientConfig` and `BehaviorGateConfig` carry their ms and count
+  fields as `uint32_t`, the registry's width; the Node bound them through `reinterpret_cast<uint32_t*>` behind a
+  static_assert that only holds on the 32-bit target, and the shared binding runs on the host too (Linux CI).
+  One overload fix (`selftest::field` took the uint32 as ambiguous). Host 75/75, T2h byte-identical.
+- 2026-10-26, item 9 (PAR-003): `src/app/ParamBindings.h` (`bindScalarTransientParams`, `bindBehaviorParams`:
+  the 13 + 13 paths, ranges and ids in one place; the Node's registrations call them, same paths as before) and
+  `src/app/ParamCommands.h/.cpp` (one PARAM handler for every mode, the Node's lines; it returns what it wrote
+  and the caller applies: the Node's `applyParamModule`, nothing on the Analyzer). The Analyzer holds a
+  `ScalarTransientConfig _scalarTuning` on its own `ParamRegistry` (13 params, no store: SAVE / LOAD answer
+  `status=no_store`, RESET returns to the profile's values); a value applies at the next SEQ start as before;
+  the observed stream is the profile's (owner: not a param). Gone: `AnalyzerTuning`, the key=value parser
+  (`parseScalarTransientToken`, `parseFeatureStreamToken`), the four `printParamField` overloads and the 14
+  diff blocks, `printParamStatus`, the five `PARAM TUNING TEMPORARY` markers; an old-form token answers
+  `ERR PARAM unknown; use PARAM SET detection.scalar_* <value>`. The host replay's `--set` takes the same
+  paths through the same binding (`detection.scalar_*`, `detection.contrast_medium`, `detection.amp_medium`),
+  range-checked like the board (`tools/bench/notchsweep.py` updated; the corpus test's 40000 limit is 32767,
+  the range's top). Node side effect: PARAM LOAD / RESET now also apply `output.silent` (applySilent is
+  idempotent; RESET used to leave a silenced node silent until the next SET). New host suite
+  `test_param_commands` (5 tests). `text_parse::equalsIgnoreCase`; the Node's copy forwards to it.
+  notes_manual Analyzer section and knob table, roadmap-param-config PAR-003 DONE. Host 80/80, T2h
+  byte-identical, include direction strict; the Node's registered path list unchanged (39), the Analyzer's
+  13 are the first 13 of it; the three mode builds are CI's.
 
 ## Decisions recorded in this pass
 

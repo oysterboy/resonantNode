@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../../app/ParamCommands.h"
 #include "../../app/SerialOut.h"
 #include "../../app/TextParse.h"
 
@@ -35,124 +36,6 @@ bool parseOnOffToken(const char* token, bool* valid) {
 
 const char* onOffName(bool value) {
     return value ? "on" : "off";
-}
-
-void printParamFieldStart(bool& firstField) {
-    if (!firstField) {
-        serialOut().print("PARAM ");
-    } else {
-        serialOut().print(" ");
-    }
-    firstField = true;
-}
-
-void printParamField(const char* name, float value, bool& firstField) {
-    printParamFieldStart(firstField);
-    serialOut().print(name);
-    serialOut().print("=");
-    serialOut().print(value, 1);
-}
-
-void printParamField(const char* name, unsigned long value, bool& firstField) {
-    printParamFieldStart(firstField);
-    serialOut().print(name);
-    serialOut().print("=");
-    serialOut().print(value);
-}
-
-void printParamField(const char* name, bool value, bool& firstField) {
-    printParamFieldStart(firstField);
-    serialOut().print(name);
-    serialOut().print("=");
-    serialOut().print(value ? "1" : "0");
-}
-
-void printParamField(const char* name, detection::FeatureStreamId value, bool& firstField) {
-    printParamFieldStart(firstField);
-    serialOut().print(name);
-    serialOut().print("=");
-    serialOut().print(scalarObservedStreamDisplayName(value));
-}
-
-bool parseFeatureStreamToken(const char* token, detection::FeatureStreamId& out) {
-    if (token == nullptr) {
-        return false;
-    }
-    if (equalsIgnoreCase(token, "scalar") || equalsIgnoreCase(token, "amp") || equalsIgnoreCase(token, "amplitude") || equalsIgnoreCase(token, "ampenvelope")) {
-        out = detection::FeatureStreamId::AmpEnvelope;
-        return true;
-    }
-    if (equalsIgnoreCase(token, "ampmagnitude") || equalsIgnoreCase(token, "amp_magnitude")) {
-        out = detection::FeatureStreamId::AmpMagnitude;
-        return true;
-    }
-    if (equalsIgnoreCase(token, "freqtarget") || equalsIgnoreCase(token, "frequencytarget")) {
-        out = detection::FeatureStreamId::FrequencyTarget;
-        return true;
-    }
-    if (equalsIgnoreCase(token, "contrast") || equalsIgnoreCase(token, "freqcontrast") || equalsIgnoreCase(token, "frequencycontrast")) {
-        out = detection::FeatureStreamId::FrequencyContrast;
-        return true;
-    }
-    return false;
-}
-
-bool parseScalarTransientToken(const char* token, detection::ScalarTransientConfig& config) {
-    if (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") || startsWithTokenIgnoreCase(token, "scalarObservedStream=") || startsWithTokenIgnoreCase(token, "scalarStream=")) {
-        const char* value = text_parse::tokenValue(token);
-        detection::FeatureStreamId stream = config.observedStream;
-        if (parseFeatureStreamToken(value, stream)) {
-            config.observedStream = stream;
-            return true;
-        }
-        return false;
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_onset_threshold=") || startsWithTokenIgnoreCase(token, "scalarOnsetThreshold=")) {
-        return text_parse::parseFiniteFloat(text_parse::tokenValue(token), config.onsetDetectionThreshold);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_release_threshold=") || startsWithTokenIgnoreCase(token, "scalarReleaseThreshold=")) {
-        return text_parse::parseFiniteFloat(text_parse::tokenValue(token), config.onsetReleaseThreshold);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_cooldown_ms=") || startsWithTokenIgnoreCase(token, "scalarCooldownMs=")) {
-        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.cooldownAfterOnsetMs);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_min_duration_ms=") || startsWithTokenIgnoreCase(token, "scalarMinDurationMs=")) {
-        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.minTransientDurationMs);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_max_duration_ms=") || startsWithTokenIgnoreCase(token, "scalarMaxDurationMs=")) {
-        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.maxTransientDurationMs);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_min_peak_strength=") || startsWithTokenIgnoreCase(token, "scalarMinPeakStrength=")) {
-        return text_parse::parseFiniteFloat(text_parse::tokenValue(token), config.minTransientPeakStrength);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_release_debounce_ms=") || startsWithTokenIgnoreCase(token, "scalarReleaseDebounceMs=")) {
-        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.releaseDebounceMs);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_require_carrier_quality=") || startsWithTokenIgnoreCase(token, "scalarRequireCarrierQuality=")) {
-        const char* value = text_parse::tokenValue(token);
-        bool valid = false;
-        config.requireCarrierQuality = parseOnOffToken(value, &valid);
-        return valid;
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_require_min_strength=") || startsWithTokenIgnoreCase(token, "scalarRequireMinStrength=")) {
-        const char* value = text_parse::tokenValue(token);
-        bool valid = false;
-        config.requireMinStrength = parseOnOffToken(value, &valid);
-        return valid;
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_min_strength=") || startsWithTokenIgnoreCase(token, "scalarMinStrength=")) {
-        return text_parse::parseFiniteFloat(text_parse::tokenValue(token), config.minMatchedMeanStrength);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_min_release_coverage_ms=") || startsWithTokenIgnoreCase(token, "scalarMinReleaseCoverageMs=")) {
-        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.minCoverageAboveReleaseMs);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_min_longest_island_ms=") || startsWithTokenIgnoreCase(token, "scalarMinLongestIslandMs=")) {
-        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.minLongestIslandMs);
-    }
-    if (startsWithTokenIgnoreCase(token, "scalar_max_gap_ms=") || startsWithTokenIgnoreCase(token, "scalarMaxGapMs=")) {
-        return text_parse::parseUnsigned(text_parse::tokenValue(token), config.maxGapMs);
-    }
-    return false;
 }
 
 } // namespace
@@ -194,8 +77,7 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println("SEQ IN: PROFILE TonalPulseScalar|AmpExperimental");
     serialOut().println("SEQ PROFILE TonalPulseScalar");
     serialOut().println("SEQ PROFILE AmpExperimental");
-    serialOut().println("SEQ PARAM: scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
-    serialOut().println("SEQ PARAM STATUS");
+    serialOut().println("SEQ PARAM: PARAM SET detection.scalar_<key> <value> (PARAM LIST shows the keys, PARAM DUMP the values; applied at the next SEQ start)");
 }
 
 void AnalyzerApp::pollUsbConsole() {
@@ -214,8 +96,7 @@ void AnalyzerApp::pollUsbConsole() {
 
 void AnalyzerApp::handleUsbLine(const char* line) {
     if (equalsIgnoreCase(line, "HELP")) {
-        serialOut().println("CMD: PARAM scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
-        serialOut().println("CMD: PARAM STATUS");
+        serialOut().println("CMD: PARAM LIST|GET <path>|SET <path> <value>|DUMP|RESET (detection.scalar_*, applied at the next SEQ start)");
         serialOut().println("CMD: EMIT CHIRP freq=3200 dur=100");
         serialOut().println("CMD: EMIT MODE REMOTE");
         serialOut().println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
@@ -235,79 +116,10 @@ void AnalyzerApp::handleUsbLine(const char* line) {
     }
 
     if (startsWithTokenIgnoreCase(line, "PARAM")) {
-        strncpy(_commandScratch, line, sizeof(_commandScratch));
-        _commandScratch[sizeof(_commandScratch) - 1] = '\0';
-
-        char* savePtr = nullptr;
-        char* token = strtok_r(_commandScratch, " ", &savePtr);
-        token = strtok_r(nullptr, " ", &savePtr);
-        if (token == nullptr || equalsIgnoreCase(token, "STATUS")) {
-            printParamStatus();
-            return;
-        }
-
-        detection::ScalarTransientConfig scalarTuning = _analyzerTuning.scalarTransient;
-        const detection::ScalarTransientConfig oldScalarTuning = scalarTuning;
-        bool printedAny = false;
-
-        do {
-            const bool scalarOk = parseScalarTransientToken(token, scalarTuning);
-            if (!scalarOk) {
-                serialOut().print("ERR PARAM token=");
-                serialOut().print(token);
-                serialOut().println(" (unknown key or invalid value; unchanged)");
-            }
-        } while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr);
-
-        if (scalarTuning.observedStream != oldScalarTuning.observedStream) {
-            printParamField("scalar_observed_stream", scalarTuning.observedStream, printedAny);
-        }
-        if (scalarTuning.onsetDetectionThreshold != oldScalarTuning.onsetDetectionThreshold) {
-            printParamField("scalar_onset_threshold", scalarTuning.onsetDetectionThreshold, printedAny);
-        }
-        if (scalarTuning.onsetReleaseThreshold != oldScalarTuning.onsetReleaseThreshold) {
-            printParamField("scalar_release_threshold", scalarTuning.onsetReleaseThreshold, printedAny);
-        }
-        if (scalarTuning.cooldownAfterOnsetMs != oldScalarTuning.cooldownAfterOnsetMs) {
-            printParamField("scalar_cooldown_ms", scalarTuning.cooldownAfterOnsetMs, printedAny);
-        }
-        if (scalarTuning.minTransientDurationMs != oldScalarTuning.minTransientDurationMs) {
-            printParamField("scalar_min_duration_ms", scalarTuning.minTransientDurationMs, printedAny);
-        }
-        if (scalarTuning.maxTransientDurationMs != oldScalarTuning.maxTransientDurationMs) {
-            printParamField("scalar_max_duration_ms", scalarTuning.maxTransientDurationMs, printedAny);
-        }
-        if (scalarTuning.minTransientPeakStrength != oldScalarTuning.minTransientPeakStrength) {
-            printParamField("scalar_min_peak_strength", scalarTuning.minTransientPeakStrength, printedAny);
-        }
-        if (scalarTuning.releaseDebounceMs != oldScalarTuning.releaseDebounceMs) {
-            printParamField("scalar_release_debounce_ms", scalarTuning.releaseDebounceMs, printedAny);
-        }
-        if (scalarTuning.requireCarrierQuality != oldScalarTuning.requireCarrierQuality) {
-            printParamField("scalar_require_carrier_quality", scalarTuning.requireCarrierQuality, printedAny);
-        }
-        if (scalarTuning.requireMinStrength != oldScalarTuning.requireMinStrength) {
-            printParamField("scalar_require_min_strength", scalarTuning.requireMinStrength, printedAny);
-        }
-        if (scalarTuning.minMatchedMeanStrength != oldScalarTuning.minMatchedMeanStrength) {
-            printParamField("scalar_min_strength", scalarTuning.minMatchedMeanStrength, printedAny);
-        }
-        if (scalarTuning.minCoverageAboveReleaseMs != oldScalarTuning.minCoverageAboveReleaseMs) {
-            printParamField("scalar_min_release_coverage_ms", scalarTuning.minCoverageAboveReleaseMs, printedAny);
-        }
-        if (scalarTuning.minLongestIslandMs != oldScalarTuning.minLongestIslandMs) {
-            printParamField("scalar_min_longest_island_ms", scalarTuning.minLongestIslandMs, printedAny);
-        }
-        if (scalarTuning.maxGapMs != oldScalarTuning.maxGapMs) {
-            printParamField("scalar_max_gap_ms", scalarTuning.maxGapMs, printedAny);
-        }
-
-        _analyzerTuning.scalarTransient = scalarTuning;
-        if (printedAny) {
-            serialOut().println();
-        } else {
-            serialOut().println("PARAM no_change");
-        }
+        // The registry's grammar and the Node's lines (app/ParamCommands, step
+        // 11e item 9). No store: the tuning is per run. A value takes effect at
+        // the next SEQ start (effectiveSequenceProfile), so nothing applies here.
+        param::handleParamCommand(line, _paramRegistry, nullptr, serialOut());
         return;
     }
 

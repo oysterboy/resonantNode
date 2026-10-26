@@ -1,6 +1,6 @@
 # The Node's network signal is the hop train; a plain chirp need not be heard
 
-Status: decided; how to enforce it is open (see Measured): not by min duration, by shape (DET-015). Enforced since 2026-10-26 by shape (DET-015, decisions/2026-10-26-det015-bin-track-inspector.md).
+Status: decided; enforced since 2026-10-26 by shape (DET-015, decisions/2026-10-26-det015-bin-track-inspector.md), not by min duration (see Measured).
 Date: 2026-10-23.
 
 ## Decision

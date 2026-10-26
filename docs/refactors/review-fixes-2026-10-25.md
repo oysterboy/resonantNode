@@ -186,6 +186,95 @@ and the I2S ramp knob (A12), `DetectorReport.source*` as Analyzer bookkeeping (A
   byte-identical, include direction strict; the Node's registered path list unchanged (39), the Analyzer's
   13 are the first 13 of it; the three mode builds are CI's.
 
+## Handoff 2026-10-26 (to the session on main with the bench)
+
+State: PR #64 (`ccr-b69abead-y64emm`, head f454d88) carries items 1-9 and is green on CI (run 110: eight ESP envs,
+host suites 80/80, include direction). Not merged; merging is the owner's call. What is still open in step 11e is
+the bench gate, which needs boards, and the diagnostics tests the owner asked for after reading item 7.
+
+### What item 7 moved, and what it saved
+
+Moved out of `DetectionRuntime` into `DetectionDiagnostics` (Analyzer build) / `NullDetectionDiagnostics` (every
+other build): the eight per-frame counters (`observeFrame`, `freshDetectorInput`, `noFreshFrequencySkip`,
+`detectorDrain`, `detectorReportRefresh`, `occurrencePopped`, `validOccurrencePopped`, `verdictProduced` plus the
+pushed / dropped pair), the 4-slot `DetectionPipelineEvent` queue and its sequence ids, the detector report
+capture (`ReportSlot` per pending inspection, `activeDetectorReport()`, the mismatch counter), the
+history-incomplete snapshot (issue #26), and the records `SourceDiagnosticRecord`, `PipelineIntegrity`,
+`DetectionPipelineEvent`, `HistoryIncompleteSnapshot`. The runtime kept what it owns and the Analyzer resets
+through it: `resetDiagnosticsCounters`, `resetSourceRejectSummaries`, `setDiagnosticsEnabled`. Dropped as dead
+on the way: the `DetectionPipelineResult` snapshot (nobody read it) and `setProfileName`.
+
+Savings, measured (CI runs 95 before, 100 after; host sizeof with g++ 64-bit):
+
+| | before | after |
+|---|---|---|
+| Node binary RAM / flash (esp32dev) | 100,108 / 848,445 | 100,108 / 848,461 |
+| Analyzer binary RAM / flash (esp32dev-analyzer) | 93,548 / 415,717 | 92,476 / 414,493 |
+| `sizeof(DetectionRuntime)` Analyzer variant, host | 65,512 | 63,936 |
+| `sizeof(DetectionRuntime)` Node variant, host | 54,864 | 54,808 |
+| `#if` lines in DetectionRuntime .cpp / .h | 24 / 8 | 0 / 0 |
+
+So: the Node saved nothing (the ifdefs already kept the recording out of it), the Analyzer saved about 1 KB of
+RAM (the dead snapshot), and the point of the item was the shape, not the bytes: one build decision (the
+`ActiveDetectionDiagnostics` alias) instead of 32 conditional lines, and a runtime body that reads the same in
+both builds.
+
+### The owner's concern: a separate diagnostics layer as a source of error
+
+The risk is real and specific. The Analyzer's SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN lines and the trial
+classifier read the side channel (`diagnostics().popPipelineEvent`, `activeDetectorReport`, the counters), not
+the verdict queue, so a hook called at the wrong point, a report captured too late (the detector's report
+refreshes while an occurrence waits in the pending queue), or a reset that clears one side and not the other
+would make the Analyzer describe a different trial than the detector decided. Two things are known today:
+
+- The replay (T2h) and `test_replay_corpus` build the Null variant, so until now nothing on the host ran the
+  full layer. Checked 2026-10-26 on this branch: the replay built with `-D ANALYZER_MODE` (the full layer
+  compiled in and called on every frame) is byte-identical to the Null build over `test/fixtures` (sha
+  c4bf73ec), and `test_replay_corpus` passes 21/21 under it. The layer does not change verdicts; it is not yet
+  shown to describe them correctly.
+- Nothing asserts that what the layer records matches what the runtime decided. That is the gap.
+
+### Tests to write (host first, then the bench)
+
+Host, `test/test_detection_diagnostics` in native-test-behavior, built with `-D ANALYZER_MODE` (the only flag
+that selects the full variant inside `src/detection`; `main.cpp` and `NodeNet.cpp` are not in the test build):
+
+1. Equivalence as a standing check: the fixtures replayed through both variants in one binary is awkward (one
+   alias per build), so add a second host env `native-replay-diag` extending `native-replay` with
+   `-D ANALYZER_MODE`, and have CI diff its `--verbose --dir test/fixtures` output against `native-replay`'s.
+2. One event per verdict: over every fixture, `verdictProducedCount` equals the verdicts popped plus
+   `verdictEventDroppedCount`; every popped `AcceptedPipelineResult` event carries the occurrence id and the
+   start ms of the verdict it belongs to, in order; `detectorReportMismatchCount` stays 0 and
+   `detectorReportMatched` is true on every event.
+3. The report captured at pop time: a synthetic stream that produces two occurrences close enough that the
+   first waits in the pending queue while the second refreshes the detector's report (the shipped values make
+   this rare: min duration 92 ms, one occurrence per 85 ms or more, a wait of 15 ms or less). Assert the first
+   event's report is the first occurrence's, not the second's. This is the case the `ReportSlot` exists for.
+4. Overflow: five verdicts with no consumer draining the 4-slot event queue; `pipelineEventOverflowCount` is 1,
+   the next event's `PipelineIntegrity` says `queueOverflowAffected` with reason `PipelineEventQueueOverflow`,
+   and the verdict queue (the Node's path) is unaffected.
+5. Resets: `resetDiagnosticsCounters` zeroes the counters and leaves the event queue; `resetDetectionState`
+   (a SEQ trial boundary) leaves no event from the previous trial behind (`eventTrialAttribution`), and the
+   history-incomplete snapshot is cleared with the history.
+6. Counters against the frames fed: `observeFrameCount` equals frames fed, `freshDetectorInputCount +
+   noFreshFrequencySkipCount` equals the valid frames, `detectorDrainCount` is at most the frames.
+7. The Null variant: a compile-time check that `NullDetectionDiagnostics` is empty (`sizeof == 1`) and that
+   `DetectionRuntime`'s Node-variant size does not grow (a `static_assert` with the current 54,808 on the host
+   is too brittle; print it in the sizes probe and record it here instead).
+
+Bench (the step's gate, owner's hardware; `tools/bench/seqrun.py`, compare with `seqcmp.py` against the last
+pre-pass session in `bench/sessions/`): Analyzer SEQ 10/10 on the D-AMP pair with `SEQ MODE detail`, so every
+trial prints SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN; the fields that come from the diagnostics (report matched,
+event ids, `SEQ_HISTDBG`) must read as before the pass. One run with `PARAM SET detection.scalar_onset_threshold`
+raised until trials miss, to see the new PARAM grammar reach the detector at the next SEQ start. Node smoke:
+boot (`PARAM load`, `RB PROFILE detail`), RB STATUS, ten hop trains answered, `PARAM RESET` with `output.silent 1`
+saved beforehand (the node must sound again: the LOAD / RESET side effect of item 9). A radio PARAM round trip
+(`NET <node> PARAM DUMP`). Then `test_analyzer_pass_rules` and `test_timebase` on a board (item 5 touched their
+thresholds; syntax-checked only).
+
+Closing the step: gate results as a dated line here, `Archived:` header, move this file to `archive/`, close
+#63 with the commit, PAR-003 is already DONE.
+
 ## Decisions recorded in this pass
 
 - decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md (items 8 and 9).

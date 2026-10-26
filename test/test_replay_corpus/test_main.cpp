@@ -31,12 +31,17 @@ What the expectations encode (2026-10-16 replay, docs/lab/2026-10-16-bench-day.m
 */
 #include <unity.h>
 
+#include <stdio.h>
+
 #include <string>
+#include <type_traits>
 
 #include <math.h>
 
 #include "../../src/app/RuntimeDefaults.h"
+#include "../../src/detection/DetectionDiagnostics.h"
 #include "../../src/detection/DetectionProfile.h"
+#include "../../src/detection/DetectionRuntime.h"
 #include "../../src/detection/HopGapContract.h"
 #include "../../src/detection/InspectionPlanContract.h"
 #include "../../src/detection/evaluation/OccurrenceVerdict.h"
@@ -433,6 +438,20 @@ void test_dc_blocker_scale_is_the_first_difference_gain_at_the_chirp() {
     TEST_ASSERT_FLOAT_WITHIN(0.001f, static_cast<float>(expected), runtime::kDcBlockerOutputScale);
 }
 
+// Step 11e item 7 follow-up (test_detection_diagnostics, handoff item 7): this suite is the
+// Null build the replay and the Node run; print the Node variant's sizeof(DetectionRuntime)
+// next to the Analyzer variant's, which test_detection_diagnostics prints. Recorded, not
+// asserted: a byte count in a static_assert is too brittle.
+static_assert(std::is_same<detection::ActiveDetectionDiagnostics, detection::NullDetectionDiagnostics>::value,
+              "native-test builds the Null diagnostics variant");
+void test_sizes_probe() {
+    char line[128];
+    snprintf(line, sizeof(line), "sizeof(DetectionRuntime) Node variant (NullDetectionDiagnostics) = %u",
+             static_cast<unsigned>(sizeof(detection::DetectionRuntime)));
+    printf("%s\n", line);
+    TEST_MESSAGE(line);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_wav_loads_the_capture);
@@ -456,5 +475,6 @@ int main(int, char**) {
     RUN_TEST(test_shipped_plan_fits_the_history_and_the_window);
     RUN_TEST(test_band_grid_is_shared_by_detector_and_hop_train);
     RUN_TEST(test_dc_blocker_scale_is_the_first_difference_gain_at_the_chirp);
+    RUN_TEST(test_sizes_probe);
     return UNITY_END();
 }

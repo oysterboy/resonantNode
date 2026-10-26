@@ -22,7 +22,7 @@ namespace audio {
 class PcmPreprocessor {
 public:
     explicit PcmPreprocessor(runtime::PcmPreprocessMode mode = runtime::kPcmPreprocessMode,
-                             uint32_t sampleRateHz = 16000U)
+                             uint32_t sampleRateHz = runtime::kDefaultAudioI2SSampleRateHz)
         : _mode(mode),
           _dcPole(1.0f - 6.2831853f * runtime::kDcBlockerCornerHz / static_cast<float>(sampleRateHz)) {}
 

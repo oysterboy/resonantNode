@@ -1,3 +1,4 @@
+#include "AnalyzerEmitterControl.h"
 #include "../AnalyzerModeApp.h"
 #include "../../../detection/analyzer/AnalyzerText.h"
 #include "../../../app/SerialLine.h"

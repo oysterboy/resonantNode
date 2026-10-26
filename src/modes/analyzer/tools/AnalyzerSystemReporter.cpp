@@ -13,7 +13,7 @@
 void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
     const AudioSourceStats& sourceStats = _audioSource.stats();
     const AudioSignalStats& signalStats = _audioSignal.stats();
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     const bool compactHealth = _sequenceTest.outputConfig.verbosity == 0U;
     const bool hasTrialWindow = _sequenceTest.active
         && _sequenceTest.currentTrial > 0

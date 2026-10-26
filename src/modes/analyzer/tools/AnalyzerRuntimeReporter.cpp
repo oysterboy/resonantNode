@@ -65,7 +65,7 @@ void AnalyzerApp::printDetectionParameters() const {
     serialOut().print(" max_gap_ms=");
     serialOut().println(scalar.maxGapMs);
 
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
     const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
     const unsigned long ageSamples = _freqBandStream.lastPacketAgeSamples();
@@ -127,7 +127,7 @@ void AnalyzerApp::printAudioRunSummary() const {
     }
 
     const unsigned long now = timebase::nowMs();
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     const unsigned long runElapsedMs = _sequenceTest.startedAtMs > 0
         ? timing::elapsedOrZero(now, _sequenceTest.startedAtMs)
         : 0UL;

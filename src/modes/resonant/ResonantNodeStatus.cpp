@@ -111,7 +111,7 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(_hopPulseMs);
     serialOut().print(" hop_gap_ms=");
     serialOut().print(_hopGapMs);
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
     const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
     const unsigned long ageSamples = _freqBandStream.lastPacketAgeSamples();

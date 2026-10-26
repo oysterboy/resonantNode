@@ -38,9 +38,9 @@ void Node::registerDetectionParams() {
     // Network band (DET-013). Applied by applyBandParams() when the values
     // change; 0 = single target at the chirp tone.
     _paramRegistry.addUInt32(param::ParamId::Detection_BandLowHz, param::ModuleId::Detection,
-                             "detection.band_low_hz", &_bandLowHz, 0U, 7900U);
+                             "detection.band_low_hz", &_bandLowHz, 0U, runtime::kMaxToneHz);
     _paramRegistry.addUInt32(param::ParamId::Detection_BandHighHz, param::ModuleId::Detection,
-                             "detection.band_high_hz", &_bandHighHz, 0U, 7900U);
+                             "detection.band_high_hz", &_bandHighHz, 0U, runtime::kMaxToneHz);
 }
 
 void Node::registerOutputParams() {
@@ -51,7 +51,7 @@ void Node::registerOutputParams() {
     _paramRegistry.addUInt32(ParamId::Output_HopPulseMs, ModuleId::Output, "output.hop_pulse_ms", &_hopPulseMs, 1U, 1000U);
     _paramRegistry.addUInt32(ParamId::Output_HopGapMs, ModuleId::Output, "output.hop_gap_ms", &_hopGapMs, 0U, 2000U);
     _paramRegistry.addUInt32(ParamId::Output_HopSteps, ModuleId::Output, "output.hop_steps", &_hopSteps, 1U, 8U);
-    _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &_idleAnnounceHz, 0U, 7900U);
+    _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &_idleAnnounceHz, 0U, runtime::kMaxToneHz);
     _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &_idleAnnounceMs, 20U, 2000U);
     _paramRegistry.addBool(ParamId::Output_Silent, ModuleId::Output, "output.silent", &_silent);
     _paramRegistry.addBool(ParamId::Node_RadioEnabled, ModuleId::Node, "node.radio_enabled", &_radioEnabled);

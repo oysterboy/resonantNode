@@ -72,7 +72,7 @@ AmpTrial runAmpTrial(AudioSourceI2S& source, ToneOutput& tone) {
     AmpTrial trial;
     drainSource(source, 0);
     Envelope envelope;
-    const uint32_t rateHz = source.sampleRateHz() > 0 ? source.sampleRateHz() : 16000U;
+    const uint32_t rateHz = source.sampleRateHz() > 0 ? source.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     const uint32_t start = timebase::nowUs();
     const uint32_t t0 = start + kAmpLeadUs;
     const uint32_t t1 = t0 + kAmpToneMs * 1000U;
@@ -138,7 +138,7 @@ void drainSource(AudioSourceI2S& source, uint32_t ms) {
 
 Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t captureMs) {
     drainSource(source, 0);
-    const uint32_t rateHz = source.sampleRateHz() > 0 ? source.sampleRateHz() : 16000U;
+    const uint32_t rateHz = source.sampleRateHz() > 0 ? source.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     const uint32_t target = (rateHz * captureMs) / 1000U;
     const uint32_t deadline = timebase::nowMs() + 2U * captureMs + 200U;
 

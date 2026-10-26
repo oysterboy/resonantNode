@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../app/RuntimeDefaults.h"
+
 /*
 OutputRequest / OutputStatus (myspec 7.2)
 
@@ -34,7 +36,7 @@ inline const char* chirpPatternName(ChirpPattern pattern) {
     return "unknown";
 }
 
-constexpr size_t kMaxHopSteps = 8;
+constexpr size_t kMaxHopSteps = runtime::kMaxHopSteps;
 
 struct OutputRequest {
     enum class Kind : uint8_t {
@@ -59,7 +61,7 @@ struct OutputRequest {
 // output.* params are bound inside these, so a reject means a composition bug.
 struct OutputLimits {
     uint32_t minHz = 100;
-    uint32_t maxHz = 7900;
+    uint32_t maxHz = runtime::kMaxToneHz;
     unsigned long maxPulseMs = 1000;
     unsigned long maxGapMs = 2000;
     unsigned long minAnnounceMs = 20;

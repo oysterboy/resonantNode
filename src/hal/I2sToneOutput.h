@@ -85,7 +85,7 @@ private:
     uint32_t _reqTrainOnMs = 0;
     uint32_t _reqTrainGapMs = 0;
     uint32_t _reqTrainRampMs = 0;
-    static constexpr size_t kMaxHop = 8;
+    static constexpr size_t kMaxHop = runtime::kMaxHopSteps;
     uint32_t _reqHopHz[kMaxHop] = {};
     size_t _reqHopCount = 0;
 

@@ -1,4 +1,5 @@
 #include "EmitterApp.h"
+#include "../../app/EmitterLimits.h"
 
 #include <Arduino.h>
 #include <string.h>
@@ -310,10 +311,10 @@ void EmitterApp::handleChirpCommand(const char* line) {
 
 // Bounds keep one train well inside a SEQ period and the 8 ms block/ramp
 // arithmetic meaningful; they are not detector limits.
-static constexpr unsigned long kPulsesMaxCount = 50;
-static constexpr unsigned long kPulsesMaxPulseMs = 1000;
-static constexpr unsigned long kPulsesMaxGapMs = 2000;
-static constexpr unsigned long kPulsesMaxRampMs = 50;
+using emitter_limits::kPulsesMaxCount;
+using emitter_limits::kPulsesMaxGapMs;
+using emitter_limits::kPulsesMaxPulseMs;
+using emitter_limits::kPulsesMaxRampMs;
 
 void EmitterApp::handlePulsesCommand(const char* line) {
     char buffer[96];

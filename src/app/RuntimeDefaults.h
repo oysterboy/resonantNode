@@ -147,4 +147,11 @@ constexpr unsigned long kDefaultAudioSignalStartupWarmupMs = 2000UL;
 constexpr float kDefaultI2sToneAmplitude = I2S_TONE_AMPLITUDE;
 constexpr uint32_t kDefaultI2sToneRampMs = 5UL;
 
+// Named once (review B12, step 11f): the highest tone any output plays (below Nyquist at the I2S rate, with
+// margin), the plain chirp's pause between beeps, and the most hop steps a train carries.
+constexpr uint32_t kMaxToneHz = 7900UL;
+static_assert(kMaxToneHz < kDefaultAudioI2SSampleRateHz / 2, "kMaxToneHz must stay below Nyquist");
+constexpr unsigned long kDefaultChirpPauseMs = 150UL;
+constexpr size_t kMaxHopSteps = 8;
+
 } // namespace runtime

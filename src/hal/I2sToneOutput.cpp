@@ -187,7 +187,7 @@ void I2sToneOutput::run() {
 }
 
 void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
-    const uint32_t sampleRateHz = _port.sampleRateHz() > 0 ? _port.sampleRateHz() : 16000U;
+    const uint32_t sampleRateHz = _port.sampleRateHz() > 0 ? _port.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     takePulseTrainRequest(sampleRateHz);
     const uint32_t phaseStep = static_cast<uint32_t>(
         (static_cast<uint64_t>(_toneHz) << 32) / static_cast<uint64_t>(sampleRateHz));

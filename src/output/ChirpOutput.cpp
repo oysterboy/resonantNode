@@ -105,17 +105,7 @@ void ChirpOutput::update() {
         case 0:
             if (elapsed >= _activeChirpOnMs) {
                 _toneOutput.toneOff();
-                if (_activePattern == ChirpPattern::Idle) {
-                    if (_beepCount > 1) {
-                        --_beepCount;
-                        _phase = 1;
-                        _phaseStartMs = now;
-                    } else {
-                        _active = false;
-                        _finished = true;
-                        _phaseStartMs = now;
-                    }
-                } else if (_beepCount > 1) {
+                if (_beepCount > 1) {
                     --_beepCount;
                     _phase = 1;
                     _phaseStartMs = now;

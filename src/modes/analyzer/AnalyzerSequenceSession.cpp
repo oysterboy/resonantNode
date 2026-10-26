@@ -12,7 +12,7 @@
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
 
-bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
+#include "tools/AnalyzerEmitterControl.h"
 
 namespace {
 
@@ -257,7 +257,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         // Rebase before the first trial so every run starts from the quiet floor.
         const unsigned long sequenceClaimSendMs = timebase::nowMs();
         sendEmitterCommand("MODE REMOTE");
-        const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", 1500);
+        const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs);
         const unsigned long sequenceClaimAckMs = timebase::nowMs();
         if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
             serialOut().print("SEQ remote claim: send=");

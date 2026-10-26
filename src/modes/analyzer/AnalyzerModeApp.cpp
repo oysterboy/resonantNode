@@ -681,7 +681,7 @@ void AnalyzerApp::update() {
             }
         }
 
-        const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+        const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
         if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
             const uint8_t blockHash = static_cast<uint8_t>(rawBlockFingerprint(block.samples, block.sampleCount));
             auto& diagnostics = _sequenceTest.currentTrialDiagnostics;

@@ -156,12 +156,14 @@ bool SoundOutput::start(const OutputRequest& request) {
             break;
         case OutputRequest::Kind::IdleCall:
             // The announcement: a plain tone outside the band (not detected).
+            _savedToneHz = _chirp.toneHz();
+            _savedOnMs = _chirp.chirpOnMs();
+            _savedPauseMs = _chirp.chirpPauseMs();
             _chirp.setToneHz(request.announceHz);
             _chirp.setTiming(request.announceMs, 0);
             _chirp.start(ChirpPattern::Single);
             if (!_chirp.isActive()) {
-                _chirp.setToneHz(runtime::kDefaultChirpFrequencyHz);
-                _chirp.setTiming(runtime::kDefaultChirpDurationMs, 150);
+                restoreChirpSetup();
                 reject(OutputReject::DeviceRefused);
                 return false;
             }
@@ -177,8 +179,7 @@ bool SoundOutput::start(const OutputRequest& request) {
 
 bool SoundOutput::startHop(const OutputRequest& request) {
     _chirp.setPulseHop(request.hopHz, request.hopSteps);
-    _chirp.startPulseTrain(static_cast<uint32_t>(request.hopSteps), request.pulseMs, request.gapMs,
-                           runtime::kDefaultI2sToneRampMs);
+    _chirp.startPulseTrain(static_cast<uint32_t>(request.hopSteps), request.pulseMs, request.gapMs);
     if (!_chirp.isActive()) {
         _chirp.setPulseHop(nullptr, 0);
         return false;
@@ -221,8 +222,7 @@ uint8_t SoundOutput::update() {
     if (_status.phase == OutputPhase::Announce) {
         if (_chirp.finished()) {
             // The announcement ended: back to the chirp tone and timing, then the gap.
-            _chirp.setToneHz(runtime::kDefaultChirpFrequencyHz);
-            _chirp.setTiming(runtime::kDefaultChirpDurationMs, 150);
+            restoreChirpSetup();
             _callAtMs = timebase::nowMs() + _request.announceGapMs;
             _status.phase = OutputPhase::AnnounceGap;
         }
@@ -237,11 +237,15 @@ void SoundOutput::stop() {
     const bool announcing = _status.phase == OutputPhase::Announce;
     _chirp.stop();
     if (announcing) {
-        _chirp.setToneHz(runtime::kDefaultChirpFrequencyHz);
-        _chirp.setTiming(runtime::kDefaultChirpDurationMs, 150);
+        restoreChirpSetup();
     }
     if (_status.busy()) {
         _status.phase = OutputPhase::Idle;
         _status.lastDoneMs = timebase::nowMs();
     }
+}
+
+void SoundOutput::restoreChirpSetup() {
+    _chirp.setToneHz(_savedToneHz);
+    _chirp.setTiming(_savedOnMs, _savedPauseMs);
 }

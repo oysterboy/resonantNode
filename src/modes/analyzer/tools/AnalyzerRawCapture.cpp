@@ -12,7 +12,7 @@
 #include "../../../app/TimingUtils.h"
 #include "../../../app/SerialOut.h"
 
-bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
+#include "AnalyzerEmitterControl.h"
 
 namespace {
 
@@ -151,7 +151,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     }
     serialOut().println();
 
-    const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     const unsigned long maxSamples = 6000UL;
     // mode=i2s with decim=N keeps every Nth word, so the fixed row budget
     // covers N times longer (e.g. a clap test over seconds). Other modes
@@ -282,7 +282,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     auto claimEmitterRemoteControl = [&]() -> bool {
         sendEmitterCommand("MODE REMOTE");
-        return waitForEmitterAck("OK MODE REMOTE", 1500);
+        return waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs);
     };
 
     if (!claimEmitterRemoteControl()) {

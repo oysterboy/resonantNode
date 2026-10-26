@@ -23,12 +23,16 @@ public:
     void setToneHz(uint32_t toneHz);
     uint32_t toneHz() const;
     void setTiming(unsigned long chirpOnMs, unsigned long chirpPauseMs);
+    unsigned long chirpOnMs() const { return _chirpOnMs; }
+    unsigned long chirpPauseMs() const { return _chirpPauseMs; }
     void start(ChirpPattern pattern = ChirpPattern::Single);
     // `count` pulses of onMs with gapMs pauses at the current tone (the
     // Emitter's PULSES, DET-011). Timed by the ToneOutput when it can
     // (I2S: per sample, rampMs edges); otherwise from update(), with the
     // device's own edges and the loop's millisecond resolution.
-    void startPulseTrain(uint32_t count, unsigned long onMs, unsigned long gapMs, uint32_t rampMs);
+    // The ramp is the device's envelope (I2S); callers above the device leave it at the default (review A12).
+    void startPulseTrain(uint32_t count, unsigned long onMs, unsigned long gapMs,
+                         uint32_t rampMs = runtime::kDefaultI2sToneRampMs);
     // Frequency per pulse for the next startPulseTrain() (hop); n = 0 clears.
     void setPulseHop(const uint32_t* hz, size_t n) { _toneOutput.setPulseHop(hz, n); }
     // Sweep inside the next plain chirp (OUT-005): glide from the tone to
@@ -53,11 +57,11 @@ private:
     int _phase = 0;
     int _beepCount = 1;
     unsigned long _phaseStartMs = 0;
-    unsigned long _activeChirpOnMs = 100;
-    unsigned long _activeChirpPauseMs = 150;
+    unsigned long _activeChirpOnMs = runtime::kDefaultChirpDurationMs;
+    unsigned long _activeChirpPauseMs = runtime::kDefaultChirpPauseMs;
     uint32_t _toneHz;
-    unsigned long _chirpOnMs = 100;
-    unsigned long _chirpPauseMs = 150;
+    unsigned long _chirpOnMs = runtime::kDefaultChirpDurationMs;
+    unsigned long _chirpPauseMs = runtime::kDefaultChirpPauseMs;
     unsigned long _tripleChirpOnMs = 100;
     unsigned long _tripleChirpPauseMs = 12;
     unsigned long _idleChirpOnMs = 500;

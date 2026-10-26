@@ -8,7 +8,8 @@
 #include "../../app/SerialOut.h"
 #include "../../app/TextParse.h"
 
-bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
+#include "tools/AnalyzerEmitterControl.h"
+#include "../../app/EmitterLimits.h"
 
 namespace {
 
@@ -196,7 +197,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     char* dash = nullptr;
                     const unsigned long lo = strtoul(spec, &dash, 10);
                     const unsigned long hi = (dash != nullptr && *dash == '-') ? strtoul(dash + 1, nullptr, 10) : 0UL;
-                    if (lo == 0 || hi < lo || hi > 7900UL) {
+                    if (lo == 0 || hi < lo || hi > runtime::kMaxToneHz) {
                         serialOut().print("RAW_ERR bad value token=");
                         serialOut().println(token);
                         return;
@@ -526,7 +527,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         char* dash = nullptr;
                         const unsigned long lo = strtoul(spec, &dash, 10);
                         const unsigned long hi = (dash != nullptr && *dash == '-') ? strtoul(dash + 1, nullptr, 10) : 0UL;
-                        if (lo == 0 || hi < lo || hi > 7900UL) {
+                        if (lo == 0 || hi < lo || hi > runtime::kMaxToneHz) {
                             serialOut().print("ERR SEQ bad value token=");
                             serialOut().println(token);
                             return;
@@ -550,7 +551,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     _pendingSequenceStart.pulseHop[sizeof(_pendingSequenceStart.pulseHop) - 1] = '\0';
                 } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sweepToHz) ||
-                        _pendingSequenceStart.sweepToHz > 7900UL) {
+                        _pendingSequenceStart.sweepToHz > runtime::kMaxToneHz) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
@@ -709,11 +710,22 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             // Same bounds the Emitter applies to PULSES; refused here so a
             // run never starts with every trial rejected on the Emitter.
             if (_pendingSequenceStart.pulseCount > 0 &&
-                (_pendingSequenceStart.pulseCount > 50 || _pendingSequenceStart.durationMs == 0 ||
-                 _pendingSequenceStart.durationMs > 1000 || _pendingSequenceStart.pulseGapMs == 0 ||
-                 _pendingSequenceStart.pulseGapMs > 2000 ||
-                 (_pendingSequenceStart.pulseRampSet && _pendingSequenceStart.pulseRampMs > 50))) {
-                serialOut().println("ERR SEQ pulses use pulses=1-50 dur=1-1000 gap=1-2000 [ramp=0-50]");
+                (_pendingSequenceStart.pulseCount > emitter_limits::kPulsesMaxCount ||
+                 _pendingSequenceStart.durationMs == 0 ||
+                 _pendingSequenceStart.durationMs > emitter_limits::kPulsesMaxPulseMs ||
+                 _pendingSequenceStart.pulseGapMs == 0 ||
+                 _pendingSequenceStart.pulseGapMs > emitter_limits::kPulsesMaxGapMs ||
+                 (_pendingSequenceStart.pulseRampSet &&
+                  _pendingSequenceStart.pulseRampMs > emitter_limits::kPulsesMaxRampMs))) {
+                serialOut().print("ERR SEQ pulses use pulses=1-");
+                serialOut().print(emitter_limits::kPulsesMaxCount);
+                serialOut().print(" dur=1-");
+                serialOut().print(emitter_limits::kPulsesMaxPulseMs);
+                serialOut().print(" gap=1-");
+                serialOut().print(emitter_limits::kPulsesMaxGapMs);
+                serialOut().print(" [ramp=0-");
+                serialOut().print(emitter_limits::kPulsesMaxRampMs);
+                serialOut().println("]");
                 return;
             }
 
@@ -749,7 +761,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
     if (startsWithTokenIgnoreCase(line, "EMIT ")) {
         if (startsWithTokenIgnoreCase(line, "EMIT CHIRP")) {
             sendEmitterCommand("MODE REMOTE");
-            if (!waitForEmitterAck("OK MODE REMOTE", 1500)) {
+            if (!waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs)) {
                 serialOut().println("ERR EMIT CHIRP emitter_remote_claim_timeout");
                 return;
             }
@@ -759,7 +771,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
         if (startsWithTokenIgnoreCase(line, "EMIT PULSES")) {
             sendEmitterCommand("MODE REMOTE");
-            if (!waitForEmitterAck("OK MODE REMOTE", 1500)) {
+            if (!waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs)) {
                 serialOut().println("ERR EMIT PULSES emitter_remote_claim_timeout");
                 return;
             }

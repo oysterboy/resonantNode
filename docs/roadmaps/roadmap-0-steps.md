@@ -43,6 +43,7 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-26, later: 11f done (review leftovers batch 1). Next: 11b, DET-015 host phase.
 Status update 2026-10-26: 11f opened (review leftovers, small fixes; owner order: 11f, then 11b DET-015).
 Status update 2026-10-26, later: 11e done (PR #64 merged; bench gate met; diagnostics host suite added).
 Status update 2026-10-26: 11a done (remote commands by radio; 12 h with the radio on: every pass mark, no leak).
@@ -1102,7 +1103,7 @@ the previous gate open unless the step says it can run in parallel.
    test_detection_diagnostics 9/9 and the replay identical with the diagnostics compiled in. Room finding: the
    plain chirp is rejected 10/10 at 79 cm (reads 31-46 ms), with old and new firmware; the hop train is not.
 
-11f. [NEXT] Review leftovers, batch 1: small fixes. (issue #65)
+11f. [DONE 2026-10-26] Review leftovers, batch 1: small fixes. (issue #65, closed)
    Owner 2026-10-26, after 11e. The small, behavior-neutral parts of the review's open findings
    (docs/research/architecture-readability-review-2026-10-25.md): A9 (the Node's literal Behavior state codes), A12
    (SoundOutput's literal restores and device ramp knob, ChirpOutput's duplicate branches), A13 (Analyzer
@@ -1112,6 +1113,18 @@ the previous gate open unless the step says it can run in parallel.
    sample-pump unifications (B7's larger parts) go with the Node and Analyzer decompositions (A7, A8).
    Gate: every env builds, host suites pass, T2h byte-identical; Analyzer SEQ and the Node's netcheck unchanged on
    the bench.
+   Done 2026-10-26 (e292569 B12 + A12, 222a1ac B7, 0cbf30d A9 + A13; bench/sessions/2026-10-26-step11f-gate):
+   named constants (sample-rate fallback, kMaxToneHz, kDefaultChirpPauseMs, kMaxHopSteps, EmitterLimits.h,
+   kEmitterModeAckTimeoutMs); SoundOutput restores the chirp setup it found (was: build defaults) and leaves the ramp
+   to the device; sampleOffsetUs, the prefix helpers (three kinds, named once in TextParse), the freq.* status
+   fields and the Node's stream names each defined once; file-local functions static; Behavior::state() replaces
+   the numeric stateCode(); ScalarCandidateEvidence; the radio's command policy out of the wire header. Host: every
+   env, 61 + 22 + 9 tests (new: the restore, the prefix kinds), T2h byte-identical, replay Null == diag. Bench:
+   Analyzer hop10 identical to the 11e post run (seqcmp), netcheck on five Nodes every step ok. Left for A8:
+   DetectorReport's Analyzer-only source* fields (written and read in ~20 places of the trial report).
+   Room finding: the plain chirp at 79 cm went from 10/10 rejected (08:18-08:24, reads 31-46 ms) to 10/10 accepted
+   (09:05-09:16, 118-127 ms), with this morning's build as well: the room changed, not the firmware; the third
+   unexplained room shift in two days (10-24 10:50, E2 <- E5 on 10-23 ~20:00).
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here

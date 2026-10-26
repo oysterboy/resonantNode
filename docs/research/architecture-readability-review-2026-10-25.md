@@ -1,7 +1,8 @@
 # Architecture critique and readability review, 2026-10-25
 
 Status:  promoted (2026-10-25)
-Became:  step 11e, docs/refactors/archive/review-fixes-2026-10-25.md (items 1-6 of the suggested order; #63)
+Became:  step 11e, docs/refactors/archive/review-fixes-2026-10-25.md (items 1-6 of the suggested order; #63);
+         step 11f (2026-10-26, #65): the small parts of A9, A12, A13, B7, B12
 Lab:     none; a code reading at main c0b75e9 (after 5ffab4a "Node: split by role"), host `sizeof` probe
 
 A review of the whole tree for two questions: does the code match the boundaries `docs/specs/myspec.md`
@@ -200,6 +201,8 @@ move the struct bodies out of the header; one classification site fed the verdic
 
 ### A9. The Node re-derives Behavior truth for printing (medium)
 
+-> partly done in step 11f (Behavior::state(); the BehaviorStatus snapshot and setOutputsEnabled stay with A7), 2026-10-26
+
 `behaviorGateName` (`ResonantNodeApp.cpp:236-250`) and `NodeDebug::observeBehaviorGate`
 (`ResonantNodeDebug.cpp:121-123`, literal `state == 1`, `state == 3` against `stateCode()`) reconstruct the
 gate reason from timers although `lastBlockReasonName()` exists and is printed twenty lines later.
@@ -230,6 +233,8 @@ with the single conditional inside; one `PiezoToneOutput(pin, invertedPin = -1)`
 
 ### A12. SoundOutput restores literals and carries a device knob; ChirpOutput keeps a superseded shape (medium)
 
+-> done in step 11f (restores what it found, ramp left to the device, duplicate branch merged; Idle / Triple patterns and the consuming finished() kept), 2026-10-26
+
 - `SoundOutput.cpp:164, 225, 241` each restore `setTiming(kDefaultChirpDurationMs, 150)` with the bare 150
   (also the member default in `ChirpOutput.h:61-69`). Any caller that configured the chirp differently (the
   Emitter does) is silently reset by an IdleCall.
@@ -241,6 +246,8 @@ with the single conditional inside; one `PiezoToneOutput(pin, invertedPin = -1)`
 - `ChirpOutput::finished()` is a consuming getter; `SoundOutput::update()` relies on calling it exactly once.
 
 ### A13. Analyzer-side ownership leaks into shared headers (low)
+
+-> partly done in step 11f (ScalarCandidateEvidence, RemoteCommandPolicy.h); DetectorReport.source* moves with A8, 2026-10-26
 
 `DetectorReport.sourceSelection/sourceOccurrenceId/sourceCandidateId/sourceReportMatched` are never set by
 the detector; only `AnalyzerModeApp.cpp:893-903` writes them. They are Analyzer bookkeeping riding in the
@@ -327,6 +334,8 @@ Direction: `serial_line::LineReader<N>` with one overflow policy; `tokenValue()`
 `TextParse.h`; a `{key, parser, &field}` table for SEQ START.
 
 ### B7. Duplication across the three modes
+
+-> partly done in 11e and 11f (helpers, names, freq fields, statics, emitter-control header); selftest ladders, I2S constructor, sample pump and emitter commands stay with A7 / A8, 2026-10-26
 
 - `sampleOffsetUs` defined four times (`ResonantNodeApp.cpp`, `AnalyzerModeApp.cpp` with external linkage,
   `hal/AudioSourceI2S.cpp`, `audio/AudioSignal.cpp`).
@@ -439,6 +448,8 @@ otherwise the best cross-cutting fix in the repo; see Part C.)
   `scalar_freq_experimental`, in one header.
 
 ### B12. Magic numbers repeated across files
+
+-> done in step 11f except the line-buffer literals, 2026-10-26
 
 `16000UL` sample-rate fallback seven times in six files although `runtime::kDefaultAudioI2SSampleRateHz`
 exists; `7900` Nyquist bound six times although `OutputLimits::maxHz` exists; `1500` ms ack timeout four

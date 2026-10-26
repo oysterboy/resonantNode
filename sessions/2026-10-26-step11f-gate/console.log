@@ -1,0 +1,12 @@
+[09:04:50] boot banner: {'role': 'analyzer', 'git': '0cbf30d', 'version': '0.4.0', 'board': 'damp'}
+[09:04:52] warmup: OK EMIT CHIRP
+[09:04:52] start hop10: SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[09:05:29] done hop10 (36s): complete=True results={'expected': 10}
+[09:05:31] start chirp10: SEQ start profile=TonalPulseScalar tries=10 dur=100 mode=detail when=all verbose=1
+[09:06:08] done chirp10 (37s): complete=True results={'expected': 10}
+[09:06:10] start pulses_bad: SEQ start profile=TonalPulseScalar tries=1 freq=3300 dur=25 pulses=60 gap=10 mode=detail
+[09:15:29] boot banner: {'role': 'analyzer', 'git': '597c921', 'version': '0.4.0', 'board': 'damp'}
+[09:15:31] warmup: OK EMIT CHIRP
+[09:15:31] start chirp10_old597c921: SEQ start profile=TonalPulseScalar tries=10 dur=100 mode=detail when=all verbose=1
+[09:16:08] done chirp10_old597c921 (37s): complete=True results={'expected': 10}
+[09:16:14] session updated, index rebuilt

@@ -599,20 +599,6 @@ const char* ResonantBehavior::stateName() const {
     return "Unknown";
 }
 
-int ResonantBehavior::stateCode() const {
-    switch (_state) {
-        case State::Idle:
-            return 0;
-        case State::HeardPattern:
-            return 1;
-        case State::Chirping:
-            return 2;
-        case State::Refractory:
-            return 3;
-    }
-
-    return -1;
-}
 
 const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
     switch (decision) {

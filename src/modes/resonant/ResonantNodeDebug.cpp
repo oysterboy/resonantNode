@@ -108,7 +108,7 @@ void NodeDebug::observeBehaviorGate(unsigned long now,
     const unsigned long waitRemainingMs = behavior.waitRemainingMs(now);
     const unsigned long refractoryRemainingMs = behavior.refractoryRemainingMs(now);
     const unsigned long selfIgnoreRemainingMs = behavior.behaviorSuppressRemainingMs(now);
-    const int state = behavior.stateCode();
+    const ResonantBehavior::State state = behavior.state();
 
     const bool gateActive = transientDetected || selfChirpSuppressed || waitRemainingMs > 0 || refractoryRemainingMs > 0 || selfIgnoreRemainingMs > 0;
     if (!gateActive) {
@@ -118,9 +118,9 @@ void NodeDebug::observeBehaviorGate(unsigned long now,
     const char* reason = "idle";
     if (selfIgnoreRemainingMs > 0) {
         reason = "self_ignore";
-    } else if (state == 1 && waitRemainingMs > 0) {
+    } else if (state == ResonantBehavior::State::HeardPattern && waitRemainingMs > 0) {
         reason = "wait";
-    } else if (state == 3 && refractoryRemainingMs > 0) {
+    } else if (state == ResonantBehavior::State::Refractory && refractoryRemainingMs > 0) {
         reason = "refractory";
     } else if (transientDetected) {
         reason = "transient";

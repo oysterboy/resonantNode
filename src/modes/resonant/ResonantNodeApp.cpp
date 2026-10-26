@@ -223,7 +223,7 @@ static const char* behaviorGateName(const ResonantBehavior& behavior, unsigned l
     if (patternDetected) {
         return "pattern";
     }
-    return behavior.stateCode() == 0 ? "idle" : behavior.stateName();
+    return behavior.state() == ResonantBehavior::State::Idle ? "idle" : behavior.stateName();
 }
 
 // --- constructors ---

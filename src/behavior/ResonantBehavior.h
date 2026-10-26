@@ -71,7 +71,15 @@ public:
     float activity() const;
     bool isActive() const;
     const char* stateName() const;
-    int stateCode() const;
+    // The state machine's state (review A9, step 11f: readers compared a numeric stateCode() against
+    // literals 0 / 1 / 3).
+    enum class State {
+        Idle,
+        HeardPattern,
+        Chirping,
+        Refractory
+    };
+    State state() const { return _state; }
     unsigned long waitRemainingMs(unsigned long now) const;
     unsigned long refractoryRemainingMs(unsigned long now) const;
     unsigned long behaviorSuppressRemainingMs(unsigned long now) const;
@@ -162,13 +170,6 @@ private:
     RingQueue<unsigned long, kEmitHistory> _emitTimes;  // the last own emissions, oldest dropped
 
     // --- state machine ---
-    enum class State {
-        Idle,
-        HeardPattern,
-        Chirping,
-        Refractory
-    };
-
     State _state = State::Idle;
 
     // --- behavior state ---

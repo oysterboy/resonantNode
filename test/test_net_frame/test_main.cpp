@@ -6,6 +6,7 @@ native-test-behavior.
 #include <unity.h>
 
 #include "../../src/net/NetFrame.h"
+#include "../../src/net/RemoteCommandPolicy.h"
 
 void setUp() {}
 void tearDown() {}

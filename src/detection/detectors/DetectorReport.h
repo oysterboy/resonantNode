@@ -145,12 +145,12 @@ struct ScalarAggregateDetail {
 };
 
 /*
-ScalarInspectEvidence
+ScalarCandidateEvidence
 
 Bounded scalar detector evidence needed for Analyzer / SEQ_INSPECT while the
 canonical report keeps scalar gate/lifecycle truth detector-owned.
 */
-struct ScalarInspectEvidence {
+struct ScalarCandidateEvidence {
     const char* rejectReason = "none";
     const char* noEmitReason = "none";
     const char* gateReason = "none";
@@ -180,7 +180,7 @@ struct ScalarDetectorReportDetail {
     ScalarSelectedRejectDetail selectedReject = {};
     ScalarThresholdDetail thresholds = {};
     ScalarAggregateDetail aggregates = {};
-    ScalarInspectEvidence inspect = {};
+    ScalarCandidateEvidence inspect = {};
 };
 
 /*

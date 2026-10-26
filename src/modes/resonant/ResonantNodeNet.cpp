@@ -12,6 +12,7 @@
 #include "../../app/SerialOut.h"
 #include "../../app/TextParse.h"
 #include "ResonantNodeInternal.h"
+#include "../../net/RemoteCommandPolicy.h"
 
 using namespace node_internal;
 

@@ -30,6 +30,11 @@ Change order 2026-10-23 (owner): what changes the installation build lands befor
 one long run covers it: 10d (persistence, done), 10e (loose ends), 10f (OUT-002/003; OUT-004 stays deferred);
 5h's measurement cells run before it too, on the bench. DET-015 (shape) waits until after 10c. Block 2 is then
 both 10c's second block and the "long run on that build".
+Milestone 2026-10-26 (owner, decisions/2026-10-26-milestone-installation-ready-node.md): this phase closes as the
+"installation-ready node" milestone when 11c's soak passes, 11g's remaining batches land, and 11d OTA firmware
+lands (OTA is in the gate). At the close this file is archived as it stands and a fresh roadmap-0-steps.md opens
+the next phase, numbering on from 12; everything still open (5h, 8a, 9, the step 11 bucket, the unsequenced list)
+is triaged into that sequence then, not before.
 
 Previous phase (closed 2026-10-22 with step 6): five D-AMP nodes with the
 same firmware in one room, hearing and answering each other, with a
@@ -43,6 +48,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
+11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
 Status update 2026-10-26, late night (owner): order 11c -> 11g -> 11d. 11c's soak runs to 10-27 13:39; 11g's A, B1,
 B2 are done on the host (nothing flashed during the soak); after the soak: flash, B2's bench smoke, then 11g C
 (Analyzer, with A8) and D (Node, with A7); then 11d (OTA firmware, needs the owner's WiFi credentials).

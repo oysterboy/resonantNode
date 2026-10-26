@@ -80,7 +80,7 @@ unsigned long answerOnce(ResonantBehavior& a, unsigned long heardAt) {
     TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::ConsumedPattern, d);
     a.update(heardAt);
     TEST_ASSERT_FALSE(a.shouldStartChirp());
-    const unsigned long emitAt = heardAt + a.waitAfterHeardMs();
+    const unsigned long emitAt = heardAt + a.config().waitAfterHeardMs;
     a.update(emitAt);
     TEST_ASSERT_TRUE(a.shouldStartChirp());
     TEST_ASSERT_EQUAL(ResonantBehavior::SignalShape::NetworkSignal, a.signalShape());

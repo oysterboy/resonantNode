@@ -1,9 +1,8 @@
 #pragma once
-#ifndef DETECTION_PROFILE_H
-#define DETECTION_PROFILE_H
 
 #include <strings.h>
 
+#include "detectors/scalar/ScalarTransientConfig.h"
 #include "field/FieldState.h"
 #include "inspection/InspectorTypes.h"
 
@@ -13,8 +12,8 @@ namespace detection {
 DetectionProfile
 
 Code-defined detection profile composition.
-Profiles select the active occurrence emitter, inspection rules, pattern rules,
-inspection config and field-state config.
+Profiles select the detector, its config, the inspection plan (which is also
+the verdict's requirements) and the field-state config.
 
 Profiles declare composition; DetectionRuntime applies the selected fields at fixed stages.
 
@@ -53,23 +52,6 @@ enum class DetectorSelection {
     ScalarTransient,
 };
 
-struct ScalarTransientConfig {
-    // Configuration and defaults.
-    FeatureStreamId observedStream = FeatureStreamId::AmpEnvelope;
-    float onsetDetectionThreshold = 18000.0f;
-    float onsetReleaseThreshold = 12000.0f;
-    unsigned long cooldownAfterOnsetMs = 50;
-    unsigned long minTransientDurationMs = 0;
-    unsigned long maxTransientDurationMs = 120;
-    float minTransientPeakStrength = 8000.0f;
-    unsigned long releaseDebounceMs = 20;
-    bool requireCarrierQuality = false;
-    bool requireMinStrength = false;
-    float minMatchedMeanStrength = 0.0f;
-    unsigned long minCoverageAboveReleaseMs = 0;
-    unsigned long minLongestIslandMs = 0;
-    unsigned long maxGapMs = 0;
-};
 
 enum class DetectionProfileKind {
      // lists available Profiles
@@ -90,7 +72,8 @@ struct DetectionProfile {
     FieldStateConfig fieldStateConfig = {};
 };
 
-inline const InspectionModuleConfig* evaluatorFirstEnabledRequirement(const InspectionPlan& plan) {
+// The first enabled inspection module: the requirement the status lines name.
+inline const InspectionModuleConfig* firstEnabledRequirement(const InspectionPlan& plan) {
     const size_t count = plan.count > kMaxInspectionModules ? kMaxInspectionModules : plan.count;
     for (size_t i = 0; i < count; ++i) {
         if (plan.modules[i].enabled) {
@@ -157,7 +140,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
     profile.inspectionPlan.modules[0].magnitude.mode = MagnitudeInspectionMode::P75; // Use a robust percentile summary.
     profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 300000.0f; // Above the 0..32,767 contrast range on purpose: Strong is unused for contrast; the requirement is Medium (step 8b item 4, owner 2026-10-22).
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = SCALAR_CONTRAST_MEDIUM_THRESHOLD; // Medium contrast threshold (build override for experiments, default 20000).
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = SCALAR_CONTRAST_MEDIUM_THRESHOLD; // Medium contrast limit, SCALAR_CONTRAST_MEDIUM_THRESHOLD above; live as detection.contrast_medium.
     profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 10000.0f; // Weak contrast threshold.
 
 
@@ -172,7 +155,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
     profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::P75; // Use a robust percentile summary.
     profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 5000.0f; // Strong amplitude threshold.
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = SCALAR_AMP_MEDIUM_THRESHOLD; // Medium amplitude threshold (build override for experiments, default 2500).
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = SCALAR_AMP_MEDIUM_THRESHOLD; // Medium amplitude limit, SCALAR_AMP_MEDIUM_THRESHOLD above; live as detection.amp_medium.
     profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1000.0f; // Weak amplitude threshold.
     profile.inspectionPlan.count = 2; // This profile uses two inspectors.
 
@@ -203,10 +186,6 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.scalarTransient.minTransientPeakStrength = 15000.0f;
     profile.scalarTransient.releaseDebounceMs = 30;
     profile.scalarTransient.requireMinStrength = true;
-    // Analyzer retune: keep the duration gate and use the normalized magnitude
-    // scale so AMP-driven occurrences are compared on the same 0..32767 band.
-    profile.scalarTransient.minTransientPeakStrength = 15000.0f;
-
     // Inspector composition.
 
 
@@ -252,8 +231,6 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     //profile.inspectionPlan.modules[2].magnitude.minSustainedMs = 25;  
     
     profile.inspectionPlan.count = 3;
-
-    // Pattern rules.
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000;
@@ -319,4 +296,3 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
 
 } // namespace detection
 
-#endif // DETECTION_PROFILE_H

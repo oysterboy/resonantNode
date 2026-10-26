@@ -163,7 +163,9 @@ hop train, speech/music OBS, and the replay corpus.
 
 ### DET-018 - "valid pattern" vocabulary and vestigial verdict enum values
 
-Status: DEFERRED (from the archived cleanup plan's Phase 7a / 7b, 2026-10-25)
+Status: DEFERRED (from the archived cleanup plan's Phase 7a / 7b, 2026-10-25). 7b lands in step 11e item 3
+(docs/refactors/review-fixes-2026-10-25.md; enumerators assigned nowhere, Behavior's dead Ambiguous branch);
+7a (the SEQ labels, a tools update) stays here.
 
 ```text
 7a: identifiers and SEQ labels that call a valid verdict a "pattern" (AnalyzerReason::ValidPattern*,

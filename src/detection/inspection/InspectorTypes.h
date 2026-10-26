@@ -214,7 +214,6 @@ struct MagnitudeInspectionObservation {
     StrengthClass strength = StrengthClass::Unknown;
 };
 
-using MagnitudeEvidence = MagnitudeInspectionObservation;
 
 // Raw detector evidence captured for transient-trigger analysis and reporting.
 struct TransientEvidence {

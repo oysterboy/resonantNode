@@ -178,15 +178,27 @@ void test_next_occurrence_ids_are_unique() {
     TEST_ASSERT_TRUE_MESSAGE(first != second, "accepted occurrences should receive different IDs");
 }
 
+// The detector's old built-in defaults (onset 75 / release 67.5, no peak
+// gate) with every duration and quality gate open: the synthetic levels these
+// tests feed were written against them.
+detection::ScalarTransientConfig wideOpenConfig() {
+    detection::ScalarTransientConfig c;
+    c.onsetDetectionThreshold = 75.0f;
+    c.onsetReleaseThreshold = 67.5f;
+    c.cooldownAfterOnsetMs = 0;
+    c.minTransientDurationMs = 0;
+    c.maxTransientDurationMs = 1000;
+    c.minTransientPeakStrength = 0.0f;
+    c.releaseDebounceMs = 1;
+    c.requireCarrierQuality = false;
+    c.requireMinStrength = false;
+    return c;
+}
+
 void test_scalar_detector_emits_distinct_occurrence_ids() {
     ScalarTransientDetector detector;
     detector.begin();
-    detector.setCooldownAfterOnsetMs(0);
-    detector.setReleaseDebounceMs(1);
-    detector.setMinTransientDurationMs(0);
-    detector.setMaxTransientDurationMs(1000);
-    detector.setRequireCarrierQuality(false);
-    detector.setRequireMinStrength(false);
+    detector.setConfig(wideOpenConfig());
 
     detection::Occurrence firstOccurrence = {};
     detection::Occurrence secondOccurrence = {};
@@ -226,12 +238,7 @@ void test_pattern_rejected_helper_excludes_source_rejects() {
 void test_scalar_detector_accepted_report_clears_stale_reject_reason() {
     ScalarTransientDetector detector;
     detector.begin();
-    detector.setCooldownAfterOnsetMs(0);
-    detector.setReleaseDebounceMs(1);
-    detector.setMinTransientDurationMs(0);
-    detector.setMaxTransientDurationMs(1000);
-    detector.setRequireCarrierQuality(false);
-    detector.setRequireMinStrength(false);
+    detector.setConfig(wideOpenConfig());
 
     detection::Occurrence acceptedOccurrence = {};
     detection::DetectorReport acceptedReport = {};

@@ -158,7 +158,7 @@ bool SoundOutput::start(const OutputRequest& request) {
             // The announcement: a plain tone outside the band (not detected).
             _chirp.setToneHz(request.announceHz);
             _chirp.setTiming(request.announceMs, 0);
-            _chirp.start(ChirpOutput::ChirpPattern::Single);
+            _chirp.start(ChirpPattern::Single);
             if (!_chirp.isActive()) {
                 _chirp.setToneHz(runtime::kDefaultChirpFrequencyHz);
                 _chirp.setTiming(runtime::kDefaultChirpDurationMs, 150);
@@ -193,7 +193,7 @@ bool SoundOutput::startCall() {
         return true;
     }
     _request.hopSteps = 0;
-    _chirp.start(ChirpOutput::ChirpPattern::Single);
+    _chirp.start(ChirpPattern::Single);
     return _chirp.isActive();
 }
 

@@ -57,7 +57,7 @@ unsigned long answer(ResonantBehavior& b, unsigned long heardAt, unsigned long f
     TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::ConsumedPattern,
                       b.handleOccurrenceVerdict(validPattern(heardAt), fieldWith(fieldPatterns), heardAt));
     b.update(heardAt);
-    const unsigned long emitAt = heardAt + b.waitAfterHeardMs();
+    const unsigned long emitAt = heardAt + b.config().waitAfterHeardMs;
     b.update(emitAt);
     TEST_ASSERT_TRUE(b.shouldStartChirp());
     b.notifyChirpStarted(emitAt, kTrainMs);
@@ -85,14 +85,14 @@ void test_dense_field_starts_a_rest_instead_of_an_answer() {
     ResonantBehavior b;
     b.configure(config());
     b.resetState();
-    const unsigned long threshold = b.restAfterFieldPatterns();
+    const unsigned long threshold = b.config().restAfterFieldPatterns;
     answer(b, 1000, threshold - 1);
     const unsigned long t = 3000;
     TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::RestFieldDense,
                       b.handleOccurrenceVerdict(validPattern(t), fieldWith(threshold), t));
     TEST_ASSERT_TRUE(b.resting(t));
     TEST_ASSERT_EQUAL_UINT32(1, b.restsEntered());
-    b.update(t + b.waitAfterHeardMs());
+    b.update(t + b.config().waitAfterHeardMs);
     TEST_ASSERT_FALSE(b.shouldStartChirp());
 }
 
@@ -102,12 +102,12 @@ void test_rest_ignores_verdicts_until_it_ends() {
     b.configure(config());
     b.resetState();
     const unsigned long t0 = 2000;
-    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.restAfterFieldPatterns()), t0);
+    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.config().restAfterFieldPatterns), t0);
     TEST_ASSERT_TRUE(b.resting(t0));
-    const unsigned long mid = t0 + b.restMs() / 2;
+    const unsigned long mid = t0 + b.config().restMs / 2;
     TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::Resting,
                       b.handleOccurrenceVerdict(validPattern(mid), fieldWith(0), mid));
-    const unsigned long after = t0 + b.restMs() + 1;
+    const unsigned long after = t0 + b.config().restMs + 1;
     TEST_ASSERT_FALSE(b.resting(after));
     answer(b, after, 0);
     TEST_ASSERT_EQUAL_UINT32(1, b.blockedResting() >= 1 ? 1 : 0);
@@ -118,7 +118,7 @@ void test_own_budget_starts_a_rest() {
     ResonantBehavior b;
     b.configure(config());
     b.resetState();
-    const unsigned long budget = b.ownEmitBudget();
+    const unsigned long budget = b.config().ownEmitBudget;
     unsigned long t = 1000;
     for (unsigned long i = 0; i < budget; ++i) {
         answer(b, t, 0);
@@ -138,7 +138,7 @@ void test_slow_traffic_stays_under_the_budget() {
     unsigned long t = 1000;
     for (int i = 0; i < 20; ++i) {
         answer(b, t, 0);
-        t += b.ownEmitBudgetWindowMs() / (b.ownEmitBudget() - 1) + 100;
+        t += b.config().ownEmitBudgetWindowMs / (b.config().ownEmitBudget - 1) + 100;
     }
     TEST_ASSERT_EQUAL_UINT32(0, b.restsEntered());
 }
@@ -167,7 +167,7 @@ void test_two_node_ping_pong_is_cut() {
             break;
         }
         listener->update(t);
-        const unsigned long emitAt = t + listener->waitAfterHeardMs();
+        const unsigned long emitAt = t + listener->config().waitAfterHeardMs;
         listener->update(emitAt);
         TEST_ASSERT_TRUE(listener->shouldStartChirp());
         listener->notifyChirpStarted(emitAt, kTrainMs);
@@ -199,14 +199,14 @@ void test_no_idle_while_resting() {
     b.resetState();
     b.seedIdleSchedule(0);
     const unsigned long t0 = 100;
-    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.restAfterFieldPatterns()), t0);
+    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.config().restAfterFieldPatterns), t0);
     TEST_ASSERT_TRUE(b.resting(t0));
-    for (unsigned long t = t0; t < t0 + b.restMs(); t += 50) {
+    for (unsigned long t = t0; t < t0 + b.config().restMs; t += 50) {
         b.update(t);
         TEST_ASSERT_FALSE_MESSAGE(b.shouldStartChirp(), "idle chirp during a rest");
     }
     bool idled = false;
-    for (unsigned long t = t0 + b.restMs() + 1; t < t0 + b.restMs() + 3000 && !idled; t += 50) {
+    for (unsigned long t = t0 + b.config().restMs + 1; t < t0 + b.config().restMs + 3000 && !idled; t += 50) {
         b.update(t);
         idled = b.shouldStartChirp();
     }
@@ -278,13 +278,13 @@ void test_network_call_waits_while_resting() {
     b.configure(config());
     b.resetState();
     const unsigned long t0 = 1000;
-    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.restAfterFieldPatterns()), t0);
+    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.config().restAfterFieldPatterns), t0);
     TEST_ASSERT_TRUE(b.resting(t0));
     b.requestNetworkCall();
     b.update(t0 + 100);
     TEST_ASSERT_FALSE(b.shouldStartChirp());
     TEST_ASSERT_TRUE(b.networkCallPending());
-    b.update(t0 + b.restMs() + 1);
+    b.update(t0 + b.config().restMs + 1);
     TEST_ASSERT_TRUE(b.shouldStartChirp());
 }
 

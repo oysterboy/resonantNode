@@ -44,6 +44,15 @@ Host-side builds and tests (no board): see "Build & verify" in `CLAUDE.md`.
 Node and Analyzer share the detection profiles and `DetectionRuntime`; they differ in what happens
 after the verdict (behavior and output on the Node, reporting on the Analyzer).
 
+Serial lines, every mode and every port (USB console, the Analyzer <-> Emitter
+link): one reader (`src/app/SerialLine.h`). A line ends at `\n`; CR and
+non-printable bytes are dropped. A line longer than the buffer (255 characters
+on the USB consoles, 95 on the Emitter link) is refused whole with
+`ERR line_too_long max=N` (`RB ERR ...` on the Node), never run cut. A number
+in a command that is not a plain decimal is refused with `... bad value
+token=<token>`; nothing is read as 0 (since 2026-10-26, step 11e;
+decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md).
+
 ## Node (RB)
 
 `RB help` prints the command surface. As of 2026-10-25:
@@ -152,15 +161,20 @@ SEQ stop | SEQ STATUS | SEQ SUMMARY | SEQ REPORT | SEQ TRIES N
 SEQ MODE quiet|trial|inspect|source|system|detail            which report lines print
 SEQ PROFILE TonalPulseScalar|AmpExperimental
 SEQ DIAG on|off | SEQ FREQBAND on|off | SEQ WHEN off|miss|all | SEQ VERBOSE 0|1|2
-PARAM scalar_<key>=<value> ...  Analyzer-side detector knobs (flat keys, same names as the Node's
-                                detection.scalar_* params); PARAM STATUS shows them
+PARAM LIST|GET|SET|DUMP|RESET   the detection.scalar_* knobs, same paths and grammar as the Node
 RAW trigger f=HZ dur=MS post=MS [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=...]
 EMIT CHIRP|MODE AUTO|MODE REMOTE|SWEEP|PULSES ...            the Analyzer drives its own output too
 SELFTEST [chirp n=N gap_ms=MS | help]
 ```
 
-The Analyzer has no ParamRegistry (planned, `roadmap-param-config.md`); its `PARAM` is the flat
-key list above, and `PARAM STATUS` shows what is set.
+The Analyzer's `PARAM` is the Node's since step 11e (2026-10-26, `src/app/ParamCommands`): the 13
+`detection.scalar_*` knobs of the TonalPulseScalar profile are on a `ParamRegistry` through the same
+binding the Node uses (`src/app/ParamBindings.h`), so `PARAM SET detection.scalar_onset_threshold 2000`
+is the same line on both boards and `PARAM DUMP` shows the values. Differences from the Node: no
+store (`SAVE` / `LOAD` answer `status=no_store`; `RESET` returns to the profile's values), and a value
+takes effect at the next `SEQ start`, not live. The observed stream is the profile's (`SEQ PROFILE`),
+not a param. The old `PARAM scalar_<key>=<value>` form and `PARAM STATUS` are gone
+(`docs/decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md`).
 
 What the report lines mean (SEQ_TRIAL, SEQ_SOURCE, SEQ_INSPECT, SEQ_EXPLAIN, SEQ_SUMMARY, and
 which output is neutral tooling rather than analyzer truth): `docs/specs/myspec.md` 5.9. That
@@ -235,7 +249,8 @@ tone level                        I2S_TONE_AMPLITUDE (build flag / RuntimeDefaul
 chirp frequency                   CHIRP_FREQUENCY_HZ (platformio.ini)
 pins, I2S slots                   BoardConfig.h
 startup quiet threshold           kRbStartupQuietThreshold (ResonantNodeApp.cpp)
-Analyzer detector knobs           PARAM scalar_<key>=<value> (flat, per run)
+Analyzer detector knobs           PARAM SET detection.scalar_* (per run, applied at SEQ start)
+host replay overrides             --set detection.<path>=<value> (.pio/build/native-replay/program --help)
 ```
 
 Live changes are lost on reboot unless `PARAM SAVE`d. Changing a default header is a tuning pass
@@ -254,7 +269,8 @@ layout). A gate result cites a `bench/sessions/...` path, never a run that only 
 src/detection/      profiles, detectors, features, occurrences, inspection (+ makeVerdict), field state, DetectionRuntime
 src/detection/analyzer/   pure Analyzer types and rules only (no mode code)
 src/behavior/       ResonantBehavior and BehaviorGateConfig
-src/output/         ChirpOutput, SoundOutput, OutputRequest / OutputStatus
+src/output/         OutputRequest.h (the request vocabulary: ChirpPattern, OutputRequest,
+                    OutputLimits, OutputStatus; no device), SoundOutput, ChirpOutput, ToneOutput
 src/audio/, src/hal/  signal chain and I2S input / output
 src/net/            ESP-NOW frames for NET commands
 src/modes/resonant|analyzer|emitter/   per-mode command handling and wiring

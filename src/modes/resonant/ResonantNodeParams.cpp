@@ -4,22 +4,12 @@
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
 #include <string.h>
-#include <new>
-#include <esp_system.h>
-#include "../../app/RuntimeDefaults.h"
-#include "../../app/TimingUtils.h"
-#include "../../app/BuildInfo.h"
-#include "../../app/NodeRoster.h"
-#include "../../detection/HopGapContract.h"
 #include "../../detection/InspectionPlanContract.h"
-#include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
-#include "../../detection/inspection/InspectionNames.h"
-#include "../../detection/evaluation/VerdictNames.h"
 #include <ParamRegistry.h>
+#include "../../app/ParamBindings.h"
+#include "../../app/ParamCommands.h"
 #include "../../app/ParamIds.h"
-#include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
-#include <new>
 #include "ResonantNodeInternal.h"
 
 using namespace node_internal;
@@ -29,7 +19,10 @@ void Node::configureParameters() {
     _paramRegistry.setGroupNamer(param::moduleNameForGroup);
     registerDetectionParams();
     registerOutputParams();
-    registerBehaviorParams();
+    // Behavior's BehaviorGateConfig on the registry (PAR-006, step 10 item 4):
+    // bound into the Node-owned _activeBehaviorProfile; a PARAM SET applies it
+    // through ResonantBehavior::configure() (setters only, no state reset).
+    param::bindBehaviorParams(_paramRegistry, _activeBehaviorProfile);
     loadInspectionLimitsFromProfile();
     _paramRegistry.addFloat(param::ParamId::Detection_ContrastMedium, param::ModuleId::Detection,
                             "detection.contrast_medium", &_contrastMediumThreshold, 0.0f, 32767.0f);
@@ -37,52 +30,16 @@ void Node::configureParameters() {
                             "detection.amp_medium", &_ampMediumThreshold, 0.0f, 32767.0f);
 }
 
-// Bind the currently-editable detection fields into the flat ParamRegistry.
-// Fields live inside _activeDetectionProfile, which is a stable Node member,
-// so the bound pointers stay valid across profile value changes; switching
-// profiles by kind still replaces the whole struct's contents, same as
-// before this registry existed.
+// The live detection params. The scalar fields bind inside _activeDetectionProfile,
+// a stable Node member, so the pointers stay valid across value changes; a
+// profile switch by kind replaces the struct's contents (setProfileFromName).
 void Node::registerDetectionParams() {
-    // TonalPulseScalar (the Node's production profile, decisions/
-    // 2026-10-14-node-ships-tonalpulsescalar.md). Same flat names as the
-    // Analyzer's PARAM keys, under "detection.". The ms fields are
-    // `unsigned long` in the config; on this 32-bit target it is the same
-    // size as uint32_t, which the registry stores.
-    static_assert(sizeof(unsigned long) == sizeof(uint32_t), "scalar ms fields are bound as uint32_t");
-    detection::ScalarTransientConfig& sc = _activeDetectionProfile.scalarTransient;
-    using param::ModuleId;
-    using param::ParamId;
-    _paramRegistry.addFloat(ParamId::Detection_ScalarOnsetThreshold, ModuleId::Detection,
-                             "detection.scalar_onset_threshold", &sc.onsetDetectionThreshold, 0.0f, 200000.0f);
-    _paramRegistry.addFloat(ParamId::Detection_ScalarReleaseThreshold, ModuleId::Detection,
-                             "detection.scalar_release_threshold", &sc.onsetReleaseThreshold, 0.0f, 200000.0f);
-    _paramRegistry.addUInt32(ParamId::Detection_ScalarCooldownMs, ModuleId::Detection,
-                             "detection.scalar_cooldown_ms", reinterpret_cast<uint32_t*>(&sc.cooldownAfterOnsetMs), 0U, 10000U);
-    _paramRegistry.addUInt32(ParamId::Detection_ScalarMinDurationMs, ModuleId::Detection,
-                             "detection.scalar_min_duration_ms", reinterpret_cast<uint32_t*>(&sc.minTransientDurationMs), 0U, 5000U);
-    _paramRegistry.addUInt32(ParamId::Detection_ScalarMaxDurationMs, ModuleId::Detection,
-                             "detection.scalar_max_duration_ms", reinterpret_cast<uint32_t*>(&sc.maxTransientDurationMs), 0U, 5000U);
-    _paramRegistry.addFloat(ParamId::Detection_ScalarMinPeakStrength, ModuleId::Detection,
-                             "detection.scalar_min_peak_strength", &sc.minTransientPeakStrength, 0.0f, 200000.0f);
-    _paramRegistry.addUInt32(ParamId::Detection_ScalarReleaseDebounceMs, ModuleId::Detection,
-                             "detection.scalar_release_debounce_ms", reinterpret_cast<uint32_t*>(&sc.releaseDebounceMs), 0U, 1000U);
-    _paramRegistry.addBool(ParamId::Detection_ScalarRequireCarrierQuality, ModuleId::Detection,
-                            "detection.scalar_require_carrier_quality", &sc.requireCarrierQuality);
-    _paramRegistry.addBool(ParamId::Detection_ScalarRequireMinStrength, ModuleId::Detection,
-                            "detection.scalar_require_min_strength", &sc.requireMinStrength);
-    _paramRegistry.addFloat(ParamId::Detection_ScalarMinStrength, ModuleId::Detection,
-                             "detection.scalar_min_strength", &sc.minMatchedMeanStrength, 0.0f, 200000.0f);
-    _paramRegistry.addUInt32(ParamId::Detection_ScalarMinReleaseCoverageMs, ModuleId::Detection,
-                             "detection.scalar_min_release_coverage_ms", reinterpret_cast<uint32_t*>(&sc.minCoverageAboveReleaseMs), 0U, 5000U);
-    _paramRegistry.addUInt32(ParamId::Detection_ScalarMinLongestIslandMs, ModuleId::Detection,
-                             "detection.scalar_min_longest_island_ms", reinterpret_cast<uint32_t*>(&sc.minLongestIslandMs), 0U, 5000U);
-    _paramRegistry.addUInt32(ParamId::Detection_ScalarMaxGapMs, ModuleId::Detection,
-                             "detection.scalar_max_gap_ms", reinterpret_cast<uint32_t*>(&sc.maxGapMs), 0U, 5000U);
+    param::bindScalarTransientParams(_paramRegistry, _activeDetectionProfile.scalarTransient);
     // Network band (DET-013). Applied by applyBandParams() when the values
     // change; 0 = single target at the chirp tone.
-    _paramRegistry.addUInt32(ParamId::Detection_BandLowHz, ModuleId::Detection,
+    _paramRegistry.addUInt32(param::ParamId::Detection_BandLowHz, param::ModuleId::Detection,
                              "detection.band_low_hz", &_bandLowHz, 0U, 7900U);
-    _paramRegistry.addUInt32(ParamId::Detection_BandHighHz, ModuleId::Detection,
+    _paramRegistry.addUInt32(param::ParamId::Detection_BandHighHz, param::ModuleId::Detection,
                              "detection.band_high_hz", &_bandHighHz, 0U, 7900U);
 }
 
@@ -98,50 +55,6 @@ void Node::registerOutputParams() {
     _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &_idleAnnounceMs, 20U, 2000U);
     _paramRegistry.addBool(ParamId::Output_Silent, ModuleId::Output, "output.silent", &_silent);
     _paramRegistry.addBool(ParamId::Node_RadioEnabled, ModuleId::Node, "node.radio_enabled", &_radioEnabled);
-}
-
-// The registered detection params (detection.scalar_*, detection.band_*) applied
-// in place: scalar thresholds through the detector's setters, the band through
-// FreqBandStream. No detector reset and no FeatureHistory wipe, so a live PARAM
-// SET does not drop an occurrence in flight (step 10 item 2, issue #14,
-// decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md D2). A profile
-// switch still goes through applyActiveDetectionProfile().
-// Behavior's BehaviorGateConfig on the registry (PAR-006, step 10 item 4). The
-// params bind into the Node-owned _activeBehaviorProfile; a PARAM SET applies it
-// through ResonantBehavior::configure(), which only calls setters (no state
-// reset). Paths are the snake_case field names; the RB BEHAV keys they replace
-// are mapped in decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md.
-void Node::registerBehaviorParams() {
-    static_assert(sizeof(unsigned long) == sizeof(uint32_t), "behavior ms fields are bound as uint32_t");
-    BehaviorGateConfig& b = _activeBehaviorProfile;
-    using param::ModuleId;
-    using param::ParamId;
-    auto u32 = [](unsigned long* field) { return reinterpret_cast<uint32_t*>(field); };
-    _paramRegistry.addBool(ParamId::Behavior_IdleEnabled, ModuleId::Behavior, "behavior.idle_enabled", &b.idleEnabled);
-    _paramRegistry.addUInt32(ParamId::Behavior_WaitAfterHeardMs, ModuleId::Behavior,
-                             "behavior.wait_after_heard_ms", u32(&b.waitAfterHeardMs), 0U, 10000U);
-    _paramRegistry.addUInt32(ParamId::Behavior_RefractoryAfterEmitMs, ModuleId::Behavior,
-                             "behavior.refractory_after_emit_ms", u32(&b.refractoryAfterEmitMs), 0U, 60000U);
-    _paramRegistry.addUInt32(ParamId::Behavior_SuppressSelfChirpMs, ModuleId::Behavior,
-                             "behavior.suppress_self_chirp_ms", u32(&b.behaviorSuppressSelfChirpMs), 0U, 10000U);
-    _paramRegistry.addUInt32(ParamId::Behavior_DetectionSuppressTailMs, ModuleId::Behavior,
-                             "behavior.detection_suppress_tail_ms", u32(&b.detectionSuppressTailMsOwnEmit), 0U, 5000U);
-    _paramRegistry.addUInt32(ParamId::Behavior_IdleTimeoutMs, ModuleId::Behavior,
-                             "behavior.idle_timeout_ms", u32(&b.idleTimeoutMs), 0U, 3600000U);
-    _paramRegistry.addUInt32(ParamId::Behavior_IdleTimeoutVariationMs, ModuleId::Behavior,
-                             "behavior.idle_timeout_variation_ms", u32(&b.idleTimeVariationMs), 0U, 3600000U);
-    _paramRegistry.addUInt32(ParamId::Behavior_IdleBlockedAfterHeardMs, ModuleId::Behavior,
-                             "behavior.idle_blocked_after_heard_ms", u32(&b.idleBlockedAfterHeardMs), 0U, 600000U);
-    _paramRegistry.addUInt32(ParamId::Behavior_IdleBlockedAfterOwnEmitMs, ModuleId::Behavior,
-                             "behavior.idle_blocked_after_own_emit_ms", u32(&b.idleBlockedAfterOwnEmitMs), 0U, 600000U);
-    _paramRegistry.addUInt32(ParamId::Behavior_RestAfterFieldPatterns, ModuleId::Behavior,
-                             "behavior.rest_after_field_patterns", u32(&b.restAfterFieldPatterns), 0U, 100U);
-    _paramRegistry.addUInt32(ParamId::Behavior_OwnEmitBudget, ModuleId::Behavior,
-                             "behavior.own_emit_budget", u32(&b.ownEmitBudget), 0U, 100U);
-    _paramRegistry.addUInt32(ParamId::Behavior_OwnEmitBudgetWindowMs, ModuleId::Behavior,
-                             "behavior.own_emit_budget_window_ms", u32(&b.ownEmitBudgetWindowMs), 0U, 600000U);
-    _paramRegistry.addUInt32(ParamId::Behavior_RestMs, ModuleId::Behavior,
-                             "behavior.rest_ms", u32(&b.restMs), 0U, 600000U);
 }
 
 namespace {
@@ -169,6 +82,12 @@ void Node::loadInspectionLimitsFromProfile() {
     _ampMediumThreshold = amp != nullptr ? amp->magnitude.supportStrength.mediumPeakThreshold : 0.0f;
 }
 
+// The registered detection params (detection.scalar_*, detection.band_*) applied
+// in place: scalar thresholds through the detector's setters, the band through
+// FreqBandStream. No detector reset and no FeatureHistory wipe, so a live PARAM
+// SET does not drop an occurrence in flight (step 10 item 2, issue #14,
+// decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md D2). A profile
+// switch still goes through applyActiveDetectionProfile().
 void Node::applyLiveDetectionParams() {
     _detection.setScalarTransientConfig(_activeDetectionProfile.scalarTransient);
     detection::InspectionModuleConfig* contrast = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Contrast);
@@ -183,140 +102,34 @@ void Node::applyLiveDetectionParams() {
     applyBandParams();
 }
 
-// PARAM LIST / GET / SET / DUMP: the generic ParamRegistry command surface.
-// The one command path for every registered knob since step 10 (RB PARAM and
-// RB BEHAV were removed; docs/roadmaps/roadmap-param-config.md PAR-015).
+// PARAM LIST / GET / SET / DUMP / SAVE / LOAD / RESET: the shared handler
+// (app/ParamCommands, step 11e item 9) with the Node's NVS store. The one
+// command path for every registered knob since step 10 (RB PARAM and RB BEHAV
+// were removed; docs/roadmaps/roadmap-param-config.md PAR-015). What it wrote,
+// the owning module applies here.
 void Node::handleParamCommand(const char* line) {
-    char buffer[kSerialLineCapacity];
-    strncpy(buffer, line, sizeof(buffer));
-    buffer[sizeof(buffer) - 1] = '\0';
-
-    char* savePtr = nullptr;
-    char* token = strtok_r(buffer, " ", &savePtr);
-    token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
-
-    if (token == nullptr) {
-        serialOut().println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP|SAVE|LOAD|RESET");
-        return;
+    const param::ParamCommandResult result = param::handleParamCommand(line, _paramRegistry, &_paramStore, serialOut());
+    switch (result.effect) {
+        case param::ParamCommandEffect::Group:
+            applyParamModule(static_cast<param::ModuleId>(result.group));
+            break;
+        case param::ParamCommandEffect::AllGroups:
+            // LOAD / RESET rewrote fields across modules: every module applies
+            // once (applySilent directly: the Detection route prints hop_check).
+            applyParamModule(param::ModuleId::Behavior);
+            applySilent();
+            applyParamModule(param::ModuleId::Detection);  // also prints hop_check and plan_check
+            break;
+        case param::ParamCommandEffect::None:
+            break;
     }
-
-    if (equalsIgnoreCase(token, "LIST")) {
-        _paramRegistry.list(serialOut());
-        return;
-    }
-
-    if (equalsIgnoreCase(token, "DUMP")) {
-        _paramRegistry.dump(serialOut());
-        return;
-    }
-
-    // Persistence (PAR-011): only SAVE writes flash. LOAD re-reads the store,
-    // RESET clears it and restores the firmware defaults; both apply at once.
-    if (equalsIgnoreCase(token, "SAVE")) {
-        const param::ParamSaveReport report = _paramRegistry.save(_paramStore);
-        serialOut().print("PARAM SAVE written=");
-        serialOut().print(static_cast<unsigned long>(report.written));
-        serialOut().print(" unchanged=");
-        serialOut().print(static_cast<unsigned long>(report.unchanged));
-        serialOut().print(" failed=");
-        serialOut().print(static_cast<unsigned long>(report.failed));
-        serialOut().print(" status=");
-        serialOut().println(report.failed == 0 ? "ok" : "error");
-        return;
-    }
-
-    if (equalsIgnoreCase(token, "LOAD")) {
-        loadStoredParams();
-        applyParamModule(param::ModuleId::Detection);
-        return;
-    }
-
-    if (equalsIgnoreCase(token, "RESET")) {
-        const bool cleared = _paramStore.clear();
-        _paramRegistry.restoreDefaults();
-        serialOut().print("PARAM RESET store=");
-        serialOut().print(cleared ? "cleared" : "error");
-        serialOut().println(" values=defaults");
-        applyParamModule(param::ModuleId::Behavior);
-        applyParamModule(param::ModuleId::Detection);  // also prints hop_check and plan_check
-        return;
-    }
-
-    if (equalsIgnoreCase(token, "GET")) {
-        const char* path = strtok_r(nullptr, " ", &savePtr);
-        const param::ParamBinding* binding = path != nullptr ? _paramRegistry.find(path) : nullptr;
-        if (binding == nullptr) {
-            serialOut().print("PARAM GET path=");
-            serialOut().print(path != nullptr ? path : "");
-            serialOut().print(" status=");
-            serialOut().println(param::paramSetStatusName(param::ParamSetStatus::UnknownParam));
-            return;
-        }
-        serialOut().print("PARAM GET path=");
-        serialOut().print(path);
-        serialOut().print(" module=");
-        serialOut().print(_paramRegistry.groupName(binding->group));
-        serialOut().print(" value=");
-        _paramRegistry.printValue(serialOut(), *binding);
-        serialOut().println();
-        return;
-    }
-
-    if (equalsIgnoreCase(token, "SET")) {
-        const char* path = strtok_r(nullptr, " ", &savePtr);
-        const char* value = strtok_r(nullptr, " ", &savePtr);
-        // One value only: "1.5 junk" is an error, not 1.5 (issue #31 R2-19).
-        const char* extra = strtok_r(nullptr, " ", &savePtr);
-        if (extra != nullptr) {
-            value = nullptr;
-        }
-        const param::ParamBinding* binding = path != nullptr ? _paramRegistry.find(path) : nullptr;
-
-        if (binding == nullptr) {
-            serialOut().print("PARAM SET path=");
-            serialOut().print(path != nullptr ? path : "");
-            serialOut().print(" status=");
-            serialOut().println(param::paramSetStatusName(param::ParamSetStatus::UnknownParam));
-            return;
-        }
-
-        serialOut().print("PARAM SET path=");
-        serialOut().print(path);
-        serialOut().print(" module=");
-        serialOut().print(_paramRegistry.groupName(binding->group));
-        serialOut().print(" old=");
-        _paramRegistry.printValue(serialOut(), *binding);
-
-        const param::ParamSetStatus status = _paramRegistry.applyValue(*binding, value);
-
-        serialOut().print(" new=");
-        _paramRegistry.printValue(serialOut(), *binding);
-        serialOut().print(" status=");
-        serialOut().println(param::paramSetStatusName(status));
-
-        if (status == param::ParamSetStatus::Ok) {
-            applyParamModule(static_cast<param::ModuleId>(binding->group));
-        }
-        return;
-    }
-
-    serialOut().println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP|SAVE|LOAD|RESET");
 }
 
-// Stored values into the fields (PAR-010), then every module applies once. At
-// boot this runs before the signal config prints; PARAM LOAD prints the checks
-// after it. Each value that differs from the default, and each stale or invalid
-// entry, has its own line (ParamRegistry::load).
+// Stored values into the fields at boot (PAR-010), then the modules apply
+// once. Runs before the signal config prints; PARAM LOAD goes through
+// handleParamCommand and applies every module.
 void Node::loadStoredParams() {
-    const param::ParamLoadReport report = _paramRegistry.load(_paramStore, serialOut());
-    serialOut().print("PARAM load stored=");
-    serialOut().print(static_cast<unsigned long>(report.stored));
-    serialOut().print(" applied=");
-    serialOut().print(static_cast<unsigned long>(report.applied));
-    serialOut().print(" stale=");
-    serialOut().print(static_cast<unsigned long>(report.stale));
-    serialOut().print(" invalid=");
-    serialOut().println(static_cast<unsigned long>(report.invalid));
+    const param::ParamLoadReport report = param::loadStoredParams(_paramRegistry, _paramStore, serialOut());
     if (report.applied > 0) {
         applyLiveDetectionParams();
         applyActiveBehaviorGateConfig();
@@ -411,7 +224,6 @@ void Node::applyActiveDetectionProfile() {
     _detection.setScalarTransientConfig(detectionProfile.scalarTransient);
     _detection.setInspectionPlan(detectionProfile.inspectionPlan);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
-    _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
     _detection.setVerdictQueueEnabled(true);
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());

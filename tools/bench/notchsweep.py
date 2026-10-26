@@ -64,7 +64,7 @@ def write(path, head, begin, summary, pcm, tag):
 def run(path, medium=None):
     cmd = [PROGRAM, "--verbose"]
     if medium is not None:
-        cmd += ["--set", "contrast_medium=%d" % medium]
+        cmd += ["--set", "detection.contrast_medium=%d" % medium]
     proc = subprocess.run(cmd + [path], capture_output=True, text=True)
     if proc.returncode != 0:
         # 0xC0000135 on Windows: the replay's MinGW runtime DLLs are not on PATH (CLAUDE.md, host build).

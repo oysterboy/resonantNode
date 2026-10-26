@@ -39,7 +39,7 @@ Does NOT:
 - implement the behavior state machine
 - classify patterns
 - generate waveforms
-- own probe thresholds as diagnostics, not core behavior logic
+- own detector thresholds or inspection rules (DetectionProfile, live detection.* params)
 
 File structure:
 - local helpers and constants
@@ -100,7 +100,7 @@ void printProfileComposition(const detection::DetectionProfile& profile) {
 }
 
 void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
-    serialOut().println("RB DETECT");
+    serialOut().println("RB PROFILE detail");
     serialOut().print("  kind=");
     serialOut().println(detection::detectionProfileName(profile.kind));
     serialOut().print("  detectorSelection=");
@@ -179,7 +179,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         }
     }
     const detection::InspectionModuleConfig* supportRequirement =
-        detection::evaluatorFirstEnabledRequirement(profile.inspectionPlan);
+        detection::firstEnabledRequirement(profile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
     serialOut().print("  verdict.has_requirement=");
     serialOut().println(supportRequired ? 1 : 0);
@@ -204,23 +204,23 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
 void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
     serialOut().println("RB behavior");
     serialOut().print("  idleEnabled=");
-    serialOut().println(behavior.idleEnabled() ? 1 : 0);
+    serialOut().println(behavior.config().idleEnabled ? 1 : 0);
     serialOut().print("  waitAfterHeardMs=");
-    serialOut().println(behavior.waitAfterHeardMs());
+    serialOut().println(behavior.config().waitAfterHeardMs);
     serialOut().print("  refractoryAfterEmitMs=");
-    serialOut().println(behavior.refractoryAfterEmitMs());
+    serialOut().println(behavior.config().refractoryAfterEmitMs);
     serialOut().print("  behaviorSuppressSelfChirpMs=");
-    serialOut().println(behavior.behaviorSuppressSelfChirpMs());
+    serialOut().println(behavior.config().behaviorSuppressSelfChirpMs);
     serialOut().print("  detectionSuppressTailMsOwnEmit=");
-    serialOut().println(behavior.detectionSuppressTailMsOwnEmit());
+    serialOut().println(behavior.config().detectionSuppressTailMsOwnEmit);
     serialOut().print("  idleTimeoutMs=");
-    serialOut().println(behavior.idleTimeoutMs());
+    serialOut().println(behavior.config().idleTimeoutMs);
     serialOut().print("  idleTimeVariationMs=");
-    serialOut().println(behavior.idleTimeVariationMs());
+    serialOut().println(behavior.config().idleTimeVariationMs);
     serialOut().print("  idleBlockedAfterHeardMs=");
-    serialOut().println(behavior.idleBlockedAfterHeardMs());
+    serialOut().println(behavior.config().idleBlockedAfterHeardMs);
     serialOut().print("  idleBlockedAfterOwnEmitMs=");
-    serialOut().println(behavior.idleBlockedAfterOwnEmitMs());
+    serialOut().println(behavior.config().idleBlockedAfterOwnEmitMs);
 }
 
 void printNodeBuildIdentity() {
@@ -247,19 +247,6 @@ const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now
         return "pattern";
     }
     return behavior.stateCode() == 0 ? "idle" : behavior.stateName();
-}
-
-const char* chirpPatternName(ChirpOutput::ChirpPattern pattern) {
-    switch (pattern) {
-        case ChirpOutput::ChirpPattern::Single:
-            return "single";
-        case ChirpOutput::ChirpPattern::Triple:
-            return "triple";
-        case ChirpOutput::ChirpPattern::Idle:
-            return "idle";
-    }
-
-    return "unknown";
 }
 
 // --- constructors ---
@@ -370,9 +357,7 @@ void Node::begin() {
         serialOut().println("RB silent=1 (output.silent: listening, never sounding)");
     }
     _debug.markLoopStart(timebase::nowUs());
-    _serialLineLength = 0;
-    _serialLineOverflow = false;
-    _serialLineBuffer[0] = '\0';
+    _serialLine.reset();
 
     serialOut().print("RB PROFILE name=");
     serialOut().print(profileName());
@@ -416,8 +401,6 @@ void Node::resetRbCounters() {
     _rbValidPatternCount = 0;
     _rbChirpStartedCount = 0;
     _rbOverflowPending = 0;
-    _rbLastPendingMs = 0;
-    _rbHaveLastPendingMs = false;
     _rbStrengthSumScaled = 0;
     _rbValidStrengthSum = 0;
     _rbDurationSumMs = 0;
@@ -478,8 +461,6 @@ const char* Node::rbBaselineStateName() const {
             return "BOOT";
         case RBBaselineState::ListenForQuiet:
             return "LISTEN_FOR_QUIET";
-        case RBBaselineState::Rebase:
-            return "REBASE";
         case RBBaselineState::Settle:
             return "SETTLE";
         case RBBaselineState::Active:
@@ -513,7 +494,6 @@ void Node::updateRbBaselineState(unsigned long now) {
                 }
                 const unsigned long quietMs = now - _rbBaselineQuietSinceMs;
                 if (quietMs >= kRbStartupQuietHoldMs) {
-                    _rbBaselineState = RBBaselineState::Rebase;
                     performRbRebase();
                     _rbBaselineState = RBBaselineState::Settle;
                     _rbBaselineSettleUntilMs = now + kRbPostRebaseSettleMs;
@@ -544,9 +524,6 @@ void Node::updateRbBaselineState(unsigned long now) {
             }
         } break;
 
-        case RBBaselineState::Rebase:
-            break;
-
         case RBBaselineState::Settle:
             if (timing::atOrAfter(now, _rbBaselineSettleUntilMs)) {
                 _rbBaselineState = RBBaselineState::Active;
@@ -560,7 +537,7 @@ void Node::updateRbBaselineState(unsigned long now) {
     }
 }
 
-// --- parameter setup ---
+// --- band and hop composition ---
 
 void Node::applyBandParams() {
     // An empty or inverted band means "single target at the chirp tone".
@@ -639,8 +616,8 @@ void Node::configureI2SParameters() {
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
 
-    // Transitional node wiring: keep the active tone and detector target aligned here
-    // while the node still runs frequency-based profiles.
+    // Boot wiring: the chirp tone and the detector's single target start aligned;
+    // applyBandParams() replaces the target with the band when detection.band_* is set.
     _chirpOutput.setToneHz(runtime::kDefaultChirpFrequencyHz);
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _audioSignal.setBaselineTrackingQuietThreshold(20);
@@ -801,7 +778,7 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
     if (_hopEnabled && _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal &&
         composeHopTrain(request)) {
         request.kind = OutputRequest::Kind::HopTrain;
-    } else if (_idleAnnounceHz > 0 && chirpPattern == ChirpOutput::ChirpPattern::Idle) {
+    } else if (_idleAnnounceHz > 0 && chirpPattern == ChirpPattern::Idle) {
         request.kind = OutputRequest::Kind::IdleCall;
         request.announceHz = _idleAnnounceHz;
         request.announceMs = _idleAnnounceMs;
@@ -866,9 +843,7 @@ void Node::updateEmissions(unsigned long now) {
     }
 }
 
-// --- serial command handling ---
-
-// --- command handlers ---
+// --- detection frame -> Behavior -> SoundOutput ---
 
 void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
                               unsigned long now,
@@ -907,8 +882,6 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         }
         _rbStrengthSumScaled += static_cast<uint64_t>(verdict.primaryStrength * 100.0f);
         _rbDurationSumMs += verdict.primaryDurationMs;
-        _rbHaveLastPendingMs = true;
-        _rbLastPendingMs = verdict.primaryHeardAtMs;
         if (_selfTest.phase != SelfTestState::Phase::Idle) {
             selfTestObserveVerdict(verdict, now);
         }
@@ -953,4 +926,3 @@ detection::FrequencyBandMeasurementPacket Node::captureFrequencyMeasurementPacke
     return detection::buildFrequencyMeasurementPacket(_freqBandStream, audioSamplePacket);
 }
 
-// --- remote params over the radio (PAR-013, step 11a) ---

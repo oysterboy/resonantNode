@@ -36,6 +36,9 @@ constexpr unsigned long bandBinCountFor(unsigned long lowHz, unsigned long highH
 
 class FreqBandStream {
 public:
+    static constexpr unsigned long kMaxBankBins = 10;  // band bins plus two guards
+    static constexpr unsigned long kMaxBandBins = kMaxBankBins - 2;
+
     void resetState();
 
     void setTargetFrequencyHz(unsigned long value);
@@ -98,11 +101,6 @@ private:
     unsigned long _targetFrequencyHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long _bandLowHz = 0;
     unsigned long _bandHighHz = 0;
-public:
-    static constexpr unsigned long kMaxBankBins = 10;  // band bins plus two guards
-    static constexpr unsigned long kMaxBandBins = kMaxBankBins - 2;
-
-private:
     float _bankHz[kMaxBankBins] = {};
     float _bankCoeff[kMaxBankBins] = {};
     unsigned long _bankCount = 0;

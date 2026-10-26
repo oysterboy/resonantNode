@@ -16,6 +16,7 @@
 #include "../../audio/AudioSignal.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../output/ChirpOutput.h"
+#include "../../app/SerialLine.h"
 #include "../../output/SoundOutput.h"
 #include "../../net/NodeNet.h"
 #include "../../behavior/ResonantBehavior.h"
@@ -57,7 +58,6 @@ private:
     enum class RBBaselineState {
         Boot,
         ListenForQuiet,
-        Rebase,
         Settle,
         Active,
         FailedNoQuiet,
@@ -184,7 +184,6 @@ private:
     void startEmission(unsigned long now, bool sawPatternThisLoop, bool selfChirpSuppressed);  // step 10 item 9
     void updateEmissions(unsigned long now);                                                     // step 10 item 9
     void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset (step 10 item 2)
-    void registerBehaviorParams();    // behavior.* on the registry (PAR-006, step 10 item 4)
     void loadInspectionLimitsFromProfile();  // detection.contrast_medium / amp_medium from the plan (item 7)
 
     // Hardware wiring.
@@ -248,20 +247,16 @@ private:
 
     // Debug / logging support.
     NodeDebug _debug;
-    // 256 like the Analyzer's USB line: the RB BEHAV usage line alone is
-    // 177 characters. A longer line is rejected, never run cut (issue #31).
+    // 256 like the Analyzer's USB line; a longer line is refused, never run
+    // cut (issue #31; app/SerialLine.h). Also the command scratch size.
     static constexpr size_t kSerialLineCapacity = 256;
-    char _serialLineBuffer[kSerialLineCapacity] = {};
-    size_t _serialLineLength = 0;
-    bool _serialLineOverflow = false;
+    serial_line::LineReader<kSerialLineCapacity - 1> _serialLine;
     unsigned long _rbPendingCount = 0;
     unsigned long _rbPatternAcceptedCount = 0;
     unsigned long _rbValidPatternCount = 0;
     unsigned long _rbChirpStartedCount = 0;
     int _rbLevelMaxSinceStatus = 0;  // loudest smoothed level since the last RB STATUS (room notes, 10c)
     unsigned long _rbOverflowPending = 0;
-    unsigned long _rbLastPendingMs = 0;
-    bool _rbHaveLastPendingMs = false;
     uint64_t _rbStrengthSumScaled = 0; // Strength16 * 100 per verdict; uint32 overflowed after ~1,300 (issue #31)
     uint64_t _rbValidStrengthSum = 0;  // valid verdicts only, whole Strength16 units: RB STATUS heard.* (10c drift)
     unsigned long _rbDurationSumMs = 0;

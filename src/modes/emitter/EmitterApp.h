@@ -8,6 +8,7 @@
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/I2sToneOutput.h"
 #endif
+#include "../../app/SerialLine.h"
 #include "../../output/ChirpOutput.h"
 
 /*
@@ -23,11 +24,6 @@ public:
         Auto,
         RemoteControl,
         Sweep
-    };
-
-    // Serial transport label kept for the control-port protocol surface.
-    enum class ControlSerialKind {
-        Serial2
     };
 
     EmitterApp(int outputPin = 25,
@@ -69,8 +65,6 @@ private:
     void advanceSweep(unsigned long now);
     const char* modeName() const;
 
-    int _outputPin;
-    int _outputBtlPin;
     int _rxPin;
     int _txPin;
     unsigned long _baudRate;
@@ -101,8 +95,6 @@ private:
     I2sToneOutput _toneOutput;
 #endif
     ChirpOutput _chirpOutput;
-    char _lineBuffer[96];
-    size_t _lineLength = 0;
-    char _usbLineBuffer[96];
-    size_t _usbLineLength = 0;
+    serial_line::LineReader<95> _controlLine;  // Serial2, the Analyzer's commands
+    serial_line::LineReader<95> _usbLine;      // USB: SELFTEST and EMIT <command>
 };

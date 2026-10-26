@@ -43,7 +43,8 @@ struct MagnitudeOccurrenceDetail {
     float peakStrength = 0.0f;
     float releaseStrength = 0.0f;
     bool audioOverflowDuringOccurrence = false;
-    MagnitudeEvidence evidence = {};
+    // The inspection evidence itself is on InspectedOccurrence (myspec 5.4:
+    // an Occurrence carries accepted-event facts, not inspection windows).
     StrengthClass strengthClass = StrengthClass::Unknown;
 };
 

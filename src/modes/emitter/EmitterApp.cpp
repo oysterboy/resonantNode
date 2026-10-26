@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../../app/BuildInfo.h"
+#include "../../app/TextParse.h"
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/SerialLine.h"
 #include "../../selftest/AudioSelfTest.h"
@@ -39,9 +40,7 @@ EmitterApp::EmitterApp(int outputPin, int rxPin, int txPin, unsigned long baudRa
     : EmitterApp(outputPin, -1, rxPin, txPin, baudRate) {}
 
 EmitterApp::EmitterApp(int outputPin, int outputBtlPin, int rxPin, int txPin, unsigned long baudRate)
-    : _outputPin(outputPin),
-      _outputBtlPin(outputBtlPin),
-      _rxPin(rxPin),
+    : _rxPin(rxPin),
       _txPin(txPin),
       _baudRate(baudRate),
 #if defined(BOARD_PIEZO)
@@ -73,10 +72,8 @@ void EmitterApp::begin() {
     configureAuto(_autoIntervalMs, _autoToneHz, _autoDurationMs);
     setMode(EmitterMode::Auto);
     _nextAutoChirpAtMs = timebase::nowMs();
-    _lineLength = 0;
-    _lineBuffer[0] = '\0';
-    _usbLineLength = 0;
-    _usbLineBuffer[0] = '\0';
+    _controlLine.reset();
+    _usbLine.reset();
 
     serialOut().print("EVT emitter_ready mode=");
     serialOut().print(modeName());
@@ -118,44 +115,33 @@ void EmitterApp::update() {
 
 void EmitterApp::pollControlSerial() {
     while (Serial2.available() > 0) {
-        const char c = static_cast<char>(Serial2.read());
-        if (serial_line::dropByte(c)) {
+        if (!_controlLine.feed(static_cast<char>(Serial2.read()))) {
             continue;
         }
-
-        if (c == '\n') {
-            _lineBuffer[_lineLength] = '\0';
-            if (_lineLength > 0) {
-                handleLine(_lineBuffer);
-            }
-            _lineLength = 0;
-            continue;
-        }
-
-        if (_lineLength < sizeof(_lineBuffer) - 1) {
-            _lineBuffer[_lineLength++] = c;
+        if (_controlLine.tooLong()) {
+            serialOut().print("ERR line_too_long max=");
+            serialOut().println(static_cast<unsigned long>(_controlLine.kCapacity));
+        } else if (_controlLine.length() > 0) {
+            handleLine(_controlLine.line());
         }
     }
 }
 
 void EmitterApp::pollUsbSerial() {
     while (Serial.available() > 0) {
-        const char c = static_cast<char>(Serial.read());
-        if (serial_line::dropByte(c)) {
+        if (!_usbLine.feed(static_cast<char>(Serial.read()))) {
             continue;
         }
-        if (c != '\n') {
-            if (_usbLineLength < sizeof(_usbLineBuffer) - 1) {
-                _usbLineBuffer[_usbLineLength++] = c;
-            }
+        if (_usbLine.tooLong()) {
+            serialOut().print("ERR line_too_long max=");
+            serialOut().println(static_cast<unsigned long>(_usbLine.kCapacity));
             continue;
         }
-        _usbLineBuffer[_usbLineLength] = '\0';
-        _usbLineLength = 0;
-        if (strncmp(_usbLineBuffer, "SELFTEST", 8) == 0 || strncmp(_usbLineBuffer, "selftest", 8) == 0) {
-            handleSelfTestCommand(_usbLineBuffer);
-        } else if (strncmp(_usbLineBuffer, "EMIT ", 5) == 0) {
-            handleLine(_usbLineBuffer + 5);
+        const char* line = _usbLine.line();
+        if (strncmp(line, "SELFTEST", 8) == 0 || strncmp(line, "selftest", 8) == 0) {
+            handleSelfTestCommand(line);
+        } else if (strncmp(line, "EMIT ", 5) == 0) {
+            handleLine(text_parse::rest(line, "EMIT"));
         }
     }
 }
@@ -256,6 +242,14 @@ static bool emitterToneHzPlayable(unsigned long toneHz) {
 #endif
 }
 
+// A value that is not a plain number is refused, not read as 0 (step 11e item 8).
+static void printBadValue(const char* command, const char* token) {
+    serialOut().print("ERR ");
+    serialOut().print(command);
+    serialOut().print(" bad value token=");
+    serialOut().println(token != nullptr ? token : "");
+}
+
 static void printToneHzRejected(const char* command, unsigned long toneHz) {
     serialOut().print("ERR ");
     serialOut().print(command);
@@ -278,14 +272,26 @@ void EmitterApp::handleChirpCommand(const char* line) {
     token = nextToken(savePtr);
     while (token != nullptr) {
         if (startsWithToken(token, "trial=")) {
-            trialId = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), trialId)) {
+                printBadValue("CHIRP", token);
+                return;
+            }
         } else if (startsWithToken(token, "freq=")) {
-            toneHz = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), toneHz)) {
+                printBadValue("CHIRP", token);
+                return;
+            }
         } else if (startsWithToken(token, "dur=")) {
-            durationMs = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), durationMs)) {
+                printBadValue("CHIRP", token);
+                return;
+            }
         } else if (startsWithToken(token, "sweep=")) {
             // Glide from freq= to this frequency over dur= (OUT-005).
-            sweepToHz = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), sweepToHz)) {
+                printBadValue("CHIRP", token);
+                return;
+            }
         }
 
         token = nextToken(savePtr);
@@ -344,19 +350,41 @@ void EmitterApp::handlePulsesCommand(const char* line) {
                 }
             }
         } else if (startsWithToken(token, "trial=")) {
-            trialId = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), trialId)) {
+                printBadValue("PULSES", token);
+                return;
+            }
         } else if (startsWithToken(token, "freq=")) {
-            toneHz = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), toneHz)) {
+                printBadValue("PULSES", token);
+                return;
+            }
         } else if (startsWithToken(token, "ramp=")) {
-            rampMs = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), rampMs)) {
+                printBadValue("PULSES", token);
+                return;
+            }
         } else if (startsWithToken(token, "n=")) {
-            count = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), count)) {
+                printBadValue("PULSES", token);
+                return;
+            }
         } else if (startsWithToken(token, "pulse=")) {
-            pulseMs = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), pulseMs)) {
+                printBadValue("PULSES", token);
+                return;
+            }
         } else if (startsWithToken(token, "gap=")) {
-            gapMs = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), gapMs)) {
+                printBadValue("PULSES", token);
+                return;
+            }
         } else if (strchr(token, '=') == nullptr) {
-            const unsigned long value = strtoul(token, nullptr, 10);
+            unsigned long value = 0;
+            if (!text_parse::parseUnsigned(token, value)) {
+                printBadValue("PULSES", token);
+                return;
+            }
             if (positional == 0) {
                 count = value;
             } else if (positional == 1) {
@@ -432,11 +460,20 @@ void EmitterApp::handleModeCommand(const char* line) {
         token = nextToken(savePtr);
         while (token != nullptr) {
             if (startsWithToken(token, "interval=")) {
-                intervalMs = strtoul(findValue(token), nullptr, 10);
+                if (!text_parse::parseUnsigned(findValue(token), intervalMs)) {
+                    printBadValue("AUTO", token);
+                    return;
+                }
             } else if (startsWithToken(token, "freq=")) {
-                toneHz = strtoul(findValue(token), nullptr, 10);
+                if (!text_parse::parseUnsigned(findValue(token), toneHz)) {
+                    printBadValue("AUTO", token);
+                    return;
+                }
             } else if (startsWithToken(token, "dur=")) {
-                durationMs = strtoul(findValue(token), nullptr, 10);
+                if (!text_parse::parseUnsigned(findValue(token), durationMs)) {
+                    printBadValue("AUTO", token);
+                    return;
+                }
             }
             token = nextToken(savePtr);
         }
@@ -486,15 +523,30 @@ void EmitterApp::handleSweepCommand(const char* line) {
     token = nextToken(savePtr);
     while (token != nullptr) {
         if (startsWithToken(token, "start=")) {
-            startHz = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), startHz)) {
+                printBadValue("SWEEP", token);
+                return;
+            }
         } else if (startsWithToken(token, "stop=")) {
-            stopHz = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), stopHz)) {
+                printBadValue("SWEEP", token);
+                return;
+            }
         } else if (startsWithToken(token, "step=")) {
-            stepHz = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), stepHz)) {
+                printBadValue("SWEEP", token);
+                return;
+            }
         } else if (startsWithToken(token, "dur=")) {
-            durationMs = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), durationMs)) {
+                printBadValue("SWEEP", token);
+                return;
+            }
         } else if (startsWithToken(token, "pause=")) {
-            pauseMs = strtoul(findValue(token), nullptr, 10);
+            if (!text_parse::parseUnsigned(findValue(token), pauseMs)) {
+                printBadValue("SWEEP", token);
+                return;
+            }
         }
         token = nextToken(savePtr);
     }

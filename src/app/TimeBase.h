@@ -10,7 +10,7 @@
 TimeBase
 
 The one clock for audio, detection, Analyzer and behavior (issue #30,
-docs/refactors/micros-wrap.md).
+docs/refactors/archive/micros-wrap.md).
 
 - nowUs64(): esp_timer_get_time() + TIMEBASE_OFFSET_US. 64 bits, never wraps.
   The audio sample clock (AudioSourceI2S) stamps blocks with it.

@@ -6,6 +6,7 @@
 #include "../../../app/RuntimeDefaults.h"
 #include "../../../audio/AudioSignal.h"
 #include "../DetectorReport.h"
+#include "ScalarTransientConfig.h"
 #include "../../occurrences/Occurrence.h"
 
 namespace detection::scalar_transient_detail {
@@ -49,7 +50,6 @@ public:
         CoverageTooLow,
         LongestIslandTooShort,
         GapTooLong,
-        PeakStillActive,
     };
 
     enum class OnsetRejectReason {
@@ -70,19 +70,10 @@ public:
         float signalLevel
     );
 
-    void setOnsetDetectionThreshold(float value);
-    void setOnsetReleaseThreshold(float value);
-    void setCooldownAfterOnsetMs(unsigned long value);
-    void setMinTransientDurationMs(unsigned long value);
-    void setMaxTransientDurationMs(unsigned long value);
-    void setMinTransientPeakStrength(float value);
-    void setReleaseDebounceMs(unsigned long value);
-    void setRequireCarrierQuality(bool value);
-    void setRequireMinStrength(bool value);
-    void setMinMatchedMeanStrength(float value);
-    void setMinCoverageAboveReleaseMs(unsigned long value);
-    void setMinLongestIslandMs(unsigned long value);
-    void setMaxGapMs(unsigned long value);
+    // The thresholds and gates, as one value (step 11e item 5): applied in
+    // place, no state reset (a live PARAM SET keeps the occurrence in flight).
+    void setConfig(const detection::ScalarTransientConfig& config);
+    const detection::ScalarTransientConfig& config() const;
     void setDiagnosticsEnabled(bool enabled);
 
     void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
@@ -96,20 +87,8 @@ public:
     bool hasPendingOccurrence() const;
 
 private:
-    // Config / thresholds.
-    float _onsetDetectionThreshold = 75.0f; // Minimum occurrence magnitude required to count as an onset.
-    float _onsetReleaseThreshold = 67.5f; // Hysteresis prevents short dips from ending a peak too early.
-    unsigned long _cooldownAfterOnsetMs = 500; // Merge repeated threshold crossings from one acoustic event.
-    unsigned long _minTransientDurationMs = 0; // Ignore peaks that are too short to be meaningful.
-    unsigned long _maxTransientDurationMs = 120; // Reject peaks that last too long to count as transients.
-    float _minTransientPeakStrength = 0.0f; // Ignore weak peaks that are likely ambient noise.
-    unsigned long _releaseDebounceMs = 20; // Require a short sustained drop before closing the peak.
-    bool _requireCarrierQuality = false;
-    bool _requireMinStrength = false;
-    float _minMatchedMeanStrength = 0.0f;
-    unsigned long _minCoverageAboveReleaseMs = 0;
-    unsigned long _minLongestIslandMs = 0;
-    unsigned long _maxGapMs = 0;
+    // Thresholds and gates (ScalarTransientConfig.h documents the fields).
+    detection::ScalarTransientConfig _config = {};
 
     // Live gate state.
     bool _onsetDetected = false;

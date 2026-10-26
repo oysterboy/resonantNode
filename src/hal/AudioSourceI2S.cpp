@@ -36,16 +36,13 @@ int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
         return static_cast<int>(audio::clampToCanonicalPcm(static_cast<audio::PcmIntermediate>(signedPacked)));
     }
 
-    if (bytesPerSample == 2) {
-        int16_t sample16 = 0;
-        memcpy(&sample16, samplePtr, sizeof(sample16));
-        return static_cast<int>(sample16);
-    }
-
-    int8_t sample8 = 0;
-    memcpy(&sample8, samplePtr, sizeof(sample8));
-    return static_cast<int>(sample8);
+    // 16- and 8-bit slots are not a supported width (AUDIO_I2S_BITS_PER_SAMPLE
+    // is 32; the 3-byte path above is the 24-bit packing). Their decode would
+    // land on a different PCM scale, so they are refused, not guessed.
+    return 0;
 }
+static_assert(AUDIO_I2S_BITS_PER_SAMPLE == 32 || AUDIO_I2S_BITS_PER_SAMPLE == 24,
+              "decodePcmSample handles 32- and 24-bit slots only");
 
 uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     if (sampleRateHz == 0) {
@@ -227,8 +224,8 @@ bool AudioSourceI2S::readRawSample(int& sample, uint64_t& sampleTimeUs64) {
         return false;
     }
     const uint8_t* rawBytes = frameBytes + kMicSlot * static_cast<size_t>(bytesPerSample);
-    // Keep the First Difference state current, so the next block does not
-    // difference across the RAW gap and emit one spurious spike.
+    // Keep the preprocessor state current, so the next block does not
+    // filter across the RAW gap and emit one spurious spike.
     (void)_preprocessor.process(static_cast<int32_t>(decodePcmSample(rawBytes, bytesPerSample)));
 
 #ifdef RAW_I2S_UNDECODED

@@ -1,27 +1,32 @@
 #pragma once
 
+#include <stdint.h>
+
 /*
 BehaviorGateConfig
 
 Behavior-side timing and gating defaults.
 These settings affect behavior eligibility, not pattern validity.
+The behavior.* params bind to the Node's copy (app/ParamBindings.h), so the
+millisecond and count fields are uint32_t, the registry's unsigned width on
+every build.
 */
 struct BehaviorGateConfig {
     bool idleEnabled = true;
 
-    unsigned long waitAfterHeardMs = 100;
-    unsigned long refractoryAfterEmitMs = 400;
-    unsigned long behaviorSuppressSelfChirpMs = 100;
+    uint32_t waitAfterHeardMs = 100;
+    uint32_t refractoryAfterEmitMs = 400;
+    uint32_t behaviorSuppressSelfChirpMs = 100;
     // After toneOff the own chirp is still heard for 33-54 ms on D-AMP (TX
     // queue + room; #19 latency measurement), so detection stays off a bit
     // longer than that.
-    unsigned long detectionSuppressTailMsOwnEmit = 60;
+    uint32_t detectionSuppressTailMsOwnEmit = 60;
     // 60 s +- 20 s since 2026-10-22 (was 20 s +- 5 s): with five nodes at 0.5 FS
     // every idle call wakes the whole group (decisions/2026-10-22-network-pacing.md).
-    unsigned long idleTimeoutMs = 60000;
-    unsigned long idleTimeVariationMs = 20000;
-    unsigned long idleBlockedAfterHeardMs = 1000;
-    unsigned long idleBlockedAfterOwnEmitMs = 500;
+    uint32_t idleTimeoutMs = 60000;
+    uint32_t idleTimeVariationMs = 20000;
+    uint32_t idleBlockedAfterHeardMs = 1000;
+    uint32_t idleBlockedAfterOwnEmitMs = 500;
 
     // Rest when the network gets busy (decisions/2026-10-17-two-node-
     // exchange-chain-length.md, owner 2026-10-17): a hard pause, no answers
@@ -34,8 +39,8 @@ struct BehaviorGateConfig {
     //    sees a thin field but keeps answering).
     // Same values on every node (no per-node variation, owner's choice).
     // 0 switches a trigger off.
-    unsigned long restAfterFieldPatterns = 4;
-    unsigned long ownEmitBudget = 6;
-    unsigned long ownEmitBudgetWindowMs = 10000;
-    unsigned long restMs = 5000;  // 5 s since 2026-10-22 (was 10 s), decisions/2026-10-22-network-pacing.md
+    uint32_t restAfterFieldPatterns = 4;
+    uint32_t ownEmitBudget = 6;
+    uint32_t ownEmitBudgetWindowMs = 10000;
+    uint32_t restMs = 5000;  // 5 s since 2026-10-22 (was 10 s), decisions/2026-10-22-network-pacing.md
 };

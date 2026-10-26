@@ -6,9 +6,8 @@
 2. Nothing under lib/ParamRegistry/ may include anything from src/ (always strict: the library must stay
    app-agnostic so a later split into its own repo is a move, PAR-016/PAR-017).
 
-The spec's layering (docs/specs/myspec.md) has detection below the modes. Today the Analyzer files under
-src/detection/analyzer/ still include modes/analyzer/AnalyzerModeApp.h (ANA-003, step 10 moves them out), so
-the check warns by default and fails only with --strict. After ANA-003 lands, CI switches to --strict.
+The spec's layering (docs/specs/myspec.md) has detection below the modes. Without --strict the check only
+warns (a local dry run); CI passes --strict since ANA-003 (step 10) moved the Analyzer out of src/detection/.
 
   python tools/ci/include_direction.py [--strict]
 """
@@ -40,7 +39,7 @@ def main():
     for h in hits:
         print(("error: " if strict else "warning: ") + h)
     print("include direction: %d include(s) of src/modes/ from src/detection/ (%s)" % (
-        len(hits), "strict" if strict else "warning only until ANA-003"))
+        len(hits), "strict" if strict else "warning only; CI runs --strict"))
 
     lib_hits = []
     src_root = os.path.join(ROOT, "src") + os.sep

@@ -5,21 +5,12 @@
 #include <Arduino.h>
 #include <string.h>
 #include <new>
-#include <esp_system.h>
-#include "../../app/RuntimeDefaults.h"
-#include "../../app/TimingUtils.h"
-#include "../../app/BuildInfo.h"
 #include "../../app/NodeRoster.h"
-#include "../../detection/HopGapContract.h"
-#include "../../detection/InspectionPlanContract.h"
-#include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
-#include "../../detection/inspection/InspectionNames.h"
-#include "../../detection/evaluation/VerdictNames.h"
 #include <ParamRegistry.h>
 #include "../../app/ParamIds.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
-#include <new>
+#include "../../app/TextParse.h"
 #include "ResonantNodeInternal.h"
 
 using namespace node_internal;
@@ -120,10 +111,7 @@ void printMac(const uint8_t mac[6]) {
 // NET STATUS, or NET <target> <command line>: this node is the gateway. The
 // command is broadcast; a target that includes this node runs it here as well.
 void Node::handleNetCommand(const char* line) {
-    const char* rest = line + 3;
-    while (*rest == ' ') {
-        ++rest;
-    }
+    const char* rest = text_parse::rest(line, "NET");
     if (*rest == '\0' || equalsIgnoreCase(rest, "STATUS")) {
         printNetStatus();
         return;

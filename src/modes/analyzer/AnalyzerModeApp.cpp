@@ -18,6 +18,8 @@
 #include "../../detection/analyzer/AnalyzerTrialClassifier.h"
 #include "../../detection/inspection/OccurrenceInspector.h"
 #include "../../app/BuildInfo.h"
+#include "../../app/ParamBindings.h"
+#include "../../app/ParamIds.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
 
@@ -530,9 +532,8 @@ AnalyzerApp::SeqOutputWhen seqOutputWhenFromToken(const char* token, bool* valid
 // Construction and setup
 // -----------------------------------------------------------------------------
 
-AnalyzerApp::AnalyzerApp(int inputPin)
-    : _inputPin(inputPin),
-      _i2sSource(runtime::kDefaultAudioI2SSckPin,
+AnalyzerApp::AnalyzerApp()
+    :       _i2sSource(runtime::kDefaultAudioI2SSckPin,
                   runtime::kDefaultAudioI2SWsPin,
                   runtime::kDefaultAudioI2SDataPin,
                   static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
@@ -544,15 +545,18 @@ AnalyzerApp::AnalyzerApp(int inputPin)
 #endif
       _audioSignal(_audioSource),
       _freqBandStream() {
-    //PARAM TUNING TEMPORARY
-    _analyzerTuning.scalarTransient = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseScalar).scalarTransient;
+    _scalarTuning = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseScalar).scalarTransient;
 }
 
+// The selected profile with the registry's detection.scalar_* values on top
+// (TonalPulseScalar only; AmpExperimental runs as defined). The observed
+// stream stays the profile's: it is not a param (owner 2026-10-25).
 detection::DetectionProfile const& AnalyzerApp::effectiveSequenceProfile() const {
-    //PARAM TUNING TEMPORARY
     _sequenceProfileScratch = detection::detectionProfileForKind(_sequenceTest.profileKind);
     if (_sequenceTest.profileKind == detection::DetectionProfileKind::TonalPulseScalar) {
-        _sequenceProfileScratch.scalarTransient = _analyzerTuning.scalarTransient;
+        const detection::FeatureStreamId stream = _sequenceProfileScratch.scalarTransient.observedStream;
+        _sequenceProfileScratch.scalarTransient = _scalarTuning;
+        _sequenceProfileScratch.scalarTransient.observedStream = stream;
     }
     return _sequenceProfileScratch;
 }
@@ -577,10 +581,8 @@ void AnalyzerApp::begin() {
     _loopLastUs = timebase::nowUs();
     _loopMaxSinceBootUs = 0;
     _loopHealth.reset();
-    _usbLineLength = 0;
-    _usbLineBuffer[0] = '\0';
-    _emitterLineLength = 0;
-    _emitterLineBuffer[0] = '\0';
+    _usbLine.reset();
+    _emitterLine.reset();
     // ANA-005 (step 7a): the boot claim was announced ("scheduled") but never
     // queued, so the Emitter kept chirping in AUTO until the first EMIT/SEQ.
     // Send MODE REMOTE half a second after boot.
@@ -590,11 +592,16 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = timebase::nowMs() + 500UL;
 
     serialOut().println("EVT analyzer_ready");
-    serialOut().println("EVT analyzer_help type='HELP', 'PARAM scalar_onset_threshold=2000 scalar_min_duration_ms=85', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT'");
+    serialOut().println("EVT analyzer_help type='HELP', 'PARAM LIST|GET <path>|SET <path> <value>|DUMP|RESET', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT'");
 }
 
 void AnalyzerApp::configureParameters() {
     configureI2SParameters();
+    // The SEQ tuning on the registry (PAR-003): the Node's paths through the
+    // shared binding; the profile's values are the defaults PARAM RESET returns to.
+    _paramRegistry.setGroupNamer(param::moduleNameForGroup);
+    param::bindScalarTransientParams(_paramRegistry, _scalarTuning);
+    _paramRegistry.captureDefaults();
 }
 
 void AnalyzerApp::configureI2SParameters() {
@@ -611,28 +618,6 @@ const char* AnalyzerApp::sequenceOutputWhenName(SeqOutputWhen value) {
     return seqOutputWhenName(value);
 }
 
-bool AnalyzerApp::sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputMode requested) {
-    if (configured == SeqOutputMode::Quiet) {
-        return false;
-    }
-    if (requested == SeqOutputMode::Trial) {
-        return true;
-    }
-    if (requested == SeqOutputMode::System) {
-        return configured == SeqOutputMode::System;
-    }
-    if (requested == SeqOutputMode::Source) {
-        return configured == requested;
-    }
-    if (requested == SeqOutputMode::Inspect) {
-        return configured == requested || configured == SeqOutputMode::Detail;
-    }
-    if (requested == SeqOutputMode::Detail) {
-        return configured == SeqOutputMode::Detail;
-    }
-    return configured == requested;
-}
-
 bool AnalyzerApp::sequenceOutputWhenEnabled(SeqOutputWhen configured, AnalyzerResult result) {
     return seqOutputWhenEnabled(configured, result);
 }
@@ -643,18 +628,6 @@ AnalyzerApp::SeqOutputMode AnalyzerApp::sequenceOutputModeFromToken(const char* 
 
 AnalyzerApp::SeqOutputWhen AnalyzerApp::sequenceOutputWhenFromToken(const char* token, bool* valid) {
     return seqOutputWhenFromToken(token, valid);
-}
-
-AnalyzerApp::SequenceDiagMode AnalyzerApp::sequenceDiagModeFromOutputWhen(SeqOutputWhen when) {
-    switch (when) {
-        case SeqOutputWhen::Off:
-            return SequenceDiagMode::Off;
-        case SeqOutputWhen::All:
-            return SequenceDiagMode::Trial;
-        case SeqOutputWhen::Miss:
-        default:
-            return SequenceDiagMode::Miss;
-    }
 }
 
 // -----------------------------------------------------------------------------
@@ -736,7 +709,7 @@ void AnalyzerApp::update() {
             }
             _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
             detection::DetectionPipelineEvent& runtimePipelineEvent = _runtimePipelineEventScratch;
-            while (_detection.popPipelineEvent(runtimePipelineEvent)) {
+            while (_detection.diagnostics().popPipelineEvent(runtimePipelineEvent)) {
                 if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && runtimePipelineEvent.hasVerdict) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                 }
@@ -873,7 +846,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.context.trigger = _sequenceTest.externalEmitter ? "observe" : "chirp";
     report.context.target = "tone";
     report.context.timestampMs = _sequenceTest.currentTrialEndMs;
-    report.context.build = "pass-c";
+    report.context.build = BUILD_VERSION;
 
     report.expected.triggerMs = _sequenceTest.currentTrialStartMs;
     report.expected.windowStartMs = _sequenceTest.currentTrialStartMs;
@@ -910,8 +883,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.integrity.occurrenceMatched = selectedTrial.reportMatched;
     report.integrity.inspectionPresent = hasInspectedOccurrence;
     report.integrity.verdictPresent = hasVerdict;
-    const unsigned long pipelineOverflowDelta = _detection.pipelineEventOverflowCount() > _sequenceTest.trialPipelineOverflowCountAtStart
-        ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialPipelineOverflowCountAtStart
+    const unsigned long pipelineOverflowDelta = _detection.diagnostics().pipelineEventOverflowCount() > _sequenceTest.trialPipelineOverflowCountAtStart
+        ? _detection.diagnostics().pipelineEventOverflowCount() - _sequenceTest.trialPipelineOverflowCountAtStart
         : 0UL;
     report.integrity.queueOverflowAffected = pipelineOverflowDelta > 0UL;
     report.integrity.correlationComplete = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
@@ -1093,7 +1066,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.inspection.accepted = report.occurrences.accepted;
     report.inspection.rejected = report.occurrences.rejected;
     const detection::InspectionModuleConfig* supportRequirement =
-        detection::evaluatorFirstEnabledRequirement(selectedProfile.inspectionPlan);
+        detection::firstEnabledRequirement(selectedProfile.inspectionPlan);
     if (trialHasPipelineEvidence && hasInspectedOccurrence) {
         report.inspection.primaryEvidence = detection::occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
         report.inspection.moduleTarget = supportRequirement != nullptr ? supportRequirement->target : detection::InspectionTarget::None;
@@ -1139,12 +1112,15 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
+    // The plan's last module's observation (the Amp module on TonalPulseScalar),
+    // as before step 11e item 6, when it rode on the occurrence itself.
     const detection::MagnitudeInspectionObservation emptyMagnitudeObservation{};
-    const detection::MagnitudeInspectionObservation& selectedMagnitudeObservation =
-        trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.magnitude.evidence.available
-            ? reportInspectedOccurrence->occurrence.magnitude.evidence
-            : emptyMagnitudeObservation;
-    report.profileDetail.magnitudeObservation = selectedMagnitudeObservation;
+    const detection::MagnitudeInspectionObservation* lastObservation =
+        trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->magnitudeObservationCount > 0
+            ? &reportInspectedOccurrence->magnitudeObservations[reportInspectedOccurrence->magnitudeObservationCount - 1]
+            : nullptr;
+    report.profileDetail.magnitudeObservation =
+        lastObservation != nullptr && lastObservation->available ? *lastObservation : emptyMagnitudeObservation;
     report.profileDetail.inspectionObservationCount = 0;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr) {
         const size_t availableCount = reportInspectedOccurrence->magnitudeObservationCount;
@@ -1177,13 +1153,3 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         ? (reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 }
-
-
-
-
-
-
-
-
-
-

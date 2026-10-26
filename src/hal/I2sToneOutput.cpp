@@ -21,7 +21,7 @@ constexpr float kPhaseToRadians = kTwoPi / 4294967296.0f;
 I2sToneOutput::I2sToneOutput(AudioSourceI2S& port, float amplitude, uint32_t rampMs)
     : _port(port),
       // Below 1.0: at full amplitude s * kFullScale reaches 2^31, outside
-      // int32 (issue #31). The default level is 0.3.
+      // int32 (issue #31). The default level is runtime::kDefaultI2sToneAmplitude.
       _amplitude(amplitude < 0.0f ? 0.0f : (amplitude > 0.999f ? 0.999f : amplitude)),
       _rampMs(rampMs) {}
 

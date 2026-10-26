@@ -1,5 +1,6 @@
 #include "ResonantBehavior.h"
 #include "../app/TimingUtils.h"
+#include "../detection/evaluation/VerdictNames.h"
 
 /*
 ResonantBehavior
@@ -41,21 +42,6 @@ unsigned long randomIdleDelayMs(unsigned long minMs, unsigned long maxMs) {
     const unsigned long spanMs = maxMs - minMs + 1;
     return minMs + static_cast<unsigned long>(random(static_cast<long>(spanMs)));
 }
-
-const char* verdictTypeName(detection::VerdictType type) {
-    switch (type) {
-        case detection::VerdictType::None:
-            return "none";
-        case detection::VerdictType::SinglePulse:
-            return "single_pulse";
-        case detection::VerdictType::Invalid:
-            return "invalid";
-        case detection::VerdictType::Ambiguous:
-            return "ambiguous";
-    }
-
-    return "unknown";
-}
 }
 
 void ResonantBehavior::resetState() {
@@ -84,12 +70,11 @@ void ResonantBehavior::resetState() {
     _outputBusy = false;
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
-    _chirpPattern = ChirpOutput::ChirpPattern::Single;
+    _chirpPattern = ChirpPattern::Single;
     _testChirpPending = false;
     _networkCallPending = false;
     _patternsReceived = 0;
     _patternsIgnoredInvalid = 0;
-    _patternsIgnoredAmbiguous = 0;
     _blockedOutputBusy = 0;
     _blockedRefractory = 0;
     _blockedWaiting = 0;
@@ -103,24 +88,23 @@ void ResonantBehavior::resetState() {
     _restsEntered = 0;
     _blockedResting = 0;
     _lastRestReason = BehaviorDecision::None;
-    _emitHead = 0;
-    _emitCount = 0;
+    _emitTimes.clear();
 }
 
 void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
-    setWaitAfterHeardMs(profile.waitAfterHeardMs);
-    setRefractoryAfterEmitMs(profile.refractoryAfterEmitMs);
-    setBehaviorSuppressSelfChirpMs(profile.behaviorSuppressSelfChirpMs);
-    setDetectionSuppressTailMsOwnEmit(profile.detectionSuppressTailMsOwnEmit);
-    setIdleTimeoutMs(profile.idleTimeoutMs);
-    setIdleTimeVariationMs(profile.idleTimeVariationMs);
-    setIdleBlockedAfterHeardMs(profile.idleBlockedAfterHeardMs);
-    setIdleBlockedAfterOwnEmitMs(profile.idleBlockedAfterOwnEmitMs);
-    setIdleEnabled(profile.idleEnabled);
-    setRestAfterFieldPatterns(profile.restAfterFieldPatterns);
-    setOwnEmitBudget(profile.ownEmitBudget);
-    setOwnEmitBudgetWindowMs(profile.ownEmitBudgetWindowMs);
-    setRestMs(profile.restMs);
+    // A live change of the idle timing (PARAM SET behavior.idle_timeout*_ms)
+    // applies to the wait already running, counted from when it started: before
+    // step 10e an idle call scheduled under a 60 s timeout still came at 60 s
+    // after the timeout was set to 5 s.
+    const bool idleChanged = profile.idleTimeoutMs != _config.idleTimeoutMs ||
+                             profile.idleTimeVariationMs != _config.idleTimeVariationMs;
+    _config = profile;
+    if (_config.ownEmitBudget > kEmitHistory) {
+        _config.ownEmitBudget = kEmitHistory;  // the history holds this many
+    }
+    if (idleChanged) {
+        rescheduleIdleFromWaitStart();
+    }
 }
 
 ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, const detection::FieldState& field, unsigned long now) {
@@ -138,24 +122,9 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
 
     if (!result.accepted) {
         _behaviorEligible = false;
-        if (result.type == detection::VerdictType::Ambiguous) {
-            _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
-            _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
-            _patternsIgnoredAmbiguous++;
-            return _lastDecision;
-        }
-
         _lastDecision = BehaviorDecision::IgnoredInvalidPattern;
         _lastBlockReason = BehaviorDecision::IgnoredInvalidPattern;
         _patternsIgnoredInvalid++;
-        return _lastDecision;
-    }
-
-    if (result.type == detection::VerdictType::Ambiguous) {
-        _behaviorEligible = false;
-        _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
-        _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
-        _patternsIgnoredAmbiguous++;
         return _lastDecision;
     }
 
@@ -182,9 +151,9 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         _lastDecision = BehaviorDecision::Resting;
         _lastBlockReason = BehaviorDecision::Resting;
         _blockedResting++;
-    } else if (_restAfterFieldPatterns > 0 && _lastFieldState.recentPatternCount >= _restAfterFieldPatterns) {
+    } else if (_config.restAfterFieldPatterns > 0 && _lastFieldState.recentPatternCount >= _config.restAfterFieldPatterns) {
         // The field window holds enough valid network patterns: rest instead of answering.
-        enterRest(now + _restMs, BehaviorDecision::RestFieldDense);
+        enterRest(now + _config.restMs, BehaviorDecision::RestFieldDense);
         _lastDecision = BehaviorDecision::RestFieldDense;
         _lastBlockReason = BehaviorDecision::RestFieldDense;
         _blockedResting++;
@@ -216,7 +185,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         _lastPatternHeardAtMs = _pendingHeardPatternMs;
         _heardPatternStartedMs = now;
         _state = State::HeardPattern;
-        _waitUntilMs = now + _waitAfterHeardMs;
+        _waitUntilMs = now + _config.waitAfterHeardMs;
         scheduleNextIdle(now);
     }
 
@@ -241,7 +210,7 @@ void ResonantBehavior::update(unsigned long now) {
 
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
-    _chirpPattern = ChirpOutput::ChirpPattern::Single;
+    _chirpPattern = ChirpPattern::Single;
     _activityLevel = heardPatternStrength;
     _outputBusy = _state == State::Chirping;
 
@@ -262,13 +231,13 @@ void ResonantBehavior::update(unsigned long now) {
             if (heardPatternDetected) {
                 _heardPatternStartedMs = now;
                 _state = State::HeardPattern;
-                _waitUntilMs = now + _waitAfterHeardMs;
+                _waitUntilMs = now + _config.waitAfterHeardMs;
             }
             else if (_networkCallPending && !resting(now)) {
                 _networkCallPending = false;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Call;
-                _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
                 _outputBusy = true;
                 _state = State::Chirping;
@@ -277,7 +246,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _testChirpPending = false;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::SelfTest;
-                _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
                 _outputBusy = true;
                 _state = State::Chirping;
@@ -288,7 +257,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _lastBlockReason = BehaviorDecision::None;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Idle;
-                _chirpPattern = ChirpOutput::ChirpPattern::Idle;
+                _chirpPattern = ChirpPattern::Idle;
                 _lastEmitMs = now;
                 _outputBusy = true;
                 _state = State::Chirping;
@@ -305,7 +274,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _lastBlockReason = BehaviorDecision::None;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::HeardPattern;
-                _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
                 _outputBusy = true;
                 _state = State::Chirping;
@@ -320,46 +289,10 @@ void ResonantBehavior::update(unsigned long now) {
 
         case State::Refractory:
             _outputBusy = false;
-            if (timing::elapsedSince(now, _refractoryStartedMs, _refractoryAfterEmitMs)) {
+            if (timing::elapsedSince(now, _refractoryStartedMs, _config.refractoryAfterEmitMs)) {
                 _state = State::Idle;
             }
             break;
-    }
-}
-
-void ResonantBehavior::setWaitAfterHeardMs(unsigned long value) {
-    _waitAfterHeardMs = value;
-}
-
-void ResonantBehavior::setRefractoryAfterEmitMs(unsigned long value) {
-    _refractoryAfterEmitMs = value;
-}
-
-void ResonantBehavior::setBehaviorSuppressSelfChirpMs(unsigned long value) {
-    _behaviorSuppressSelfChirpMs = value;
-}
-
-void ResonantBehavior::setDetectionSuppressTailMsOwnEmit(unsigned long value) {
-    _detectionSuppressTailMsOwnEmit = value;
-}
-
-// A live change of the idle timing (PARAM SET behavior.idle_timeout*_ms)
-// applies to the wait already running, counted from when it started: before
-// step 10e an idle call scheduled under a 60 s timeout still came at 60 s
-// after the timeout was set to 5 s.
-void ResonantBehavior::setIdleTimeMs(unsigned long value) {
-    const bool changed = value != _idleTimeMs;
-    _idleTimeMs = value;
-    if (changed) {
-        rescheduleIdleFromWaitStart();
-    }
-}
-
-void ResonantBehavior::setIdleTimeVariationMs(unsigned long value) {
-    const bool changed = value != _idleTimeVariationMs;
-    _idleTimeVariationMs = value;
-    if (changed) {
-        rescheduleIdleFromWaitStart();
     }
 }
 
@@ -369,64 +302,8 @@ void ResonantBehavior::rescheduleIdleFromWaitStart() {
     }
 }
 
-void ResonantBehavior::setIdleBlockedAfterHeardMs(unsigned long value) {
-    _idleBlockedAfterHeardMs = value;
-}
-
-void ResonantBehavior::setIdleBlockedAfterOwnEmitMs(unsigned long value) {
-    _idleBlockedAfterOwnEmitMs = value;
-}
-
-void ResonantBehavior::setIdleEnabled(bool value) {
-    _idleEnabled = value;
-}
-
-void ResonantBehavior::setIdleTimeoutMs(unsigned long value) {
-    setIdleTimeMs(value);
-}
-
 void ResonantBehavior::seedIdleSchedule(unsigned long now) {
     scheduleNextIdle(now);
-}
-
-unsigned long ResonantBehavior::waitAfterHeardMs() const {
-    return _waitAfterHeardMs;
-}
-
-unsigned long ResonantBehavior::refractoryAfterEmitMs() const {
-    return _refractoryAfterEmitMs;
-}
-
-unsigned long ResonantBehavior::behaviorSuppressSelfChirpMs() const {
-    return _behaviorSuppressSelfChirpMs;
-}
-
-unsigned long ResonantBehavior::detectionSuppressTailMsOwnEmit() const {
-    return _detectionSuppressTailMsOwnEmit;
-}
-
-unsigned long ResonantBehavior::idleTimeoutMs() const {
-    return _idleTimeMs;
-}
-
-unsigned long ResonantBehavior::idleTimeMs() const {
-    return _idleTimeMs;
-}
-
-unsigned long ResonantBehavior::idleTimeVariationMs() const {
-    return _idleTimeVariationMs;
-}
-
-unsigned long ResonantBehavior::idleBlockedAfterHeardMs() const {
-    return _idleBlockedAfterHeardMs;
-}
-
-unsigned long ResonantBehavior::idleBlockedAfterOwnEmitMs() const {
-    return _idleBlockedAfterOwnEmitMs;
-}
-
-bool ResonantBehavior::idleEnabled() const {
-    return _idleEnabled;
 }
 
 bool ResonantBehavior::behaviorEligible() const {
@@ -476,7 +353,7 @@ bool ResonantBehavior::testChirpPending() const {
     return _testChirpPending;
 }
 
-ChirpOutput::ChirpPattern ResonantBehavior::chirpPattern() const {
+ChirpPattern ResonantBehavior::chirpPattern() const {
     return _chirpPattern;
 }
 
@@ -501,9 +378,9 @@ ResonantBehavior::SignalShape ResonantBehavior::signalShape() const {
 }
 
 void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitSpanMs) {
-    unsigned long suppressMs = _behaviorSuppressSelfChirpMs;
-    if (_chirpRequestSource == ChirpRequestSource::Idle && _idleBlockedAfterOwnEmitMs > suppressMs) {
-        suppressMs = _idleBlockedAfterOwnEmitMs;
+    unsigned long suppressMs = _config.behaviorSuppressSelfChirpMs;
+    if (_chirpRequestSource == ChirpRequestSource::Idle && _config.idleBlockedAfterOwnEmitMs > suppressMs) {
+        suppressMs = _config.idleBlockedAfterOwnEmitMs;
     }
     if (emitSpanMs > suppressMs) {
         suppressMs = emitSpanMs;  // the whole emission, then the tail from notifyChirpFinished
@@ -519,13 +396,9 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitS
 
     // Own budget: count this emission; at the budget the node rests from the
     // end of this emission on.
-    _emitTimes[_emitHead] = now;
-    _emitHead = (_emitHead + 1) % kEmitHistory;
-    if (_emitCount < kEmitHistory) {
-        _emitCount++;
-    }
-    if (_ownEmitBudget > 0 && ownEmitsInWindow(now) >= _ownEmitBudget) {
-        enterRest(now + emitSpanMs + _restMs, BehaviorDecision::RestOwnBudget);
+    _emitTimes.pushOverwrite(now);
+    if (_config.ownEmitBudget > 0 && ownEmitsInWindow(now) >= _config.ownEmitBudget) {
+        enterRest(now + emitSpanMs + _config.restMs, BehaviorDecision::RestOwnBudget);
     }
 }
 
@@ -540,9 +413,9 @@ void ResonantBehavior::enterRest(unsigned long untilMs, BehaviorDecision reason)
 
 unsigned long ResonantBehavior::ownEmitsInWindow(unsigned long now) const {
     unsigned long n = 0;
-    for (size_t i = 0; i < _emitCount; ++i) {
-        const unsigned long t = _emitTimes[i];
-        if (timing::atOrAfter(now, t) && now - t < _ownEmitBudgetWindowMs) {
+    for (size_t i = 0; i < _emitTimes.count(); ++i) {
+        const unsigned long t = _emitTimes.at(i);
+        if (timing::atOrAfter(now, t) && now - t < _config.ownEmitBudgetWindowMs) {
             n++;
         }
     }
@@ -553,16 +426,6 @@ bool ResonantBehavior::resting(unsigned long now) const {
     return _restArmed && timing::beforeDeadline(now, _restUntilMs);
 }
 
-void ResonantBehavior::setRestAfterFieldPatterns(unsigned long value) { _restAfterFieldPatterns = value; }
-void ResonantBehavior::setOwnEmitBudget(unsigned long value) {
-    _ownEmitBudget = value > kEmitHistory ? kEmitHistory : value;
-}
-void ResonantBehavior::setOwnEmitBudgetWindowMs(unsigned long value) { _ownEmitBudgetWindowMs = value; }
-void ResonantBehavior::setRestMs(unsigned long value) { _restMs = value; }
-unsigned long ResonantBehavior::restAfterFieldPatterns() const { return _restAfterFieldPatterns; }
-unsigned long ResonantBehavior::ownEmitBudget() const { return _ownEmitBudget; }
-unsigned long ResonantBehavior::ownEmitBudgetWindowMs() const { return _ownEmitBudgetWindowMs; }
-unsigned long ResonantBehavior::restMs() const { return _restMs; }
 unsigned long ResonantBehavior::restUntilMs() const { return _restUntilMs; }
 unsigned long ResonantBehavior::restsEntered() const { return _restsEntered; }
 ResonantBehavior::BehaviorDecision ResonantBehavior::lastRestReason() const { return _lastRestReason; }
@@ -571,13 +434,13 @@ unsigned long ResonantBehavior::blockedResting() const { return _blockedResting;
 void ResonantBehavior::notifyChirpFinished(unsigned long now) {
     if (_state == State::Chirping) {
         _refractoryStartedMs = now;
-        _refractoryUntilMs = now + _refractoryAfterEmitMs;
-        _ownEmitDetectionSuppressUntilMs = now + _detectionSuppressTailMsOwnEmit;
+        _refractoryUntilMs = now + _config.refractoryAfterEmitMs;
+        _ownEmitDetectionSuppressUntilMs = now + _config.detectionSuppressTailMsOwnEmit;
         _ownEmitDetectionSuppressArmed = true;
         _state = State::Refractory;
         _outputBusy = false;
 
-        const unsigned long suppressUntilMs = now + _detectionSuppressTailMsOwnEmit;
+        const unsigned long suppressUntilMs = now + _config.detectionSuppressTailMsOwnEmit;
         extendBehaviorSuppress(suppressUntilMs);
     }
 }
@@ -648,7 +511,7 @@ detection::VerdictType ResonantBehavior::lastVerdictType() const {
 }
 
 const char* ResonantBehavior::lastVerdictTypeName() const {
-    return verdictTypeName(_lastVerdictType);
+    return detection::verdictTypeName(_lastVerdictType);
 }
 
 unsigned long ResonantBehavior::lastHeardMs() const {
@@ -695,10 +558,6 @@ unsigned long ResonantBehavior::patternsReceived() const {
 
 unsigned long ResonantBehavior::patternsIgnoredInvalid() const {
     return _patternsIgnoredInvalid;
-}
-
-unsigned long ResonantBehavior::patternsIgnoredAmbiguous() const {
-    return _patternsIgnoredAmbiguous;
 }
 
 unsigned long ResonantBehavior::blockedOutputBusy() const {
@@ -763,36 +622,22 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
             return "consumed_pattern";
         case BehaviorDecision::IgnoredInvalidPattern:
             return "ignored_invalid_pattern";
-        case BehaviorDecision::IgnoredAmbiguousPattern:
-            return "ignored_ambiguous_pattern";
         case BehaviorDecision::IgnoredMissingSupport:
             return "ignored_missing_support";
         case BehaviorDecision::IgnoredSupportTooLow:
             return "ignored_support_too_low";
-        case BehaviorDecision::Disabled:
-            return "disabled";
         case BehaviorDecision::OutputBusy:
             return "output_busy";
-        case BehaviorDecision::WaitingAfterHeard:
-            return "waiting_after_heard";
         case BehaviorDecision::RefractoryAfterEmit:
             return "refractory_after_emit";
-        case BehaviorDecision::IgnoreAfterOwnEmit:
-            return "ignore_after_own_emit";
-        case BehaviorDecision::CooldownAfterDetect:
-            return "cooldown_after_detect";
         case BehaviorDecision::SelfSuppressed:
             return "self_suppressed";
         case BehaviorDecision::AlreadyScheduled:
             return "already_scheduled";
-        case BehaviorDecision::ResponseProbabilitySkipped:
-            return "response_probability_skipped";
         case BehaviorDecision::Emitted:
             return "emitted";
         case BehaviorDecision::WouldEmit:
             return "would_emit";
-        case BehaviorDecision::UnknownBlocked:
-            return "unknown_blocked";
         case BehaviorDecision::RestFieldDense:
             return "rest_field_dense";
         case BehaviorDecision::RestOwnBudget:
@@ -810,7 +655,7 @@ void ResonantBehavior::scheduleNextIdle(unsigned long now) {
 }
 
 bool ResonantBehavior::canIdle(unsigned long now) const {
-    if (!_idleEnabled) {
+    if (!_config.idleEnabled) {
         return false;
     }
     if (resting(now)) {
@@ -819,24 +664,24 @@ bool ResonantBehavior::canIdle(unsigned long now) const {
     if (_nextIdleAtMs != 0 && timing::beforeDeadline(now, _nextIdleAtMs)) {
         return false;
     }
-    if (!timing::elapsedSince(now, _lastHeardPatternMs, _idleBlockedAfterHeardMs)) {
+    if (!timing::elapsedSince(now, _lastHeardPatternMs, _config.idleBlockedAfterHeardMs)) {
         return false;
     }
-    if (!timing::elapsedSince(now, _lastEmitMs, _idleBlockedAfterOwnEmitMs)) {
+    if (!timing::elapsedSince(now, _lastEmitMs, _config.idleBlockedAfterOwnEmitMs)) {
         return false;
     }
     return true;
 }
 
 unsigned long ResonantBehavior::idleMinMs() const {
-    if (_idleTimeVariationMs >= _idleTimeMs) {
+    if (_config.idleTimeVariationMs >= _config.idleTimeoutMs) {
         return 0;
     }
-    return _idleTimeMs - _idleTimeVariationMs;
+    return _config.idleTimeoutMs - _config.idleTimeVariationMs;
 }
 
 unsigned long ResonantBehavior::idleMaxMs() const {
-    return _idleTimeMs + _idleTimeVariationMs;
+    return _config.idleTimeoutMs + _config.idleTimeVariationMs;
 }
 
 void ResonantBehavior::notePatternHeardWhileOutputsOff(const detection::OccurrenceVerdict& verdict, unsigned long now) {

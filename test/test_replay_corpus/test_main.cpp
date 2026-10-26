@@ -201,12 +201,12 @@ void test_host_frequency_path_matches_the_board_on_the_band() {
     }
 }
 
-// A contrast limit above what any chirp reaches rejects the same capture at the inspector.
+// A contrast limit at the top of the range (32767, the board's limit too) rejects the same capture at the inspector.
 void test_profile_override_reaches_the_inspector() {
     hostreplay::Capture cap;
     TEST_ASSERT_TRUE(hostreplay::loadCapture(kChirpCsv, cap));
     detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
-    TEST_ASSERT_TRUE(hostreplay::applyProfileSet(profile, "contrast_medium", 40000.0));
+    TEST_ASSERT_EQUAL_STRING("ok", hostreplay::applyProfileSet(profile, "detection.contrast_medium", "32767"));
     const hostreplay::Result r = hostreplay::replay(cap, singleTarget3200(), profile);
     TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
     TEST_ASSERT_EQUAL_UINT32(1, r.rejected);
@@ -293,7 +293,7 @@ void test_room_tail_bridges_15_ms_but_not_30_ms() {
 // Changing the shipped value is a tuning pass of its own (CLAUDE.md; step 5h "Levers").
 void test_release_debounce_above_the_gap_bridges_the_dry_train() {
     detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
-    TEST_ASSERT_TRUE(hostreplay::applyProfileSet(profile, "scalar_release_debounce_ms", 20.0));
+    TEST_ASSERT_EQUAL_STRING("ok", hostreplay::applyProfileSet(profile, "detection.scalar_release_debounce_ms", "20"));
     const int gaps[] = {10, 15};
     for (int g : gaps) {
         hostreplay::Capture cap;
@@ -387,7 +387,7 @@ void test_hop_gap_check_flags_what_the_detector_cannot_read() {
     TEST_ASSERT_FALSE(s.durationFits);
     TEST_ASSERT_TRUE(s.gapBelowDebounce);
     detection::DetectionProfile longer = profile;
-    TEST_ASSERT_TRUE(hostreplay::applyProfileSet(longer, "scalar_release_debounce_ms", 20.0));
+    TEST_ASSERT_EQUAL_STRING("ok", hostreplay::applyProfileSet(longer, "detection.scalar_release_debounce_ms", "20"));
     detection::HopTrainShape shipped;
     shipped.steps = runtime::kDefaultHopSteps;
     shipped.pulseMs = runtime::kDefaultHopPulseMs;

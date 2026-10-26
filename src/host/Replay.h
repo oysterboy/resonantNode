@@ -103,8 +103,11 @@ struct Result {
     double contrastMaxRelDiff = 0.0;
 };
 
-// Profile override by the Analyzer PARAM key names plus contrast_medium / amp_medium.
-bool applyProfileSet(detection::DetectionProfile& profile, const std::string& key, double value);
+// --set <path>=<value>: a registered param path (app/ParamBindings.h, the
+// detection.scalar_* params as on the board, plus detection.contrast_medium /
+// detection.amp_medium on the plan's modules), parsed and range-checked by
+// ParamRegistry. Returns the status name, "ok" on success.
+const char* applyProfileSet(detection::DetectionProfile& profile, const std::string& path, const std::string& valueText);
 
 Result replay(const Capture& capture, const Options& options, const detection::DetectionProfile& profile);
 

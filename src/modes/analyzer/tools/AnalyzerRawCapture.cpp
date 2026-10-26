@@ -329,8 +329,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     sendEmitterCommand(emitterCommand);
     Serial2.flush();
 
-    char emitterLineBuffer[96];
-    size_t emitterLineLength = 0;
+    serial_line::LineReader<95> emitterLine;
     bool emitStarted = false;
     bool emitDone = false;
     bool preWindowCopied = false;
@@ -412,22 +411,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     auto pumpEmitterSerial = [&]() {
         while (Serial2.available() > 0) {
-            const char c = static_cast<char>(Serial2.read());
-            if (serial_line::dropByte(c)) {
-                continue;
-            }
-
-            if (c == '\n') {
-                emitterLineBuffer[emitterLineLength] = '\0';
-                if (emitterLineLength > 0) {
-                    noteEmitterLine(emitterLineBuffer);
-                }
-                emitterLineLength = 0;
-                continue;
-            }
-
-            if (emitterLineLength < sizeof(emitterLineBuffer) - 1) {
-                emitterLineBuffer[emitterLineLength++] = c;
+            if (emitterLine.feed(static_cast<char>(Serial2.read())) && emitterLine.length() > 0) {
+                noteEmitterLine(emitterLine.line());
             }
         }
     };

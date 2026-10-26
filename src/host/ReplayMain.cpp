@@ -7,10 +7,15 @@ Command line for the host replay (NODE-006), see Replay.h.
 Options
     --band LO-HI          band bank (default 2950-3950, the network band; "off" = single target at --target)
     --target HZ           single-target frequency (default 3200)
-    --set key=value       profile override; keys: scalar_onset_threshold, scalar_release_threshold,
-                          scalar_min_duration_ms, scalar_max_duration_ms, scalar_min_peak_strength,
-                          scalar_release_debounce_ms, scalar_cooldown_ms, scalar_min_release_coverage_ms,
-                          scalar_min_longest_island_ms, scalar_max_gap_ms, contrast_medium, amp_medium
+    --set path=value      profile override by param path, as PARAM SET on the board (app/ParamBindings.h):
+                          detection.scalar_onset_threshold, detection.scalar_release_threshold,
+                          detection.scalar_cooldown_ms, detection.scalar_min_duration_ms,
+                          detection.scalar_max_duration_ms, detection.scalar_min_peak_strength,
+                          detection.scalar_release_debounce_ms, detection.scalar_require_carrier_quality,
+                          detection.scalar_require_min_strength, detection.scalar_min_strength,
+                          detection.scalar_min_release_coverage_ms, detection.scalar_min_longest_island_ms,
+                          detection.scalar_max_gap_ms, detection.contrast_medium, detection.amp_medium;
+                          values are range-checked like on the board
     --preprocess none|dc|fd   force the PCM preprocessor (default: none for mode=both/feat transcripts and
                           .wav files, the build's preprocessor for mode=i2s/pcm transcripts)
     --tail-ms N           silence appended after the capture so the last occurrence can close (default 300)
@@ -43,7 +48,7 @@ bool endsWith(const std::string& s, const char* suffix) {
 }
 
 void usage() {
-    printf("usage: program [--band LO-HI|off] [--target HZ] [--set key=value]... [--preprocess none|dc|fd]\n"
+    printf("usage: program [--band LO-HI|off] [--target HZ] [--set path=value]... [--preprocess none|dc|fd]\n"
            "               [--tail-ms N] [--skip-ms N] [--compare] [--verbose] [--quiet] <capture>... | --dir <folder>\n");
 }
 
@@ -54,7 +59,7 @@ int main(int argc, char** argv) {
     Options opt;
     bool bandGiven = false;  // --band on the command line wins over a transcript's RAW_BEGIN band=
     bool quiet = false;
-    std::vector<std::pair<std::string, double>> sets;
+    std::vector<std::pair<std::string, std::string>> sets;
     std::vector<std::string> files;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -81,10 +86,10 @@ int main(int argc, char** argv) {
             const std::string v = next("--set");
             const size_t eq = v.find('=');
             if (eq == std::string::npos) {
-                fprintf(stderr, "--set wants key=value\n");
+                fprintf(stderr, "--set wants path=value\n");
                 return 2;
             }
-            sets.emplace_back(v.substr(0, eq), atof(v.c_str() + eq + 1));
+            sets.emplace_back(v.substr(0, eq), v.substr(eq + 1));
         } else if (a == "--preprocess") {
             const std::string v = next("--preprocess");
             opt.preprocessForced = true;
@@ -132,8 +137,9 @@ int main(int argc, char** argv) {
 
     detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
     for (const auto& kv : sets) {
-        if (!applyProfileSet(profile, kv.first, kv.second)) {
-            fprintf(stderr, "unknown --set key: %s\n", kv.first.c_str());
+        const char* status = applyProfileSet(profile, kv.first, kv.second);
+        if (strcmp(status, "ok") != 0) {
+            fprintf(stderr, "--set %s=%s: %s\n", kv.first.c_str(), kv.second.c_str(), status);
             return 2;
         }
     }
@@ -142,7 +148,7 @@ int main(int argc, char** argv) {
                detection::detectionProfileName(profile.kind), opt.bandLow, opt.bandHigh, opt.targetHz,
                static_cast<double>(profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold),
                static_cast<double>(profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold),
-               profile.scalarTransient.maxTransientDurationMs);
+               static_cast<unsigned long>(profile.scalarTransient.maxTransientDurationMs));
     }
 
     unsigned totalAccepted = 0;

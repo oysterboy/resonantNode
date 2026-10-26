@@ -1,9 +1,14 @@
 #pragma once
 
+#include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
-// Number parsing for console commands, shared by the Analyzer and the Node.
+// Text helpers for console commands, shared by the Node, the Analyzer and the
+// Emitter (step 11e item 8): numbers are parsed whole or refused, a key's value
+// is found at its '=', and a command's rest is found after its verb, so no
+// parser counts key lengths by hand (that got four wrong once).
 namespace text_parse {
 
 // A finite number with nothing after it. On anything else the value is left
@@ -21,6 +26,52 @@ inline bool parseFiniteFloat(const char* text, float& out) {
     }
     out = parsed;
     return true;
+}
+
+// A plain decimal with nothing after it; on anything else the value is left
+// unchanged (issue #31 R2-4: "x" used to become 0). The result is narrowed to
+// T as the caller's field needs it.
+template <typename T>
+inline bool parseUnsigned(const char* text, T& out) {
+    if (text == nullptr || *text < '0' || *text > '9') {
+        return false;
+    }
+    char* end = nullptr;
+    const unsigned long parsed = strtoul(text, &end, 10);
+    if (*end != '\0') {
+        return false;
+    }
+    out = static_cast<T>(parsed);
+    return true;
+}
+
+// The text after the first '=' of a key=value token; the empty string when
+// the token has no '='.
+inline const char* tokenValue(const char* token) {
+    const char* equals = strchr(token, '=');
+    return equals != nullptr ? equals + 1 : token + strlen(token);
+}
+
+// The text after `verb` (which the caller has already matched at the start
+// of `line`, case-insensitively or not), with the spaces skipped.
+inline const char* rest(const char* line, const char* verb) {
+    const char* p = line + strlen(verb);
+    while (*p == ' ') {
+        ++p;
+    }
+    return p;
+}
+
+// Whole-string match, case-insensitive (command verbs).
+inline bool equalsIgnoreCase(const char* a, const char* b) {
+    while (*a != '\0' && *b != '\0') {
+        if (toupper(static_cast<unsigned char>(*a)) != toupper(static_cast<unsigned char>(*b))) {
+            return false;
+        }
+        ++a;
+        ++b;
+    }
+    return *a == '\0' && *b == '\0';
 }
 
 }  // namespace text_parse

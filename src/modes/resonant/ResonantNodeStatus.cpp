@@ -1,7 +1,7 @@
 // Node status output (step 10 item 9, NODE-004): RB STATUS, the RB summaries, the
 // boot-time signal config, and the hop_check / plan_check lines. Moved verbatim
 // from ResonantNodeApp.cpp; handleDetectCommand is now printRbStatus (it was
-// RB STATUS under the wrong name, boundary map docs/refactors/step10-boundary-map.md).
+// RB STATUS under the wrong name, boundary map docs/refactors/archive/step10-boundary-map.md).
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
 #include <string.h>
@@ -59,7 +59,7 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(" inspectionPlan=");
     serialOut().print(detection::inspectionPlanName(detectionProfile.inspectionPlan));
     const detection::InspectionModuleConfig* supportRequirement =
-        detection::evaluatorFirstEnabledRequirement(detectionProfile.inspectionPlan);
+        detection::firstEnabledRequirement(detectionProfile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
     serialOut().print(" has_requirement=");
     serialOut().print(supportRequired ? 1 : 0);
@@ -68,11 +68,11 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(" behavior_state=");
     serialOut().print(_behavior.stateName());
     serialOut().print(" behavior_idle=");
-    serialOut().print(_behavior.idleEnabled() ? 1 : 0);
+    serialOut().print(_behavior.config().idleEnabled ? 1 : 0);
     serialOut().print(" behavior_suppressSelfChirpMs=");
-    serialOut().print(_behavior.behaviorSuppressSelfChirpMs());
+    serialOut().print(_behavior.config().behaviorSuppressSelfChirpMs);
     serialOut().print(" behavior_detectionSuppressTailMsOwnEmit=");
-    serialOut().print(_behavior.detectionSuppressTailMsOwnEmit());
+    serialOut().print(_behavior.config().detectionSuppressTailMsOwnEmit);
     serialOut().print(" output_busy=");
     serialOut().print(_behavior.outputBusy() ? 1 : 0);
     serialOut().print(" silent=");
@@ -358,25 +358,25 @@ void Node::printRbSummary() const {
 
 void Node::printRbBehaviorSummary() const {
     serialOut().print("RB behavior idle=");
-    serialOut().print(_behavior.idleEnabled() ? 1 : 0);
+    serialOut().print(_behavior.config().idleEnabled ? 1 : 0);
     serialOut().print(" wait=");
-    serialOut().print(_behavior.waitAfterHeardMs());
+    serialOut().print(_behavior.config().waitAfterHeardMs);
     serialOut().print(" refractory=");
-    serialOut().print(_behavior.refractoryAfterEmitMs());
+    serialOut().print(_behavior.config().refractoryAfterEmitMs);
     serialOut().print(" suppressSelfChirp=");
-    serialOut().print(_behavior.behaviorSuppressSelfChirpMs());
+    serialOut().print(_behavior.config().behaviorSuppressSelfChirpMs);
     serialOut().print(" detectionSuppressTail=");
-    serialOut().print(_behavior.detectionSuppressTailMsOwnEmit());
+    serialOut().print(_behavior.config().detectionSuppressTailMsOwnEmit);
     serialOut().print(" idleTimeout=");
-    serialOut().print(_behavior.idleTimeoutMs());
+    serialOut().print(_behavior.config().idleTimeoutMs);
     serialOut().print(" idleTimeoutVariation=");
-    serialOut().print(_behavior.idleTimeVariationMs());
+    serialOut().print(_behavior.config().idleTimeVariationMs);
     serialOut().print(" idleBlockedHeard=");
-    serialOut().print(_behavior.idleBlockedAfterHeardMs());
+    serialOut().print(_behavior.config().idleBlockedAfterHeardMs);
     serialOut().print(" idleBlockedOwnEmit=");
-    serialOut().print(_behavior.idleBlockedAfterOwnEmitMs());
+    serialOut().print(_behavior.config().idleBlockedAfterOwnEmitMs);
     serialOut().print(" idleEnabled=");
-    serialOut().print(_behavior.idleEnabled() ? 1 : 0);
+    serialOut().print(_behavior.config().idleEnabled ? 1 : 0);
     serialOut().print(" lastDecision=");
     serialOut().print(_behavior.lastDecisionName());
     serialOut().print(" lastBlock=");
@@ -399,8 +399,6 @@ void Node::printRbBehaviorSummary() const {
     serialOut().print(_behavior.patternsReceived());
     serialOut().print(" ignoredInvalid=");
     serialOut().print(_behavior.patternsIgnoredInvalid());
-    serialOut().print(" ignoredAmbiguous=");
-    serialOut().print(_behavior.patternsIgnoredAmbiguous());
     serialOut().print(" blockedOutputBusy=");
     serialOut().print(_behavior.blockedOutputBusy());
     serialOut().print(" blockedWaiting=");

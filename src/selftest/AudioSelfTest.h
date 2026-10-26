@@ -22,7 +22,7 @@ state), because the samples read here never reach it.
 
 Measurement (the amp-check sketch of the #20 bench, damp-bench-check.md AC,
 bench:sessions/2026-10-10-issue20-damp-10cm/amp-check/sketch): on the
-First-Differenced stream, envelope = moving max of |x| over 6 samples (one
+preprocessed stream (DC blocker by default), envelope = moving max of |x| over 6 samples (one
 3200 Hz period is 5); per chirp, floor = max envelope over the 75 ms before
 toneOn, tone = mean envelope 50-90 ms after toneOn (the toneOn -> own mic
 latency is ~30 ms); SNR = 20 log10((tone + 1) / (floor + 1)).
@@ -30,8 +30,8 @@ latency is ~30 ms); SNR = 20 log10((tone + 1) / (floor + 1)).
 namespace selftest {
 
 // Mic: share of non-zero samples (E2's mic read 0 in both slots), raw span
-// (a floating data line reads one stuck value), quiet floor on the FD
-// stream, and the I2S framing bit (#24: raw bit 8 never set when RX is read
+// (a floating data line reads one stuck value), quiet floor on the
+// preprocessed stream, and the I2S framing bit (#24: raw bit 8 never set when RX is read
 // one bit late). Framing is judged only where the RX realignment is built
 // in (I2S_RX_MSB_ALIGN, the D-AMP board); elsewhere it is reported only.
 Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t captureMs = 750);

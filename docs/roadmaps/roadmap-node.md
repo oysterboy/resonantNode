@@ -96,6 +96,9 @@ Open: update() and handleSerialLine() are still long; split further when an owne
 lines); configuration in ResonantNodeParams.cpp, command dispatch in ResonantNodeCommands.cpp, the radio in
 ResonantNodeNet.cpp, diagnostics in Status + SelfTest; shared helpers in ResonantNodeInternal.h. A file split, not
 separate classes: a CommandRouter that serial, NET and VEKTOR feed is NODE-005, with VEKTOR.
+Review 2026-10-25 (docs/research/architecture-readability-review-2026-10-25.md A7): the next cut is state per
+file (NodeParams owning the registry, NetGateway owning reply / join state, the baseline machine as a struct);
+not in step 11e, which only shares helpers (LineReader, ParamCommands) with the Node.
 
 ```text
 Move incidental command parsing and status formatting out of Node only when

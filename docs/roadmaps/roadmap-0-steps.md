@@ -45,6 +45,8 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26: 11a done (remote commands by radio; 12 h with the radio on: every pass mark, no leak).
 Next: 11b (DET-015 host phase); 11d needs the owner's WiFi credentials.
+Status update 2026-10-25, later: step 11e added, parallel to 11a (review fixes, host-only; #63, pass doc
+docs/refactors/review-fixes-2026-10-25.md). 11a closed 2026-10-26; 11e runs beside 11b.
 Status update 2026-10-25 (owner away from the bench for a week): 11a OTA params, 11b DET-015 host phase,
 11c unattended runs, 11d OTA firmware. Next: 11a.
 Status update 2026-10-24: 10c done (block 2, 24 h on dbb6305, every pass mark met). Open before step 11's
@@ -1078,6 +1080,20 @@ the previous gate open unless the step says it can run in parallel.
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the
    repo) and a two-slot partition table (a first USB flash of every board). Gate: an image flashed over WiFi to
    every board, a failed or interrupted update falls back to the old image.
+
+11e. [NEXT, parallel] Review fixes 2026-10-25: boundaries, duplication, dead code. (issue #63)
+   Owner 2026-10-25. The fixes from the architecture and readability review
+   (docs/research/architecture-readability-review-2026-10-25.md), items 1-6 of its order, as a pass doc:
+   docs/refactors/review-fixes-2026-10-25.md. Host-only work parallel to 11a (no bench): myspec 6.2 / 7.2
+   rewritten around OutputRequest / OutputStatus and ChirpPattern out of Behavior's includes; comment drift
+   and dead code (DET-018's 7b part); RingQueue; the config structs held, not re-plumbed as setters;
+   Occurrence.magnitude.evidence dropped; DetectionDiagnostics replaces the ANALYZER_MODE ifdefs in
+   DetectionRuntime; one LineReader (long lines refused everywhere) and one token parser; the Analyzer's
+   knobs on ParamRegistry with the Node's grammar (PAR-003; decisions/2026-10-25-analyzer-params-on-registry-
+   and-line-policy.md). Not in it: the next Node cut (NODE-004), the Analyzer TrialState split.
+   Gate: every env builds, host suites pass, T2h byte-identical, the Node's PARAM DUMP unchanged (host side,
+   this session); then the owner's bench check on the branch: Node smoke (boot, RB STATUS, 10 hop trains
+   answered), Analyzer SEQ 10/10 with a PARAM SET detection.scalar_* on the Analyzer, a radio PARAM round trip.
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here

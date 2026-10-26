@@ -61,4 +61,10 @@ tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; partly landed, not reviewed)
 unproven-assumptions-audit.md  where code and roadmap rest on unmeasured
                                assumptions (2026-10-16 audit); check order
+vektor-lessons-from-11a.md     what the 11a radio taught VEKTOR (real-time
+                               budget, replies, persistence)
+architecture-readability-review-2026-10-25.md
+                               spec vs code boundaries, readability and
+                               maintainability findings at c0b75e9, ranked,
+                               with a suggested order
 ```

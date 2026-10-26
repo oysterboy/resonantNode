@@ -17,18 +17,12 @@ enum class OccurrenceDecision {
     Rejected
 };
 
+// What the inspector rejects before inspecting: an absent occurrence
+// (UnsupportedKind) or one the detector marked invalid (InvalidTiming).
 enum class OccurrenceRejectReason {
     None,
-    TooShort,
-    TooLong,
-    TooWeak,
-    BelowThreshold,
-    Cooldown,
-    MissingFrequencyEvidence,
-    MissingAmpSupport,
     InvalidTiming,
     UnsupportedKind,
-    Unknown
 };
 
 struct InspectedOccurrence {

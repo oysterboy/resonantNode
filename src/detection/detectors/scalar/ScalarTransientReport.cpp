@@ -26,24 +26,24 @@ void ScalarTransientDetector::refreshReportDetail() {
     _reportDetail.inspect.rejectReason = summaryRejectReason;
     _reportDetail.inspect.noEmitReason = summaryRejectReason;
     _reportDetail.inspect.gateReason = summaryRejectReason;
-    _reportDetail.inspect.matchedMeanPassed = !_requireMinStrength ||
-        (hasSummary ? summaryMatchedMeanStrength >= _minMatchedMeanStrength : false);
-    _reportDetail.inspect.carrierQualityRequired = _requireCarrierQuality;
-    _reportDetail.inspect.carrierCoveragePassed = !_requireCarrierQuality ||
+    _reportDetail.inspect.matchedMeanPassed = !_config.requireMinStrength ||
+        (hasSummary ? summaryMatchedMeanStrength >= _config.minMatchedMeanStrength : false);
+    _reportDetail.inspect.carrierQualityRequired = _config.requireCarrierQuality;
+    _reportDetail.inspect.carrierCoveragePassed = !_config.requireCarrierQuality ||
         !hasSummary ||
         (hasAcceptedSummary
-            ? _acceptedOccurrence.coverageAboveReleaseMs >= _minCoverageAboveReleaseMs
-            : _selectedReject.coverageAboveReleaseMs >= _minCoverageAboveReleaseMs);
-    _reportDetail.inspect.carrierIslandPassed = !_requireCarrierQuality ||
+            ? _acceptedOccurrence.coverageAboveReleaseMs >= _config.minCoverageAboveReleaseMs
+            : _selectedReject.coverageAboveReleaseMs >= _config.minCoverageAboveReleaseMs);
+    _reportDetail.inspect.carrierIslandPassed = !_config.requireCarrierQuality ||
         !hasSummary ||
         (hasAcceptedSummary
-            ? _acceptedOccurrence.islandMaxMs >= _minLongestIslandMs
-            : _selectedReject.islandMaxMs >= _minLongestIslandMs);
-    _reportDetail.inspect.carrierGapPassed = !_requireCarrierQuality ||
+            ? _acceptedOccurrence.islandMaxMs >= _config.minLongestIslandMs
+            : _selectedReject.islandMaxMs >= _config.minLongestIslandMs);
+    _reportDetail.inspect.carrierGapPassed = !_config.requireCarrierQuality ||
         !hasSummary ||
         (hasAcceptedSummary
-            ? _acceptedOccurrence.gapMaxMs <= _maxGapMs
-            : _selectedReject.gapMaxMs <= _maxGapMs);
+            ? _acceptedOccurrence.gapMaxMs <= _config.maxGapMs
+            : _selectedReject.gapMaxMs <= _config.maxGapMs);
     _reportDetail.inspect.opened = hasAcceptedSummary
         ? true
         : (hasSelectedRejectSummary ? true : (_peakActive || _releaseObservedUs != 0 || _peakStartedUs != 0));
@@ -69,9 +69,9 @@ void ScalarTransientDetector::refreshReportDetail() {
         ? _acceptedOccurrence.peak
         : (hasSelectedRejectSummary ? _selectedReject.peak : _peakStrength);
     _reportDetail.inspect.rejectReason = summaryRejectReason;
-    _reportDetail.thresholds.onsetThreshold = _onsetDetectionThreshold;
-    _reportDetail.thresholds.releaseThreshold = _onsetReleaseThreshold;
-    _reportDetail.thresholds.minStrength = _minTransientPeakStrength;
+    _reportDetail.thresholds.onsetThreshold = _config.onsetDetectionThreshold;
+    _reportDetail.thresholds.releaseThreshold = _config.onsetReleaseThreshold;
+    _reportDetail.thresholds.minStrength = _config.minTransientPeakStrength;
     _reportDetail.aggregates.tooShortCount = _transientRejectedDurationTooShortCount;
     _reportDetail.aggregates.tooLongCount = _transientRejectedDurationTooLongCount;
     _reportDetail.aggregates.strengthTooLowCount = _transientRejectedStrengthTooLowCount;
@@ -130,8 +130,8 @@ void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsign
     out.detectorId = detection::DetectorId::ScalarTransient;
     out.accepted = _acceptedOccurrence;
     out.accepted.occurrenceId = _acceptedOccurrenceId;
-    out.thresholds.minDurationMs = _minTransientDurationMs;
-    out.thresholds.maxDurationMs = _maxTransientDurationMs;
+    out.thresholds.minDurationMs = _config.minTransientDurationMs;
+    out.thresholds.maxDurationMs = _config.maxTransientDurationMs;
     out.aggregates.acceptedCount = _peakAcceptedCount - _trialAcceptedCountBase;
     out.aggregates.rejectedCount = _transientRejectedCount - _trialRejectedCountBase;
     out.scalar = _reportDetail;

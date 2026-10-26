@@ -127,8 +127,7 @@ void Node::updateSelfTest(unsigned long now) {
         case SelfTestState::Phase::QuietBoot: {
             const bool pending = _rbLastRebaseResult == RbRebaseResult::Pending
                 || _rbBaselineState == RBBaselineState::Boot
-                || _rbBaselineState == RBBaselineState::ListenForQuiet
-                || _rbBaselineState == RBBaselineState::Rebase;
+                || _rbBaselineState == RBBaselineState::ListenForQuiet;
             if (pending && !deadlinePassed(now, st.deadlineMs)) {
                 return;
             }
@@ -360,7 +359,7 @@ void Node::finishSelfTestOwnChirp(bool timedOut) {
     selftest::field(serialOut(), "other_verdicts", st.otherVerdicts);
     selftest::field(serialOut(), "other_valid", st.otherValid);
     selftest::field(serialOut(), "echo_window_ms", kEchoWindowMs);
-    selftest::field(serialOut(), "suppress_tail_ms", _behavior.detectionSuppressTailMsOwnEmit());
+    selftest::field(serialOut(), "suppress_tail_ms", static_cast<unsigned long>(_behavior.config().detectionSuppressTailMsOwnEmit));
     selftest::end(serialOut());
 
     selftest::skip(serialOut(), st.tally, "external_chirp", "not_requested");
@@ -399,7 +398,7 @@ void Node::finishSelfTest() {
 
 bool Node::selfTestVerdictIsOwn(unsigned long occurrenceStartMs) const {
     const SelfTestState& st = _selfTest;
-    const unsigned long ownStartLimitMs = _behavior.detectionSuppressTailMsOwnEmit() + kOwnEchoStartMarginMs;
+    const unsigned long ownStartLimitMs = _behavior.config().detectionSuppressTailMsOwnEmit + kOwnEchoStartMarginMs;
     for (uint8_t i = 0; i < st.windowCount; ++i) {
         const unsigned long start = st.chirpStartMs[i];
         const unsigned long end = st.chirpEndMs[i] != 0 ? st.chirpEndMs[i] : start + kOpenChirpSpanMs;

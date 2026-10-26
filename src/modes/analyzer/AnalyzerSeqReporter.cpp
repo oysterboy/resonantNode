@@ -93,7 +93,7 @@ void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
 void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     // Issue #26 diagnostics: one line whenever an inspection found its
     // history window incomplete since the previous trial line.
-    const detection::DetectionRuntime::HistoryIncompleteSnapshot& hist = _detection.historyIncompleteSnapshot();
+    const detection::HistoryIncompleteSnapshot& hist = _detection.diagnostics().historyIncompleteSnapshot();
     if (hist.count < _lastPrintedHistoryIncompleteCount) {
         _lastPrintedHistoryIncompleteCount = 0;
     }
@@ -124,7 +124,7 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
             serialOut().print(hist.outOfOrderRecords);
         }
         serialOut().print(" out_of_order_total=");
-        serialOut().print(_detection.featureHistory().outOfOrderRecordCount());
+        serialOut().print(_detection.diagnostics().featureHistory().outOfOrderRecordCount());
         serialOut().print(" i2s_backsteps=");
         serialOut().print(audioStats.timestampBacksteps);
         serialOut().print(" i2s_max_backstep_us=");

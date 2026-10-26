@@ -190,7 +190,7 @@ void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSign
     _i2sCenteredMax = centeredSignal;
 }
 
-void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern) {
+void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, ChirpPattern pattern) {
     if (!RB_VERBOSE_DEBUG || !eventsEnabled()) {
         return;
     }
@@ -199,17 +199,7 @@ void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, C
     serialOut().print("EVT chirp_started source=");
     serialOut().print(sourceName);
     serialOut().print(" pattern=");
-    switch (pattern) {
-        case ChirpOutput::ChirpPattern::Single:
-            serialOut().println("single");
-            break;
-        case ChirpOutput::ChirpPattern::Triple:
-            serialOut().println("triple");
-            break;
-        case ChirpOutput::ChirpPattern::Idle:
-            serialOut().println("idle");
-            break;
-    }
+    serialOut().println(chirpPatternName(pattern));
 }
 
 void NodeDebug::observeChirpFinished(unsigned long now) {

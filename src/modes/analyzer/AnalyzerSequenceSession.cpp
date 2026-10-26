@@ -16,7 +16,6 @@ bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
 namespace {
 
-constexpr unsigned long kSequenceWarmupMs = 500;
 
 unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned long firstTrials, unsigned long everyNth) {
     if (totalTrials == 0) {
@@ -68,7 +67,6 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.externalEmitter = pending.externalEmitter;
     _sequenceTest.profileKind = pending.profileKind;
     _sequenceTest.outputConfig = _seqOutputConfig;
-    _sequenceTest.diagMode = sequenceDiagModeFromOutputWhen(_sequenceTest.outputConfig.when);
     _sequenceTest.progressLineStarted = false;
     _sequenceTest.totalTrials = pending.totalTrials == 0 ? 1 : pending.totalTrials;
     _sequenceTest.periodMs = pending.periodMs == 0 ? 1 : pending.periodMs;
@@ -149,7 +147,6 @@ void AnalyzerApp::configureSequenceDetection() {
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
     _detection.setInspectionPlan(selectedProfile.inspectionPlan);
     _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
-    _detection.setProfileName(detection::detectionProfileName(selectedProfile.kind));
     _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     _sequenceTest.sampleDumpDetectorSelection = selectedProfile.detectorSelection;
     _sequenceTest.sampleDumpObservedStream = selectedProfile.scalarTransient.observedStream;
@@ -184,12 +181,10 @@ void AnalyzerApp::resetSequenceTestRunState() {
     memset(&_sequenceTest.primaryValidPattern, 0, sizeof(_sequenceTest.primaryValidPattern));
     memset(&_sequenceTest.primaryValidInspectedOccurrence, 0, sizeof(_sequenceTest.primaryValidInspectedOccurrence));
     memset(&_sequenceTest.primaryValidDetectorReport, 0, sizeof(_sequenceTest.primaryValidDetectorReport));
-    _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
     memset(&_sequenceTest.primaryAcceptedInspectedOccurrence, 0, sizeof(_sequenceTest.primaryAcceptedInspectedOccurrence));
     memset(&_sequenceTest.primaryAcceptedDetectorReport, 0, sizeof(_sequenceTest.primaryAcceptedDetectorReport));
     memset(&_sequenceTest.primaryAcceptedSourceRecord, 0, sizeof(_sequenceTest.primaryAcceptedSourceRecord));
-    _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
     memset(&_sequenceTest.bestRejectedInWindow, 0, sizeof(_sequenceTest.bestRejectedInWindow));
@@ -205,17 +200,9 @@ void AnalyzerApp::resetSequenceTestRunState() {
     memset(&_sequenceTest.currentTrialDiagnostics, 0, sizeof(_sequenceTest.currentTrialDiagnostics));
     _sequenceTest.trialOverflowCountAtStart = 0;
     _sequenceTest.trialPipelineOverflowCountAtStart = 0;
-    _sequenceTest.hits = 0;
-    _sequenceTest.expectedHits = 0;
-    _sequenceTest.lateHits = 0;
-    _sequenceTest.misses = 0;
-    _sequenceTest.unexpected = 0;
-    _sequenceTest.duplicates = 0;
-    _sequenceTest.startupArtifacts = 0;
     _sequenceTest.samplesProcessed = 0;
     _sequenceTest.currentTrialSamplesProcessed = 0;
     _sequenceTest.maxSamplesPerLoop = 0;
-    _sequenceTest.emptySourceLoops = 0;
     _sequenceTest.availableBytesSum = 0;
     _sequenceTest.availableBytesSamples = 0;
     _sequenceTest.maxAvailableBytes = 0;
@@ -330,7 +317,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         serialOut().print(detection::detectorSelectionName(selectedProfile.detectorSelection));
         serialOut().print(" detector=");
         serialOut().print(detection::detectorSelectionName(selectedProfile.detectorSelection));
-        //PARAM TUNING TEMPORARY
         serialOut().print(" scalar_observed_stream=");
         serialOut().print(scalarObservedStreamDisplayName(selectedProfile.scalarTransient.observedStream));
         serialOut().print(" scalar_onset_threshold=");
@@ -467,12 +453,10 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidInspectedOccurrence = {};
     _sequenceTest.primaryValidDetectorReport = {};
-    _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
     _sequenceTest.primaryAcceptedInspectedOccurrence = {};
     _sequenceTest.primaryAcceptedDetectorReport = {};
     _sequenceTest.primaryAcceptedSourceRecord = {};
-    _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
     _sequenceTest.bestRejectedInWindow = {};
@@ -500,7 +484,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     }
     // Detection-side overflow baselines after the diagnostics reset, which
     // zeroes both counters (issue #31); the I2S baseline above is separate.
-    _sequenceTest.trialPipelineOverflowCountAtStart = _detection.pipelineEventOverflowCount();
+    _sequenceTest.trialPipelineOverflowCountAtStart = _detection.diagnostics().pipelineEventOverflowCount();
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
     beginSequenceSampleDump(trialNumber);
@@ -543,7 +527,6 @@ void IRAM_ATTR AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
         diagnostics.ambientBaselineMin = baseline;
         diagnostics.ambientBaselineMax = baseline;
         diagnostics.maxSignalLevel = signalLevel;
-        diagnostics.ampPeakMs = nowMs;
     } else {
         if (baseline < diagnostics.ambientBaselineMin) {
             diagnostics.ambientBaselineMin = baseline;
@@ -553,7 +536,6 @@ void IRAM_ATTR AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
         }
         if (signalLevel > diagnostics.maxSignalLevel) {
             diagnostics.maxSignalLevel = signalLevel;
-            diagnostics.ampPeakMs = nowMs;
         }
     }
 
@@ -669,7 +651,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
 // rejected_count without a new reject event (decision 2026-10-13, issue #31
 // B11), so bring their aggregate counts up to trial end.
 void AnalyzerApp::refreshCapturedDetectorReportAggregates() {
-    const detection::DetectorReport& live = _detection.activeDetectorReport();
+    const detection::DetectorReport& live = _detection.diagnostics().activeDetectorReport();
     if (live.detectorId == detection::DetectorId::Unknown) {
         return;
     }
@@ -722,38 +704,19 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     const bool confirmedTrial = result == AnalyzerResult::Expected || result == AnalyzerResult::Late;
     if (confirmedTrial) {
-        _sequenceTest.hits++;
-        if (selectedTrial.kind == SequenceTrialSelection::Kind::ValidPattern) {
-            _sequenceTest.primaryValidPatternDtMs = dtMs;
-        } else if (selectedTrial.kind == SequenceTrialSelection::Kind::AcceptedOccurrence) {
-            _sequenceTest.primaryAcceptedOccurrenceDtMs = dtMs;
-        }
-        if (result == AnalyzerResult::Late) {
-            _sequenceTest.lateHits++;
-        } else {
-            _sequenceTest.expectedHits++;
-        }
+        // Expected or Late stays.
     } else if (rejectedTrial) {
         result = AnalyzerResult::Rejected;
     } else if (unexpectedTrial) {
-        _sequenceTest.unexpected++;
         result = AnalyzerResult::Unexpected;
     } else {
         result = AnalyzerResult::Miss;
     }
 
-    _sequenceTest.duplicates += diagnostics.duplicateCount;
     AnalyzerReport* finalizedReport = sequenceReportScratch();
     buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.completedTrials++;
-    if (result == AnalyzerResult::Miss) {
-        if (finalizedReport->debug.startupArtifact) {
-            _sequenceTest.startupArtifacts++;
-        } else {
-            _sequenceTest.misses++;
-        }
-    }
     // ANA-004 (step 7a): where the per-trial report time goes. One line per
     // trial with diagnostics on: microseconds per print block and the
     // cumulative dropped-DMA count at finalize start (drops caused by this

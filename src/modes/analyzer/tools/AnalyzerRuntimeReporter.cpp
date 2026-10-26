@@ -13,7 +13,7 @@
 // so report exactly those rather than a fixed pair: a stream the plan doesn't
 // use has no buffer and would read as 0, which says nothing about the run.
 void AnalyzerApp::printFeatureHistoryRecordCounts() const {
-    const detection::FeatureHistory& history = _detection.featureHistory();
+    const detection::FeatureHistory& history = _detection.diagnostics().featureHistory();
     serialOut().print(" history_records=");
     const size_t count = history.activeStreamCount();
     if (count == 0) {
@@ -32,7 +32,6 @@ void AnalyzerApp::printFeatureHistoryRecordCounts() const {
 }
 
 void AnalyzerApp::printDetectionParameters() const {
-    //PARAM TUNING TEMPORARY
     const detection::DetectionProfile& activeProfile = effectiveSequenceProfile();
 
     const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
@@ -97,40 +96,6 @@ void AnalyzerApp::printDetectionParameters() const {
     serialOut().print(ageSamples);
     serialOut().print(" freq.packet_age_ms=");
     serialOut().println(ageMs, 3);
-}
-
-void AnalyzerApp::printParamStatus() const {
-    const detection::DetectionProfile& activeProfile = effectiveSequenceProfile();
-
-    const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
-    serialOut().print("PARAM scalar_observed_stream=");
-    serialOut().print(scalarObservedStreamDisplayName(scalar.observedStream));
-    serialOut().print(" scalar_onset_threshold=");
-    serialOut().print(scalar.onsetDetectionThreshold, 1);
-    serialOut().print(" scalar_release_threshold=");
-    serialOut().print(scalar.onsetReleaseThreshold, 1);
-    serialOut().print(" scalar_cooldown_ms=");
-    serialOut().print(scalar.cooldownAfterOnsetMs);
-    serialOut().print(" scalar_min_duration_ms=");
-    serialOut().print(scalar.minTransientDurationMs);
-    serialOut().print(" scalar_max_duration_ms=");
-    serialOut().print(scalar.maxTransientDurationMs);
-    serialOut().print(" scalar_min_peak_strength=");
-    serialOut().print(scalar.minTransientPeakStrength, 1);
-    serialOut().print(" scalar_release_debounce_ms=");
-    serialOut().print(scalar.releaseDebounceMs);
-    serialOut().print(" scalar_require_carrier_quality=");
-    serialOut().print(scalar.requireCarrierQuality ? 1 : 0);
-    serialOut().print(" scalar_require_min_strength=");
-    serialOut().print(scalar.requireMinStrength ? 1 : 0);
-    serialOut().print(" scalar_min_strength=");
-    serialOut().print(scalar.minMatchedMeanStrength, 1);
-    serialOut().print(" scalar_min_release_coverage_ms=");
-    serialOut().print(scalar.minCoverageAboveReleaseMs);
-    serialOut().print(" scalar_min_longest_island_ms=");
-    serialOut().print(scalar.minLongestIslandMs);
-    serialOut().print(" scalar_max_gap_ms=");
-    serialOut().println(scalar.maxGapMs);
 }
 
 void AnalyzerApp::printAudioSourceSummary() const {
@@ -274,10 +239,13 @@ void AnalyzerApp::printOccurrenceSummary() const {
     serialOut().print(stats.blocksProcessed);
     serialOut().print(" samples=");
     serialOut().print(static_cast<unsigned long long>(stats.samplesProcessed));
+    // The signal layer runs per sample (one-sample "blocks"): the last block is
+    // the latest frame. Labels kept for the log readers.
+    const AudioSamplePacket& latest = _audioSignal.latestFrame();
     serialOut().print(" lastBlockStart=");
-    serialOut().print(static_cast<unsigned long long>(_audioSignal.lastBlockStartSample()));
+    serialOut().print(static_cast<unsigned long long>(latest.sampleIndex));
     serialOut().print(" lastBlockCount=");
-    serialOut().print(_audioSignal.lastBlockSampleCount());
+    serialOut().print(latest.valid ? 1 : 0);
     serialOut().print(" lastBlockMicros=");
-    serialOut().println(static_cast<unsigned long>(_audioSignal.lastBlockApproxStartUs64()));
+    serialOut().println(static_cast<unsigned long>(latest.timeUs64));
 }

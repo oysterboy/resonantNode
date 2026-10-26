@@ -18,3 +18,11 @@ three unexplained shifts of 10-23 / 10-24 / 10-26.
 
 First check (11:40): hop10 10/10, chirp 3200 / 100 ms 10/10 rejected duration_too_short, chirp 3450 / 150 ms 10/10
 rejected by shape. Results when the run ends.
+
+## Stopped after 1.63 h (owner: merge PR #66, fix its findings, restart the 24 h run)
+
+Two room checks. 11:40: hop 10/10, chirp 3200 / 100 ms rejected duration_too_short, chirp 3450 / 150 ms rejected by
+shape. 12:40: hop 10/10, chirp 3200 / 100 ms now rejected by shape (read long enough again: the room changed within
+the hour), chirp 3450 by shape. Network (nodegroup_interim.py): 100 / 100 chains ended (max 4.9 s), 0 noise-started
+of 1,109 answers, 0 dropped buffers after boot, 0 resets, max 28 per minute. The restarted run is
+2026-10-26-soak24-shape-b.

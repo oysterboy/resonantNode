@@ -1,0 +1,7 @@
+cycle,local_time,elapsed_h,step,expected,rejected,miss,unexpected,avg_strength,reasons
+1,2026-10-26 11:40,0.05,hop10,10,0,0,0,14861.1,
+1,2026-10-26 11:40,0.06,chirp3200_100,0,10,0,0,3951.0,duration_too_short:10
+1,2026-10-26 11:40,0.07,chirp3450_150,0,10,0,0,8296.8,failed_shape:10;pattern_rejected:10
+2,2026-10-26 12:40,1.05,hop10,10,0,0,0,14951.7,
+2,2026-10-26 12:40,1.06,chirp3200_100,0,10,0,0,5813.4,failed_shape:10;pattern_rejected:10
+2,2026-10-26 12:40,1.07,chirp3450_150,0,10,0,0,5411.4,failed_shape:10;pattern_rejected:10

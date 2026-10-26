@@ -485,9 +485,9 @@ Order: roadmap-0-steps.md. NODE-009, NODE-010, NODE-011 are steps 2-4
 NODE-006 and NODE-007 are step 7; NODE-004 is part of step 10.
 NODE-019 is a known issue (sample-clock backsteps), not stepped; it rides step 10 or the
 next loop-timing pass.
-Steps 2-10 are done. Now (2026-10-26): 11c unattended bench runs (running), 11d OTA
-firmware, 11g batch D (the Node: boot baseline, RB debug dropped, with A7's next
-NODE-004 cut).
+Steps 2-10 are done. Order (2026-10-26, owner): 11c unattended bench runs (running),
+then 11g batch D (the Node: boot baseline, RB debug dropped, with A7's next NODE-004
+cut), then 11d OTA firmware.
 ```
 
 ## Spec candidates

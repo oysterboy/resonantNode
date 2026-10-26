@@ -43,6 +43,9 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-26, late night (owner): order 11c -> 11g -> 11d. 11c's soak runs to 10-27 13:39; 11g's A, B1,
+B2 are done on the host (nothing flashed during the soak); after the soak: flash, B2's bench smoke, then 11g C
+(Analyzer, with A8) and D (Node, with A7); then 11d (OTA firmware, needs the owner's WiFi credentials).
 Status update 2026-10-26, night: 11c restarted (soak to 10-27 13:39); 11g opened (review Part D, the rest; #67):
 batch A and the host part of B during the soak.
 Status update 2026-10-26, evening: 11b done (DET-015: the Node hears the hop train only, by shape; bench gate met).
@@ -1110,7 +1113,7 @@ the previous gate open unless the step says it can run in parallel.
    distant church bells ring on the hour and the quarters; the checks avoid the chimes and sample three times as
    densely): Nodes silenced, Analyzer hop / chirp SEQ and RAW hop captures for per-bin levels.
 
-11d. [TODO] OTA firmware (FWOTA). (issue #61)
+11d. [TODO, after 11g] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the
    repo) and a two-slot partition table (a first USB flash of every board). Gate: an image flashed over WiFi to
    every board, a failed or interrupted update falls back to the old image.
@@ -1157,7 +1160,7 @@ the previous gate open unless the step says it can run in parallel.
    (09:05-09:16, 118-127 ms), with this morning's build as well: the room changed, not the firmware; the third
    unexplained room shift in two days (10-24 10:50, E2 <- E5 on 10-23 ~20:00).
 
-11g. [NEXT] Review Part D, the rest. (issue #67)
+11g. [RUNNING 2026-10-26] Review Part D, the rest. (issue #67)
    Owner 2026-10-26: sequence the review's remaining Part D findings
    (docs/research/architecture-readability-review-2026-10-25.md, Part D; D1.1, D1.3, D1.7, D4.1, D4.2 done in 5fcd3fc
    before the 11c restart). Four batches; A and the host part of B run while 11c's soak holds the boards (no flash

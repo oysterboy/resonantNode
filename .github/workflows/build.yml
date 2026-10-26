@@ -67,6 +67,8 @@ jobs:
       - run: pio test -e native-test
       - run: pio test -e native-test-behavior
       - run: pio test -e native-test-diag
+      # The bench tools' parsers (step 11g A: shapesurvey's shape_fields over a recorded replay).
+      - run: python3 tools/bench/test_shapesurvey.py
 
   include-direction:
     runs-on: ubuntu-24.04

@@ -1,7 +1,11 @@
 /*
 NetFrame on the host (PAR-013, step 11a): encode/decode round trip, rejects,
-target matching, the remote command allowlist and the repeat filter. Runs in
-native-test-behavior.
+target matching, the remote command allowlist and the repeat filter. The filter
+across a sender's reboot (critique D1.3 / D4.3): it remembers only the last seq
+per sender, so a sender that restarts its count drops exactly the first command
+of its new life whose seq equals the last of the old one; NodeNet::begin() seeds
+the count from esp_random() so that this is a 1-in-65535 event, not "one command
+per boot". Runs in native-test-behavior.
 */
 #include <unity.h>
 
@@ -104,6 +108,66 @@ void test_seq_filter_drops_repeats_per_sender() {
     TEST_ASSERT_FALSE(filter.accept(a, 11));
 }
 
+// A sender reboots and counts from 1 again (NodeNet before D1.3): its first command
+// is dropped when the old life ended on seq 1, then the count runs on. Only the last
+// seq is remembered, so a reboot after more than one command loses nothing.
+void test_seq_filter_across_a_sender_restart_at_seq_1() {
+    net::SeqFilter filter;
+    const uint8_t gw[6] = {0x24, 0x6F, 0x28, 1, 2, 3};
+    // Old life: one command, broadcast kCommandRepeats (3) times.
+    TEST_ASSERT_TRUE(filter.accept(gw, 1));
+    TEST_ASSERT_FALSE(filter.accept(gw, 1));
+    TEST_ASSERT_FALSE(filter.accept(gw, 1));
+    // Reboot, the first command of the new life has seq 1 again: every copy dropped.
+    TEST_ASSERT_FALSE(filter.accept(gw, 1));
+    TEST_ASSERT_FALSE(filter.accept(gw, 1));
+    TEST_ASSERT_FALSE(filter.accept(gw, 1));
+    TEST_ASSERT_TRUE(filter.accept(gw, 2));  // the next one runs
+
+    net::SeqFilter f2;
+    for (uint16_t s = 1; s <= 5; ++s) {
+        TEST_ASSERT_TRUE(f2.accept(gw, s));
+    }
+    // Reboot after five: 1..5 of the new life all run (each differs from the one before).
+    for (uint16_t s = 1; s <= 5; ++s) {
+        TEST_ASSERT_TRUE(f2.accept(gw, s));
+        TEST_ASSERT_FALSE(f2.accept(gw, s));
+    }
+}
+
+// What the random start buys: the new life's first command runs for every start
+// except the one equal to the old life's last seq.
+void test_seq_filter_random_start_runs_the_first_command() {
+    const uint8_t gw[6] = {0x24, 0x6F, 0x28, 1, 2, 3};
+    const uint16_t lastOfOldLife = 0x3A41;
+    uint32_t dropped = 0;
+    for (uint32_t start = 1; start <= 0xFFFF; ++start) {  // NodeNet never uses seq 0
+        net::SeqFilter filter;
+        filter.accept(gw, lastOfOldLife);
+        if (!filter.accept(gw, static_cast<uint16_t>(start))) {
+            ++dropped;
+            TEST_ASSERT_EQUAL_UINT16(lastOfOldLife, start);
+        }
+    }
+    TEST_ASSERT_EQUAL_UINT32(1, dropped);
+}
+
+// kSenders slots, oldest replaced: after eight other senders a repeat is no longer
+// recognized and runs twice. Five nodes plus a gateway stay well inside.
+void test_seq_filter_forgets_a_sender_after_ksenders_others() {
+    net::SeqFilter filter;
+    const uint8_t a[6] = {0xA, 0, 0, 0, 0, 1};
+    TEST_ASSERT_TRUE(filter.accept(a, 77));
+    for (uint8_t i = 0; i < net::SeqFilter::kSenders - 1; ++i) {
+        const uint8_t other[6] = {0xB, 0, 0, 0, 0, i};
+        TEST_ASSERT_TRUE(filter.accept(other, 1));
+    }
+    TEST_ASSERT_FALSE(filter.accept(a, 77));  // seven others: still remembered
+    const uint8_t eighth[6] = {0xC, 0, 0, 0, 0, 0};
+    TEST_ASSERT_TRUE(filter.accept(eighth, 1));
+    TEST_ASSERT_TRUE(filter.accept(a, 77));  // its slot was reused
+}
+
 // The gateway joins a reply stream: line ends inside frames, a long line across frames.
 void test_line_joiner_rebuilds_lines_across_frames() {
     net::LineJoiner<64> j;
@@ -132,6 +196,9 @@ int main(int, char**) {
     RUN_TEST(test_decode_rejects_foreign_or_broken_frames);
     RUN_TEST(test_targets_and_allowlist);
     RUN_TEST(test_seq_filter_drops_repeats_per_sender);
+    RUN_TEST(test_seq_filter_across_a_sender_restart_at_seq_1);
+    RUN_TEST(test_seq_filter_random_start_runs_the_first_command);
+    RUN_TEST(test_seq_filter_forgets_a_sender_after_ksenders_others);
     RUN_TEST(test_line_joiner_rebuilds_lines_across_frames);
     return UNITY_END();
 }

@@ -6,10 +6,6 @@ import subprocess
 import sys
 from collections import defaultdict
 
-PROG = sys.argv[1]
-dirs = ["test/fixtures"] + sorted(d for d in glob.glob("bench/sessions/*") if os.path.isdir(d) and (
-    "corpus" in d or "cell" in d or "dur40" in d or "freqcols" in d))
-
 
 def category(name, d):
     n = name.lower()
@@ -45,11 +41,11 @@ def shape_fields(line):
     return (m.group(1),) + tuple(f[k] for k in SHAPE_KEYS)
 
 
-rows = []
-for d in dirs:
-    out = subprocess.run([PROG, "--shape", "--dir", d], capture_output=True, text=True).stdout.splitlines()
+def rows_from_output(d, lines):
+    """The replay's `--shape --dir d` output as rows: each shape line belongs to the capture line after it."""
+    rows = []
     pending = []
-    for line in out:
+    for line in lines:
         g = shape_fields(line)
         if g:
             pending.append(g)
@@ -59,16 +55,31 @@ for d in dirs:
             for g in pending:
                 rows.append((d, m.group(1), category(m.group(1), d)) + g)
             pending = []
+    return rows
 
-by = defaultdict(list)
-for r in rows:
-    by[r[2]].append(r)
-for cat in sorted(by):
-    rs = by[cat]
-    print("== %s: %d verdicts (%d accepted today)" % (cat, len(rs), sum(1 for r in rs if r[3] == "accepted")))
-    dist = defaultdict(int)
-    for r in rs:
-        dist[(int(r[8]), int(r[9]))] += 1
-    print("   (distinct bins, up steps) -> count:", dict(sorted(dist.items())))
-    for r in rs[:3]:
-        print("   e.g. %-34s %-22s dur=%s seq=%s" % (r[1][:34], r[3], r[5], r[11][:90]))
+
+def main():
+    prog = sys.argv[1]
+    dirs = ["test/fixtures"] + sorted(d for d in glob.glob("bench/sessions/*") if os.path.isdir(d) and (
+        "corpus" in d or "cell" in d or "dur40" in d or "freqcols" in d))
+    rows = []
+    for d in dirs:
+        out = subprocess.run([prog, "--shape", "--dir", d], capture_output=True, text=True).stdout.splitlines()
+        rows += rows_from_output(d, out)
+
+    by = defaultdict(list)
+    for r in rows:
+        by[r[2]].append(r)
+    for cat in sorted(by):
+        rs = by[cat]
+        print("== %s: %d verdicts (%d accepted today)" % (cat, len(rs), sum(1 for r in rs if r[3] == "accepted")))
+        dist = defaultdict(int)
+        for r in rs:
+            dist[(int(r[8]), int(r[9]))] += 1
+        print("   (distinct bins, up steps) -> count:", dict(sorted(dist.items())))
+        for r in rs[:3]:
+            print("   e.g. %-34s %-22s dur=%s seq=%s" % (r[1][:34], r[3], r[5], r[11][:90]))
+
+
+if __name__ == "__main__":
+    main()

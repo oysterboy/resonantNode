@@ -359,7 +359,7 @@ void Node::finishSelfTestOwnChirp(bool timedOut) {
     selftest::field(serialOut(), "other_verdicts", st.otherVerdicts);
     selftest::field(serialOut(), "other_valid", st.otherValid);
     selftest::field(serialOut(), "echo_window_ms", kEchoWindowMs);
-    selftest::field(serialOut(), "suppress_tail_ms", _behavior.config().detectionSuppressTailMsOwnEmit);
+    selftest::field(serialOut(), "suppress_tail_ms", static_cast<unsigned long>(_behavior.config().detectionSuppressTailMsOwnEmit));
     selftest::end(serialOut());
 
     selftest::skip(serialOut(), st.tally, "external_chirp", "not_requested");

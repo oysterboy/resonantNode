@@ -33,10 +33,7 @@ void Node::configureParameters() {
 void Node::registerDetectionParams() {
     // TonalPulseScalar (the Node's production profile, decisions/
     // 2026-10-14-node-ships-tonalpulsescalar.md). Same flat names as the
-    // Analyzer's PARAM keys, under "detection.". The ms fields are
-    // `unsigned long` in the config; on this 32-bit target it is the same
-    // size as uint32_t, which the registry stores.
-    static_assert(sizeof(unsigned long) == sizeof(uint32_t), "scalar ms fields are bound as uint32_t");
+    // Analyzer's PARAM keys, under "detection.".
     detection::ScalarTransientConfig& sc = _activeDetectionProfile.scalarTransient;
     using param::ModuleId;
     using param::ParamId;
@@ -45,15 +42,15 @@ void Node::registerDetectionParams() {
     _paramRegistry.addFloat(ParamId::Detection_ScalarReleaseThreshold, ModuleId::Detection,
                              "detection.scalar_release_threshold", &sc.onsetReleaseThreshold, 0.0f, 200000.0f);
     _paramRegistry.addUInt32(ParamId::Detection_ScalarCooldownMs, ModuleId::Detection,
-                             "detection.scalar_cooldown_ms", reinterpret_cast<uint32_t*>(&sc.cooldownAfterOnsetMs), 0U, 10000U);
+                             "detection.scalar_cooldown_ms", &sc.cooldownAfterOnsetMs, 0U, 10000U);
     _paramRegistry.addUInt32(ParamId::Detection_ScalarMinDurationMs, ModuleId::Detection,
-                             "detection.scalar_min_duration_ms", reinterpret_cast<uint32_t*>(&sc.minTransientDurationMs), 0U, 5000U);
+                             "detection.scalar_min_duration_ms", &sc.minTransientDurationMs, 0U, 5000U);
     _paramRegistry.addUInt32(ParamId::Detection_ScalarMaxDurationMs, ModuleId::Detection,
-                             "detection.scalar_max_duration_ms", reinterpret_cast<uint32_t*>(&sc.maxTransientDurationMs), 0U, 5000U);
+                             "detection.scalar_max_duration_ms", &sc.maxTransientDurationMs, 0U, 5000U);
     _paramRegistry.addFloat(ParamId::Detection_ScalarMinPeakStrength, ModuleId::Detection,
                              "detection.scalar_min_peak_strength", &sc.minTransientPeakStrength, 0.0f, 200000.0f);
     _paramRegistry.addUInt32(ParamId::Detection_ScalarReleaseDebounceMs, ModuleId::Detection,
-                             "detection.scalar_release_debounce_ms", reinterpret_cast<uint32_t*>(&sc.releaseDebounceMs), 0U, 1000U);
+                             "detection.scalar_release_debounce_ms", &sc.releaseDebounceMs, 0U, 1000U);
     _paramRegistry.addBool(ParamId::Detection_ScalarRequireCarrierQuality, ModuleId::Detection,
                             "detection.scalar_require_carrier_quality", &sc.requireCarrierQuality);
     _paramRegistry.addBool(ParamId::Detection_ScalarRequireMinStrength, ModuleId::Detection,
@@ -61,11 +58,11 @@ void Node::registerDetectionParams() {
     _paramRegistry.addFloat(ParamId::Detection_ScalarMinStrength, ModuleId::Detection,
                              "detection.scalar_min_strength", &sc.minMatchedMeanStrength, 0.0f, 200000.0f);
     _paramRegistry.addUInt32(ParamId::Detection_ScalarMinReleaseCoverageMs, ModuleId::Detection,
-                             "detection.scalar_min_release_coverage_ms", reinterpret_cast<uint32_t*>(&sc.minCoverageAboveReleaseMs), 0U, 5000U);
+                             "detection.scalar_min_release_coverage_ms", &sc.minCoverageAboveReleaseMs, 0U, 5000U);
     _paramRegistry.addUInt32(ParamId::Detection_ScalarMinLongestIslandMs, ModuleId::Detection,
-                             "detection.scalar_min_longest_island_ms", reinterpret_cast<uint32_t*>(&sc.minLongestIslandMs), 0U, 5000U);
+                             "detection.scalar_min_longest_island_ms", &sc.minLongestIslandMs, 0U, 5000U);
     _paramRegistry.addUInt32(ParamId::Detection_ScalarMaxGapMs, ModuleId::Detection,
-                             "detection.scalar_max_gap_ms", reinterpret_cast<uint32_t*>(&sc.maxGapMs), 0U, 5000U);
+                             "detection.scalar_max_gap_ms", &sc.maxGapMs, 0U, 5000U);
     // Network band (DET-013). Applied by applyBandParams() when the values
     // change; 0 = single target at the chirp tone.
     _paramRegistry.addUInt32(ParamId::Detection_BandLowHz, ModuleId::Detection,
@@ -100,36 +97,34 @@ void Node::registerOutputParams() {
 // reset). Paths are the snake_case field names; the RB BEHAV keys they replace
 // are mapped in decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md.
 void Node::registerBehaviorParams() {
-    static_assert(sizeof(unsigned long) == sizeof(uint32_t), "behavior ms fields are bound as uint32_t");
     BehaviorGateConfig& b = _activeBehaviorProfile;
     using param::ModuleId;
     using param::ParamId;
-    auto u32 = [](unsigned long* field) { return reinterpret_cast<uint32_t*>(field); };
     _paramRegistry.addBool(ParamId::Behavior_IdleEnabled, ModuleId::Behavior, "behavior.idle_enabled", &b.idleEnabled);
     _paramRegistry.addUInt32(ParamId::Behavior_WaitAfterHeardMs, ModuleId::Behavior,
-                             "behavior.wait_after_heard_ms", u32(&b.waitAfterHeardMs), 0U, 10000U);
+                             "behavior.wait_after_heard_ms", &b.waitAfterHeardMs, 0U, 10000U);
     _paramRegistry.addUInt32(ParamId::Behavior_RefractoryAfterEmitMs, ModuleId::Behavior,
-                             "behavior.refractory_after_emit_ms", u32(&b.refractoryAfterEmitMs), 0U, 60000U);
+                             "behavior.refractory_after_emit_ms", &b.refractoryAfterEmitMs, 0U, 60000U);
     _paramRegistry.addUInt32(ParamId::Behavior_SuppressSelfChirpMs, ModuleId::Behavior,
-                             "behavior.suppress_self_chirp_ms", u32(&b.behaviorSuppressSelfChirpMs), 0U, 10000U);
+                             "behavior.suppress_self_chirp_ms", &b.behaviorSuppressSelfChirpMs, 0U, 10000U);
     _paramRegistry.addUInt32(ParamId::Behavior_DetectionSuppressTailMs, ModuleId::Behavior,
-                             "behavior.detection_suppress_tail_ms", u32(&b.detectionSuppressTailMsOwnEmit), 0U, 5000U);
+                             "behavior.detection_suppress_tail_ms", &b.detectionSuppressTailMsOwnEmit, 0U, 5000U);
     _paramRegistry.addUInt32(ParamId::Behavior_IdleTimeoutMs, ModuleId::Behavior,
-                             "behavior.idle_timeout_ms", u32(&b.idleTimeoutMs), 0U, 3600000U);
+                             "behavior.idle_timeout_ms", &b.idleTimeoutMs, 0U, 3600000U);
     _paramRegistry.addUInt32(ParamId::Behavior_IdleTimeoutVariationMs, ModuleId::Behavior,
-                             "behavior.idle_timeout_variation_ms", u32(&b.idleTimeVariationMs), 0U, 3600000U);
+                             "behavior.idle_timeout_variation_ms", &b.idleTimeVariationMs, 0U, 3600000U);
     _paramRegistry.addUInt32(ParamId::Behavior_IdleBlockedAfterHeardMs, ModuleId::Behavior,
-                             "behavior.idle_blocked_after_heard_ms", u32(&b.idleBlockedAfterHeardMs), 0U, 600000U);
+                             "behavior.idle_blocked_after_heard_ms", &b.idleBlockedAfterHeardMs, 0U, 600000U);
     _paramRegistry.addUInt32(ParamId::Behavior_IdleBlockedAfterOwnEmitMs, ModuleId::Behavior,
-                             "behavior.idle_blocked_after_own_emit_ms", u32(&b.idleBlockedAfterOwnEmitMs), 0U, 600000U);
+                             "behavior.idle_blocked_after_own_emit_ms", &b.idleBlockedAfterOwnEmitMs, 0U, 600000U);
     _paramRegistry.addUInt32(ParamId::Behavior_RestAfterFieldPatterns, ModuleId::Behavior,
-                             "behavior.rest_after_field_patterns", u32(&b.restAfterFieldPatterns), 0U, 100U);
+                             "behavior.rest_after_field_patterns", &b.restAfterFieldPatterns, 0U, 100U);
     _paramRegistry.addUInt32(ParamId::Behavior_OwnEmitBudget, ModuleId::Behavior,
-                             "behavior.own_emit_budget", u32(&b.ownEmitBudget), 0U, 100U);
+                             "behavior.own_emit_budget", &b.ownEmitBudget, 0U, 100U);
     _paramRegistry.addUInt32(ParamId::Behavior_OwnEmitBudgetWindowMs, ModuleId::Behavior,
-                             "behavior.own_emit_budget_window_ms", u32(&b.ownEmitBudgetWindowMs), 0U, 600000U);
+                             "behavior.own_emit_budget_window_ms", &b.ownEmitBudgetWindowMs, 0U, 600000U);
     _paramRegistry.addUInt32(ParamId::Behavior_RestMs, ModuleId::Behavior,
-                             "behavior.rest_ms", u32(&b.restMs), 0U, 600000U);
+                             "behavior.rest_ms", &b.restMs, 0U, 600000U);
 }
 
 namespace {

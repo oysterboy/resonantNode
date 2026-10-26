@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
                detection::detectionProfileName(profile.kind), opt.bandLow, opt.bandHigh, opt.targetHz,
                static_cast<double>(profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold),
                static_cast<double>(profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold),
-               profile.scalarTransient.maxTransientDurationMs);
+               static_cast<unsigned long>(profile.scalarTransient.maxTransientDurationMs));
     }
 
     unsigned totalAccepted = 0;

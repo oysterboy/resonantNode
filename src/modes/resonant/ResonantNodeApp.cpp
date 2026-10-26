@@ -67,18 +67,29 @@ constexpr unsigned long kRbStartupMicWarmupMs = runtime::kDefaultAudioSignalStar
 constexpr unsigned long kRbStartupQuietHoldMs = 1000;
 constexpr unsigned long kRbStartupBaselineTimeoutMs = 8000;
 
-uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
-    if (sampleRateHz == 0) {
-        return 0;
+
+}
+
+
+
+
+// RB PROFILE detail prints the stream in CamelCase (detection::featureStreamName is snake_case); one copy
+// of the switch that was written twice here (review B7, step 11f).
+static const char* streamDisplayName(detection::FeatureStreamId stream) {
+    switch (stream) {
+        case detection::FeatureStreamId::AmpMagnitude:
+            return "AmpMagnitude";
+        case detection::FeatureStreamId::AmpEnvelope:
+            return "AmpEnvelope";
+        case detection::FeatureStreamId::FrequencyTarget:
+            return "FrequencyTarget";
+        case detection::FeatureStreamId::FrequencyContrast:
+            return "FrequencyContrast";
+        case detection::FeatureStreamId::Unknown:
+        default:
+            return "Unknown";
     }
-
-    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
 }
-
-}
-
-
-
 
 BehaviorGateConfig makeTonalPulseBehaviorProfile() {
     return BehaviorGateConfig{};
@@ -99,7 +110,7 @@ void printProfileComposition(const detection::DetectionProfile& profile) {
     serialOut().print(profile.fieldStateConfig.patternWindowMs);
 }
 
-void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
+static void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     serialOut().println("RB PROFILE detail");
     serialOut().print("  kind=");
     serialOut().println(detection::detectionProfileName(profile.kind));
@@ -109,24 +120,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     serialOut().println(detection::inspectionPlanName(profile.inspectionPlan));
     if (profile.detectorSelection == detection::DetectorSelection::ScalarTransient) {
         serialOut().print("  scalarTransient.observedStream=");
-        switch (profile.scalarTransient.observedStream) {
-            case detection::FeatureStreamId::AmpMagnitude:
-                serialOut().println("AmpMagnitude");
-                break;
-            case detection::FeatureStreamId::AmpEnvelope:
-                serialOut().println("AmpEnvelope");
-                break;
-            case detection::FeatureStreamId::FrequencyTarget:
-                serialOut().println("FrequencyTarget");
-                break;
-            case detection::FeatureStreamId::FrequencyContrast:
-                serialOut().println("FrequencyContrast");
-                break;
-            case detection::FeatureStreamId::Unknown:
-            default:
-                serialOut().println("Unknown");
-                break;
-        }
+        serialOut().println(streamDisplayName(profile.scalarTransient.observedStream));
         serialOut().print("  scalarTransient.onsetDetectionThreshold=");
         serialOut().println(profile.scalarTransient.onsetDetectionThreshold, 1);
         serialOut().print("  scalarTransient.onsetReleaseThreshold=");
@@ -152,24 +146,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         serialOut().print(detection::inspectionTargetName(module.target));
         if (module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength) {
             serialOut().print(" stream=");
-            switch (module.magnitude.stream) {
-                case detection::FeatureStreamId::AmpMagnitude:
-                    serialOut().print("AmpMagnitude");
-                    break;
-                case detection::FeatureStreamId::AmpEnvelope:
-                    serialOut().print("AmpEnvelope");
-                    break;
-                case detection::FeatureStreamId::FrequencyTarget:
-                    serialOut().print("FrequencyTarget");
-                    break;
-                case detection::FeatureStreamId::FrequencyContrast:
-                    serialOut().print("FrequencyContrast");
-                    break;
-                case detection::FeatureStreamId::Unknown:
-                default:
-                    serialOut().print("Unknown");
-                    break;
-            }
+            serialOut().print(streamDisplayName(module.magnitude.stream));
             serialOut().print(" windowPreMs=");
             serialOut().print(module.magnitude.windowPreMs);
             serialOut().print(" windowPostMs=");
@@ -201,7 +178,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     serialOut().println(profile.fieldStateConfig.busyActivityThreshold, 2);
 }
 
-void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
+static void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
     serialOut().println("RB behavior");
     serialOut().print("  idleEnabled=");
     serialOut().println(behavior.config().idleEnabled ? 1 : 0);
@@ -223,7 +200,7 @@ void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
     serialOut().println(behavior.config().idleBlockedAfterOwnEmitMs);
 }
 
-void printNodeBuildIdentity() {
+static void printNodeBuildIdentity() {
     char nodeIdBuffer[17];
     const uint64_t nodeId = ESP.getEfuseMac();
     snprintf(nodeIdBuffer, sizeof(nodeIdBuffer), "0x%012llX", static_cast<unsigned long long>(nodeId));
@@ -233,7 +210,7 @@ void printNodeBuildIdentity() {
     serialOut().println(nodeIdBuffer);
 }
 
-const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool patternDetected, bool selfChirpSuppressed) {
+static const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool patternDetected, bool selfChirpSuppressed) {
     if (selfChirpSuppressed) {
         return "self_ignore";
     }
@@ -647,7 +624,7 @@ void Node::update() {
 
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const uint64_t sampleTimeUs64 = block.approxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
+            const uint64_t sampleTimeUs64 = block.approxStartUs64 + timebase::sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSamplePacket audioSamplePacket;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket, block.overflowBeforeBlock);
             const bool ownEmitSuppressed = _behavior.ownEmitDetectionSuppressed(audioSamplePacket.timeMs);

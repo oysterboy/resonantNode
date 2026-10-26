@@ -13,25 +13,9 @@ src/modes/resonant/; nothing outside includes it.
 */
 namespace node_internal {
 
-// Case-insensitive prefix match that ends on a token boundary: the next
-// character is the end or a space, unless the prefix itself ends in '='
-// (key=value). A plain prefix match ran "RB rebase forced" and
-// "RB rebasefoo" as rebases (issue #31 R2-19).
+// The Node's commands match on a token boundary (text_parse::startsWithWordIgnoreCase).
 inline bool startsWithTokenIgnoreCase(const char* line, const char* token) {
-    char last = '\0';
-    while (*token != '\0') {
-        if (*line == '\0') {
-            return false;
-        }
-        if (toupper(static_cast<unsigned char>(*line)) != toupper(static_cast<unsigned char>(*token))) {
-            return false;
-        }
-        last = *token;
-        ++line;
-        ++token;
-    }
-
-    return last == '=' || *line == '\0' || *line == ' ';
+    return text_parse::startsWithWordIgnoreCase(line, token);
 }
 
 inline bool equalsIgnoreCase(const char* a, const char* b) {

@@ -105,6 +105,19 @@ void test_parse_finite_float_refuses_junk_and_nan() {
     TEST_ASSERT_EQUAL_FLOAT(2000.0f, f);
 }
 
+// Review B7 (step 11f): the three prefix kinds, defined once, with their different meanings pinned.
+void test_prefix_kinds() {
+    TEST_ASSERT_TRUE(text_parse::startsWith("PULSES 5", "PULSES"));
+    TEST_ASSERT_FALSE(text_parse::startsWith("pulses 5", "PULSES"));  // case-sensitive: the Emitter's link
+    TEST_ASSERT_TRUE(text_parse::startsWithIgnoreCase("seq START x", "SEQ start"));
+    TEST_ASSERT_TRUE(text_parse::startsWithIgnoreCase("SEQ startfoo", "SEQ start"));  // plain prefix: the Analyzer
+    TEST_ASSERT_FALSE(text_parse::startsWithIgnoreCase("SE", "SEQ"));
+    TEST_ASSERT_TRUE(text_parse::startsWithWordIgnoreCase("rb rebase", "RB rebase"));
+    TEST_ASSERT_TRUE(text_parse::startsWithWordIgnoreCase("RB rebase force", "RB rebase"));
+    TEST_ASSERT_FALSE(text_parse::startsWithWordIgnoreCase("RB rebasefoo", "RB rebase"));  // boundary: the Node
+    TEST_ASSERT_TRUE(text_parse::startsWithWordIgnoreCase("name=Tonal", "name="));  // '=' ends a key
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_reader_ends_a_line_at_newline_and_drops_cr_and_junk);
@@ -114,5 +127,6 @@ int main(int, char**) {
     RUN_TEST(test_parse_unsigned_takes_whole_numbers_only);
     RUN_TEST(test_token_value_and_rest);
     RUN_TEST(test_parse_finite_float_refuses_junk_and_nan);
+    RUN_TEST(test_prefix_kinds);
     return UNITY_END();
 }

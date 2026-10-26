@@ -37,7 +37,7 @@ File structure:
 - sequence orchestration
 - canonical reporting and summary output
 */
-constexpr int kMaxSamplesPerLoop = 512;
+static constexpr int kMaxSamplesPerLoop = 512;
 // The loud-end limits below were written for 16-bit samples; the canonical PCM
 // is 24-bit, so they are scaled by 256 (otherwise any tone above ~0.4 % of full
 // scale read as "clipped", lab note 2026-10-15). The quiet-end limits (zero-ish,
@@ -82,15 +82,8 @@ float sequenceSampleDumpInputValue(detection::DetectorSelection detectorSelectio
 }
 
 
-uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
-    if (sampleRateHz == 0) {
-        return 0;
-    }
 
-    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
-}
-
-void printHeapStatus(const char* when) {
+static void printHeapStatus(const char* when) {
     const uint32_t free8 = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_8BIT));
     const uint32_t largest8 = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
     const uint32_t min8 = static_cast<uint32_t>(heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT));
@@ -113,7 +106,7 @@ void printHeapStatus(const char* when) {
     serialOut().println(minInternal);
 }
 
-void printRuntimeSize() {
+static void printRuntimeSize() {
     serialOut().println("MEMORY_INVENTORY");
     serialOut().print("RUNTIME_SIZE detection_runtime_bytes=");
     serialOut().println(static_cast<unsigned long>(sizeof(detection::DetectionRuntime)));
@@ -412,7 +405,7 @@ bool AnalyzerApp::shouldPrintSequenceDetail(const AnalyzerReport& report) const 
            sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
 }
 
-const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
+static const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
     switch (mode) {
         case AnalyzerApp::SeqOutputMode::Quiet:
             return "quiet";
@@ -691,7 +684,7 @@ void AnalyzerApp::update() {
             diagnostics.rawLastBlockHash = blockHash;
         }
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const uint64_t sampleTimeUs64 = block.approxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
+            const uint64_t sampleTimeUs64 = block.approxStartUs64 + timebase::sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSamplePacket audioSamplePacket;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket, block.overflowBeforeBlock);
             updateSequenceAudioHealth(audioSamplePacket);
@@ -804,7 +797,7 @@ const char* AnalyzerApp::activeAnalyzerProfileName() const {
     return detection::detectionProfileName(_sequenceTest.profileKind);
 }
 
-const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
+static const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
         case detection::DetectionProfileKind::AmpExperimental:
             return "amp_experimental";
@@ -814,7 +807,7 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
     }
 }
 
-const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profileKind) {
+static const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
         case detection::DetectionProfileKind::AmpExperimental:
             return "amp experimental profile view";

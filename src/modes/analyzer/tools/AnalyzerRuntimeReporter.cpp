@@ -1,4 +1,5 @@
 #include "AnalyzerRuntimeReporter.h"
+#include "../../../app/FreqStatusFields.h"
 
 #include "../AnalyzerModeApp.h"
 
@@ -66,36 +67,9 @@ void AnalyzerApp::printDetectionParameters() const {
     serialOut().println(scalar.maxGapMs);
 
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
-    const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
-    const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
-    const unsigned long ageSamples = _freqBandStream.lastPacketAgeSamples();
-    const float windowMs = sampleRateHz > 0
-        ? (static_cast<float>(windowSizeSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
-        : 0.0f;
-    const float updateStepMs = sampleRateHz > 0
-        ? (static_cast<float>(frequencyUpdateEverySamples) * 1000.0f) / static_cast<float>(sampleRateHz)
-        : 0.0f;
-    const float ageMs = sampleRateHz > 0
-        ? (static_cast<float>(ageSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
-        : 0.0f;
-
     serialOut().print("FREQBAND runtime:");
-    serialOut().print(" freq.window_samples=");
-    serialOut().print(windowSizeSamples);
-    serialOut().print(" freq.window_ms=");
-    serialOut().print(windowMs, 2);
-    serialOut().print(" freq.update_every_samples=");
-    serialOut().print(frequencyUpdateEverySamples);
-    serialOut().print(" freq.update_period_ms=");
-    serialOut().print(updateStepMs, 3);
-    serialOut().print(" freq.target_hz=");
-    serialOut().print(_freqBandStream.targetFrequencyHz());
-    serialOut().print(" freq.produced_fresh_packet=");
-    serialOut().print(_freqBandStream.producedFreshPacketOnLastObserve() ? 1 : 0);
-    serialOut().print(" freq.packet_age_samples=");
-    serialOut().print(ageSamples);
-    serialOut().print(" freq.packet_age_ms=");
-    serialOut().println(ageMs, 3);
+    printFreqStatusFields(serialOut(), _freqBandStream, sampleRateHz);
+    serialOut().println();
 }
 
 void AnalyzerApp::printAudioSourceSummary() const {

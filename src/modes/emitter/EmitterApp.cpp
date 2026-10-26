@@ -16,7 +16,7 @@
 
 namespace {
 bool startsWithToken(const char* line, const char* token) {
-    return strncmp(line, token, strlen(token)) == 0;
+    return text_parse::startsWith(line, token);
 }
 
 const char* findValue(const char* token) {

@@ -62,6 +62,40 @@ inline const char* rest(const char* line, const char* verb) {
     return p;
 }
 
+// Prefix matches. Three kinds exist on purpose, with different meanings (review B7, step 11f: they were
+// defined in three places under the same names):
+// - startsWith: plain prefix, case-sensitive (the Emitter's link commands).
+// - startsWithIgnoreCase: plain prefix, any case (the Analyzer's console).
+// - startsWithWordIgnoreCase: the prefix ends on a token boundary, the end or a space, unless it ends
+//   in '=' (key=value); "RB rebasefoo" is not "RB rebase" (the Node's console, issue #31 R2-19).
+inline bool startsWith(const char* line, const char* prefix) {
+    return strncmp(line, prefix, strlen(prefix)) == 0;
+}
+
+inline bool startsWithIgnoreCase(const char* line, const char* prefix) {
+    while (*prefix != '\0') {
+        if (*line == '\0' || toupper(static_cast<unsigned char>(*line)) != toupper(static_cast<unsigned char>(*prefix))) {
+            return false;
+        }
+        ++line;
+        ++prefix;
+    }
+    return true;
+}
+
+inline bool startsWithWordIgnoreCase(const char* line, const char* prefix) {
+    char last = '\0';
+    while (*prefix != '\0') {
+        if (*line == '\0' || toupper(static_cast<unsigned char>(*line)) != toupper(static_cast<unsigned char>(*prefix))) {
+            return false;
+        }
+        last = *prefix;
+        ++line;
+        ++prefix;
+    }
+    return last == '=' || *line == '\0' || *line == ' ';
+}
+
 // Whole-string match, case-insensitive (command verbs).
 inline bool equalsIgnoreCase(const char* a, const char* b) {
     while (*a != '\0' && *b != '\0') {

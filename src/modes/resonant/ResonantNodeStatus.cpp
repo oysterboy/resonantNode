@@ -19,6 +19,7 @@
 #include "../../app/ParamIds.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
+#include "../../app/FreqStatusFields.h"
 
 void Node::printSignalConfig() {
     uint32_t hz[8];
@@ -112,34 +113,7 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(" hop_gap_ms=");
     serialOut().print(_hopGapMs);
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
-    const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
-    const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
-    const unsigned long ageSamples = _freqBandStream.lastPacketAgeSamples();
-    const float windowMs = sampleRateHz > 0
-        ? (static_cast<float>(windowSizeSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
-        : 0.0f;
-    const float updateStepMs = sampleRateHz > 0
-        ? (static_cast<float>(frequencyUpdateEverySamples) * 1000.0f) / static_cast<float>(sampleRateHz)
-        : 0.0f;
-    const float ageMs = sampleRateHz > 0
-        ? (static_cast<float>(ageSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
-        : 0.0f;
-    serialOut().print(" freq.window_samples=");
-    serialOut().print(windowSizeSamples);
-    serialOut().print(" freq.window_ms=");
-    serialOut().print(windowMs, 2);
-    serialOut().print(" freq.update_every_samples=");
-    serialOut().print(frequencyUpdateEverySamples);
-    serialOut().print(" freq.update_period_ms=");
-    serialOut().print(updateStepMs, 3);
-    serialOut().print(" freq.target_hz=");
-    serialOut().print(_freqBandStream.targetFrequencyHz());
-    serialOut().print(" freq.produced_fresh_packet=");
-    serialOut().print(_freqBandStream.producedFreshPacketOnLastObserve() ? 1 : 0);
-    serialOut().print(" freq.packet_age_samples=");
-    serialOut().print(ageSamples);
-    serialOut().print(" freq.packet_age_ms=");
-    serialOut().print(ageMs, 3);
+    printFreqStatusFields(serialOut(), _freqBandStream, sampleRateHz);
     const AudioSourceStats& audioStats = _audioSource.stats();
     serialOut().print(" i2s.samples_read=");
     serialOut().print(static_cast<unsigned long>(audioStats.totalSamplesRead));

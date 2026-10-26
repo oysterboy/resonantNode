@@ -44,13 +44,6 @@ int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
 static_assert(AUDIO_I2S_BITS_PER_SAMPLE == 32 || AUDIO_I2S_BITS_PER_SAMPLE == 24,
               "decodePcmSample handles 32- and 24-bit slots only");
 
-uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
-    if (sampleRateHz == 0) {
-        return 0;
-    }
-
-    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
-}
 
 } // namespace
 
@@ -199,7 +192,7 @@ bool AudioSourceI2S::readSample(int& sample, uint64_t& sampleTimeUs64) {
 
     const size_t index = _blockCursor++;
     sample = static_cast<int>(_blockSamples[index]);
-    sampleTimeUs64 = _blockApproxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(index), static_cast<uint32_t>(_sampleRate));
+    sampleTimeUs64 = _blockApproxStartUs64 + timebase::sampleOffsetUs(static_cast<uint32_t>(index), static_cast<uint32_t>(_sampleRate));
     return true;
 }
 
@@ -267,7 +260,7 @@ bool AudioSourceI2S::readBlock(AudioBlock& block) {
     block.samples = _blockSamples.get() + _blockCursor;
     block.sampleCount = static_cast<uint16_t>(_blockCount - _blockCursor);
     block.startSampleIndex = _blockStartSampleIndex + _blockCursor;
-    block.approxStartUs64 = _blockApproxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
+    block.approxStartUs64 = _blockApproxStartUs64 + timebase::sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
     // readBlock hands over the rest of the block in one go, so the flag is
     // delivered once and cleared.
     block.overflowBeforeBlock = _blockOverflowBeforeBlock;

@@ -1225,6 +1225,7 @@ the previous gate open unless the step says it can run in parallel.
    D. Node, with A7's next cut: D2.4 the boot baseline runs (decisions/2026-10-26-node-boot-warmup-runs.md), D2.5
       RB debug dropped (decisions/2026-10-26-drop-rb-debug.md), D2.9 Behavior's busy mirror, D2.10 one line bound,
       D1.8 SELFTEST value parsing. Gate: Node smoke and SELFTEST on the bench, boot timing recorded.
+      Proposed shape of the cut and how the later items land on it: docs/research/node-structure.md.
    Small ones (D1.9, D2.11) go with whichever batch touches their files.
    Progress 2026-10-26 (host gate each: every env, host suites, T2h byte-identical, replay Null == diag): A done
    (64535d3 tests, 074c401 docs; left: the pcm RAW_BEGIN fields line, stale pointers in platformio.ini /

@@ -167,6 +167,7 @@ them so); delete the detector/behavior member defaults by holding the config str
 
 ### A7. The Node split is a file split, not a decomposition (medium; NODE-004 says so)
 
+-> worked out further in docs/research/node-structure.md (classes, files, the later roadmap's seams), 2026-10-27
 -> open (NODE-004). As described: 35 members plus `SelfTestState` in the header, the baseline machine run by hand in `ResonantNodeCommands.cpp:92-94`, reply / join state in file-scope globals `ResonantNodeNet.cpp:59-70` never reset by `begin()`, `setTee` paired by hand in four places, `makeTonalPulseBehaviorProfile()` still `return BehaviorGateConfig{}`. New on top: the `Boot` state is unreachable (D2.4), 2026-10-26
 
 - All 35 data members plus the 25-field `SelfTestState` body stay in `ResonantNodeApp.h` (190-293, 116-156);

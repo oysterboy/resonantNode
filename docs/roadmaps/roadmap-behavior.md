@@ -79,6 +79,7 @@ profile and a session's values are in its log header
 ### BEH-003 - behavior input extraction
 
 Status: DEFERRED
+Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
 
 ```text
 Introduce BehaviorInput / BehaviorContext.
@@ -89,6 +90,7 @@ Preserve current behavior decisions exactly.
 ### BEH-004 - later behavior architecture
 
 Status: DEFERRED
+Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
 
 ```text
 BehaviorDecision object.

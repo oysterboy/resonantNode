@@ -83,6 +83,7 @@ Output executes request and validates physical limits.
 ### OUT-004 - OutputProfile
 
 Status: DEFERRED
+Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
 
 ```text
 Add OutputProfile / ChirpProfile only after behavior variations prove needed.

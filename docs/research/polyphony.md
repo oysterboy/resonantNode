@@ -98,5 +98,27 @@ in the band, which nobody has measured.
 - **In-band chords are already happening.** Part A's chord rounds are the network playing in-band chords, so A's
   host mix covers this case too. If a deliberate in-band chord comes up later, A's data says what it costs.
 
+### Does taking the mic out free it? (owner question, 2026-10-27)
+
+Owner: "with the MEMS out, we could go polyphonic, right?" Partly. The I2S MEMS mic is not what limits a chord:
+
+- **The emitting Node's own mic is already out while it plays.** It ignores its mic for the whole emission plus
+  60 ms (decisions/2026-10-09-own-emit-suppression-whole-chirp.md). Its own chord never reaches its own detection.
+- **The limit is the other Nodes' ears.** Every listener watches 2950-3950 Hz. In-band voices in adjacent bins fail
+  their contrast gate, so the call is lost. In-band voices two or more bins apart can pass as a network signal, so
+  the chord may start answers. A mic-less Node changes neither.
+- **So the rule is where the voices sit, not whether the emitter listens.** Outside the band, any Node, with or
+  without a mic, can be as polyphonic as the level budget allows; the open check is leak into the band (OUT-006's
+  first item). Inside the band, voices are network signal and follow the detection rules above.
+- **A Node with no mic is a pure sound source**, as the Emitter mode already is. It can play free chords outside
+  the band, but it cannot answer, so it stands outside call and answer.
+
+Two limits stay with the mic in or out:
+
+- **Level.** Every voice shares the amp's full scale. A loud chord lowers the detection voice unless the extra
+  voices are kept softer than it.
+- **Renderer.** `I2sToneOutput` renders one sine today. Summing voices is a renderer change on the output path,
+  independent of the mic, and is not built.
+
 Open for the owner: is a chord inside one chirp an aesthetic wish (then OUT-006 is the path), or does it carry
 meaning for the network, such as identity or a different message (then it needs a detection design first)?

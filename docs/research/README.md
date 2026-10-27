@@ -64,7 +64,7 @@ frequency-drift-detection.md   drift: Goertzel bank vs sliding DFT vs FFT
                                decisions/2026-10-15-signal-variation-inside-a-
                                shared-band.md, DET-013..015, OUT-005/006)
 frequency-tuning-sweep.md      the network band swept from 1000 Hz: hits vs
-                               noise acceptance per position (queued: step 12)
+                               noise acceptance per position (promoted: step 11h)
 tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; partly landed, not reviewed)
 unproven-assumptions-audit.md  where code and roadmap rest on unmeasured

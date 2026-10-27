@@ -2,8 +2,8 @@
 
 ```text
 Status:  exploring (2026-10-27)
-Became:  queued as the first step of the next phase, step 12 (owner 2026-10-27; roadmap-0-steps.md, milestone
-         paragraph), after 11c, 11g and 11d
+Became:  step 11h (owner 2026-10-27; roadmap-0-steps.md), after 11c and before 11g and 11d; first queued
+         as step 12 the same morning
 Lab:     bench/sessions/2026-10-26-soak24-shape-b (the band as shipped, 24 h); E002 (shape over the corpus)
 ```
 

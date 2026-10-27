@@ -31,13 +31,13 @@ one long run covers it: 10d (persistence, done), 10e (loose ends), 10f (OUT-002/
 5h's measurement cells run before it too, on the bench. DET-015 (shape) waits until after 10c. Block 2 is then
 both 10c's second block and the "long run on that build".
 Milestone 2026-10-26 (owner, decisions/2026-10-26-milestone-installation-ready-node.md): this phase closes as the
-"installation-ready node" milestone when 11c's soak passes, 11g's remaining batches land, and 11d OTA firmware
+"installation-ready node" milestone when 11c's soak passes, 11h's sweep has its decision, 11g's remaining batches
+land, and 11d OTA firmware
 lands (OTA is in the gate). At the close this file is archived as it stands and a fresh roadmap-0-steps.md opens
 the next phase, numbering on from 12; everything still open (5h, 8a, 9, the step 11 bucket, the unsequenced list)
 is triaged into that sequence then, not before.
-Queued first for the next phase (owner 2026-10-27), after 11c, 11g and 11d: step 12, a frequency tuning sweep
-from 1000 Hz, to answer "how bad is detection / noise acceptance really" (hits and false accepts per band
-position; docs/research/frequency-tuning-sweep.md, issue #69).
+The frequency tuning sweep is part of step 11, as 11h, run after 11c and before 11g and 11d (owner 2026-10-27;
+first queued as step 12 of the next phase the same morning).
 
 Previous phase (closed 2026-10-22 with step 6): five D-AMP nodes with the
 same firmware in one room, hearing and answering each other, with a
@@ -53,6 +53,8 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
 11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
+Status update 2026-10-27 (owner): the frequency sweep is step 11h, run before 11g and 11d. Order now
+11c -> 11h -> 11g -> 11d.
 Status update 2026-10-26, late night (owner): order 11c -> 11g -> 11d. 11c's soak runs to 10-27 13:39; 11g's A, B1,
 B2 are done on the host (nothing flashed during the soak); after the soak: flash, B2's bench smoke, then 11g C
 (Analyzer, with A8) and D (Node, with A7); then 11d (OTA firmware, needs the owner's WiFi credentials).
@@ -1123,7 +1125,7 @@ the previous gate open unless the step says it can run in parallel.
    distant church bells ring on the hour and the quarters; the checks avoid the chimes and sample three times as
    densely): Nodes silenced, Analyzer hop / chirp SEQ and RAW hop captures for per-bin levels.
 
-11d. [TODO, after 11g] OTA firmware (FWOTA). (issue #61)
+11d. [TODO, after 11h and 11g] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the
    repo) and a two-slot partition table (a first USB flash of every board). Gate: an image flashed over WiFi to
    every board, a failed or interrupted update falls back to the old image.
@@ -1170,7 +1172,23 @@ the previous gate open unless the step says it can run in parallel.
    (09:05-09:16, 118-127 ms), with this morning's build as well: the room changed, not the firmware; the third
    unexplained room shift in two days (10-24 10:50, E2 <- E5 on 10-23 ~20:00).
 
-11g. [RUNNING 2026-10-26] Review Part D, the rest. (issue #67)
+11h. [NEXT, after 11c] Frequency tuning sweep from 1000 Hz: hits vs noise acceptance. (issue #69)
+   Owner 2026-10-27: "How bad is detection / noise acceptance really." The network band
+   (detection.band_low_hz / band_high_hz; the bins, the hop train and the shape rule follow it) swept from 1000 Hz
+   in 500 Hz steps, 5 bins wide, then 250 Hz steps around the good and the bad positions. Per position: the
+   Analyzer's hop10 and a plain chirp on the band (must be rejected), RAW hop captures for per-bin levels, and the
+   silent Nodes listening while bench_audio.wav plays from the lab PC (false accepts per hour); on the host, the
+   noise replayed per position and gain. Thresholds stay as shipped; tuning follows the data as its own pass.
+   Design and first host pass: docs/research/frequency-tuning-sweep.md. Tool: tools/bench/bandsweep.py (host,
+   bench, --dry-run). Runs on the build 11g's B1 / B2 left on main (flashed after the soak; the shipped band's
+   hop10 doubles as B2's smoke). Before the bench sweep: one room recording of bench_audio.wav at installation
+   level through a Node's mic, to calibrate the host gains.
+   Gate: positions.csv and noise.csv for every position in a bench session, the host table beside it, an
+   experiment note (E003), and a decision whether the band moves.
+   First host pass 2026-10-27 (dry file, gains 16 / 64 / 256): 9 accepts out of ~5,900 noise occurrences over 12
+   positions, 7 of them at 1000-3000 Hz, none above 5500 Hz.
+
+11g. [RUNNING 2026-10-26, bench part after 11h] Review Part D, the rest. (issue #67)
    Owner 2026-10-26: sequence the review's remaining Part D findings
    (docs/research/architecture-readability-review-2026-10-25.md, Part D; D1.1, D1.3, D1.7, D4.1, D4.2 done in 5fcd3fc
    before the 11c restart). Four batches; A and the host part of B run while 11c's soak holds the boards (no flash

@@ -21,84 +21,84 @@ const char* detectorInputName(detection::DetectorSelection selection, detection:
 } // namespace
 
 bool AnalyzerApp::sequenceSampleDumpSelected(unsigned long trialNumber) const {
-    if (!_sequenceTest.sampleDumpEnabled) {
+    if (!_sequenceTest.config.sampleDumpEnabled) {
         return false;
     }
 
-    const bool firstSelected = _sequenceTest.sampleDumpFirstTrials > 0 && trialNumber <= _sequenceTest.sampleDumpFirstTrials;
-    const bool everySelected = _sequenceTest.sampleDumpEveryNth > 0 && trialNumber % _sequenceTest.sampleDumpEveryNth == 0;
+    const bool firstSelected = _sequenceTest.config.sampleDumpFirstTrials > 0 && trialNumber <= _sequenceTest.config.sampleDumpFirstTrials;
+    const bool everySelected = _sequenceTest.config.sampleDumpEveryNth > 0 && trialNumber % _sequenceTest.config.sampleDumpEveryNth == 0;
     return firstSelected || everySelected;
 }
 
 void AnalyzerApp::clearSequenceSampleDump() {
-    _sequenceTest.sampleDumpSelectedForTrial = false;
-    _sequenceTest.sampleDumpCapturing = false;
-    _sequenceTest.sampleDumpCurrentTrial = 0;
-    _sequenceTest.sampleDumpTriggerMs = 0;
-    _sequenceTest.sampleDumpTriggerSampleMs = 0;
-    _sequenceTest.sampleDumpCaptureStartMs = 0;
-    _sequenceTest.sampleDumpCaptureEndMs = 0;
-    _sequenceTest.sampleDumpNextEmitMs = 0;
-    _sequenceTest.sampleDumpDetectorSelection = detection::DetectorSelection::ScalarTransient;
-    _sequenceTest.sampleDumpObservedStream = detection::FeatureStreamId::Unknown;
-    _sequenceTest.sampleRowCount = 0;
-    _sequenceTest.sampleHistoryStart = 0;
-    _sequenceTest.sampleHistoryCount = 0;
-    _sequenceTest.sampleHistoryLastMs = 0;
-    _sequenceTest.sampleHistoryHasPending = false;
-    _sequenceTest.sampleHistoryPending = {};
+    _sequenceTest.sampleDump.selectedForTrial = false;
+    _sequenceTest.sampleDump.capturing = false;
+    _sequenceTest.sampleDump.trialNumber = 0;
+    _sequenceTest.sampleDump.triggerMs = 0;
+    _sequenceTest.sampleDump.triggerSampleMs = 0;
+    _sequenceTest.sampleDump.captureStartMs = 0;
+    _sequenceTest.sampleDump.captureEndMs = 0;
+    _sequenceTest.sampleDump.nextEmitMs = 0;
+    _sequenceTest.sampleDump.detectorSelection = detection::DetectorSelection::ScalarTransient;
+    _sequenceTest.sampleDump.observedStream = detection::FeatureStreamId::Unknown;
+    _sequenceTest.sampleDump.rowCount = 0;
+    _sequenceTest.sampleDump.historyStart = 0;
+    _sequenceTest.sampleDump.historyCount = 0;
+    _sequenceTest.sampleDump.historyLastMs = 0;
+    _sequenceTest.sampleDump.historyHasPending = false;
+    _sequenceTest.sampleDump.historyPending = {};
 }
 
 void AnalyzerApp::flushSequenceSampleHistory(unsigned long currentSampleMs) {
-    if (!_sequenceTest.sampleHistoryHasPending) {
+    if (!_sequenceTest.sampleDump.historyHasPending) {
         return;
     }
-    if (timing::atOrAfter(_sequenceTest.sampleHistoryPending.sampleMs, currentSampleMs)) {
+    if (timing::atOrAfter(_sequenceTest.sampleDump.historyPending.sampleMs, currentSampleMs)) {
         return;
     }
 
-    const DetectorInputSample committed = _sequenceTest.sampleHistoryPending;
-    _sequenceTest.sampleHistoryHasPending = false;
-    _sequenceTest.sampleHistoryPending = {};
+    const DetectorInputSample committed = _sequenceTest.sampleDump.historyPending;
+    _sequenceTest.sampleDump.historyHasPending = false;
+    _sequenceTest.sampleDump.historyPending = {};
 
-    if (_sequenceTest.sampleHistoryCount < SequenceTest::kMaxSampleHistory) {
-        const size_t index = (_sequenceTest.sampleHistoryStart + _sequenceTest.sampleHistoryCount) % SequenceTest::kMaxSampleHistory;
-        _sequenceTest.sampleHistory[index] = committed;
-        ++_sequenceTest.sampleHistoryCount;
+    if (_sequenceTest.sampleDump.historyCount < SampleDumpState::kMaxSampleHistory) {
+        const size_t index = (_sequenceTest.sampleDump.historyStart + _sequenceTest.sampleDump.historyCount) % SampleDumpState::kMaxSampleHistory;
+        _sequenceTest.sampleDump.history[index] = committed;
+        ++_sequenceTest.sampleDump.historyCount;
     } else {
-        _sequenceTest.sampleHistory[_sequenceTest.sampleHistoryStart] = committed;
-        _sequenceTest.sampleHistoryStart = (_sequenceTest.sampleHistoryStart + 1) % SequenceTest::kMaxSampleHistory;
+        _sequenceTest.sampleDump.history[_sequenceTest.sampleDump.historyStart] = committed;
+        _sequenceTest.sampleDump.historyStart = (_sequenceTest.sampleDump.historyStart + 1) % SampleDumpState::kMaxSampleHistory;
     }
 
-    _sequenceTest.sampleHistoryLastMs = committed.sampleMs;
+    _sequenceTest.sampleDump.historyLastMs = committed.sampleMs;
 
-    if (!_sequenceTest.sampleDumpCapturing
-        || !_sequenceTest.sampleDumpSelectedForTrial
-        || _sequenceTest.sampleDumpCurrentTrial != _sequenceTest.currentTrial) {
+    if (!_sequenceTest.sampleDump.capturing
+        || !_sequenceTest.sampleDump.selectedForTrial
+        || _sequenceTest.sampleDump.trialNumber != _sequenceTest.trial.number) {
         return;
     }
 
-    if (!timing::inWindow(committed.sampleMs, _sequenceTest.sampleDumpCaptureStartMs, _sequenceTest.sampleDumpCaptureEndMs)) {
+    if (!timing::inWindow(committed.sampleMs, _sequenceTest.sampleDump.captureStartMs, _sequenceTest.sampleDump.captureEndMs)) {
         return;
     }
-    if (timing::beforeDeadline(committed.sampleMs, _sequenceTest.sampleDumpNextEmitMs)) {
+    if (timing::beforeDeadline(committed.sampleMs, _sequenceTest.sampleDump.nextEmitMs)) {
         return;
     }
 
-    if (_sequenceTest.sampleRowCount >= SequenceTest::kMaxSampleRows) {
-        if (!_sequenceTest.sampleDumpWarned) {
+    if (_sequenceTest.sampleDump.rowCount >= SampleDumpState::kMaxSampleRows) {
+        if (!_sequenceTest.sampleDump.warned) {
             serialOut().print("SAMPLES_WARN reason=too_many_samples requested=");
-            serialOut().print(_sequenceTest.sampleRowCount + 1UL);
+            serialOut().print(_sequenceTest.sampleDump.rowCount + 1UL);
             serialOut().print(" max_allowed=");
-            serialOut().println(SequenceTest::kMaxSampleRows);
-            _sequenceTest.sampleDumpWarned = true;
+            serialOut().println(SampleDumpState::kMaxSampleRows);
+            _sequenceTest.sampleDump.warned = true;
         }
-        _sequenceTest.sampleDumpCapturing = false;
+        _sequenceTest.sampleDump.capturing = false;
         return;
     }
 
-    _sequenceTest.sampleRows[_sequenceTest.sampleRowCount++] = committed;
-    _sequenceTest.sampleDumpNextEmitMs = committed.sampleMs + _sequenceTest.sampleDumpStepMs;
+    _sequenceTest.sampleDump.rows[_sequenceTest.sampleDump.rowCount++] = committed;
+    _sequenceTest.sampleDump.nextEmitMs = committed.sampleMs + _sequenceTest.config.sampleDumpStepMs;
 }
 
 void AnalyzerApp::recordSequenceDetectorInputSample(unsigned long sampleMs, float value) {
@@ -106,61 +106,61 @@ void AnalyzerApp::recordSequenceDetectorInputSample(unsigned long sampleMs, floa
     sample.sampleMs = sampleMs;
     sample.value = value;
 
-    if (!_sequenceTest.sampleHistoryHasPending) {
-        _sequenceTest.sampleHistoryPending = sample;
-        _sequenceTest.sampleHistoryHasPending = true;
+    if (!_sequenceTest.sampleDump.historyHasPending) {
+        _sequenceTest.sampleDump.historyPending = sample;
+        _sequenceTest.sampleDump.historyHasPending = true;
         return;
     }
 
-    if (sampleMs == _sequenceTest.sampleHistoryPending.sampleMs) {
-        _sequenceTest.sampleHistoryPending = sample;
+    if (sampleMs == _sequenceTest.sampleDump.historyPending.sampleMs) {
+        _sequenceTest.sampleDump.historyPending = sample;
         return;
     }
 
     flushSequenceSampleHistory(sampleMs);
-    _sequenceTest.sampleHistoryPending = sample;
-    _sequenceTest.sampleHistoryHasPending = true;
+    _sequenceTest.sampleDump.historyPending = sample;
+    _sequenceTest.sampleDump.historyHasPending = true;
 }
 
 void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
-    _sequenceTest.sampleDumpSelectedForTrial = sequenceSampleDumpSelected(trialNumber);
-    _sequenceTest.sampleDumpCurrentTrial = trialNumber;
-    _sequenceTest.sampleDumpCapturing = _sequenceTest.sampleDumpSelectedForTrial;
-    _sequenceTest.sampleDumpTriggerMs = _sequenceTest.currentTrialStartMs;
-    _sequenceTest.sampleDumpTriggerSampleMs = timebase::msFromUs64(_audioSignal.sampleTimeUs64());
-    _sequenceTest.sampleDumpCaptureStartMs = _sequenceTest.sampleDumpTriggerSampleMs > _sequenceTest.sampleDumpLeadMs
-        ? _sequenceTest.sampleDumpTriggerSampleMs - _sequenceTest.sampleDumpLeadMs
+    _sequenceTest.sampleDump.selectedForTrial = sequenceSampleDumpSelected(trialNumber);
+    _sequenceTest.sampleDump.trialNumber = trialNumber;
+    _sequenceTest.sampleDump.capturing = _sequenceTest.sampleDump.selectedForTrial;
+    _sequenceTest.sampleDump.triggerMs = _sequenceTest.trial.startMs;
+    _sequenceTest.sampleDump.triggerSampleMs = timebase::msFromUs64(_audioSignal.sampleTimeUs64());
+    _sequenceTest.sampleDump.captureStartMs = _sequenceTest.sampleDump.triggerSampleMs > _sequenceTest.config.sampleDumpLeadMs
+        ? _sequenceTest.sampleDump.triggerSampleMs - _sequenceTest.config.sampleDumpLeadMs
         : 0;
-    _sequenceTest.sampleDumpCaptureEndMs = _sequenceTest.sampleDumpTriggerSampleMs + _sequenceTest.sampleDumpTailMs;
-    _sequenceTest.sampleDumpNextEmitMs = _sequenceTest.sampleDumpCaptureStartMs;
-    _sequenceTest.sampleRowCount = 0;
+    _sequenceTest.sampleDump.captureEndMs = _sequenceTest.sampleDump.triggerSampleMs + _sequenceTest.config.sampleDumpTailMs;
+    _sequenceTest.sampleDump.nextEmitMs = _sequenceTest.sampleDump.captureStartMs;
+    _sequenceTest.sampleDump.rowCount = 0;
 
-    flushSequenceSampleHistory(_sequenceTest.sampleDumpTriggerSampleMs + 1UL);
+    flushSequenceSampleHistory(_sequenceTest.sampleDump.triggerSampleMs + 1UL);
 
-    if (!_sequenceTest.sampleDumpCapturing) {
+    if (!_sequenceTest.sampleDump.capturing) {
         return;
     }
 
-    for (size_t i = 0; i < _sequenceTest.sampleHistoryCount; ++i) {
-        const size_t index = (_sequenceTest.sampleHistoryStart + i) % SequenceTest::kMaxSampleHistory;
-        const auto& snapshot = _sequenceTest.sampleHistory[index];
-        if (timing::beforeDeadline(snapshot.sampleMs, _sequenceTest.sampleDumpCaptureStartMs)) {
+    for (size_t i = 0; i < _sequenceTest.sampleDump.historyCount; ++i) {
+        const size_t index = (_sequenceTest.sampleDump.historyStart + i) % SampleDumpState::kMaxSampleHistory;
+        const auto& snapshot = _sequenceTest.sampleDump.history[index];
+        if (timing::beforeDeadline(snapshot.sampleMs, _sequenceTest.sampleDump.captureStartMs)) {
             continue;
         }
-        if (timing::after(snapshot.sampleMs, _sequenceTest.sampleDumpTriggerSampleMs)) {
+        if (timing::after(snapshot.sampleMs, _sequenceTest.sampleDump.triggerSampleMs)) {
             break;
         }
-        if (timing::atOrAfter(snapshot.sampleMs, _sequenceTest.sampleDumpNextEmitMs)) {
-            if (_sequenceTest.sampleRowCount < SequenceTest::kMaxSampleRows) {
-                _sequenceTest.sampleRows[_sequenceTest.sampleRowCount++] = snapshot;
-                _sequenceTest.sampleDumpNextEmitMs = snapshot.sampleMs + _sequenceTest.sampleDumpStepMs;
-            } else if (!_sequenceTest.sampleDumpWarned) {
+        if (timing::atOrAfter(snapshot.sampleMs, _sequenceTest.sampleDump.nextEmitMs)) {
+            if (_sequenceTest.sampleDump.rowCount < SampleDumpState::kMaxSampleRows) {
+                _sequenceTest.sampleDump.rows[_sequenceTest.sampleDump.rowCount++] = snapshot;
+                _sequenceTest.sampleDump.nextEmitMs = snapshot.sampleMs + _sequenceTest.config.sampleDumpStepMs;
+            } else if (!_sequenceTest.sampleDump.warned) {
                 serialOut().print("SAMPLES_WARN reason=too_many_samples requested=");
-                serialOut().print(_sequenceTest.sampleRowCount + 1UL);
+                serialOut().print(_sequenceTest.sampleDump.rowCount + 1UL);
                 serialOut().print(" max_allowed=");
-                serialOut().println(SequenceTest::kMaxSampleRows);
-                _sequenceTest.sampleDumpWarned = true;
-                _sequenceTest.sampleDumpCapturing = false;
+                serialOut().println(SampleDumpState::kMaxSampleRows);
+                _sequenceTest.sampleDump.warned = true;
+                _sequenceTest.sampleDump.capturing = false;
                 break;
             }
         }
@@ -169,32 +169,32 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
 
 // Sample-dump output is detector-input tooling, not detector truth.
 void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
-    if (!_sequenceTest.sampleDumpEnabled || !_sequenceTest.sampleDumpSelectedForTrial || _sequenceTest.sampleDumpCurrentTrial != trialNumber) {
+    if (!_sequenceTest.config.sampleDumpEnabled || !_sequenceTest.sampleDump.selectedForTrial || _sequenceTest.sampleDump.trialNumber != trialNumber) {
         return;
     }
 
     serialOut().print("SAMPLES_BEGIN trial=");
     serialOut().print(trialNumber);
     serialOut().print(" source=detector_input trigger_ms=");
-    serialOut().print(_sequenceTest.sampleDumpTriggerMs);
+    serialOut().print(_sequenceTest.sampleDump.triggerMs);
     serialOut().print(" sample_rate_ms=");
-    serialOut().print(_sequenceTest.sampleDumpStepMs);
+    serialOut().print(_sequenceTest.config.sampleDumpStepMs);
     serialOut().print(" fields=t,value");
     serialOut().println();
     serialOut().print("SAMPLES_NOTE trial=");
     serialOut().print(trialNumber);
     serialOut().print(" input=");
-    serialOut().print(detectorInputName(_sequenceTest.sampleDumpDetectorSelection, _sequenceTest.sampleDumpObservedStream));
+    serialOut().print(detectorInputName(_sequenceTest.sampleDump.detectorSelection, _sequenceTest.sampleDump.observedStream));
     serialOut().print(" rows_cap=");
-    serialOut().print(SequenceTest::kMaxSampleRows);
+    serialOut().print(SampleDumpState::kMaxSampleRows);
     serialOut().print(" sample_max_budget=");
-    serialOut().print(_sequenceTest.sampleDumpMaxRows);
+    serialOut().print(_sequenceTest.config.sampleDumpMaxRows);
     serialOut().print(" value=detector_input_scalar");
     serialOut().println();
 
-    for (size_t i = 0; i < _sequenceTest.sampleRowCount; ++i) {
-        const auto& sample = _sequenceTest.sampleRows[i];
-        const long tMs = static_cast<long>(timing::delta(sample.sampleMs, _sequenceTest.sampleDumpTriggerSampleMs));
+    for (size_t i = 0; i < _sequenceTest.sampleDump.rowCount; ++i) {
+        const auto& sample = _sequenceTest.sampleDump.rows[i];
+        const long tMs = static_cast<long>(timing::delta(sample.sampleMs, _sequenceTest.sampleDump.triggerSampleMs));
         serialOut().print(tMs);
         serialOut().print(",");
         serialOut().println(sample.value, 3);

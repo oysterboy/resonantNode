@@ -52,6 +52,12 @@ An Analyzer A/B on the bench: the same SEQ set (hop10, chirp 3200 / 100, chirp 3
 for 11h; its sweep logs are the before for hop10 / chirp150) and on the build after C5, compared with seqcmp:
 identical except what C1 and C5 list.
 
+Targets from C4 (argued identical by reading, not run): `SEQ SUMMARY` / `SEQ STOP` before the first trial ends
+(run start now resets trial fields to their defaults: audioHealth / profileName "unknown" instead of nullptr); a
+`test=` label longer than 47 characters (parsed straight into the 48-byte field); `SEQ start` + `SEQ MODE x` in one
+buffer (the sub-command reaches the next-start config only, as before). Known change: the boot line
+`SIZE AnalyzerApp::SequenceTest=` 7688 -> 7696.
+
 ## Don't touch without saying so
 
 Detection thresholds and the plan (tuning is its own pass); the detector and inspector (C2 moves printers only);
@@ -166,3 +172,20 @@ prune". Other sessions: read-only on batch C until it closes.
 - 2026-10-27, SEQ_HISTDBG dropped too (owner: "clean and prune"): its two keys anything used moved, `dropped_dma_buffers`
   to the end of SEQ_SUMMARY (soak.py takes the last value in the log, unchanged) and `emit_marker_seen` into SEQ_TRIAL
   after `reject_reason`; the issue #26 counters that fed only it removed. Host gate green.
+- 2026-10-27, C4 done (A8, structural, no printed field changed): the struct bodies moved out of `AnalyzerModeApp.h`
+  into `src/modes/analyzer/AnalyzerSequenceTypes.h` (namespace `analyzer_seq`, aliased in `AnalyzerApp`). `SequenceTest`
+  is now `active` / `startedAtMs` / `nextTriggerAtMs` plus `RunConfig config` (what SEQ start parses: tries, period,
+  window, freq, dur, pulses / gap / ramp / hop, sweep, band, delay, settle, profile, show / quiet, label, sample dump
+  request, `outputConfig`), `TrialState trial` (window, evidence copies, counts, `TrialDiagnostics`, loop timing; reset
+  as a whole at trial start and run start), `RunTotals totals` (cleanSummary, completed, the run-health maxima, the
+  source-reject identity carried across trials) and `SampleDumpState sampleDump`. `PendingSequenceStart` = `active` +
+  a `RunConfig`; SEQ start parses into a local `RunConfig` and hands it over only when every token is valid; activation
+  copies it, clamps once and sets `outputConfig` from the next-start config (as before, at activation). The reset is
+  `resetToDefaults()` (destroy + construct in place): `trial = TrialState{}` built a ~4 KB stack temporary
+  (updateSequenceTest's frame 0.9 -> 4.3 KB, now 0.2 KB). SEQ DIAG / FREQBAND / FREQUPDATEEVERYSAMPLES / MODE / WHEN /
+  VERBOSE write through one helper `changeSeqOutputConfig` (next-start config, plus the running copy during a run); C1's
+  MODE-quiet diagnostics clear stays a running-only line; TRIES / PROFILE stay next-start only. `mutable` 6 -> 1
+  (`_sequenceProfileScratch`, effectiveSequenceProfile's scratch); `printSystemHealth` is non-const (it resets the
+  loop-health window). Callerless `sequenceSampleDumpEstimatedRows` declaration dropped. Analyzer RAM 87,412 -> 87,396 B,
+  flash 411,885 -> 410,093 B; boot `SIZE AnalyzerApp::SequenceTest=` 7688 -> 7696 (layout only). Host gate green, T2h
+  byte-identical. Not re-verified on a board (bench A/B after 11h).

@@ -19,12 +19,7 @@
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/SerialLine.h"
 #include "../../detection/analyzer/AnalyzerReportTypes.h"
-
-struct DetectorInputSample {
-    // Bounded detector-input trace used only by the neutral SAMPLES dump.
-    unsigned long sampleMs = 0;
-    float value = 0.0f;
-};
+#include "AnalyzerSequenceTypes.h"
 
 /*
 AnalyzerApp
@@ -40,20 +35,9 @@ class AnalyzerApp {
 public:
     using OccurrenceVerdict = detection::OccurrenceVerdict;
 
-    enum class SeqOutputMode {
-        Quiet,
-        Trial,
-        System,
-        Source,
-        Inspect,
-        Detail,
-    };
-
-    enum class SeqOutputWhen {
-        Off,
-        Miss,
-        All,
-    };
+    using SeqOutputMode = analyzer_seq::SeqOutputMode;
+    using SeqOutputWhen = analyzer_seq::SeqOutputWhen;
+    using SeqOutputConfig = analyzer_seq::SeqOutputConfig;
 
     enum class RawCaptureMode {
         Pcm,      // Analyzer-facing PCM: raw sample plus current baseline and centered value.
@@ -79,17 +63,6 @@ public:
         unsigned long bandHighHz = 0;
     };
 
-    struct SeqOutputConfig {
-        SeqOutputMode mode = SeqOutputMode::Trial;
-        SeqOutputWhen when = SeqOutputWhen::Miss;
-        uint8_t verbosity = 0;
-        unsigned long totalTrials = 100;
-        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
-        bool diagnosticsEnabled = true;
-        bool frequencyBandEnabled = true;
-        unsigned long frequencyUpdateEverySamples = 4;
-    };
-
     AnalyzerApp();
 
     void begin();
@@ -101,7 +74,7 @@ public:
 
 private:
     void updateSequenceAudioHealth(const AudioSamplePacket& audioSamplePacket);
-    void printSystemHealth(const AnalyzerReport& report) const;
+    void printSystemHealth(const AnalyzerReport& report);  // non-const: it resets the loop-health window it printed
     uint32_t analyzerBootCount() const;
     const char* currentResetReasonName() const;
     unsigned long activeRunStartMs() const;
@@ -138,206 +111,14 @@ private:
         }
     };
 
-    struct SequenceTest {
-        // Live per-trial diagnostics and rejection bookkeeping.
-        struct TrialDiagnostics {
-            bool accepted = false;
-
-            unsigned long firstOnsetMs = 0;
-            unsigned long acceptedPatternMs = 0;
-            unsigned long acceptedPatternDurationMs = 0;
-            float acceptedAmbientBaseline = 0.0f;
-            bool runtimePatternCaptured = false;
-
-            bool emitStartSeen = false;
-            unsigned long emitStartDtMs = 0;
-
-            unsigned long audioFrames = 0;
-            unsigned long audioZeroishFrames = 0;
-            unsigned long audioFlatlineFrames = 0;
-            unsigned long audioLargeJumpFrames = 0;
-            unsigned long audioRmsTooLowFrames = 0;
-            unsigned long audioRmsTooHighFrames = 0;
-            unsigned long audioMaxAbsDelta = 0;
-            unsigned long audioFlatlineRunFrames = 0;
-            long audioLastCenteredSample = 0;
-            bool audioHasLastCenteredSample = false;
-            uint64_t audioSumSquares = 0;
-            float audioRms = 0.0f;
-            const char* audioHealth = "unknown";
-
-            uint16_t rawFrames = 0;
-            int16_t rawMin = 0;
-            int16_t rawMax = 0;
-            int32_t rawSum = 0;
-            uint32_t rawAbsSum = 0;
-            uint8_t rawZeroCrossings = 0;
-            uint8_t rawSameValueCount = 0;
-            uint8_t rawSameValueRun = 0;
-            uint8_t rawSameValueMaxRun = 0;
-            int16_t rawLastSample = 0;
-            uint8_t rawBlockHashRepeatCount = 0;
-            uint8_t rawLastBlockHash = 0;
-
-            unsigned long ambientBaselineSamples = 0;
-            float ambientBaselineMin = 0.0f;
-            float ambientBaselineMax = 0.0f;
-            int maxSignalLevel = 0;
-
-            unsigned long duplicateCount = 0;
-
-        };
-
-        // Sequence-test configuration and execution state.
-        bool active = false;
-        bool quiet = false;
-        bool showDetails = true;
-        SeqOutputConfig outputConfig = {};
-        bool externalEmitter = false;
-        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
-        unsigned long totalTrials = 100;
-        unsigned long periodMs = 2500;
-        unsigned long windowEndOffsetMs = 2200;
-        unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
-        unsigned long durationMs = 100;
-        // pulses > 0: each trial is a PULSES train of durationMs pulses
-        // (DET-011); 0 = one CHIRP. pulseRampMs only sent when set.
-        unsigned long pulseCount = 0;
-        unsigned long pulseGapMs = 0;
-        bool pulseRampSet = false;
-        unsigned long pulseRampMs = 0;
-        char pulseHop[40] = {};  // hop=F1,F2,... forwarded to PULSES; empty = none
-        unsigned long sweepToHz = 0;  // sweep=HZ forwarded to CHIRP (glide from toneHz over durationMs); 0 = steady
-        unsigned long bandLowHz = 0;   // band=LOW-HIGH: FrequencyTarget = strongest bin in the band; 0 = off
-        unsigned long bandHighHz = 0;
-        unsigned long startupDelayMs = 1000;
-        unsigned long reportSettleMs = 500;
-        char setupLabel[48] = TEST_SETUP_LABEL;
-
-        // Sample-dump tooling state, separate from clean analyzer truth.
-        bool sampleDumpEnabled = false;
-        unsigned long sampleDumpFirstTrials = 2;
-        unsigned long sampleDumpEveryNth = 0;
-        unsigned long sampleDumpLeadMs = 50;
-        unsigned long sampleDumpTailMs = 800;
-        unsigned long sampleDumpStepMs = 4; // 50 + 800 ms at 4 ms = 213 rows, fits kMaxSampleRows (issue #31 B12)
-        unsigned long sampleDumpMaxRows = 5000;
-        bool sampleDumpWarned = false;
-        bool sampleDumpSelectedForTrial = false;
-        bool sampleDumpCapturing = false;
-        unsigned long sampleDumpCurrentTrial = 0;
-        unsigned long sampleDumpTriggerMs = 0;
-        unsigned long sampleDumpTriggerSampleMs = 0;
-        unsigned long sampleDumpCaptureStartMs = 0;
-        unsigned long sampleDumpCaptureEndMs = 0;
-        unsigned long sampleDumpNextEmitMs = 0;
-        detection::DetectorSelection sampleDumpDetectorSelection = detection::DetectorSelection::ScalarTransient;
-        detection::FeatureStreamId sampleDumpObservedStream = detection::FeatureStreamId::Unknown;
-        static constexpr size_t kMaxSampleHistory = 128;
-        static constexpr size_t kMaxSampleRows = 256;
-        DetectorInputSample sampleHistory[kMaxSampleHistory] = {};
-        size_t sampleHistoryStart = 0;
-        size_t sampleHistoryCount = 0;
-        unsigned long sampleHistoryLastMs = 0;
-        bool sampleHistoryHasPending = false;
-        DetectorInputSample sampleHistoryPending = {};
-        DetectorInputSample sampleRows[kMaxSampleRows] = {};
-        size_t sampleRowCount = 0;
-
-        // Trial scheduling and aggregate results.
-        unsigned long startedAtMs = 0;
-        unsigned long nextTriggerAtMs = 0;
-        unsigned long currentTrial = 0;
-        unsigned long currentTrialScheduledAtMs = 0;
-        // ANA-007 (step 7a): when this trial's CHIRP/PULSES command left for
-        // the Emitter; the dt anchor (the EMIT_START marker is read after the
-        // sample loop, 21-37 ms late and jittery).
-        unsigned long currentTrialCommandSentMs = 0;
-        bool currentTrialCommandSent = false;
-        unsigned long currentTrialStartMs = 0;
-        unsigned long currentTrialEndMs = 0;
-        unsigned long currentTrialOnsetDetectedMs = 0;
-        unsigned long currentTrialPatternDetectedMs = 0;
-        unsigned long sourceCandidateCount = 0;
-        unsigned long sourceAcceptedCount = 0;
-        unsigned long sourceRejectedCount = 0;
-        unsigned long inspectedOccurrenceCount = 0;
-        unsigned long verdictCount = 0;
-        bool primaryValidPatternCaptured = false;
-        detection::OccurrenceVerdict primaryValidPattern = {};
-        detection::InspectedOccurrence primaryValidInspectedOccurrence = {};
-        detection::DetectorReport primaryValidDetectorReport = {};
-        bool primaryAcceptedOccurrenceCaptured = false;
-        detection::InspectedOccurrence primaryAcceptedInspectedOccurrence = {};
-        detection::DetectorReport primaryAcceptedDetectorReport = {};
-        detection::SourceDiagnosticRecord primaryAcceptedSourceRecord = {};
-        unsigned long rejectedInWindowCount = 0;
-        bool bestRejectedPatternCaptured = false;
-        detection::OccurrenceVerdict bestRejectedInWindow = {};
-        detection::InspectedOccurrence bestRejectedInspectedOccurrence = {};
-        detection::DetectorReport bestRejectedDetectorReport = {};
-        bool selectedSourceRejectCaptured = false;
-        detection::SourceDiagnosticRecord selectedSourceReject = {};
-        unsigned long consumedSourceRejectEventId = 0;
-        unsigned long consumedSourceRejectReportGeneration = 0;
-        bool currentTrialFinalized = false;
-        unsigned long currentTrialUnexpected = 0;
-        unsigned long currentTrialRejected = 0;
-        bool bufferOverrun = false;
-        unsigned long trialOverflowCountAtStart = 0;
-        unsigned long trialPipelineOverflowCountAtStart = 0;
-        TrialDiagnostics currentTrialDiagnostics;
-
-        unsigned long samplesProcessed = 0;
-        unsigned long currentTrialSamplesProcessed = 0;
-        unsigned long maxSamplesPerLoop = 0;
-        uint64_t availableBytesSum = 0;
-        unsigned long availableBytesSamples = 0;
-        unsigned long maxAvailableBytes = 0;
-        unsigned long maxBlockAgeMs = 0;
-        unsigned long maxUpdateLoopUs = 0;
-        uint64_t totalUpdateLoopUs = 0;
-        unsigned long updateLoopCount = 0;
-        unsigned long currentTrialUpdateLoopMaxUs = 0;
-        unsigned long maxSampleWorkUs = 0;
-        unsigned long maxFinalizeTrialUs = 0;
-        unsigned long maxProcessingLagMs = 0;
-        unsigned long completedTrials = 0;
-        AnalyzerCleanSummary cleanSummary = {};
-
-        };
-
-    struct PendingSequenceStart {
-        bool active = false;
-        unsigned long totalTrials = 0;
-        unsigned long periodMs = 0;
-        unsigned long windowEndOffsetMs = 0;
-        unsigned long toneHz = 0;
-        unsigned long durationMs = 0;
-        unsigned long pulseCount = 0;
-        unsigned long pulseGapMs = 0;
-        bool pulseRampSet = false;
-        unsigned long pulseRampMs = 0;
-        char pulseHop[40] = {};  // hop=F1,F2,... forwarded to PULSES; empty = none
-        unsigned long sweepToHz = 0;  // sweep=HZ forwarded to CHIRP (glide from toneHz over durationMs); 0 = steady
-        unsigned long bandLowHz = 0;   // band=LOW-HIGH: FrequencyTarget = strongest bin in the band; 0 = off
-        unsigned long bandHighHz = 0;
-        unsigned long reportSettleMs = 500;
-        bool quiet = false;
-        bool showDetails = false;
-        const char* setupLabel = nullptr;
-        bool sampleDumpEnabled = false;
-        unsigned long sampleDumpFirstTrials = 0;
-        unsigned long sampleDumpEveryNth = 0;
-        unsigned long sampleDumpLeadMs = 0;
-        unsigned long sampleDumpTailMs = 0;
-        unsigned long sampleDumpStepMs = 0;
-        unsigned long sampleDumpMaxRows = 0;
-        unsigned long startupDelayMs = 1000;
-        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
-        bool externalEmitter = false;
-        char setupLabelStorage[96] = {};
-    };
+    // SEQ run state, by lifetime (AnalyzerSequenceTypes.h, step 11g C4).
+    using RunConfig = analyzer_seq::RunConfig;
+    using TrialState = analyzer_seq::TrialState;
+    using TrialDiagnostics = analyzer_seq::TrialDiagnostics;
+    using RunTotals = analyzer_seq::RunTotals;
+    using SampleDumpState = analyzer_seq::SampleDumpState;
+    using SequenceTest = analyzer_seq::SequenceTest;
+    using PendingSequenceStart = analyzer_seq::PendingSequenceStart;
 
     // Setup, control, and detector configuration helpers.
     void configureParameters();
@@ -351,12 +132,15 @@ private:
     void handleSelfTestCommand(const char* line);
     void restoreAfterSelfTest();
     void printSequenceHelp();
+    // SEQ output sub-commands: the next start's settings, and the running copy during a run.
+    template <typename Change>
+    void changeSeqOutputConfig(Change change);
     void sendEmitterCommand(const char* command);
     void resetAudioSignalState();
 
     // Sequence-test workflows.
-    void startSequenceTest(const PendingSequenceStart& pending);
-    void initializeSequenceTest(const PendingSequenceStart& pending);
+    void startSequenceTest(const RunConfig& requested);
+    void initializeSequenceTest(const RunConfig& requested);
     void configureSequenceDetection();
     void resetSequenceTestRunState();
     void stopSequenceTest();
@@ -382,7 +166,7 @@ private:
     const char* activeAnalyzerProfileName() const;
     const detection::DetectionProfile& effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
-    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const TrialDiagnostics& diagnostics) const;
         struct SequenceTrialSelection {
         enum class Kind {
             None,
@@ -423,7 +207,6 @@ private:
     void flushSequenceSampleHistory(unsigned long currentSampleMs);
     void printSequenceSampleReport(unsigned long trialNumber) const;
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
-    unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const;
 
     // Miscellaneous output helpers.
@@ -448,14 +231,16 @@ private:
     I2sToneOutput _selfTestTone;
 #endif
     AudioSignal _audioSignal; // Audio framing for detector input packets (the same class the Node runs).
-    mutable detection::DetectionRuntime _detection; // Canonical detector runtime and feature history.
+    detection::DetectionRuntime _detection; // Canonical detector runtime and feature history.
     FreqBandStream _freqBandStream; // Live frequency-band stream used by analyzer diagnostics.
     // SEQ tuning (PAR-003, step 11e item 9): the TonalPulseScalar profile's
     // detection.scalar_* values on the registry with the Node's paths; a SEQ
     // start copies them into the profile (effectiveSequenceProfile).
     detection::ScalarTransientConfig _scalarTuning = {};
     param::ParamRegistry _paramRegistry;
-    SeqOutputConfig _seqOutputConfig = {}; // Sequence-report output policy.
+    // The next start's output settings; a run copies them once at activation into
+    // _sequenceTest.config.outputConfig (SEQ sub-commands: changeSeqOutputConfig).
+    SeqOutputConfig _seqOutputConfig = {};
     PendingSequenceStart _pendingSequenceStart = {}; // Deferred sequence start request.
 
     // Console and emitter control.
@@ -475,13 +260,15 @@ private:
     SequenceTest _sequenceTest; // Current sequence-test execution state.
     unsigned long _rawCaptureSequenceId = 0; // Monotonic RAW capture identifier.
     AnalyzerReport _sequenceReportScratch = {}; // Reusable scratch report buffer.
-    mutable detection::DetectionProfile _sequenceProfileScratch = {}; // Reusable tuned profile scratch buffer.
-    mutable detection::FrequencyBandMeasurementPacket _runtimeFrequencyMeasurementPacketScratch = {}; // Reusable per-sample frequency packet scratch.
-    mutable detection::DetectionPipelineEvent _runtimePipelineEventScratch = {}; // Reusable pipeline event scratch for the loop task.
+    // The one mutable: effectiveSequenceProfile() const builds the tuned profile here, a
+    // scratch for const printers (printDetectionParameters) rather than a stack copy.
+    mutable detection::DetectionProfile _sequenceProfileScratch = {};
+    detection::FrequencyBandMeasurementPacket _runtimeFrequencyMeasurementPacketScratch = {}; // Reusable per-sample frequency packet scratch.
+    detection::DetectionPipelineEvent _runtimePipelineEventScratch = {}; // Reusable pipeline event scratch for the loop task.
 
     uint32_t _loopLastUs = 0; // Previous loop timestamp for timing diagnostics.
     unsigned long _loopMaxSinceBootUs = 0; // Worst loop duration since boot.
-    mutable LoopHealthStats _loopHealth; // Rolling loop health statistics.
+    LoopHealthStats _loopHealth; // Rolling loop health statistics.
 };
 
 using AnalyzerModeApp = AnalyzerApp;
@@ -491,10 +278,10 @@ constexpr size_t AnalyzerApp::debugSequenceTestSize() {
 }
 
 constexpr size_t AnalyzerApp::debugSequenceTestSampleHistoryCapacity() {
-    return SequenceTest::kMaxSampleHistory;
+    return SampleDumpState::kMaxSampleHistory;
 }
 
 constexpr size_t AnalyzerApp::debugSequenceTestSampleRowsCapacity() {
-    return SequenceTest::kMaxSampleRows;
+    return SampleDumpState::kMaxSampleRows;
 }
 

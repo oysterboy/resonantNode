@@ -109,7 +109,7 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     serialOut().print(" reject_reason=");
     serialOut().print(trialRejectReason);
     serialOut().print(" emit_marker_seen=");  // moved from SEQ_HISTDBG (11g C3b)
-    serialOut().print(_sequenceTest.currentTrialDiagnostics.emitStartSeen ? 1 : 0);
+    serialOut().print(_sequenceTest.trial.diagnostics.emitStartSeen ? 1 : 0);
     serialOut().print(" source_selection=");
     serialOut().print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
     serialOut().print(" source_reason=");
@@ -375,7 +375,7 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
 }
 
 void AnalyzerApp::printSequenceSummaryClean() const {
-    const auto& summary = _sequenceTest.cleanSummary;
+    const auto& summary = _sequenceTest.totals.cleanSummary;
     const long avgDtRounded = summary.dtCount > 0
         ? static_cast<long>(static_cast<float>(summary.totalDtMs) / static_cast<float>(summary.dtCount) + 0.5f)
         : -1L;
@@ -429,24 +429,24 @@ void AnalyzerApp::printSequenceSummaryClean() const {
 }
 
 void AnalyzerApp::printSequenceReport() const {
-    if (_sequenceTest.showDetails) {
+    if (_sequenceTest.config.showDetails) {
         printDetectionParameters();
     }
-    if (_sequenceTest.outputConfig.verbosity > 0U ||
-        _sequenceTest.outputConfig.mode == SeqOutputMode::Detail) {
+    if (_sequenceTest.config.outputConfig.verbosity > 0U ||
+        _sequenceTest.config.outputConfig.mode == SeqOutputMode::Detail) {
         printAudioSourceSummary();
         printOccurrenceSummary();
     }
-    if (_sequenceTest.outputConfig.verbosity > 0U ||
-        _sequenceTest.outputConfig.mode == SeqOutputMode::System ||
-        _sequenceTest.outputConfig.mode == SeqOutputMode::Detail) {
+    if (_sequenceTest.config.outputConfig.verbosity > 0U ||
+        _sequenceTest.config.outputConfig.mode == SeqOutputMode::System ||
+        _sequenceTest.config.outputConfig.mode == SeqOutputMode::Detail) {
         printAudioRunSummary();
     }
 }
 
 void AnalyzerApp::printSequenceStatus() const {
     // One config (review D1.4): the running one during a run, the one the next start copies otherwise.
-    const SeqOutputConfig& config = _sequenceTest.active ? _sequenceTest.outputConfig : _seqOutputConfig;
+    const SeqOutputConfig& config = _sequenceTest.active ? _sequenceTest.config.outputConfig : _seqOutputConfig;
     serialOut().print("SEQ_STATUS mode=");
     serialOut().print(sequenceOutputModeName(config.mode));
     serialOut().print(" when=");

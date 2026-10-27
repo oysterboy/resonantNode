@@ -41,6 +41,17 @@ const char* onOffName(bool value) {
 
 } // namespace
 
+// SEQ DIAG / FREQBAND / FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE: one rule (step 11g C4).
+// The change goes to the next start's output settings and, while a run is active, to the running
+// run's copy as well. TRIES and PROFILE change the next start only.
+template <typename Change>
+void AnalyzerApp::changeSeqOutputConfig(Change change) {
+    change(_seqOutputConfig);
+    if (_sequenceTest.active) {
+        change(_sequenceTest.config.outputConfig);
+    }
+}
+
 void AnalyzerApp::printSequenceHelp() {
     serialOut().println("CMD: SEQ help");
     serialOut().println("CMD: SEQ");
@@ -270,10 +281,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             serialOut().println("ERR SEQ unknown diagnostics use DIAG on|off");
             return;
         }
-        _seqOutputConfig.diagnosticsEnabled = enabled;
-        if (_sequenceTest.active) {
-            _sequenceTest.outputConfig.diagnosticsEnabled = enabled;
-        }
+        changeSeqOutputConfig([enabled](SeqOutputConfig& config) { config.diagnosticsEnabled = enabled; });
         serialOut().print("OK SEQ DIAG ");
         serialOut().println(onOffName(enabled));
         return;
@@ -287,10 +295,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             serialOut().println("ERR SEQ unknown freqband use FREQBAND on|off");
             return;
         }
-        _seqOutputConfig.frequencyBandEnabled = enabled;
-        if (_sequenceTest.active) {
-            _sequenceTest.outputConfig.frequencyBandEnabled = enabled;
-        }
+        changeSeqOutputConfig([enabled](SeqOutputConfig& config) { config.frequencyBandEnabled = enabled; });
         serialOut().print("OK SEQ FREQBAND ");
         serialOut().println(onOffName(enabled));
         return;
@@ -307,11 +312,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             serialOut().println("ERR SEQ freqUpdateEverySamples out of range use N>=1");
             return;
         }
-        _seqOutputConfig.frequencyUpdateEverySamples = decimation;
+        changeSeqOutputConfig([decimation](SeqOutputConfig& config) { config.frequencyUpdateEverySamples = decimation; });
         _freqBandStream.setFrequencyUpdateEverySamples(decimation);
-        if (_sequenceTest.active) {
-            _sequenceTest.outputConfig.frequencyUpdateEverySamples = decimation;
-        }
         serialOut().print("OK SEQ FREQUPDATEEVERYSAMPLES ");
         serialOut().println(decimation);
         return;
@@ -325,18 +327,16 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             serialOut().println("ERR SEQ unknown mode use MODE quiet|trial|inspect|source|system|detail");
                 return;
             }
-            _seqOutputConfig.mode = mode;
-            if (mode == AnalyzerApp::SeqOutputMode::Quiet) {
-                _seqOutputConfig.when = AnalyzerApp::SeqOutputWhen::Off;
-                _seqOutputConfig.verbosity = 0;
-            }
-            if (_sequenceTest.active) {
-                _sequenceTest.outputConfig.mode = mode;
+            changeSeqOutputConfig([mode](SeqOutputConfig& config) {
+                config.mode = mode;
                 if (mode == AnalyzerApp::SeqOutputMode::Quiet) {
-                    _sequenceTest.outputConfig.when = AnalyzerApp::SeqOutputWhen::Off;
-                    _sequenceTest.outputConfig.verbosity = 0;
-                    _sequenceTest.outputConfig.diagnosticsEnabled = false;  // a later SEQ WHEN must not re-enable them
+                    config.when = AnalyzerApp::SeqOutputWhen::Off;
+                    config.verbosity = 0;
                 }
+            });
+            if (_sequenceTest.active && mode == AnalyzerApp::SeqOutputMode::Quiet) {
+                // The running run only (C1): a later SEQ WHEN must not re-enable its diagnostics.
+                _sequenceTest.config.outputConfig.diagnosticsEnabled = false;
             }
             serialOut().print("OK SEQ MODE ");
             serialOut().println(AnalyzerApp::sequenceOutputModeName(mode));
@@ -351,10 +351,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR SEQ unknown when use WHEN off|miss|all");
                 return;
             }
-            _seqOutputConfig.when = when;
-            if (_sequenceTest.active) {
-                _sequenceTest.outputConfig.when = when;
-            }
+            changeSeqOutputConfig([when](SeqOutputConfig& config) { config.when = when; });
             serialOut().print("OK SEQ WHEN ");
             serialOut().println(AnalyzerApp::sequenceOutputWhenName(when));
             return;
@@ -395,10 +392,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR SEQ verbosity out of range use 0|1|2");
                 return;
             }
-            _seqOutputConfig.verbosity = static_cast<uint8_t>(verbosity);
-            if (_sequenceTest.active) {
-                _sequenceTest.outputConfig.verbosity = _seqOutputConfig.verbosity;
-            }
+            changeSeqOutputConfig([verbosity](SeqOutputConfig& config) { config.verbosity = static_cast<uint8_t>(verbosity); });
             serialOut().print("OK SEQ VERBOSE ");
             serialOut().println(static_cast<unsigned long>(_seqOutputConfig.verbosity));
             return;
@@ -415,7 +409,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR SEQ tries out of range use N>=1");
                 return;
             }
-            _seqOutputConfig.totalTrials = totalTrials;
+            _seqOutputConfig.totalTrials = totalTrials;  // the next start's shape only, as PROFILE: a running run keeps its own
             serialOut().print("OK SEQ TRIES ");
             serialOut().println(_seqOutputConfig.totalTrials);
             return;
@@ -446,79 +440,52 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR SEQ start refused reason=run_active (SEQ STOP first)");
                 return;
             }
-            _pendingSequenceStart = {};
-            // Parsed into copies and activated only when every token is valid
-            // (issue #31): on an ERR the run used to start anyway, and the
-            // output settings parsed before the bad token stuck.
-            _pendingSequenceStart.active = false;
+            // Parsed into a copy and handed to the pending start only when
+            // every token is valid (issue #31): on an ERR the run used to
+            // start anyway, and the output settings parsed before the bad
+            // token stuck. RunConfig's defaults are the start's defaults.
+            AnalyzerApp::RunConfig request;
             AnalyzerApp::SeqOutputConfig outputConfig = _seqOutputConfig;
-            _pendingSequenceStart.totalTrials = _seqOutputConfig.totalTrials;
-            _pendingSequenceStart.periodMs = 2500;
-            _pendingSequenceStart.windowEndOffsetMs = 2200;
-            _pendingSequenceStart.toneHz = runtime::kDefaultChirpFrequencyHz;
-            _pendingSequenceStart.durationMs = 100;
-            _pendingSequenceStart.pulseCount = 0;
-            _pendingSequenceStart.pulseGapMs = 0;
-            _pendingSequenceStart.pulseRampSet = false;
-            _pendingSequenceStart.pulseRampMs = 0;
-            _pendingSequenceStart.pulseHop[0] = '\0';
-            _pendingSequenceStart.sweepToHz = 0;
-            _pendingSequenceStart.bandLowHz = 0;
-            _pendingSequenceStart.bandHighHz = 0;
-            _pendingSequenceStart.quiet = false;
-            _pendingSequenceStart.showDetails = true;
-            _pendingSequenceStart.setupLabel = _pendingSequenceStart.setupLabelStorage;
-            _pendingSequenceStart.setupLabelStorage[0] = '\0';
-            _pendingSequenceStart.sampleDumpEnabled = false;
-            _pendingSequenceStart.sampleDumpFirstTrials = 2;
-            _pendingSequenceStart.sampleDumpEveryNth = 0;
-            _pendingSequenceStart.sampleDumpLeadMs = 50;
-            _pendingSequenceStart.sampleDumpTailMs = 800;
-            // 4 ms: the default 850 ms window in 213 rows, inside the 256-row
-            // per-trial buffer; at 1 ms (851 rows) every default dump was
-            // refused (decision 2026-10-13, issue #31 B12).
-            _pendingSequenceStart.sampleDumpStepMs = 4;
-            _pendingSequenceStart.sampleDumpMaxRows = 5000;
-            _pendingSequenceStart.startupDelayMs = 1000;
-            _pendingSequenceStart.reportSettleMs = 500;
-            _pendingSequenceStart.profileKind = _seqOutputConfig.profileKind;
-            _pendingSequenceStart.externalEmitter = equalsIgnoreCase(token, "OBS");
+            request.totalTrials = _seqOutputConfig.totalTrials;
+            request.setupLabel[0] = '\0';
+            request.profileKind = _seqOutputConfig.profileKind;
+            request.externalEmitter = equalsIgnoreCase(token, "OBS");
             bool totalTrialsSet = false;
             bool windowSet = false;
             bool profileSeen = false;
             bool profileValid = true;
             while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
                 if (!totalTrialsSet && strchr(token, '=') == nullptr && strspn(token, "0123456789") == strlen(token)) {
-                    text_parse::parseUnsigned(token, _pendingSequenceStart.totalTrials);  // digits only, checked above
+                    text_parse::parseUnsigned(token, request.totalTrials);  // digits only, checked above
                     totalTrialsSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "tries=")) {
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.totalTrials)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.totalTrials)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                     totalTrialsSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "period=")) {
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.periodMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.periodMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "window=")) {
                     windowSet = true;
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.windowEndOffsetMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.windowEndOffsetMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "freq=")) {
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.toneHz)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.toneHz)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "dur=")) {
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.durationMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.durationMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
@@ -526,8 +493,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 } else if (startsWithTokenIgnoreCase(token, "band=")) {
                     const char* spec = text_parse::tokenValue(token);
                     if (equalsIgnoreCase(spec, "off")) {
-                        _pendingSequenceStart.bandLowHz = 0;
-                        _pendingSequenceStart.bandHighHz = 0;
+                        request.bandLowHz = 0;
+                        request.bandHighHz = 0;
                     } else {
                         char* dash = nullptr;
                         const unsigned long lo = strtoul(spec, &dash, 10);
@@ -537,13 +504,13 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                             serialOut().println(token);
                             return;
                         }
-                        _pendingSequenceStart.bandLowHz = lo;
-                        _pendingSequenceStart.bandHighHz = hi;
+                        request.bandLowHz = lo;
+                        request.bandHighHz = hi;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "hop=")) {
                     const char* list = text_parse::tokenValue(token);
                     const size_t len = strlen(list);
-                    bool ok = len > 0 && len < sizeof(_pendingSequenceStart.pulseHop);
+                    bool ok = len > 0 && len < sizeof(request.pulseHop);
                     for (size_t i = 0; ok && i < len; ++i) {
                         ok = (list[i] >= '0' && list[i] <= '9') || list[i] == ',';
                     }
@@ -552,55 +519,55 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         serialOut().println(token);
                         return;
                     }
-                    strncpy(_pendingSequenceStart.pulseHop, list, sizeof(_pendingSequenceStart.pulseHop) - 1);
-                    _pendingSequenceStart.pulseHop[sizeof(_pendingSequenceStart.pulseHop) - 1] = '\0';
+                    strncpy(request.pulseHop, list, sizeof(request.pulseHop) - 1);
+                    request.pulseHop[sizeof(request.pulseHop) - 1] = '\0';
                 } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sweepToHz) ||
-                        _pendingSequenceStart.sweepToHz > runtime::kMaxToneHz) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sweepToHz) ||
+                        request.sweepToHz > runtime::kMaxToneHz) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.pulseCount)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.pulseCount)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "gap=")) {
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.pulseGapMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.pulseGapMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "ramp=")) {
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.pulseRampMs)) {
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.pulseRampMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                    _pendingSequenceStart.pulseRampSet = true;
+                    request.pulseRampSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "delay=") || startsWithTokenIgnoreCase(token, "warmup=")) {
-                    if (!text_parse::parseUnsigned(strchr(token, '=') + 1, _pendingSequenceStart.startupDelayMs)) {
+                    if (!text_parse::parseUnsigned(strchr(token, '=') + 1, request.startupDelayMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "report_settle=") || startsWithTokenIgnoreCase(token, "settle=")) {
-                    if (!text_parse::parseUnsigned(strchr(token, '=') + 1, _pendingSequenceStart.reportSettleMs)) {
+                    if (!text_parse::parseUnsigned(strchr(token, '=') + 1, request.reportSettleMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (equalsIgnoreCase(token, "quiet")) {
-                    _pendingSequenceStart.quiet = true;
+                    request.quiet = true;
                 } else if (equalsIgnoreCase(token, "show=0")) {
-                    _pendingSequenceStart.showDetails = false;
+                    request.showDetails = false;
                 } else if (equalsIgnoreCase(token, "show=1")) {
-                    _pendingSequenceStart.showDetails = true;
+                    request.showDetails = true;
                 } else if (startsWithTokenIgnoreCase(token, "profile=")) {
                     const char* profileValue = text_parse::tokenValue(token);
-                    if (detection::detectionProfileKindFromName(profileValue, _pendingSequenceStart.profileKind)) {
+                    if (detection::detectionProfileKindFromName(profileValue, request.profileKind)) {
                         profileSeen = true;
                     } else {
                         profileValid = false;
@@ -650,43 +617,43 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     }
                     outputConfig.diagnosticsEnabled = enabled;
                 } else if (startsWithTokenIgnoreCase(token, "sampleFirst=")) {
-                    _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpFirstTrials)) {
+                    request.sampleDumpEnabled = true;
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpFirstTrials)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleEvery=")) {
-                    _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpEveryNth)) {
+                    request.sampleDumpEnabled = true;
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpEveryNth)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleLead=")) {
-                    _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpLeadMs)) {
+                    request.sampleDumpEnabled = true;
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpLeadMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleTail=")) {
-                    _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpTailMs)) {
+                    request.sampleDumpEnabled = true;
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpTailMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleStep=")) {
-                    _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpStepMs)) {
+                    request.sampleDumpEnabled = true;
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpStepMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "sampleMax=")) {
-                    _pendingSequenceStart.sampleDumpEnabled = true;
-                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), _pendingSequenceStart.sampleDumpMaxRows)) {
+                    request.sampleDumpEnabled = true;
+                    if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpMaxRows)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
@@ -694,13 +661,13 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 } else if (equalsIgnoreCase(token, "external")) {
                     // Observing an already-running external emitter is an explicit mode.
                     // Keep the current mode if the caller already requested OBS.
-                    _pendingSequenceStart.externalEmitter = true;
+                    request.externalEmitter = true;
                 } else if (startsWithTokenIgnoreCase(token, "test=")) {
-                    strncpy(_pendingSequenceStart.setupLabelStorage, text_parse::tokenValue(token), sizeof(_pendingSequenceStart.setupLabelStorage));
-                    _pendingSequenceStart.setupLabelStorage[sizeof(_pendingSequenceStart.setupLabelStorage) - 1] = '\0';
+                    strncpy(request.setupLabel, text_parse::tokenValue(token), sizeof(request.setupLabel));
+                    request.setupLabel[sizeof(request.setupLabel) - 1] = '\0';
                 } else if (equalsIgnoreCase(token, "labels")) {
-                    strncpy(_pendingSequenceStart.setupLabelStorage, "labels", sizeof(_pendingSequenceStart.setupLabelStorage));
-                    _pendingSequenceStart.setupLabelStorage[sizeof(_pendingSequenceStart.setupLabelStorage) - 1] = '\0';
+                    strncpy(request.setupLabel, "labels", sizeof(request.setupLabel));
+                    request.setupLabel[sizeof(request.setupLabel) - 1] = '\0';
                 } else if (equalsIgnoreCase(token, "start")) {
                     // "SEQ OBS start ..." (tools/bench/soak.py): the verb after OBS.
                 } else {
@@ -714,14 +681,14 @@ void AnalyzerApp::handleUsbLine(const char* line) {
 
             // Same bounds the Emitter applies to PULSES; refused here so a
             // run never starts with every trial rejected on the Emitter.
-            if (_pendingSequenceStart.pulseCount > 0 &&
-                (_pendingSequenceStart.pulseCount > emitter_limits::kPulsesMaxCount ||
-                 _pendingSequenceStart.durationMs == 0 ||
-                 _pendingSequenceStart.durationMs > emitter_limits::kPulsesMaxPulseMs ||
-                 _pendingSequenceStart.pulseGapMs == 0 ||
-                 _pendingSequenceStart.pulseGapMs > emitter_limits::kPulsesMaxGapMs ||
-                 (_pendingSequenceStart.pulseRampSet &&
-                  _pendingSequenceStart.pulseRampMs > emitter_limits::kPulsesMaxRampMs))) {
+            if (request.pulseCount > 0 &&
+                (request.pulseCount > emitter_limits::kPulsesMaxCount ||
+                 request.durationMs == 0 ||
+                 request.durationMs > emitter_limits::kPulsesMaxPulseMs ||
+                 request.pulseGapMs == 0 ||
+                 request.pulseGapMs > emitter_limits::kPulsesMaxGapMs ||
+                 (request.pulseRampSet &&
+                  request.pulseRampMs > emitter_limits::kPulsesMaxRampMs))) {
                 serialOut().print("ERR SEQ pulses use pulses=1-");
                 serialOut().print(emitter_limits::kPulsesMaxCount);
                 serialOut().print(" dur=1-");
@@ -738,24 +705,24 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             // trigger: 2200 + 500 > 2500 credited early chirps of trial N+1
             // to trial N (issue #31 R2-5). An explicit window= is kept (and
             // warned about at start).
-            if (_pendingSequenceStart.externalEmitter && !windowSet &&
-                _pendingSequenceStart.periodMs > _pendingSequenceStart.reportSettleMs) {
-                _pendingSequenceStart.windowEndOffsetMs = _pendingSequenceStart.periodMs - _pendingSequenceStart.reportSettleMs;
+            if (request.externalEmitter && !windowSet &&
+                request.periodMs > request.reportSettleMs) {
+                request.windowEndOffsetMs = request.periodMs - request.reportSettleMs;
             }
 
             if (!profileSeen) {
-                _pendingSequenceStart.profileKind = outputConfig.profileKind;
+                request.profileKind = outputConfig.profileKind;
             }
             if (!profileValid) {
                 return;
             }
-            outputConfig.totalTrials = _pendingSequenceStart.totalTrials;
-            if (_pendingSequenceStart.setupLabelStorage[0] == '\0') {
-                strncpy(_pendingSequenceStart.setupLabelStorage, TEST_SETUP_LABEL, sizeof(_pendingSequenceStart.setupLabelStorage));
-                _pendingSequenceStart.setupLabelStorage[sizeof(_pendingSequenceStart.setupLabelStorage) - 1] = '\0';
+            outputConfig.totalTrials = request.totalTrials;
+            if (request.setupLabel[0] == '\0') {
+                strncpy(request.setupLabel, TEST_SETUP_LABEL, sizeof(request.setupLabel));
+                request.setupLabel[sizeof(request.setupLabel) - 1] = '\0';
             }
-            _pendingSequenceStart.setupLabel = _pendingSequenceStart.setupLabelStorage;
             _seqOutputConfig = outputConfig;
+            _pendingSequenceStart.config = request;
             _pendingSequenceStart.active = true;
             serialOut().println("OK SEQ");
             return;

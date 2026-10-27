@@ -60,81 +60,61 @@ bool detectorReportMatchesOccurrence(const detection::DetectorReport* detectorRe
 
 } // namespace
 
-void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
+// The run's config, copied once from the accepted start and clamped here; the
+// run reads it unchanged afterwards (step 11g C4).
+void AnalyzerApp::initializeSequenceTest(const RunConfig& requested) {
     _sequenceTest.active = true;
-    _sequenceTest.quiet = pending.quiet || _seqOutputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet;
-    _sequenceTest.showDetails = pending.showDetails;
-    _sequenceTest.externalEmitter = pending.externalEmitter;
-    _sequenceTest.profileKind = pending.profileKind;
-    _sequenceTest.outputConfig = _seqOutputConfig;
-    _sequenceTest.totalTrials = pending.totalTrials == 0 ? 1 : pending.totalTrials;
-    _sequenceTest.periodMs = pending.periodMs == 0 ? 1 : pending.periodMs;
-    _sequenceTest.windowEndOffsetMs = pending.windowEndOffsetMs;
-    if (_sequenceTest.windowEndOffsetMs < 250) {
-        _sequenceTest.windowEndOffsetMs = 250;
+    RunConfig& config = _sequenceTest.config;
+    config = requested;
+    config.quiet = requested.quiet || _seqOutputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet;
+    config.outputConfig = _seqOutputConfig;  // the running copy of the next-start output settings
+    config.totalTrials = requested.totalTrials == 0 ? 1 : requested.totalTrials;
+    config.periodMs = requested.periodMs == 0 ? 1 : requested.periodMs;
+    if (config.windowEndOffsetMs < 250) {
+        config.windowEndOffsetMs = 250;
     }
-    if (_sequenceTest.windowEndOffsetMs >= _sequenceTest.periodMs) {
-        _sequenceTest.windowEndOffsetMs = _sequenceTest.periodMs > 250 ? _sequenceTest.periodMs - 250 : _sequenceTest.periodMs;
+    if (config.windowEndOffsetMs >= config.periodMs) {
+        config.windowEndOffsetMs = config.periodMs > 250 ? config.periodMs - 250 : config.periodMs;
     }
     // First pulse on to last pulse off; a single chirp when pulses=0.
-    const unsigned long emittedSpanMs = pending.pulseCount > 0
-        ? pending.pulseCount * pending.durationMs + (pending.pulseCount - 1) * pending.pulseGapMs
-        : pending.durationMs;
-    if (_sequenceTest.externalEmitter && _sequenceTest.windowEndOffsetMs < emittedSpanMs + 500) {
-        _sequenceTest.windowEndOffsetMs = emittedSpanMs + 500;
+    const unsigned long emittedSpanMs = config.pulseCount > 0
+        ? config.pulseCount * config.durationMs + (config.pulseCount - 1) * config.pulseGapMs
+        : config.durationMs;
+    if (config.externalEmitter && config.windowEndOffsetMs < emittedSpanMs + 500) {
+        config.windowEndOffsetMs = emittedSpanMs + 500;
     }
-    if (!_sequenceTest.externalEmitter && emittedSpanMs + 250 > _sequenceTest.windowEndOffsetMs) {
+    if (!config.externalEmitter && emittedSpanMs + 250 > config.windowEndOffsetMs) {
         serialOut().print("SEQ_WARN emitted span close to window end span_ms=");
         serialOut().print(emittedSpanMs);
         serialOut().print(" window=");
-        serialOut().println(_sequenceTest.windowEndOffsetMs);
+        serialOut().println(config.windowEndOffsetMs);
     }
-    _sequenceTest.toneHz = pending.toneHz;
-    _sequenceTest.durationMs = pending.durationMs;
-    _sequenceTest.pulseCount = pending.pulseCount;
-    _sequenceTest.pulseGapMs = pending.pulseGapMs;
-    _sequenceTest.pulseRampSet = pending.pulseRampSet;
-    _sequenceTest.pulseRampMs = pending.pulseRampMs;
-    strncpy(_sequenceTest.pulseHop, pending.pulseHop, sizeof(_sequenceTest.pulseHop) - 1);
-    _sequenceTest.pulseHop[sizeof(_sequenceTest.pulseHop) - 1] = '\0';
-    _sequenceTest.sweepToHz = pending.sweepToHz;
-    _sequenceTest.bandLowHz = pending.bandLowHz;
-    _sequenceTest.bandHighHz = pending.bandHighHz;
-    _sequenceTest.startupDelayMs = pending.startupDelayMs;
-    _sequenceTest.reportSettleMs = pending.reportSettleMs == 0 ? 1 : pending.reportSettleMs;
-    if (_sequenceTest.externalEmitter &&
-        _sequenceTest.windowEndOffsetMs + _sequenceTest.reportSettleMs > _sequenceTest.periodMs) {
+    config.reportSettleMs = requested.reportSettleMs == 0 ? 1 : requested.reportSettleMs;
+    if (config.externalEmitter &&
+        config.windowEndOffsetMs + config.reportSettleMs > config.periodMs) {
         // A trial finalizes reportSettleMs after its window; until then the
         // next emitter chirp is credited to the old trial (issue #31).
         serialOut().print("OBS_WARN window+report_settle>period window=");
-        serialOut().print(_sequenceTest.windowEndOffsetMs);
+        serialOut().print(config.windowEndOffsetMs);
         serialOut().print(" report_settle=");
-        serialOut().print(_sequenceTest.reportSettleMs);
+        serialOut().print(config.reportSettleMs);
         serialOut().print(" period=");
-        serialOut().println(_sequenceTest.periodMs);
+        serialOut().println(config.periodMs);
     }
-    _sequenceTest.sampleDumpEnabled = pending.sampleDumpEnabled;
-    _sequenceTest.sampleDumpFirstTrials = pending.sampleDumpFirstTrials;
-    _sequenceTest.sampleDumpEveryNth = pending.sampleDumpEveryNth;
-    _sequenceTest.sampleDumpLeadMs = pending.sampleDumpLeadMs;
-    _sequenceTest.sampleDumpTailMs = pending.sampleDumpTailMs;
-    _sequenceTest.sampleDumpStepMs = pending.sampleDumpStepMs == 0 ? 1 : pending.sampleDumpStepMs;
-    if (_sequenceTest.sampleDumpTailMs < _sequenceTest.sampleDumpLeadMs) {
-        _sequenceTest.sampleDumpTailMs = _sequenceTest.sampleDumpLeadMs;
+    config.sampleDumpStepMs = requested.sampleDumpStepMs == 0 ? 1 : requested.sampleDumpStepMs;
+    if (config.sampleDumpTailMs < config.sampleDumpLeadMs) {
+        config.sampleDumpTailMs = config.sampleDumpLeadMs;
     }
     // sampleMax is the budget over all dumped trials; the per-trial buffer
     // limit is checked separately in startSequenceTest. Clamping it to
     // kMaxSampleRows refused any dump of two default trials (issue #31 B12).
-    _sequenceTest.sampleDumpMaxRows = pending.sampleDumpMaxRows == 0 ? 1 : pending.sampleDumpMaxRows;
-    _sequenceTest.sampleDumpWarned = false;
+    config.sampleDumpMaxRows = requested.sampleDumpMaxRows == 0 ? 1 : requested.sampleDumpMaxRows;
+    _sequenceTest.sampleDump.warned = false;
     clearSequenceSampleDump();
-    const char* setupLabel = pending.setupLabel;
-    if (setupLabel != nullptr && setupLabel[0] != '\0') {
-        strncpy(_sequenceTest.setupLabel, setupLabel, sizeof(_sequenceTest.setupLabel));
-    } else {
-        strncpy(_sequenceTest.setupLabel, TEST_SETUP_LABEL, sizeof(_sequenceTest.setupLabel));
+    if (config.setupLabel[0] == '\0') {
+        strncpy(config.setupLabel, TEST_SETUP_LABEL, sizeof(config.setupLabel));
     }
-    _sequenceTest.setupLabel[sizeof(_sequenceTest.setupLabel) - 1] = '\0';
+    config.setupLabel[sizeof(config.setupLabel) - 1] = '\0';
 }
 
 void AnalyzerApp::configureSequenceDetection() {
@@ -145,118 +125,71 @@ void AnalyzerApp::configureSequenceDetection() {
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
     _detection.setInspectionPlan(selectedProfile.inspectionPlan);
     _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
-    _sequenceTest.sampleDumpDetectorSelection = selectedProfile.detectorSelection;
-    _sequenceTest.sampleDumpObservedStream = selectedProfile.scalarTransient.observedStream;
+    _sequenceTest.sampleDump.detectorSelection = selectedProfile.detectorSelection;
+    _sequenceTest.sampleDump.observedStream = selectedProfile.scalarTransient.observedStream;
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
-    _freqBandStream.setTargetFrequencyHz(_sequenceTest.toneHz);
-    _freqBandStream.setFrequencyUpdateEverySamples(_sequenceTest.outputConfig.frequencyUpdateEverySamples);
-    _freqBandStream.setBand(_sequenceTest.bandLowHz, _sequenceTest.bandHighHz);
+    _freqBandStream.setTargetFrequencyHz(_sequenceTest.config.toneHz);
+    _freqBandStream.setFrequencyUpdateEverySamples(_sequenceTest.config.outputConfig.frequencyUpdateEverySamples);
+    _freqBandStream.setBand(_sequenceTest.config.bandLowHz, _sequenceTest.config.bandHighHz);
     _freqBandStream.resetState();
-    if (_sequenceTest.bandLowHz != 0) {
+    if (_sequenceTest.config.bandLowHz != 0) {
         serialOut().print("SEQ band: low_hz=");
-        serialOut().print(_sequenceTest.bandLowHz);
+        serialOut().print(_sequenceTest.config.bandLowHz);
         serialOut().print(" high_hz=");
-        serialOut().print(_sequenceTest.bandHighHz);
+        serialOut().print(_sequenceTest.config.bandHighHz);
         serialOut().print(" bin_spacing_hz=");
         serialOut().println(_freqBandStream.bandSpacingHz(), 1);
     }
 }
 
+// Run start: no trial yet, the run's tallies at zero (step 11g C4).
 void AnalyzerApp::resetSequenceTestRunState() {
-    _sequenceTest.currentTrial = 0;
-    _sequenceTest.currentTrialScheduledAtMs = 0;
-    _sequenceTest.currentTrialStartMs = 0;
-    _sequenceTest.currentTrialEndMs = 0;
-    _sequenceTest.currentTrialOnsetDetectedMs = 0;
-    _sequenceTest.currentTrialPatternDetectedMs = 0;
-    _sequenceTest.sourceCandidateCount = 0;
-    _sequenceTest.sourceAcceptedCount = 0;
-    _sequenceTest.sourceRejectedCount = 0;
-    _sequenceTest.inspectedOccurrenceCount = 0;
-    _sequenceTest.verdictCount = 0;
-    _sequenceTest.primaryValidPatternCaptured = false;
-    memset(&_sequenceTest.primaryValidPattern, 0, sizeof(_sequenceTest.primaryValidPattern));
-    memset(&_sequenceTest.primaryValidInspectedOccurrence, 0, sizeof(_sequenceTest.primaryValidInspectedOccurrence));
-    memset(&_sequenceTest.primaryValidDetectorReport, 0, sizeof(_sequenceTest.primaryValidDetectorReport));
-    _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
-    memset(&_sequenceTest.primaryAcceptedInspectedOccurrence, 0, sizeof(_sequenceTest.primaryAcceptedInspectedOccurrence));
-    memset(&_sequenceTest.primaryAcceptedDetectorReport, 0, sizeof(_sequenceTest.primaryAcceptedDetectorReport));
-    memset(&_sequenceTest.primaryAcceptedSourceRecord, 0, sizeof(_sequenceTest.primaryAcceptedSourceRecord));
-    _sequenceTest.rejectedInWindowCount = 0;
-    _sequenceTest.bestRejectedPatternCaptured = false;
-    memset(&_sequenceTest.bestRejectedInWindow, 0, sizeof(_sequenceTest.bestRejectedInWindow));
-    memset(&_sequenceTest.bestRejectedInspectedOccurrence, 0, sizeof(_sequenceTest.bestRejectedInspectedOccurrence));
-    memset(&_sequenceTest.bestRejectedDetectorReport, 0, sizeof(_sequenceTest.bestRejectedDetectorReport));
-    _sequenceTest.selectedSourceRejectCaptured = false;
-    memset(&_sequenceTest.selectedSourceReject, 0, sizeof(_sequenceTest.selectedSourceReject));
-    _sequenceTest.consumedSourceRejectEventId = 0;
-    _sequenceTest.consumedSourceRejectReportGeneration = 0;
-    _sequenceTest.currentTrialFinalized = false;
-    _sequenceTest.currentTrialUnexpected = 0;
-    _sequenceTest.currentTrialRejected = 0;
-    memset(&_sequenceTest.currentTrialDiagnostics, 0, sizeof(_sequenceTest.currentTrialDiagnostics));
-    _sequenceTest.trialOverflowCountAtStart = 0;
-    _sequenceTest.trialPipelineOverflowCountAtStart = 0;
-    _sequenceTest.samplesProcessed = 0;
-    _sequenceTest.currentTrialSamplesProcessed = 0;
-    _sequenceTest.maxSamplesPerLoop = 0;
-    _sequenceTest.availableBytesSum = 0;
-    _sequenceTest.availableBytesSamples = 0;
-    _sequenceTest.maxAvailableBytes = 0;
-    _sequenceTest.maxBlockAgeMs = 0;
-    _sequenceTest.maxUpdateLoopUs = 0;
-    _sequenceTest.totalUpdateLoopUs = 0;
-    _sequenceTest.updateLoopCount = 0;
-    _sequenceTest.currentTrialUpdateLoopMaxUs = 0;
-    _sequenceTest.maxSampleWorkUs = 0;
-    _sequenceTest.maxFinalizeTrialUs = 0;
-    _sequenceTest.maxProcessingLagMs = 0;
-    _sequenceTest.completedTrials = 0;
-    memset(&_sequenceTest.cleanSummary, 0, sizeof(_sequenceTest.cleanSummary));
+    analyzer_seq::resetToDefaults(_sequenceTest.trial);
+    analyzer_seq::resetToDefaults(_sequenceTest.totals);
 }
 
-void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
-    initializeSequenceTest(pending);
+void AnalyzerApp::startSequenceTest(const RunConfig& requested) {
+    initializeSequenceTest(requested);
     configureSequenceDetection();
 
     // One history entry per ms holds the lead before the trigger; a longer
     // sampleLead was cut silently (issue #31 R2-19).
-    if (_sequenceTest.sampleDumpEnabled && _sequenceTest.sampleDumpLeadMs >= SequenceTest::kMaxSampleHistory) {
+    if (_sequenceTest.config.sampleDumpEnabled && _sequenceTest.config.sampleDumpLeadMs >= SampleDumpState::kMaxSampleHistory) {
         serialOut().print("SAMPLES_WARN reason=lead_beyond_history requested_lead_ms=");
-        serialOut().print(_sequenceTest.sampleDumpLeadMs);
+        serialOut().print(_sequenceTest.config.sampleDumpLeadMs);
         serialOut().print(" max_lead_ms=");
-        serialOut().println(static_cast<unsigned long>(SequenceTest::kMaxSampleHistory - 1));
-        _sequenceTest.sampleDumpLeadMs = SequenceTest::kMaxSampleHistory - 1;
+        serialOut().println(static_cast<unsigned long>(SampleDumpState::kMaxSampleHistory - 1));
+        _sequenceTest.config.sampleDumpLeadMs = SampleDumpState::kMaxSampleHistory - 1;
     }
-    if (_sequenceTest.sampleDumpEnabled) {
+    if (_sequenceTest.config.sampleDumpEnabled) {
         const unsigned long selectedTrialsEstimate = countSelectedSampleDumpTrials(
-            _sequenceTest.totalTrials, _sequenceTest.sampleDumpFirstTrials, _sequenceTest.sampleDumpEveryNth);
-        const unsigned long rowsPerTrial = ((_sequenceTest.sampleDumpLeadMs + _sequenceTest.sampleDumpTailMs) /
-                                            _sequenceTest.sampleDumpStepMs) + 1UL;
+            _sequenceTest.config.totalTrials, _sequenceTest.config.sampleDumpFirstTrials, _sequenceTest.config.sampleDumpEveryNth);
+        const unsigned long rowsPerTrial = ((_sequenceTest.config.sampleDumpLeadMs + _sequenceTest.config.sampleDumpTailMs) /
+                                            _sequenceTest.config.sampleDumpStepMs) + 1UL;
         const unsigned long requestedRows = selectedTrialsEstimate * rowsPerTrial;
-        if (requestedRows > _sequenceTest.sampleDumpMaxRows || rowsPerTrial > SequenceTest::kMaxSampleRows) {
+        if (requestedRows > _sequenceTest.config.sampleDumpMaxRows || rowsPerTrial > SampleDumpState::kMaxSampleRows) {
             serialOut().print("SAMPLES_WARN reason=too_many_samples requested=");
             serialOut().print(requestedRows);
             serialOut().print(" max_allowed=");
-            serialOut().print(_sequenceTest.sampleDumpMaxRows);
+            serialOut().print(_sequenceTest.config.sampleDumpMaxRows);
             serialOut().print(" rows_per_trial=");
             serialOut().print(rowsPerTrial);
             serialOut().print(" max_per_trial=");
-            serialOut().println(static_cast<unsigned long>(SequenceTest::kMaxSampleRows));
-            _sequenceTest.sampleDumpEnabled = false;
+            serialOut().println(static_cast<unsigned long>(SampleDumpState::kMaxSampleRows));
+            _sequenceTest.config.sampleDumpEnabled = false;
         }
     }
     _sequenceTest.startedAtMs = timebase::nowMs();
-    _sequenceTest.nextTriggerAtMs = _sequenceTest.startedAtMs + _sequenceTest.startupDelayMs;
+    _sequenceTest.nextTriggerAtMs = _sequenceTest.startedAtMs + _sequenceTest.config.startupDelayMs;
     resetSequenceTestRunState();
 
-    if (!_sequenceTest.externalEmitter) {
+    if (!_sequenceTest.config.externalEmitter) {
         // Rebase before the first trial so every run starts from the quiet floor.
         const unsigned long sequenceClaimSendMs = timebase::nowMs();
         sendEmitterCommand("MODE REMOTE");
         const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs);
         const unsigned long sequenceClaimAckMs = timebase::nowMs();
-        if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
+        if (_sequenceTest.config.showDetails && !_sequenceTest.config.quiet) {
             serialOut().print("SEQ remote claim: send=");
             serialOut().print(sequenceClaimSendMs);
             serialOut().print("ms ack=");
@@ -273,7 +206,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     if (!_audioSignal.rebase()) {
         serialOut().println("SEQ WARN rebase_timeout no_audio baseline_unchanged");
     }
-    if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
+    if (_sequenceTest.config.showDetails && !_sequenceTest.config.quiet) {
         serialOut().print("SEQ rebase: start=");
         serialOut().print(sequenceRebaseStartMs);
         serialOut().print("ms end=");
@@ -285,30 +218,30 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     resetAudioSignalState();
     _audioSignal.resetStats();
     _audioSource.resetStats();
-    if (!_sequenceTest.quiet) {
+    if (!_sequenceTest.config.quiet) {
         serialOut().println("AUDIO stats reset");
     }
 
-    if (!_sequenceTest.quiet) {
+    if (!_sequenceTest.config.quiet) {
         serialOut().print("SEQ start test=");
-        serialOut().print(_sequenceTest.setupLabel);
+        serialOut().print(_sequenceTest.config.setupLabel);
         serialOut().print(" startup_delay_ms=");
-        serialOut().print(_sequenceTest.startupDelayMs);
+        serialOut().print(_sequenceTest.config.startupDelayMs);
         serialOut().print(" report_settle_ms=");
-        serialOut().print(_sequenceTest.reportSettleMs);
+        serialOut().print(_sequenceTest.config.reportSettleMs);
         serialOut().print(" loopDelayMs=");
         serialOut().print(TEST_LOOP_DELAY_MS);
         serialOut().print(" logStress=");
         serialOut().println(TEST_LOG_STRESS ? 1 : 0);
     }
 
-    if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
+    if (_sequenceTest.config.showDetails && !_sequenceTest.config.quiet) {
         const detection::DetectionProfile& selectedProfile = effectiveSequenceProfile();
         serialOut().print("SEQ start source=");
         serialOut().print("I2S");
         serialOut().print(" probe=AMP");
         serialOut().print(" profile=");
-        serialOut().print(detection::detectionProfileName(_sequenceTest.profileKind));
+        serialOut().print(detection::detectionProfileName(_sequenceTest.config.profileKind));
         serialOut().print(" source=");
         serialOut().print(detection::detectorSelectionName(selectedProfile.detectorSelection));
         serialOut().print(" detector=");
@@ -347,59 +280,59 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         serialOut().print(" history.stream=freq_target aggregation=fresh_only");
         serialOut().print(" history.stream=freq_contrast aggregation=fresh_only");
         serialOut().print(" mode=");
-        serialOut().print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
+        serialOut().print(_sequenceTest.config.externalEmitter ? "OBS" : "SEQ");
         serialOut().print(" test=");
-        serialOut().print(_sequenceTest.setupLabel);
+        serialOut().print(_sequenceTest.config.setupLabel);
         serialOut().print(" startup_delay_ms=");
-        serialOut().print(_sequenceTest.startupDelayMs);
+        serialOut().print(_sequenceTest.config.startupDelayMs);
         serialOut().print(" report_settle_ms=");
-        serialOut().print(_sequenceTest.reportSettleMs);
+        serialOut().print(_sequenceTest.config.reportSettleMs);
         serialOut().print(" loopDelayMs=");
         serialOut().print(TEST_LOOP_DELAY_MS);
         serialOut().print(" logStress=");
         serialOut().print(TEST_LOG_STRESS ? 1 : 0);
         serialOut().print(" quiet=");
-        serialOut().print(_sequenceTest.quiet ? 1 : 0);
+        serialOut().print(_sequenceTest.config.quiet ? 1 : 0);
         serialOut().print(" tries=");
-        serialOut().print(_sequenceTest.totalTrials);
+        serialOut().print(_sequenceTest.config.totalTrials);
         serialOut().print(" period_ms=");
-        serialOut().print(_sequenceTest.periodMs);
+        serialOut().print(_sequenceTest.config.periodMs);
         serialOut().print(" window_start_ms=");
         serialOut().print(0UL);
         serialOut().print(" window_end_ms=");
-        serialOut().print(_sequenceTest.windowEndOffsetMs);
+        serialOut().print(_sequenceTest.config.windowEndOffsetMs);
         serialOut().print(" freq_hz=");
-        serialOut().print(_sequenceTest.toneHz);
+        serialOut().print(_sequenceTest.config.toneHz);
         serialOut().print(" dur_ms=");
-        serialOut().print(_sequenceTest.durationMs);
+        serialOut().print(_sequenceTest.config.durationMs);
         // Pulse trains only (DET-011); a plain chirp run keeps its old header.
-        if (_sequenceTest.pulseCount > 0) {
+        if (_sequenceTest.config.pulseCount > 0) {
             serialOut().print(" pulses=");
-            serialOut().print(_sequenceTest.pulseCount);
+            serialOut().print(_sequenceTest.config.pulseCount);
             serialOut().print(" gap_ms=");
-            serialOut().print(_sequenceTest.pulseGapMs);
+            serialOut().print(_sequenceTest.config.pulseGapMs);
             serialOut().print(" ramp_ms=");
-            if (_sequenceTest.pulseRampSet) {
-                serialOut().print(_sequenceTest.pulseRampMs);
+            if (_sequenceTest.config.pulseRampSet) {
+                serialOut().print(_sequenceTest.config.pulseRampMs);
             } else {
                 serialOut().print("default");
             }
-        } else if (_sequenceTest.sweepToHz != 0) {
+        } else if (_sequenceTest.config.sweepToHz != 0) {
             // Sweep inside the chirp (OUT-005): freq_hz glides to this over dur_ms.
             serialOut().print(" sweep_hz=");
-            serialOut().print(_sequenceTest.sweepToHz);
+            serialOut().print(_sequenceTest.config.sweepToHz);
         }
         serialOut().println();
         printDetectionParameters();
-        if (!_sequenceTest.quiet) {
-            serialOut().println(_sequenceTest.externalEmitter ? "OBS running" : "SEQ running");
+        if (!_sequenceTest.config.quiet) {
+            serialOut().println(_sequenceTest.config.externalEmitter ? "OBS running" : "SEQ running");
         }
     }
 }
 
 void AnalyzerApp::stopSequenceTest() {
     _sequenceTest.active = false;
-    _sequenceTest.sampleDumpCapturing = false;
+    _sequenceTest.sampleDump.capturing = false;
 }
 
 void AnalyzerApp::updateSequenceTest(unsigned long now) {
@@ -407,8 +340,8 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         return;
     }
 
-    if (_sequenceTest.currentTrial > 0 && !_sequenceTest.currentTrialFinalized) {
-        const unsigned long finalizeAtMs = _sequenceTest.currentTrialEndMs + _sequenceTest.reportSettleMs;
+    if (_sequenceTest.trial.number > 0 && !_sequenceTest.trial.finalized) {
+        const unsigned long finalizeAtMs = _sequenceTest.trial.endMs + _sequenceTest.config.reportSettleMs;
         if (timing::beforeDeadline(now, finalizeAtMs)) {
             return;
         }
@@ -423,99 +356,67 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         return;
     }
 
-    if (_sequenceTest.currentTrial >= _sequenceTest.totalTrials) {
+    if (_sequenceTest.trial.number >= _sequenceTest.config.totalTrials) {
         return;
     }
 
-    const unsigned long trialNumber = _sequenceTest.currentTrial + 1;
+    const unsigned long trialNumber = _sequenceTest.trial.number + 1;
     const unsigned long scheduledAtMs = _sequenceTest.nextTriggerAtMs;
-    _sequenceTest.currentTrial = trialNumber;
-    _sequenceTest.currentTrialScheduledAtMs = scheduledAtMs;
-    _sequenceTest.currentTrialStartMs = scheduledAtMs;
-    _sequenceTest.currentTrialCommandSent = false;
-    _sequenceTest.currentTrialCommandSentMs = 0;
-    _sequenceTest.currentTrialEndMs = scheduledAtMs + _sequenceTest.windowEndOffsetMs;
-    _sequenceTest.currentTrialOnsetDetectedMs = 0;
-    _sequenceTest.currentTrialPatternDetectedMs = 0;
+    // One reset to defaults for the whole trial (TrialState{}): its window, evidence, diagnostics and loop timing.
     // Trial-local evidence for classifySequenceTrial (issue #31): left
     // cumulative, one rejected candidate made every later miss
     // OccurrenceSeenButRejected.
-    _sequenceTest.sourceCandidateCount = 0;
-    _sequenceTest.sourceAcceptedCount = 0;
-    _sequenceTest.sourceRejectedCount = 0;
-    _sequenceTest.inspectedOccurrenceCount = 0;
-    _sequenceTest.verdictCount = 0;
-    _sequenceTest.primaryValidPatternCaptured = false;
-    _sequenceTest.primaryValidPattern = {};
-    _sequenceTest.primaryValidInspectedOccurrence = {};
-    _sequenceTest.primaryValidDetectorReport = {};
-    _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
-    _sequenceTest.primaryAcceptedInspectedOccurrence = {};
-    _sequenceTest.primaryAcceptedDetectorReport = {};
-    _sequenceTest.primaryAcceptedSourceRecord = {};
-    _sequenceTest.rejectedInWindowCount = 0;
-    _sequenceTest.bestRejectedPatternCaptured = false;
-    _sequenceTest.bestRejectedInWindow = {};
-    _sequenceTest.bestRejectedInspectedOccurrence = {};
-    _sequenceTest.bestRejectedDetectorReport = {};
-    _sequenceTest.selectedSourceRejectCaptured = false;
-    _sequenceTest.selectedSourceReject = {};
-    _sequenceTest.currentTrialFinalized = false;
-    _sequenceTest.currentTrialUnexpected = 0;
-    _sequenceTest.currentTrialRejected = 0;
-    _sequenceTest.bufferOverrun = false;
-    _sequenceTest.trialOverflowCountAtStart = _audioSource.stats().overflowCount;
-    _sequenceTest.currentTrialDiagnostics = {};
-    _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
-    _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
-    _sequenceTest.currentTrialSamplesProcessed = 0;
-    _sequenceTest.currentTrialUpdateLoopMaxUs = 0;
-    _sequenceTest.totalUpdateLoopUs = 0;
-    _sequenceTest.updateLoopCount = 0;
+    analyzer_seq::resetToDefaults(_sequenceTest.trial);
+    _sequenceTest.trial.number = trialNumber;
+    _sequenceTest.trial.scheduledAtMs = scheduledAtMs;
+    _sequenceTest.trial.startMs = scheduledAtMs;
+    _sequenceTest.trial.endMs = scheduledAtMs + _sequenceTest.config.windowEndOffsetMs;
+    _sequenceTest.trial.overflowCountAtStart = _audioSource.stats().overflowCount;
+    _sequenceTest.trial.diagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
     _detection.resetSourceRejectSummaries();
     resetLoopHealthWindow();
     printSequenceTrialHeader(trialNumber);
-    if (_sequenceTest.outputConfig.diagnosticsEnabled) {
+    if (_sequenceTest.config.outputConfig.diagnosticsEnabled) {
         _detection.resetDiagnosticsCounters();
     }
     // Detection-side overflow baselines after the diagnostics reset, which
     // zeroes both counters (issue #31); the I2S baseline above is separate.
-    _sequenceTest.trialPipelineOverflowCountAtStart = _detection.diagnostics().pipelineEventOverflowCount();
-    _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
+    _sequenceTest.trial.pipelineOverflowCountAtStart = _detection.diagnostics().pipelineEventOverflowCount();
+    _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.config.periodMs;
 
     beginSequenceSampleDump(trialNumber);
 
-    if (!_sequenceTest.externalEmitter) {
+    if (!_sequenceTest.config.externalEmitter) {
         char command[128];
-        if (_sequenceTest.pulseCount > 0) {
+        if (_sequenceTest.config.pulseCount > 0) {
             int written = snprintf(command, sizeof(command), "PULSES %lu %lu %lu trial=%lu freq=%lu",
-                                   _sequenceTest.pulseCount, _sequenceTest.durationMs, _sequenceTest.pulseGapMs,
-                                   trialNumber, _sequenceTest.toneHz);
-            if (_sequenceTest.pulseRampSet && written > 0 && static_cast<size_t>(written) < sizeof(command)) {
-                snprintf(command + written, sizeof(command) - written, " ramp=%lu", _sequenceTest.pulseRampMs);
+                                   _sequenceTest.config.pulseCount, _sequenceTest.config.durationMs, _sequenceTest.config.pulseGapMs,
+                                   trialNumber, _sequenceTest.config.toneHz);
+            if (_sequenceTest.config.pulseRampSet && written > 0 && static_cast<size_t>(written) < sizeof(command)) {
+                snprintf(command + written, sizeof(command) - written, " ramp=%lu", _sequenceTest.config.pulseRampMs);
             }
             const size_t used = strlen(command);
-            if (_sequenceTest.pulseHop[0] != '\0' && used < sizeof(command)) {
-                snprintf(command + used, sizeof(command) - used, " hop=%s", _sequenceTest.pulseHop);
+            if (_sequenceTest.config.pulseHop[0] != '\0' && used < sizeof(command)) {
+                snprintf(command + used, sizeof(command) - used, " hop=%s", _sequenceTest.config.pulseHop);
             }
-        } else if (_sequenceTest.sweepToHz != 0) {
+        } else if (_sequenceTest.config.sweepToHz != 0) {
             snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu sweep=%lu", trialNumber,
-                     _sequenceTest.toneHz, _sequenceTest.durationMs, _sequenceTest.sweepToHz);
+                     _sequenceTest.config.toneHz, _sequenceTest.config.durationMs, _sequenceTest.config.sweepToHz);
         } else {
-            snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber, _sequenceTest.toneHz, _sequenceTest.durationMs);
+            snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber, _sequenceTest.config.toneHz, _sequenceTest.config.durationMs);
         }
-        _sequenceTest.currentTrialCommandSentMs = timebase::nowMs();
-        _sequenceTest.currentTrialCommandSent = true;
+        _sequenceTest.trial.commandSentMs = timebase::nowMs();
+        _sequenceTest.trial.commandSent = true;
         sendEmitterCommand(command);
     }
 }
 
 void IRAM_ATTR AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
-    if (!_sequenceTest.active || _sequenceTest.currentTrial == 0 || _sequenceTest.currentTrialFinalized) {
+    if (!_sequenceTest.active || _sequenceTest.trial.number == 0 || _sequenceTest.trial.finalized) {
         return;
     }
 
-    auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+    auto& diagnostics = _sequenceTest.trial.diagnostics;
     const float baseline = _audioSignal.baseline();
     const int signalLevel = _audioSignal.smoothedSignalMagnitude();
 
@@ -541,96 +442,96 @@ void IRAM_ATTR AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
 AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const {
     SequenceTrialSelection selection = {};
 
-    if (_sequenceTest.primaryValidPatternCaptured) {
+    if (_sequenceTest.trial.primaryValidPatternCaptured) {
         selection.kind = SequenceTrialSelection::Kind::ValidPattern;
-        selection.verdict = &_sequenceTest.primaryValidPattern;
-        selection.inspectedOccurrence = _sequenceTest.primaryValidInspectedOccurrence.occurrence.present
-            ? &_sequenceTest.primaryValidInspectedOccurrence
+        selection.verdict = &_sequenceTest.trial.primaryValidPattern;
+        selection.inspectedOccurrence = _sequenceTest.trial.primaryValidInspectedOccurrence.occurrence.present
+            ? &_sequenceTest.trial.primaryValidInspectedOccurrence
             : nullptr;
-        selection.detectorReport = _sequenceTest.primaryValidDetectorReport.detectorId != detection::DetectorId::Unknown
-            ? &_sequenceTest.primaryValidDetectorReport
+        selection.detectorReport = _sequenceTest.trial.primaryValidDetectorReport.detectorId != detection::DetectorId::Unknown
+            ? &_sequenceTest.trial.primaryValidDetectorReport
             : nullptr;
-        selection.sourceEventId = _sequenceTest.primaryAcceptedSourceRecord.eventId;
-        selection.sourceReportGeneration = _sequenceTest.primaryAcceptedSourceRecord.reportGeneration;
-        selection.sourceEventTrialAttribution = _sequenceTest.primaryAcceptedSourceRecord.eventTrialAttribution;
+        selection.sourceEventId = _sequenceTest.trial.primaryAcceptedSourceRecord.eventId;
+        selection.sourceReportGeneration = _sequenceTest.trial.primaryAcceptedSourceRecord.reportGeneration;
+        selection.sourceEventTrialAttribution = _sequenceTest.trial.primaryAcceptedSourceRecord.eventTrialAttribution;
         selection.occurrenceId = selection.inspectedOccurrence != nullptr
             ? selection.inspectedOccurrence->occurrence.occurrenceId
             : 0UL;
         selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.primaryValidPattern.primaryStartMs, trialOnsetAnchorMs));
-        selection.durationMs = _sequenceTest.primaryValidPattern.primaryDurationMs;
-        selection.strength = _sequenceTest.primaryValidPattern.primaryStrength;
+        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.primaryValidPattern.primaryStartMs, trialOnsetAnchorMs));
+        selection.durationMs = _sequenceTest.trial.primaryValidPattern.primaryDurationMs;
+        selection.strength = _sequenceTest.trial.primaryValidPattern.primaryStrength;
         selection.result = selection.dtMs >= kAnalyzerLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
         return selection;
     }
 
-    if (_sequenceTest.primaryAcceptedOccurrenceCaptured && _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.present) {
+    if (_sequenceTest.trial.primaryAcceptedOccurrenceCaptured && _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.present) {
         selection.kind = SequenceTrialSelection::Kind::AcceptedOccurrence;
-        selection.inspectedOccurrence = &_sequenceTest.primaryAcceptedInspectedOccurrence;
-        selection.detectorReport = _sequenceTest.primaryAcceptedDetectorReport.detectorId != detection::DetectorId::Unknown
-            ? &_sequenceTest.primaryAcceptedDetectorReport
+        selection.inspectedOccurrence = &_sequenceTest.trial.primaryAcceptedInspectedOccurrence;
+        selection.detectorReport = _sequenceTest.trial.primaryAcceptedDetectorReport.detectorId != detection::DetectorId::Unknown
+            ? &_sequenceTest.trial.primaryAcceptedDetectorReport
             : nullptr;
-        selection.sourceEventId = _sequenceTest.primaryAcceptedSourceRecord.eventId;
-        selection.sourceReportGeneration = _sequenceTest.primaryAcceptedSourceRecord.reportGeneration;
-        selection.sourceEventTrialAttribution = _sequenceTest.primaryAcceptedSourceRecord.eventTrialAttribution;
+        selection.sourceEventId = _sequenceTest.trial.primaryAcceptedSourceRecord.eventId;
+        selection.sourceReportGeneration = _sequenceTest.trial.primaryAcceptedSourceRecord.reportGeneration;
+        selection.sourceEventTrialAttribution = _sequenceTest.trial.primaryAcceptedSourceRecord.eventTrialAttribution;
         selection.occurrenceId = selection.inspectedOccurrence->occurrence.occurrenceId;
         selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs, trialOnsetAnchorMs));
-        selection.durationMs = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
-        selection.strength = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.strength;
-        if (_sequenceTest.bestRejectedPatternCaptured &&
-            _sequenceTest.bestRejectedInWindow.occurrenceId == selection.occurrenceId) {
-            selection.verdict = &_sequenceTest.bestRejectedInWindow;
-            selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
-            selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
-            selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
+        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.startMs, trialOnsetAnchorMs));
+        selection.durationMs = _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
+        selection.strength = _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.strength;
+        if (_sequenceTest.trial.bestRejectedPatternCaptured &&
+            _sequenceTest.trial.bestRejectedInWindow.occurrenceId == selection.occurrenceId) {
+            selection.verdict = &_sequenceTest.trial.bestRejectedInWindow;
+            selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
+            selection.durationMs = _sequenceTest.trial.bestRejectedInWindow.primaryDurationMs;
+            selection.strength = _sequenceTest.trial.bestRejectedInWindow.primaryStrength;
         }
         selection.result = selection.dtMs >= kAnalyzerLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
         return selection;
     }
 
-    if (_sequenceTest.selectedSourceRejectCaptured &&
-        _sequenceTest.selectedSourceReject.detectorReport.detectorId != detection::DetectorId::Unknown &&
-        _sequenceTest.selectedSourceReject.eventTrialAttribution == _sequenceTest.currentTrial) {
+    if (_sequenceTest.trial.selectedSourceRejectCaptured &&
+        _sequenceTest.trial.selectedSourceReject.detectorReport.detectorId != detection::DetectorId::Unknown &&
+        _sequenceTest.trial.selectedSourceReject.eventTrialAttribution == _sequenceTest.trial.number) {
         selection.kind = SequenceTrialSelection::Kind::RejectedSourceCandidate;
-        selection.detectorReport = &_sequenceTest.selectedSourceReject.detectorReport;
-        selection.sourceEventId = _sequenceTest.selectedSourceReject.eventId;
-        selection.sourceReportGeneration = _sequenceTest.selectedSourceReject.reportGeneration;
-        selection.sourceEventTrialAttribution = _sequenceTest.selectedSourceReject.eventTrialAttribution;
-        selection.occurrenceId = _sequenceTest.selectedSourceReject.sourceOccurrenceId;
-        selection.candidateId = _sequenceTest.selectedSourceReject.sourceCandidateId;
-        selection.reportMatched = _sequenceTest.selectedSourceReject.sourceReportMatched;
-        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.selectedSourceReject.detectorReport.selectedReject.startMs, trialOnsetAnchorMs));
-        selection.durationMs = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.durationMs;
-        selection.strength = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.strength;
+        selection.detectorReport = &_sequenceTest.trial.selectedSourceReject.detectorReport;
+        selection.sourceEventId = _sequenceTest.trial.selectedSourceReject.eventId;
+        selection.sourceReportGeneration = _sequenceTest.trial.selectedSourceReject.reportGeneration;
+        selection.sourceEventTrialAttribution = _sequenceTest.trial.selectedSourceReject.eventTrialAttribution;
+        selection.occurrenceId = _sequenceTest.trial.selectedSourceReject.sourceOccurrenceId;
+        selection.candidateId = _sequenceTest.trial.selectedSourceReject.sourceCandidateId;
+        selection.reportMatched = _sequenceTest.trial.selectedSourceReject.sourceReportMatched;
+        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.selectedSourceReject.detectorReport.selectedReject.startMs, trialOnsetAnchorMs));
+        selection.durationMs = _sequenceTest.trial.selectedSourceReject.detectorReport.selectedReject.durationMs;
+        selection.strength = _sequenceTest.trial.selectedSourceReject.detectorReport.selectedReject.strength;
         selection.result = AnalyzerResult::Rejected;
         return selection;
     }
 
-    if (_sequenceTest.bestRejectedPatternCaptured) {
+    if (_sequenceTest.trial.bestRejectedPatternCaptured) {
         selection.kind = SequenceTrialSelection::Kind::RejectedPattern;
-        selection.verdict = &_sequenceTest.bestRejectedInWindow;
-        selection.inspectedOccurrence = _sequenceTest.bestRejectedInspectedOccurrence.occurrence.present
-            ? &_sequenceTest.bestRejectedInspectedOccurrence
+        selection.verdict = &_sequenceTest.trial.bestRejectedInWindow;
+        selection.inspectedOccurrence = _sequenceTest.trial.bestRejectedInspectedOccurrence.occurrence.present
+            ? &_sequenceTest.trial.bestRejectedInspectedOccurrence
             : nullptr;
-        selection.detectorReport = _sequenceTest.bestRejectedDetectorReport.detectorId != detection::DetectorId::Unknown
-            ? &_sequenceTest.bestRejectedDetectorReport
+        selection.detectorReport = _sequenceTest.trial.bestRejectedDetectorReport.detectorId != detection::DetectorId::Unknown
+            ? &_sequenceTest.trial.bestRejectedDetectorReport
             : nullptr;
         selection.occurrenceId = selection.inspectedOccurrence != nullptr
             ? selection.inspectedOccurrence->occurrence.occurrenceId
             : 0UL;
         selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
-        selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
-        selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
+        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
+        selection.durationMs = _sequenceTest.trial.bestRejectedInWindow.primaryDurationMs;
+        selection.strength = _sequenceTest.trial.bestRejectedInWindow.primaryStrength;
         selection.result = AnalyzerResult::Rejected;
         return selection;
     }
 
-    if (_sequenceTest.currentTrialUnexpected > 0) {
+    if (_sequenceTest.trial.unexpected > 0) {
         selection.kind = SequenceTrialSelection::Kind::Unexpected;
         selection.result = AnalyzerResult::Unexpected;
         return selection;
@@ -651,10 +552,10 @@ void AnalyzerApp::refreshCapturedDetectorReportAggregates() {
         return;
     }
     detection::DetectorReport* const copies[] = {
-        &_sequenceTest.primaryValidDetectorReport,
-        &_sequenceTest.primaryAcceptedDetectorReport,
-        &_sequenceTest.bestRejectedDetectorReport,
-        &_sequenceTest.selectedSourceReject.detectorReport,
+        &_sequenceTest.trial.primaryValidDetectorReport,
+        &_sequenceTest.trial.primaryAcceptedDetectorReport,
+        &_sequenceTest.trial.bestRejectedDetectorReport,
+        &_sequenceTest.trial.selectedSourceReject.detectorReport,
     };
     for (detection::DetectorReport* copy : copies) {
         if (copy->detectorId == live.detectorId) {
@@ -664,11 +565,11 @@ void AnalyzerApp::refreshCapturedDetectorReportAggregates() {
 }
 
 void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
-    if (_sequenceTest.currentTrial == 0) {
+    if (_sequenceTest.trial.number == 0) {
         return;
     }
 
-    if (_sequenceTest.currentTrialFinalized) {
+    if (_sequenceTest.trial.finalized) {
         return;
     }
 
@@ -676,13 +577,13 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     pollEmitterSerial();
     refreshCapturedDetectorReportAggregates();
     const uint32_t finalizeStartUs = timebase::nowUs();
-    auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+    auto& diagnostics = _sequenceTest.trial.diagnostics;
 
-    const bool bufferOverrunTrial = _sequenceTest.bufferOverrun
-                                    || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
+    const bool bufferOverrunTrial = _sequenceTest.trial.bufferOverrun
+                                    || _audioSource.stats().overflowCount != _sequenceTest.trial.overflowCountAtStart;
     const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
     const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
-    const bool rejectedTrial = _sequenceTest.rejectedInWindowCount > 0;
+    const bool rejectedTrial = _sequenceTest.trial.rejectedInWindowCount > 0;
     const bool unexpectedTrial = selectedTrial.result == AnalyzerResult::Unexpected;
 
     AnalyzerResult result = selectedTrial.result;
@@ -709,15 +610,15 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 
     AnalyzerReport* finalizedReport = sequenceReportScratch();
-    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
+    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.trial.number, result, dtMs, durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
-    _sequenceTest.completedTrials++;
+    _sequenceTest.totals.completedTrials++;
     flushSequenceSampleHistory(now + 1UL);
     if (shouldPrintSequenceTrial()) {
         printSequenceTrial(*finalizedReport);
     }
-    if (_sequenceTest.sampleDumpEnabled) {
-        printSequenceSampleReport(_sequenceTest.currentTrial);
+    if (_sequenceTest.config.sampleDumpEnabled) {
+        printSequenceSampleReport(_sequenceTest.trial.number);
     }
     if (shouldPrintSequenceInspect(*finalizedReport)) {
         printSequenceInspectCanonical(*finalizedReport);
@@ -735,37 +636,37 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     // period, and finalize already waited reportSettleMs past the window, so
     // a second settle here shifted every later window out of phase (issue
     // #31). SEQ commands its own chirps and may push the next one out.
-    if (!_sequenceTest.externalEmitter && _sequenceTest.currentTrial < _sequenceTest.totalTrials) {
-        const unsigned long settleUntilMs = now + _sequenceTest.reportSettleMs;
+    if (!_sequenceTest.config.externalEmitter && _sequenceTest.trial.number < _sequenceTest.config.totalTrials) {
+        const unsigned long settleUntilMs = now + _sequenceTest.config.reportSettleMs;
         if (timing::beforeDeadline(_sequenceTest.nextTriggerAtMs, settleUntilMs)) {
             _sequenceTest.nextTriggerAtMs = settleUntilMs;
         }
     }
-    _sequenceTest.currentTrialFinalized = true;
+    _sequenceTest.trial.finalized = true;
 
-    if (_sequenceTest.currentTrial >= _sequenceTest.totalTrials) {
+    if (_sequenceTest.trial.number >= _sequenceTest.config.totalTrials) {
         printSequenceSummaryClean();
         stopSequenceTest();
     }
 
     const unsigned long finalizeUs = static_cast<unsigned long>(timebase::nowUs() - finalizeStartUs);
-    if (finalizeUs > _sequenceTest.maxFinalizeTrialUs) {
-        _sequenceTest.maxFinalizeTrialUs = finalizeUs;
+    if (finalizeUs > _sequenceTest.totals.maxFinalizeTrialUs) {
+        _sequenceTest.totals.maxFinalizeTrialUs = finalizeUs;
     }
 }
 
 void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
-    AnalyzerCleanSummary& summary = _sequenceTest.cleanSummary;
+    AnalyzerCleanSummary& summary = _sequenceTest.totals.cleanSummary;
     summary.profileName = activeAnalyzerProfileName();
     if (summary.detectorId == detection::DetectorId::Unknown) {
-        const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+        const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.config.profileKind);
         (void)selectedProfile;  // one family: the scalar detector
         summary.detectorId = detection::DetectorId::ScalarTransient;
         if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
             summary.detectorId = report.detectorReport->detectorId;
         }
     }
-    summary.trials = static_cast<unsigned int>(_sequenceTest.totalTrials);
+    summary.trials = static_cast<unsigned int>(_sequenceTest.config.totalTrials);
 
     switch (report.classification.result) {
         case AnalyzerResult::Expected:
@@ -846,13 +747,13 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
 // command contains the Emitter's command handling and the D-AMP TX queue, a
 // constant (59 ms on 2026-10-22, E2/E3, against 22-38 ms of marker jitter).
 unsigned long AnalyzerApp::sequenceTrialOnsetAnchorMs() const {
-    if (_sequenceTest.currentTrialCommandSent) {
-        return _sequenceTest.currentTrialCommandSentMs;
+    if (_sequenceTest.trial.commandSent) {
+        return _sequenceTest.trial.commandSentMs;
     }
-    if (_sequenceTest.currentTrialDiagnostics.emitStartSeen) {
-        return _sequenceTest.currentTrialStartMs + _sequenceTest.currentTrialDiagnostics.emitStartDtMs;
+    if (_sequenceTest.trial.diagnostics.emitStartSeen) {
+        return _sequenceTest.trial.startMs + _sequenceTest.trial.diagnostics.emitStartDtMs;
     }
-    return _sequenceTest.currentTrialScheduledAtMs;
+    return _sequenceTest.trial.scheduledAtMs;
 }
 
 

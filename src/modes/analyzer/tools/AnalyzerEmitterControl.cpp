@@ -65,12 +65,12 @@ void AnalyzerApp::pollEmitterSerial() {
                 _controlClaimAcked = true;
                 serialOut().println("EVT analyzer_control_claim acked");
             }
-            if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && (emitStartLine || emitDriveOnLine)) {
+            if (_sequenceTest.active && _sequenceTest.trial.number > 0 && (emitStartLine || emitDriveOnLine)) {
                 const unsigned long markerTrial = parseUnsignedTokenValue(emitterLine, "trial=");
-                if (markerTrial == _sequenceTest.currentTrial) {
-                    auto& trialDiag = _sequenceTest.currentTrialDiagnostics;
+                if (markerTrial == _sequenceTest.trial.number) {
+                    auto& trialDiag = _sequenceTest.trial.diagnostics;
                     trialDiag.emitStartSeen = true;
-                    trialDiag.emitStartDtMs = timing::elapsedOrZero(now, _sequenceTest.currentTrialStartMs);
+                    trialDiag.emitStartDtMs = timing::elapsedOrZero(now, _sequenceTest.trial.startMs);
                 }
             }
         }

@@ -235,11 +235,11 @@ const char* AnalyzerApp::currentResetReasonName() const {
 }
 
 void IRAM_ATTR AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& audioSamplePacket) {
-    if (!_sequenceTest.active || _sequenceTest.currentTrial == 0 || _sequenceTest.currentTrialFinalized) {
+    if (!_sequenceTest.active || _sequenceTest.trial.number == 0 || _sequenceTest.trial.finalized) {
         return;
     }
 
-    auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+    auto& diagnostics = _sequenceTest.trial.diagnostics;
     const long baselineCorrectedSample = static_cast<long>(audioSamplePacket.baselineCorrectedValue);
     const long rawSample = static_cast<long>(audioSamplePacket.rawAudioValue);
     const unsigned long absCentered = static_cast<unsigned long>(baselineCorrectedSample >= 0 ? baselineCorrectedSample : -baselineCorrectedSample);
@@ -335,8 +335,8 @@ unsigned long AnalyzerApp::activeRunStartMs() const {
 }
 
 unsigned long AnalyzerApp::activeRunEndMs() const {
-    if (_sequenceTest.active && _sequenceTest.currentTrialEndMs > 0) {
-        return _sequenceTest.currentTrialEndMs;
+    if (_sequenceTest.active && _sequenceTest.trial.endMs > 0) {
+        return _sequenceTest.trial.endMs;
     }
     return timebase::nowMs();
 }
@@ -347,60 +347,60 @@ void AnalyzerApp::resetLoopHealthWindow() {
 }
 
 bool AnalyzerApp::shouldPrintHardwareDiagnostics() const {
-    return _sequenceTest.outputConfig.diagnosticsEnabled &&
-           _sequenceTest.outputConfig.verbosity >= 2U &&
-           _sequenceTest.outputConfig.mode == SeqOutputMode::System;
+    return _sequenceTest.config.outputConfig.diagnosticsEnabled &&
+           _sequenceTest.config.outputConfig.verbosity >= 2U &&
+           _sequenceTest.config.outputConfig.mode == SeqOutputMode::System;
 }
 
 bool AnalyzerApp::shouldPrintSequenceTrial() const {
-    return _sequenceTest.outputConfig.mode != SeqOutputMode::Quiet;
+    return _sequenceTest.config.outputConfig.mode != SeqOutputMode::Quiet;
 }
 
 bool AnalyzerApp::shouldPrintSequenceSource(const AnalyzerReport& report) const {
-    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
+    if (!_sequenceTest.config.outputConfig.diagnosticsEnabled) {
         return false;
     }
 
-    switch (_sequenceTest.outputConfig.mode) {
+    switch (_sequenceTest.config.outputConfig.mode) {
         case SeqOutputMode::Source:
         case SeqOutputMode::Detail:
-            return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+            return sequenceOutputWhenEnabled(_sequenceTest.config.outputConfig.when, report.classification.result);
         default:
             return false;
     }
 }
 
 bool AnalyzerApp::shouldPrintSequenceInspect(const AnalyzerReport& report) const {
-    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
+    if (!_sequenceTest.config.outputConfig.diagnosticsEnabled) {
         return false;
     }
 
-    switch (_sequenceTest.outputConfig.mode) {
+    switch (_sequenceTest.config.outputConfig.mode) {
         case SeqOutputMode::Inspect:
         case SeqOutputMode::Detail:
-            return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+            return sequenceOutputWhenEnabled(_sequenceTest.config.outputConfig.when, report.classification.result);
         default:
             return false;
     }
 }
 
 bool AnalyzerApp::shouldPrintSequenceSystem(const AnalyzerReport& report) const {
-    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
+    if (!_sequenceTest.config.outputConfig.diagnosticsEnabled) {
         return false;
     }
 
-    switch (_sequenceTest.outputConfig.mode) {
+    switch (_sequenceTest.config.outputConfig.mode) {
         case SeqOutputMode::System:
-            return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+            return sequenceOutputWhenEnabled(_sequenceTest.config.outputConfig.when, report.classification.result);
         default:
             return false;
     }
 }
 
 bool AnalyzerApp::shouldPrintSequenceDetail(const AnalyzerReport& report) const {
-    return _sequenceTest.outputConfig.diagnosticsEnabled &&
-           _sequenceTest.outputConfig.mode == SeqOutputMode::Detail &&
-           sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+    return _sequenceTest.config.outputConfig.diagnosticsEnabled &&
+           _sequenceTest.config.outputConfig.mode == SeqOutputMode::Detail &&
+           sequenceOutputWhenEnabled(_sequenceTest.config.outputConfig.when, report.classification.result);
 }
 
 static const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
@@ -543,8 +543,8 @@ AnalyzerApp::AnalyzerApp()
 // (TonalPulseScalar only; AmpExperimental runs as defined). The observed
 // stream stays the profile's: it is not a param (owner 2026-10-25).
 detection::DetectionProfile const& AnalyzerApp::effectiveSequenceProfile() const {
-    _sequenceProfileScratch = detection::detectionProfileForKind(_sequenceTest.profileKind);
-    if (_sequenceTest.profileKind == detection::DetectionProfileKind::TonalPulseScalar) {
+    _sequenceProfileScratch = detection::detectionProfileForKind(_sequenceTest.config.profileKind);
+    if (_sequenceTest.config.profileKind == detection::DetectionProfileKind::TonalPulseScalar) {
         const detection::FeatureStreamId stream = _sequenceProfileScratch.scalarTransient.observedStream;
         _sequenceProfileScratch.scalarTransient = _scalarTuning;
         _sequenceProfileScratch.scalarTransient.observedStream = stream;
@@ -656,10 +656,10 @@ void AnalyzerApp::update() {
         if (_sequenceTest.active) {
             if (availableBytesBeforeRead >= 0) {
                 const unsigned long availableBytes = static_cast<unsigned long>(availableBytesBeforeRead);
-                _sequenceTest.availableBytesSum += static_cast<uint64_t>(availableBytes);
-                _sequenceTest.availableBytesSamples++;
-                if (availableBytes > _sequenceTest.maxAvailableBytes) {
-                    _sequenceTest.maxAvailableBytes = availableBytes;
+                _sequenceTest.totals.availableBytesSum += static_cast<uint64_t>(availableBytes);
+                _sequenceTest.totals.availableBytesSamples++;
+                if (availableBytes > _sequenceTest.totals.maxAvailableBytes) {
+                    _sequenceTest.totals.maxAvailableBytes = availableBytes;
                 }
             }
             // Wrap-safe: 64-bit block time vs the same 64-bit clock (#30).
@@ -667,15 +667,15 @@ void AnalyzerApp::update() {
             const unsigned long blockAgeMs = blockReadAtUs64 > block.approxStartUs64
                 ? static_cast<unsigned long>((blockReadAtUs64 - block.approxStartUs64) / 1000ULL)
                 : 0UL;
-            if (blockAgeMs > _sequenceTest.maxBlockAgeMs) {
-                _sequenceTest.maxBlockAgeMs = blockAgeMs;
+            if (blockAgeMs > _sequenceTest.totals.maxBlockAgeMs) {
+                _sequenceTest.totals.maxBlockAgeMs = blockAgeMs;
             }
         }
 
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
-        if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
+        if (_sequenceTest.active && _sequenceTest.trial.number > 0) {
             const uint8_t blockHash = static_cast<uint8_t>(rawBlockFingerprint(block.samples, block.sampleCount));
-            auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+            auto& diagnostics = _sequenceTest.trial.diagnostics;
             if (diagnostics.rawFrames > 0 && blockHash == diagnostics.rawLastBlockHash) {
                 ++diagnostics.rawBlockHashRepeatCount;
             }
@@ -689,10 +689,10 @@ void AnalyzerApp::update() {
             _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
             detection::FrequencyBandMeasurementPacket& runtimeFrequencyMeasurementPacket = _runtimeFrequencyMeasurementPacketScratch;
             runtimeFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
-            if (_sequenceTest.sampleDumpEnabled) {
+            if (_sequenceTest.config.sampleDumpEnabled) {
                 const float detectorInputValue = sequenceSampleDumpInputValue(
-                    _sequenceTest.sampleDumpDetectorSelection,
-                    _sequenceTest.sampleDumpObservedStream,
+                    _sequenceTest.sampleDump.detectorSelection,
+                    _sequenceTest.sampleDump.observedStream,
                     audioSamplePacket,
                     runtimeFrequencyMeasurementPacket
                 );
@@ -701,21 +701,21 @@ void AnalyzerApp::update() {
             _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
             detection::DetectionPipelineEvent& runtimePipelineEvent = _runtimePipelineEventScratch;
             while (_detection.diagnostics().popPipelineEvent(runtimePipelineEvent)) {
-                if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && runtimePipelineEvent.hasVerdict) {
-                    _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
+                if (_sequenceTest.active && _sequenceTest.trial.number > 0 && runtimePipelineEvent.hasVerdict) {
+                    _sequenceTest.trial.diagnostics.runtimePatternCaptured = true;
                 }
-                if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
+                if (_sequenceTest.active && _sequenceTest.trial.number > 0) {
                     handleSequencePending(runtimePipelineEvent);
                 }
             }
-            if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
+            if (_sequenceTest.active && _sequenceTest.trial.number > 0) {
                 const unsigned long processingLagMs = timing::elapsedOrZero(timebase::nowMs(), audioSamplePacket.timeMs);
-                if (processingLagMs > _sequenceTest.maxProcessingLagMs) {
-                    _sequenceTest.maxProcessingLagMs = processingLagMs;
+                if (processingLagMs > _sequenceTest.totals.maxProcessingLagMs) {
+                    _sequenceTest.totals.maxProcessingLagMs = processingLagMs;
                 }
-                if (timing::atOrAfter(audioSamplePacket.timeMs, _sequenceTest.currentTrialStartMs) &&
-                    timing::atOrBefore(audioSamplePacket.timeMs, _sequenceTest.currentTrialEndMs)) {
-                    ++_sequenceTest.currentTrialSamplesProcessed;
+                if (timing::atOrAfter(audioSamplePacket.timeMs, _sequenceTest.trial.startMs) &&
+                    timing::atOrBefore(audioSamplePacket.timeMs, _sequenceTest.trial.endMs)) {
+                    ++_sequenceTest.trial.samplesProcessed;
                 }
                 updateSequenceAmbientStats(audioSamplePacket.timeMs);
             }
@@ -726,24 +726,24 @@ void AnalyzerApp::update() {
         }
     }
     const unsigned long sampleWorkUs = static_cast<unsigned long>(timebase::nowUs() - sampleWorkStartUs);
-    if (_sequenceTest.active && sampleWorkUs > _sequenceTest.maxSampleWorkUs) {
-        _sequenceTest.maxSampleWorkUs = sampleWorkUs;
+    if (_sequenceTest.active && sampleWorkUs > _sequenceTest.totals.maxSampleWorkUs) {
+        _sequenceTest.totals.maxSampleWorkUs = sampleWorkUs;
     }
 
-    _sequenceTest.samplesProcessed += static_cast<unsigned long>(processedSamples);
-    if (static_cast<unsigned long>(processedSamples) > _sequenceTest.maxSamplesPerLoop) {
-        _sequenceTest.maxSamplesPerLoop = static_cast<unsigned long>(processedSamples);
+    _sequenceTest.totals.samplesProcessed += static_cast<unsigned long>(processedSamples);
+    if (static_cast<unsigned long>(processedSamples) > _sequenceTest.totals.maxSamplesPerLoop) {
+        _sequenceTest.totals.maxSamplesPerLoop = static_cast<unsigned long>(processedSamples);
     }
     const unsigned long updateLoopUs = timebase::nowUs() - updateLoopStartUs;
     if (_sequenceTest.active) {
-        _sequenceTest.totalUpdateLoopUs += updateLoopUs;
-        ++_sequenceTest.updateLoopCount;
-        if (updateLoopUs > _sequenceTest.currentTrialUpdateLoopMaxUs) {
-            _sequenceTest.currentTrialUpdateLoopMaxUs = updateLoopUs;
+        _sequenceTest.trial.totalUpdateLoopUs += updateLoopUs;
+        ++_sequenceTest.trial.updateLoopCount;
+        if (updateLoopUs > _sequenceTest.trial.updateLoopMaxUs) {
+            _sequenceTest.trial.updateLoopMaxUs = updateLoopUs;
         }
     }
-    if (_sequenceTest.active && updateLoopUs > _sequenceTest.maxUpdateLoopUs) {
-        _sequenceTest.maxUpdateLoopUs = updateLoopUs;
+    if (_sequenceTest.active && updateLoopUs > _sequenceTest.totals.maxUpdateLoopUs) {
+        _sequenceTest.totals.maxUpdateLoopUs = updateLoopUs;
     }
 
     // Drain emitter markers before SEQ finalization so trial latches reflect the latest observed state.
@@ -781,11 +781,11 @@ void AnalyzerApp::processPendingSequenceStart() {
     }
 
     _pendingSequenceStart.active = false;
-    startSequenceTest(_pendingSequenceStart);
+    startSequenceTest(_pendingSequenceStart.config);
 }
 
 const char* AnalyzerApp::activeAnalyzerProfileName() const {
-    return detection::detectionProfileName(_sequenceTest.profileKind);
+    return detection::detectionProfileName(_sequenceTest.config.profileKind);
 }
 
 static const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
@@ -821,22 +821,22 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
                                               float strength,
                                               bool bufferOverrun,
                                               unsigned long duplicateCount,
-                                              const SequenceTest::TrialDiagnostics& diagnostics) const {
+                                              const TrialDiagnostics& diagnostics) const {
     report = makeEmptyAnalyzerReport();
 
     report.context.profile = activeAnalyzerProfileName();
-    report.context.mode = _sequenceTest.externalEmitter ? "OBS" : "SEQ";
+    report.context.mode = _sequenceTest.config.externalEmitter ? "OBS" : "SEQ";
     report.context.trial = trialNumber;
-    report.context.trigger = _sequenceTest.externalEmitter ? "observe" : "chirp";
+    report.context.trigger = _sequenceTest.config.externalEmitter ? "observe" : "chirp";
     report.context.target = "tone";
-    report.context.timestampMs = _sequenceTest.currentTrialEndMs;
+    report.context.timestampMs = _sequenceTest.trial.endMs;
     report.context.build = BUILD_VERSION;
 
-    report.expected.triggerMs = _sequenceTest.currentTrialStartMs;
-    report.expected.windowStartMs = _sequenceTest.currentTrialStartMs;
-    report.expected.windowEndMs = _sequenceTest.currentTrialEndMs;
+    report.expected.triggerMs = _sequenceTest.trial.startMs;
+    report.expected.windowStartMs = _sequenceTest.trial.startMs;
+    report.expected.windowEndMs = _sequenceTest.trial.endMs;
     report.expected.verdictType = "sequence_trial";
-    report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
+    report.expected.expectedSource = _sequenceTest.config.externalEmitter ? "external" : "local";
 
     const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
     const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
@@ -846,7 +846,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const bool hasVerdict = reportVerdict != nullptr;
     const bool hasInspectedOccurrence = reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present;
     const detection::FieldState* runtimeFieldState = &_detection.fieldState();
-    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.config.profileKind);
     report.sourceSelection = selectedTrial.kind == SequenceTrialSelection::Kind::Miss || selectedTrial.kind == SequenceTrialSelection::Kind::Unexpected
         ? "none"
         : (selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate ||
@@ -867,8 +867,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.integrity.occurrenceMatched = selectedTrial.reportMatched;
     report.integrity.inspectionPresent = hasInspectedOccurrence;
     report.integrity.verdictPresent = hasVerdict;
-    const unsigned long pipelineOverflowDelta = _detection.diagnostics().pipelineEventOverflowCount() > _sequenceTest.trialPipelineOverflowCountAtStart
-        ? _detection.diagnostics().pipelineEventOverflowCount() - _sequenceTest.trialPipelineOverflowCountAtStart
+    const unsigned long pipelineOverflowDelta = _detection.diagnostics().pipelineEventOverflowCount() > _sequenceTest.trial.pipelineOverflowCountAtStart
+        ? _detection.diagnostics().pipelineEventOverflowCount() - _sequenceTest.trial.pipelineOverflowCountAtStart
         : 0UL;
     report.integrity.queueOverflowAffected = pipelineOverflowDelta > 0UL;
     report.integrity.correlationComplete = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
@@ -894,8 +894,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     } else {
         report.integrity.reason = "none";
     }
-    const bool trialHasPipelineEvidence = (hasVerdict || hasInspectedOccurrence || _sequenceTest.selectedSourceRejectCaptured)
-        && _sequenceTest.sourceCandidateCount > 0;
+    const bool trialHasPipelineEvidence = (hasVerdict || hasInspectedOccurrence || _sequenceTest.trial.selectedSourceRejectCaptured)
+        && _sequenceTest.trial.sourceCandidateCount > 0;
     const long reportPatternDtMs = hasVerdict
         ? selectedTrial.dtMs
         : dtMs;
@@ -912,7 +912,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         return "missing_pipeline_result";
     }();
     const bool startupArtifact = result == AnalyzerResult::Miss
-        && _sequenceTest.currentTrial == 1
+        && _sequenceTest.trial.number == 1
         && !trialHasPipelineEvidence
         && selectedDetectorReport == nullptr
         && strcmp(artifactReason, "missing_pipeline_result") == 0;
@@ -920,11 +920,11 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     AnalyzerSequenceClassificationInput classificationInput;
     classificationInput.result = result;
     classificationInput.dtMs = reportPatternDtMs;
-    classificationInput.sourceCandidateCount = _sequenceTest.sourceCandidateCount;
-    classificationInput.sourceAcceptedCount = _sequenceTest.sourceAcceptedCount;
-    classificationInput.sourceRejectedCount = _sequenceTest.sourceRejectedCount;
-    classificationInput.inspectedOccurrenceCount = _sequenceTest.inspectedOccurrenceCount;
-    classificationInput.verdictCount = _sequenceTest.verdictCount;
+    classificationInput.sourceCandidateCount = _sequenceTest.trial.sourceCandidateCount;
+    classificationInput.sourceAcceptedCount = _sequenceTest.trial.sourceAcceptedCount;
+    classificationInput.sourceRejectedCount = _sequenceTest.trial.sourceRejectedCount;
+    classificationInput.inspectedOccurrenceCount = _sequenceTest.trial.inspectedOccurrenceCount;
+    classificationInput.verdictCount = _sequenceTest.trial.verdictCount;
     classificationInput.pipelineQueueOverflowCount = pipelineOverflowDelta;
     classificationInput.bufferOverrun = bufferOverrun;
     classificationInput.patternAvailable = hasVerdict;
@@ -1043,7 +1043,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         }
     }
 
-    report.inspection.inspected = _sequenceTest.inspectedOccurrenceCount;
+    report.inspection.inspected = _sequenceTest.trial.inspectedOccurrenceCount;
     report.inspection.accepted = report.occurrences.accepted;
     report.inspection.rejected = report.occurrences.rejected;
     const detection::InspectionModuleConfig* supportRequirement =
@@ -1073,17 +1073,17 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.field.recentValidPatterns = runtimeFieldState->recentPatternCount;
         report.field.recentRejects = runtimeFieldState->recentOccurrenceCount > runtimeFieldState->recentPatternCount
             ? runtimeFieldState->recentOccurrenceCount - runtimeFieldState->recentPatternCount
-            : _sequenceTest.sourceRejectedCount;
+            : _sequenceTest.trial.sourceRejectedCount;
     } else {
         report.field.state = "unknown";
         report.field.rawActivity = 0.0f;
         report.field.validPatternActivity = 0.0f;
         report.field.recentValidPatterns = 0U;
-        report.field.recentRejects = _sequenceTest.sourceRejectedCount;
+        report.field.recentRejects = _sequenceTest.trial.sourceRejectedCount;
     }
 
-    report.profileDetail.namespaceName = analyzerProfileDetailNamespace(_sequenceTest.profileKind);
-    report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind);
+    report.profileDetail.namespaceName = analyzerProfileDetailNamespace(_sequenceTest.config.profileKind);
+    report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.config.profileKind);
     report.profileDetail.emitter = detection::detectorSelectionName(selectedProfile.detectorSelection);
     report.profileDetail.inspectionAcceptance = detection::detectorSelectionName(selectedProfile.detectorSelection);
     report.profileDetail.inspectionPlan = detection::inspectionPlanName(selectedProfile.inspectionPlan);
@@ -1114,9 +1114,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         }
     }
 
-    report.debug.occurrences = _sequenceTest.sourceCandidateCount;
-    report.debug.inspected = _sequenceTest.inspectedOccurrenceCount;
-    report.debug.patterns = _sequenceTest.verdictCount;
+    report.debug.occurrences = _sequenceTest.trial.sourceCandidateCount;
+    report.debug.inspected = _sequenceTest.trial.inspectedOccurrenceCount;
+    report.debug.patterns = _sequenceTest.trial.verdictCount;
     report.debug.rejects = report.occurrences.rejected;
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;

@@ -96,7 +96,7 @@ void AnalyzerApp::printAudioSourceSummary() const {
 }
 
 void AnalyzerApp::printAudioRunSummary() const {
-    if (!_sequenceTest.active && _sequenceTest.completedTrials == 0) {
+    if (!_sequenceTest.active && _sequenceTest.totals.completedTrials == 0) {
         return;
     }
 
@@ -107,12 +107,12 @@ void AnalyzerApp::printAudioRunSummary() const {
         : 0UL;
     const unsigned long expectedSamples = static_cast<unsigned long>(
         (static_cast<unsigned long long>(runElapsedMs) * static_cast<unsigned long long>(sampleRateHz)) / 1000ULL);
-    const unsigned long processedSamples = _sequenceTest.samplesProcessed;
+    const unsigned long processedSamples = _sequenceTest.totals.samplesProcessed;
     const float processedRatio = expectedSamples > 0
         ? static_cast<float>(processedSamples) / static_cast<float>(expectedSamples)
         : 0.0f;
-    const unsigned long avgAvailableBytes = _sequenceTest.availableBytesSamples > 0
-        ? static_cast<unsigned long>(_sequenceTest.availableBytesSum / static_cast<uint64_t>(_sequenceTest.availableBytesSamples))
+    const unsigned long avgAvailableBytes = _sequenceTest.totals.availableBytesSamples > 0
+        ? static_cast<unsigned long>(_sequenceTest.totals.availableBytesSum / static_cast<uint64_t>(_sequenceTest.totals.availableBytesSamples))
         : 0UL;
 
     serialOut().println("AUDIO run:");
@@ -125,15 +125,15 @@ void AnalyzerApp::printAudioRunSummary() const {
     serialOut().print(" processed_ratio=");
     serialOut().print(processedRatio, 3);
     serialOut().print(" max_available_bytes=");
-    serialOut().print(_sequenceTest.maxAvailableBytes);
+    serialOut().print(_sequenceTest.totals.maxAvailableBytes);
     serialOut().print(" avg_available_bytes=");
     serialOut().print(avgAvailableBytes);
     serialOut().print(" max_block_age_ms=");
-    serialOut().print(_sequenceTest.maxBlockAgeMs);
+    serialOut().print(_sequenceTest.totals.maxBlockAgeMs);
     serialOut().print(" max_update_loop_us=");
-    serialOut().print(_sequenceTest.maxUpdateLoopUs);
+    serialOut().print(_sequenceTest.totals.maxUpdateLoopUs);
     serialOut().print(" max_processing_lag_ms=");
-    serialOut().println(_sequenceTest.maxProcessingLagMs);
+    serialOut().println(_sequenceTest.totals.maxProcessingLagMs);
 
     serialOut().print("FREQBAND config:");
     serialOut().print(" freqband=");

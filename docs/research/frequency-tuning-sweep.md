@@ -61,12 +61,29 @@ Per position:
 Output: one table per position (hop accept %, strength, chirp rejection, corpus false accepts per hour, live
 false accepts per hour), as a lab experiment (E003), and a decision on whether the band moves.
 
+## Tool
+
+`tools/bench/bandsweep.py` (2026-10-27): `host` replays the noise at every position (the corpus, bench_audio.wav's
+four sections resampled to 16 kHz and cached in `logs/bandsweep_cache`, synthetic traffic) at several gains and
+writes host.csv; `bench` drives the Analyzer / Emitter and the Nodes per position (hop10, chirp on the second bin,
+RAW hop captures, noise played from the lab PC while the silent Nodes listen) and writes positions.csv / noise.csv;
+`bench --dry-run` prints the commands without opening a port.
+
+## First host pass (2026-10-27, 52bac7e, a preview: dry file, no room, no mic)
+
+Positions 1000-6500 (low edge, 500 Hz steps, 5 bins each); per position 100 s each of drum and bass, female
+speech, male speech, flute, and 150 s of synthetic traffic, at gains 16 / 64 / 256 on the 16-bit file (gains 1 and
+4 trigger nothing: the file is far below the mic's level, so the gains bracket it). Accepted / rejected over all
+positions: gain 16: 1 / 275; gain 64: 2 / 2,363; gain 256: 6 / 3,256. Of the 9 accepts, 7 are at 1000-3000 Hz
+(drum and bass, female speech, flute), 2 at 3000-5500 (flute), none above 5500. The checks after the detector
+stop all but a handful of thousands of noise occurrences; the low bands let more through. What level the room
+and the mic give a real source is the bench part's question.
+
 ## Needs before it runs
 
-- A sweep driver: soakcycle's checks parameterised by the band (hop line, `band=`, chirp freq), plus the Nodes'
-  band set per position (unsaved PARAM SET, or `NET * PARAM SET`).
-- A corpus band sweep (a script around native-replay and shapesurvey).
-- More noise in the corpus: the 24 noise verdicts are too few to give a rate.
+- (done 2026-10-27) the sweep driver and the corpus band sweep: bandsweep.py.
+- More recorded noise: the room corpus is 24 captures, 6 s after the marker. bench_audio.wav and synthetic
+  traffic stand in on the host; a room recording of the file at the installation level would calibrate the gains.
 
 ## Open questions
 

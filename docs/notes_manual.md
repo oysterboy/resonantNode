@@ -161,6 +161,9 @@ SEQ OBS start ...               passive observe mode for an external emitter alr
 SEQ start ... pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]      pulse train per trial (DET-011)
 SEQ start ... freq=START_HZ dur=MS sweep=END_HZ              sweep inside the chirp (OUT-005)
 SEQ stop | SEQ STATUS | SEQ SUMMARY | SEQ REPORT | SEQ TRIES N
+SEQ start while a run is active                              refused: ERR SEQ start refused reason=run_active
+                                                             (SEQ STOP first; STOP also cancels a start queued
+                                                             with it; since 11g C1, 2026-10-27)
 SEQ MODE quiet|trial|inspect|source|system|detail            which report lines print
 SEQ PROFILE TonalPulseScalar|AmpExperimental
 SEQ DIAG on|off | SEQ FREQBAND on|off | SEQ WHEN off|miss|all | SEQ VERBOSE 0|1|2

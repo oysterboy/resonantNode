@@ -574,21 +574,23 @@ void AnalyzerApp::printSequenceReport() const {
 }
 
 void AnalyzerApp::printSequenceStatus() const {
+    // One config (review D1.4): the running one during a run, the one the next start copies otherwise.
+    const SeqOutputConfig& config = _sequenceTest.active ? _sequenceTest.outputConfig : _seqOutputConfig;
     serialOut().print("SEQ_STATUS mode=");
-    serialOut().print(sequenceOutputModeName(_sequenceTest.outputConfig.mode));
+    serialOut().print(sequenceOutputModeName(config.mode));
     serialOut().print(" when=");
-    serialOut().print(sequenceOutputWhenName(_sequenceTest.outputConfig.when));
+    serialOut().print(sequenceOutputWhenName(config.when));
     serialOut().print(" verbosity=");
-    serialOut().print(_sequenceTest.outputConfig.verbosity);
+    serialOut().print(config.verbosity);
     serialOut().print(" profile=");
     serialOut().print(_sequenceTest.active ? activeAnalyzerProfileName() : detection::detectionProfileName(_seqOutputConfig.profileKind));
     serialOut().print(" tries=");
-    serialOut().print(_seqOutputConfig.totalTrials);
+    serialOut().print(config.totalTrials);
     serialOut().print(" diagnostics=");
-    serialOut().print(_seqOutputConfig.diagnosticsEnabled ? "on" : "off");
+    serialOut().print(config.diagnosticsEnabled ? "on" : "off");
     serialOut().print(" freqband=");
-    serialOut().print(_seqOutputConfig.frequencyBandEnabled ? "on" : "off");
+    serialOut().print(config.frequencyBandEnabled ? "on" : "off");
     serialOut().print(" freqUpdateEverySamples=");
-    serialOut().print(_seqOutputConfig.frequencyUpdateEverySamples);
+    serialOut().print(config.frequencyUpdateEverySamples);
     serialOut().println();
 }

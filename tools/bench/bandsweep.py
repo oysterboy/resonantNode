@@ -333,6 +333,12 @@ class Bench:
                 done_at = time.time()
             if done_at is not None and time.time() - done_at > 2:
                 break
+        if done_at is None and cmd.upper().startswith("SEQ START"):
+            # No summary within the timeout: stop the run, or the Analyzer refuses the next SEQ start
+            # (run_active, 11g C1).
+            self.analyzer.write(b"SEQ STOP\n")
+            self.pump(2)
+            self.sink.append(">> SEQ STOP (timeout)")
         got, self.sink = self.sink, None
         return [">> " + cmd] + got
 

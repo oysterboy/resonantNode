@@ -336,6 +336,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 if (mode == AnalyzerApp::SeqOutputMode::Quiet) {
                     _sequenceTest.outputConfig.when = AnalyzerApp::SeqOutputWhen::Off;
                     _sequenceTest.outputConfig.verbosity = 0;
+                    _sequenceTest.outputConfig.diagnosticsEnabled = false;  // a later SEQ WHEN must not re-enable them
                     _detection.setDiagnosticsEnabled(false);
                 }
             }
@@ -436,11 +437,18 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         if (equalsIgnoreCase(token, "STOP")) {
             printSequenceSummaryClean();
             stopSequenceTest();
+            _pendingSequenceStart.active = false;  // a start + stop in one buffer does not start (review D1.4)
             serialOut().println("OK SEQ STOP");
             return;
         }
 
         if (equalsIgnoreCase(token, "START") || equalsIgnoreCase(token, "OBS")) {
+            // A run in progress (or one already queued) is not discarded by a second start: its trial in flight
+            // and its summary would be lost (review D1.4, 2026-10-27). SEQ STOP first, as SELFTEST does.
+            if (_sequenceTest.active || _pendingSequenceStart.active) {
+                serialOut().println("ERR SEQ start refused reason=run_active (SEQ STOP first)");
+                return;
+            }
             _pendingSequenceStart = {};
             // Parsed into copies and activated only when every token is valid
             // (issue #31): on an ERR the run used to start anyway, and the

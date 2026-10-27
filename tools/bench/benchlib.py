@@ -207,4 +207,9 @@ def run_commands(ser, cmds, timeout_s, body=None, abort_on=None, done_on="SEQ_SU
             done_at = time.time()
         if done_at is not None and time.time() - done_at > 3:
             break
+    if done_at is None and cmds[-1].upper().startswith("SEQ START"):
+        # No summary within the timeout: stop the run, or the Analyzer refuses the next SEQ start
+        # (run_active, 11g C1).
+        ser.write(b"SEQ STOP\n")
+        body.append(">> SEQ STOP (timeout)\n" + read_for(ser, 2))
     return body

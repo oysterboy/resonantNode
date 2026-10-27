@@ -122,6 +122,12 @@ def analyzer_run(cmd, done_on, timeout_s):
             done_at = time.time()
         if done_at is not None and time.time() - done_at > 2:
             break
+    if done_at is None and cmd.upper().startswith("SEQ START"):
+        # No summary within the timeout: stop the run, or the Analyzer refuses the next SEQ start
+        # (run_active, 11g C1).
+        analyzer.write(b"SEQ STOP\n")
+        pump(2)
+        analyzer_sink.append(">> SEQ STOP (timeout)")
     got, analyzer_sink = analyzer_sink, None
     return [">> " + cmd] + got
 

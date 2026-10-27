@@ -658,6 +658,8 @@ string before it was written down.
    while active disables the runtime diagnostics but leaves `outputConfig.diagnosticsEnabled` true, from which a
    later `SEQ WHEN` re-enables them (`AnalyzerCommands.cpp:336-359`). Fix: refuse `SEQ start` while active (as
    SELFTEST does), clear the pending start in STOP, one `SeqOutputConfig` copied once at start (A8).
+   -> partly 2026-10-27 (11g C1): start refused while active, STOP clears the pending start, STATUS reads one
+   config, quiet clears the running diagnostics flag; the one `SeqOutputConfig` is C4.
 
 5. **`shape.minLevel` is a boot-time copy of the release threshold (medium).** `DetectionProfile.h:176-178`
    copies `onsetReleaseThreshold` into `modules[2].shape.minLevel` and says so; `applyLiveDetectionParams`

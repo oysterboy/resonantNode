@@ -61,3 +61,8 @@ SEQ line names and the keys the tools parse; the Emitter protocol; the Node.
 
 - 2026-10-27: opened. Before-state for the bench A/B: 11h's sweep logs on 42f1eef
   (bench/sessions/2026-10-27-step11h-sweep24, pos*_hop10.log / chirp150.log, mode=detail verbose=1).
+- 2026-10-27, C1 done: SEQ start refused while a run is active or queued (`ERR SEQ start refused reason=run_active`),
+  SEQ STOP clears the queued start, SEQ STATUS prints one config (the running one, else the next start's), SEQ MODE
+  quiet during a run also clears the running config's diagnostics flag. The tools that wait for SEQ_SUMMARY
+  (benchlib.run_commands, soakcycle, bandsweep) send SEQ STOP when it never comes, so a hung run cannot block the
+  next start. Host gate green, T2h byte-identical.

@@ -1221,7 +1221,7 @@ the previous gate open unless the step says it can run in parallel.
           smoke after the soak.
    C. Analyzer, with A8's TrialState split (its own pass doc): D1.4 (SEQ start during a run, SEQ STOP leaves a start
       armed, SEQ STATUS reads two sources), D2.6 (write-only fields), D2.8 (presentation out of detection/).
-      Gate: an Analyzer A/B on the bench.
+      Gate: an Analyzer A/B on the bench. Pass doc: docs/refactors/analyzer-run-trial-split.md (opened 2026-10-27).
    D. Node, with A7's next cut: D2.4 the boot baseline runs (decisions/2026-10-26-node-boot-warmup-runs.md), D2.5
       RB debug dropped (decisions/2026-10-26-drop-rb-debug.md), D2.9 Behavior's busy mirror, D2.10 one line bound,
       D1.8 SELFTEST value parsing. Gate: Node smoke and SELFTEST on the bench, boot timing recorded.

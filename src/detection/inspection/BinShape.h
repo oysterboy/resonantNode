@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../../app/RuntimeDefaults.h"
 #include "../occurrences/Occurrence.h"
 #include "InspectorTypes.h"
 
@@ -40,7 +41,8 @@ struct BinShapeMeasure {
 };
 
 constexpr uint32_t kBinShapeRunGapMs = 3;
-constexpr uint32_t kBinShapeSpacingHz = 250;
+// The band grid's spacing, from the one place it is defined (RuntimeDefaults.h: sample rate / FreqBandStream window).
+constexpr uint32_t kBinShapeSpacingHz = static_cast<uint32_t>(runtime::kBandBinSpacingHz);
 
 inline StrengthClass classifyBinShape(const OccurrenceShape& shape, const ShapeInspectionConfig& config) {
     if (!shape.applicable) {

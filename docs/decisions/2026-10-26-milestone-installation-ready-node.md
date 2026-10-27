@@ -10,7 +10,7 @@ phase") closes as a named milestone. Its gate, all four:
 
 - 11c: the 24 h unattended soak passes on the build under test (bench session cited in the step).
 - 11h (added 2026-10-27, owner: the frequency sweep is part of step 11, run before 11g and 11d): the sweep's
-  bench session, host table and E003, ending in a decision whether the band moves.
+  bench session, host table and E004, ending in a decision whether the band moves.
 - 11g: the remaining batches land with their bench gates (B2 bench smoke, C Analyzer A/B, D Node smoke and
   SELFTEST, boot timing recorded).
 - 11d: OTA firmware. An image flashed over WiFi to every board; a failed or interrupted update falls back to

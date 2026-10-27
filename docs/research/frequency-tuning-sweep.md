@@ -62,7 +62,7 @@ Per position:
 4. Optionally the Nodes free for a short run per position (chains, noise-started), as in 11c.
 
 Output: one table per position (hop accept %, strength, chirp rejection, corpus false accepts per hour, live
-false accepts per hour), as a lab experiment (E003), and a decision on whether the band moves.
+false accepts per hour), as a lab experiment (E004), and a decision on whether the band moves.
 
 ## Tool
 

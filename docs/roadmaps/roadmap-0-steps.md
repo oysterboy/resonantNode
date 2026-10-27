@@ -1190,7 +1190,7 @@ the previous gate open unless the step says it can run in parallel.
    hop10 doubles as B2's smoke). Before the bench sweep: one room recording of bench_audio.wav at installation
    level through a Node's mic, to calibrate the host gains.
    Gate: positions.csv and noise.csv for every position in a bench session, the host table beside it, an
-   experiment note (E003), and a decision whether the band moves.
+   experiment note (E004), and a decision whether the band moves.
    First host pass 2026-10-27 (dry file, gains 16 / 64 / 256): 9 accepts out of ~5,900 noise occurrences over 12
    positions, 7 of them at 1000-3000 Hz, none above 5500 Hz.
    Checks 2026-10-27 (bench/sessions/2026-10-27-step11h-checks, 42f1eef on all five): B2 smoke at the shipped band

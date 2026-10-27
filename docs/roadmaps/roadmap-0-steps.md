@@ -1172,10 +1172,11 @@ the previous gate open unless the step says it can run in parallel.
    (09:05-09:16, 118-127 ms), with this morning's build as well: the room changed, not the firmware; the third
    unexplained room shift in two days (10-24 10:50, E2 <- E5 on 10-23 ~20:00).
 
-11h. [NEXT, after 11c] Frequency tuning sweep from 1000 Hz: hits vs noise acceptance. (issue #69)
+11h. [NEXT, after 11c] Frequency tuning sweep, 500-5000 Hz: hits vs noise acceptance. (issue #69)
    Owner 2026-10-27: "How bad is detection / noise acceptance really." The network band
-   (detection.band_low_hz / band_high_hz; the bins, the hop train and the shape rule follow it) swept from 1000 Hz
-   in 500 Hz steps, 5 bins wide, then 250 Hz steps around the good and the bad positions. Per position: the
+   (detection.band_low_hz / band_high_hz; the bins, the hop train and the shape rule follow it) swept over tones
+   of 500-5000 Hz (owner 2026-10-27): band low edges 500-4000 in 250 Hz steps, 5 bins wide, as one unattended
+   24 h run (bandsweep.py bench --hours 24): rounds in a shuffled order, each starting with the shipped band. Per position: the
    Analyzer's hop10 and a plain chirp on the band (must be rejected), RAW hop captures for per-bin levels, and the
    silent Nodes listening while bench_audio.wav plays from the lab PC (false accepts per hour); on the host, the
    noise replayed per position and gain. Thresholds stay as shipped; tuning follows the data as its own pass.

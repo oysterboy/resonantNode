@@ -1,4 +1,4 @@
-"""Frequency tuning sweep (step 12, docs/research/frequency-tuning-sweep.md): the network band moved from 1000 Hz up,
+"""Frequency tuning sweep (step 11h, docs/research/frequency-tuning-sweep.md): the network band moved across 500-5000 Hz,
 hits and noise acceptance per band position. Owner 2026-10-27: "how bad is detection / noise acceptance really".
 
 A band position is its low edge; the band is --width wide (1000 Hz = 5 bins of 250 Hz, as shipped at 2950-3950).
@@ -12,7 +12,7 @@ host   No board. Replays noise through the real detection chain (native-replay -
        (synthtraffic.py at 16 kHz). Writes host.csv: position, source, gain, seconds, accepted, rejected, per hour.
 
          python tools/bench/bandsweep.py host --replay .pio/build/native-replay/program.exe --out <dir>
-             [--positions 1000:6500:500] [--wav C:/Users/admin/Downloads/bench_audio.wav] [--gains 1,4,16] [--traffic]
+             [--positions 500:4000:250] [--wav C:/Users/admin/Downloads/bench_audio.wav] [--gains 1,4,16] [--traffic]
 
 bench  The boards (one Analyzer with its Emitter, optionally Nodes). Per position: the Nodes' band set (unsaved,
        output.silent 1), the Analyzer's hop10 and chirp SEQ on that band (the chirp on the band's second bin, must be
@@ -23,8 +23,12 @@ bench  The boards (one Analyzer with its Emitter, optionally Nodes). Per positio
        pos<low>_hop5_r<k>.csv, and nodes.log ("<t> <NAME> <line>", nodegroup_interim.py reads it).
 
          python tools/bench/bandsweep.py bench --analyzer COM3 [--nodes E1=COM8,E4=COM10,E5=COM11] --out <dir>
-             [--positions 1000:6500:500] [--noise-wav C:/Users/admin/Downloads/bench_audio.wav --noise-s 120]
+             [--positions 500:4000:250] [--noise-wav C:/Users/admin/Downloads/bench_audio.wav] [--hours 24]
              [--dry-run]
+
+report A compact table from a bench run's CSVs (per position: hop accepted, strength, chirps accepted, noise per hour).
+
+         python tools/bench/bandsweep.py report --out <dir>
 
 Thresholds stay as shipped during a sweep: tuning follows the data, as its own pass.
 """
@@ -333,17 +337,73 @@ class Bench:
         return [">> " + cmd] + got
 
 
-def play_noise(wav, seconds):
-    """Plays the WAV on the lab PC's default output device (PowerShell SoundPlayer), stopped after `seconds`."""
+def play_noise(wav):
+    """Plays the WAV on the lab PC's default output device (PowerShell SoundPlayer); the caller kills it."""
     ps = "(New-Object System.Media.SoundPlayer '%s').PlaySync()" % wav.replace("'", "''")
-    return subprocess.Popen(["powershell", "-NoProfile", "-Command", ps]), seconds
+    return subprocess.Popen(["powershell", "-NoProfile", "-Command", ps])
+
+
+def wav_seconds(path):
+    w = wave.open(path, "rb")
+    seconds = w.getnframes() / float(w.getframerate())
+    w.close()
+    return seconds
+
+
+def round_order(positions, reference, rnd, seed):
+    """One round: the reference band first (the shipped band, the day's yardstick), then the rest shuffled per round
+    so time of day and room drift do not line up with frequency."""
+    import random
+    rest = [p for p in positions if p != reference]
+    random.Random(seed * 1000 + rnd).shuffle(rest)
+    return ([reference] if reference else []) + rest
+
+
+def run_position(bench, a, low, rnd, pos_csv, noise_csv, pos_file, noise_file):
+    low, high = band_of(low, a.width)
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    tag = "pos%d_r%02d" % (low, rnd)
+    bench.log.write("%.2f -- round %d position %d-%d start\n" % (time.time() - bench.t0, rnd, low, high))
+    bench.to_nodes("PARAM SET detection.band_low_hz %d" % low)
+    bench.to_nodes("PARAM SET detection.band_high_hz %d" % high)
+    bench.pump(a.settle_s)
+    steps, raw = bench_steps(low, high)
+    summary = []
+    for name, cmd in steps:
+        lines = bench.analyzer_run(cmd, "SEQ_SUMMARY", 150)
+        open(os.path.join(a.out, "%s_%s.log" % (tag, name)), "w", encoding="utf-8").write("\n".join(lines) + "\n")
+        r = summarize_seq(lines)
+        pos_csv.writerow([rnd, low, high, stamp, name, r.get("expected_trials", ""), r.get("rejected_trials", ""),
+                          r.get("miss_trials", ""), r.get("unexpected_trials", ""), r.get("avg_strength", ""),
+                          r.get("reasons", "")])
+        pos_file.flush()
+        summary.append("%s %s/10" % (name, r.get("expected_trials", "?")))
+    for k in range(a.raw_reps):
+        lines = bench.analyzer_run(raw, "RAW_SUMMARY", 30)
+        open(os.path.join(a.out, "%s_hop5_%d.csv" % (tag, k)), "w", encoding="utf-8").write(
+            "\n".join(l for l in lines if not l.startswith(">> ")) + "\n")
+    if a.noise_wav and bench.nodes:
+        seconds = a.noise_s if a.noise_s > 0 else int(math.ceil(wav_seconds(a.noise_wav)))
+        bench.counting = {n: [0, 0] for n in bench.nodes}
+        proc = play_noise(a.noise_wav)
+        bench.log.write("%.2f -- noise %s %d s\n" % (time.time() - bench.t0, a.noise_wav, seconds))
+        bench.pump(seconds)
+        proc.kill()
+        counts, bench.counting = bench.counting, None
+        for n, (valid, rejected) in counts.items():
+            noise_csv.writerow([rnd, low, high, stamp, n, seconds, valid, rejected, "%.1f" % (valid * 3600.0 / seconds)])
+        noise_file.flush()
+        summary.append("noise valid " + ",".join("%s:%d" % (n, c[0]) for n, c in counts.items()))
+    bench.log.write("%.2f -- round %d position %d-%d end\n" % (time.time() - bench.t0, rnd, low, high))
+    bench.log.flush()
+    print("r%d %d-%d %s" % (rnd, low, high, "; ".join(summary)), flush=True)  # one line per position: cheap to read
 
 
 def run_bench(a):
     os.makedirs(a.out, exist_ok=True)
     positions = parse_positions(a.positions)
     if a.dry_run:
-        for low in positions:
+        for low in round_order(positions, a.reference, 1, a.seed):
             low, high = band_of(low, a.width)
             steps, raw = bench_steps(low, high)
             print("== %d-%d Hz" % (low, high))
@@ -353,7 +413,8 @@ def run_bench(a):
                 print("  analyzer [%s] >> %s" % (name, cmd))
             print("  analyzer [raw x%d] >> %s" % (a.raw_reps, raw))
             if a.noise_wav and a.nodes:
-                print("  noise: play %s for %d s, count the Nodes' verdicts" % (a.noise_wav, a.noise_s))
+                print("  noise: play %s for %s s, count the Nodes' verdicts"
+                      % (a.noise_wav, a.noise_s if a.noise_s > 0 else "the whole file"))
         return
     bench = Bench(a)
     pos_path = os.path.join(a.out, "positions.csv")
@@ -362,50 +423,24 @@ def run_bench(a):
     noise_file = open(noise_path, "a", newline="", encoding="utf-8")
     pos_csv, noise_csv = csv.writer(pos_file), csv.writer(noise_file)
     if pos_file.tell() == 0:
-        pos_csv.writerow(["band_low_hz", "band_high_hz", "local_time", "step", "expected", "rejected", "miss",
+        pos_csv.writerow(["round", "band_low_hz", "band_high_hz", "local_time", "step", "expected", "rejected", "miss",
                           "unexpected", "avg_strength", "reasons"])
     if noise_file.tell() == 0:
-        noise_csv.writerow(["band_low_hz", "band_high_hz", "local_time", "node", "seconds", "valid", "rejected",
-                            "valid_per_hour"])
+        noise_csv.writerow(["round", "band_low_hz", "band_high_hz", "local_time", "node", "seconds", "valid",
+                            "rejected", "valid_per_hour"])
+    deadline = bench.t0 + a.hours * 3600.0 if a.hours > 0 else None
     try:
         bench.to_nodes("PARAM SET output.silent 1")
         bench.to_nodes("RB log full")
-        for low in positions:
-            low, high = band_of(low, a.width)
-            stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-            bench.log.write("%.2f -- position %d-%d start\n" % (time.time() - bench.t0, low, high))
-            bench.to_nodes("PARAM SET detection.band_low_hz %d" % low)
-            bench.to_nodes("PARAM SET detection.band_high_hz %d" % high)
-            bench.pump(a.settle_s)
-            steps, raw = bench_steps(low, high)
-            for name, cmd in steps:
-                lines = bench.analyzer_run(cmd, "SEQ_SUMMARY", 150)
-                open(os.path.join(a.out, "pos%d_%s.log" % (low, name)), "w", encoding="utf-8").write("\n".join(lines) + "\n")
-                r = summarize_seq(lines)
-                pos_csv.writerow([low, high, stamp, name, r.get("expected_trials", ""), r.get("rejected_trials", ""),
-                                  r.get("miss_trials", ""), r.get("unexpected_trials", ""), r.get("avg_strength", ""),
-                                  r.get("reasons", "")])
-                pos_file.flush()
-                print("%d-%d %s: expected %s rejected %s miss %s %s" % (low, high, name, r.get("expected_trials"),
-                      r.get("rejected_trials"), r.get("miss_trials"), r.get("reasons")), flush=True)
-            for k in range(a.raw_reps):
-                lines = bench.analyzer_run(raw, "RAW_SUMMARY", 30)
-                open(os.path.join(a.out, "pos%d_hop5_r%d.csv" % (low, k)), "w", encoding="utf-8").write(
-                    "\n".join(l for l in lines if not l.startswith(">> ")) + "\n")
-            if a.noise_wav and bench.nodes:
-                bench.counting = {n: [0, 0] for n in bench.nodes}
-                proc, seconds = play_noise(a.noise_wav, a.noise_s)
-                bench.log.write("%.2f -- noise %s %d s\n" % (time.time() - bench.t0, a.noise_wav, seconds))
-                bench.pump(seconds)
-                proc.kill()
-                counts, bench.counting = bench.counting, None
-                for n, (valid, rejected) in counts.items():
-                    noise_csv.writerow([low, high, stamp, n, seconds, valid, rejected, "%.1f" % (valid * 3600.0 / seconds)])
-                noise_file.flush()
-                print("%d-%d noise %d s: %s" % (low, high, seconds, ", ".join("%s valid %d rej %d" % (n, c[0], c[1])
-                                                                             for n, c in counts.items())), flush=True)
-            bench.log.write("%.2f -- position %d-%d end\n" % (time.time() - bench.t0, low, high))
-            bench.log.flush()
+        rnd = 0
+        while True:
+            rnd += 1
+            for low in round_order(positions, a.reference, rnd, a.seed):
+                if deadline is not None and time.time() >= deadline:
+                    break
+                run_position(bench, a, low, rnd, pos_csv, noise_csv, pos_file, noise_file)
+            if deadline is None or time.time() >= deadline:
+                break
     finally:
         bench.to_nodes("PARAM SET detection.band_low_hz %d" % SHIPPED_BAND[0])
         bench.to_nodes("PARAM SET detection.band_high_hz %d" % SHIPPED_BAND[1])
@@ -413,16 +448,50 @@ def run_bench(a):
         bench.log.close()
         pos_file.close()
         noise_file.close()
-    print("wrote", pos_path, noise_path if a.noise_wav else "")
+    print("done: %d round(s), %.2f h; %s" % (rnd, (time.time() - bench.t0) / 3600.0, pos_path), flush=True)
+
+
+def run_report(a):
+    """A compact table from positions.csv / noise.csv: per position, hop accepted / tried, chirps accepted (should be
+    0), the hop strength range, noise valid verdicts per hour per node (mean over rounds). Cheap to read."""
+    hop, chirp, strength, noise = {}, {}, {}, {}
+    for r in csv.DictReader(open(os.path.join(a.out, "positions.csv"), encoding="utf-8")):
+        low = int(r["band_low_hz"])
+        exp = int(r["expected"] or 0)
+        tried = exp + int(r["rejected"] or 0) + int(r["miss"] or 0)
+        if r["step"] == "hop10":
+            h = hop.setdefault(low, [0, 0])
+            h[0] += exp
+            h[1] += tried
+            if r["avg_strength"]:
+                strength.setdefault(low, []).append(float(r["avg_strength"]))
+        else:
+            c = chirp.setdefault(low, [0, 0])
+            c[0] += exp
+            c[1] += tried
+    path = os.path.join(a.out, "noise.csv")
+    if os.path.exists(path):
+        for r in csv.DictReader(open(path, encoding="utf-8")):
+            n = noise.setdefault(int(r["band_low_hz"]), {}).setdefault(r["node"], [0, 0.0])
+            n[0] += int(r["valid"])
+            n[1] += float(r["seconds"])
+    print("band       hop acc   strength        chirp acc   noise valid/h per node")
+    for low in sorted(set(hop) | set(chirp) | set(noise)):
+        h, c, s = hop.get(low, [0, 0]), chirp.get(low, [0, 0]), strength.get(low, [])
+        nz = " ".join("%s %.1f" % (n, v[0] * 3600.0 / v[1]) for n, v in sorted(noise.get(low, {}).items()) if v[1])
+        print("%4d-%4d  %3d/%-3d  %6s-%-6s  %3d/%-3d     %s" % (
+            low, low + a.width, h[0], h[1], "%.0f" % min(s) if s else "-", "%.0f" % max(s) if s else "-",
+            c[0], c[1], nz))
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="mode", required=True)
-    for name in ("host", "bench"):
+    for name in ("host", "bench", "report"):
         p = sub.add_parser(name)
         p.add_argument("--out", required=True)
-        p.add_argument("--positions", default="1000:6500:500", help="band low edges: start:stop:step or a,b,c")
+        p.add_argument("--positions", default="500:4000:250",
+                       help="band low edges: start:stop:step or a,b,c (default: the tones 500-5000 Hz, owner 2026-10-27)")
         p.add_argument("--width", type=int, default=1000, help="band width in Hz (1000 = 5 bins)")
         if name == "host":
             p.add_argument("--replay", required=True, help="the native-replay program")
@@ -432,13 +501,18 @@ def main(argv=None):
             p.add_argument("--gains", default="1,4,16", help="gains for the WAV sources (24-bit replay input)")
             p.add_argument("--traffic", action="store_true", help="add synthtraffic.py at 16 kHz")
             p.add_argument("--cache", default="logs/bandsweep_cache", help="resampled audio (gitignored)")
+        elif name == "report":
+            pass
         else:
             p.add_argument("--analyzer", required=False)
             p.add_argument("--nodes", default="", help="NAME=PORT,... (silent listeners; their band follows)")
-            p.add_argument("--raw-reps", type=int, default=2)
+            p.add_argument("--raw-reps", type=int, default=1)
+            p.add_argument("--hours", type=float, default=0.0, help="repeat rounds until this many hours (0: one round)")
+            p.add_argument("--reference", type=int, default=SHIPPED_BAND[0], help="band low edge each round starts with")
+            p.add_argument("--seed", type=int, default=1, help="the shuffle of each round's order")
             p.add_argument("--settle-s", type=float, default=5.0)
             p.add_argument("--noise-wav")
-            p.add_argument("--noise-s", type=int, default=120)
+            p.add_argument("--noise-s", type=int, default=0, help="0: the whole file")
             p.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
     for low in parse_positions(a.positions):
@@ -447,6 +521,8 @@ def main(argv=None):
                      "multiple of %d, top below 8 kHz" % (low, a.width, GRID_HZ))
     if a.mode == "host":
         run_host(a)
+    elif a.mode == "report":
+        run_report(a)
     else:
         if not a.dry_run and not a.analyzer:
             sys.exit("bandsweep bench: --analyzer is required (or --dry-run)")

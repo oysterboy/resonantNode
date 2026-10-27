@@ -9,7 +9,8 @@ Lab:     bench/sessions/2026-10-26-soak24-shape-b (the band as shipped, 24 h); E
 
 ## Question (owner, 2026-10-27)
 
-"How bad is detection / noise acceptance really." Measured as a sweep of the network band, starting at 1000 Hz,
+"How bad is detection / noise acceptance really." Measured as a sweep of the network band over tones of 500-5000 Hz
+(owner 2026-10-27; first written as "from 1000 Hz"),
 instead of the one band every number so far comes from (2950-3950 Hz, decisions/2026-10-16-network-band-2950-
 3950.md).
 
@@ -43,9 +44,11 @@ speech and mains harmonics carry more energy low; 250 Hz bins are relatively wid
 
 ## Protocol (sketch)
 
-Positions: band low from 1000 Hz, 5 bins wide (1000 Hz), up to the top the output allows (below 8 kHz). A first
-pass in 500 Hz steps (1000, 1500, ... ~6500: about 12 positions), then 250 Hz steps around the good and the bad
-ones.
+Positions (owner 2026-10-27: tones 500-5000 Hz): band low edges 500-4000 in 250 Hz steps, 5 bins wide (1000 Hz),
+15 positions, plus the shipped band (2950-3950) at the start of every round as the yardstick. One unattended 24 h
+run (`bandsweep.py bench --hours 24`): each position about 10 min (hop10, chirp10, one RAW capture, the whole
+435 s noise file), so a round is about 2.7 h and the run holds about 9 rounds; each round's order is shuffled so
+time of day and room drift do not line up with frequency.
 
 Per position:
 

@@ -449,9 +449,6 @@ private:
 #endif
     AudioSignal _audioSignal; // Audio framing for detector input packets (the same class the Node runs).
     mutable detection::DetectionRuntime _detection; // Canonical detector runtime and feature history.
-    mutable uint32_t _lastPrintedHistoryIncompleteCount = 0; // Issue #26 diagnostics: last SEQ_HISTDBG count printed.
-    uint64_t _diagSampleWorkUs = 0; // Issue #26 diagnostics: time spent in the per-sample loop.
-    uint64_t _diagSamplesWorked = 0; // Issue #26 diagnostics: samples processed in that time.
     FreqBandStream _freqBandStream; // Live frequency-band stream used by analyzer diagnostics.
     // SEQ tuning (PAR-003, step 11e item 9): the TonalPulseScalar profile's
     // detection.scalar_* values on the registry with the Node's paths; a SEQ

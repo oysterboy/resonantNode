@@ -91,68 +91,6 @@ void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
 }
 
 void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
-    // Issue #26 diagnostics: one line whenever an inspection found its
-    // history window incomplete since the previous trial line.
-    const detection::HistoryIncompleteSnapshot& hist = _detection.diagnostics().historyIncompleteSnapshot();
-    if (hist.count < _lastPrintedHistoryIncompleteCount) {
-        _lastPrintedHistoryIncompleteCount = 0;
-    }
-    {
-        const AudioSourceStats& audioStats = _audioSource.stats();
-        serialOut().print("SEQ_HISTDBG trial=");
-        serialOut().print(report.context.trial);
-        serialOut().print(" incomplete_total=");
-        serialOut().print(hist.count);
-        serialOut().print(" new=");
-        serialOut().print(hist.count - _lastPrintedHistoryIncompleteCount);
-        if (hist.count != _lastPrintedHistoryIncompleteCount) {
-            serialOut().print(" stream=");
-            serialOut().print(detection::featureStreamName(hist.stream));
-            serialOut().print(" req=");
-            serialOut().print(hist.requestedStartMs);
-            serialOut().print("..");
-            serialOut().print(hist.requestedEndMs);
-            serialOut().print(" now=");
-            serialOut().print(hist.inspectionNowMs);
-            serialOut().print(" ring=");
-            serialOut().print(hist.ringOldestMs);
-            serialOut().print("..");
-            serialOut().print(hist.ringNewestMs);
-            serialOut().print(" ring_bins=");
-            serialOut().print(static_cast<unsigned long>(hist.ringBins));
-            serialOut().print(" out_of_order_at_fail=");
-            serialOut().print(hist.outOfOrderRecords);
-        }
-        serialOut().print(" out_of_order_total=");
-        serialOut().print(_detection.diagnostics().featureHistory().outOfOrderRecordCount());
-        serialOut().print(" i2s_backsteps=");
-        serialOut().print(audioStats.timestampBacksteps);
-        serialOut().print(" i2s_max_backstep_us=");
-        serialOut().print(audioStats.maxTimestampBackstepUs);
-        serialOut().print(" i2s_overflows=");
-        serialOut().print(audioStats.overflowCount);
-        serialOut().print(" clock_corrections=");
-        serialOut().print(audioStats.sampleClockCorrections);
-        serialOut().print(" clock_max_correction_us=");
-        serialOut().print(audioStats.maxSampleClockCorrectionUs);
-        serialOut().print(" emit_marker_seen=");
-        serialOut().print(_sequenceTest.currentTrialDiagnostics.emitStartSeen ? 1 : 0);
-        serialOut().print(" emit_marker_dt_ms=");
-        serialOut().print(_sequenceTest.currentTrialDiagnostics.emitStartDtMs);
-        serialOut().print(" uptime_ms=");
-        serialOut().print(timebase::nowMs());
-        serialOut().print(" samples_read=");
-        serialOut().print(static_cast<unsigned long>(audioStats.totalSamplesRead));
-        serialOut().print(" us_per_sample=");
-        serialOut().print(_diagSamplesWorked > 0
-            ? static_cast<float>(_diagSampleWorkUs) / static_cast<float>(_diagSamplesWorked)
-            : 0.0f, 2);
-        serialOut().print(" dropped_dma_buffers=");
-        serialOut().print(audioStats.droppedDmaBuffers);
-        serialOut().print(" clock_rate_mhz=");
-        serialOut().println(audioStats.sampleClockRateMilliHz);
-        _lastPrintedHistoryIncompleteCount = hist.count;
-    }
     const char* trialRejectReason = analyzerReasonName(report.classification.reason);
     if (report.classification.result == AnalyzerResult::Rejected &&
         report.occurrences.rejectReason != nullptr &&
@@ -170,6 +108,8 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     serialOut().print(analyzerStageName(report.classification.primaryStage));
     serialOut().print(" reject_reason=");
     serialOut().print(trialRejectReason);
+    serialOut().print(" emit_marker_seen=");  // moved from SEQ_HISTDBG (11g C3b)
+    serialOut().print(_sequenceTest.currentTrialDiagnostics.emitStartSeen ? 1 : 0);
     serialOut().print(" source_selection=");
     serialOut().print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
     serialOut().print(" source_reason=");
@@ -482,7 +422,10 @@ void AnalyzerApp::printSequenceSummaryClean() const {
         serialOut().print(-1);
     }
     serialOut().print(" avg_strength=");
-    serialOut().println(avgStrength, 1);
+    serialOut().print(avgStrength, 1);
+    // The run's dropped DMA buffers (cumulative since SEQ start; soak.py reads the last value), moved from SEQ_HISTDBG.
+    serialOut().print(" dropped_dma_buffers=");
+    serialOut().println(_audioSource.stats().droppedDmaBuffers);
 }
 
 void AnalyzerApp::printSequenceReport() const {

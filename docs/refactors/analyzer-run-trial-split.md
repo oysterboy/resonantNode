@@ -163,3 +163,6 @@ prune". Other sessions: read-only on batch C until it closes.
   `SUMMARY_FIELDS` without `avg_conf` (index.csv loses the column on rebuild), `LINE_TYPES` without `SEQ_SOURCE` /
   `SEQ_DETAIL`; test_report_printers' key lists trimmed (no kept key's value changed). Host gate green, T2h
   byte-identical. Open for the owner: SEQ_HISTDBG (move `dropped_dma_buffers` to SEQ_SUMMARY, then drop it?).
+- 2026-10-27, SEQ_HISTDBG dropped too (owner: "clean and prune"): its two keys anything used moved, `dropped_dma_buffers`
+  to the end of SEQ_SUMMARY (soak.py takes the last value in the log, unchanged) and `emit_marker_seen` into SEQ_TRIAL
+  after `reject_reason`; the issue #26 counters that fed only it removed. Host gate green.

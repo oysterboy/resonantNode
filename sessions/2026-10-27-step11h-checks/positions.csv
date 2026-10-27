@@ -1,0 +1,7 @@
+round,band_low_hz,band_high_hz,local_time,step,expected,rejected,miss,unexpected,avg_strength,reasons
+1,2950,3950,2026-10-27 13:14,hop10,10,0,0,0,9836.7,
+1,2950,3950,2026-10-27 13:14,chirp150,0,10,0,0,5546.3,failed_shape:10;pattern_rejected:10
+1,4000,5000,2026-10-27 13:18,hop10,10,0,0,0,9499.7,
+1,4000,5000,2026-10-27 13:18,chirp150,0,10,0,0,13021.9,failed_shape:10;pattern_rejected:10
+1,500,1500,2026-10-27 13:19,hop10,10,0,0,0,32767.0,
+1,500,1500,2026-10-27 13:19,chirp150,0,10,0,0,32767.0,duration_too_long:10

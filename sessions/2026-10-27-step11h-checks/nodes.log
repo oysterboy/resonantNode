@@ -1,0 +1,188 @@
+# bandsweep nodes=E1=COM8,E4=COM10,E5=COM11 analyzer=COM3 started_unix=1793103491.090 started=2026-10-27T13:18:11
+0.24 E1 >> PARAM SET output.silent 1
+0.26 E1 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+0.27 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+0.45 E4 >> PARAM SET output.silent 1
+0.46 E4 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+0.48 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+0.65 E5 >> PARAM SET output.silent 1
+0.66 E5 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+0.68 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+0.85 E1 >> RB log full
+0.86 E1 RB log mode=full
+1.06 E4 >> RB log full
+1.07 E4 RB log mode=full
+1.26 E5 >> RB log full
+1.27 E5 RB log mode=full
+1.47 -- round 1 position 4000-5000 start
+1.47 E1 >> PARAM SET detection.band_low_hz 4000
+1.48 E1 PARAM SET path=detection.band_low_hz module=detection old=2950 new=4000 status=ok
+1.49 E1 RB hop_check status=fail train_ms=0 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=duration,coverage
+1.50 E1 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+1.67 E4 >> PARAM SET detection.band_low_hz 4000
+1.68 E4 PARAM SET path=detection.band_low_hz module=detection old=2950 new=4000 status=ok
+1.70 E4 RB hop_check status=fail train_ms=0 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=duration,coverage
+1.70 E4 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+1.87 E5 >> PARAM SET detection.band_low_hz 4000
+1.89 E5 PARAM SET path=detection.band_low_hz module=detection old=2950 new=4000 status=ok
+1.90 E5 RB hop_check status=fail train_ms=0 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=duration,coverage
+1.90 E5 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+2.07 E1 >> PARAM SET detection.band_high_hz 5000
+2.09 E1 PARAM SET path=detection.band_high_hz module=detection old=3950 new=5000 status=ok
+2.10 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+2.11 E1 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+2.28 E4 >> PARAM SET detection.band_high_hz 5000
+2.29 E4 PARAM SET path=detection.band_high_hz module=detection old=3950 new=5000 status=ok
+2.31 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+2.31 E4 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+2.48 E5 >> PARAM SET detection.band_high_hz 5000
+2.50 E5 PARAM SET path=detection.band_high_hz module=detection old=3950 new=5000 status=ok
+2.51 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+2.52 E5 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+9.01 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8710 duration_ms=216 profile=TonalPulseScalar
+9.01 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9517 duration_ms=224 profile=TonalPulseScalar
+9.04 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9907 duration_ms=248 profile=TonalPulseScalar
+12.21 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8565 duration_ms=219 profile=TonalPulseScalar
+12.21 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9737 duration_ms=224 profile=TonalPulseScalar
+12.24 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9587 duration_ms=248 profile=TonalPulseScalar
+15.41 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8514 duration_ms=219 profile=TonalPulseScalar
+15.41 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9744 duration_ms=224 profile=TonalPulseScalar
+15.45 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10114 duration_ms=248 profile=TonalPulseScalar
+18.57 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8350 duration_ms=171 profile=TonalPulseScalar
+18.64 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9558 duration_ms=253 profile=TonalPulseScalar
+18.64 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10231 duration_ms=248 profile=TonalPulseScalar
+21.81 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8449 duration_ms=220 profile=TonalPulseScalar
+21.82 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9588 duration_ms=224 profile=TonalPulseScalar
+21.84 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9960 duration_ms=249 profile=TonalPulseScalar
+25.01 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8691 duration_ms=220 profile=TonalPulseScalar
+25.04 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9777 duration_ms=253 profile=TonalPulseScalar
+25.04 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9806 duration_ms=249 profile=TonalPulseScalar
+28.21 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8573 duration_ms=220 profile=TonalPulseScalar
+28.24 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9966 duration_ms=249 profile=TonalPulseScalar
+28.24 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9640 duration_ms=253 profile=TonalPulseScalar
+31.36 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8179 duration_ms=175 profile=TonalPulseScalar
+31.44 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9616 duration_ms=253 profile=TonalPulseScalar
+31.44 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9736 duration_ms=249 profile=TonalPulseScalar
+34.61 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9802 duration_ms=224 profile=TonalPulseScalar
+34.61 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8192 duration_ms=221 profile=TonalPulseScalar
+34.64 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9950 duration_ms=248 profile=TonalPulseScalar
+37.81 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9826 duration_ms=224 profile=TonalPulseScalar
+37.81 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8292 duration_ms=220 profile=TonalPulseScalar
+37.84 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9434 duration_ms=248 profile=TonalPulseScalar
+44.21 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13294 duration_ms=189 profile=TonalPulseScalar
+44.25 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11973 duration_ms=237 profile=TonalPulseScalar
+44.28 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7128 duration_ms=259 profile=TonalPulseScalar
+47.41 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13095 duration_ms=194 profile=TonalPulseScalar
+47.45 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11567 duration_ms=238 profile=TonalPulseScalar
+47.48 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7622 duration_ms=259 profile=TonalPulseScalar
+50.59 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7521 duration_ms=171 profile=TonalPulseScalar
+50.61 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13614 duration_ms=195 profile=TonalPulseScalar
+50.65 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11781 duration_ms=238 profile=TonalPulseScalar
+53.81 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13503 duration_ms=189 profile=TonalPulseScalar
+53.85 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11219 duration_ms=237 profile=TonalPulseScalar
+53.88 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7575 duration_ms=258 profile=TonalPulseScalar
+57.01 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13265 duration_ms=195 profile=TonalPulseScalar
+57.05 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11180 duration_ms=237 profile=TonalPulseScalar
+57.08 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7292 duration_ms=262 profile=TonalPulseScalar
+60.22 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13438 duration_ms=195 profile=TonalPulseScalar
+60.25 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11686 duration_ms=236 profile=TonalPulseScalar
+60.29 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7132 duration_ms=263 profile=TonalPulseScalar
+63.45 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11493 duration_ms=236 profile=TonalPulseScalar
+63.48 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13571 duration_ms=258 profile=TonalPulseScalar
+63.49 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7206 duration_ms=261 profile=TonalPulseScalar
+66.61 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13599 duration_ms=195 profile=TonalPulseScalar
+66.65 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11564 duration_ms=236 profile=TonalPulseScalar
+66.68 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7466 duration_ms=258 profile=TonalPulseScalar
+69.81 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13198 duration_ms=195 profile=TonalPulseScalar
+69.85 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11526 duration_ms=236 profile=TonalPulseScalar
+69.88 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7136 duration_ms=257 profile=TonalPulseScalar
+73.01 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=13216 duration_ms=189 profile=TonalPulseScalar
+73.05 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=11278 duration_ms=236 profile=TonalPulseScalar
+73.08 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7238 duration_ms=258 profile=TonalPulseScalar
+78.41 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8217 duration_ms=175 profile=TonalPulseScalar
+78.46 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9848 duration_ms=223 profile=TonalPulseScalar
+78.49 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=9632 duration_ms=248 profile=TonalPulseScalar
+92.72 -- round 1 position 4000-5000 end
+92.72 -- round 1 position 500-1500 start
+92.72 E1 >> PARAM SET detection.band_low_hz 500
+92.73 E1 PARAM SET path=detection.band_low_hz module=detection old=4000 new=500 status=ok
+92.75 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+92.75 E1 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+92.92 E4 >> PARAM SET detection.band_low_hz 500
+92.94 E4 PARAM SET path=detection.band_low_hz module=detection old=4000 new=500 status=ok
+92.95 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+92.96 E4 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+93.12 E5 >> PARAM SET detection.band_low_hz 500
+93.14 E5 PARAM SET path=detection.band_low_hz module=detection old=4000 new=500 status=ok
+93.15 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+93.16 E5 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+93.33 E1 >> PARAM SET detection.band_high_hz 1500
+93.35 E1 PARAM SET path=detection.band_high_hz module=detection old=5000 new=1500 status=ok
+93.36 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+93.36 E1 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+93.53 E4 >> PARAM SET detection.band_high_hz 1500
+93.54 E4 PARAM SET path=detection.band_high_hz module=detection old=5000 new=1500 status=ok
+93.56 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+93.57 E4 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+93.73 E5 >> PARAM SET detection.band_high_hz 1500
+93.75 E5 PARAM SET path=detection.band_high_hz module=detection old=5000 new=1500 status=ok
+93.76 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+93.77 E5 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+100.27 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30874 duration_ms=222 profile=TonalPulseScalar
+100.27 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18943 duration_ms=198 profile=TonalPulseScalar
+100.29 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14847 duration_ms=235 profile=TonalPulseScalar
+103.47 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30743 duration_ms=222 profile=TonalPulseScalar
+103.47 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18928 duration_ms=198 profile=TonalPulseScalar
+103.48 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14773 duration_ms=235 profile=TonalPulseScalar
+106.67 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30772 duration_ms=222 profile=TonalPulseScalar
+106.67 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18775 duration_ms=204 profile=TonalPulseScalar
+106.68 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14661 duration_ms=235 profile=TonalPulseScalar
+109.87 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30570 duration_ms=222 profile=TonalPulseScalar
+109.88 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18760 duration_ms=204 profile=TonalPulseScalar
+109.88 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14720 duration_ms=235 profile=TonalPulseScalar
+113.07 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30520 duration_ms=222 profile=TonalPulseScalar
+113.07 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18657 duration_ms=198 profile=TonalPulseScalar
+113.09 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14759 duration_ms=235 profile=TonalPulseScalar
+116.27 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30330 duration_ms=222 profile=TonalPulseScalar
+116.27 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18732 duration_ms=204 profile=TonalPulseScalar
+116.29 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14732 duration_ms=235 profile=TonalPulseScalar
+119.47 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30236 duration_ms=222 profile=TonalPulseScalar
+119.47 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18661 duration_ms=198 profile=TonalPulseScalar
+119.49 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14654 duration_ms=235 profile=TonalPulseScalar
+122.67 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30218 duration_ms=222 profile=TonalPulseScalar
+122.67 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18700 duration_ms=198 profile=TonalPulseScalar
+122.69 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14718 duration_ms=235 profile=TonalPulseScalar
+125.87 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30161 duration_ms=222 profile=TonalPulseScalar
+125.87 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18714 duration_ms=198 profile=TonalPulseScalar
+125.89 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14705 duration_ms=235 profile=TonalPulseScalar
+129.07 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30487 duration_ms=222 profile=TonalPulseScalar
+129.08 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18866 duration_ms=198 profile=TonalPulseScalar
+129.09 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14738 duration_ms=235 profile=TonalPulseScalar
+169.72 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=30287 duration_ms=222 profile=TonalPulseScalar
+169.72 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18476 duration_ms=195 profile=TonalPulseScalar
+169.74 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14400 duration_ms=235 profile=TonalPulseScalar
+184.51 -- round 1 position 500-1500 end
+184.51 E1 >> PARAM SET detection.band_low_hz 2950
+184.53 E1 PARAM SET path=detection.band_low_hz module=detection old=500 new=2950 status=ok
+184.54 E1 RB hop_check status=fail train_ms=0 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=duration,coverage
+184.55 E1 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+184.71 E4 >> PARAM SET detection.band_low_hz 2950
+184.73 E4 PARAM SET path=detection.band_low_hz module=detection old=500 new=2950 status=ok
+184.74 E4 RB hop_check status=fail train_ms=0 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=duration,coverage
+184.74 E4 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+184.92 E5 >> PARAM SET detection.band_low_hz 2950
+184.93 E5 PARAM SET path=detection.band_low_hz module=detection old=500 new=2950 status=ok
+184.94 E5 RB hop_check status=fail train_ms=0 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=duration,coverage
+184.95 E5 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+185.12 E1 >> PARAM SET detection.band_high_hz 3950
+185.14 E1 PARAM SET path=detection.band_high_hz module=detection old=1500 new=3950 status=ok
+185.15 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+185.16 E1 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+185.32 E4 >> PARAM SET detection.band_high_hz 3950
+185.34 E4 PARAM SET path=detection.band_high_hz module=detection old=1500 new=3950 status=ok
+185.35 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+185.37 E4 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+185.52 E5 >> PARAM SET detection.band_high_hz 3950
+185.54 E5 PARAM SET path=detection.band_high_hz module=detection old=1500 new=3950 status=ok
+185.55 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+185.56 E5 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none

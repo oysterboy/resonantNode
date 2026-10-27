@@ -953,7 +953,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         pattern.proposalMatched = hasVerdict ? reportVerdict->proposalMatched : false;
         pattern.supportMatched = hasVerdict ? reportVerdict->supportMatched : false;
         pattern.behaviorEligible = pattern.valid;
-        pattern.confidence = hasVerdict ? reportVerdict->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
         pattern.supportStrength = hasInspectedOccurrence
             ? detection::strengthClassName(reportInspectedOccurrence->occurrence.magnitude.strengthClass)
@@ -1005,7 +1004,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.primaryStrength = selectedTrial.strength;
         report.occurrences.contrast = 0.0f;  // was the Freq occurrence's band contrast; 0 for scalar occurrences
         report.occurrences.strength = selectedTrial.strength;
-        report.occurrences.confidence = hasVerdict ? reportVerdict->confidence : occurrence.confidence;
         report.occurrences.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
             ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason)
             : "none";
@@ -1036,7 +1034,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.strength = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
             ? selectedTrial.strength
             : reportPatternStrength;
-        report.occurrences.confidence = hasVerdict ? reportVerdict->confidence : 0.0f;
         if (selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate &&
             selectedDetectorReport != nullptr &&
             selectedDetectorReport->selectedReject.present &&

@@ -159,7 +159,6 @@ private:
     unsigned long _transientRejectedDurationTooShortCount = 0;
     unsigned long _transientRejectedDurationTooLongCount = 0;
     unsigned long _transientRejectedStrengthTooLowCount = 0;
-    unsigned long _onsetRejectedCount = 0;
     unsigned long _transientRejectedCount = 0;
     bool _selectedRejectPresent = false;
     detection::SelectedRejectSummary _selectedReject = {};

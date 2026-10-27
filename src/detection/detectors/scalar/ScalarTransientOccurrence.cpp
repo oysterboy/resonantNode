@@ -161,9 +161,6 @@ void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) 
     _selectedReject.gapMaxMs = _candidateGapMaxMs;
     _reportDetail.selectedReject.present = true;
     _reportDetail.selectedReject.value = _lastTransientRejectedStrength;
-    _reportDetail.selectedReject.baseline = 0.0f;
-    _reportDetail.selectedReject.lift = 0.0f;
-    _reportDetail.selectedReject.normalized = 0.0f;
     _reportDetail.selectedReject.opened = true;
     _reportDetail.selectedReject.crossedOnset = true;
     _reportDetail.selectedReject.crossedRelease = true;
@@ -213,7 +210,6 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _reportDetail.accepted.value = _pendingOccurrence.magnitude.value;
     _reportDetail.accepted.baseline = _pendingOccurrence.magnitude.baseline;
     _reportDetail.accepted.lift = _pendingOccurrence.magnitude.lift;
-    _reportDetail.accepted.normalized = 0.0f;
     _pendingOccurrencePresent = true;
     refreshReportDetail();
     freezeReport(audioSamplePacket.timeMs);

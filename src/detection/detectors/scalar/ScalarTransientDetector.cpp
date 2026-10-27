@@ -39,7 +39,6 @@ void ScalarTransientDetector::resetState() {
     _releaseObservedUs = 0;
     _peakStrength = 0.0f;
     resetCandidateFacts();
-    _onsetRejectedCount = 0;
     _transientRejectedCount = 0;
     _lastObservedAcceptedOccurrenceRejectedCount = 0;
     _acceptedOccurrenceId = 0;
@@ -209,10 +208,8 @@ void IRAM_ATTR ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float s
         _lastOnsetRejectReason = OnsetRejectReason::BelowThreshold;
     } else if (_peakActive) {
         _lastOnsetRejectReason = OnsetRejectReason::PeakActive;
-        _onsetRejectedCount++;
     } else if (!onsetCooldownElapsed) {
         _lastOnsetRejectReason = OnsetRejectReason::CooldownActive;
-        _onsetRejectedCount++;
     }
 }
 

@@ -184,8 +184,6 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         serialOut().print(report.classification.dtMs);
         serialOut().print("ms");
     }
-    serialOut().print(" dt_anchor=");
-    serialOut().print(sequenceTrialOnsetAnchorName());
     if (report.occurrences.primaryDurationMs > 0) {
         serialOut().print(" duration_ms=");
         serialOut().print(report.occurrences.primaryDurationMs);
@@ -213,8 +211,6 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     }
     serialOut().print(" source_strength=");
     serialOut().print(report.occurrences.primaryStrength, 1);
-    serialOut().print(" verdict_confidence=");
-    serialOut().print(report.primaryPattern.confidence, 2);
     serialOut().print(" dup=");
     serialOut().print(report.debug.duplicates);
     serialOut().print(" src_total=");
@@ -318,8 +314,6 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         serialOut().print(report.integrity.correlationComplete ? 1 : 0);
         serialOut().print(" inspect.integrity_reason=");
         serialOut().print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
-        serialOut().print(" inspect.integrity_queue_overflow=");
-        serialOut().print(report.integrity.queueOverflowAffected ? 1 : 0);
         serialOut().println();
     };
 
@@ -338,59 +332,6 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
     if (!shouldPrintSequenceSource(report)) {
         return;
     }
-
-    serialOut().print("SEQ_SOURCE");
-    serialOut().print(" source.selection=");
-    serialOut().print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
-    serialOut().print(" source.occurrence_id=");
-    serialOut().print(report.sourceOccurrenceId);
-    serialOut().print(" source.candidate_id=");
-    serialOut().print(report.sourceCandidateId);
-    serialOut().print(" source.report_matched=");
-    serialOut().print(report.sourceReportMatched ? 1 : 0);
-    serialOut().print(" source.event_id=");
-    serialOut().print(report.sourceEventId);
-    serialOut().print(" source.report_generation=");
-    serialOut().print(report.sourceReportGeneration);
-    serialOut().print(" source.event_trial_attribution=");
-    serialOut().print(report.sourceEventTrialAttribution);
-    serialOut().print(" source.report_reason=");
-    serialOut().print(report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
-    serialOut().print(" source.kind=");
-    serialOut().print(report.occurrences.kind != nullptr ? report.occurrences.kind : "none");
-    serialOut().print(" source.source=");
-    serialOut().print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
-    serialOut().print(" source.present=");
-    serialOut().print(report.occurrences.present ? 1 : 0);
-    serialOut().print(" source.valid=");
-    serialOut().print(report.occurrences.valid ? 1 : 0);
-    serialOut().print(" source.start_ms=");
-    serialOut().print(report.occurrences.startMs);
-    serialOut().print(" source.peak_ms=");
-    serialOut().print(report.occurrences.peakMs);
-    serialOut().print(" source.release_ms=");
-    serialOut().print(report.occurrences.releaseMs);
-    serialOut().print(" source.duration_ms=");
-    serialOut().print(report.occurrences.primaryDurationMs);
-    serialOut().print(" source.strength=");
-    serialOut().print(report.occurrences.primaryStrength, 1);
-    serialOut().print(" source.confidence=");
-    serialOut().print(report.occurrences.confidence, 2);
-    serialOut().print(" source.reject_reason=");
-    serialOut().print(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
-    serialOut().print(" source.total=");
-    serialOut().print(report.occurrences.total);
-    serialOut().print(" source.accepted_count=");
-    serialOut().print(report.occurrences.accepted);
-    serialOut().print(" source.rejected_count=");
-    serialOut().print(report.occurrences.rejected);
-    serialOut().print(" integrity.complete=");
-    serialOut().print(report.integrity.correlationComplete ? 1 : 0);
-    serialOut().print(" integrity.queue_overflow=");
-    serialOut().print(report.integrity.queueOverflowAffected ? 1 : 0);
-    serialOut().print(" integrity.reason=");
-    serialOut().print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
-    serialOut().println();
 
     printSequenceSourceCoreCanonical(report);
     printSequenceSourceSpecCanonical(report);
@@ -463,8 +404,6 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     serialOut().print(strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
     serialOut().print(" coverage.complete=");
     serialOut().print(report.profileDetail.magnitudeObservation.coverageComplete ? 1 : 0);
-    serialOut().print(" coverage.future_unavailable=");
-    serialOut().print(report.profileDetail.magnitudeObservation.requestedFutureAtInspection ? 1 : 0);
     serialOut().print(" coverage.covered_ms=");
     serialOut().print(report.profileDetail.magnitudeObservation.coveredDurationMs);
     serialOut().print(" integrity.detector_present=");
@@ -477,8 +416,6 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     serialOut().print(report.integrity.verdictPresent ? 1 : 0);
     serialOut().print(" integrity.complete=");
     serialOut().print(report.integrity.correlationComplete ? 1 : 0);
-    serialOut().print(" integrity.queue_overflow=");
-    serialOut().print(report.integrity.queueOverflowAffected ? 1 : 0);
     serialOut().print(" integrity.reason=");
     serialOut().print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
     serialOut().print(" PATTERN:");
@@ -505,9 +442,6 @@ void AnalyzerApp::printSequenceSummaryClean() const {
     const float avgStrength = summary.strengthCount > 0
         ? summary.totalStrength / static_cast<float>(summary.strengthCount)
         : 0.0f;
-    const float avgConfidence = summary.confidenceCount > 0
-        ? summary.totalConfidence / static_cast<float>(summary.confidenceCount)
-        : 0.0f;
 
     serialOut().print("SEQ_SUMMARY profile=");
     serialOut().print(summary.profileName != nullptr ? summary.profileName : "unknown");
@@ -533,10 +467,6 @@ void AnalyzerApp::printSequenceSummaryClean() const {
     serialOut().print(summary.rejectedTrials);
     serialOut().print(" buffer_overrun_trials=");
     serialOut().print(summary.bufferOverrunTrials);
-    serialOut().print(" ambiguous_trials=");
-    serialOut().print(summary.ambiguousTrials);
-    serialOut().print(" too_dense_trials=");
-    serialOut().print(summary.tooDenseTrials);
     serialOut().print(" detector_accepted_trials=");
     serialOut().print(summary.detectorAcceptedTrials);
     serialOut().print(" detector_reject_trials=");
@@ -552,9 +482,7 @@ void AnalyzerApp::printSequenceSummaryClean() const {
         serialOut().print(-1);
     }
     serialOut().print(" avg_strength=");
-    serialOut().print(avgStrength, 1);
-    serialOut().print(" avg_conf=");
-    serialOut().println(avgConfidence, 2);
+    serialOut().println(avgStrength, 1);
 }
 
 void AnalyzerApp::printSequenceReport() const {

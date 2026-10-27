@@ -184,9 +184,12 @@ takes effect at the next `SEQ start`, not live. The observed stream is the profi
 not a param. The old `PARAM scalar_<key>=<value>` form and `PARAM STATUS` are gone
 (`docs/decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md`).
 
-What the report lines mean (SEQ_TRIAL, SEQ_SOURCE, SEQ_INSPECT, SEQ_EXPLAIN, SEQ_SUMMARY, and
-which output is neutral tooling rather than analyzer truth): `docs/specs/myspec.md` 5.9. That
-section defines the line classes; the exact fields are whatever the current firmware prints.
+What the report lines mean (SEQ_TRIAL, SEQ_SOURCE_CORE / SEQ_SOURCE_SPEC, SEQ_INSPECT, SEQ_EXPLAIN,
+SEQ_SUMMARY, and which output is neutral tooling rather than analyzer truth): `docs/specs/myspec.md`
+5.9. That section defines the line classes; the exact fields are whatever the current firmware prints.
+Since 11g C3b (2026-10-27) the bare `SEQ_SOURCE` line (a subset of SEQ_SOURCE_CORE) and `SEQ_TIMING`
+(SEQ DIAG on) are gone, and keys that were constant over every committed bench run and read by no tool
+left the lines (the list: `docs/refactors/analyzer-run-trial-split.md`, Progress, C3b).
 
 ### Sample dump (detector-input curve tooling)
 

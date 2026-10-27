@@ -121,6 +121,10 @@ read through a reference alias would not show.
 
 ## Progress
 
+Owner 2026-10-27: this session (the one that opened the doc) does C4 and C5; SEQ_TIMING dropped; "clean and
+prune". Other sessions: read-only on batch C until it closes.
+
+
 - 2026-10-27: opened. Before-state for the bench A/B: 11h's sweep logs on 42f1eef
   (bench/sessions/2026-10-27-step11h-sweep24, pos*_hop10.log / chirp150.log, mode=detail verbose=1).
 - 2026-10-27, C1 done: SEQ start refused while a run is active or queued (`ERR SEQ start refused reason=run_active`),
@@ -141,3 +145,21 @@ read through a reference alias would not show.
   ageSamples, FeatureStream and its aliases, FeatureHistory's record(FeatureStream) / hasSamples / latestValue and
   what fed only them, the commented-out record lines, the Emitter's 4-argument constructor, the RB rebase tab
   check). 17 files, -136 lines; host gate green, T2h byte-identical.
+- 2026-10-27, C3b prune (owner: "Drop SEQ_TIMING. Clean and prune."): went: write-only `TrialDiagnostics.onsetSeen /
+  acceptedPatternStrength / emitDoneSeen` (and the EMIT_DONE / EMIT_DRIVE_OFF tests that fed only it) /
+  `ambientBaselineSum`, `SequenceTest.progressLineStarted`, the detector's `_onsetRejectedCount`; the lines
+  `SEQ_TIMING` (with its timestamps) and bare `SEQ_SOURCE`; the keys `SEQ_SUMMARY ambiguous_trials / too_dense_trials
+  / avg_conf` (the counters stay, `completedPrimaryTrialCount` reads them), `SEQ_TRIAL dt_anchor / verdict_confidence`
+  (`sequenceTrialOnsetAnchorName` with it), `SEQ_INSPECT inspect.integrity_queue_overflow`, `SEQ_EXPLAIN
+  coverage.future_unavailable / integrity.queue_overflow`, CORE `accepted.confidence / reject.confidence`, SPEC
+  `detail.scalar.accepted.normalized`, `.reject.baseline / .lift / .normalized`, `.aggregate.max_rejected_lift`,
+  `.inspect.min_strength_pass / carrier_quality_required / opened / released`; the report fields only those printed
+  (`DetectorReport` scalar `normalized`, reject `baseline / lift`, `maxRejectedLift` and their hard-coded 0 writes;
+  the Analyzer report's two `confidence` fields and the summary's confidence sums). Kept because read: the other
+  detector counters (DetectorReport aggregates -> CORE / SPEC); `early_trials` (seqcmp table, soak.py),
+  `duplicate_trials` (seqcmp table); `SEQ_HISTDBG` whole: soak.py reads its `dropped_dma_buffers` (the run's DMA drop
+  total; no other Analyzer line has it) and `emit_marker_seen` lives there, not in SEQ_TRIAL; the opened / released /
+  carrierQualityRequired / matchedMeanPassed fields (detector report end, SEQ_EXPLAIN, CORE). Tools: benchlib
+  `SUMMARY_FIELDS` without `avg_conf` (index.csv loses the column on rebuild), `LINE_TYPES` without `SEQ_SOURCE` /
+  `SEQ_DETAIL`; test_report_printers' key lists trimmed (no kept key's value changed). Host gate green, T2h
+  byte-identical. Open for the owner: SEQ_HISTDBG (move `dropped_dma_buffers` to SEQ_SUMMARY, then drop it?).

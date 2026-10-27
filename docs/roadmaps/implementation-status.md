@@ -14,7 +14,7 @@ archived pass docs and the step texts in `roadmap-0-steps.md`.
 
 | Item | Status | Notes |
 |---|---|---|
-| Clean analyzer reporting | stable active | `SEQ_TRIAL`, `SEQ_SOURCE` (+ `SEQ_SOURCE_CORE` / `SEQ_SOURCE_SPEC`), `SEQ_INSPECT`, `SEQ_EXPLAIN`, `SEQ_SUMMARY` read `DetectorReport` and `OccurrenceVerdict` (myspec 5.9). The shape facts are not yet in SEQ output (with A8). |
+| Clean analyzer reporting | stable active | `SEQ_TRIAL`, `SEQ_SOURCE_CORE` / `SEQ_SOURCE_SPEC`, `SEQ_INSPECT`, `SEQ_EXPLAIN`, `SEQ_SUMMARY` read `DetectorReport` and `OccurrenceVerdict` (myspec 5.9). The shape facts are not yet in SEQ output (with A8). |
 | DetectorReport / SelectedRejectSummary | stable active | Detector-stage truth in detector-owned report contracts (`detectors/DetectorReport.h`); `ScalarTransientDetector` freezes its report on accept and on reject. |
 | DetectionDiagnostics | stable active (Analyzer only) | The Analyzer's side channel out of `DetectionRuntime` (`src/detection/DetectionDiagnostics.h`): counters, pipeline events, report capture. The Node holds the empty `NullDetectionDiagnostics`. CI checks that the replay prints the same with either (myspec 5.5). |
 | Inspection and verdict (makeVerdict) | stable active | `OccurrenceInspector` runs the plan's modules (`MagnitudeFeatureStrength`, `BinShape`); `makeVerdict()` (`inspection/VerdictProjection.h`) is its last step, called per occurrence in `drainDetectors()`, once the inspection window is complete. The verdict boundary rule (normalized confidence, event class) is deferred: DET-016. |

@@ -75,7 +75,6 @@ void ScalarTransientDetector::refreshReportDetail() {
     _reportDetail.aggregates.tooShortCount = _transientRejectedDurationTooShortCount;
     _reportDetail.aggregates.tooLongCount = _transientRejectedDurationTooLongCount;
     _reportDetail.aggregates.strengthTooLowCount = _transientRejectedStrengthTooLowCount;
-    _reportDetail.aggregates.maxRejectedLift = 0.0f;
     _reportDetail.aggregates.bestRejectedValue = _selectedRejectPresent ? _selectedReject.strength : 0.0f;
 }
 

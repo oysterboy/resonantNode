@@ -86,7 +86,7 @@ releaseThreshold-onsetThreshold
 Per launch, capture:
 
 - `SEQ_TRIAL`
-- `SEQ_SOURCE`
+- `SEQ_SOURCE_CORE`
 - `SEQ_SOURCE_SPEC`
 - `SEQ_SUMMARY`
 
@@ -105,7 +105,7 @@ For each block, look at:
 
 For misses, inspect:
 
-- `SEQ_SOURCE`
+- `SEQ_SOURCE_CORE`
 - `SEQ_SOURCE_SPEC`
 - `detail.scalar.inspect.reject_reason`
 

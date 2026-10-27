@@ -44,8 +44,6 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     serialOut().print(accepted.durationMs);
     serialOut().print(" accepted.strength=");
     serialOut().print(accepted.strength, 1);
-    serialOut().print(" accepted.confidence=");
-    serialOut().print(accepted.confidence, 2);
     serialOut().print(" accepted.peak=");
     serialOut().print(accepted.peak, 1);
     serialOut().print(" accepted.mean=");
@@ -82,8 +80,6 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     serialOut().print(selectedReject.durationMs);
     serialOut().print(" reject.strength=");
     serialOut().print(selectedReject.strength, 1);
-    serialOut().print(" reject.confidence=");
-    serialOut().print(selectedReject.confidence, 2);
     serialOut().print(" reject.peak=");
     serialOut().print(selectedReject.peak, 1);
     serialOut().print(" reject.mean=");

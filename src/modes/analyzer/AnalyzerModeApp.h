@@ -141,18 +141,15 @@ private:
     struct SequenceTest {
         // Live per-trial diagnostics and rejection bookkeeping.
         struct TrialDiagnostics {
-            bool onsetSeen = false;
             bool accepted = false;
 
             unsigned long firstOnsetMs = 0;
             unsigned long acceptedPatternMs = 0;
-            float acceptedPatternStrength = 0.0f;
             unsigned long acceptedPatternDurationMs = 0;
             float acceptedAmbientBaseline = 0.0f;
             bool runtimePatternCaptured = false;
 
             bool emitStartSeen = false;
-            bool emitDoneSeen = false;
             unsigned long emitStartDtMs = 0;
 
             unsigned long audioFrames = 0;
@@ -183,7 +180,6 @@ private:
             uint8_t rawLastBlockHash = 0;
 
             unsigned long ambientBaselineSamples = 0;
-            float ambientBaselineSum = 0.0f;
             float ambientBaselineMin = 0.0f;
             float ambientBaselineMax = 0.0f;
             int maxSignalLevel = 0;
@@ -199,7 +195,6 @@ private:
         SeqOutputConfig outputConfig = {};
         bool externalEmitter = false;
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
-        bool progressLineStarted = false;
         unsigned long totalTrials = 100;
         unsigned long periodMs = 2500;
         unsigned long windowEndOffsetMs = 2200;
@@ -416,7 +411,6 @@ private:
     };
 
     unsigned long sequenceTrialOnsetAnchorMs() const;
-    const char* sequenceTrialOnsetAnchorName() const;
     SequenceTrialSelection selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const;
     void handleSequencePending(const detection::DetectionPipelineEvent& event);
     void updateSequenceAmbientStats(unsigned long nowMs);

@@ -103,11 +103,11 @@ void assertKeys(const char* const* expected, size_t n, const std::vector<std::st
 const char* const kCoreKeys[] = {
     "trial", "detector", "source.selection", "source.occurrence_id", "source.candidate_id", "source.report_matched",
     "window.start_ms", "window.end_ms", "accepted.present", "accepted.start_ms", "accepted.peak_ms",
-    "accepted.end_ms", "accepted.duration_ms", "accepted.strength", "accepted.confidence", "accepted.peak",
+    "accepted.end_ms", "accepted.duration_ms", "accepted.strength", "accepted.peak",
     "accepted.mean", "accepted.rms", "accepted.coverage_attack_ms", "accepted.coverage_release_ms",
     "accepted.sustained_ms", "accepted.island_count", "accepted.gap_count", "accepted.island_max_ms",
     "accepted.gap_max_ms", "reject.present", "reject.class", "reject.detector_reason", "reject.start_ms",
-    "reject.peak_ms", "reject.end_ms", "reject.duration_ms", "reject.strength", "reject.confidence", "reject.peak",
+    "reject.peak_ms", "reject.end_ms", "reject.duration_ms", "reject.strength", "reject.peak",
     "reject.mean", "reject.rms", "candidate.mean_strength", "candidate.min_strength", "candidate.strength_count",
     "candidate.matched_strength_count", "reject.coverage_attack_ms", "reject.coverage_release_ms",
     "reject.sustained_ms", "reject.island_count", "reject.gap_count", "reject.island_max_ms", "reject.gap_max_ms",
@@ -117,17 +117,15 @@ const char* const kCoreKeys[] = {
 
 const char* const kSpecKeys[] = {
     "detail.scalar.accepted.value", "detail.scalar.accepted.baseline", "detail.scalar.accepted.lift",
-    "detail.scalar.accepted.normalized", "detail.scalar.reject.value", "detail.scalar.reject.baseline",
-    "detail.scalar.reject.lift", "detail.scalar.reject.normalized", "detail.scalar.reject.opened",
+    "detail.scalar.reject.value", "detail.scalar.reject.opened",
     "detail.scalar.reject.crossed_onset", "detail.scalar.reject.crossed_release", "detail.scalar.threshold.onset",
     "detail.scalar.threshold.release", "detail.scalar.threshold.min_strength", "detail.scalar.aggregate.too_short",
     "detail.scalar.aggregate.too_long", "detail.scalar.aggregate.strength_too_low",
-    "detail.scalar.aggregate.max_rejected_lift", "detail.scalar.aggregate.best_rejected_value",
+    "detail.scalar.aggregate.best_rejected_value",
     "detail.scalar.inspect.reject_reason", "detail.scalar.inspect.no_emit_reason",
-    "detail.scalar.inspect.gate_reason", "detail.scalar.inspect.min_strength_pass",
-    "detail.scalar.inspect.carrier_quality_required", "detail.scalar.inspect.carrier_coverage_passed",
+    "detail.scalar.inspect.gate_reason", "detail.scalar.inspect.carrier_coverage_passed",
     "detail.scalar.inspect.carrier_island_passed", "detail.scalar.inspect.carrier_gap_passed",
-    "detail.scalar.inspect.opened", "detail.scalar.inspect.released", "detail.scalar.inspect.valid_release",
+    "detail.scalar.inspect.valid_release",
     "detail.scalar.inspect.emit_allowed", "detail.scalar.inspect.open_ms", "detail.scalar.inspect.peak_ms",
     "detail.scalar.inspect.release_ms", "detail.scalar.inspect.duration_ms", "detail.scalar.inspect.peak_strength",
 };
@@ -143,10 +141,9 @@ DetectorReport acceptedReport() {
     r.accepted.startMs = 1059;
     r.accepted.durationMs = 201;
     r.accepted.strength = 9083.0f;
-    r.accepted.confidence = 0.857f;
     r.accepted.meanStrength = 4321.3f;  // no half-way value: the shim (printf) and Arduino's Print round those differently
     r.accepted.strengthCount = 12;
-    r.scalar.accepted.normalized = 0.456f;
+    r.scalar.accepted.lift = 456.7f;
     r.scalar.inspect.matchedMeanPassed = true;
     r.scalar.inspect.peakStrength = 9083.0f;
     r.aggregates.acceptedCount = 1;
@@ -184,7 +181,6 @@ void test_core_line_accepted() {
     TEST_ASSERT_EQUAL_STRING("1", valueOf(k, v, "accepted.present").c_str());
     TEST_ASSERT_EQUAL_STRING("201", valueOf(k, v, "accepted.duration_ms").c_str());
     TEST_ASSERT_EQUAL_STRING("9083.0", valueOf(k, v, "accepted.strength").c_str());
-    TEST_ASSERT_EQUAL_STRING("0.86", valueOf(k, v, "accepted.confidence").c_str());
     TEST_ASSERT_EQUAL_STRING("none", valueOf(k, v, "reject.class").c_str());
     TEST_ASSERT_EQUAL_STRING("none", valueOf(k, v, "reject.detector_reason").c_str());
     // candidate.* follow the accepted candidate when there is one.
@@ -230,7 +226,6 @@ void test_spec_line_scalar() {
     // The selected reject's reason fills the three inspect reasons.
     TEST_ASSERT_EQUAL_STRING("too_long", valueOf(k, v, "detail.scalar.inspect.reject_reason").c_str());
     TEST_ASSERT_EQUAL_STRING("too_long", valueOf(k, v, "detail.scalar.inspect.gate_reason").c_str());
-    TEST_ASSERT_EQUAL_STRING("1", valueOf(k, v, "detail.scalar.inspect.carrier_quality_required").c_str());
     TEST_ASSERT_EQUAL_STRING("0", valueOf(k, v, "detail.scalar.inspect.carrier_gap_passed").c_str());
 
     const DetectorReport a = acceptedReport();
@@ -238,7 +233,7 @@ void test_spec_line_scalar() {
     std::vector<std::string> va;
     const std::vector<std::string> ka = keysOf(outA, "SEQ_SOURCE_SPEC", va);
     TEST_ASSERT_EQUAL_STRING("none", valueOf(ka, va, "detail.scalar.inspect.reject_reason").c_str());
-    TEST_ASSERT_EQUAL_STRING("0.46", valueOf(ka, va, "detail.scalar.accepted.normalized").c_str());
+    TEST_ASSERT_EQUAL_STRING("456.7", valueOf(ka, va, "detail.scalar.accepted.lift").c_str());
     TEST_ASSERT_EQUAL_STRING("9083.0", valueOf(ka, va, "detail.scalar.inspect.peak_strength").c_str());
 }
 

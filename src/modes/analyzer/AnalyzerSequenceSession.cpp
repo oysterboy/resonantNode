@@ -67,7 +67,6 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.externalEmitter = pending.externalEmitter;
     _sequenceTest.profileKind = pending.profileKind;
     _sequenceTest.outputConfig = _seqOutputConfig;
-    _sequenceTest.progressLineStarted = false;
     _sequenceTest.totalTrials = pending.totalTrials == 0 ? 1 : pending.totalTrials;
     _sequenceTest.periodMs = pending.periodMs == 0 ? 1 : pending.periodMs;
     _sequenceTest.windowEndOffsetMs = pending.windowEndOffsetMs;
@@ -537,7 +536,6 @@ void IRAM_ATTR AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
     }
 
     diagnostics.ambientBaselineSamples++;
-    diagnostics.ambientBaselineSum += static_cast<float>(signalLevel);
 }
 
 AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const {
@@ -714,51 +712,24 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.completedTrials++;
-    // ANA-004 (step 7a): where the per-trial report time goes. One line per
-    // trial with diagnostics on: microseconds per print block and the
-    // cumulative dropped-DMA count at finalize start (drops caused by this
-    // report show up in the next trial's line).
-    const uint32_t tBuildUs = timebase::nowUs();
-    const uint32_t dropsAtFinalize = _audioSource.stats().droppedDmaBuffers;
     flushSequenceSampleHistory(now + 1UL);
-    const uint32_t tFlushUs = timebase::nowUs();
     if (shouldPrintSequenceTrial()) {
         printSequenceTrial(*finalizedReport);
     }
-    const uint32_t tTrialUs = timebase::nowUs();
     if (_sequenceTest.sampleDumpEnabled) {
         printSequenceSampleReport(_sequenceTest.currentTrial);
     }
-    const uint32_t tSamplesUs = timebase::nowUs();
     if (shouldPrintSequenceInspect(*finalizedReport)) {
         printSequenceInspectCanonical(*finalizedReport);
     }
-    const uint32_t tInspectUs = timebase::nowUs();
     if (shouldPrintSequenceSource(*finalizedReport)) {
         printSequenceSourceCanonical(*finalizedReport);
     }
-    const uint32_t tSourceUs = timebase::nowUs();
     if (shouldPrintSequenceSystem(*finalizedReport)) {
         printSystemHealth(*finalizedReport);
     }
-    const uint32_t tSystemUs = timebase::nowUs();
     if (shouldPrintSequenceDetail(*finalizedReport)) {
         printSequenceDetailCanonical(*finalizedReport);
-    }
-    const uint32_t tDetailUs = timebase::nowUs();
-    if (_sequenceTest.outputConfig.diagnosticsEnabled) {
-        serialOut().printf("SEQ_TIMING trial=%lu build_us=%lu flush_us=%lu trial_us=%lu samples_us=%lu inspect_us=%lu source_us=%lu system_us=%lu detail_us=%lu drops_at_finalize=%lu tx_free=%d\n",
-                      static_cast<unsigned long>(_sequenceTest.currentTrial),
-                      static_cast<unsigned long>(tBuildUs - finalizeStartUs),
-                      static_cast<unsigned long>(tFlushUs - tBuildUs),
-                      static_cast<unsigned long>(tTrialUs - tFlushUs),
-                      static_cast<unsigned long>(tSamplesUs - tTrialUs),
-                      static_cast<unsigned long>(tInspectUs - tSamplesUs),
-                      static_cast<unsigned long>(tSourceUs - tInspectUs),
-                      static_cast<unsigned long>(tSystemUs - tSourceUs),
-                      static_cast<unsigned long>(tDetailUs - tSystemUs),
-                      static_cast<unsigned long>(dropsAtFinalize),
-                      Serial.availableForWrite());
     }
     // OBS keeps the trigger grid: the external emitter runs on its own fixed
     // period, and finalize already waited reportSettleMs past the window, so
@@ -866,11 +837,6 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         ++summary.strengthCount;
     }
 
-    if (report.primaryPattern.confidence > 0.0f) {
-        summary.totalConfidence += report.primaryPattern.confidence;
-        ++summary.confidenceCount;
-    }
-
     summary.completed = detection::analyzer::completedPrimaryTrialCount(summary);
 }
 
@@ -887,16 +853,6 @@ unsigned long AnalyzerApp::sequenceTrialOnsetAnchorMs() const {
         return _sequenceTest.currentTrialStartMs + _sequenceTest.currentTrialDiagnostics.emitStartDtMs;
     }
     return _sequenceTest.currentTrialScheduledAtMs;
-}
-
-const char* AnalyzerApp::sequenceTrialOnsetAnchorName() const {
-    if (_sequenceTest.currentTrialCommandSent) {
-        return "command";
-    }
-    if (_sequenceTest.currentTrialDiagnostics.emitStartSeen) {
-        return "marker";
-    }
-    return "scheduled";
 }
 
 

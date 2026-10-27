@@ -126,7 +126,6 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
             _sequenceTest.primaryAcceptedSourceRecord = event.sourceRecord;
             _sequenceTest.primaryAcceptedSourceRecord.eventTrialAttribution = _sequenceTest.currentTrial;
         }
-        _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
         if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {
             _sequenceTest.currentTrialDiagnostics.firstOnsetMs = onsetMs;
         }
@@ -135,7 +134,6 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
         }
         _sequenceTest.currentTrialDiagnostics.accepted = true;
         _sequenceTest.currentTrialDiagnostics.acceptedPatternMs = onsetMs;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = verdict->primaryStrength;
         _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = verdict->primaryDurationMs;
         _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = verdict->primaryAmbientBaseline;
         _sequenceTest.currentTrialPatternDetectedMs = onsetMs;
@@ -176,7 +174,6 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
         }
     }
 
-    _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
     if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {
         _sequenceTest.currentTrialDiagnostics.firstOnsetMs = onsetMs;
     }
@@ -191,7 +188,6 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
 
     _sequenceTest.currentTrialDiagnostics.accepted = true;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternMs = onsetMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = verdict->primaryStrength;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = verdict->primaryDurationMs;
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = verdict->primaryAmbientBaseline;
     _sequenceTest.currentTrialPatternDetectedMs = onsetMs;

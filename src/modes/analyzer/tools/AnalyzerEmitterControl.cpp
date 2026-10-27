@@ -60,24 +60,17 @@ void AnalyzerApp::pollEmitterSerial() {
             const unsigned long now = timebase::nowMs();
             const char* emitterLine = _emitterLine.line();
             const bool emitStartLine = startsWithTokenIgnoreCase(emitterLine, "EMIT_START");
-            const bool emitDoneLine = startsWithTokenIgnoreCase(emitterLine, "EMIT_DONE");
             const bool emitDriveOnLine = startsWithTokenIgnoreCase(emitterLine, "EMIT_DRIVE_ON");
-            const bool emitDriveOffLine = startsWithTokenIgnoreCase(emitterLine, "EMIT_DRIVE_OFF");
             if (_controlClaimSent && !_controlClaimAcked && startsWithTokenIgnoreCase(emitterLine, "OK MODE REMOTE")) {
                 _controlClaimAcked = true;
                 serialOut().println("EVT analyzer_control_claim acked");
             }
-            if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && (emitStartLine || emitDoneLine || emitDriveOnLine || emitDriveOffLine)) {
+            if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && (emitStartLine || emitDriveOnLine)) {
                 const unsigned long markerTrial = parseUnsignedTokenValue(emitterLine, "trial=");
                 if (markerTrial == _sequenceTest.currentTrial) {
                     auto& trialDiag = _sequenceTest.currentTrialDiagnostics;
-                    if (emitStartLine || emitDriveOnLine) {
-                        trialDiag.emitStartSeen = true;
-                        trialDiag.emitStartDtMs = timing::elapsedOrZero(now, _sequenceTest.currentTrialStartMs);
-                    }
-                    if (emitDoneLine || emitDriveOffLine) {
-                        trialDiag.emitDoneSeen = true;
-                    }
+                    trialDiag.emitStartSeen = true;
+                    trialDiag.emitStartDtMs = timing::elapsedOrZero(now, _sequenceTest.currentTrialStartMs);
                 }
             }
         }

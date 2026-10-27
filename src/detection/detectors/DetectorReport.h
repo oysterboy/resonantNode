@@ -100,7 +100,6 @@ struct ScalarAcceptedDetail {
     float value = 0.0f;
     float baseline = 0.0f;
     float lift = 0.0f;
-    float normalized = 0.0f;
 };
 
 /*
@@ -112,9 +111,6 @@ while the scalar detector still owns only a subset of the scalar report truth.
 struct ScalarSelectedRejectDetail {
     bool present = false;
     float value = 0.0f;
-    float baseline = 0.0f;
-    float lift = 0.0f;
-    float normalized = 0.0f;
     bool opened = false;
     bool crossedOnset = false;
     bool crossedRelease = false;
@@ -140,7 +136,6 @@ struct ScalarAggregateDetail {
     unsigned long tooShortCount = 0;
     unsigned long tooLongCount = 0;
     unsigned long strengthTooLowCount = 0;
-    float maxRejectedLift = 0.0f;
     float bestRejectedValue = 0.0f;
 };
 

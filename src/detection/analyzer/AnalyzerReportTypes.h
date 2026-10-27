@@ -224,7 +224,6 @@ struct AnalyzerVerdictObservation {
     bool supportMatched = false;
     bool behaviorEligible = false;
 
-    float confidence = 0.0f;
     long dtMs = -1;
 
     const char* supportStrength = "unknown";
@@ -259,7 +258,6 @@ struct AnalyzerOccurrenceObservation {
     float primaryStrength = 0.0f;
     float contrast = 0.0f;
     float strength = 0.0f;
-    float confidence = 0.0f;
 
     detection::InspectionTarget moduleTarget = detection::InspectionTarget::None;
     const char* mainRejectReason = "none";
@@ -386,8 +384,6 @@ struct AnalyzerCleanSummary {
     unsigned int dtCount = 0;
     float totalStrength = 0.0f;
     unsigned int strengthCount = 0;
-    float totalConfidence = 0.0f;
-    unsigned int confidenceCount = 0;
 };
 
 struct AnalyzerReport {

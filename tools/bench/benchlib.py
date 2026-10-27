@@ -10,15 +10,15 @@ KV = re.compile(r"(\S+?)=(\S*)")
 # Board boot banner, or the "# firmware:" header seqrun/import write into run logs.
 # board= was added 2026-10-09 (D-AMP); every earlier firmware was piezo-only.
 BANNER = re.compile(r"^(?:BUILD|# firmware:) role=(\S+) git=(\S+) .*version=(\S+)(?: board=(\S+))?")
-LINE_TYPES = ("SEQ_TRIAL", "SEQ_SOURCE_CORE", "SEQ_SOURCE_SPEC", "SEQ_SOURCE",
-              "SEQ_INSPECT", "SEQ_EXPLAIN", "SEQ_DETAIL", "SEQ_SUMMARY", "SEQ REPORT")
+LINE_TYPES = ("SEQ_TRIAL", "SEQ_SOURCE_CORE", "SEQ_SOURCE_SPEC",
+              "SEQ_INSPECT", "SEQ_EXPLAIN", "SEQ_SUMMARY", "SEQ REPORT")
 
 # SEQ_SUMMARY fields copied into summaries and the index, in this order.
 SUMMARY_FIELDS = ("trials", "completed", "expected_trials", "early_trials", "late_trials",
                   "miss_trials", "duplicate_trials", "unexpected_trials", "rejected_trials",
                   "buffer_overrun_trials", "detector_accepted_trials", "detector_reject_trials",
                   "pattern_valid_trials", "pattern_rejected_trials", "avg_dt_ms",
-                  "avg_strength", "avg_conf")
+                  "avg_strength")
 
 INDEX_COLUMNS = ("session", "run", "date", "firmware", "role", "profile", "detector",
                  "distance_cm", "space", "speaker", "tone_level", "purpose", "complete") + SUMMARY_FIELDS

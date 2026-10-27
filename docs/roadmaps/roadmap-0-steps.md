@@ -53,6 +53,7 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
 11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
+Status update 2026-10-27, later: 11c done (soak accepted at 23.45 h). Next: 11h's checks, then its 24 h run.
 Status update 2026-10-27 (owner): the frequency sweep is step 11h, run before 11g and 11d. Order now
 11c -> 11h -> 11g -> 11d.
 Status update 2026-10-26, late night (owner): order 11c -> 11g -> 11d. 11c's soak runs to 10-27 13:39; 11g's A, B1,
@@ -1111,7 +1112,7 @@ the previous gate open unless the step says it can run in parallel.
    The self-test's amp check measures SNR and needed no change. Open: `tailMs` (0) on the board's truncated
    trains (the height cell); a long run with the rule; the Analyzer's shape facts in SEQ output (with A8).
 
-11c. [RUNNING 2026-10-26 13:39 to 10-27 13:39] Unattended bench runs. (issue #60)
+11c. [DONE 2026-10-27] Unattended bench runs. (issue #60, closed)
    Owner 2026-10-25: the reference cell (bench/sessions/2026-10-23-cell-desk-ref-110cm) repeated every few hours
    for day-to-day variation, and listen logs of the silent nodes. No physical change; plays sound in the empty room.
    Needs E2/E3 back as Analyzer/Emitter between runs of 11a.
@@ -1124,6 +1125,10 @@ the previous gate open unless the step says it can run in parallel.
    Nodes free, a room check at minutes 7 / 27 / 47 of every hour (owner: hourly steps in the drift are suspicious,
    distant church bells ring on the hour and the quarters; the checks avoid the chimes and sample three times as
    densely): Nodes silenced, Analyzer hop / chirp SEQ and RAW hop captures for per-bin levels.
+   Done 2026-10-27, accepted by the owner at 23.45 h (bench/sessions/2026-10-26-soak24-shape-b): 70 room checks,
+   hop 710 / 710, chirps 0 / 1,400 (shape; 3200 by duration while the room's null was in), 1,378 chains all ended,
+   0 noise-started of 14,671 answers, 0 resets, no drops after boot. E5 <- E1 drifts -17 % (E4 stands between
+   them); no sign of the bells. Next: 11h.
 
 11d. [TODO, after 11h and 11g] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

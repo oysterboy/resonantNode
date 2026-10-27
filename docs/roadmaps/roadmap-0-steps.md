@@ -35,6 +35,9 @@ Milestone 2026-10-26 (owner, decisions/2026-10-26-milestone-installation-ready-n
 lands (OTA is in the gate). At the close this file is archived as it stands and a fresh roadmap-0-steps.md opens
 the next phase, numbering on from 12; everything still open (5h, 8a, 9, the step 11 bucket, the unsequenced list)
 is triaged into that sequence then, not before.
+Queued first for the next phase (owner 2026-10-27), after 11c, 11g and 11d: step 12, a frequency tuning sweep
+from 1000 Hz, to answer "how bad is detection / noise acceptance really" (hits and false accepts per band
+position; docs/research/frequency-tuning-sweep.md, issue #69).
 
 Previous phase (closed 2026-10-22 with step 6): five D-AMP nodes with the
 same firmware in one room, hearing and answering each other, with a

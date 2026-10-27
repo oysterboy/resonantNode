@@ -94,6 +94,8 @@ Upload the same firmware to all test nodes.
 
 ### NODE-004 - node glue cleanup
 
+Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
+
 Status: PARTIAL 2026-10-22 (step 10 item 9): RB STATUS and the status prints are in ResonantNodeStatus.cpp;
 the emission logic is out of update() (startEmission / updateEmissions); SelfTest uses the one detection reset.
 Open: update() and handleSerialLine() are still long; split further when an owner module has a home for it.
@@ -114,6 +116,7 @@ Do not build a registry before the ownership map is clear.
 ### NODE-005 - later infrastructure
 
 Status: DEFERRED
+Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
 
 ```text
 PARAM SAVE / LOAD / verify (LIST / GET / SET landed, see roadmap-param-config.md).

@@ -76,4 +76,8 @@ architecture-readability-review-2026-10-25.md
                                spec vs code boundaries, readability and
                                maintainability findings at c0b75e9, ranked,
                                with a suggested order
+node-structure.md              Node classes and files against the spec and the
+                               later roadmap: the A7 cut (step 11g D), then where
+                               CommandRouter, BehaviorInput, OutputProfile /
+                               ResonantProgram, ConfigStore, OTA, VEKTOR land
 ```

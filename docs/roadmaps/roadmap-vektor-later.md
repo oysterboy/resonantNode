@@ -59,6 +59,7 @@ Keep the list aligned after detection, behavior, and output boundaries change.
 ### VEK-002 - after local boundaries stabilize
 
 Status: DEFERRED
+Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
 
 ```text
 Define resource, state, and command mapping.

@@ -488,6 +488,7 @@ Keep these separate.
 ### PAR-014 - Config stays separate
 
 Status: DEFERRED
+Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
 
 ```text
 Do not merge Config and Params too early.

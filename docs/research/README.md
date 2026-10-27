@@ -69,6 +69,8 @@ tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; partly landed, not reviewed)
 unproven-assumptions-audit.md  where code and roadmap rest on unmeasured
                                assumptions (2026-10-16 audit); check order
+polyphony.md                   several nodes at once (lab E003) and chords
+                               inside one chirp (OUT-006); test design
 vektor-lessons-from-11a.md     what the 11a radio taught VEKTOR (real-time
                                budget, replies, persistence) (cited by
                                decisions/2026-10-25-vektor-replaces-net.md)

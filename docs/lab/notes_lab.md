@@ -419,3 +419,13 @@ Full write-up with the session paths: `docs/lab/2026-10-16-bench-day.md`. In sho
 ## 2026-10-17 - slot 1 (unsupervised): the deafness wanders, nothing crosses after the replug
 
 Full write-up: `docs/lab/2026-10-17-slot1.md`. In short: E3 is not a bad listener; a Node goes deaf for minutes on either board and either build (no regression from the 2026-10-16 merge), with suppression, clocks and chirp state normal (new `RB STATUS` fields). A Node loses 0.3-0.4 DMA buffers per second on the bench where the Analyzer counted none. After the owner replugged the USB cables, both nodes were deaf and E3's chirps reached E2 only as 4-7 ms fragments: the placement changed, to be restored before the next listening test. Data: `bench/sessions/2026-10-17-slot1-e3-listener`.
+
+## 2026-10-27 - Nodes answer in chords: 38-65 % of field rounds have several trains at once
+
+Full write-up: `docs/lab/experiments/E003_simultaneous_answers.md`. In short: every Node answers exactly
+`behavior.wait_after_heard_ms` after its verdict, so all Nodes that hear a call answer within a few ms of each other.
+In step 10b the typical round is four trains at once; in the 23 h soak, 4,428 of 11,708 rounds had two. Listeners
+still read those rounds as valid (1,261 of 1,305 cells in the soak). Why the contrast gate lets an adjacent-bin
+chord through is not measured. Counted offline with `tools/bench/overlapstats.py` from `bench/sessions/
+2026-10-22-step6-trial`, `2026-10-22-step10b-field-rerun` and `2026-10-26-soak24-shape-b` (bench 39a56eb). Test
+design and the separate question of chords inside one chirp: `docs/research/polyphony.md`.

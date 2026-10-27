@@ -49,3 +49,5 @@ Observations:
 - Speech and music that pass the existing gates (none in this corpus): the case where shape matters most for noise.
 - Other rotations (every recording starts at 2950; a Node with rotation 2 starts at 3450 and wraps).
 - Two trains overlapping (two nodes answering at once).
+  2026-10-27: the field logs show this in 38-65 % of rounds; counted in E003, test design in
+  docs/research/polyphony.md. Shape facts on such rounds are still not recorded.

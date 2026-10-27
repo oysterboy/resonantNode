@@ -64,6 +64,9 @@ experiments/E001_spatialdistance.md   detection over distance, rooms and
                                       acoustic-test-suite.md)
 experiments/E002_shape_separation.md  does shape separate the hop train
                                       (DET-015 verification, step 11b)
+experiments/E003_simultaneous_answers.md  several Nodes sounding at once:
+                                      how often, still heard? (design:
+                                      research/polyphony.md)
 2026-09-03-exp001-notes.md            raw notes, E001 phase 1 + stack crash
 2026-09-memory-stack-analysis.md      analyzer/reset stack frame sizes
 current-state-2026-06-24.md           checkpoint snapshot

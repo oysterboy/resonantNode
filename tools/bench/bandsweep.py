@@ -382,12 +382,34 @@ def run_position(bench, a, low, rnd, pos_csv, noise_csv, pos_file, noise_file):
         lines = bench.analyzer_run(raw, "RAW_SUMMARY", 30)
         open(os.path.join(a.out, "%s_hop5_%d.csv" % (tag, k)), "w", encoding="utf-8").write(
             "\n".join(l for l in lines if not l.startswith(">> ")) + "\n")
-    if a.noise_wav and bench.nodes:
+    if a.noise_wav and (bench.nodes or a.under_noise):
         seconds = a.noise_s if a.noise_s > 0 else int(math.ceil(wav_seconds(a.noise_wav)))
         bench.counting = {n: [0, 0] for n in bench.nodes}
         proc = play_noise(a.noise_wav)
+        started = time.time()
         bench.log.write("%.2f -- noise %s %d s\n" % (time.time() - bench.t0, a.noise_wav, seconds))
-        bench.pump(seconds)
+        if a.under_noise:
+            # Hits under noise (owner 2026-10-27): hop10 back to back while the file plays, each run labelled by the
+            # file section it started in. Does a train get through while the detector is busy with music or speech?
+            sections = sections_for(a.noise_wav) or []
+            hop_name, hop_cmd = steps[0]
+            k = 0
+            while time.time() - started < seconds - 20:
+                offset = time.time() - started
+                section = next((t for t, x, y in sections if x <= offset < y), "gap")
+                lines = bench.analyzer_run(hop_cmd, "SEQ_SUMMARY", 150)
+                k += 1
+                open(os.path.join(a.out, "%s_%s_noise%d.log" % (tag, hop_name, k)), "w", encoding="utf-8").write(
+                    "\n".join(lines) + "\n")
+                r = summarize_seq(lines)
+                pos_csv.writerow([rnd, low, high, stamp, "%s_noise@%ds_%s" % (hop_name, offset, section),
+                                  r.get("expected_trials", ""), r.get("rejected_trials", ""), r.get("miss_trials", ""),
+                                  r.get("unexpected_trials", ""), r.get("avg_strength", ""), r.get("reasons", "")])
+                pos_file.flush()
+                summary.append("%s@%s %s/10" % (hop_name, section[:8], r.get("expected_trials", "?")))
+            bench.pump(max(0.0, seconds - (time.time() - started)))
+        else:
+            bench.pump(seconds)
         proc.kill()
         counts, bench.counting = bench.counting, None
         for n, (valid, rejected) in counts.items():
@@ -412,6 +434,8 @@ def run_bench(a):
             for name, cmd in steps:
                 print("  analyzer [%s] >> %s" % (name, cmd))
             print("  analyzer [raw x%d] >> %s" % (a.raw_reps, raw))
+            if a.noise_wav and a.under_noise:
+                print("  under noise: hop10 back to back while %s plays" % a.noise_wav)
             if a.noise_wav and a.nodes:
                 print("  noise: play %s for %s s, count the Nodes' verdicts"
                       % (a.noise_wav, a.noise_s if a.noise_s > 0 else "the whole file"))
@@ -454,12 +478,16 @@ def run_bench(a):
 def run_report(a):
     """A compact table from positions.csv / noise.csv: per position, hop accepted / tried, chirps accepted (should be
     0), the hop strength range, noise valid verdicts per hour per node (mean over rounds). Cheap to read."""
-    hop, chirp, strength, noise = {}, {}, {}, {}
+    hop, chirp, strength, noise, under = {}, {}, {}, {}, {}
     for r in csv.DictReader(open(os.path.join(a.out, "positions.csv"), encoding="utf-8")):
         low = int(r["band_low_hz"])
         exp = int(r["expected"] or 0)
         tried = exp + int(r["rejected"] or 0) + int(r["miss"] or 0)
-        if r["step"] == "hop10":
+        if r["step"].startswith("hop10_noise"):
+            u = under.setdefault(low, [0, 0])
+            u[0] += exp
+            u[1] += tried
+        elif r["step"] == "hop10":
             h = hop.setdefault(low, [0, 0])
             h[0] += exp
             h[1] += tried
@@ -475,13 +503,14 @@ def run_report(a):
             n = noise.setdefault(int(r["band_low_hz"]), {}).setdefault(r["node"], [0, 0.0])
             n[0] += int(r["valid"])
             n[1] += float(r["seconds"])
-    print("band       hop acc   strength        chirp acc   noise valid/h per node")
+    print("band       hop acc   strength        chirp acc   hop under noise   noise valid/h per node")
     for low in sorted(set(hop) | set(chirp) | set(noise)):
         h, c, s = hop.get(low, [0, 0]), chirp.get(low, [0, 0]), strength.get(low, [])
+        u = "%d/%d" % tuple(under[low]) if low in under else "-"
         nz = " ".join("%s %.1f" % (n, v[0] * 3600.0 / v[1]) for n, v in sorted(noise.get(low, {}).items()) if v[1])
-        print("%4d-%4d  %3d/%-3d  %6s-%-6s  %3d/%-3d     %s" % (
+        print("%4d-%4d  %3d/%-3d  %6s-%-6s  %3d/%-3d     %-17s %s" % (
             low, low + a.width, h[0], h[1], "%.0f" % min(s) if s else "-", "%.0f" % max(s) if s else "-",
-            c[0], c[1], nz))
+            c[0], c[1], u, nz))
 
 
 def main(argv=None):
@@ -513,6 +542,8 @@ def main(argv=None):
             p.add_argument("--settle-s", type=float, default=5.0)
             p.add_argument("--noise-wav")
             p.add_argument("--noise-s", type=int, default=0, help="0: the whole file")
+            p.add_argument("--under-noise", action="store_true",
+                           help="during the noise, run hop10 back to back (hits under noise; needs --noise-wav)")
             p.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
     for low in parse_positions(a.positions):

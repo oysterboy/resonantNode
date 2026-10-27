@@ -1196,6 +1196,12 @@ the previous gate open unless the step says it can run in parallel.
    Checks 2026-10-27 (bench/sessions/2026-10-27-step11h-checks, 42f1eef on all five): B2 smoke at the shipped band
    hop 10/10, chirp 0/10; 500-1500 and 4000-5000 hop 10/10, chirp 0/10; the Nodes follow the band and get it back;
    the noise file reaches the mics. The 24 h run: bench/sessions/2026-10-27-step11h-sweep24.
+   Added 2026-10-27 (owner), after the 24 h run: hits under noise. The low bands (500-1250) take the hop train at the
+   strength cap but music and speech trip the detector there hundreds of times per playback (all rejected, by shape);
+   whether a train that arrives while the detector is busy still gets through is not measured by the sweep (hits in
+   silence, noise separately). Run: bandsweep.py bench --under-noise at 500, 750 and the shipped band (hop10 back to
+   back while bench_audio.wav plays, per file section), plus one lower Emitter level at 500 / 750 to see the margin
+   under the cap.
 
 11g. [RUNNING 2026-10-26, bench part after 11h] Review Part D, the rest. (issue #67)
    Owner 2026-10-26: sequence the review's remaining Part D findings

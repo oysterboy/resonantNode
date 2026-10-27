@@ -66,3 +66,8 @@ SEQ line names and the keys the tools parse; the Emitter protocol; the Node.
   quiet during a run also clears the running config's diagnostics flag. The tools that wait for SEQ_SUMMARY
   (benchlib.run_commands, soakcycle, bandsweep) send SEQ STOP when it never comes, so a hung run cannot block the
   next start. Host gate green, T2h byte-identical.
+- 2026-10-27, C2 done: DetectorReportPrinter / ScalarTransientPrinter moved to `src/modes/analyzer/report/` (lines
+  unchanged: test_report_printers passes); test_shipped_profile no longer includes them. The `EVT transient` line
+  was compiled out everywhere (`AUDIO_VERBOSE_DEBUG` 0, review D1.9), so it was deleted with its flag chain
+  (`setDiagnosticsEnabled` in the detector and DetectionRuntime, the Analyzer's five calls, the stats fields) rather
+  than moved; SEQ DIAG keeps gating the Analyzer's own diagnostics. Node flash -248 B (the linker had dropped most).

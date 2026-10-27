@@ -597,7 +597,7 @@ One family per binary, no virtual base
 
 Compile-time interface (static_assert in DetectionFamily.h)
   core:        resetState(), hasPendingOccurrence(), popOccurrence(Occurrence&)
-  diagnostics: latestReport(), reportGeneration(), setDiagnosticsEnabled(bool)
+  diagnostics: latestReport(), reportGeneration()
   Three shims, bodies in the family's branch of DetectionFamily.h:
     bool updateActiveDetector(ActiveDetector&, const AudioSamplePacket&,
         const FrequencyBandMeasurementPacket&, const ActiveDetectorConfig&,

@@ -73,7 +73,6 @@ public:
     // (the Null variant records nothing).
     void resetSourceRejectSummaries();
     void resetDiagnosticsCounters();
-    void setDiagnosticsEnabled(bool enabled);
     ActiveDetectionDiagnostics& diagnostics() { return _diagnostics; }
     const ActiveDetectionDiagnostics& diagnostics() const { return _diagnostics; }
 

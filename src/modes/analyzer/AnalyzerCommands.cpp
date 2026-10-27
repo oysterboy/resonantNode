@@ -273,7 +273,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         _seqOutputConfig.diagnosticsEnabled = enabled;
         if (_sequenceTest.active) {
             _sequenceTest.outputConfig.diagnosticsEnabled = enabled;
-            _detection.setDiagnosticsEnabled(enabled);
         }
         serialOut().print("OK SEQ DIAG ");
         serialOut().println(onOffName(enabled));
@@ -337,7 +336,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     _sequenceTest.outputConfig.when = AnalyzerApp::SeqOutputWhen::Off;
                     _sequenceTest.outputConfig.verbosity = 0;
                     _sequenceTest.outputConfig.diagnosticsEnabled = false;  // a later SEQ WHEN must not re-enable them
-                    _detection.setDiagnosticsEnabled(false);
                 }
             }
             serialOut().print("OK SEQ MODE ");
@@ -356,7 +354,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _seqOutputConfig.when = when;
             if (_sequenceTest.active) {
                 _sequenceTest.outputConfig.when = when;
-                _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
             }
             serialOut().print("OK SEQ WHEN ");
             serialOut().println(AnalyzerApp::sequenceOutputWhenName(when));

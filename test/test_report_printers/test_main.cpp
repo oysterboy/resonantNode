@@ -23,8 +23,8 @@ temp file around each call. Runs in native-test-behavior.
 #include <vector>
 
 #include "../../src/detection/detectors/DetectorNames.cpp"
-#include "../../src/detection/detectors/DetectorReportPrinter.cpp"
-#include "../../src/detection/detectors/scalar/ScalarTransientPrinter.cpp"
+#include "../../src/modes/analyzer/report/DetectorReportPrinter.cpp"
+#include "../../src/modes/analyzer/report/ScalarTransientPrinter.cpp"
 
 using namespace detection;
 

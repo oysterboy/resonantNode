@@ -788,6 +788,8 @@ string before it was written down.
    `detection/analyzer/`) and have one caller (`AnalyzerSeqReporter.cpp:406`); `printTransientStatsIfDue`
    prints `EVT transient ...` from inside the detector. Spec 5.3 and 5.9. Fix: move both printers to
    `modes/analyzer/` (they read only `DetectorReport`), the EVT line to the Analyzer's reporter.
+   -> done 2026-10-27 (11g C2): printers in `modes/analyzer/report/`; the EVT line deleted (compiled out by
+   AUDIO_VERBOSE_DEBUG, D1.9) with the detector's diagnostics flag.
 
 9. **Behavior mirrors SoundOutput's busy state (low).** `_outputBusy` (B13) duplicates `output.phase`; RB STATUS
    prints both (`ResonantNodeStatus.cpp:77-78, 84-85`). Spec 7.2 says Behavior reads `OutputStatus`; the code has

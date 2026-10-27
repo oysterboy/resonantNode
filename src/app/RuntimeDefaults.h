@@ -13,10 +13,6 @@ debug/test knobs that multiple subsystems still share.
 These are defaults, not live profile state.
 */
 
-#ifndef AUDIO_VERBOSE_DEBUG
-#define AUDIO_VERBOSE_DEBUG 0
-#endif
-
 #ifndef TEST_LOOP_DELAY_MS
 #define TEST_LOOP_DELAY_MS 0
 #endif

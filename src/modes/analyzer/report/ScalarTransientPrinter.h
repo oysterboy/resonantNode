@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../DetectorReport.h"
+#include "../../../detection/detectors/DetectorReport.h"
 
 // Scalar-transient detector-specific report/detail rendering helpers.
 // Keep scalar wording and field printing close to the scalar detector code.

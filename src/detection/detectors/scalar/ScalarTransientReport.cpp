@@ -79,50 +79,6 @@ void ScalarTransientDetector::refreshReportDetail() {
     _reportDetail.aggregates.bestRejectedValue = _selectedRejectPresent ? _selectedReject.strength : 0.0f;
 }
 
-void ScalarTransientDetector::printTransientStatsIfDue(uint64_t nowUs) {
-    if (!_diagnosticsEnabled || !AUDIO_VERBOSE_DEBUG) {
-        return;
-    }
-
-    if (_diagnosticsLabel == nullptr) {
-        _diagnosticsLabel = "EVT";
-    }
-
-    if (_lastStatsPrintUs == 0 || nowUs - _lastStatsPrintUs >= _statsPrintIntervalMs * 1000UL) {
-        const unsigned long elapsedMs = static_cast<unsigned long>((nowUs - _statsStartUs) / 1000ULL);
-        const unsigned long expectedCount = (elapsedMs + (_expectedTransientPeriodMs / 2)) / _expectedTransientPeriodMs;
-        const unsigned long successRate = expectedCount > 0 ? ((_peakAcceptedCount * 100UL) / expectedCount) : 0;
-
-        serialOut().print(_diagnosticsLabel);
-        serialOut().print(" transient success t=");
-        serialOut().print(timebase::msFromUs64(nowUs));
-        serialOut().print(" accepted=");
-        serialOut().print(_peakAcceptedCount);
-        serialOut().print(" expected=");
-        serialOut().print(expectedCount);
-        serialOut().print(" success_rate=");
-        serialOut().print(successRate);
-        serialOut().print("%");
-        serialOut().print(" onset_rejected=");
-        serialOut().print(_onsetRejectedCount);
-        serialOut().print(" transient_rejected=");
-        serialOut().print(_transientRejectedCount);
-        serialOut().print(" duration_short=");
-        serialOut().print(_transientRejectedDurationTooShortCount);
-        serialOut().print(" duration_long=");
-        serialOut().print(_transientRejectedDurationTooLongCount);
-        serialOut().print(" strength_low=");
-        serialOut().print(_transientRejectedStrengthTooLowCount);
-        serialOut().print(" peak_strength=");
-        serialOut().print(_acceptedOccurrence.peak, 1);
-        serialOut().print(" best_rejected_strength=");
-        serialOut().print(_selectedReject.strength, 1);
-        serialOut().print(" best_rejected_reason=");
-        serialOut().println(_selectedReject.detectorReason != nullptr ? _selectedReject.detectorReason : "none");
-        _lastStatsPrintUs = nowUs;
-    }
-}
-
 void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
     // Keep detector-specific report assembly local to the detector so
     // DetectionRuntime only coordinates report snapshots.

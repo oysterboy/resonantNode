@@ -11,8 +11,6 @@ ScalarTransientDetector::ScalarTransientDetector() = default;
 
 void ScalarTransientDetector::begin() {
     resetState();
-    _statsStartUs = timebase::nowUs64();
-    _lastStatsPrintUs = 0;
     _peakAcceptedCount = 0;
     _trialAcceptedCountBase = 0;
     _trialRejectedCountBase = 0;
@@ -404,7 +402,6 @@ void IRAM_ATTR ScalarTransientDetector::update(
     updateTransientStage(nowUs, signalMagnitude, aboveReleaseThreshold);
     updateAcceptedOccurrencePending(audioSamplePacket, signalMagnitude);
     refreshReportDetail();
-    printTransientStatsIfDue(nowUs);
 }
 
 void ScalarTransientDetector::freezeReport(unsigned long nowMs) {
@@ -432,6 +429,3 @@ const detection::ScalarTransientConfig& ScalarTransientDetector::config() const 
     return _config;
 }
 
-void ScalarTransientDetector::setDiagnosticsEnabled(bool enabled) {
-    _diagnosticsEnabled = enabled;
-}

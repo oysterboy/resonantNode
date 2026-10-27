@@ -147,7 +147,6 @@ void AnalyzerApp::configureSequenceDetection() {
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
     _detection.setInspectionPlan(selectedProfile.inspectionPlan);
     _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
-    _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     _sequenceTest.sampleDumpDetectorSelection = selectedProfile.detectorSelection;
     _sequenceTest.sampleDumpObservedStream = selectedProfile.scalarTransient.observedStream;
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
@@ -286,7 +285,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         serialOut().println("ms");
     }
     resetAudioSignalState();
-    _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     _audioSignal.resetStats();
     _audioSource.resetStats();
     if (!_sequenceTest.quiet) {

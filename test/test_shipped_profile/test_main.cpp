@@ -37,10 +37,8 @@ Host: `pio test -e native-test-behavior` (no src build; this file pulls the chai
 #include "../../src/detection/DetectionRuntime.cpp"
 #include "../../src/detection/DetectionDiagnostics.cpp"  // the Analyzer build (ANALYZER_MODE) links its recorder
 #include "../../src/detection/detectors/DetectorNames.cpp"
-#include "../../src/detection/detectors/DetectorReportPrinter.cpp"
 #include "../../src/detection/detectors/scalar/ScalarTransientDetector.cpp"
 #include "../../src/detection/detectors/scalar/ScalarTransientOccurrence.cpp"
-#include "../../src/detection/detectors/scalar/ScalarTransientPrinter.cpp"
 #include "../../src/detection/detectors/scalar/ScalarTransientReport.cpp"
 #include "../../src/detection/inspection/VerdictProjection.cpp"
 #include "../../src/detection/features/FeatureHistory.cpp"

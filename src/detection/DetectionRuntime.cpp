@@ -64,10 +64,6 @@ void DetectionRuntime::resetSourceRejectSummaries() {
     _scalarDetector.resetSelectedRejectSummary();
 }
 
-void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
-    _scalarDetector.setDiagnosticsEnabled(enabled);
-}
-
 // --- configuration ----------------------------------------------------------
 
 void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& config) {

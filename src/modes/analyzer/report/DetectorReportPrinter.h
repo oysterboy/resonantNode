@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DetectorReport.h"
+#include "../../../detection/detectors/DetectorReport.h"
 
 // Generic detector report rendering entry points used by Analyzer/SEQ output.
 // Detector-specific detail lives behind these helpers.

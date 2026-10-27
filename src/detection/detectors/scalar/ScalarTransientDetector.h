@@ -74,7 +74,6 @@ public:
     // place, no state reset (a live PARAM SET keeps the occurrence in flight).
     void setConfig(const detection::ScalarTransientConfig& config);
     const detection::ScalarTransientConfig& config() const;
-    void setDiagnosticsEnabled(bool enabled);
 
     void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
     const detection::DetectorReport& latestReport() const;
@@ -174,13 +173,7 @@ private:
     unsigned long _trialRejectedCountBase = 0;
 
     // Diagnostics state.
-    uint64_t _lastStatsPrintUs = 0;
-    uint64_t _statsStartUs = 0;
     unsigned long _peakAcceptedCount = 0;
-    unsigned long _statsPrintIntervalMs = 10000; // Report cumulative detector success once every 10 seconds.
-    unsigned long _expectedTransientPeriodMs = 2000; // Rough cadence we expect from the external source.
-    bool _diagnosticsEnabled = AUDIO_VERBOSE_DEBUG;
-    const char* _diagnosticsLabel = "EVT";
 
     // Private helpers.
     const char* lastOnsetRejectReasonName() const;
@@ -201,5 +194,4 @@ private:
     void freezeReport(unsigned long nowMs);
     void clearFrozenReport();
     void refreshReportDetail();
-    void printTransientStatsIfDue(uint64_t nowUs);
 };

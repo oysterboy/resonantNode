@@ -2,9 +2,9 @@
 
 #include <Arduino.h>
 
-#include "DetectorNames.h"
-#include "scalar/ScalarTransientPrinter.h"
-#include "../../app/SerialOut.h"
+#include "../../../detection/detectors/DetectorNames.h"
+#include "ScalarTransientPrinter.h"
+#include "../../../app/SerialOut.h"
 
 // Shared detector report rendering. Dispatches to detector-owned detail printers.
 namespace detection {

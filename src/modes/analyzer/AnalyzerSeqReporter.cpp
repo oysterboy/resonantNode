@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "../../detection/detectors/DetectorNames.h"
-#include "../../detection/detectors/DetectorReportPrinter.h"
+#include "report/DetectorReportPrinter.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"

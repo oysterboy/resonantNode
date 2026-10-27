@@ -1177,7 +1177,7 @@ the previous gate open unless the step says it can run in parallel.
    (09:05-09:16, 118-127 ms), with this morning's build as well: the room changed, not the firmware; the third
    unexplained room shift in two days (10-24 10:50, E2 <- E5 on 10-23 ~20:00).
 
-11h. [NEXT, after 11c] Frequency tuning sweep, 500-5000 Hz: hits vs noise acceptance. (issue #69)
+11h. [RUNNING 2026-10-27 13:25 to 10-28 ~13:30] Frequency tuning sweep, 500-5000 Hz: hits vs noise acceptance. (issue #69)
    Owner 2026-10-27: "How bad is detection / noise acceptance really." The network band
    (detection.band_low_hz / band_high_hz; the bins, the hop train and the shape rule follow it) swept over tones
    of 500-5000 Hz (owner 2026-10-27): band low edges 500-4000 in 250 Hz steps, 5 bins wide, as one unattended
@@ -1193,6 +1193,9 @@ the previous gate open unless the step says it can run in parallel.
    experiment note (E003), and a decision whether the band moves.
    First host pass 2026-10-27 (dry file, gains 16 / 64 / 256): 9 accepts out of ~5,900 noise occurrences over 12
    positions, 7 of them at 1000-3000 Hz, none above 5500 Hz.
+   Checks 2026-10-27 (bench/sessions/2026-10-27-step11h-checks, 42f1eef on all five): B2 smoke at the shipped band
+   hop 10/10, chirp 0/10; 500-1500 and 4000-5000 hop 10/10, chirp 0/10; the Nodes follow the band and get it back;
+   the noise file reaches the mics. The 24 h run: bench/sessions/2026-10-27-step11h-sweep24.
 
 11g. [RUNNING 2026-10-26, bench part after 11h] Review Part D, the rest. (issue #67)
    Owner 2026-10-26: sequence the review's remaining Part D findings

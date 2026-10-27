@@ -773,6 +773,9 @@ string before it was written down.
    tests (so `_statsStartUs` is 0 on the board); the Emitter constructor with hard-coded pins
    (`EmitterApp.h:29-32`, no caller); `ResonantNodeCommands.cpp:102-105` skipping tabs `dropByte` never
    delivers.
+   -> re-checked 2026-10-27 at HEAD: `bestPending*` and `duplicateFirst/LastDtMs` already gone; the current list,
+   with what the bench tools read and which printed keys were constant over every committed run, is the "Output
+   audit" section of `docs/refactors/analyzer-run-trial-split.md` (11g batch C, items C2 / C3 / C5).
 
 7. **Nine shape knobs are not registered params (medium; repo rule).** `ShapeInspectionConfig`
    (`InspectorTypes.h:146-156`: `preMs, tailMs, maxRisingStepBins, minLevel, minRunMs, mediumMin*, strongMin*`)

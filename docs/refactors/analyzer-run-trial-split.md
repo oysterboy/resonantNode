@@ -133,14 +133,11 @@ read through a reference alias would not show.
   was compiled out everywhere (`AUDIO_VERBOSE_DEBUG` 0, review D1.9), so it was deleted with its flag chain
   (`setDiagnosticsEnabled` in the detector and DetectionRuntime, the Analyzer's five calls, the stats fields) rather
   than moved; SEQ DIAG keeps gating the Analyzer's own diagnostics. Node flash -248 B (the linker had dropped most).
-<<<<<<< HEAD
 - 2026-10-27: output audit written (section above, `tools/bench/keycensus.py` added): what the tools read, what
   is printed for nobody, what is constant, the write-only list re-checked at HEAD. No code changed.
-=======
 - 2026-10-27, C3 done: the D2.6 write-only fields removed after a read check per field (TrialDiagnostics.duplicate*
   but duplicateCount, emitSeen / emitTrialId / emitDoneDtMs, handleSequencePending's unused packet and dt locals,
   windowStartOffsetMs, DetectionRuntime::_detectorSelection, the packet's matched / confidence / targetHz /
   ageSamples, FeatureStream and its aliases, FeatureHistory's record(FeatureStream) / hasSamples / latestValue and
   what fed only them, the commented-out record lines, the Emitter's 4-argument constructor, the RB rebase tab
   check). 17 files, -136 lines; host gate green, T2h byte-identical.
->>>>>>> 88b66ae (Analyzer / detection (11g C3, D2.6): write-only fields and callerless helpers removed after a read check per field)

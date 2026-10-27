@@ -1,4 +1,5 @@
 #include "ParamCommands.h"
+#include "SerialLine.h"
 
 #include <Arduino.h>
 #include <string.h>
@@ -9,7 +10,7 @@ namespace param {
 
 namespace {
 
-constexpr size_t kMaxLineLength = 255;
+constexpr size_t kMaxLineLength = serial_line::kCommandLineMax;
 
 void printUsage(Print& out, bool hasStore) {
     out.println(hasStore ? "PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP|SAVE|LOAD|RESET"

@@ -204,7 +204,7 @@ void EmitterApp::handleLine(const char* line) {
     serialOut().print("EVT emitter_cmd line=");
     serialOut().println(line);
 
-    char buffer[96];
+    char buffer[serial_line::kEmitterLineMax + 1];
     strncpy(buffer, line, sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';
 
@@ -260,7 +260,7 @@ static void printToneHzRejected(const char* command, unsigned long toneHz) {
 }
 
 void EmitterApp::handleChirpCommand(const char* line) {
-    char buffer[96];
+    char buffer[serial_line::kEmitterLineMax + 1];
     strncpy(buffer, line, sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';
 
@@ -317,7 +317,7 @@ using emitter_limits::kPulsesMaxPulseMs;
 using emitter_limits::kPulsesMaxRampMs;
 
 void EmitterApp::handlePulsesCommand(const char* line) {
-    char buffer[96];
+    char buffer[serial_line::kEmitterLineMax + 1];
     strncpy(buffer, line, sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';
 
@@ -432,7 +432,7 @@ void EmitterApp::handlePulsesCommand(const char* line) {
 }
 
 void EmitterApp::handleModeCommand(const char* line) {
-    char buffer[96];
+    char buffer[serial_line::kEmitterLineMax + 1];
     strncpy(buffer, line, sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';
 
@@ -509,7 +509,7 @@ void EmitterApp::handleModeCommand(const char* line) {
 }
 
 void EmitterApp::handleSweepCommand(const char* line) {
-    char buffer[96];
+    char buffer[serial_line::kEmitterLineMax + 1];
     strncpy(buffer, line, sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';
 

@@ -95,6 +95,6 @@ private:
     I2sToneOutput _toneOutput;
 #endif
     ChirpOutput _chirpOutput;
-    serial_line::LineReader<95> _controlLine;  // Serial2, the Analyzer's commands
-    serial_line::LineReader<95> _usbLine;      // USB: SELFTEST and EMIT <command>
+    serial_line::LineReader<serial_line::kEmitterLineMax> _controlLine;  // Serial2, the Analyzer's commands
+    serial_line::LineReader<serial_line::kEmitterLineMax> _usbLine;      // USB: SELFTEST and EMIT <command>
 };

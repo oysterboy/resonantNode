@@ -692,6 +692,8 @@ string before it was written down.
 8. **SELFTEST values are parsed with bare `strtoul` and clamped (low).** `SelfTestReport.cpp:208-216`:
    `SELFTEST external wait_ms=abc` runs with 100 ms, `chirp n=abc` with one chirp, no error line; the one parser
    the step 11e policy (decision 2026-10-25) missed. Fix: `text_parse::parseUnsigned`, `Kind::Unknown` on failure.
+   -> done 2026-10-27 (11g D): values through `text_parse::parseUnsigned`; a non-number makes the command Unknown
+   (help printed); the range clamps stay.
 
 9. **Small ones (low).** `_pendingInspectionOverflowCount` never reset and read only by a test
    (`DetectionRuntime.cpp:52-55, 175, 208`); `inspectWithHistory` iterates `_inspectionPlan.count` unclamped
@@ -743,6 +745,8 @@ string before it was written down.
    Either the quiet gate replaced the warmup on purpose (delete the state, fix the comment) or the warmup was
    lost (run Boot first). The baseline timing is the owner's.
    -> decided 2026-10-26: Boot runs (decisions/2026-10-26-node-boot-warmup-runs.md); step 11g batch D.
+   -> done on the host 2026-10-27 (11g D): the Node boots in Boot, waits the warmup with the loop running, rebases
+   (`RB warmup done ... rebase= baseline=`), then ListenForQuiet; begin(false) stays (no blocking delay). Bench: boot timing.
 
 5. **`RB debug off|events` is a no-op in every shipped build (medium).** `RB_VERBOSE_DEBUG` defaults to 0
    (`RuntimeDefaults.h:20-22`) and no env sets it, so every `NodeDebug::observe*` returns at its first line
@@ -752,6 +756,8 @@ string before it was written down.
    is a registered param". Fix: one gate, the runtime one; delete the unread stats, or delete the command and
    the manual line.
    -> decided 2026-10-26: the command goes (decisions/2026-10-26-drop-rb-debug.md); step 11g batch D.
+   -> done 2026-10-27 (11g D): NodeDebug is now NodeLed (the LED only); command, help, manual line,
+   RB_VERBOSE_DEBUG and the unread loop stats removed.
 
 6. **Write-only Analyzer fields that survived 11e item 3b (medium, with A8).** `TrialDiagnostics.duplicate*`
    (`AnalyzerModeApp.h:188-192`, written `AnalyzerTrialCapture.cpp:200-204`), `emitSeen / emitTrialId /
@@ -785,11 +791,15 @@ string before it was written down.
    prints both (`ResonantNodeStatus.cpp:77-78, 84-85`). Spec 7.2 says Behavior reads `OutputStatus`; the code has
    the Node forwarding `spanMs` and `finishedAtMs` (`ResonantNodeApp.cpp:791, 815-817`), which is fine, but the
    sentence and `outputBusy()` should agree. Fix: `outputBusy()` returns `_state == Chirping`; one sentence in 7.2.
+   -> done 2026-10-27 (11g D): `outputBusy()` is `_state == Chirping`, the member and its 11 writes gone; spec 7.2
+   says how Behavior learns OutputStatus (span, finish time through the Node).
 
 10. **Three statements of the line bound (low).** `ParamCommands.cpp:12` `kMaxLineLength = 255`, the Node's
     `kSerialLineCapacity - 1`, the Analyzer's `LineReader<255>` + `_commandScratch[256]`, `net::kMaxText` 233
     checked separately, five `char buffer[96]` in `EmitterApp.cpp` against `LineReader<95>`. Fix: one
     `serial_line::kCommandLineMax` the others derive from.
+   -> done 2026-10-27 (11g D): `serial_line::kCommandLineMax` (255) and `kEmitterLineMax` (95) in SerialLine.h;
+   ParamCommands, the Node, the Analyzer, the Emitter and the Analyzer's Emitter readers derive from them.
 
 11. **Smaller (low).** `PendingSequenceStart.setupLabel` points into the struct's own storage
     (`AnalyzerModeApp.h:343, 354`; works only because it is passed by reference); 42 `IRAM_ATTR` in

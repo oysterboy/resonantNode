@@ -1287,8 +1287,10 @@ SoundOutput executes one request at a time and owns its sequencing (the
 idle call's announcement, gap and call; the hop train's steps).
 SoundOutput must not decide pattern meaning or artistic response policy,
 and must not change a configured chirp behind the composer's back.
-Behavior reads OutputStatus (busy, finished time) to avoid overlapping
-emissions and to size its own-emit suppression; it never drives ChirpOutput.
+Behavior learns what OutputStatus says through the Node: the planned span
+when an emission starts and the finish time when it ends. It is busy while
+it is Chirping (between the two) and keeps no second busy flag; it sizes its
+own-emit suppression from the span and never drives ChirpOutput.
 A request that does not start falls back to the plain pattern once (the
 composer's rule); if nothing starts, the emission ends at once so Behavior
 does not wait in Chirping.

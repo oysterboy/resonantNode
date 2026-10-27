@@ -200,7 +200,6 @@ private:
     BehaviorDecision _lastBlockReason = BehaviorDecision::None;
     bool _behaviorEligible = false;
     bool _wouldEmit = false;
-    bool _outputBusy = false;
 
     // --- idle schedule ---
     unsigned long _nextIdleAtMs = 0;

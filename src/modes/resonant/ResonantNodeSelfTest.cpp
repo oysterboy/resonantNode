@@ -237,7 +237,6 @@ void Node::runSelfTestHardware(unsigned long now) {
     if (_soundOutput.busy() || _chirpOutput.isActive()) {
         _soundOutput.stop();
         _behavior.notifyChirpFinished(now);
-        _debug.observeChirpFinished(now);
         selfTestNoteChirpFinished(now);
     }
 
@@ -281,7 +280,6 @@ void Node::restoreAfterSelfTestHardware() {
         _rbBaselineState = RBBaselineState::Settle;
         _rbBaselineSettleUntilMs = timebase::nowMs() + kSettleAfterHardwareMs;
     }
-    _debug.markLoopStart(timebase::nowUs());
     serialOut().print("SELFTEST_RESTORE detection=reset baseline=");
     serialOut().println(rbBaselineStateName());
 }

@@ -320,7 +320,9 @@ void Node::begin() {
     _audioSignal.resetStats();
     _audioSource.resetStats();
     resetRbCounters();
-    _rbBaselineState = RBBaselineState::ListenForQuiet;
+    // Boot: the mic warmup first (kRbStartupMicWarmupMs, the loop keeps running), then the floor is rebased and
+    // the quiet gate starts (decisions/2026-10-26-node-boot-warmup-runs.md; it had been skipped since begin(false)).
+    _rbBaselineState = RBBaselineState::Boot;
     _rbBaselineStateStartedMs = timebase::nowMs();
     _rbBaselineQuietSinceMs = 0;
     _rbBaselineLastLogMs = 0;
@@ -329,13 +331,12 @@ void Node::begin() {
     _rbLastWouldEmitHeardMs = 0;
     _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
     _chirpOutput.begin();
-    _debug.begin(_ledPin);
+    _led.begin(_ledPin);
     _behavior.seedIdleSchedule(timebase::nowMs());
     _silentApplied = _silent;
     if (_silent) {
         serialOut().println("RB silent=1 (output.silent: listening, never sounding)");
     }
-    _debug.markLoopStart(timebase::nowUs());
     _serialLine.reset();
 
     serialOut().print("RB PROFILE name=");
@@ -359,7 +360,6 @@ void Node::quiesceBehaviorForOutputsOff() {
     if (_soundOutput.busy() || _chirpOutput.isActive()) {
         _soundOutput.stop();
         _lastOwnChirpEndMs = timebase::nowMs();
-        _debug.observeChirpFinished(timebase::nowMs());
         selfTestNoteChirpFinished(timebase::nowMs());
     }
     _behavior.resetState();
@@ -454,6 +454,14 @@ void Node::updateRbBaselineState(unsigned long now) {
     switch (_rbBaselineState) {
         case RBBaselineState::Boot:
             if (timing::elapsedSince(now, _rbBaselineStateStartedMs, kRbStartupMicWarmupMs)) {
+                // The warmed-up mic's floor (what begin(true) did with a blocking delay), then the quiet gate.
+                const bool rebased = _audioSignal.rebase();
+                serialOut().print("RB warmup done ms=");
+                serialOut().print(now - _rbBaselineStateStartedMs);
+                serialOut().print(" rebase=");
+                serialOut().print(rebased ? "ok" : "timeout");
+                serialOut().print(" baseline=");
+                serialOut().println(_audioSignal.baseline(), 1);
                 startRbQuietBaseline();
             } else if (_rbBaselineLastLogMs == 0 || timing::elapsedSince(now, _rbBaselineLastLogMs, 1000UL)) {
                 _rbBaselineLastLogMs = now;
@@ -606,10 +614,8 @@ void Node::configureI2SParameters() {
 
 void Node::update() {
     const unsigned long now = timebase::nowMs();
-    const unsigned long nowUs = timebase::nowUs();
     const bool selfChirpSuppressed = _behavior.behaviorSuppressed(now);
 
-    _debug.noteCoreLoopUs(nowUs);
     pollSerialCommands();
     pollNet();
 
@@ -696,10 +702,8 @@ void Node::update() {
         _rbLastWouldEmitHeardMs = _behavior.lastHeardMs();
         _rbLastWouldEmitDecision = _behavior.lastDecision();
     }
-    _debug.observeBehaviorGate(now, _behavior, sawPatternThisLoop, selfChirpSuppressed);
 
     if (sawI2SSample) {
-        _debug.observeI2SSignal(now, _audioSignal);
         const int level = _audioSignal.smoothedSignalMagnitude();
         if (level > _rbLevelMaxSinceStatus) {
             _rbLevelMaxSinceStatus = level;
@@ -711,13 +715,12 @@ void Node::update() {
     }
     updateEmissions(now);
 
-    _debug.updateLed(now);
+    _led.update(now);
 
     if (_selfTest.phase != SelfTestState::Phase::Idle) {
         updateSelfTest(timebase::nowMs());
     }
 
-    _debug.endLoop(timebase::nowUs());
 }
 
 // Behavior asked for a chirp: start the emission it asked for (step 10 item 9:
@@ -744,8 +747,7 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
         serialOut().print(" pattern=");
         serialOut().println(chirpPatternName(chirpPattern));
     }
-    _debug.observeChirpStarted(now, sourceName, chirpPattern);
-    _debug.flashLed(now, 2);
+    _led.flash(now, 2);
     // A response to a heard pattern is the network signal: the node's hop
     // train inside the band (BEH-005). The idle call is an announcement tone
     // outside the band (not detected), a gap, then the node's own call (owner
@@ -820,7 +822,6 @@ void Node::updateEmissions(unsigned long now) {
         const unsigned long finishedMs = _soundOutput.finishedAtMs();
         _lastOwnChirpEndMs = finishedMs;
         _behavior.notifyChirpFinished(finishedMs);
-        _debug.observeChirpFinished(now);
         selfTestNoteChirpFinished(now);
     }
 }
@@ -852,7 +853,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         ++_rbPendingCount;
         if (verdict.accepted) {
             ++_rbPatternAcceptedCount;
-            _debug.flashLed(now, 1);
+            _led.flash(now, 1);
         }
         if (verdict.valid) {
             ++_rbValidPatternCount;

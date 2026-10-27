@@ -1231,6 +1231,9 @@ the previous gate open unless the step says it can run in parallel.
    (64535d3 tests, 074c401 docs; left: the pcm RAW_BEGIN fields line, stale pointers in platformio.ini /
    selftest.py / test/README / three header comments, D4.3's ESP-only parts); B1 done (1f7114d); B2 done on the
    host (this commit), bench smoke after the 11c soak. Nothing flashed: the soak runs on 5fcd3fc.
+   2026-10-27: B2's bench smoke passed (bench/sessions/2026-10-27-step11h-checks). D done on the host (boot warmup
+   runs, RB debug dropped, outputBusy from the state, one line bound, SELFTEST values strict); its bench gate
+   (Node smoke, SELFTEST, boot timing) after 11h. A7's next Node cut not in it.
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here

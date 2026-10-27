@@ -26,7 +26,7 @@ unsigned long parseUnsignedTokenValue(const char* line, const char* key, unsigne
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs) {
     const unsigned long startMs = timebase::nowMs();
-    serial_line::LineReader<95> line;
+    serial_line::LineReader<serial_line::kEmitterLineMax> line;
 
     // Wait synchronously for the emitter to acknowledge remote mode.
     while (timebase::nowMs() - startMs < timeoutMs) {

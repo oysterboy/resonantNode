@@ -41,7 +41,6 @@ void Node::handleSerialLine(const char* line) {
         serialOut().println("RB CMD: RB rebase force");
         serialOut().println("RB CMD: RB CALL (play the node's network signal now; a kick for multi-node runs)");
         serialOut().println("RB CMD: RB log off|minimal|full");
-        serialOut().println("RB CMD: RB debug off|events");
         serialOut().println("RB CMD: RB summary");
         serialOut().println("RB CMD: RB stop");
         serialOut().println("RB CMD: PARAM LIST");
@@ -137,28 +136,6 @@ void Node::handleSerialLine(const char* line) {
         printRbSummary();
         return;
     }
-    if (startsWithTokenIgnoreCase(line, "RB debug")) {
-        handleDebugCommand(line);
-        return;
-    }
-}
-
-void Node::handleDebugCommand(const char* line) {
-    const char* mode = text_parse::rest(line, "RB debug");
-
-    if (equalsIgnoreCase(mode, "off")) {
-        _debug.setDebugMode(NodeDebug::DebugMode::Off);
-    } else if (equalsIgnoreCase(mode, "events")) {
-        _debug.setDebugMode(NodeDebug::DebugMode::Events);
-    } else {
-        serialOut().print("RB debug mode=");
-        serialOut().print(_debug.debugModeName());
-        serialOut().println(" (use off|events)");
-        return;
-    }
-
-    serialOut().print("RB debug mode=");
-    serialOut().println(_debug.debugModeName());
 }
 
 void Node::handleLogCommand(const char* line) {

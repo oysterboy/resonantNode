@@ -329,7 +329,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     sendEmitterCommand(emitterCommand);
     Serial2.flush();
 
-    serial_line::LineReader<95> emitterLine;
+    serial_line::LineReader<serial_line::kEmitterLineMax> emitterLine;
     bool emitStarted = false;
     bool emitDone = false;
     bool preWindowCopied = false;

@@ -25,7 +25,7 @@
 #include "../../app/ParamIds.h"
 #include "../../app/NvsParamStore.h"
 #include "../../selftest/SelfTestReport.h"
-#include "ResonantNodeDebug.h"
+#include "ResonantNodeLed.h"
 
 /*
 Node
@@ -85,7 +85,6 @@ private:
     const char* rbBaselineStateName() const;
     void pollSerialCommands();
     void handleSerialLine(const char* line);
-    void handleDebugCommand(const char* line);
     void handleLogCommand(const char* line);
     void printRbStatus(const char* line);
     void handleProfileCommand(const char* line);
@@ -246,11 +245,10 @@ private:
     unsigned long _rbLastRestsEntered = 0;  // logs "RB rest start" once per rest
 
     // Debug / logging support.
-    NodeDebug _debug;
+    NodeLed _led;
     // 256 like the Analyzer's USB line; a longer line is refused, never run
     // cut (issue #31; app/SerialLine.h). Also the command scratch size.
-    static constexpr size_t kSerialLineCapacity = 256;
-    serial_line::LineReader<kSerialLineCapacity - 1> _serialLine;
+    serial_line::LineReader<serial_line::kCommandLineMax> _serialLine;
     unsigned long _rbPendingCount = 0;
     unsigned long _rbPatternAcceptedCount = 0;
     unsigned long _rbValidPatternCount = 0;

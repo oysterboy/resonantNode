@@ -484,9 +484,9 @@ private:
     unsigned long _controlBaudRate = EMITTER_UART_BAUD; // Serial2 baud rate to the emitter.
     int _controlRxPin = EMITTER_UART_RX_PIN; // UART RX pin for emitter control.
     int _controlTxPin = EMITTER_UART_TX_PIN; // UART TX pin for emitter control.
-    serial_line::LineReader<255> _usbLine;      // the USB console (app/SerialLine.h: long lines refused)
-    char _commandScratch[256];                   // mutable scratch for strtok_r over a finished line
-    serial_line::LineReader<255> _emitterLine;  // the Emitter's replies on Serial2
+    serial_line::LineReader<serial_line::kCommandLineMax> _usbLine;      // the USB console (app/SerialLine.h: long lines refused)
+    char _commandScratch[serial_line::kCommandLineMax + 1];                   // mutable scratch for strtok_r over a finished line
+    serial_line::LineReader<serial_line::kCommandLineMax> _emitterLine;  // the Emitter's replies on Serial2
 
     bool _controlClaimPending = false; // Waiting to request emitter control.
     bool _controlClaimSent = false; // Control claim has already been sent.

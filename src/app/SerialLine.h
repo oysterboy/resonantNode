@@ -24,6 +24,13 @@ step 11e).
 */
 namespace serial_line {
 
+// The line bounds, stated once (review D2.10, 2026-10-26): a command line on a USB console (Node, Analyzer) and
+// the PARAM handler's copy of it; a line on the Emitter link (both Emitter ports and the Analyzer's readers of it,
+// 95 because the Emitter's commands are short and its buffers small). net::kMaxText (233) is the radio's own
+// wire limit, checked separately before a remote line is run.
+constexpr size_t kCommandLineMax = 255;
+constexpr size_t kEmitterLineMax = 95;
+
 inline bool dropByte(char c) {
     const unsigned char u = static_cast<unsigned char>(c);
     return c != '\n' && (u < 0x20 || u > 0x7E);

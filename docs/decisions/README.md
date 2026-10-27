@@ -86,8 +86,8 @@ what replaced it.
 | 2026-10-25 | [Remote params over ESP-NOW through the serial PARAM path; one-line replies only, DUMP/LIST stay on USB (step 11a)](2026-10-25-remote-params-espnow.md) |
 | 2026-10-25 | [Analyzer knobs on ParamRegistry with the Node's grammar, old key=value form dropped; long serial lines refused on every port (step 11e)](2026-10-25-analyzer-params-on-registry-and-line-policy.md) (implemented in 11e items 8-9) |
 | 2026-10-26 | [DET-015: a bin track read by a shape inspector (>= 3 bins, 2 steps up, band mode); an in-band sweep counts as a network signal](2026-10-26-det015-bin-track-inspector.md) |
-| 2026-10-26 | [The Node's boot baseline runs: mic warmup, then the quiet gate (review D2.4)](2026-10-26-node-boot-warmup-runs.md) (not yet implemented, 11g) |
-| 2026-10-26 | [Drop `RB debug off\|events` and the compile-time Node tracing (review D2.5)](2026-10-26-drop-rb-debug.md) (not yet implemented, 11g) |
+| 2026-10-26 | [The Node's boot baseline runs: mic warmup, then the quiet gate (review D2.4)](2026-10-26-node-boot-warmup-runs.md) (host 2026-10-27, bench pending) |
+| 2026-10-26 | [Drop `RB debug off\|events` and the compile-time Node tracing (review D2.5)](2026-10-26-drop-rb-debug.md) (implemented 2026-10-27) |
 | 2026-10-26 | [Milestone "installation-ready node": gate = 11c soak, 11g batches, 11d OTA firmware; then the step sequence restarts at 12 in a fresh file](2026-10-26-milestone-installation-ready-node.md) (cut-over waits for the gate) |
 
 ## Open

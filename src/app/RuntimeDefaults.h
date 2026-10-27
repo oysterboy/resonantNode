@@ -17,10 +17,6 @@ These are defaults, not live profile state.
 #define AUDIO_VERBOSE_DEBUG 0
 #endif
 
-#ifndef RB_VERBOSE_DEBUG
-#define RB_VERBOSE_DEBUG 0
-#endif
-
 #ifndef TEST_LOOP_DELAY_MS
 #define TEST_LOOP_DELAY_MS 0
 #endif

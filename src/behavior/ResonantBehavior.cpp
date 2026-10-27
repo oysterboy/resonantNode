@@ -67,7 +67,6 @@ void ResonantBehavior::resetState() {
     _lastBlockReason = BehaviorDecision::None;
     _behaviorEligible = false;
     _wouldEmit = false;
-    _outputBusy = false;
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
     _chirpPattern = ChirpPattern::Single;
@@ -118,7 +117,6 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
     _lastPatternHeardAtMs = result.primaryHeardAtMs != 0 ? result.primaryHeardAtMs : result.primaryStartMs;
     _lastDecisionMs = now;
     _wouldEmit = false;
-    _outputBusy = _state == State::Chirping;
 
     if (!result.accepted) {
         _behaviorEligible = false;
@@ -212,7 +210,6 @@ void ResonantBehavior::update(unsigned long now) {
     _chirpRequestSource = ChirpRequestSource::None;
     _chirpPattern = ChirpPattern::Single;
     _activityLevel = heardPatternStrength;
-    _outputBusy = _state == State::Chirping;
 
     if (_nextIdleAtMs == 0) {
         scheduleNextIdle(now);
@@ -239,7 +236,6 @@ void ResonantBehavior::update(unsigned long now) {
                 _chirpRequestSource = ChirpRequestSource::Call;
                 _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
-                _outputBusy = true;
                 _state = State::Chirping;
             }
             else if (_testChirpPending) {
@@ -248,7 +244,6 @@ void ResonantBehavior::update(unsigned long now) {
                 _chirpRequestSource = ChirpRequestSource::SelfTest;
                 _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
-                _outputBusy = true;
                 _state = State::Chirping;
             }
             else if (canIdle(now)) {
@@ -259,7 +254,6 @@ void ResonantBehavior::update(unsigned long now) {
                 _chirpRequestSource = ChirpRequestSource::Idle;
                 _chirpPattern = ChirpPattern::Idle;
                 _lastEmitMs = now;
-                _outputBusy = true;
                 _state = State::Chirping;
                 _wouldEmitCount++;
                 scheduleNextIdle(now);
@@ -276,7 +270,6 @@ void ResonantBehavior::update(unsigned long now) {
                 _chirpRequestSource = ChirpRequestSource::HeardPattern;
                 _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
-                _outputBusy = true;
                 _state = State::Chirping;
                 _wouldEmitCount++;
             }
@@ -284,11 +277,9 @@ void ResonantBehavior::update(unsigned long now) {
 
         case State::Chirping:
             // wait for explicit chirp-finished feedback
-            _outputBusy = true;
             break;
 
         case State::Refractory:
-            _outputBusy = false;
             if (timing::elapsedSince(now, _refractoryStartedMs, _config.refractoryAfterEmitMs)) {
                 _state = State::Idle;
             }
@@ -392,7 +383,6 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitS
     extendBehaviorSuppress(suppressUntilMs);
     _ownEmitDetectionSuppressUntilMs = suppressUntilMs;
     _ownEmitDetectionSuppressArmed = true;
-    _outputBusy = true;
     _lastDecision = BehaviorDecision::Emitted;
     _lastBlockReason = BehaviorDecision::None;
     _emittedCount++;
@@ -441,7 +431,6 @@ void ResonantBehavior::notifyChirpFinished(unsigned long now) {
         _ownEmitDetectionSuppressUntilMs = now + _config.detectionSuppressTailMsOwnEmit;
         _ownEmitDetectionSuppressArmed = true;
         _state = State::Refractory;
-        _outputBusy = false;
 
         const unsigned long suppressUntilMs = now + _config.detectionSuppressTailMsOwnEmit;
         extendBehaviorSuppress(suppressUntilMs);
@@ -484,7 +473,7 @@ unsigned long ResonantBehavior::behaviorSuppressRemainingMs(unsigned long now) c
 }
 
 bool ResonantBehavior::outputBusy() const {
-    return _outputBusy;
+    return _state == State::Chirping;  // the one busy state (review D2.9; SoundOutput's own phase is output.phase)
 }
 
 bool ResonantBehavior::takeWouldEmit() {

@@ -63,7 +63,6 @@ RB STATUS                       state, profile, output.* status, silent=
 RB PROFILE [name=...]           show or switch the detection profile (TonalPulseScalar | AmpExperimental)
 RB CALL                         play the node's network signal now (a kick for multi-node runs)
 RB log off|minimal|full         serial log level
-RB debug off|events             event tracing
 RB summary | RB stop | RB rebase [force]
 PARAM LIST|GET|SET|DUMP         every registered knob (see below)
 PARAM SAVE|LOAD|RESET           persistence to NVS

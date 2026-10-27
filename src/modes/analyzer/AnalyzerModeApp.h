@@ -151,12 +151,9 @@ private:
             float acceptedAmbientBaseline = 0.0f;
             bool runtimePatternCaptured = false;
 
-            bool emitSeen = false;
             bool emitStartSeen = false;
             bool emitDoneSeen = false;
             unsigned long emitStartDtMs = 0;
-            unsigned long emitDoneDtMs = 0;
-            unsigned long emitTrialId = 0;
 
             unsigned long audioFrames = 0;
             unsigned long audioZeroishFrames = 0;
@@ -185,12 +182,6 @@ private:
             uint8_t rawBlockHashRepeatCount = 0;
             uint8_t rawLastBlockHash = 0;
 
-            unsigned long duplicatePatternMs = 0;
-            float duplicatePatternStrength = 0.0f;
-            unsigned long duplicatePatternDurationMs = 0;
-            bool duplicateOriginWindow = false;
-            char duplicateReason[32] = "none";
-
             unsigned long ambientBaselineSamples = 0;
             float ambientBaselineSum = 0.0f;
             float ambientBaselineMin = 0.0f;
@@ -211,7 +202,6 @@ private:
         bool progressLineStarted = false;
         unsigned long totalTrials = 100;
         unsigned long periodMs = 2500;
-        unsigned long windowStartOffsetMs = 0;
         unsigned long windowEndOffsetMs = 2200;
         unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
@@ -428,10 +418,7 @@ private:
     unsigned long sequenceTrialOnsetAnchorMs() const;
     const char* sequenceTrialOnsetAnchorName() const;
     SequenceTrialSelection selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const;
-    void handleSequencePending(
-        const detection::DetectionPipelineEvent& event,
-        const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket = nullptr
-    );
+    void handleSequencePending(const detection::DetectionPipelineEvent& event);
     void updateSequenceAmbientStats(unsigned long nowMs);
     void updateCleanSequenceSummary(const AnalyzerReport& report);
 

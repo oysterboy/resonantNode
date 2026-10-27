@@ -71,15 +71,12 @@ void AnalyzerApp::pollEmitterSerial() {
                 const unsigned long markerTrial = parseUnsignedTokenValue(emitterLine, "trial=");
                 if (markerTrial == _sequenceTest.currentTrial) {
                     auto& trialDiag = _sequenceTest.currentTrialDiagnostics;
-                    trialDiag.emitTrialId = markerTrial;
-                    trialDiag.emitSeen = true;
                     if (emitStartLine || emitDriveOnLine) {
                         trialDiag.emitStartSeen = true;
                         trialDiag.emitStartDtMs = timing::elapsedOrZero(now, _sequenceTest.currentTrialStartMs);
                     }
                     if (emitDoneLine || emitDriveOffLine) {
                         trialDiag.emitDoneSeen = true;
-                        trialDiag.emitDoneDtMs = timing::elapsedOrZero(now, _sequenceTest.currentTrialStartMs);
                     }
                 }
             }

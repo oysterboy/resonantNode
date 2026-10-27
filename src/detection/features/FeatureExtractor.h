@@ -37,11 +37,6 @@ inline void observeFrequencyMeasurementPacket(const FrequencyBandMeasurementPack
     // Frequency target, score, and contrast are first-class scalar samples in history.
     history.record(FeatureStreamId::FrequencyTarget, sampleTimeMs, evidence.targetBandValue);
     history.record(FeatureStreamId::FrequencyContrast, sampleTimeMs, evidence.targetBandContrastValue);
-    // Temporarily disabled to reduce analyzer memory pressure during the current pass.
-    // history.record(FeatureStreamId::FrequencyTargetPower, sampleTimeMs, evidence.targetBandPowerValue);
-    // history.record(FeatureStreamId::FrequencyNeighborPower, sampleTimeMs, evidence.neighborBandPowerValue);
-    // history.record(FeatureStreamId::FrequencyTotalEnergy, sampleTimeMs, evidence.totalEnergyValue);
-    // history.record(FeatureStreamId::FrequencyWindowValid, sampleTimeMs, evidence.validWindow ? 1.0f : 0.0f);
 }
 
 } // namespace detection::FeatureExtractor

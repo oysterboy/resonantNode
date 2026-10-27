@@ -153,24 +153,6 @@ float FeatureHistory::representativeValueForStream(FeatureStreamId stream, const
     }
 }
 
-float FeatureHistory::representativeValueForAccumulator(FeatureStreamId stream, const FeatureBinAccumulator& bin) {
-    if (!bin.valid || bin.inputCount == 0) {
-        return 0.0f;
-    }
-
-    switch (stream) {
-        case FeatureStreamId::AmpMagnitude:
-        case FeatureStreamId::AmpEnvelope:
-            return static_cast<float>(bin.sumAbs / static_cast<double>(bin.inputCount));
-        case FeatureStreamId::FrequencyTarget:
-        case FeatureStreamId::FrequencyContrast:
-            return static_cast<float>(bin.sum / static_cast<double>(bin.inputCount));
-        case FeatureStreamId::Unknown:
-        default:
-            return bin.last;
-    }
-}
-
 // Every StreamBuffer member defaults to zero, so clearing the bytes is the same
 // as `buffer = {}`, without the 12 KB temporary GCC built on the stack for it:
 // that took the Node's loop stack from 14.2 KB to 3.6 KB free at boot and on
@@ -228,7 +210,7 @@ void IRAM_ATTR FeatureHistory::accumulateIntoCurrentBin(StreamBuffer& buffer, fl
     current.last = value;
 }
 
-void IRAM_ATTR FeatureHistory::finalizeCurrentBin(StreamBuffer& buffer, FeatureStreamId stream) {
+void IRAM_ATTR FeatureHistory::finalizeCurrentBin(StreamBuffer& buffer) {
     if (!buffer.hasCurrent || !buffer.current.valid) {
         return;
     }
@@ -253,16 +235,10 @@ void IRAM_ATTR FeatureHistory::finalizeCurrentBin(StreamBuffer& buffer, FeatureS
         if (buffer.binCount < kBinsPerStream) {
             ++buffer.binCount;
         }
-        buffer.latestTimeMs = finalized.startMs;
-        buffer.latestValue = representativeValueForStream(stream, finalized);
     }
 
     buffer.hasCurrent = false;
     buffer.current = {};
-}
-
-void IRAM_ATTR FeatureHistory::record(const FeatureStream& sample, bool fresh) {
-    record(sample.id, sample.timeMs, sample.value, fresh);
 }
 
 void IRAM_ATTR FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float value, bool fresh) {
@@ -282,13 +258,11 @@ void IRAM_ATTR FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, 
     if (!buffer.hasCurrent) {
         startCurrentBin(buffer, timeMs);
     } else if (timeMs != buffer.current.startMs) {
-        finalizeCurrentBin(buffer, id);
+        finalizeCurrentBin(buffer);
         startCurrentBin(buffer, timeMs);
     }
 
     accumulateIntoCurrentBin(buffer, value, fresh);
-    buffer.latestTimeMs = buffer.current.startMs;
-    buffer.latestValue = representativeValueForAccumulator(id, buffer.current);
 }
 
 MagnitudeWindow FeatureHistory::getWindow(
@@ -469,10 +443,6 @@ size_t FeatureHistory::sampleCount(FeatureStreamId stream) const {
     return buffer.binCount + (buffer.hasCurrent && buffer.current.inputCount > 0 ? 1U : 0U);
 }
 
-bool FeatureHistory::hasSamples(FeatureStreamId stream) const {
-    return sampleCount(stream) > 0;
-}
-
 unsigned long FeatureHistory::latestTimeMs(FeatureStreamId stream) const {
     const size_t slot = slotFor(stream);
     if (slot == kNoSlot) {
@@ -490,25 +460,6 @@ unsigned long FeatureHistory::latestTimeMs(FeatureStreamId stream) const {
 
     const size_t latestIndex = (buffer.writeIndex + kBinsPerStream - 1U) % kBinsPerStream;
     return buffer.bins[latestIndex].startMs;
-}
-
-float FeatureHistory::latestValue(FeatureStreamId stream) const {
-    const size_t slot = slotFor(stream);
-    if (slot == kNoSlot) {
-        return 0.0f;
-    }
-
-    const StreamBuffer& buffer = _streams[slot];
-    if (buffer.hasCurrent && buffer.current.inputCount > 0) {
-        return representativeValueForAccumulator(stream, buffer.current);
-    }
-
-    if (buffer.binCount == 0) {
-        return 0.0f;
-    }
-
-    const size_t latestIndex = (buffer.writeIndex + kBinsPerStream - 1U) % kBinsPerStream;
-    return representativeValueForStream(stream, buffer.bins[latestIndex]);
 }
 
 } // namespace detection

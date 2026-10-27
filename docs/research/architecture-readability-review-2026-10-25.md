@@ -773,9 +773,20 @@ string before it was written down.
    tests (so `_statsStartUs` is 0 on the board); the Emitter constructor with hard-coded pins
    (`EmitterApp.h:29-32`, no caller); `ResonantNodeCommands.cpp:102-105` skipping tabs `dropByte` never
    delivers.
+<<<<<<< HEAD
    -> re-checked 2026-10-27 at HEAD: `bestPending*` and `duplicateFirst/LastDtMs` already gone; the current list,
    with what the bench tools read and which printed keys were constant over every committed run, is the "Output
    audit" section of `docs/refactors/analyzer-run-trial-split.md` (11g batch C, items C2 / C3 / C5).
+=======
+   -> done 2026-10-27 (11g C3): `duplicatePattern* / duplicateOriginWindow / duplicateReason`, `emitSeen /
+   emitTrialId / emitDoneDtMs`, `handleSequencePending`'s packet parameter and both `dtFromTriggerMs`,
+   `windowStartOffsetMs` (the header prints a literal 0), `_detectorSelection`, the packet's `matched / confidence /
+   targetHz / ageSamples`, `FeatureStream` with its aliases, `record(const FeatureStream&)`, `hasSamples`,
+   `latestValue` (with StreamBuffer's write-only `latestTimeMs / latestValue` and
+   `representativeValueForAccumulator`), the commented `history.record` lines, the pin-default Emitter
+   constructor, the tab skip; kept: `duplicateCount` (report `debug.duplicates`, `duplicateTrials`), the
+   `latestTimeMs()` method (DetectionDiagnostics), `ScalarTransientDetector::begin()` (tests).
+>>>>>>> 88b66ae (Analyzer / detection (11g C3, D2.6): write-only fields and callerless helpers removed after a read check per field)
 
 7. **Nine shape knobs are not registered params (medium; repo rule).** `ShapeInspectionConfig`
    (`InspectorTypes.h:146-156`: `preMs, tailMs, maxRisingStepBins, minLevel, minRunMs, mediumMin*, strongMin*`)

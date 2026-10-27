@@ -16,10 +16,7 @@ detection::FrequencyBandMeasurementPacket IRAM_ATTR AnalyzerApp::captureFrequenc
     return detection::buildFrequencyMeasurementPacket(_freqBandStream, audioSamplePacket);
 }
 
-void AnalyzerApp::handleSequencePending(
-    const detection::DetectionPipelineEvent& event,
-    const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket
-) {
+void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent& event) {
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0) {
         return;
     }
@@ -77,10 +74,7 @@ void AnalyzerApp::handleSequencePending(
         const unsigned long sourceOnsetMs = event.hasSourceRecord && event.sourceRecord.detectorReport.selectedReject.present
             ? event.sourceRecord.detectorReport.selectedReject.startMs
             : 0UL;
-        const long dtFromTriggerMs = sourceOnsetMs > 0
-            ? static_cast<long>(timing::delta(sourceOnsetMs, _sequenceTest.currentTrialScheduledAtMs))
-            : 0L;
-        const bool preWindow = sourceOnsetMs > 0 && timing::beforeDeadline(sourceOnsetMs, _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs);
+        const bool preWindow = sourceOnsetMs > 0 && timing::beforeDeadline(sourceOnsetMs, _sequenceTest.currentTrialStartMs);
         const bool postWindow = timing::after(sourceOnsetMs, _sequenceTest.currentTrialEndMs);
         const bool inWindow = sourceOnsetMs > 0 && !preWindow && !postWindow;
         if (inWindow) {
@@ -88,10 +82,6 @@ void AnalyzerApp::handleSequencePending(
             _sequenceTest.currentTrialRejected++;
         }
         diagnostics.runtimePatternCaptured = diagnostics.runtimePatternCaptured || event.hasVerdict;
-        (void)dtFromTriggerMs;
-        if (liveFrequencyMeasurementPacket != nullptr) {
-            (void)liveFrequencyMeasurementPacket;
-        }
         return;
     }
 
@@ -100,7 +90,6 @@ void AnalyzerApp::handleSequencePending(
     }
 
     const unsigned long onsetMs = verdict->primaryStartMs;
-    const long dtFromTriggerMs = static_cast<long>(timing::delta(onsetMs, _sequenceTest.currentTrialScheduledAtMs));
 
     const bool bufferOverrunSeenNow = verdict->primaryAudioOverflow
                                       || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
@@ -113,7 +102,7 @@ void AnalyzerApp::handleSequencePending(
         ? "selected_reject"
         : "selected_occurrence";
 
-    const bool preWindow = timing::beforeDeadline(onsetMs, _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs);
+    const bool preWindow = timing::beforeDeadline(onsetMs, _sequenceTest.currentTrialStartMs);
     const bool postWindow = timing::after(onsetMs, _sequenceTest.currentTrialEndMs);
     const bool inWindow = !preWindow && !postWindow;
 
@@ -196,13 +185,6 @@ void AnalyzerApp::handleSequencePending(
     }
 
     if (hadPrimaryBeforePending) {
-        if (diagnostics.duplicateCount == 0) {
-            diagnostics.duplicatePatternMs = onsetMs;
-            diagnostics.duplicatePatternStrength = verdict->primaryStrength;
-            diagnostics.duplicatePatternDurationMs = verdict->primaryDurationMs;
-            strncpy(diagnostics.duplicateReason, "duplicate_after_primary", sizeof(diagnostics.duplicateReason) - 1);
-            diagnostics.duplicateReason[sizeof(diagnostics.duplicateReason) - 1] = '\0';
-        }
         _sequenceTest.currentTrialDiagnostics.duplicateCount++;
         return;
     }

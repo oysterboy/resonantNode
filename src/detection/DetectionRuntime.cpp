@@ -72,8 +72,7 @@ void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& con
     _occurrenceInspector.setShapeMinLevel(_scalarTransientConfig.onsetReleaseThreshold);
 }
 
-void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
-    _detectorSelection = selection;
+void DetectionRuntime::setDetectorSelection(DetectorSelection /*selection*/) {
     resetDetectors();
     _scalarDetector.setConfig(_scalarTransientConfig);
     _diagnostics.resetBookkeeping();

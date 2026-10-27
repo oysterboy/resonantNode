@@ -99,7 +99,7 @@ void Node::handleSerialLine(const char* line) {
         // Only a bare "RB rebase" (or "force", above): "RB rebase forced"
         // used to start a quiet-gated rebase (issue #32 check 17).
         const char* extra = line + strlen("RB rebase");
-        while (*extra == ' ' || *extra == '\t') {
+        while (*extra == ' ') {
             ++extra;
         }
         if (*extra != '\0') {

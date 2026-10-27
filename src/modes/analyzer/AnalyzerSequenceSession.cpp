@@ -70,7 +70,6 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.progressLineStarted = false;
     _sequenceTest.totalTrials = pending.totalTrials == 0 ? 1 : pending.totalTrials;
     _sequenceTest.periodMs = pending.periodMs == 0 ? 1 : pending.periodMs;
-    _sequenceTest.windowStartOffsetMs = 0;
     _sequenceTest.windowEndOffsetMs = pending.windowEndOffsetMs;
     if (_sequenceTest.windowEndOffsetMs < 250) {
         _sequenceTest.windowEndOffsetMs = 250;
@@ -367,7 +366,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         serialOut().print(" period_ms=");
         serialOut().print(_sequenceTest.periodMs);
         serialOut().print(" window_start_ms=");
-        serialOut().print(_sequenceTest.windowStartOffsetMs);
+        serialOut().print(0UL);
         serialOut().print(" window_end_ms=");
         serialOut().print(_sequenceTest.windowEndOffsetMs);
         serialOut().print(" freq_hz=");

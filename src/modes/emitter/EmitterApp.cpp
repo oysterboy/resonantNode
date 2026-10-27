@@ -37,9 +37,6 @@ void sendEmitterMarker(const char* line) {
 }
 }
 
-EmitterApp::EmitterApp(int outputPin, int rxPin, int txPin, unsigned long baudRate)
-    : EmitterApp(outputPin, -1, rxPin, txPin, baudRate) {}
-
 EmitterApp::EmitterApp(int outputPin, int outputBtlPin, int rxPin, int txPin, unsigned long baudRate)
     : _rxPin(rxPin),
       _txPin(txPin),

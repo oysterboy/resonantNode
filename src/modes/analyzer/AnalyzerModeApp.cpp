@@ -705,10 +705,7 @@ void AnalyzerApp::update() {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                 }
                 if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
-                    handleSequencePending(
-                        runtimePipelineEvent,
-                        &runtimeFrequencyMeasurementPacket
-                    );
+                    handleSequencePending(runtimePipelineEvent);
                 }
             }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {

@@ -55,7 +55,6 @@ public:
     // Clears buffered samples; keeps the active-stream binding.
     void reset();
 
-    void record(const FeatureStream& sample, bool fresh = true);
     void record(FeatureStreamId id, unsigned long timeMs, float value, bool fresh = true);
 
     MagnitudeWindow getWindow(
@@ -72,9 +71,7 @@ public:
     unsigned long oldestBinTimeMs(FeatureStreamId stream) const;
     size_t binCount(FeatureStreamId stream) const;
     uint32_t outOfOrderRecordCount() const;
-    bool hasSamples(FeatureStreamId stream) const;
     unsigned long latestTimeMs(FeatureStreamId stream) const;
-    float latestValue(FeatureStreamId stream) const;
 
 private:
     // getWindow()'s value scratch (step 8b item 5): one window at a time, the
@@ -113,19 +110,16 @@ private:
         size_t binCount = 0;
         size_t writeIndex = 0;
         bool hasCurrent = false;
-        unsigned long latestTimeMs = 0;
-        float latestValue = 0.0f;
     };
 
     static bool isKnownStream(FeatureStreamId stream);
     size_t slotFor(FeatureStreamId stream) const;
     static bool streamRequiresFreshAggregation(FeatureStreamId stream);
     static float representativeValueForStream(FeatureStreamId stream, const FeatureHistoryBin& bin);
-    static float representativeValueForAccumulator(FeatureStreamId stream, const FeatureBinAccumulator& bin);
     static void resetStream(StreamBuffer& buffer);
     static void startCurrentBin(StreamBuffer& buffer, unsigned long timeMs);
     static void accumulateIntoCurrentBin(StreamBuffer& buffer, float value, bool fresh);
-    static void finalizeCurrentBin(StreamBuffer& buffer, FeatureStreamId stream);
+    static void finalizeCurrentBin(StreamBuffer& buffer);
 
     FeatureStreamId _slotStream[kMaxActiveStreams] = {};
     size_t _activeStreamCount = 0;

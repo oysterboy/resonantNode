@@ -257,16 +257,12 @@ struct TransientEvidence {
 // Decision fields belong to the detector / gate result, not the measurement packet.
 struct FrequencyBandMeasurementPacket {
     bool present = false;
-    bool matched = false;
     bool fresh = false;
 
-    unsigned long targetHz = 0;
     unsigned long observedAtMs = 0;
-    unsigned long ageSamples = 0;
 
     // Frequency target value on the shared 0..32767 magnitude-like scale.
     audio::FrequencyScore16 targetBandValue = 0;
-    float confidence = 0.0f;
 
     // Raw Goertzel power retained for diagnostics and debugging.
     float targetBandPowerValue = 0.0f;

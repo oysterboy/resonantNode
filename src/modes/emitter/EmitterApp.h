@@ -26,10 +26,6 @@ public:
         Sweep
     };
 
-    EmitterApp(int outputPin = 25,
-               int rxPin = 16,
-               int txPin = 17,
-               unsigned long baudRate = 115200);
     EmitterApp(int outputPin,
                int outputBtlPin,
                int rxPin,

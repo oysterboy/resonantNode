@@ -39,14 +39,4 @@ inline const char* featureStreamName(FeatureStreamId value) {
     }
 }
 
-struct FeatureStream {
-    FeatureStreamId id = FeatureStreamId::Unknown;
-    unsigned long timeMs = 0;
-    float value = 0.0f;
-};
-
-using AmpEnvelopeSample = FeatureStream;
-using FrequencyTargetSample = FeatureStream;
-using FrequencyContrastSample = FeatureStream;
-
 } // namespace detection

@@ -97,7 +97,6 @@ private:
 
     ScalarTransientConfig _scalarTransientConfig = {};
     // Profile configuration applied at fixed runtime stages.
-    DetectorSelection _detectorSelection = DetectorSelection::ScalarTransient;
     InspectionPlan _inspectionPlan = {};
 
     ScalarTransientDetector _scalarDetector;

@@ -166,7 +166,7 @@ private:
     const char* activeAnalyzerProfileName() const;
     const detection::DetectionProfile& effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
-    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const TrialDiagnostics& diagnostics) const;
+    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, bool rejectedInWindow, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const TrialDiagnostics& diagnostics) const;
         struct SequenceTrialSelection {
         enum class Kind {
             None,

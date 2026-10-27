@@ -222,7 +222,6 @@ struct AnalyzerVerdictObservation {
     bool accepted = false;
     bool proposalMatched = false;
     bool supportMatched = false;
-    bool behaviorEligible = false;
 
     long dtMs = -1;
 

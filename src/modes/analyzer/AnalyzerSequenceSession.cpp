@@ -583,34 +583,14 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
                                     || _audioSource.stats().overflowCount != _sequenceTest.trial.overflowCountAtStart;
     const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
     const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
-    const bool rejectedTrial = _sequenceTest.trial.rejectedInWindowCount > 0;
-    const bool unexpectedTrial = selectedTrial.result == AnalyzerResult::Unexpected;
-
-    AnalyzerResult result = selectedTrial.result;
-    if (selectedTrial.verdict == nullptr &&
-        (selectedTrial.kind == SequenceTrialSelection::Kind::ValidPattern ||
-         selectedTrial.kind == SequenceTrialSelection::Kind::AcceptedOccurrence)) {
-        result = AnalyzerResult::Miss;
-    } else if (selectedTrial.verdict != nullptr && !selectedTrial.verdict->valid) {
-        result = AnalyzerResult::Rejected;
-    }
+    const bool rejectedInWindow = _sequenceTest.trial.rejectedInWindowCount > 0;
     long dtMs = selectedTrial.dtMs;
     long durMs = static_cast<long>(selectedTrial.durationMs);
     float strength = selectedTrial.strength;
 
-    const bool confirmedTrial = result == AnalyzerResult::Expected || result == AnalyzerResult::Late;
-    if (confirmedTrial) {
-        // Expected or Late stays.
-    } else if (rejectedTrial) {
-        result = AnalyzerResult::Rejected;
-    } else if (unexpectedTrial) {
-        result = AnalyzerResult::Unexpected;
-    } else {
-        result = AnalyzerResult::Miss;
-    }
-
+    // The trial result is decided once, by classifySequenceTrial inside the report builder (11g C5).
     AnalyzerReport* finalizedReport = sequenceReportScratch();
-    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.trial.number, result, dtMs, durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
+    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.trial.number, rejectedInWindow, dtMs, durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.totals.completedTrials++;
     flushSequenceSampleHistory(now + 1UL);

@@ -226,6 +226,9 @@ Direction: `RunConfig` (copied once at start), `TrialState` (reset by `trial = T
 move the struct bodies out of the header; one classification site fed the verdict validity as input; drop
 `behaviorEligible` from Analyzer output or rename it `verdictValid`.
 
+-> done on the host 2026-10-27 (11g C4 / C5): RunConfig / TrialState / RunTotals, one output-config helper, mutables 6 -> 1
+(C4); one classification site in AnalyzerTrialClassifier, host-tested, `behaviorEligible` gone (C5). Bench A/B after 11h.
+
 ### A9. The Node re-derives Behavior truth for printing (medium)
 
 -> partly done in step 11f (Behavior::state(); the BehaviorStatus snapshot and setOutputsEnabled stay with A7), 2026-10-26

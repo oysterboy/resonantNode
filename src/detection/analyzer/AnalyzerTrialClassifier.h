@@ -16,7 +16,16 @@ must stay on DetectorReport, Occurrence/InspectedOccurrence, and OccurrenceVerdi
 constexpr long kAnalyzerLateOnsetMinMs = 200L;
 
 struct AnalyzerSequenceClassificationInput {
-    // Generic trial result from Analyzer trial control flow.
+    // The trial's selection (what the Analyzer's trial selection found in the window; 11g C5 moved the result ladder
+    // that turns it into the trial result from finalizeSequenceTrial into sequenceTrialResult() below).
+    AnalyzerResult selectedResult = AnalyzerResult::Unknown;
+    // The selection is of a kind that needs a verdict (a valid pattern or an accepted occurrence).
+    bool selectionNeedsVerdict = false;
+    // The selected verdict's validity (meaningful when patternAvailable).
+    bool verdictValid = false;
+    // A candidate was rejected inside the trial's window.
+    bool rejectedInWindow = false;
+    // The trial result; classifySequenceTrial sets it from the fields above (callers leave it).
     AnalyzerResult result = AnalyzerResult::Unknown;
     // Generic timing delta for the selected trial OccurrenceVerdict when present.
     long dtMs = -1;
@@ -39,4 +48,8 @@ struct AnalyzerSequenceClassificationInput {
 };
 
 AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassificationInput& input);
+// The trial result from the selection (review A8 / 11g C5: the one ladder; it was in finalizeSequenceTrial).
+AnalyzerResult sequenceTrialResult(const AnalyzerSequenceClassificationInput& input);
+// The whole classification, once: the result ladder, the reason and stage, and an invalid verdict as
+// Rejected / PatternRejected / Evaluator (it was a second override in buildSequenceAnalyzerReport).
 AnalyzerClassification classifySequenceTrial(const AnalyzerSequenceClassificationInput& input);

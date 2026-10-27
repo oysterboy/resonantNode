@@ -14,6 +14,8 @@
 #include "../../src/detection/detectors/scalar/ScalarTransientOccurrence.cpp"
 #include "../../src/detection/detectors/scalar/ScalarTransientReport.cpp"
 #include "../../src/detection/features/FeatureHistory.cpp"
+#include "../../src/detection/analyzer/AnalyzerTrialClassifier.h"
+#include "../../src/detection/analyzer/AnalyzerTrialClassifier.cpp"
 
 namespace {
 
@@ -249,6 +251,53 @@ void test_scalar_detector_accepted_report_clears_stale_reject_reason() {
     TEST_ASSERT_EQUAL_STRING("none", acceptedReport.scalar.inspect.gateReason);
 }
 
+// The trial classification, decided once (11g C5, review A8): the result ladder that was in finalizeSequenceTrial and
+// the invalid-verdict override that was in buildSequenceAnalyzerReport, as one pure function.
+static AnalyzerSequenceClassificationInput withVerdict(AnalyzerResult selected, bool valid) {
+    AnalyzerSequenceClassificationInput in;
+    in.selectedResult = selected;
+    in.selectionNeedsVerdict = true;
+    in.patternAvailable = true;
+    in.verdictValid = valid;
+    in.detectorReportAvailable = true;
+    return in;
+}
+
+void test_classification_valid_verdict_in_window_is_expected() {
+    const AnalyzerClassification c = classifySequenceTrial(withVerdict(AnalyzerResult::Expected, true));
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerResult::Expected), static_cast<int>(c.result));
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerReason::ValidPatternInExpectedWindow), static_cast<int>(c.reason));
+}
+
+void test_classification_invalid_verdict_is_rejected_at_the_evaluator_even_without_a_window_reject() {
+    AnalyzerSequenceClassificationInput in = withVerdict(AnalyzerResult::Expected, false);
+    in.rejectedInWindow = false;
+    // The ladder alone says Miss (nothing confirmed, nothing rejected in the window) ...
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerResult::Miss), static_cast<int>(sequenceTrialResult(in)));
+    // ... the classification says what the board prints: Rejected by the pattern.
+    const AnalyzerClassification c = classifySequenceTrial(in);
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerResult::Rejected), static_cast<int>(c.result));
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerReason::PatternRejected), static_cast<int>(c.reason));
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerStage::Evaluator), static_cast<int>(c.primaryStage));
+}
+
+void test_classification_selection_without_its_verdict_is_a_miss() {
+    AnalyzerSequenceClassificationInput in = withVerdict(AnalyzerResult::Expected, true);
+    in.patternAvailable = false;
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerResult::Miss), static_cast<int>(sequenceTrialResult(in)));
+}
+
+void test_classification_window_reject_and_unexpected() {
+    AnalyzerSequenceClassificationInput in;
+    in.selectedResult = AnalyzerResult::Unexpected;
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerResult::Unexpected), static_cast<int>(sequenceTrialResult(in)));
+    in.rejectedInWindow = true;  // a reject in the window wins over an unexpected selection
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerResult::Rejected), static_cast<int>(sequenceTrialResult(in)));
+    AnalyzerSequenceClassificationInput none;
+    TEST_ASSERT_EQUAL(static_cast<int>(AnalyzerReason::MissingPipelineResult),
+                      static_cast<int>(classifySequenceTrial(none).reason));
+}
+
 static int runTests() {
     UNITY_BEGIN();
     RUN_TEST(test_feature_history_empty_window);
@@ -260,6 +309,10 @@ static int runTests() {
     RUN_TEST(test_scalar_detector_emits_distinct_occurrence_ids);
     RUN_TEST(test_pattern_rejected_helper_excludes_source_rejects);
     RUN_TEST(test_scalar_detector_accepted_report_clears_stale_reject_reason);
+    RUN_TEST(test_classification_valid_verdict_in_window_is_expected);
+    RUN_TEST(test_classification_invalid_verdict_is_rejected_at_the_evaluator_even_without_a_window_reject);
+    RUN_TEST(test_classification_selection_without_its_verdict_is_a_miss);
+    RUN_TEST(test_classification_window_reject_and_unexpected);
     return UNITY_END();
 }
 

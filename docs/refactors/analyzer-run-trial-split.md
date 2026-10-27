@@ -189,3 +189,12 @@ prune". Other sessions: read-only on batch C until it closes.
   loop-health window). Callerless `sequenceSampleDumpEstimatedRows` declaration dropped. Analyzer RAM 87,412 -> 87,396 B,
   flash 411,885 -> 410,093 B; boot `SIZE AnalyzerApp::SequenceTest=` 7688 -> 7696 (layout only). Host gate green, T2h
   byte-identical. Not re-verified on a board (bench A/B after 11h).
+- 2026-10-27, C5 done: one classification site. `sequenceTrialResult()` (the result ladder, moved from
+  finalizeSequenceTrial) and `classifySequenceTrial()` (ladder, reason / stage, and an invalid verdict as Rejected /
+  PatternRejected / Evaluator, moved from buildSequenceAnalyzerReport's override) in
+  `src/detection/analyzer/AnalyzerTrialClassifier.cpp`; the report builder fills one input from the selection and
+  calls it; `startupArtifact` and `debug.unexpected` keep reading the ladder's result. Equivalent by construction
+  (same selection, same steps, same order): no printed value changes. The Analyzer's `behaviorEligible` was written
+  and never printed: removed (no output change, so no decision file). Four host tests in test_analyzer_pass_rules
+  pin it, incl. an invalid verdict with no window reject (ladder Miss, printed Rejected). Host gate green, 106 host
+  tests. Batch C's code is complete; its close is the bench A/B after 11h.

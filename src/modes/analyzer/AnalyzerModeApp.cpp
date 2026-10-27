@@ -815,7 +815,7 @@ AnalyzerReport* AnalyzerApp::sequenceReportScratch() {
 
 void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
                                               unsigned long trialNumber,
-                                              AnalyzerResult result,
+                                              bool rejectedInWindow,
                                               long dtMs,
                                               long durMs,
                                               float strength,
@@ -911,14 +911,12 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         }
         return "missing_pipeline_result";
     }();
-    const bool startupArtifact = result == AnalyzerResult::Miss
-        && _sequenceTest.trial.number == 1
-        && !trialHasPipelineEvidence
-        && selectedDetectorReport == nullptr
-        && strcmp(artifactReason, "missing_pipeline_result") == 0;
-
     AnalyzerSequenceClassificationInput classificationInput;
-    classificationInput.result = result;
+    classificationInput.selectedResult = selectedTrial.result;
+    classificationInput.selectionNeedsVerdict = selectedTrial.kind == SequenceTrialSelection::Kind::ValidPattern ||
+                                                selectedTrial.kind == SequenceTrialSelection::Kind::AcceptedOccurrence;
+    classificationInput.verdictValid = hasVerdict && reportVerdict->valid;
+    classificationInput.rejectedInWindow = rejectedInWindow;
     classificationInput.dtMs = reportPatternDtMs;
     classificationInput.sourceCandidateCount = _sequenceTest.trial.sourceCandidateCount;
     classificationInput.sourceAcceptedCount = _sequenceTest.trial.sourceAcceptedCount;
@@ -931,12 +929,15 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     classificationInput.detectorReportAvailable = selectedDetectorReport != nullptr;
     classificationInput.detectorAcceptedPresent = selectedDetectorReport != nullptr && selectedDetectorReport->accepted.present;
     classificationInput.detectorSelectedRejectPresent = selectedDetectorReport != nullptr && selectedDetectorReport->selectedReject.present;
+    // The ladder's result, before an invalid verdict's override: what startupArtifact and debug.unexpected always used.
+    const AnalyzerResult ladderResult = sequenceTrialResult(classificationInput);
+    const bool startupArtifact = ladderResult == AnalyzerResult::Miss
+        && _sequenceTest.trial.number == 1
+        && !trialHasPipelineEvidence
+        && selectedDetectorReport == nullptr
+        && strcmp(artifactReason, "missing_pipeline_result") == 0;
+
     report.classification = classifySequenceTrial(classificationInput);
-    if (hasVerdict && !reportVerdict->valid) {
-        report.classification.result = AnalyzerResult::Rejected;
-        report.classification.reason = AnalyzerReason::PatternRejected;
-        report.classification.primaryStage = AnalyzerStage::Evaluator;
-    }
     {
         // Analyzer formats the runtime OccurrenceVerdict when one exists; it does
         // not synthesize pattern validity from occurrence acceptance.
@@ -948,7 +949,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         pattern.accepted = hasVerdict ? reportVerdict->accepted : false;
         pattern.proposalMatched = hasVerdict ? reportVerdict->proposalMatched : false;
         pattern.supportMatched = hasVerdict ? reportVerdict->supportMatched : false;
-        pattern.behaviorEligible = pattern.valid;
         pattern.dtMs = report.classification.dtMs;
         pattern.supportStrength = hasInspectedOccurrence
             ? detection::strengthClassName(reportInspectedOccurrence->occurrence.magnitude.strengthClass)
@@ -1119,7 +1119,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.debug.patterns = _sequenceTest.trial.verdictCount;
     report.debug.rejects = report.occurrences.rejected;
     report.debug.duplicates = duplicateCount;
-    report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;
+    report.debug.unexpected = ladderResult == AnalyzerResult::Unexpected ? 1U : 0U;
     report.debug.pipelineQueueOverflows = classificationInput.pipelineQueueOverflowCount;
     report.debug.patternResultQueueOverflows = 0UL;
     report.debug.startupArtifact = startupArtifact;

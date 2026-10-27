@@ -79,13 +79,41 @@ AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
     }
 }
 
+AnalyzerResult sequenceTrialResult(const AnalyzerSequenceClassificationInput& input) {
+    AnalyzerResult result = input.selectedResult;
+    if (!input.patternAvailable && input.selectionNeedsVerdict) {
+        result = AnalyzerResult::Miss;
+    } else if (input.patternAvailable && !input.verdictValid) {
+        result = AnalyzerResult::Rejected;
+    }
+    if (result == AnalyzerResult::Expected || result == AnalyzerResult::Late) {
+        return result;  // a valid verdict in (or after) the window stays
+    }
+    if (input.rejectedInWindow) {
+        return AnalyzerResult::Rejected;
+    }
+    if (input.selectedResult == AnalyzerResult::Unexpected) {
+        return AnalyzerResult::Unexpected;
+    }
+    return AnalyzerResult::Miss;
+}
+
 AnalyzerClassification classifySequenceTrial(const AnalyzerSequenceClassificationInput& input) {
+    AnalyzerSequenceClassificationInput resolved = input;
+    resolved.result = sequenceTrialResult(input);
     AnalyzerClassification classification = {};
-    classification.result = input.result;
-    classification.reason = (input.patternAvailable || input.detectorReportAvailable || input.pipelineQueueOverflowCount > 0)
-        ? analyzerReasonFromSequenceOutcome(input)
+    classification.result = resolved.result;
+    classification.reason = (resolved.patternAvailable || resolved.detectorReportAvailable || resolved.pipelineQueueOverflowCount > 0)
+        ? analyzerReasonFromSequenceOutcome(resolved)
         : AnalyzerReason::MissingPipelineResult;
     classification.primaryStage = analyzerPrimaryStageFromReason(classification.reason);
-    classification.dtMs = input.dtMs;
+    classification.dtMs = resolved.dtMs;
+    if (resolved.patternAvailable && !resolved.verdictValid) {
+        // The verdict is the pattern's own word: an invalid one makes the trial Rejected at the evaluator, whatever
+        // the window held.
+        classification.result = AnalyzerResult::Rejected;
+        classification.reason = AnalyzerReason::PatternRejected;
+        classification.primaryStage = AnalyzerStage::Evaluator;
+    }
     return classification;
 }

@@ -14,7 +14,7 @@
 #include "ResonantNodeInternal.h"
 #include "../../net/RemoteCommandPolicy.h"
 
-using namespace node_internal;
+using text_parse::equalsIgnoreCase;
 
 namespace {
 

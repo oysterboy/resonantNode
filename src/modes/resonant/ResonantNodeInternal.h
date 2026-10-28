@@ -9,20 +9,9 @@
 
 /*
 Helpers the Node's files share (owner 2026-10-25 split by role). Internal to
-src/modes/resonant/; nothing outside includes it.
+src/modes/resonant/; nothing outside includes it. The text helpers are app/TextParse.h's
+(text_parse::startsWithWordIgnoreCase: the Node's verbs end on a token boundary).
 */
-namespace node_internal {
-
-// The Node's commands match on a token boundary (text_parse::startsWithWordIgnoreCase).
-inline bool startsWithTokenIgnoreCase(const char* line, const char* token) {
-    return text_parse::startsWithWordIgnoreCase(line, token);
-}
-
-inline bool equalsIgnoreCase(const char* a, const char* b) {
-    return text_parse::equalsIgnoreCase(a, b);
-}
-
-}  // namespace node_internal
 
 // Defined in ResonantNodeApp.cpp, used by the profile switch and the profile command.
 BehaviorGateConfig makeTonalPulseBehaviorProfile();

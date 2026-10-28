@@ -12,7 +12,6 @@
 #include "../../app/SerialOut.h"
 #include "ResonantNodeInternal.h"
 
-using namespace node_internal;
 
 // --- NodeParams ---
 

@@ -18,8 +18,6 @@
 #include "../../selftest/AudioSelfTest.h"
 #include "ResonantNodeInternal.h"
 
-using namespace node_internal;
-
 /*
 Node
 

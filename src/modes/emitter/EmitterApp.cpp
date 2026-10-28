@@ -15,11 +15,9 @@
 #include "../../app/TimingUtils.h"
 #include "../../app/SerialOut.h"
 
-namespace {
-bool startsWithToken(const char* line, const char* token) {
-    return text_parse::startsWith(line, token);
-}
+using text_parse::startsWith;
 
+namespace {
 const char* findValue(const char* token) {
     const char* equals = strchr(token, '=');
     return equals != nullptr ? equals + 1 : nullptr;
@@ -113,30 +111,12 @@ void EmitterApp::update() {
 }
 
 void EmitterApp::pollControlSerial() {
-    while (Serial2.available() > 0) {
-        if (!_controlLine.feed(static_cast<char>(Serial2.read()))) {
-            continue;
-        }
-        if (_controlLine.tooLong()) {
-            serialOut().print("ERR line_too_long max=");
-            serialOut().println(static_cast<unsigned long>(_controlLine.kCapacity));
-        } else if (_controlLine.length() > 0) {
-            handleLine(_controlLine.line());
-        }
-    }
+    serial_line::pollLines(Serial2, _controlLine, serialOut(),
+                           "ERR line_too_long max=", [this](const char* line) { handleLine(line); });
 }
 
 void EmitterApp::pollUsbSerial() {
-    while (Serial.available() > 0) {
-        if (!_usbLine.feed(static_cast<char>(Serial.read()))) {
-            continue;
-        }
-        if (_usbLine.tooLong()) {
-            serialOut().print("ERR line_too_long max=");
-            serialOut().println(static_cast<unsigned long>(_usbLine.kCapacity));
-            continue;
-        }
-        const char* line = _usbLine.line();
+    serial_line::pollLines(Serial, _usbLine, serialOut(), "ERR line_too_long max=", [this](const char* line) {
         if (strncmp(line, "SELFTEST", 8) == 0 || strncmp(line, "selftest", 8) == 0) {
             handleSelfTestCommand(line);
         } else if (strncmp(line, "OTA", 3) == 0 || strncmp(line, "ota", 3) == 0) {
@@ -144,7 +124,7 @@ void EmitterApp::pollUsbSerial() {
         } else if (strncmp(line, "EMIT ", 5) == 0) {
             handleLine(text_parse::rest(line, "EMIT"));
         }
-    }
+    });
 }
 
 void EmitterApp::handleSelfTestCommand(const char* line) {
@@ -273,22 +253,22 @@ void EmitterApp::handleChirpCommand(const char* line) {
     char* token = strtok_r(buffer, " ", &savePtr);
     token = nextToken(savePtr);
     while (token != nullptr) {
-        if (startsWithToken(token, "trial=")) {
+        if (startsWith(token, "trial=")) {
             if (!text_parse::parseUnsigned(findValue(token), trialId)) {
                 printBadValue("CHIRP", token);
                 return;
             }
-        } else if (startsWithToken(token, "freq=")) {
+        } else if (startsWith(token, "freq=")) {
             if (!text_parse::parseUnsigned(findValue(token), toneHz)) {
                 printBadValue("CHIRP", token);
                 return;
             }
-        } else if (startsWithToken(token, "dur=")) {
+        } else if (startsWith(token, "dur=")) {
             if (!text_parse::parseUnsigned(findValue(token), durationMs)) {
                 printBadValue("CHIRP", token);
                 return;
             }
-        } else if (startsWithToken(token, "sweep=")) {
+        } else if (startsWith(token, "sweep=")) {
             // Glide from freq= to this frequency over dur= (OUT-005).
             if (!text_parse::parseUnsigned(findValue(token), sweepToHz)) {
                 printBadValue("CHIRP", token);
@@ -335,7 +315,7 @@ void EmitterApp::handlePulsesCommand(const char* line) {
     char* token = strtok_r(buffer, " ", &savePtr);
     token = nextToken(savePtr);
     while (token != nullptr) {
-        if (startsWithToken(token, "hop=")) {
+        if (startsWith(token, "hop=")) {
             const char* list = findValue(token);
             while (list != nullptr && *list != '\0') {
                 char* end = nullptr;
@@ -351,32 +331,32 @@ void EmitterApp::handlePulsesCommand(const char* line) {
                     break;
                 }
             }
-        } else if (startsWithToken(token, "trial=")) {
+        } else if (startsWith(token, "trial=")) {
             if (!text_parse::parseUnsigned(findValue(token), trialId)) {
                 printBadValue("PULSES", token);
                 return;
             }
-        } else if (startsWithToken(token, "freq=")) {
+        } else if (startsWith(token, "freq=")) {
             if (!text_parse::parseUnsigned(findValue(token), toneHz)) {
                 printBadValue("PULSES", token);
                 return;
             }
-        } else if (startsWithToken(token, "ramp=")) {
+        } else if (startsWith(token, "ramp=")) {
             if (!text_parse::parseUnsigned(findValue(token), rampMs)) {
                 printBadValue("PULSES", token);
                 return;
             }
-        } else if (startsWithToken(token, "n=")) {
+        } else if (startsWith(token, "n=")) {
             if (!text_parse::parseUnsigned(findValue(token), count)) {
                 printBadValue("PULSES", token);
                 return;
             }
-        } else if (startsWithToken(token, "pulse=")) {
+        } else if (startsWith(token, "pulse=")) {
             if (!text_parse::parseUnsigned(findValue(token), pulseMs)) {
                 printBadValue("PULSES", token);
                 return;
             }
-        } else if (startsWithToken(token, "gap=")) {
+        } else if (startsWith(token, "gap=")) {
             if (!text_parse::parseUnsigned(findValue(token), gapMs)) {
                 printBadValue("PULSES", token);
                 return;
@@ -461,17 +441,17 @@ void EmitterApp::handleModeCommand(const char* line) {
         unsigned long durationMs = _autoDurationMs;
         token = nextToken(savePtr);
         while (token != nullptr) {
-            if (startsWithToken(token, "interval=")) {
+            if (startsWith(token, "interval=")) {
                 if (!text_parse::parseUnsigned(findValue(token), intervalMs)) {
                     printBadValue("AUTO", token);
                     return;
                 }
-            } else if (startsWithToken(token, "freq=")) {
+            } else if (startsWith(token, "freq=")) {
                 if (!text_parse::parseUnsigned(findValue(token), toneHz)) {
                     printBadValue("AUTO", token);
                     return;
                 }
-            } else if (startsWithToken(token, "dur=")) {
+            } else if (startsWith(token, "dur=")) {
                 if (!text_parse::parseUnsigned(findValue(token), durationMs)) {
                     printBadValue("AUTO", token);
                     return;
@@ -519,27 +499,27 @@ void EmitterApp::handleSweepCommand(const char* line) {
     char* token = strtok_r(buffer, " ", &savePtr);
     token = nextToken(savePtr);
     while (token != nullptr) {
-        if (startsWithToken(token, "start=")) {
+        if (startsWith(token, "start=")) {
             if (!text_parse::parseUnsigned(findValue(token), startHz)) {
                 printBadValue("SWEEP", token);
                 return;
             }
-        } else if (startsWithToken(token, "stop=")) {
+        } else if (startsWith(token, "stop=")) {
             if (!text_parse::parseUnsigned(findValue(token), stopHz)) {
                 printBadValue("SWEEP", token);
                 return;
             }
-        } else if (startsWithToken(token, "step=")) {
+        } else if (startsWith(token, "step=")) {
             if (!text_parse::parseUnsigned(findValue(token), stepHz)) {
                 printBadValue("SWEEP", token);
                 return;
             }
-        } else if (startsWithToken(token, "dur=")) {
+        } else if (startsWith(token, "dur=")) {
             if (!text_parse::parseUnsigned(findValue(token), durationMs)) {
                 printBadValue("SWEEP", token);
                 return;
             }
-        } else if (startsWithToken(token, "pause=")) {
+        } else if (startsWith(token, "pause=")) {
             if (!text_parse::parseUnsigned(findValue(token), pauseMs)) {
                 printBadValue("SWEEP", token);
                 return;

@@ -9,7 +9,7 @@
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/TimingUtils.h"
 #include "../../detection/detectors/DetectorNames.h"
-#include "../../detection/analyzer/AnalyzerText.h"
+#include "../../app/TextParse.h"
 #include "../../detection/analyzer/AnalyzerPassRules.h"
 #include "../../detection/analyzer/tools/AnalyzerRawHealth.h"
 #include "../../detection/inspection/InspectionNames.h"
@@ -23,6 +23,8 @@
 #include "../../app/ParamIds.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
+
+using text_parse::equalsIgnoreCase;
 
 /*
 AnalyzerApp

@@ -87,4 +87,22 @@ private:
     bool _ready = false;
 };
 
+// One poll of a port, the loop every console runs (step 11j): reads what the port holds; a finished line goes to
+// handle(line), an empty one is skipped, an overflowed one is refused with `tooLongReply` and the capacity
+// ("ERR line_too_long max=255"). Port: available() / read(); Out: print() / println() (Serial, serialOut()).
+template <size_t Capacity, typename Port, typename Out, typename Handler>
+void pollLines(Port& port, LineReader<Capacity>& reader, Out& out, const char* tooLongReply, Handler&& handle) {
+    while (port.available() > 0) {
+        if (!reader.feed(static_cast<char>(port.read()))) {
+            continue;
+        }
+        if (reader.tooLong()) {
+            out.print(tooLongReply);
+            out.println(static_cast<unsigned long>(Capacity));
+        } else if (reader.length() > 0) {
+            handle(reader.line());
+        }
+    }
+}
+
 } // namespace serial_line

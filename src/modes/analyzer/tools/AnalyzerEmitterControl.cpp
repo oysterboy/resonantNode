@@ -1,6 +1,6 @@
 #include "AnalyzerEmitterControl.h"
 #include "../AnalyzerModeApp.h"
-#include "../../../detection/analyzer/AnalyzerText.h"
+#include "../../../app/TextParse.h"
 #include "../../../app/SerialLine.h"
 
 #include <Arduino.h>
@@ -9,6 +9,8 @@
 #include "../../../app/TimeBase.h"
 #include "../../../app/TimingUtils.h"
 #include "../../../app/SerialOut.h"
+
+using text_parse::startsWithIgnoreCase;
 
 namespace {
 
@@ -59,9 +61,9 @@ void AnalyzerApp::pollEmitterSerial() {
         {
             const unsigned long now = timebase::nowMs();
             const char* emitterLine = _emitterLine.line();
-            const bool emitStartLine = startsWithTokenIgnoreCase(emitterLine, "EMIT_START");
-            const bool emitDriveOnLine = startsWithTokenIgnoreCase(emitterLine, "EMIT_DRIVE_ON");
-            if (_controlClaimSent && !_controlClaimAcked && startsWithTokenIgnoreCase(emitterLine, "OK MODE REMOTE")) {
+            const bool emitStartLine = startsWithIgnoreCase(emitterLine, "EMIT_START");
+            const bool emitDriveOnLine = startsWithIgnoreCase(emitterLine, "EMIT_DRIVE_ON");
+            if (_controlClaimSent && !_controlClaimAcked && startsWithIgnoreCase(emitterLine, "OK MODE REMOTE")) {
                 _controlClaimAcked = true;
                 serialOut().println("EVT analyzer_control_claim acked");
             }

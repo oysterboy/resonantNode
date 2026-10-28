@@ -1,6 +1,6 @@
 #include "../AnalyzerModeApp.h"
 #include "../../../audio/AudioPcm.h"
-#include "../../../detection/analyzer/AnalyzerText.h"
+#include "../../../app/TextParse.h"
 #include "../../../app/SerialLine.h"
 
 #include <Arduino.h>
@@ -13,6 +13,8 @@
 #include "../../../app/SerialOut.h"
 
 #include "AnalyzerEmitterControl.h"
+
+using text_parse::startsWithIgnoreCase;
 
 namespace {
 
@@ -387,10 +389,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, 
             return;
         }
 
-        const bool startLine =
-            startsWithTokenIgnoreCase(line, "EMIT_START") || startsWithTokenIgnoreCase(line, "EMIT_DRIVE_ON");
-        const bool doneLine =
-            startsWithTokenIgnoreCase(line, "EMIT_DONE") || startsWithTokenIgnoreCase(line, "EMIT_DRIVE_OFF");
+        const bool startLine = startsWithIgnoreCase(line, "EMIT_START") || startsWithIgnoreCase(line, "EMIT_DRIVE_ON");
+        const bool doneLine = startsWithIgnoreCase(line, "EMIT_DONE") || startsWithIgnoreCase(line, "EMIT_DRIVE_OFF");
         if (startLine && !emitStarted) {
             emitStarted = true;
             emitStartMs = timebase::nowMs();

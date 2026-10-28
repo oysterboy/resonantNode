@@ -1,6 +1,5 @@
 #include "AnalyzerModeApp.h"
 #include "../../app/FirmwareOta.h"
-#include "../../detection/analyzer/AnalyzerText.h"
 
 #include <Arduino.h>
 #include <stdlib.h>
@@ -11,6 +10,9 @@
 
 #include "tools/AnalyzerEmitterControl.h"
 #include "../../app/EmitterLimits.h"
+
+using text_parse::equalsIgnoreCase;
+using text_parse::startsWithIgnoreCase;
 
 namespace {
 
@@ -102,17 +104,8 @@ void AnalyzerApp::printSequenceHelp() {
 }
 
 void AnalyzerApp::pollUsbConsole() {
-    while (Serial.available() > 0) {
-        if (!_usbLine.feed(static_cast<char>(Serial.read()))) {
-            continue;
-        }
-        if (_usbLine.tooLong()) {
-            serialOut().print("ERR line_too_long max=");
-            serialOut().println(static_cast<unsigned long>(_usbLine.kCapacity));
-        } else if (_usbLine.length() > 0) {
-            handleUsbLine(_usbLine.line());
-        }
-    }
+    serial_line::pollLines(Serial, _usbLine, serialOut(),
+                           "ERR line_too_long max=", [this](const char* line) { handleUsbLine(line); });
 }
 
 void AnalyzerApp::handleUsbLine(const char* line) {
@@ -134,17 +127,17 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         return;
     }
 
-    if (startsWithTokenIgnoreCase(line, "SELFTEST")) {
+    if (startsWithIgnoreCase(line, "SELFTEST")) {
         handleSelfTestCommand(line);
         return;
     }
 
-    if (startsWithTokenIgnoreCase(line, "OTA")) {
+    if (startsWithIgnoreCase(line, "OTA")) {
         ota::runCommand(line, serialOut());  // firmware over WiFi (step 11d); reboots on success
         return;
     }
 
-    if (startsWithTokenIgnoreCase(line, "PARAM")) {
+    if (startsWithIgnoreCase(line, "PARAM")) {
         // The registry's grammar and the Node's lines (app/ParamCommands, step
         // 11e item 9). No store: the tuning is per run. A value takes effect at
         // the next SEQ start (effectiveSequenceProfile), so nothing applies here.
@@ -152,7 +145,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         return;
     }
 
-    if (startsWithTokenIgnoreCase(line, "RAW")) {
+    if (startsWithIgnoreCase(line, "RAW")) {
         strncpy(_commandScratch, line, sizeof(_commandScratch));
         _commandScratch[sizeof(_commandScratch) - 1] = '\0';
 
@@ -167,55 +160,55 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         char* savePtr = nullptr;
         char* token = strtok_r(_commandScratch, " ", &savePtr);
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
-            if (startsWithTokenIgnoreCase(token, "f=")) {
+            if (startsWithIgnoreCase(token, "f=")) {
                 if (!text_parse::parseUnsigned(text_parse::tokenValue(token), toneHz)) {
                     serialOut().print("ERR RAW bad value token=");
                     serialOut().println(token);
                     return;
                 }
-            } else if (startsWithTokenIgnoreCase(token, "dur=")) {
+            } else if (startsWithIgnoreCase(token, "dur=")) {
                 if (!text_parse::parseUnsigned(text_parse::tokenValue(token), durationMs)) {
                     serialOut().print("ERR RAW bad value token=");
                     serialOut().println(token);
                     return;
                 }
-            } else if (startsWithTokenIgnoreCase(token, "post=")) {
+            } else if (startsWithIgnoreCase(token, "post=")) {
                 if (!text_parse::parseUnsigned(text_parse::tokenValue(token), postMs)) {
                     serialOut().print("ERR RAW bad value token=");
                     serialOut().println(token);
                     return;
                 }
-            } else if (startsWithTokenIgnoreCase(token, "pre=")) {
+            } else if (startsWithIgnoreCase(token, "pre=")) {
                 if (!text_parse::parseUnsigned(text_parse::tokenValue(token), preMs)) {
                     serialOut().print("ERR RAW bad value token=");
                     serialOut().println(token);
                     return;
                 }
-            } else if (startsWithTokenIgnoreCase(token, "decim=")) {
+            } else if (startsWithIgnoreCase(token, "decim=")) {
                 if (!text_parse::parseUnsigned(text_parse::tokenValue(token), decim)) {
                     serialOut().print("ERR RAW bad value token=");
                     serialOut().println(token);
                     return;
                 }
-            } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
+            } else if (startsWithIgnoreCase(token, "pulses=")) {
                 if (!text_parse::parseUnsigned(text_parse::tokenValue(token), shape.pulseCount)) {
                     serialOut().print("ERR RAW bad value token=");
                     serialOut().println(token);
                     return;
                 }
-            } else if (startsWithTokenIgnoreCase(token, "gap=")) {
+            } else if (startsWithIgnoreCase(token, "gap=")) {
                 if (!text_parse::parseUnsigned(text_parse::tokenValue(token), shape.pulseGapMs)) {
                     serialOut().print("ERR RAW bad value token=");
                     serialOut().println(token);
                     return;
                 }
-            } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
+            } else if (startsWithIgnoreCase(token, "sweep=")) {
                 if (!text_parse::parseUnsigned(text_parse::tokenValue(token), shape.sweepToHz)) {
                     serialOut().print("ERR RAW bad value token=");
                     serialOut().println(token);
                     return;
                 }
-            } else if (startsWithTokenIgnoreCase(token, "band=")) {
+            } else if (startsWithIgnoreCase(token, "band=")) {
                 const char* spec = text_parse::tokenValue(token);
                 shape.bandSet = true;
                 if (equalsIgnoreCase(spec, "off")) {
@@ -233,7 +226,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     shape.bandLowHz = lo;
                     shape.bandHighHz = hi;
                 }
-            } else if (startsWithTokenIgnoreCase(token, "hop=")) {
+            } else if (startsWithIgnoreCase(token, "hop=")) {
                 // Same validation as SEQ start: digits and commas, fits the buffer.
                 const char* list = text_parse::tokenValue(token);
                 const size_t len = strlen(list);
@@ -248,7 +241,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 }
                 strncpy(shape.hop, list, sizeof(shape.hop) - 1);
                 shape.hop[sizeof(shape.hop) - 1] = '\0';
-            } else if (startsWithTokenIgnoreCase(token, "mode=")) {
+            } else if (startsWithIgnoreCase(token, "mode=")) {
                 const char* modeValue = text_parse::tokenValue(token);
                 if (equalsIgnoreCase(modeValue, "feat") || equalsIgnoreCase(modeValue, "features") ||
                     equalsIgnoreCase(modeValue, "csv")) {
@@ -269,7 +262,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         return;
     }
 
-    if (startsWithTokenIgnoreCase(line, "SEQ")) {
+    if (startsWithIgnoreCase(line, "SEQ")) {
         strncpy(_commandScratch, line, sizeof(_commandScratch));
         _commandScratch[sizeof(_commandScratch) - 1] = '\0';
 
@@ -479,39 +472,39 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 if (!totalTrialsSet && strchr(token, '=') == nullptr && strspn(token, "0123456789") == strlen(token)) {
                     text_parse::parseUnsigned(token, request.totalTrials);  // digits only, checked above
                     totalTrialsSet = true;
-                } else if (startsWithTokenIgnoreCase(token, "tries=")) {
+                } else if (startsWithIgnoreCase(token, "tries=")) {
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.totalTrials)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                     totalTrialsSet = true;
-                } else if (startsWithTokenIgnoreCase(token, "period=")) {
+                } else if (startsWithIgnoreCase(token, "period=")) {
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.periodMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "window=")) {
+                } else if (startsWithIgnoreCase(token, "window=")) {
                     windowSet = true;
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.windowEndOffsetMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "freq=")) {
+                } else if (startsWithIgnoreCase(token, "freq=")) {
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.toneHz)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "dur=")) {
+                } else if (startsWithIgnoreCase(token, "dur=")) {
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.durationMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "band=")) {
+                } else if (startsWithIgnoreCase(token, "band=")) {
                     const char* spec = text_parse::tokenValue(token);
                     if (equalsIgnoreCase(spec, "off")) {
                         request.bandLowHz = 0;
@@ -529,7 +522,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         request.bandLowHz = lo;
                         request.bandHighHz = hi;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "hop=")) {
+                } else if (startsWithIgnoreCase(token, "hop=")) {
                     const char* list = text_parse::tokenValue(token);
                     const size_t len = strlen(list);
                     bool ok = len > 0 && len < sizeof(request.pulseHop);
@@ -543,40 +536,39 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     }
                     strncpy(request.pulseHop, list, sizeof(request.pulseHop) - 1);
                     request.pulseHop[sizeof(request.pulseHop) - 1] = '\0';
-                } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
+                } else if (startsWithIgnoreCase(token, "sweep=")) {
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sweepToHz) ||
                         request.sweepToHz > runtime::kMaxToneHz) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
+                } else if (startsWithIgnoreCase(token, "pulses=")) {
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.pulseCount)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "gap=")) {
+                } else if (startsWithIgnoreCase(token, "gap=")) {
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.pulseGapMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "ramp=")) {
+                } else if (startsWithIgnoreCase(token, "ramp=")) {
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.pulseRampMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
                     request.pulseRampSet = true;
-                } else if (startsWithTokenIgnoreCase(token, "delay=") || startsWithTokenIgnoreCase(token, "warmup=")) {
+                } else if (startsWithIgnoreCase(token, "delay=") || startsWithIgnoreCase(token, "warmup=")) {
                     if (!text_parse::parseUnsigned(strchr(token, '=') + 1, request.startupDelayMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "report_settle=") ||
-                           startsWithTokenIgnoreCase(token, "settle=")) {
+                } else if (startsWithIgnoreCase(token, "report_settle=") || startsWithIgnoreCase(token, "settle=")) {
                     if (!text_parse::parseUnsigned(strchr(token, '=') + 1, request.reportSettleMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
@@ -588,7 +580,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     request.showDetails = false;
                 } else if (equalsIgnoreCase(token, "show=1")) {
                     request.showDetails = true;
-                } else if (startsWithTokenIgnoreCase(token, "profile=")) {
+                } else if (startsWithIgnoreCase(token, "profile=")) {
                     const char* profileValue = text_parse::tokenValue(token);
                     if (detection::detectionProfileKindFromName(profileValue, request.profileKind)) {
                         profileSeen = true;
@@ -599,7 +591,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         serialOut().println(" use profile=TonalPulseScalar or profile=AmpExperimental");
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "mode=")) {
+                } else if (startsWithIgnoreCase(token, "mode=")) {
                     bool valid = false;
                     outputConfig.mode = AnalyzerApp::sequenceOutputModeFromToken(text_parse::tokenValue(token), &valid);
                     if (!valid) {
@@ -613,7 +605,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         outputConfig.when = AnalyzerApp::SeqOutputWhen::Off;
                         outputConfig.verbosity = 0;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "when=")) {
+                } else if (startsWithIgnoreCase(token, "when=")) {
                     bool valid = false;
                     outputConfig.when = AnalyzerApp::sequenceOutputWhenFromToken(text_parse::tokenValue(token), &valid);
                     if (!valid) {
@@ -622,7 +614,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         serialOut().println(" use when=off, when=miss or when=all");
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "verbose=")) {
+                } else if (startsWithIgnoreCase(token, "verbose=")) {
                     unsigned long verbosity = 0;
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), verbosity) || verbosity > 2UL) {
                         serialOut().print("ERR SEQ verbose=");
@@ -631,8 +623,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         return;
                     }
                     outputConfig.verbosity = static_cast<uint8_t>(verbosity);
-                } else if (startsWithTokenIgnoreCase(token, "diag=") ||
-                           startsWithTokenIgnoreCase(token, "diagnostics=")) {
+                } else if (startsWithIgnoreCase(token, "diag=") || startsWithIgnoreCase(token, "diagnostics=")) {
                     const char* valueToken = strchr(token, '=') != nullptr ? strchr(token, '=') + 1 : nullptr;
                     bool valid = false;
                     const bool enabled = parseOnOffToken(valueToken, &valid);
@@ -641,42 +632,42 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         return;
                     }
                     outputConfig.diagnosticsEnabled = enabled;
-                } else if (startsWithTokenIgnoreCase(token, "sampleFirst=")) {
+                } else if (startsWithIgnoreCase(token, "sampleFirst=")) {
                     request.sampleDumpEnabled = true;
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpFirstTrials)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "sampleEvery=")) {
+                } else if (startsWithIgnoreCase(token, "sampleEvery=")) {
                     request.sampleDumpEnabled = true;
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpEveryNth)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "sampleLead=")) {
+                } else if (startsWithIgnoreCase(token, "sampleLead=")) {
                     request.sampleDumpEnabled = true;
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpLeadMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "sampleTail=")) {
+                } else if (startsWithIgnoreCase(token, "sampleTail=")) {
                     request.sampleDumpEnabled = true;
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpTailMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "sampleStep=")) {
+                } else if (startsWithIgnoreCase(token, "sampleStep=")) {
                     request.sampleDumpEnabled = true;
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpStepMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "sampleMax=")) {
+                } else if (startsWithIgnoreCase(token, "sampleMax=")) {
                     request.sampleDumpEnabled = true;
                     if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sampleDumpMaxRows)) {
                         serialOut().print("ERR SEQ bad value token=");
@@ -687,7 +678,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     // Observing an already-running external emitter is an explicit mode.
                     // Keep the current mode if the caller already requested OBS.
                     request.externalEmitter = true;
-                } else if (startsWithTokenIgnoreCase(token, "test=")) {
+                } else if (startsWithIgnoreCase(token, "test=")) {
                     strncpy(request.setupLabel, text_parse::tokenValue(token), sizeof(request.setupLabel));
                     request.setupLabel[sizeof(request.setupLabel) - 1] = '\0';
                 } else if (equalsIgnoreCase(token, "labels")) {
@@ -750,8 +741,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
     }
 
-    if (startsWithTokenIgnoreCase(line, "EMIT ")) {
-        if (startsWithTokenIgnoreCase(line, "EMIT CHIRP")) {
+    if (startsWithIgnoreCase(line, "EMIT ")) {
+        if (startsWithIgnoreCase(line, "EMIT CHIRP")) {
             sendEmitterCommand("MODE REMOTE");
             if (!waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs)) {
                 serialOut().println("ERR EMIT CHIRP emitter_remote_claim_timeout");
@@ -761,7 +752,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             serialOut().println("OK EMIT CHIRP");
             return;
         }
-        if (startsWithTokenIgnoreCase(line, "EMIT PULSES")) {
+        if (startsWithIgnoreCase(line, "EMIT PULSES")) {
             sendEmitterCommand("MODE REMOTE");
             if (!waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs)) {
                 serialOut().println("ERR EMIT PULSES emitter_remote_claim_timeout");
@@ -771,17 +762,17 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             serialOut().println("OK EMIT PULSES");
             return;
         }
-        if (startsWithTokenIgnoreCase(line, "EMIT MODE REMOTE")) {
+        if (startsWithIgnoreCase(line, "EMIT MODE REMOTE")) {
             sendEmitterCommand("MODE REMOTE");
             serialOut().println("OK EMIT MODE REMOTE");
             return;
         }
-        if (startsWithTokenIgnoreCase(line, "EMIT MODE AUTO")) {
+        if (startsWithIgnoreCase(line, "EMIT MODE AUTO")) {
             sendEmitterCommand(text_parse::rest(line, "EMIT"));
             serialOut().println("OK EMIT MODE AUTO");
             return;
         }
-        if (startsWithTokenIgnoreCase(line, "EMIT SWEEP")) {
+        if (startsWithIgnoreCase(line, "EMIT SWEEP")) {
             sendEmitterCommand(text_parse::rest(line, "EMIT"));
             serialOut().println("OK EMIT SWEEP");
             return;

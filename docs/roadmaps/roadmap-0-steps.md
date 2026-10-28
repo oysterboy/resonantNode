@@ -1158,8 +1158,11 @@ the previous gate open unless the step says it can run in parallel.
    Progress 2026-10-28 (11j 1): .clang-format (clang-format 18.1.8 from PyPI, 120 columns, 4 spaces, attached
    braces; include order, comment text and trailing-comment alignment left as written) and .editorconfig (no
    line-ending rule); tools/ci/clang_format.py --check / --fix over src/, lib/, test/ (fixtures, generated
-   headers and FirmwareOta.* out), a CI job fails on drift; the
-   next commit is the formatting-only reformat (gate green, T2h byte-identical).
+   headers and FirmwareOta.* out), a CI job fails on drift (c907048); the formatting-only reformat, 98 files
+   (943913e): gate green, T2h byte-identical.
+   Progress 2026-10-28 (11j 2): the case-insensitive helpers live only in app/TextParse.h (AnalyzerText.h deleted,
+   node_internal's and the Emitter's forwarders gone; call sites use text_parse:: by using-declarations); the four
+   serial poll loops (Emitter x2, Node, Analyzer) are serial_line::pollLines next to LineReader, same replies.
 
 11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

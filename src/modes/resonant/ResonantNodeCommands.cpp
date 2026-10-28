@@ -12,20 +12,12 @@
 #include "../../app/TextParse.h"
 #include "ResonantNodeInternal.h"
 
-using namespace node_internal;
+using text_parse::equalsIgnoreCase;
+using text_parse::startsWithWordIgnoreCase;
 
 void Node::pollSerialCommands() {
-    while (Serial.available() > 0) {
-        if (!_serialLine.feed(static_cast<char>(Serial.read()))) {
-            continue;
-        }
-        if (_serialLine.tooLong()) {
-            serialOut().print("RB ERR line_too_long max=");
-            serialOut().println(static_cast<unsigned long>(_serialLine.kCapacity));
-        } else if (_serialLine.length() > 0) {
-            handleSerialLine(_serialLine.line());
-        }
-    }
+    serial_line::pollLines(Serial, _serialLine, serialOut(),
+                           "RB ERR line_too_long max=", [this](const char* line) { handleSerialLine(line); });
 }
 
 // The Node's commands, one row per verb (step 11i N8): the first row whose verb matches handles the line. Word: the
@@ -53,7 +45,7 @@ const Node::Command Node::kCommands[] = {
 void Node::handleSerialLine(const char* line) {
     for (const Command& command : kCommands) {
         const bool matches = command.match == Command::Match::Exact ? equalsIgnoreCase(line, command.verb)
-                                                                    : startsWithTokenIgnoreCase(line, command.verb);
+                                                                    : startsWithWordIgnoreCase(line, command.verb);
         if (matches) {
             (this->*command.handler)(line);
             return;
@@ -196,7 +188,7 @@ void Node::handleProfileCommand(const char* line) {
         return;
     }
 
-    if (startsWithTokenIgnoreCase(name, "name=")) {
+    if (startsWithWordIgnoreCase(name, "name=")) {
         name = text_parse::tokenValue(name);
     }
 

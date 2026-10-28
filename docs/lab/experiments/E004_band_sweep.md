@@ -7,8 +7,8 @@ Owner 2026-10-27: "How bad is detection / noise acceptance really." The network 
 
 ## Status
 
-phase 1 logged (2026-10-28): the 19 h bench sweep, a host preview, and hits under noise. Open: the band decision
-(step 11h); the lower Emitter level at the low end is moot if the band stays.
+phase 1 logged (2026-10-28): the 19 h bench sweep, a host preview, and hits under noise. Decided 2026-10-28: the band
+stays (decisions/2026-10-28-band-stays-after-the-sweep.md); closed with step 11h.
 Design: docs/research/frequency-tuning-sweep.md.
 
 ## Setup

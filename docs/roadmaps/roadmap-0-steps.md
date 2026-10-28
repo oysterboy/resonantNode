@@ -1179,7 +1179,7 @@ the previous gate open unless the step says it can run in parallel.
    (09:05-09:16, 118-127 ms), with this morning's build as well: the room changed, not the firmware; the third
    unexplained room shift in two days (10-24 10:50, E2 <- E5 on 10-23 ~20:00).
 
-11h. [RUNNING 2026-10-27, sweep accepted 10-28; hits under noise and the band decision open] Frequency tuning sweep, 500-5000 Hz: hits vs noise acceptance. (issue #69)
+11h. [DONE 2026-10-28] Frequency tuning sweep, 500-5000 Hz: hits vs noise acceptance. (issue #69, closed)
    Owner 2026-10-27: "How bad is detection / noise acceptance really." The network band
    (detection.band_low_hz / band_high_hz; the bins, the hop train and the shape rule follow it) swept over tones
    of 500-5000 Hz (owner 2026-10-27): band low edges 500-4000 in 250 Hz steps, 5 bins wide, as one unattended
@@ -1207,7 +1207,10 @@ the previous gate open unless the step says it can run in parallel.
    Sweep accepted 2026-10-28 at 19.1 h (bench/sessions/2026-10-27-step11h-sweep24, E004): 8-9 rounds per position;
    noise 0 accepted anywhere (detections only below 1250 Hz, 2,387 in all, every one rejected by shape); plain chirps
    0 / 1,330; hop train 100 % at 500-1250 and 2250-5000, a weak zone at 1500-3000 (65-89 %, moving between rounds);
-   the shipped band 90 / 90. Open: hits under noise, the low-end level check, the band decision.
+   the shipped band 90 / 90.
+   Done 2026-10-28: hits under noise (bench/sessions/2026-10-28-step11h-undernoise): 500-1500 46/120, 750-1750
+   76/120, the shipped band 120/120; the band stays (decisions/2026-10-28-band-stays-after-the-sweep.md). The low-end
+   level check dropped with the low end.
 
 11g. [RUNNING 2026-10-26, bench part after 11h] Review Part D, the rest. (issue #67)
    Owner 2026-10-26: sequence the review's remaining Part D findings

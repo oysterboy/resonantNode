@@ -7,8 +7,8 @@ Owner 2026-10-27: "How bad is detection / noise acceptance really." The network 
 
 ## Status
 
-phase 1 logged (2026-10-28): the 19 h bench sweep and a host preview. Open: hits under noise (a train arriving while
-the detector is busy with music or speech), one lower Emitter level at the low end, and the band decision (step 11h).
+phase 1 logged (2026-10-28): the 19 h bench sweep, a host preview, and hits under noise. Open: the band decision
+(step 11h); the lower Emitter level at the low end is moot if the band stays.
 Design: docs/research/frequency-tuning-sweep.md.
 
 ## Setup
@@ -39,9 +39,16 @@ Design: docs/research/frequency-tuning-sweep.md.
 - The host preview agrees on the shape of it: its accepts (dry file at made-up gains) fell at 1000-3000, none above
   5500.
 
+2026-10-28, hits under noise (bench/sessions/2026-10-28-step11h-undernoise): hop10 back to back while the file
+plays. 500-1500: 46 / 120 (flute 2/20, male speech 10/30); 750-1750: 76 / 120 (flute 6/20); 2950-3950: 120 / 120,
+strength as in quiet. The silent Nodes agree (valid verdicts during the noise at 500: 36 / 105 / 116 of 120; at the
+shipped band 120 each). Losses at the low bands: duration_too_long (the noise lengthens the occurrence),
+failed_contrast, occurrence_seen_but_rejected.
+
 ## Reading
 
-Noise acceptance is not the problem in this room with this material: nothing passed anywhere. The margin differs:
+Noise acceptance is not the problem in this room with this material: nothing passed anywhere. Noise masking is: at
+500-1750 music and speech in the band cost 40-60 % of the trains; the shipped band loses none. The margin differs:
 at 500-1250 the shape rule alone stands between music or speech and an answer; at 2750-5000 the noise does not even
 reach the detector. Detection has one zone to avoid, 1500-3000 here. The shipped band sits in the zone where both
 are best. Limits: one room, one distance, one noise file at one level, no birds (2-8 kHz, tonal glides: the

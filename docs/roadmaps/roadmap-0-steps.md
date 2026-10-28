@@ -1166,6 +1166,12 @@ the previous gate open unless the step says it can run in parallel.
    Progress 2026-10-28 (11j 3): ResonantBehavior::setDecision sets the decision / block-reason pair (15 sites; a
    go-ahead clears the reason), decisions unchanged; ScalarTransientDetector::resetState calls the summary clears
    its reset helpers use, with one report clear (the printed sourceReportGeneration steps once, as before).
+   Progress 2026-10-28 (11j 4): DetectionProfile.h: magnitudeModule() / binShapeModule() make each inspection
+   module one call; the decision histories on the min / max duration and the medium limits are pointers to their
+   decisions files (all three already held them; "noise cost of 300 not measured" kept, found nowhere else); the
+   narration and the two commented-out minSustainedMs lines gone. Both profiles field-for-field identical (a host
+   dump of every field before / after), T2h byte-identical. The contrast Strong 300000 stays: the inspector has no
+   disabled class, and adding one would change the printed plan.
 
 11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

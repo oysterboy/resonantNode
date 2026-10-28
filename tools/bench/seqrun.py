@@ -35,9 +35,11 @@ ap.add_argument("--distance-cm", type=float)
 ap.add_argument("--orientation", help="e.g. 'vertical emit, vertical mic'")
 ap.add_argument("--emitter-fw", help="emitter firmware git hash, if known")
 # NODE-012 cells (research/acoustic-test-suite.md): which space, speaker and tone level the session ran in.
-ap.add_argument("--space", default="", help="e.g. 'desk', 'desk dry (absorbers)', 'installation site'")
-ap.add_argument("--speaker", default="", help="e.g. 'stock D-AMP 3 W / 8 ohm'")
-ap.add_argument("--tone-level", default="", help="Emitter tone level, e.g. '0.5 FS'")
+# Required for a new session (2026-10-28): 752 of 775 indexed runs had them empty, and E001 could not
+# separate distance from level afterwards. --speaker defaults to the stock driver every node has.
+ap.add_argument("--space", default="", help="e.g. 'desk', 'desk dry (absorbers)', 'tryout room 5x6 m'")
+ap.add_argument("--speaker", default=benchlib.DEFAULT_SPEAKER, help="e.g. 'stock D-AMP 3 W / 8 ohm'")
+ap.add_argument("--tone-level", default="", help="Emitter tone level as set on the board, e.g. '0.5 FS'")
 ap.add_argument("--note", action="append", default=[], help="free-form setup note (repeatable)")
 ap.add_argument("--run", nargs=2, action="append", metavar=("NAME", "COMMANDS"), required=True)
 ap.add_argument("--no-reset", action="store_true", help="skip reset (firmware read from session)")
@@ -51,8 +53,10 @@ session_file = os.path.join(session_dir, "session.json")
 if os.path.exists(session_file):
     data = benchlib.load_session(session_dir)
 else:
-    if args.distance_cm is None or not args.purpose:
-        sys.exit("new session: --purpose and --distance-cm are required")
+    missing = [f for f, v in (("--purpose", args.purpose), ("--distance-cm", args.distance_cm),
+                              ("--space", args.space), ("--tone-level", args.tone_level)) if v in (None, "")]
+    if missing:
+        sys.exit("new session: %s required (bench/README.md, setup fields)" % ", ".join(missing))
     data = {
         "purpose": args.purpose,
         "created": datetime.datetime.now().isoformat(timespec="seconds"),

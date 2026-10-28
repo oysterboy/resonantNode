@@ -21,7 +21,31 @@ SUMMARY_FIELDS = ("trials", "completed", "expected_trials", "early_trials", "lat
                   "avg_strength")
 
 INDEX_COLUMNS = ("session", "run", "date", "firmware", "role", "profile", "detector",
-                 "distance_cm", "space", "speaker", "tone_level", "purpose", "complete") + SUMMARY_FIELDS
+                 "distance_cm", "space", "speaker", "tone_level", "orientation", "signal", "freq_hz",
+                 "backfilled", "purpose", "complete") + SUMMARY_FIELDS
+
+DEFAULT_SPEAKER = "stock D-AMP 3 W / 8 ohm"
+
+
+def signal_of(command):
+    """(signal, freq_hz) from a SEQ start command: what the run emitted, for filtering the index.
+
+    obs = OBS windows (nothing emitted on purpose); hop = a pulse train with hop bins; train = pulses
+    without hops; sweep; chirp = one tone. freq_hz is the freq= argument, empty when the profile default ran.
+    """
+    if not command or not command.startswith("SEQ"):
+        return "", ""
+    freq = re.search(r"\bfreq=(\d+)", command)
+    freq = freq.group(1) if freq else ""
+    if command.startswith("SEQ OBS"):
+        return "obs", freq
+    if re.search(r"\bhop=", command):
+        return "hop", freq
+    if re.search(r"\bpulses=", command):
+        return "train", freq
+    if re.search(r"\bsweep=", command):
+        return "sweep", freq
+    return "chirp", freq
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 BENCH_ROOT = os.path.join(REPO_ROOT, "bench")
@@ -122,6 +146,8 @@ def rebuild_index():
             # Re-read the log so a summarize_run change reaches old runs too.
             log_path = os.path.join(sdir, run["file"])
             summ = summarize_run(log_path) if os.path.isfile(log_path) else run.get("summary", {})
+            cmds = run.get("commands") or []
+            signal, freq = signal_of(cmds[-1] if cmds else "")
             row = {
                 "session": name,
                 "run": run["name"],
@@ -134,6 +160,10 @@ def rebuild_index():
                 "space": setup.get("space", ""),
                 "speaker": setup.get("speaker", ""),
                 "tone_level": setup.get("tone_level", ""),
+                "orientation": setup.get("orientation", ""),
+                "signal": signal,
+                "freq_hz": freq,
+                "backfilled": " ".join(sorted(setup.get("backfill", {}))),
                 "purpose": data.get("purpose", ""),
                 "complete": "1" if summ.get("complete") else "0",
             }

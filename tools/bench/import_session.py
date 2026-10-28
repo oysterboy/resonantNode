@@ -21,6 +21,9 @@ ap.add_argument("--purpose")
 ap.add_argument("--distance-cm", type=float)
 ap.add_argument("--orientation", default="")
 ap.add_argument("--emitter-fw", default="")
+ap.add_argument("--space", default="")
+ap.add_argument("--speaker", default="")
+ap.add_argument("--tone-level", default="", help="leave empty if not known; never guess it")
 ap.add_argument("--note", action="append", default=[])
 ap.add_argument("--firmware-log")
 ap.add_argument("--reindex-only", action="store_true")
@@ -38,7 +41,8 @@ if os.path.exists(os.path.join(sdir, "session.json")):
 else:
     data = {"purpose": args.purpose, "created": datetime.datetime.now().isoformat(timespec="seconds"),
             "setup": {"distance_cm": args.distance_cm, "orientation": args.orientation,
-                      "emitter_fw": args.emitter_fw, "notes": args.note},
+                      "emitter_fw": args.emitter_fw, "space": args.space,
+                      "speaker": args.speaker, "tone_level": args.tone_level, "notes": args.note},
             "runs": []}
 
 fw_default = None

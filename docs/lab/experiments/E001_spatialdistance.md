@@ -74,6 +74,10 @@ re-measured on the bench (damp-bench-check.md R1).
 
 ## Open threads
 
+- 2026-10-28: the index data read for distance in docs/research/distance-range.md: strength is flat over
+  60-110 cm (-1.8 to +0.4 dB per doubling, scatter 2-4 dB), so no distance law yet; the 110 cm level
+  bracket puts the operating point 4.4-14 dB above threshold. Tests 1-2 there are the next phase.
+
 - Phase 0 (May, AMP detector) reached 140 cm at 85/100 on piezo; phase 2a
   (October) got 10-14/50 at 40 cm on piezo. Different detector path,
   thresholds and unknown setup, so not comparable as is; worth knowing

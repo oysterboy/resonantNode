@@ -50,6 +50,9 @@ A note whose ideas were all promoted or abandoned gets `promoted` or
 ```text
 acoustic-test-suite.md         rooms x speakers x distance test design
                                (promoted: NODE-012; observations in lab E001)
+distance-range.md              how far a node hears another: what the bench
+                               data says (a level bracket, no distance law),
+                               the urgent tests for the 5 x 6 m / 1 m tryout
 soak-24h.md                    24 h unattended soak: room vs signal
                                (promoted: NODE-013 / step 3a, on D-AMP; the
                                repeated runs are step 11c, tools/bench/soakcycle.py)

@@ -2,7 +2,7 @@
 
 Per port: open without resetting (DTR/RTS held low; --reset pulses EN and
 reads the BUILD banner), send SELFTEST, parse the one-line-per-check output
-(format: docs/refactors/selftest.md), map the MAC to the board label from
+(format: docs/refactors/archive/selftest.md), map the MAC to the board label from
 the table in bench/README.md, and print one row per board. With --external
 each Node then gets `SELFTEST external wait_ms=N` while the next board in
 the list is told `SELFTEST chirp n=K` (rotating), so every Node proves it

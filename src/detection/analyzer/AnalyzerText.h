@@ -3,9 +3,9 @@
 #include "../../app/TextParse.h"
 
 /*
-The Analyzer console's text helpers, now forwarding to app/TextParse.h, where
-the three prefix kinds are defined once (review B7, step 11f). Plain prefix
-matches, as the Analyzer always used them.
+The Analyzer console's text helpers, forwarding to app/TextParse.h, where the
+three prefix kinds are defined. Plain prefix matches, as the Analyzer always
+used them.
 */
 inline bool startsWithToken(const char* line, const char* token) {
     return text_parse::startsWith(line, token);

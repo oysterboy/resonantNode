@@ -3,7 +3,7 @@
 /*
 The Emitter's PULSES bounds (DET-011), shared with the Analyzer, which refuses a
 SEQ run outside them before it starts (otherwise every trial is rejected on the
-Emitter). Named once, review B12 (step 11f).
+Emitter).
 */
 namespace emitter_limits {
 

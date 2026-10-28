@@ -102,12 +102,26 @@ inline const char* inspectionTargetName(InspectionTarget value) {
     }
 }
 
+// One module: its target ("contrast"); several: their targets in plan order ("contrast+amp+shape").
+// The text lives in a static buffer, valid until the next call.
 inline const char* inspectionPlanName(const InspectionPlan& plan) {
     if (plan.count == 1 && plan.modules[0].kind == InspectionModuleKind::MagnitudeFeatureStrength) {
         return inspectionTargetName(plan.modules[0].target);
     }
-
-    return "custom";
+    static char name[kMaxInspectionModules * 12];
+    size_t len = 0;
+    const size_t count = plan.count > kMaxInspectionModules ? kMaxInspectionModules : plan.count;
+    for (size_t i = 0; i < count; ++i) {
+        const char* target = inspectionTargetName(plan.modules[i].target);
+        if (i > 0 && len + 1 < sizeof(name)) {
+            name[len++] = '+';
+        }
+        for (const char* c = target; *c != '\0' && len + 1 < sizeof(name); ++c) {
+            name[len++] = *c;
+        }
+    }
+    name[len] = '\0';
+    return len > 0 ? name : "none";
 }
 
 inline const char* inspectionModulesName(const InspectionPlan& plan) {

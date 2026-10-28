@@ -16,6 +16,8 @@ Hard (inspection reads a window the history no longer holds):
   - history: max duration + release debounce + window pre + window post fits
     the history span (FEATURE_HISTORY_BINS x 1 ms). Conservative: it holds for
     any anchor, also if inspection waits for the window to complete.
+  - shape: shape pre + max duration + release debounce + shape tail + 1 fits
+    the bin track (BinTrack::kMs).
 Soft (some occurrences are judged on a window that has not arrived):
   - complete at release: an occurrence of the minimum duration is inspected at
     release + debounce; a Start or Peak anchored window ends at most
@@ -51,8 +53,11 @@ inline InspectionPlanCheck checkInspectionPlan(const ScalarTransientConfig& scal
     for (size_t i = 0; i < count; ++i) {
         const InspectionModuleConfig& module = plan.modules[i];
         if (module.kind == InspectionModuleKind::BinShape) {
-            // DET-015: the shape window (look-back + the longest occurrence + margin) must fit the bin track.
-            const unsigned long shapeNeeded = module.shape.preMs + scalar.maxTransientDurationMs + module.shape.tailMs;
+            // DET-015: the shape window (look-back + the longest occurrence + margin) must fit the bin track
+            // at the time it is read, which is up to the release debounce after the release; the track holds
+            // the kMs ms up to and including now, hence the + 1.
+            const unsigned long shapeNeeded = module.shape.preMs + scalar.maxTransientDurationMs +
+                                              scalar.releaseDebounceMs + module.shape.tailMs + 1;
             if (shapeNeeded > BinTrack::kMs) {
                 c.shapeFits = false;
             }

@@ -147,6 +147,8 @@ void Node::handleSerialLine(const char* line) {
         printRbSummary();
         return;
     }
+    // Anything else gets one line, so a typo is not mistaken for a lost command (review D1.9).
+    serialOut().println("RB ERR unknown_command");
 }
 
 void Node::handleLogCommand(const char* line) {

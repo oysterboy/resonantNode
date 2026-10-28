@@ -6,7 +6,9 @@
 // DetectionRuntime pipeline execution in source order.
 namespace detection {
 
-DetectionRuntime::DetectionRuntime() : _diagnostics(_scalarDetector, _featureHistory) {}
+DetectionRuntime::DetectionRuntime() : _diagnostics(_scalarDetector, _featureHistory) {
+    _occurrenceInspector.setBinTrack(&_binTrack);
+}
 
 namespace {
 
@@ -56,6 +58,7 @@ void DetectionRuntime::resetDetectionQueues() {
 
 void DetectionRuntime::resetDiagnosticsCounters() {
     _verdictQueueOverflowCount = 0;
+    _pendingInspectionOverflowCount = 0;
     _diagnostics.resetCounters();
 }
 
@@ -88,7 +91,6 @@ static_assert(FeatureHistory::kMaxActiveStreams >= kMaxInspectionModules,
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _inspectionPlan = plan;
     _occurrenceInspector.configure(_inspectionPlan);
-    _occurrenceInspector.setBinTrack(&_binTrack);
     _occurrenceInspector.setShapeMinLevel(_scalarTransientConfig.onsetReleaseThreshold);
 
     FeatureStreamId streams[kMaxInspectionModules] = {};

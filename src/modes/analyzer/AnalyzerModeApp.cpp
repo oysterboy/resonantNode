@@ -100,7 +100,7 @@ static void printHeapStatus(const char* when) {
     serialOut().print(" min_8bit=");
     serialOut().print(min8);
     serialOut().print(" free_internal=");
-    serialOut().println(freeInternal);
+    serialOut().print(freeInternal);
     serialOut().print(" largest_internal=");
     serialOut().print(largestInternal);
     serialOut().print(" min_internal=");

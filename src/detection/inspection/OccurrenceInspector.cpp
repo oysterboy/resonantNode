@@ -323,7 +323,8 @@ InspectedOccurrence OccurrenceInspector::inspectWithHistory(
     out.decision = OccurrenceDecision::Accepted;
     out.rejectReason = OccurrenceRejectReason::None;
     out.magnitudeObservationCount = 0;
-    for (size_t i = 0; i < _inspectionPlan.count; ++i) {
+    const size_t count = _inspectionPlan.count > kMaxInspectionModules ? kMaxInspectionModules : _inspectionPlan.count;
+    for (size_t i = 0; i < count; ++i) {
         runInspectionModule(out, occurrence, featureHistory, inspectionNowMs, _inspectionPlan.modules[i]);
     }
     return out;

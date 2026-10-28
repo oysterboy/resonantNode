@@ -663,6 +663,9 @@ string before it was written down.
    SELFTEST does), clear the pending start in STOP, one `SeqOutputConfig` copied once at start (A8).
    -> partly 2026-10-27 (11g C1): start refused while active, STOP clears the pending start, STATUS reads one
    config, quiet clears the running diagnostics flag; the one `SeqOutputConfig` is C4.
+   -> done 2026-10-28 (leftovers): checked at HEAD, C4 (48e32b6) landed it: SEQ DIAG / FREQBAND /
+   FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE write through one helper `changeSeqOutputConfig` (the next
+   start's `_seqOutputConfig`, and the running copy during a run); a run copies it once at activation.
 
 5. **`shape.minLevel` is a boot-time copy of the release threshold (medium).** `DetectionProfile.h:176-178`
    copies `onsetReleaseThreshold` into `modules[2].shape.minLevel` and says so; `applyLiveDetectionParams`
@@ -710,6 +713,13 @@ string before it was written down.
    unknown `RB` command gets no reply on the Node (`ResonantNodeCommands.cpp:30-144`, the Analyzer prints
    `EVT analyzer_unknown_cmd`); a radio reply frame refused by the outbox is dropped silently and can lose the
    `last` flag (`ResonantNodeNet.cpp:37-40`; not reachable with today's reply sizes).
+   -> partly 2026-10-28 (leftovers): the overflow count is reset with the other diagnostics counters;
+   `inspectWithHistory` clamps like its siblings; the shape bound adds `releaseDebounceMs + 1` (431 of 512 ms
+   on the shipped plan, plan_check unchanged); `--dump-freq` casts; `HEAP_STATUS` is one line (no tool reads
+   it); an unknown line on the Node prints `RB ERR unknown_command` (nodepair.py already collects `RB ERR`
+   replies; guide line added). Already gone: the `EVT transient` promise (11g C2 deleted the line and the
+   flag). Left: the refused reply frame, still unreachable (48-entry outbox) and not silent: NodeNet counts it
+   as `outbox_full` in NET STATUS; keeping `last` would need a retry path for no reachable case.
 
 ### D2. Architecture and readability
 
@@ -830,6 +840,17 @@ string before it was written down.
     detection`; the 11e / 11f fixes left "was defined three times (review B7, step 11f)" history in nine headers
     (B9's own rule); unused includes in `ResonantNodeApp.cpp:12-13` and `ResonantNodeStatus.cpp:12, 15, 17`; the
     Emitter's post-selftest restore differs from the Node's and the Analyzer's (three definitions of "restored").
+    -> partly 2026-10-28 (leftovers): `setupLabel` is an array since C4 (fixed); 32 of the 42 `IRAM_ATTR` in
+    FreqBandStream.cpp dropped (getters, setters, profiling getters), kept on the per-sample path (observe,
+    push, the Goertzel and score functions) and the config-time rebuilds; `FrequencyBandMeasurementPacket` moved
+    to `features/FeatureStream.h`; `setBinTrack` is wired once in DetectionRuntime's constructor;
+    `inspectionPlanName` joins the module targets (`contrast+amp+shape`, printed by RB STATUS / RB PROFILE as
+    `inspectionPlan=`; no tool reads it); the "step 11f" history gone from the ten comments that carried it;
+    the unused includes removed (more than listed: `HopGapContract`, `InspectionPlanContract`, `<new>` in
+    ResonantNodeApp.cpp, seven in ResonantNodeStatus.cpp). Left: `annotateShape`'s stack is ~0.7 KB since B2's
+    `measureBinShape` (raw runs 384 B, the measure 200 B, seen 64 B), not worth a static buffer;
+    `ScalarTransientDetector` / `FreqBandStream` outside `namespace detection` (32 files to touch, with step 9's
+    family build); the Emitter's post-selftest restore (what "restored" means per mode is a behaviour choice).
 
 ### D3. Spec, guide, roadmap against the code
 
@@ -869,6 +890,9 @@ string before it was written down.
    help strings fixed (SEQ help: band=, SEQ_EXPLAIN for SEQ_DETAIL, SEQ_STATUS; HELP: RAW keys, SELFTEST external,
    no_store; RB help: SAVE|LOAD|RESET); spec: SEQ_STATUS, all four RAW layouts acknowledged. Left: the pcm
    `RAW_BEGIN fields=` value (an output line, code batch) and `benchlib.py`'s SEQ_DETAIL (tools/).
+   -> done 2026-10-28 (leftovers): pcm's `RAW_BEGIN fields=ms,pcm,baseline,centered`, as the header row; no tool
+   reads the key (rawcorpus.py reads the header row; hopvariants / notchsweep rewrite it; raw_capture_slope.py
+   reads only sr / trigger_ms); guide line updated. `benchlib.py`'s SEQ_DETAIL was already gone.
 
 4. **`implementation-status.md` is history, not a live table (high for the rows named).** Params row: "a
    registry on the Analyzer: not implemented", "38 Node params" (PAR-003 is DONE; the Node registers 39, 17
@@ -902,6 +926,10 @@ string before it was written down.
    lines, decisions/README (dates sorted, three resolved open rows removed, three "pending" notes checked against
    5b / 5g / 5f), research/README and soak-24h.md. Left: the pointers in platformio.ini, tools/bench/selftest.py,
    test/README and the src/ header comments (files outside this batch's docs scope).
+   -> done 2026-10-28 (leftovers): platformio.ini (archive path; the test_ignore and native-test-behavior comments
+   say what the lists are now), selftest.py (archive path), test/README (all fifteen host suites in three envs),
+   DetectionProfile.h (the enums as they are, with BinShape, AmpMagnitude, InspectionTarget/Shape),
+   DetectionCoreTypes.h and Occurrence.h (the present: one family; magnitude / band / shape namespaces).
 
 ### D4. Tests and tools
 
@@ -932,6 +960,9 @@ string before it was written down.
    (5fcd3fc), shapesurvey's parser (`tools/bench/test_shapesurvey.py`, in CI). Open: NodeNet pacing (the file is
    ESP-only; the reply spacing would need a pure helper), the mode apps' printers (RB STATUS, NET reply, SEQ_TRIAL /
    SUMMARY, RAW_*), src/hal, selftest, NVS store, the dispatchers, the twin-list check.
+   -> partly 2026-10-28 (leftovers): the twin-list check is `tools/ci/test_lists.py` (ESP `test_ignore` = the
+   native `test_filter` union minus the three on-device suites, which must be in a native filter and never
+   ignored; every `test/test_*` dir in a list), in CI's include-direction job. Open: the rest of the list above.
 
 4. **Tool parsers that do match today (verified, for the record).** `netcheck.py` (`NET reply`, `PARAM path=`,
    the `RB STATUS ... board=` tail), `nodegroup.py` (`BEH emit start`, `RB emit shape=hop`, `RB verdict=`, `RB

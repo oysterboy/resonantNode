@@ -76,7 +76,6 @@ private:
 };
 
 // The time of sample `sampleOffset` after a block's start, at sampleRateHz (0 when the rate is unknown).
-// Was defined three times (AudioSourceI2S, Node, Analyzer; review B7, step 11f).
 inline uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     if (sampleRateHz == 0) {
         return 0;

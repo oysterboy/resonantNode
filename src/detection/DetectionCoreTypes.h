@@ -36,18 +36,16 @@ namespace detection {
 // Detector-specific details belong in Occurrence payloads selected by
 // OccurrenceType or in DetectorReport.
 //
-// Migration note:
-//   ScalarTransientDetector owns accepted Occurrence emission plus
-//   DetectorReport directly. FrequencyMatchDetector was removed 2026-10-22
-//   (decisions/2026-10-22-remove-frequencymatch.md); a second family comes
-//   back behind the family build flag, not as a new value here.
+// ScalarTransientDetector is the one detector family: it emits the accepted
+// Occurrences and its DetectorReport. FrequencyMatchDetector was removed
+// 2026-10-22 (decisions/2026-10-22-remove-frequencymatch.md); a new family
+// joins on the terms of myspec 5.3, "Adding a detector family".
 
 /*
 DetectionCoreTypes
 
-Pass A canonical vocabulary anchor.
-These enums establish the new detector-facing names without forcing the current
-runtime to migrate to them yet.
+The detector-facing identity of an occurrence: which family produced it
+(DetectorId) and its public event category (OccurrenceType).
 */
 enum class DetectorId : uint8_t {
     Unknown = 0,

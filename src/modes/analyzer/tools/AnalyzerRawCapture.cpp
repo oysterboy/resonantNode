@@ -660,7 +660,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     serialOut().print(rawCaptureModeName(mode));
     serialOut().print(" output=csv");
     if (mode == RawCaptureMode::Pcm) {
-        serialOut().print(" fields=ms,pcm,baseline");
+        serialOut().print(" fields=ms,pcm,baseline,centered");
     } else if (mode == RawCaptureMode::I2s) {
         serialOut().print(" fields=ms,pcm");
     } else if (mode == RawCaptureMode::Features) {

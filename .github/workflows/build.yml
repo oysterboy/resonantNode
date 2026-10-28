@@ -1,5 +1,5 @@
 # NODE-007 (step 7): every env in platformio.ini builds on every push, the host tests run, and the include
-# direction (src/detection must not include src/modes) is reported. No hardware here: a green run means
+# direction (src/detection must not include src/modes) and the twin test lists are enforced. No hardware here: a green run means
 # "compiles and host tests pass", never "works on a board" (CLAUDE.md).
 name: build
 
@@ -76,3 +76,5 @@ jobs:
       - uses: actions/checkout@v4
       # Strict since ANA-003 (step 10) moved the Analyzer out of src/detection.
       - run: python3 tools/ci/include_direction.py --strict
+      # platformio.ini's twin lists: ESP test_ignore vs the native envs' test_filter (review D4.3).
+      - run: python3 tools/ci/test_lists.py

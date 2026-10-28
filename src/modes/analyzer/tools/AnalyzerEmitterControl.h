@@ -1,8 +1,7 @@
 #pragma once
 
 /*
-The Analyzer's link to the Emitter (AnalyzerEmitterControl.cpp). Was forward-
-declared by hand in three files (review B7, step 11f).
+The Analyzer's link to the Emitter (AnalyzerEmitterControl.cpp).
 */
 
 // How long the Analyzer waits for the Emitter to confirm a mode change.

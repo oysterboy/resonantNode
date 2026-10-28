@@ -71,8 +71,7 @@ public:
     float activity() const;
     bool isActive() const;
     const char* stateName() const;
-    // The state machine's state (review A9, step 11f: readers compared a numeric stateCode() against
-    // literals 0 / 1 / 3).
+    // The state machine's state.
     enum class State {
         Idle,
         HeardPattern,

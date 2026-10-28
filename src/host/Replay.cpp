@@ -519,7 +519,7 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
             ++r.ampCompared;
         }
         if (dump != nullptr && i < cap.pcm.size()) {
-            fprintf(dump, "%zu,%lu,%d,%d,%.1f,%.1f,%d,%d\n", i, packet.timeMs, static_cast<int>(evidence.targetBandValue),
+            fprintf(dump, "%zu,%lu,%d,%d,%.1f,%.1f,%d,%d\n", i, static_cast<unsigned long>(packet.timeMs), static_cast<int>(evidence.targetBandValue),
                     i < cap.boardFreq.size() ? cap.boardFreq[i] : -1, static_cast<double>(evidence.targetBandContrastValue),
                     i < cap.boardContrast.size() ? static_cast<double>(cap.boardContrast[i]) : -1.0, evidence.fresh ? 1 : 0,
                     i < cap.boardFresh.size() ? cap.boardFresh[i] : -1);

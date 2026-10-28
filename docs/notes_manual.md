@@ -71,6 +71,8 @@ NET STATUS                      the gateway's own radio counters
 SELFTEST [external wait_ms=N | chirp n=N gap_ms=MS dur_ms=MS | help]
 ```
 
+A line the Node does not know gets `RB ERR unknown_command` (since 2026-10-28; before, no reply).
+
 `RB PARAM` and `RB BEHAV` are gone since step 10 (2026-10-22). Old session headers map through
 `docs/decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md`.
 
@@ -238,8 +240,7 @@ mode=both            ms,amp,pcm,freq,contrast,fresh
 ```
 
 The header row is what `tools/bench/rawcorpus.py` reads. The `fields=` key on the `RAW_BEGIN` line
-says `ms,pcm,baseline` for `mode=pcm`, one column short of the header (review D3.3, left for the
-code batch).
+names the same columns (for `mode=pcm` since 2026-10-28; before, it said `ms,pcm,baseline`).
 
 ## Emitter
 

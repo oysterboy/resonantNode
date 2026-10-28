@@ -62,8 +62,7 @@ inline const char* rest(const char* line, const char* verb) {
     return p;
 }
 
-// Prefix matches. Three kinds exist on purpose, with different meanings (review B7, step 11f: they were
-// defined in three places under the same names):
+// Prefix matches. Three kinds exist on purpose, with different meanings:
 // - startsWith: plain prefix, case-sensitive (the Emitter's link commands).
 // - startsWithIgnoreCase: plain prefix, any case (the Analyzer's console).
 // - startsWithWordIgnoreCase: the prefix ends on a token boundary, the end or a space, unless it ends

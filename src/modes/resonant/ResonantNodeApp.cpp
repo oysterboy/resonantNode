@@ -1,8 +1,6 @@
 #include "ResonantNodeApp.h"
 #include "../../app/FirmwareOta.h"
 #include <Arduino.h>
-#include <string.h>
-#include <new>
 
 #include <esp_system.h>
 
@@ -10,8 +8,6 @@
 #include "../../app/TimingUtils.h"
 #include "../../app/BuildInfo.h"
 #include "../../app/NodeRoster.h"
-#include "../../detection/HopGapContract.h"
-#include "../../detection/InspectionPlanContract.h"
 #include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/evaluation/VerdictNames.h"
@@ -74,8 +70,7 @@ constexpr unsigned long kRbStartupBaselineTimeoutMs = 8000;
 
 
 
-// RB PROFILE detail prints the stream in CamelCase (detection::featureStreamName is snake_case); one copy
-// of the switch that was written twice here (review B7, step 11f).
+// RB PROFILE detail prints the stream in CamelCase (detection::featureStreamName is snake_case).
 static const char* streamDisplayName(detection::FeatureStreamId stream) {
     switch (stream) {
         case detection::FeatureStreamId::AmpMagnitude:

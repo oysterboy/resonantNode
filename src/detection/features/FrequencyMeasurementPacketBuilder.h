@@ -2,7 +2,7 @@
 
 #include "../../audio/AudioSignal.h"
 #include "FreqBandStream.h"
-#include "../inspection/InspectorTypes.h"
+#include "FeatureStream.h"
 
 namespace detection {
 

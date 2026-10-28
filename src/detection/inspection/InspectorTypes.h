@@ -253,28 +253,4 @@ struct TransientEvidence {
     bool audioOverflowDuringOccurrence = false;
 };
 
-// Frequency band measurement packet carried alongside an occurrence for measurement and reporting.
-// Decision fields belong to the detector / gate result, not the measurement packet.
-struct FrequencyBandMeasurementPacket {
-    bool present = false;
-    bool fresh = false;
-
-    unsigned long observedAtMs = 0;
-
-    // Frequency target value on the shared 0..32767 magnitude-like scale.
-    audio::FrequencyScore16 targetBandValue = 0;
-
-    // Raw Goertzel power retained for diagnostics and debugging.
-    float targetBandPowerValue = 0.0f;
-    float neighborBandPowerValue = 0.0f;
-    float lowerBandPowerValue = 0.0f;
-    float upperBandPowerValue = 0.0f;
-    float totalEnergyValue = 0.0f;
-    float targetBandContrastValue = 0.0f;
-
-    // Band mode: the centre of the strongest band bin at the last update, 0 outside band mode (DET-015, the
-    // ShapeInspector's bin track).
-    unsigned long peakBinHz = 0;
-};
-
 } // namespace detection

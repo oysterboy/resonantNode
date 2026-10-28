@@ -6,7 +6,7 @@
 
 /*
 The FreqBandStream's runtime fields as ` freq.window_samples=... freq.packet_age_ms=...`, one copy for the
-Node's RB STATUS and the Analyzer's FREQBAND line (they were byte-identical in both, review B7, step 11f). No
+Node's RB STATUS and the Analyzer's FREQBAND line. No
 leading label, no newline: the callers frame it.
 */
 inline void printFreqStatusFields(Print& out, const FreqBandStream& stream, unsigned long sampleRateHz) {

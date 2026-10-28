@@ -17,14 +17,16 @@ the verdict's requirements) and the field-state config.
 
 Profiles declare composition; DetectionRuntime applies the selected fields at fixed stages.
 
-Common enum / selector types used in this file:
+Common enum / selector types used in this file (as of 2026-10-28; the enum
+definitions are the source):
 
 ```text
 DetectionProfileKind { AmpExperimental, TonalPulseScalar }
 DetectorSelection { ScalarTransient }
-FeatureStreamId { AmpEnvelope, FrequencyTarget, FrequencyContrast }
+FeatureStreamId { Unknown, AmpMagnitude, AmpEnvelope, FrequencyTarget, FrequencyContrast }
 StrengthClass { Unknown, None, Weak, Medium, Strong }
-InspectionModuleKind { None, MagnitudeFeatureStrength }
+InspectionModuleKind { None, MagnitudeFeatureStrength, BinShape }
+InspectionTarget { None, Amp, TargetScore, Contrast, TargetBand, Shape }
 ```
 
 New profile checklist:

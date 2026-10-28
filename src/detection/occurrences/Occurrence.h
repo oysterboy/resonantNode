@@ -13,18 +13,15 @@ Occurrence
 Low-level detector occurrence event emitted by a detector.
 It is not an occurrence verdict and must not drive behavior directly.
 
-`magnitude` and `band` below are evidence-domain namespaces, not a
-detector-exclusive pair, and deliberately share no vocabulary with
-`DetectorId`/`OccurrenceType`'s detector axis (`Scalar` today), which is a
-separate axis (which detector/lifecycle produced this occurrence). Both
-`magnitude` and `band` may be populated for the same occurrence regardless
-of which detector produced it: `OccurrenceInspector` writes into whichever
-namespace matches each configured `InspectionTarget` (`Amp` -> `magnitude`,
-`TargetScore`/`Contrast`/`TargetBand` -> `band`), and the shipped profile
-(`TonalPulseScalar`: contrast and amp) spans both namespaces on every
-occurrence. Do not assume only one is meaningful
-based on `detectorId`/`occurrenceType`; `makeVerdict()` reads both,
-unconditionally. This is unlike `DetectorReport.scalar` (see
+`magnitude`, `band` and `shape` below are evidence-domain namespaces, not
+tied to the detector axis of `DetectorId`/`OccurrenceType` (`Scalar` today:
+which detector produced this occurrence). The detector fills `magnitude`'s
+values; `OccurrenceInspector` writes the class of each configured
+`InspectionTarget` into its namespace (`Amp` -> `magnitude.strengthClass`,
+`TargetScore`/`Contrast`/`TargetBand` -> `band`, `Shape` -> `shape`), and the
+shipped profile (`TonalPulseScalar`: contrast, amp, shape) spans all three on
+every occurrence. Do not assume only one is meaningful based on
+`detectorId`/`occurrenceType`; `makeVerdict()` reads them unconditionally. This is unlike `DetectorReport.scalar` (see
 DetectorReport.h), which really is exclusive to the detector that produced
 that report.
 */

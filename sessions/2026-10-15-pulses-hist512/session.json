@@ -7,7 +7,15 @@
     "emitter_fw": "",
     "notes": [
       "E2 COM5 Analyzer with 512-bin history (RAM 31.7 % vs 26.1 %), E3 Emitter PULSES 0.5 FS; params: max_gap 130, max_duration 600, min_release_coverage 40, release_debounce 130; same trains as 2026-10-15-pulses-wide (256 bins)"
-    ]
+    ],
+    "tone_level": "0.5 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

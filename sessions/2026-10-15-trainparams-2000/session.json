@@ -7,7 +7,13 @@
     "emitter_fw": "",
     "notes": [
       "E2 COM5 Analyzer 512-bin history, E3 Emitter idle; radio 50 cm from E2, full volume, 90 deg to the mic; music first then speech; compare 2026-10-14-lowfreq-90cm-noise (defaults, 256 bins, 2000 Hz: speech 3, music 4)"
-    ]
+    ],
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "backfill": {
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "space": "desk"
   },
   "runs": [
     {

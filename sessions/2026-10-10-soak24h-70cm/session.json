@@ -8,7 +8,15 @@
     "notes": [
       "D-AMP: Emitter E3 COM4 (24:dc:c3:49:b7:38) fixed, Analyzer E2 COM3 (24:dc:c3:4b:4c:e8) firmware 246029b; tone 0.3 FS, 3200 Hz; boards untouched for 24 h",
       "Office empty from ~12:35 2026-10-10 (owner leaving); room conditions not recorded at start"
-    ]
+    ],
+    "tone_level": "0.3 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

@@ -9,7 +9,15 @@
       "D-AMP: Emitter E3 COM4 (24:dc:c3:49:b7:38, emitter build with SELFTEST, git 8fd6b6f+uncommitted = be61884 source), Analyzer E2 COM3 (24:dc:c3:4b:4c:e8, 652c9a6); 0.3 FS, 3200 Hz",
       "SELFTEST gate before start: bench sessions/2026-10-11-selftest-soak-gate2, both PASS (E2 48.1 dB, E3 52.1 dB); boards moved slightly before 2026-10-11 (likely fixed the 2026-10-10 contact fault)",
       "runner flags no_detection blocks and runs the Analyzer SELFTEST (31d...)"
-    ]
+    ],
+    "tone_level": "0.3 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

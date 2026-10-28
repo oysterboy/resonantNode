@@ -8,7 +8,15 @@
     "notes": [
       "D-AMP boards: Emitter E3 COM4 (MAC 24:dc:c3:49:b7:38), Analyzer E2 COM3 (MAC 24:dc:c3:4b:4c:e8); tone 0.3 FS, 3200 Hz",
       "Amp check (AC) at session start: E2 20/20 pass 47.7-52.3 dB, E3 20/20 pass 37.1-59.8 dB (low trial = pre-tone noise spike)"
-    ]
+    ],
+    "tone_level": "0.3 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

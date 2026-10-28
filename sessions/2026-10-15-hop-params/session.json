@@ -7,7 +7,15 @@
     "emitter_fw": "",
     "notes": [
       "E2 COM5 Analyzer 512-bin history + band bank, E3 Emitter hop; hop 2800,3300,3800, 15 ms x3; sets: A defaults; B debounce 40/max_gap 60/max_dur 400; C debounce 80/max_gap 100/max_dur 500/coverage 40; D debounce 130/max_gap 130/max_dur 600/coverage 40"
-    ]
+    ],
+    "tone_level": "0.5 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

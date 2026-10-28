@@ -58,9 +58,15 @@ bench/                 (worktree of branch `bench`)
 - **Run file** = `<run-name>.<firmware-git>.log`, the raw serial transcript
   with a three-line `#` header. The firmware hash comes from the board's own
   `BUILD ... git=` boot banner, never typed by hand.
-- **session.json** setup fields: `distance_cm` (required), `orientation`,
-  `emitter_fw`, `notes`. Add fields when a new variable starts to matter,
-  don't bury it in `notes`.
+- **session.json** setup fields: `distance_cm`, `space`, `tone_level`
+  (required for a new session since 2026-10-28), `speaker` (defaults to the
+  stock D-AMP driver), `orientation`, `emitter_fw`, `notes`. Add fields when a
+  new variable starts to matter, don't bury it in `notes`.
+- `setup.backfill` (`{field: source}`) marks a value filled afterwards by
+  `tools/bench/backfill_setup.py` from the session's own name, purpose,
+  notes or boot banners (2026-10-28); the index's `backfilled` column names
+  those fields. `signal` and `freq_hz` in the index come from the SEQ start
+  command.
 
 ## What to commit
 

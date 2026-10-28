@@ -7,7 +7,13 @@
     "emitter_fw": "",
     "notes": [
       "E2 COM5 experimental Analyzer (HISTORY 512, amp medium 1500, b22b035); speaker 50 cm from E2 mic, 90 deg; level matched by band energy to WDR5 (see 2026-10-16-audiolevel-calib); sections in tools/bench/bench_audio.sections.txt; playback started at unix ms 1792139859159"
-    ]
+    ],
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "backfill": {
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "space": "desk"
   },
   "runs": [
     {

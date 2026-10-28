@@ -7,7 +7,15 @@
     "emitter_fw": "",
     "notes": [
       "E2 COM5 Analyzer, E3 COM3 Emitter with PULSES; defaults otherwise; first grid: 2026-10-15-pulses-timing"
-    ]
+    ],
+    "tone_level": "0.5 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

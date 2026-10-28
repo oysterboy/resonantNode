@@ -7,7 +7,15 @@
     "emitter_fw": "8fd6b6f",
     "notes": [
       "Emitter E3 COM4, SELFTEST amp PASS 60.8 dB just before (sessions/2026-10-12-selftest-e3-recheck2); Analyzer E2 COM3 7882627; 0.3 FS 3200 Hz"
-    ]
+    ],
+    "tone_level": "0.3 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

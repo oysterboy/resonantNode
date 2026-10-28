@@ -7,7 +7,15 @@
     "emitter_fw": "0566cc1",
     "notes": [
       "D-AMP boards: Emitter COM6, Analyzer COM10; tone 0.1 FS, 5 ms ramp; TonalPulseScalar only (owner's time)"
-    ]
+    ],
+    "tone_level": "0.1 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

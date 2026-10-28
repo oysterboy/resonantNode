@@ -7,7 +7,15 @@
     "emitter_fw": "",
     "notes": [
       "Analyzer default build (DC blocker 100 Hz x0.588), code bfbe0c8; radio 50 cm from E2, full volume, 90 deg to the mic for speech/music"
-    ]
+    ],
+    "tone_level": "0.5 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

@@ -7,7 +7,15 @@
     "emitter_fw": "",
     "notes": [
       "E2 Analyzer with -D FEATURE_HISTORY_BINS=512 -D SCALAR_AMP_MEDIUM_THRESHOLD=1500.0f -D SCALAR_CONTRAST_MEDIUM_THRESHOLD=30500.0f; E3 Emitter hop 0.5 FS; after hopcand-100cm"
-    ]
+    ],
+    "tone_level": "0.5 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

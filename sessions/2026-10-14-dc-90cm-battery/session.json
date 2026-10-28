@@ -7,7 +7,15 @@
     "emitter_fw": "",
     "notes": [
       "Analyzer default build (DC blocker), code bfbe0c8; silence/speech/music of the battery: 2026-10-14-dc-90cm-noise; window and doors closed, Roomba off"
-    ]
+    ],
+    "tone_level": "0.5 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

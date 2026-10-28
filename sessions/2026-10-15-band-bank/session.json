@@ -7,7 +7,15 @@
     "emitter_fw": "",
     "notes": [
       "E2 COM5 Analyzer 512-bin history + band bank (code after b309e96, uncommitted at run time), E3 COM3 Emitter with hop (0.5 FS); band 2800-3800 Hz = bins 2800/3050/3300/3550/3800 + guards 2550/4050; train params: max_gap 130, max_duration 600, coverage 40, debounce 130"
-    ]
+    ],
+    "tone_level": "0.5 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

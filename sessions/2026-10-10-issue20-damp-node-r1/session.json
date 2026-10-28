@@ -8,7 +8,13 @@
     "notes": [
       "Node E2 COM3 (MAC 24:dc:c3:4b:4c:e8), firmware 60b111f env esp32dev, TonalPulseScalar; E3 COM4 held in reset (EN via RTS) for the 240 s capture, released for the 30 s control (amp-check sketch: 100 ms 3200 Hz chirp every ~0.8 s)",
       "RB log full + RB debug events; script node_check.py"
-    ]
+    ],
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "backfill": {
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "space": "desk"
   },
   "runs": [
     {

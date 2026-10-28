@@ -7,7 +7,15 @@
     "emitter_fw": "",
     "notes": [
       "code bfbe0c8 Analyzer default (DC blocker); boards re-plugged since the earlier 90 cm runs, 3200 Hz raw amplitude differs (see 2026-10-14-up-90cm-rawscan-wide); owner away, quiet room assumed"
-    ]
+    ],
+    "tone_level": "0.5 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

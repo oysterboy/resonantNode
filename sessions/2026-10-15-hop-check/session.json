@@ -7,7 +7,15 @@
     "emitter_fw": "",
     "notes": [
       "E2 COM5 Analyzer (512-bin history), E3 COM3 Emitter with hop (0.5 FS); train 15 ms x3, gap 20, hop=3200,3300,3400; detector target set per run with SEQ freq=; params relaxed (min duration 10, island 0, coverage 0) so a single pulse can register; dt = delay from the emit marker, pulses start at about 0 / 35 / 70 ms"
-    ]
+    ],
+    "tone_level": "0.5 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

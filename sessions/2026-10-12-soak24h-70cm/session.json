@@ -9,7 +9,15 @@
       "D-AMP: Emitter E3 COM4 (24:dc:c3:49:b7:38, emitter build 8fd6b6f+be61884 source, unchanged), Analyzer E2 COM3 (24:dc:c3:4b:4c:e8) firmware 189b24c with the TimeBase fix (#30); 0.3 FS, 3200 Hz",
       "SELFTEST gate: bench sessions/2026-10-12-selftest-soak3-gate both PASS (E2 54.7 dB, E3 60.3 dB). Third attempt; doubles as the real-uptime gate of #30 (detection past 4,295 s Analyzer uptime)",
       "runner soak.py f460680"
-    ]
+    ],
+    "tone_level": "0.3 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

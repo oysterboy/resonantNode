@@ -7,7 +7,15 @@
     "emitter_fw": "965737a",
     "notes": [
       "D-AMP: Emitter E3 COM4 (24:dc:c3:49:b7:38), Analyzer E2 COM3 (24:dc:c3:4b:4c:e8); tone 0.3 FS, 3200 Hz; office empty except owner"
-    ]
+    ],
+    "tone_level": "0.3 FS",
+    "backfill": {
+      "tone_level": "purpose/notes",
+      "speaker": "boot banner board=damp",
+      "space": "all bench sessions to 2026-10-28 ran on the one desk"
+    },
+    "speaker": "stock D-AMP 3 W / 8 ohm",
+    "space": "desk"
   },
   "runs": [
     {

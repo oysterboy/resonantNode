@@ -1143,6 +1143,9 @@ the previous gate open unless the step says it can run in parallel.
    gateway, N4 self-test, N5 signal composer, N6 Behavior snapshot, N7 params described by their configs, N8 command
    table); design input docs/research/node-structure.md. Host gate per item; bench gate after the soak. Not in the
    installation-ready milestone's gate.
+   Host part done 2026-10-28 (N1 95830ae, N2 82740b5, N3 653c08d, N4 fdc6e1b, N5 2def60f, N6 d74f1e6, N7 b929ba7, N8
+   ede0e1a): gate green after each, param paths / order / ranges identical, 125 host tests; esp32dev flash +1.2 KB.
+   Bench gate pending (targets in the pass doc). Left: the replay binds the medium limits itself (A10 note).
 
 11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

@@ -1,7 +1,8 @@
 # Code standards read, 2026-10-28
 
 ```text
-Status:  exploring (2026-10-28)
+Status:  promoted (2026-10-28)
+Became:  step 11j (owner 2026-10-28: line limit 120, go now; issue #73)
 Lab:     none; a code reading at main 2def60f (after the 11i N1-N5 Node
          splits), from a cloud container: grep / awk counts over src/ and
          lib/, no build and no hardware. Every file:line below was read

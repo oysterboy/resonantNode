@@ -77,7 +77,27 @@ private:
     void updateRbBaselineState(unsigned long now);
     bool rbOutputsEnabled() const;
     void pollSerialCommands();
+    // The text dispatch (step 11i N8, ResonantNodeCommands.cpp): kCommands, verb -> handler, first match wins.
     void handleSerialLine(const char* line);
+    struct Command {
+        enum class Match : uint8_t {
+            Word,   // the verb, then the end or a space (text_parse::startsWithWordIgnoreCase)
+            Exact,  // the whole line, any case
+        };
+        const char* verb;
+        Match match;
+        void (Node::*handler)(const char* line);
+    };
+    static const Command kCommands[];
+    void handleOtaCommand(const char* line);
+    void printHelp(const char* line);
+    void handleSelfTestCommand(const char* line);
+    void refuseRbParam(const char* line);
+    void refuseRbBehav(const char* line);
+    void handleRebaseForceCommand(const char* line);
+    void handleRebaseCommand(const char* line);
+    void handleCallCommand(const char* line);
+    void handleSummaryCommand(const char* line);
     void handleLogCommand(const char* line);
     void printRbStatus(const char* line);
     void handleProfileCommand(const char* line);

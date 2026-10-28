@@ -167,6 +167,7 @@ them so); delete the detector/behavior member defaults by holding the config str
 
 ### A7. The Node split is a file split, not a decomposition (medium; NODE-004 says so)
 
+-> done on the host 2026-10-28 (11i N1-N8, docs/refactors/node-split.md): the Node owns parts that hold their own state (NodeCounters, NodeBaseline with its own update(), NetGateway with the tee as a scoped guard and reset by begin(), NodeSelfTest, NodeSignalComposer, NodeParams) and dispatches text through one command table; the bench gate (boot lines, RB STATUS keys, hop trains, SELFTEST, NET round trips, PARAM DUMP) is still open
 -> worked out further in docs/research/node-structure.md (classes, files, the later roadmap's seams), 2026-10-27
 -> open (NODE-004). As described: 35 members plus `SelfTestState` in the header, the baseline machine run by hand in `ResonantNodeCommands.cpp:92-94`, reply / join state in file-scope globals `ResonantNodeNet.cpp:59-70` never reset by `begin()`, `setTee` paired by hand in four places, `makeTonalPulseBehaviorProfile()` still `return BehaviorGateConfig{}`. New on top: the `Boot` state is unreachable (D2.4), 2026-10-26
 
@@ -231,6 +232,7 @@ move the struct bodies out of the header; one classification site fed the verdic
 
 ### A9. The Node re-derives Behavior truth for printing (medium)
 
+-> done on the host 2026-10-28 (11i N1-N8): `BehaviorStatus` (src/behavior/BehaviorStatus.h) filled by `ResonantBehavior::status(now)` and printed by the Node for RB STATUS, the summaries, the BEH / RB emit / rest / verdict lines and RB CALL, `behaviorGateName` reads the snapshot; `ResonantBehavior::setOutputsEnabled(bool)` holds the outputs-off block reason (decisions unchanged, host suite test_behavior_status); the getters stay for the host suites
 -> partly done in step 11f (Behavior::state(); the BehaviorStatus snapshot and setOutputsEnabled stay with A7), 2026-10-26
 
 `behaviorGateName` (`ResonantNodeApp.cpp:236-250`) and `NodeDebug::observeBehaviorGate`
@@ -244,6 +246,7 @@ fills and the Node prints; delete `stateCode()`.
 
 ### A10. The Node writes into inspection-plan internals (medium)
 
+-> done on the host 2026-10-28 (11i N1-N8): each config describes its own params (`param::describeParams` next to ScalarTransientConfig, InspectionLimits / ShapeInspectionConfig, NetworkBand, BehaviorGateConfig, NodeSignalComposer::Values, NodeSwitches; app/ParamBindings.h lists the sites), `NodeParams` owns the registry, the store and the order, and the plan walk is detection's (`inspectionLimitsFromPlan` / `applyInspectionLimits`); PARAM LIST / DUMP order, ids and ranges checked identical on the host. Still open: the replay binds contrast / amp into the plan module itself (Replay.cpp), D1.5
 -> open (`ResonantNodeParams.cpp:62-105`, the two Node floats `ResonantNodeApp.h:266-267`). Related new finding: `shape.minLevel` is a boot-time copy of the release threshold (D1.5), 2026-10-26
 
 `ResonantNodeParams.cpp:147-184`: `moduleForTarget()` walks `_activeDetectionProfile.inspectionPlan.

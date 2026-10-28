@@ -4,7 +4,8 @@
 Status:  exploring (2026-10-27)
 Became:  step 11h (owner 2026-10-27; roadmap-0-steps.md), after 11c and before 11g and 11d; first queued
          as step 12 the same morning
-Lab:     bench/sessions/2026-10-26-soak24-shape-b (the band as shipped, 24 h); E002 (shape over the corpus)
+Lab:     bench/sessions/2026-10-27-step11h-sweep24 and E004 (the sweep, 2026-10-28); 2026-10-26-soak24-shape-b;
+         E002 (shape over the corpus)
 ```
 
 ## Question (owner, 2026-10-27)

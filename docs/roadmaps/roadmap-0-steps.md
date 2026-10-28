@@ -1155,6 +1155,11 @@ the previous gate open unless the step says it can run in parallel.
    history comments to decisions pointers, narration out, a module helper; critique.md archived, a root README.md,
    the dead contrast field; handleUsbLine split with a host test for dispatch. Each item checked against the code
    first (11i landed after the read). Host gate per item; no behaviour change.
+   Progress 2026-10-28 (11j 1): .clang-format (clang-format 18.1.8 from PyPI, 120 columns, 4 spaces, attached
+   braces; include order, comment text and trailing-comment alignment left as written) and .editorconfig (no
+   line-ending rule); tools/ci/clang_format.py --check / --fix over src/, lib/, test/ (fixtures, generated
+   headers and FirmwareOta.* out), a CI job fails on drift; the
+   next commit is the formatting-only reformat (gate green, T2h byte-identical).
 
 11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

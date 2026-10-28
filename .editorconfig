@@ -1,0 +1,19 @@
+# Step 11j: indentation, trailing whitespace and the final newline. Line endings are left alone on purpose (the
+# tree is LF in git; working copies follow core.autocrlf). C/C++ layout is .clang-format's (120 columns).
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab

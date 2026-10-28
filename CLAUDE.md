@@ -328,3 +328,8 @@ Short, imperative subject lines, often prefixed with the affected area
 (`Analyzer:`, `DetectionCleanup:`, `AnalyzerDiag:`) — see `git log
 --oneline` for examples. No enforced footer format beyond what your
 current session's attribution instructions require.
+
+Formatting (step 11j): `.clang-format` (120 columns) with clang-format 18.1.8
+from PyPI (`python -m pip install clang-format==18.1.8`, e.g. into a venv);
+`python tools/ci/clang_format.py --fix` before committing C/C++, CI runs
+`--check` and fails on drift.

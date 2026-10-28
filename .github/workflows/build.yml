@@ -78,3 +78,15 @@ jobs:
       - run: python3 tools/ci/include_direction.py --strict
       # platformio.ini's twin lists: ESP test_ignore vs the native envs' test_filter (review D4.3).
       - run: python3 tools/ci/test_lists.py
+
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Step 11j: .clang-format with the pinned clang-format (the version tools/ci/clang_format.py checks for);
+      # fails on drift over src/, lib/ and test/ (fixtures and generated headers excluded).
+      - run: pip install clang-format==18.1.8
+      - run: python3 tools/ci/clang_format.py --check

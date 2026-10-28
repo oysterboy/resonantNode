@@ -1,0 +1,51 @@
+# Step 11j (docs/research/code-standards-read-2026-10-28.md, 2.2): the tree's existing style written down, at 120
+# columns. clang-format 18.1.8 (PyPI), pinned in tools/ci/clang_format.py; CI fails on drift.
+# Includes keep their order (some depend on it) and comments are not rewrapped (decision comments keep their lines).
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++17
+ColumnLimit: 120
+IndentWidth: 4
+ContinuationIndentWidth: 4
+TabWidth: 4
+UseTab: Never
+LineEnding: DeriveLF
+InsertNewlineAtEOF: true
+AccessModifierOffset: -4
+IndentCaseLabels: true
+IndentPPDirectives: None
+NamespaceIndentation: None
+FixNamespaceComments: false
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+DerivePointerAlignment: false
+SortIncludes: Never
+IncludeBlocks: Preserve
+ReflowComments: false
+BreakStringLiterals: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortLambdasOnASingleLine: All
+AlwaysBreakTemplateDeclarations: Yes
+AlignAfterOpenBracket: Align
+AlignOperands: DontAlign
+AlignTrailingComments:
+  Kind: Leave
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignEscapedNewlines: DontAlign
+BinPackArguments: true
+BinPackParameters: true
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: Never
+ConstructorInitializerIndentWidth: 4
+PenaltyReturnTypeOnItsOwnLine: 1000
+SpaceBeforeParens: ControlStatements
+SpacesBeforeTrailingComments: 2
+MaxEmptyLinesToKeep: 2
+KeepEmptyLinesAtTheStartOfBlocks: true
+EmptyLineBeforeAccessModifier: Leave

@@ -128,6 +128,22 @@ private:
     void pollUsbConsole();
     void pollEmitterSerial();
     void handleUsbLine(const char* line);
+    // The console's handlers, one per group (AnalyzerCommands.cpp; analyzer_commands::groupOf routes). The SEQ and
+    // EMIT ones return false for a sub-command they do not know.
+    struct SeqStartSeen {
+        bool totalTrials = false;
+        bool window = false;
+        bool profile = false;
+    };
+    void printUsbHelp();
+    void handleRawCommand(const char* line);
+    bool handleSeqCommand(const char* line);
+    bool handleSeqOutputSetting(const char* verb, char*& savePtr);
+    bool handleSeqRunCommand(const char* verb, char*& savePtr);
+    void handleSeqStart(const char* verb, char*& savePtr);
+    bool applySeqStartToken(const char* token, RunConfig& request, SeqOutputConfig& outputConfig, SeqStartSeen& seen);
+    bool handleEmitCommand(const char* line);
+    void sendClaimedEmitterCommand(const char* line, const char* name);
     // SELFTEST (NODE-015, AnalyzerSelfTest.cpp): board, mic, amp; blocking.
     void handleSelfTestCommand(const char* line);
     void restoreAfterSelfTest();

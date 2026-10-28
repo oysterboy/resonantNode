@@ -1176,6 +1176,12 @@ the previous gate open unless the step says it can run in parallel.
    README.md (four pointers); AnalyzerOccurrenceObservation.contrast dropped (written 0, read and printed nowhere;
    only the Analyzer's memory lines SIZE AnalyzerReport / SequenceTest shrink, no tool reads them). The contrast
    Strong 300000 stays (item 4: no disabled class in the inspector).
+   Progress 2026-10-28 (11j 6): the Analyzer's handleUsbLine (669 lines) is a switch over
+   analyzer_commands::groupOf (AnalyzerCommandParse.h, pure) into per-group handlers: printUsbHelp,
+   handleRawCommand, handleSeqCommand (handleSeqOutputSetting, handleSeqRunCommand, handleSeqStart with
+   applySeqStartToken), handleEmitCommand (EMIT CHIRP / PULSES share sendClaimedEmitterCommand); every string
+   literal and reply as before. The handlers need the board, so the new host suite test_analyzer_commands (6
+   cases) tests the routing and the shared on/off, band and hop checks, not the handlers.
 
 11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

@@ -63,7 +63,7 @@ void Node::handleSerialLine(const char* line) {
         return;
     }
     if (startsWithTokenIgnoreCase(line, "SELFTEST")) {
-        handleSelfTestCommand(line);
+        _selfTest.handleCommand(line, timebase::nowMs());
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB PROFILE")) {
@@ -95,7 +95,7 @@ void Node::handleSerialLine(const char* line) {
     if (startsWithTokenIgnoreCase(line, "RB rebase force")) {
         // A rebase stops and resets what SELFTEST is waiting on (issue #31
         // R2-13): finish or wait out the self-test first.
-        if (_selfTest.phase != SelfTestState::Phase::Idle) {
+        if (_selfTest.active()) {
             serialOut().println("RB rebase refused busy=selftest");
             return;
         }
@@ -116,7 +116,7 @@ void Node::handleSerialLine(const char* line) {
             serialOut().println(extra);
             return;
         }
-        if (_selfTest.phase != SelfTestState::Phase::Idle) {
+        if (_selfTest.active()) {
             serialOut().println("RB rebase refused busy=selftest");
             return;
         }

@@ -82,7 +82,7 @@ void Node::handleNetCommand(const char* line) {
 }
 
 void Node::pollNet() {
-    if (_netGateway.replyOpen() && _selfTest.phase == SelfTestState::Phase::Idle) {
+    if (_netGateway.replyOpen() && !_selfTest.active()) {
         _netGateway.closeOpenReply();
     }
     _net.service(timebase::nowMs());
@@ -131,7 +131,7 @@ void Node::runRemoteCommand(const NodeNet::Received& received) {
         handleSerialLine(f.text);
     }
     ++_net.stats().commandsRun;
-    if (_selfTest.phase != SelfTestState::Phase::Idle) {
+    if (_selfTest.active()) {
         reply.keepOpen();  // the self-test reports over the next seconds; pollNet() closes it
     }
 }

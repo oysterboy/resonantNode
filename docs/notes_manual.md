@@ -318,10 +318,12 @@ src/output/         OutputRequest.h (the request vocabulary: ChirpPattern, Outpu
 src/audio/, src/hal/  signal chain and I2S input / output
 src/net/            ESP-NOW frames for NET commands
 src/modes/resonant|analyzer|emitter/   per-mode command handling and wiring
-src/modes/resonant/  the Node, split by role: ResonantNodeApp.cpp (boot, loop, pipeline, baseline),
+src/modes/resonant/  the Node, split by role: ResonantNodeApp.cpp (boot, loop, pipeline, SELFTEST glue),
                      ResonantNodeParams.cpp (params, persistence, profile), ResonantNodeCommands.cpp
                      (serial and the command dispatch), ResonantNodeNet.cpp (radio), ResonantNodeStatus.cpp
-                     + ResonantNodeSelfTest.cpp (diagnostics)
+                     (diagnostics); its parts (step 11i): ResonantNodeCounters.h (RB tallies),
+                     ResonantNodeBaseline (quiet-gated rebase), ResonantNodeNetGateway (radio replies),
+                     ResonantNodeSelfTest (SELFTEST phases)
 src/app/            board config, runtime defaults, roster, param ids, NVS store, serial
 lib/ParamRegistry/  the param registry (no src/ includes)
 test/, test/fixtures/   on-device and host suites, replay corpus

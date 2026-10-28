@@ -15,6 +15,7 @@
 #include "../../app/ParamIds.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
+#include "../../selftest/AudioSelfTest.h"
 #include "ResonantNodeInternal.h"
 
 using namespace node_internal;
@@ -321,6 +322,7 @@ void Node::begin() {
     }
     _serialLine.reset();
     _netGateway.begin();
+    _selfTest.begin();
 
     serialOut().print("RB PROFILE name=");
     serialOut().print(profileName());
@@ -343,7 +345,7 @@ void Node::quiesceBehaviorForOutputsOff() {
     if (_soundOutput.busy() || _chirpOutput.isActive()) {
         _soundOutput.stop();
         _lastOwnChirpEndMs = timebase::nowMs();
-        selfTestNoteChirpFinished(timebase::nowMs());
+        _selfTest.noteChirpFinished(timebase::nowMs());
     }
     _behavior.resetState();
 }
@@ -456,6 +458,80 @@ void Node::updateRbBaselineState(unsigned long now) {
             serialOut().println("RB baseline active");
             break;
     }
+}
+
+// --- SELFTEST glue (NodeSelfTest runs the phases; step 11i N4) ---
+
+void Node::selfTestRequestChirp(void* ctx) {
+    static_cast<Node*>(ctx)->_behavior.requestTestChirp();
+}
+
+void Node::selfTestCancelChirp(void* ctx) {
+    static_cast<Node*>(ctx)->_behavior.cancelTestChirp();
+}
+
+void Node::updateSelfTest(unsigned long now) {
+    NodeSelfTest::Inputs in;
+    in.outputsEnabled = rbOutputsEnabled();
+    in.chirpActive = _chirpOutput.isActive();
+    in.lastOwnChirpEndMs = _lastOwnChirpEndMs;
+    in.toneHz = _chirpOutput.toneHz();
+    in.suppressTailMs = _behavior.config().detectionSuppressTailMsOwnEmit;
+    if (_selfTest.update(now, in) == NodeSelfTest::Request::RunHardware) {
+        runSelfTestHardware(now);
+    }
+}
+
+// The blocking checks on the Node's audio source and tone output; NodeSelfTest
+// prints quiet_boot from the baseline machine's results and counts the tally.
+void Node::runSelfTestHardware(unsigned long now) {
+    // Nothing of ours may sound while the mic floor is measured.
+    if (_soundOutput.busy() || _chirpOutput.isActive()) {
+        _soundOutput.stop();
+        _behavior.notifyChirpFinished(now);
+        _selfTest.noteChirpFinished(now);
+    }
+
+    selftest::Tally& tally = _selfTest.tally();
+    const selftest::Result mic = selftest::runMicCheck(serialOut(), tally, _i2sSource);
+    selftest::Result amp = selftest::Result::Skip;
+    if (mic != selftest::Result::Pass) {
+        selftest::skip(serialOut(), tally, "quiet_boot", "mic_failed");
+        selftest::skip(serialOut(), tally, "amp", "mic_failed");
+    } else {
+        _selfTest.printQuietBoot(_audioSignal.baseline());
+#if defined(BOARD_PIEZO)
+        const char* path = "piezo";
+#else
+        const char* path = "i2s";
+#endif
+        amp = selftest::runAmpCheck(serialOut(), tally, _i2sSource, _chirpOutput.toneOutput(),
+                                    _chirpOutput.toneHz(), path);
+    }
+    restoreAfterSelfTestHardware();
+    _selfTest.hardwareDone(mic, amp, timebase::nowMs());
+}
+
+void Node::restoreAfterSelfTestHardware() {
+    // The tone is off; put the output device back on the chirp frequency.
+    _soundOutput.stop();
+    // Several seconds of blocking checks: a HeardPattern from before them
+    // must not fire after Settle (issue #31 R2-3). Config is kept.
+    _behavior.resetState();
+    _chirpOutput.setToneHz(_chirpOutput.toneHz());
+
+    // The checks read several seconds of audio that never reached the
+    // detection chain: restart it on fresh audio (same reset as a rebase,
+    // without touching the AudioSignal baseline or the Behavior config), plus
+    // a fresh band stream on the chirp tone the checks may have moved.
+    resetDetectionState();
+    _freqBandStream.resetState();
+    _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
+    _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
+
+    _baseline.resettle(timebase::nowMs() + NodeSelfTest::kSettleAfterHardwareMs);
+    serialOut().print("SELFTEST_RESTORE detection=reset baseline=");
+    serialOut().println(_baseline.stateName());
 }
 
 // --- band and hop composition ---
@@ -652,7 +728,7 @@ void Node::update() {
 
     _led.update(now);
 
-    if (_selfTest.phase != SelfTestState::Phase::Idle) {
+    if (_selfTest.active()) {
         updateSelfTest(timebase::nowMs());
     }
 
@@ -740,7 +816,7 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
     }
     _behavior.notifyChirpStarted(now, emitSpanMs);
     ++_counters.chirpStarted;
-    selfTestNoteChirpStarted(now, sourceName);
+    _selfTest.noteChirpStarted(now, sourceName);
 }
 
 // The output tick, the idle call's second half (the train after the
@@ -757,7 +833,7 @@ void Node::updateEmissions(unsigned long now) {
         const unsigned long finishedMs = _soundOutput.finishedAtMs();
         _lastOwnChirpEndMs = finishedMs;
         _behavior.notifyChirpFinished(finishedMs);
-        selfTestNoteChirpFinished(now);
+        _selfTest.noteChirpFinished(now);
     }
 }
 
@@ -789,8 +865,8 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         if (verdict.accepted) {
             _led.flash(now, 1);
         }
-        if (_selfTest.phase != SelfTestState::Phase::Idle) {
-            selfTestObserveVerdict(verdict, now);
+        if (_selfTest.active()) {
+            _selfTest.observeVerdict(verdict, now, _behavior.config().detectionSuppressTailMsOwnEmit);
         }
 
         if (rbShouldLogDetail()) {

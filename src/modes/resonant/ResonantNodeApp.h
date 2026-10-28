@@ -24,11 +24,11 @@
 #include <ParamRegistry.h>
 #include "../../app/ParamIds.h"
 #include "../../app/NvsParamStore.h"
-#include "../../selftest/SelfTestReport.h"
 #include "ResonantNodeLed.h"
 #include "ResonantNodeCounters.h"
 #include "ResonantNodeBaseline.h"
 #include "ResonantNodeNetGateway.h"
+#include "ResonantNodeSelfTest.h"
 
 /*
 Node
@@ -96,66 +96,15 @@ private:
     void printRbSignalSummary() const;
     void printRbBehaviorSummary() const;
 
-    // SELFTEST (NODE-015, ResonantNodeSelfTest.cpp). The hardware checks
-    // block; the runtime smoke checks run as phases of the normal loop and
-    // only watch its public outputs (verdicts popped from DetectionRuntime,
-    // chirp start/finish), never detector internals.
-    struct SelfTestState {
-        enum class Phase : uint8_t {
-            Idle,
-            QuietBoot,
-            Hardware,
-            Settle,
-            OwnChirp,
-            OwnChirpTail,
-            External,
-            ExternalTail,
-        };
-        static constexpr uint8_t kWindows = 8;
-
-        Phase phase = Phase::Idle;
-        selftest::Command command;
-        selftest::Tally tally;
-        unsigned long phaseStartMs = 0;
-        unsigned long deadlineMs = 0;
-        uint8_t chirpsRequested = 0;
-        uint8_t chirpsStarted = 0;
-        uint8_t chirpsFinished = 0;
-        bool waitingForChirp = false;
-        bool selfTestChirpSounding = false;
-        // Hardware results; checks that need a working mic / amp SKIP on a
-        // failure instead of passing vacuously.
-        selftest::Result micResult = selftest::Result::Skip;
-        selftest::Result ampResult = selftest::Result::Skip;
-        unsigned long nextChirpAtMs = 0;
-        // Own chirps (any source) seen while a SELFTEST runs: start / finish
-        // times (0 = still sounding), a small ring.
-        unsigned long chirpStartMs[kWindows] = {};
-        unsigned long chirpEndMs[kWindows] = {};
-        uint8_t windowNext = 0;
-        uint8_t windowCount = 0;
-        unsigned long ownVerdicts = 0;
-        unsigned long ownValid = 0;
-        unsigned long otherVerdicts = 0;
-        unsigned long otherValid = 0;
-        unsigned long firstOtherValidMs = 0;
-        unsigned long responses = 0;
-    };
-
-    void handleSelfTestCommand(const char* line);
+    // SELFTEST (NODE-015): NodeSelfTest (ResonantNodeSelfTest.h/.cpp) runs the
+    // command and its phases; the Node hands it verdicts, chirp start / finish
+    // and per-tick inputs, and runs the blocking hardware checks when asked
+    // (they need the audio source and the tone output).
     void updateSelfTest(unsigned long now);
     void runSelfTestHardware(unsigned long now);
     void restoreAfterSelfTestHardware();
-    void printSelfTestQuietBoot();
-    void startSelfTestChirps(SelfTestState::Phase phase, unsigned long now);
-    void driveSelfTestChirps(unsigned long now);
-    void finishSelfTestOwnChirp(bool timedOut);
-    void finishSelfTestExternal(unsigned long now);
-    void finishSelfTest();
-    bool selfTestVerdictIsOwn(unsigned long occurrenceStartMs) const;
-    void selfTestObserveVerdict(const OccurrenceVerdict& verdict, unsigned long now);
-    void selfTestNoteChirpStarted(unsigned long now, const char* sourceName);
-    void selfTestNoteChirpFinished(unsigned long now);
+    static void selfTestRequestChirp(void* ctx);
+    static void selfTestCancelChirp(void* ctx);
 
     // Network band and the node's hop signal (BEH-005 / OUT-005 / DET-013).
     void registerOutputParams();
@@ -254,5 +203,6 @@ private:
     // The quiet-gated rebase machine, its timers and results (step 11i N2).
     NodeBaseline _baseline;
 
-    SelfTestState _selfTest;
+    // SELFTEST and its phases (step 11i N4); asks Behavior for test chirps through the callbacks.
+    NodeSelfTest _selfTest{_baseline, NodeSelfTest::Chirps{this, &Node::selfTestRequestChirp, &Node::selfTestCancelChirp}};
 };

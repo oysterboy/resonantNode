@@ -186,18 +186,24 @@ AnalyzerModeApp.h     25 members   78 methods
 1. `.clang-format` (4 spaces, 100 or 120 columns, current brace style) and
    `.editorconfig`; one formatting-only commit; a CI step that fails on
    drift. This closes 2.2 and keeps B5's indentation finding closed.
+   -> done 2026-10-28 (11j 1): c907048 (config, CI job, clang-format 18.1.8), 943913e (the reformat, 98 files).
 2. Delete the two helper copies (2.3, first item) and give the four poll
    loops one routine next to `LineReader`.
+   -> done 2026-10-28 (11j 2): 2404dc2 + 9ff8fb5 (AnalyzerText.h deleted; serial_line::pollLines).
 3. `setDecision()` in `ResonantBehavior`; `resetState` calls its own
    helpers in `ScalarTransientDetector`.
+   -> done 2026-10-28 (11j 3): 070f643.
 4. Move the inline decision history out of `DetectionProfile.h` to
    `docs/decisions/` pointers, delete the narration comments and the two
    commented-out lines, add the module helper.
+   -> done 2026-10-28 (11j 4): 7984937 (magnitudeModule / binShapeModule; values identical).
 5. Archive `critique.md`; add `README.md`; drop the dead `contrast`
    field with DET-018.
+   -> done 2026-10-28 (11j 5): b2a8e88; the contrast Strong 300000 stays (no disabled class in the inspector).
 6. `handleUsbLine` into per-group handlers (B5 / B6 direction) with a
    host test for dispatch. Biggest item, last, because 1-5 make it
    smaller and safer.
+   -> done 2026-10-28 (11j 6): 6514fe3; the host test covers routing and token checks (handlers need the board).
 
 ## Open questions
 

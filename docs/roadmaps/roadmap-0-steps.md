@@ -1162,7 +1162,8 @@ the previous gate open unless the step says it can run in parallel.
    (943913e): gate green, T2h byte-identical.
    Progress 2026-10-28 (11j 2): the case-insensitive helpers live only in app/TextParse.h (AnalyzerText.h deleted,
    node_internal's and the Emitter's forwarders gone; call sites use text_parse:: by using-declarations); the four
-   serial poll loops (Emitter x2, Node, Analyzer) are serial_line::pollLines next to LineReader, same replies.
+   serial poll loops (Emitter x2, Node, Analyzer) are serial_line::pollLines next to LineReader, same replies
+   (2404dc2 carried only the deletion by a staging slip, 9ff8fb5 the rest; gate green on the pair).
    Progress 2026-10-28 (11j 3): ResonantBehavior::setDecision sets the decision / block-reason pair (15 sites; a
    go-ahead clears the reason), decisions unchanged; ScalarTransientDetector::resetState calls the summary clears
    its reset helpers use, with one report clear (the printed sourceReportGeneration steps once, as before).

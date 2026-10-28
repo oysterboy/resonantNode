@@ -1,4 +1,5 @@
 #include "AnalyzerModeApp.h"
+#include "../../app/FirmwareOta.h"
 #include "../../detection/analyzer/AnalyzerText.h"
 
 #include <Arduino.h>
@@ -124,6 +125,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
 
     if (startsWithTokenIgnoreCase(line, "SELFTEST")) {
         handleSelfTestCommand(line);
+        return;
+    }
+
+    if (startsWithTokenIgnoreCase(line, "OTA")) {
+        ota::runCommand(line, serialOut());  // firmware over WiFi (step 11d); reboots on success
         return;
     }
 

@@ -2,6 +2,7 @@
 // dispatch every transport feeds (serial here, the radio in ResonantNodeNet.cpp, VEKTOR
 // later; a CommandRouter class is NODE-005). Moved verbatim from ResonantNodeApp.cpp.
 #include "ResonantNodeApp.h"
+#include "../../app/FirmwareOta.h"
 #include <Arduino.h>
 #include <string.h>
 #include <ParamRegistry.h>
@@ -30,6 +31,16 @@ void Node::pollSerialCommands() {
 void Node::handleSerialLine(const char* line) {
     if (startsWithTokenIgnoreCase(line, "NET")) {
         handleNetCommand(line);
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "OTA")) {
+        // Firmware over WiFi (step 11d): silence, pull, reboot; on failure the old image runs on and the radio goes
+        // back to its channel.
+        _soundOutput.stop();
+        ota::runCommand(line, serialOut());
+        if (_radioEnabled) {
+            _net.restoreChannel();
+        }
         return;
     }
     if (equalsIgnoreCase(line, "RB help")) {

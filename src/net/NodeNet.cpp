@@ -84,6 +84,13 @@ bool NodeNet::begin() {
     return true;
 }
 
+void NodeNet::restoreChannel() {
+    WiFi.disconnect();
+    esp_wifi_set_promiscuous(true);
+    esp_wifi_set_channel(NET_CHANNEL, WIFI_SECOND_CHAN_NONE);
+    esp_wifi_set_promiscuous(false);
+}
+
 bool NodeNet::ensurePeer(const uint8_t mac[6]) {
     if (esp_now_is_peer_exist(mac)) {
         return true;

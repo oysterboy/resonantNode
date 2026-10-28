@@ -1,4 +1,5 @@
 #include "ResonantNodeApp.h"
+#include "../../app/FirmwareOta.h"
 #include <Arduino.h>
 #include <string.h>
 #include <new>
@@ -614,6 +615,7 @@ void Node::configureI2SParameters() {
 
 void Node::update() {
     const unsigned long now = timebase::nowMs();
+    ota::confirmRunningImage(now, serialOut());
     const bool selfChirpSuppressed = _behavior.behaviorSuppressed(now);
 
     pollSerialCommands();

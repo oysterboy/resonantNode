@@ -1,4 +1,5 @@
 #include "AnalyzerModeApp.h"
+#include "../../app/FirmwareOta.h"
 
 #include <Arduino.h>
 #include <esp_system.h>
@@ -626,6 +627,7 @@ AnalyzerApp::SeqOutputWhen AnalyzerApp::sequenceOutputWhenFromToken(const char* 
 // -----------------------------------------------------------------------------
 
 void AnalyzerApp::update() {
+    ota::confirmRunningImage(timebase::nowMs(), serialOut());
     const uint32_t nowUs = timebase::nowUs();
     if (_loopLastUs != 0) {
         const uint32_t loopUs = nowUs - _loopLastUs;

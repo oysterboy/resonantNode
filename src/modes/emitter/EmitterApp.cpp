@@ -1,4 +1,5 @@
 #include "EmitterApp.h"
+#include "../../app/FirmwareOta.h"
 #include "../../app/EmitterLimits.h"
 
 #include <Arduino.h>
@@ -84,6 +85,7 @@ void EmitterApp::begin() {
 }
 
 void EmitterApp::update() {
+    ota::confirmRunningImage(timebase::nowMs(), serialOut());
     pollControlSerial();
     pollUsbSerial();
     _chirpOutput.update();
@@ -138,6 +140,8 @@ void EmitterApp::pollUsbSerial() {
         const char* line = _usbLine.line();
         if (strncmp(line, "SELFTEST", 8) == 0 || strncmp(line, "selftest", 8) == 0) {
             handleSelfTestCommand(line);
+        } else if (strncmp(line, "OTA", 3) == 0 || strncmp(line, "ota", 3) == 0) {
+            ota::runCommand(line, serialOut());  // firmware over WiFi (step 11d); reboots on success
         } else if (strncmp(line, "EMIT ", 5) == 0) {
             handleLine(text_parse::rest(line, "EMIT"));
         }

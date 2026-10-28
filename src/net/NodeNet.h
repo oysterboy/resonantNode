@@ -51,6 +51,8 @@ public:
     };
 
     bool begin();
+    // Back on NET_CHANNEL after WiFi joined an access point (a failed OTA firmware update, step 11d).
+    void restoreChannel();
     bool started() const { return _started; }
 
     // Queues a command line to `target` ("*" or a node name), kCommandRepeats

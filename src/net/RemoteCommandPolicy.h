@@ -23,7 +23,7 @@ inline bool remoteCommandAllowed(const char* text) {
     if (text == nullptr) {
         return false;
     }
-    if (startsWithWord(text, "PARAM") || startsWithWord(text, "SELFTEST")) {
+    if (startsWithWord(text, "PARAM") || startsWithWord(text, "SELFTEST") || startsWithWord(text, "OTA")) {
         return true;
     }
     if (strncasecmp(text, "RB ", 3) == 0) {

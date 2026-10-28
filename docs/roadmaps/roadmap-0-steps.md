@@ -53,6 +53,8 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
 11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
+Status update 2026-10-28, later: 11h done (band stays), 11g done (bench gates passed). Next: 11d (OTA firmware,
+needs the owner's WiFi credentials), the last item of the installation-ready milestone.
 Status update 2026-10-28: 11h's sweep accepted (19.1 h, E004). Next: hits under noise, then flash and 11g's
 bench gates (B2 done, C A/B, D smoke), then the band decision and 11d.
 Status update 2026-10-27, later: 11c done (soak accepted at 23.45 h). Next: 11h's checks, then its 24 h run.
@@ -1212,7 +1214,7 @@ the previous gate open unless the step says it can run in parallel.
    76/120, the shipped band 120/120; the band stays (decisions/2026-10-28-band-stays-after-the-sweep.md). The low-end
    level check dropped with the low end.
 
-11g. [RUNNING 2026-10-26, bench part after 11h] Review Part D, the rest. (issue #67)
+11g. [DONE 2026-10-28] Review Part D, the rest. (issue #67, closed)
    Owner 2026-10-26: sequence the review's remaining Part D findings
    (docs/research/architecture-readability-review-2026-10-25.md, Part D; D1.1, D1.3, D1.7, D4.1, D4.2 done in 5fcd3fc
    before the 11c restart). Four batches; A and the host part of B run while 11c's soak holds the boards (no flash
@@ -1230,7 +1232,7 @@ the previous gate open unless the step says it can run in parallel.
           smoke after the soak.
    C. Analyzer, with A8's TrialState split (its own pass doc): D1.4 (SEQ start during a run, SEQ STOP leaves a start
       armed, SEQ STATUS reads two sources), D2.6 (write-only fields), D2.8 (presentation out of detection/).
-      Gate: an Analyzer A/B on the bench. Pass doc: docs/refactors/analyzer-run-trial-split.md (opened 2026-10-27).
+      Gate: an Analyzer A/B on the bench. Pass doc: docs/refactors/archive/analyzer-run-trial-split.md (opened 2026-10-27).
    D. Node, with A7's next cut: D2.4 the boot baseline runs (decisions/2026-10-26-node-boot-warmup-runs.md), D2.5
       RB debug dropped (decisions/2026-10-26-drop-rb-debug.md), D2.9 Behavior's busy mirror, D2.10 one line bound,
       D1.8 SELFTEST value parsing. Gate: Node smoke and SELFTEST on the bench, boot timing recorded.
@@ -1243,6 +1245,12 @@ the previous gate open unless the step says it can run in parallel.
    2026-10-27: B2's bench smoke passed (bench/sessions/2026-10-27-step11h-checks). D done on the host (boot warmup
    runs, RB debug dropped, outputBusy from the state, one line bound, SELFTEST values strict); its bench gate
    (Node smoke, SELFTEST, boot timing) after 11h. A7's next Node cut not in it.
+   Done 2026-10-28 (bench/sessions/2026-10-28-step11g-ab, all five on 184c72c): C's Analyzer A/B identical but for
+   the pruned keys and the designed edge cases (start during a run refused, start + STOP does not start); D's Node:
+   boot warmup 2 s then rebase, active 4.1 s after reset, 10/10 hop trains answered, SELFTEST PASS, a bad SELFTEST
+   value prints the help. Pass doc archived: docs/refactors/archive/analyzer-run-trial-split.md. Left for later:
+   A7's next Node cut (docs/research/node-structure.md), D1.9's small ones not touched by a batch, D4.3's ESP-only
+   tests.
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
    PAR-010/011 done early as 10d, OUT-002/003 pulled ahead as 10f; OUT-004 and DET-015 come after 10c; step 9's Phases 5d and 6 wait here

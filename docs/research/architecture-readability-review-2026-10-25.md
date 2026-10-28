@@ -778,7 +778,7 @@ string before it was written down.
    delivers.
    -> re-checked 2026-10-27 at HEAD: `bestPending*` and `duplicateFirst/LastDtMs` already gone; the current list,
    with what the bench tools read and which printed keys were constant over every committed run, is the "Output
-   audit" section of `docs/refactors/analyzer-run-trial-split.md` (11g batch C, items C2 / C3 / C5).
+   audit" section of `docs/refactors/archive/analyzer-run-trial-split.md` (11g batch C, items C2 / C3 / C5).
    -> done 2026-10-27 (11g C3): `duplicatePattern* / duplicateOriginWindow / duplicateReason`, `emitSeen /
    emitTrialId / emitDoneDtMs`, `handleSequencePending`'s packet parameter and both `dtFromTriggerMs`,
    `windowStartOffsetMs` (the header prints a literal 0), `_detectorSelection`, the packet's `matched / confidence /

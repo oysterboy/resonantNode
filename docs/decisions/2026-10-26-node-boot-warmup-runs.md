@@ -1,6 +1,7 @@
 # The Node's boot baseline runs: mic warmup first, then the quiet gate
 
-Status: decided (owner 2026-10-26); implemented on the host 2026-10-27 (step 11g D); bench check with batch D's gate.
+Status: decided (owner 2026-10-26); implemented 2026-10-27, bench-checked 2026-10-28 (step 11g D; bench/sessions/2026-10-28-step11g-ab: warmup
+2 s, rebase ok, active 4.1 s after reset).
 Date: 2026-10-26.
 
 ## Decision

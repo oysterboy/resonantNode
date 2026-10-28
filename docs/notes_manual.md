@@ -189,7 +189,7 @@ SEQ_SUMMARY, and which output is neutral tooling rather than analyzer truth): `d
 5.9. That section defines the line classes; the exact fields are whatever the current firmware prints.
 Since 11g C3b (2026-10-27) the bare `SEQ_SOURCE` line (a subset of SEQ_SOURCE_CORE) and `SEQ_TIMING`
 (SEQ DIAG on) are gone, and keys that were constant over every committed bench run and read by no tool
-left the lines (the list: `docs/refactors/analyzer-run-trial-split.md`, Progress, C3b).
+left the lines (the list: `docs/refactors/archive/analyzer-run-trial-split.md`, Progress, C3b).
 
 ### Sample dump (detector-input curve tooling)
 

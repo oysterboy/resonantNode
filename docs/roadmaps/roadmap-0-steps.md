@@ -53,6 +53,7 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
 11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
+Status update 2026-10-28, night: review leftovers done (442e7dc); 11i opened (Node split, #71).
 Status update 2026-10-28, evening: 11d implemented, its gate blocked on the lab PC's firewall rule until 11-01 (owner away);
 a 96 h soak on 40c92e3 meanwhile.
 Status update 2026-10-28, later: 11h done (band stays), 11g done (bench gates passed). Next: 11d (OTA firmware,
@@ -1135,6 +1136,13 @@ the previous gate open unless the step says it can run in parallel.
    hop 710 / 710, chirps 0 / 1,400 (shape; 3200 by duration while the room's null was in), 1,378 chains all ended,
    0 noise-started of 14,671 answers, 0 resets, no drops after boot. E5 <- E1 drifts -17 % (E4 stands between
    them); no sign of the bells. Next: 11h.
+
+11i. [RUNNING 2026-10-28] Node split: review A7, with A9 and A10. (issue #71)
+   Owner 2026-10-28: "leftovers, then node split", while 11d waits for the lab PC's firewall rule (owner back 11-01)
+   and a 96 h soak holds the boards. Pass doc: docs/refactors/node-split.md (N1 counters, N2 baseline, N3 net
+   gateway, N4 self-test, N5 signal composer, N6 Behavior snapshot, N7 params described by their configs, N8 command
+   table); design input docs/research/node-structure.md. Host gate per item; bench gate after the soak. Not in the
+   installation-ready milestone's gate.
 
 11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

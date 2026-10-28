@@ -53,6 +53,8 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
 11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
+Status update 2026-10-28, later still: 11j done (c907048..51d88d6; host only, no behaviour change; its board check rides
+with 11i's on Sunday's OTA build).
 Status update 2026-10-28, late: 11i host part done; 11j opened (code standards pass, line limit 120).
 Status update 2026-10-28, night: review leftovers done (442e7dc); 11i opened (Node split, #71).
 Status update 2026-10-28, evening: 11d implemented, its gate blocked on the lab PC's firewall rule until 11-01 (owner away);
@@ -1148,7 +1150,7 @@ the previous gate open unless the step says it can run in parallel.
    ede0e1a): gate green after each, param paths / order / ranges identical, 125 host tests; esp32dev flash +1.2 KB.
    Bench gate pending (targets in the pass doc). Left: the replay binds the medium limits itself (A10 note).
 
-11j. [RUNNING 2026-10-28] Code standards pass. (issue #73)
+11j. [DONE 2026-10-28] Code standards pass. (issue #73, closed)
    Owner 2026-10-28 ("120, go now"): items 1-6 of docs/research/code-standards-read-2026-10-28.md, in its order:
    .clang-format / .editorconfig at 120 columns with one formatting-only commit and a CI check; the duplicated text
    helpers and serial poll loops; Behavior's setDecision and the detector's reset helpers; DetectionProfile.h's

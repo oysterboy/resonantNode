@@ -100,9 +100,7 @@ void Node::handleSerialLine(const char* line) {
             return;
         }
         performRbRebase();
-        _rbBaselineState = RBBaselineState::Settle;
-        _rbBaselineSettleUntilMs = timebase::nowMs() + kRbPostRebaseSettleMs;
-        ++_rbForcedRebaseCount;
+        _baseline.noteForcedRebase(timebase::nowMs());
         serialOut().println("RB rebase forced");
         return;
     }

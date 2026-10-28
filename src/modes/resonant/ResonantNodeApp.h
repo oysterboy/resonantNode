@@ -27,6 +27,7 @@
 #include "../../selftest/SelfTestReport.h"
 #include "ResonantNodeLed.h"
 #include "ResonantNodeCounters.h"
+#include "ResonantNodeBaseline.h"
 
 /*
 Node
@@ -56,14 +57,6 @@ public:
     void update();
 
 private:
-    enum class RBBaselineState {
-        Boot,
-        ListenForQuiet,
-        Settle,
-        Active,
-        FailedNoQuiet,
-    };
-
     void configureParameters();
     void configureI2SParameters();
     void registerDetectionParams();
@@ -82,7 +75,6 @@ private:
     void quiesceBehaviorForOutputsOff();
     void updateRbBaselineState(unsigned long now);
     bool rbOutputsEnabled() const;
-    const char* rbBaselineStateName() const;
     void pollSerialCommands();
     void handleSerialLine(const char* line);
     void handleLogCommand(const char* line);
@@ -107,11 +99,6 @@ private:
     // block; the runtime smoke checks run as phases of the normal loop and
     // only watch its public outputs (verdicts popped from DetectionRuntime,
     // chirp start/finish), never detector internals.
-    enum class RbRebaseResult : uint8_t {
-        Pending,
-        Done,
-        NoQuiet,
-    };
     struct SelfTestState {
         enum class Phase : uint8_t {
             Idle,
@@ -168,7 +155,6 @@ private:
     void selfTestObserveVerdict(const OccurrenceVerdict& verdict, unsigned long now);
     void selfTestNoteChirpStarted(unsigned long now, const char* sourceName);
     void selfTestNoteChirpFinished(unsigned long now);
-    void noteRebaseResult(RbRebaseResult result);
 
     // Network band and the node's hop signal (BEH-005 / OUT-005 / DET-013).
     void registerOutputParams();
@@ -263,19 +249,8 @@ private:
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
 
     // Baseline / startup state.
-    RBBaselineState _rbBaselineState = RBBaselineState::Boot;
-    unsigned long _rbBaselineStateStartedMs = 0;
-    unsigned long _rbBaselineQuietSinceMs = 0;
-    unsigned long _rbBaselineLastLogMs = 0;
-    unsigned long _rbBaselineSettleUntilMs = 0;
-    // Outcome of the quiet-gated rebase: the one at boot and the latest one
-    // (a later "RB rebase" repeats it); "RB rebase force" is counted apart.
-    RbRebaseResult _rbBootRebaseResult = RbRebaseResult::Pending;
-    RbRebaseResult _rbLastRebaseResult = RbRebaseResult::Pending;
-    unsigned long _rbLastRebaseAtMs = 0;
-    unsigned long _rbQuietRebaseCount = 0;
-    unsigned long _rbForcedRebaseCount = 0;
-    float _rbLastRebaseSmooth = 0.0f;
+    // The quiet-gated rebase machine, its timers and results (step 11i N2).
+    NodeBaseline _baseline;
 
     SelfTestState _selfTest;
 };

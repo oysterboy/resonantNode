@@ -52,17 +52,6 @@ ResonantNodeStatus.cpp + ResonantNodeSelfTest.cpp; shared helpers in ResonantNod
 
 namespace {
 constexpr int kMaxSamplesPerLoop = 512;
-// Smoothed signal magnitude under which the startup baseline counts as
-// quiet. The D-AMP mic's floor sits at ~230-250 in a quiet room (#20,
-// 2026-10-09), so the piezo-era 20 was never reached there.
-#if defined(BOARD_PIEZO)
-constexpr int kRbStartupQuietThreshold = 20;
-#else
-constexpr int kRbStartupQuietThreshold = 400;
-#endif
-constexpr unsigned long kRbStartupMicWarmupMs = runtime::kDefaultAudioSignalStartupWarmupMs;
-constexpr unsigned long kRbStartupQuietHoldMs = 1000;
-constexpr unsigned long kRbStartupBaselineTimeoutMs = 8000;
 
 
 }
@@ -316,13 +305,10 @@ void Node::begin() {
     _audioSignal.resetStats();
     _audioSource.resetStats();
     _counters = NodeCounters{};
-    // Boot: the mic warmup first (kRbStartupMicWarmupMs, the loop keeps running), then the floor is rebased and
-    // the quiet gate starts (decisions/2026-10-26-node-boot-warmup-runs.md; it had been skipped since begin(false)).
-    _rbBaselineState = RBBaselineState::Boot;
-    _rbBaselineStateStartedMs = timebase::nowMs();
-    _rbBaselineQuietSinceMs = 0;
-    _rbBaselineLastLogMs = 0;
-    _rbBaselineSettleUntilMs = 0;
+    // Boot: the mic warmup first (NodeBaseline::Config::micWarmupMs, the loop keeps running), then the floor is
+    // rebased and the quiet gate starts (decisions/2026-10-26-node-boot-warmup-runs.md; it had been skipped since
+    // begin(false)).
+    _baseline.begin(timebase::nowMs());
     _rbLogMode = RbLogMode::Minimal;
     _rbLastWouldEmitHeardMs = 0;
     _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
@@ -344,7 +330,7 @@ void Node::begin() {
     printBehaviorRuntimeDetails(_behavior);
     serialOut().println();
     serialOut().print("RB startup baseline=");
-    serialOut().println(rbBaselineStateName());
+    serialOut().println(_baseline.stateName());
 }
 
 // Outputs go off: Behavior must not carry a HeardPattern (or a sounding
@@ -363,11 +349,7 @@ void Node::quiesceBehaviorForOutputsOff() {
 
 void Node::startRbQuietBaseline() {
     quiesceBehaviorForOutputsOff();
-    _rbBaselineState = RBBaselineState::ListenForQuiet;
-    _rbBaselineStateStartedMs = timebase::nowMs();
-    _rbBaselineQuietSinceMs = 0;
-    _rbBaselineLastLogMs = 0;
-    _rbBaselineSettleUntilMs = 0;
+    _baseline.startListening(timebase::nowMs());
 }
 
 void Node::resetDetectionState() {
@@ -400,8 +382,7 @@ bool Node::rbOutputsEnabled() const {
     if (_silent) {
         return false;
     }
-    return _rbBaselineState == RBBaselineState::Active
-        || _rbBaselineState == RBBaselineState::FailedNoQuiet;
+    return _baseline.outputsAllowed();
 }
 
 // output.silent changed (PARAM SET, LOAD, RESET, or a stored value at boot):
@@ -419,92 +400,59 @@ void Node::applySilent() {
     serialOut().println(_silent ? 1 : 0);
 }
 
-const char* Node::rbBaselineStateName() const {
-    switch (_rbBaselineState) {
-        case RBBaselineState::Boot:
-            return "BOOT";
-        case RBBaselineState::ListenForQuiet:
-            return "LISTEN_FOR_QUIET";
-        case RBBaselineState::Settle:
-            return "SETTLE";
-        case RBBaselineState::Active:
-            return "ACTIVE";
-        case RBBaselineState::FailedNoQuiet:
-            return "FAILED_NO_QUIET";
-    }
-    return "UNKNOWN";
-}
-
+// The machine (NodeBaseline) says what happened this tick; the Node does the side effects and prints the RB lines.
 void Node::updateRbBaselineState(unsigned long now) {
-    switch (_rbBaselineState) {
-        case RBBaselineState::Boot:
-            if (timing::elapsedSince(now, _rbBaselineStateStartedMs, kRbStartupMicWarmupMs)) {
-                // The warmed-up mic's floor (what begin(true) did with a blocking delay), then the quiet gate.
-                const bool rebased = _audioSignal.rebase();
-                serialOut().print("RB warmup done ms=");
-                serialOut().print(now - _rbBaselineStateStartedMs);
-                serialOut().print(" rebase=");
-                serialOut().print(rebased ? "ok" : "timeout");
-                serialOut().print(" baseline=");
-                serialOut().println(_audioSignal.baseline(), 1);
-                startRbQuietBaseline();
-            } else if (_rbBaselineLastLogMs == 0 || timing::elapsedSince(now, _rbBaselineLastLogMs, 1000UL)) {
-                _rbBaselineLastLogMs = now;
-                serialOut().print("RB warmup waiting ms=");
-                serialOut().print(now - _rbBaselineStateStartedMs);
-                serialOut().print(" of ");
-                serialOut().println(kRbStartupMicWarmupMs);
-            }
+    const NodeBaseline::Tick tick =
+        _baseline.update(now, static_cast<float>(_audioSignal.smoothedSignalMagnitude()));
+    switch (tick.step) {
+        case NodeBaseline::Step::None:
             break;
 
-        case RBBaselineState::ListenForQuiet: {
-            const float smooth = static_cast<float>(_audioSignal.smoothedSignalMagnitude());
-            const bool quietNow = smooth < static_cast<float>(kRbStartupQuietThreshold);
-            if (quietNow) {
-                if (_rbBaselineQuietSinceMs == 0) {
-                    _rbBaselineQuietSinceMs = now;
-                }
-                const unsigned long quietMs = now - _rbBaselineQuietSinceMs;
-                if (quietMs >= kRbStartupQuietHoldMs) {
-                    performRbRebase();
-                    _rbBaselineState = RBBaselineState::Settle;
-                    _rbBaselineSettleUntilMs = now + kRbPostRebaseSettleMs;
-                    _rbLastRebaseSmooth = smooth;
-                    noteRebaseResult(RbRebaseResult::Done);
-                    serialOut().print("RB rebase done quietMs=");
-                    serialOut().print(quietMs);
-                    serialOut().print(" baseline=");
-                    serialOut().print(_audioSignal.baseline(), 1);
-                    serialOut().print(" smooth=");
-                    serialOut().println(_audioSignal.smoothedSignalMagnitude());
-                } else if (_rbBaselineLastLogMs == 0 || timing::elapsedSince(now, _rbBaselineLastLogMs, 1000UL)) {
-                    _rbBaselineLastLogMs = now;
-                    serialOut().print("RB rebase waiting smooth=");
-                    serialOut().print(smooth, 1);
-                    serialOut().print(" quietMs=");
-                    serialOut().println(quietMs);
-                }
-            } else {
-                _rbBaselineQuietSinceMs = 0;
-                if (timing::elapsedSince(now, _rbBaselineStateStartedMs, kRbStartupBaselineTimeoutMs)) {
-                    _rbBaselineState = RBBaselineState::FailedNoQuiet;
-                    _rbLastRebaseSmooth = smooth;
-                    noteRebaseResult(RbRebaseResult::NoQuiet);
-                    serialOut().print("RB rebase skipped reason=no_quiet smooth=");
-                    serialOut().println(smooth, 1);
-                }
-            }
+        case NodeBaseline::Step::WarmupDone: {
+            // The warmed-up mic's floor (what begin(true) did with a blocking delay), then the quiet gate.
+            const bool rebased = _audioSignal.rebase();
+            serialOut().print("RB warmup done ms=");
+            serialOut().print(tick.elapsedMs);
+            serialOut().print(" rebase=");
+            serialOut().print(rebased ? "ok" : "timeout");
+            serialOut().print(" baseline=");
+            serialOut().println(_audioSignal.baseline(), 1);
+            startRbQuietBaseline();
         } break;
 
-        case RBBaselineState::Settle:
-            if (timing::atOrAfter(now, _rbBaselineSettleUntilMs)) {
-                _rbBaselineState = RBBaselineState::Active;
-                serialOut().println("RB baseline active");
-            }
+        case NodeBaseline::Step::WarmupWaiting:
+            serialOut().print("RB warmup waiting ms=");
+            serialOut().print(tick.elapsedMs);
+            serialOut().print(" of ");
+            serialOut().println(_baseline.config().micWarmupMs);
             break;
 
-        case RBBaselineState::Active:
-        case RBBaselineState::FailedNoQuiet:
+        case NodeBaseline::Step::QuietHeld:
+            performRbRebase();
+            _baseline.noteRebaseResult(NodeBaseline::RebaseResult::Done, timebase::nowMs());
+            serialOut().print("RB rebase done quietMs=");
+            serialOut().print(tick.elapsedMs);
+            serialOut().print(" baseline=");
+            serialOut().print(_audioSignal.baseline(), 1);
+            serialOut().print(" smooth=");
+            serialOut().println(_audioSignal.smoothedSignalMagnitude());
+            break;
+
+        case NodeBaseline::Step::RebaseWaiting:
+            serialOut().print("RB rebase waiting smooth=");
+            serialOut().print(tick.smooth, 1);
+            serialOut().print(" quietMs=");
+            serialOut().println(tick.elapsedMs);
+            break;
+
+        case NodeBaseline::Step::NoQuiet:
+            _baseline.noteRebaseResult(NodeBaseline::RebaseResult::NoQuiet, timebase::nowMs());
+            serialOut().print("RB rebase skipped reason=no_quiet smooth=");
+            serialOut().println(tick.smooth, 1);
+            break;
+
+        case NodeBaseline::Step::Activated:
+            serialOut().println("RB baseline active");
             break;
     }
 }

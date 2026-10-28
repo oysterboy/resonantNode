@@ -68,15 +68,6 @@ bool deadlinePassed(unsigned long now, unsigned long deadline) {
 }
 } // namespace
 
-void Node::noteRebaseResult(RbRebaseResult result) {
-    if (_rbBootRebaseResult == RbRebaseResult::Pending) {
-        _rbBootRebaseResult = result;
-    }
-    _rbLastRebaseResult = result;
-    _rbLastRebaseAtMs = timebase::nowMs();
-    ++_rbQuietRebaseCount;
-}
-
 void Node::handleSelfTestCommand(const char* line) {
     const selftest::Command command = selftest::parseCommand(line);
     if (command.kind == selftest::Command::Kind::Help || command.kind == selftest::Command::Kind::Unknown) {
@@ -125,9 +116,9 @@ void Node::updateSelfTest(unsigned long now) {
             return;
 
         case SelfTestState::Phase::QuietBoot: {
-            const bool pending = _rbLastRebaseResult == RbRebaseResult::Pending
-                || _rbBaselineState == RBBaselineState::Boot
-                || _rbBaselineState == RBBaselineState::ListenForQuiet;
+            const bool pending = _baseline.lastResult() == NodeBaseline::RebaseResult::Pending
+                || _baseline.state() == NodeBaseline::State::Boot
+                || _baseline.state() == NodeBaseline::State::ListenForQuiet;
             if (pending && !deadlinePassed(now, st.deadlineMs)) {
                 return;
             }
@@ -207,13 +198,13 @@ void Node::updateSelfTest(unsigned long now) {
 }
 
 void Node::printSelfTestQuietBoot() {
-    const uint8_t last = static_cast<uint8_t>(_rbLastRebaseResult);
+    const uint8_t last = static_cast<uint8_t>(_baseline.lastResult());
     selftest::Result result = selftest::Result::Pass;
     const char* reason = nullptr;
-    if (_rbLastRebaseResult == RbRebaseResult::NoQuiet) {
+    if (_baseline.lastResult() == NodeBaseline::RebaseResult::NoQuiet) {
         result = selftest::Result::Fail;
         reason = "no_quiet";
-    } else if (_rbLastRebaseResult == RbRebaseResult::Pending) {
+    } else if (_baseline.lastResult() == NodeBaseline::RebaseResult::Pending) {
         result = selftest::Result::Fail;
         reason = "timeout";
     }
@@ -221,13 +212,13 @@ void Node::printSelfTestQuietBoot() {
     if (reason != nullptr) {
         selftest::field(serialOut(), "reason", reason);
     }
-    selftest::field(serialOut(), "state", rbBaselineStateName());
-    selftest::field(serialOut(), "boot", rebaseResultName(static_cast<uint8_t>(_rbBootRebaseResult)));
+    selftest::field(serialOut(), "state", _baseline.stateName());
+    selftest::field(serialOut(), "boot", rebaseResultName(static_cast<uint8_t>(_baseline.bootResult())));
     selftest::field(serialOut(), "last", rebaseResultName(last));
-    selftest::field(serialOut(), "last_at_ms", _rbLastRebaseAtMs);
-    selftest::field(serialOut(), "smooth_at_rebase", _rbLastRebaseSmooth, 1);
-    selftest::field(serialOut(), "quiet_rebases", _rbQuietRebaseCount);
-    selftest::field(serialOut(), "forced_rebases", _rbForcedRebaseCount);
+    selftest::field(serialOut(), "last_at_ms", _baseline.lastRebaseAtMs());
+    selftest::field(serialOut(), "smooth_at_rebase", _baseline.lastRebaseSmooth(), 1);
+    selftest::field(serialOut(), "quiet_rebases", _baseline.quietRebaseCount());
+    selftest::field(serialOut(), "forced_rebases", _baseline.forcedRebaseCount());
     selftest::field(serialOut(), "baseline", _audioSignal.baseline(), 1);
     selftest::end(serialOut());
 }
@@ -276,12 +267,9 @@ void Node::restoreAfterSelfTestHardware() {
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
 
-    if (_rbBaselineState == RBBaselineState::Active || _rbBaselineState == RBBaselineState::Settle) {
-        _rbBaselineState = RBBaselineState::Settle;
-        _rbBaselineSettleUntilMs = timebase::nowMs() + kSettleAfterHardwareMs;
-    }
+    _baseline.resettle(timebase::nowMs() + kSettleAfterHardwareMs);
     serialOut().print("SELFTEST_RESTORE detection=reset baseline=");
-    serialOut().println(rbBaselineStateName());
+    serialOut().println(_baseline.stateName());
 }
 
 void Node::startSelfTestChirps(SelfTestState::Phase phase, unsigned long now) {
@@ -379,7 +367,7 @@ void Node::finishSelfTestExternal(unsigned long now) {
     selftest::field(serialOut(), "verdicts", st.otherVerdicts);
     selftest::field(serialOut(), "own_verdicts", st.ownVerdicts);
     selftest::field(serialOut(), "responded", st.responses > 0 ? 1UL : 0UL);
-    selftest::field(serialOut(), "baseline", rbBaselineStateName());
+    selftest::field(serialOut(), "baseline", _baseline.stateName());
     selftest::end(serialOut());
     (void)now;
     finishSelfTest();

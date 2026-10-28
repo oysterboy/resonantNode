@@ -22,9 +22,6 @@ inline bool equalsIgnoreCase(const char* a, const char* b) {
     return text_parse::equalsIgnoreCase(a, b);
 }
 
-// Settle after a forced rebase before outputs come back (core and RB rebase force).
-constexpr unsigned long kRbPostRebaseSettleMs = 500;
-
 }  // namespace node_internal
 
 // Defined in ResonantNodeApp.cpp, used by the profile switch and the profile command.

@@ -327,7 +327,7 @@ void Node::printRbSummary() const {
     printBuildIdentity(serialOut(), "node");
     serialOut().println();
     serialOut().print("RB baseline state=");
-    serialOut().println(rbBaselineStateName());
+    serialOut().println(_baseline.stateName());
     serialOut().print("RB log mode=");
     serialOut().println(rbLogModeName());
 

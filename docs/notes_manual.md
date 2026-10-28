@@ -165,8 +165,9 @@ Operator rules (the firmware does not check these, except where noted):
 
 ### Startup quiet gate
 
-The Node waits for the room to be quiet before it arms: `kRbStartupQuietThreshold` in
-`src/modes/resonant/ResonantNodeApp.cpp`, one value per board (D-AMP and piezo differ).
+The Node waits for the room to be quiet before it arms: `NodeBaseline::Config::quietThreshold` in
+`src/modes/resonant/ResonantNodeBaseline.h`, one value per board (D-AMP and piezo differ); the warmup, hold,
+timeout and settle times sit beside it.
 
 ## Analyzer
 
@@ -291,7 +292,7 @@ radio                             PARAM SET node.radio_enabled
 tone level                        I2S_TONE_AMPLITUDE (build flag / RuntimeDefaults.h)
 chirp frequency                   CHIRP_FREQUENCY_HZ (platformio.ini)
 pins, I2S slots                   BoardConfig.h
-startup quiet threshold           kRbStartupQuietThreshold (ResonantNodeApp.cpp)
+startup quiet threshold           NodeBaseline::Config::quietThreshold (ResonantNodeBaseline.h)
 Analyzer detector knobs           PARAM SET detection.scalar_* (per run, applied at SEQ start)
 host replay overrides             --set detection.<path>=<value> (.pio/build/native-replay/program --help)
 ```

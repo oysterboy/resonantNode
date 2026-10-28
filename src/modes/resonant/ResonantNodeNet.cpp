@@ -1,10 +1,10 @@
 // Node radio transport (step 11a, PAR-013; owner 2026-10-25 split by role): NET commands, the
 // remote command path and its replies. Interim: VEKTOR replaces it
-// (docs/decisions/2026-10-25-vektor-replaces-net.md). Moved verbatim from ResonantNodeApp.cpp.
+// (docs/decisions/2026-10-25-vektor-replaces-net.md). Moved verbatim from ResonantNodeApp.cpp. The reply and join state
+// live in NetGateway (ResonantNodeNetGateway.h, step 11i N3).
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
 #include <string.h>
-#include <new>
 #include "../../app/NodeRoster.h"
 #include <ParamRegistry.h>
 #include "../../app/ParamIds.h"
@@ -17,84 +17,6 @@
 using namespace node_internal;
 
 namespace {
-
-// The reply of one remote command: every line it prints goes back as a reply
-// frame. A line is held until the next one arrives, so the last frame carries
-// the "last" flag.
-// The reply of one remote command is everything it prints, as a byte stream
-// cut into frames: a newline travels as net::kLineEnd, a long line (RB STATUS)
-// runs on into the next frame, and the console's 1 KB flushes of one line join
-// up again. The gateway's LineJoiner prints whole lines.
-struct NetReply {
-    NodeNet* net = nullptr;
-    uint8_t mac[6] = {};
-    uint16_t seq = 0;
-    const char* name = nullptr;
-    uint8_t part = 0;
-    char held[net::kMaxText];
-    size_t heldLen = 0;
-
-    void send(bool last) {
-        net->sendReply(mac, seq, part++, last, name, held, heldLen);
-        heldLen = 0;
-    }
-
-    static void tee(void* ctx, const uint8_t* data, size_t len) {
-        NetReply& r = *static_cast<NetReply*>(ctx);
-        for (size_t i = 0; i < len; ++i) {
-            const char ch = static_cast<char>(data[i]);
-            if (ch == '\r') {
-                continue;
-            }
-            if (r.heldLen == sizeof(r.held)) {
-                r.send(false);
-            }
-            r.held[r.heldLen++] = ch == '\n' ? net::kLineEnd : ch;
-        }
-    }
-};
-
-// A command that runs on after its call returns (SELFTEST: a state machine over
-// many loop passes) keeps its reply open until it is done; pollNet() closes it.
-NetReply gOpenReply;
-bool gOpenReplyActive = false;
-
-// The gateway's reassembly, one per replying node (by name).
-struct NetJoinSlot {
-    char name[net::kTargetLen + 1] = {};
-    uint16_t seq = 0;
-    net::LineJoiner<2560> joiner;
-};
-// On the heap at the first reply (only a gateway needs them; static RAM is full).
-constexpr size_t kJoinSlots = 5;
-NetJoinSlot* gJoin = nullptr;
-
-NetJoinSlot* joinSlotFor(const char* name, uint16_t seq) {
-    if (gJoin == nullptr) {
-        gJoin = new (std::nothrow) NetJoinSlot[kJoinSlots];
-        if (gJoin == nullptr) {
-            return nullptr;
-        }
-    }
-    for (size_t i = 0; i < kJoinSlots; ++i) {
-        NetJoinSlot& s = gJoin[i];
-        if (strcmp(s.name, name) == 0) {
-            if (s.seq != seq) {
-                s.seq = seq;
-                s.joiner.reset();
-            }
-            return &s;
-        }
-    }
-    static size_t next = 0;
-    NetJoinSlot& s = gJoin[next];
-    next = (next + 1) % kJoinSlots;
-    strncpy(s.name, name, net::kTargetLen);
-    s.name[net::kTargetLen] = '\0';
-    s.seq = seq;
-    s.joiner.reset();
-    return &s;
-}
 
 void printMac(const uint8_t mac[6]) {
     static const char* kHex = "0123456789ABCDEF";
@@ -160,10 +82,8 @@ void Node::handleNetCommand(const char* line) {
 }
 
 void Node::pollNet() {
-    if (gOpenReplyActive && _selfTest.phase == SelfTestState::Phase::Idle) {
-        serialOut().setTee(nullptr, nullptr);
-        gOpenReply.send(true);
-        gOpenReplyActive = false;
+    if (_netGateway.replyOpen() && _selfTest.phase == SelfTestState::Phase::Idle) {
+        _netGateway.closeOpenReply();
     }
     _net.service(timebase::nowMs());
     NodeNet::Received received;
@@ -174,29 +94,7 @@ void Node::pollNet() {
     for (int handled = 0; handled < 1 && Serial.availableForWrite() > 4096 && _net.poll(received); ++handled) {
         const net::Frame& f = received.frame;
         if (f.type == net::FrameType::Reply) {
-            NetJoinSlot* slot = joinSlotFor(f.target, f.seq);
-            if (slot == nullptr) {
-                continue;
-            }
-            slot->joiner.feed(f.text, f.textLen, f.last, [&](const char* line, size_t n) {
-                serialOut().print("NET reply from=");
-                serialOut().print(f.target);
-                serialOut().print(" seq=");
-                serialOut().print(f.seq);
-                serialOut().print(" part=");
-                serialOut().print(f.part);
-                serialOut().print(' ');
-                serialOut().write(reinterpret_cast<const uint8_t*>(line), n);
-                serialOut().println();
-            });
-            if (f.last) {
-                serialOut().print("NET reply from=");
-                serialOut().print(f.target);
-                serialOut().print(" seq=");
-                serialOut().print(f.seq);
-                serialOut().print(" done parts=");
-                serialOut().println(static_cast<unsigned>(f.part) + 1U);
-            }
+            _netGateway.handleReplyFrame(f);
             continue;
         }
         if (!net::targetMatches(f.target, _nodeName)) {
@@ -217,19 +115,9 @@ void Node::runRemoteCommand(const NodeNet::Received& received) {
     serialOut().print(" text=");
     serialOut().println(f.text);
 
-    if (gOpenReplyActive) {
-        // A new command ends a reply still open (its output stops here).
-        serialOut().setTee(nullptr, nullptr);
-        gOpenReply.send(true);
-        gOpenReplyActive = false;
-    }
-    NetReply& reply = gOpenReply;
-    reply = NetReply();
-    reply.net = &_net;
-    memcpy(reply.mac, received.mac, 6);
-    reply.seq = f.seq;
-    reply.name = _nodeName;
-    serialOut().setTee(&NetReply::tee, &reply);
+    // Everything printed from here goes back as the reply (a reply still open
+    // is closed first); the scope's end sends the last frame.
+    NetGateway::ReplyScope reply(_netGateway, received.mac, f.seq, _nodeName);
     if (!net::remoteCommandAllowed(f.text)) {
         serialOut().println("NET ERR not_allowed");
     } else if (net::remoteCommandNeedsOneTarget(f.text) && strcmp(f.target, "*") == 0) {
@@ -244,11 +132,8 @@ void Node::runRemoteCommand(const NodeNet::Received& received) {
     }
     ++_net.stats().commandsRun;
     if (_selfTest.phase != SelfTestState::Phase::Idle) {
-        gOpenReplyActive = true;  // the self-test reports over the next seconds
-        return;
+        reply.keepOpen();  // the self-test reports over the next seconds; pollNet() closes it
     }
-    serialOut().setTee(nullptr, nullptr);
-    reply.send(true);
 }
 
 void Node::printNetStatus() {

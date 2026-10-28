@@ -28,6 +28,7 @@
 #include "ResonantNodeLed.h"
 #include "ResonantNodeCounters.h"
 #include "ResonantNodeBaseline.h"
+#include "ResonantNodeNetGateway.h"
 
 /*
 Node
@@ -185,6 +186,7 @@ private:
     // Executes the Node's emissions and keeps their status (OUT-002/003, step 10f).
     SoundOutput _soundOutput{_chirpOutput};
     NodeNet _net;
+    NetGateway _netGateway{_net};  // reply tee and reply reassembly (step 11i N3)
     bool _radioEnabled = true;          // node.radio_enabled, read at boot
     const char* _nodeName = "unknown";  // from the roster (app/NodeRoster.h)
 

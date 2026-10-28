@@ -320,6 +320,7 @@ void Node::begin() {
         serialOut().println("RB silent=1 (output.silent: listening, never sounding)");
     }
     _serialLine.reset();
+    _netGateway.begin();
 
     serialOut().print("RB PROFILE name=");
     serialOut().print(profileName());

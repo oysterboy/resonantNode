@@ -255,7 +255,6 @@ struct AnalyzerOccurrenceObservation {
     long primaryDtMs = -1;
     unsigned long primaryDurationMs = 0;
     float primaryStrength = 0.0f;
-    float contrast = 0.0f;
     float strength = 0.0f;
 
     detection::InspectionTarget moduleTarget = detection::InspectionTarget::None;

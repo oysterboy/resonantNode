@@ -1172,6 +1172,10 @@ the previous gate open unless the step says it can run in parallel.
    narration and the two commented-out minSustainedMs lines gone. Both profiles field-for-field identical (a host
    dump of every field before / after), T2h byte-identical. The contrast Strong 300000 stays: the inspector has no
    disabled class, and adding one would change the printed plan.
+   Progress 2026-10-28 (11j 5): critique.md archived to docs/refactors/archive/ with its Archived line; a root
+   README.md (four pointers); AnalyzerOccurrenceObservation.contrast dropped (written 0, read and printed nowhere;
+   only the Analyzer's memory lines SIZE AnalyzerReport / SequenceTest shrink, no tool reads them). The contrast
+   Strong 300000 stays (item 4: no disabled class in the inspector).
 
 11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

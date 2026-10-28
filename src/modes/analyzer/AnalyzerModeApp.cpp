@@ -984,7 +984,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned l
         report.occurrences.primaryDtMs = selectedTrial.dtMs;
         report.occurrences.primaryDurationMs = selectedTrial.durationMs;
         report.occurrences.primaryStrength = selectedTrial.strength;
-        report.occurrences.contrast = 0.0f;  // was the Freq occurrence's band contrast; 0 for scalar occurrences
         report.occurrences.strength = selectedTrial.strength;
         report.occurrences.mainRejectReason =
             reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
@@ -1012,7 +1011,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned l
             report.occurrences.primarySource = detection::occurrenceSourceName(selectedDetectorReport->detectorId);
             report.occurrences.detectorKind = detection::detectorIdName(selectedDetectorReport->detectorId);
         }
-        report.occurrences.contrast = 0.0f;
         report.occurrences.strength = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
             ? selectedTrial.strength
             : reportPatternStrength;

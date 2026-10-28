@@ -1,5 +1,10 @@
 # ResonantNode — Independent Critique
 
+Archived: 2026-10-28 - an independent code-grounded critique of the firmware written 2026-09-21 (77c0761) at
+the repo root; its headline FrequencyMatch bug left with the detector on 2026-10-22
+(docs/decisions/2026-10-22-remove-frequencymatch.md), its line counts are of that tree, and it is superseded by
+docs/research/architecture-readability-review-2026-10-25.md. Moved here by step 11j item 5; not re-verified.
+
 **Method note:** This critique was written from the actual source under `src/`
 (≈19,000 lines of C++), reasoned about directly, not derived from conformance
 to `docs/specs/myspec.md` or any other in-repo document. Where a doc is cited

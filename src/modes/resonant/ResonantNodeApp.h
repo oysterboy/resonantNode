@@ -26,6 +26,7 @@
 #include "../../app/NvsParamStore.h"
 #include "../../selftest/SelfTestReport.h"
 #include "ResonantNodeLed.h"
+#include "ResonantNodeCounters.h"
 
 /*
 Node
@@ -76,7 +77,6 @@ private:
     void printNetStatus();
     void applySilent();
     void startRbQuietBaseline();
-    void resetRbCounters();
     void resetDetectionState();
     void performRbRebase();
     void quiesceBehaviorForOutputsOff();
@@ -249,15 +249,8 @@ private:
     // 256 like the Analyzer's USB line; a longer line is refused, never run
     // cut (issue #31; app/SerialLine.h). Also the command scratch size.
     serial_line::LineReader<serial_line::kCommandLineMax> _serialLine;
-    unsigned long _rbPendingCount = 0;
-    unsigned long _rbPatternAcceptedCount = 0;
-    unsigned long _rbValidPatternCount = 0;
-    unsigned long _rbChirpStartedCount = 0;
+    NodeCounters _counters;  // RB tallies since boot or rebase (step 11i N1)
     int _rbLevelMaxSinceStatus = 0;  // loudest smoothed level since the last RB STATUS (room notes, 10c)
-    unsigned long _rbOverflowPending = 0;
-    uint64_t _rbStrengthSumScaled = 0; // Strength16 * 100 per verdict; uint32 overflowed after ~1,300 (issue #31)
-    uint64_t _rbValidStrengthSum = 0;  // valid verdicts only, whole Strength16 units: RB STATUS heard.* (10c drift)
-    unsigned long _rbDurationSumMs = 0;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;
     BehaviorGateConfig _activeBehaviorProfile = {};  // the behavior.* params bind into it (step 10 item 4)

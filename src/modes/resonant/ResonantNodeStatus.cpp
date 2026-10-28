@@ -144,7 +144,7 @@ void Node::printRbStatus(const char* line) {
     // Step 8b: verdicts the 4-slot queue dropped (was Analyzer-only), and the
     // loop task's lowest free stack since boot (bytes; getWindow() puts 2 KB
     // on it per inspection module, audit 3.7).
-    // Cumulative since boot or rebase (resetRbCounters): the mean over a span is
+    // Cumulative since boot or rebase (NodeCounters, reset by assignment): the mean over a span is
     // the difference of two STATUS lines (step 10c, per-board strength drift).
     // The room as the mic hears it (smoothed magnitude, the same value the
     // quiet baseline watches): now, the loudest since the last STATUS, and the
@@ -157,9 +157,9 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(" audio.baseline=");
     serialOut().print(_audioSignal.baseline(), 1);
     serialOut().print(" heard.valid=");
-    serialOut().print(_rbValidPatternCount);
+    serialOut().print(_counters.validPatterns);
     serialOut().print(" heard.strength_sum=");
-    serialOut().print(static_cast<unsigned long long>(_rbValidStrengthSum));
+    serialOut().print(static_cast<unsigned long long>(_counters.validStrengthSum));
     // The radio's cost (step 11a): frames, and the heap it took.
     serialOut().print(" net.started=");
     serialOut().print(_net.started() ? 1 : 0);
@@ -303,20 +303,20 @@ void Node::printInspectionPlanCheck() {
 }
 
 void Node::printRbSummary() const {
-    const float avgStrength = _rbPendingCount > 0 ? (static_cast<float>(_rbStrengthSumScaled) / 100.0f) / static_cast<float>(_rbPendingCount) : 0.0f;
-    const float avgDuration = _rbPendingCount > 0 ? static_cast<float>(_rbDurationSumMs) / static_cast<float>(_rbPendingCount) : 0.0f;
+    const float avgStrength = _counters.pending > 0 ? (static_cast<float>(_counters.strengthSumScaled) / 100.0f) / static_cast<float>(_counters.pending) : 0.0f;
+    const float avgDuration = _counters.pending > 0 ? static_cast<float>(_counters.durationSumMs) / static_cast<float>(_counters.pending) : 0.0f;
     const AudioSignalStats& stats = _audioSignal.stats();
 
     serialOut().print("RB summary: pending=");
-    serialOut().print(_rbPendingCount);
+    serialOut().print(_counters.pending);
     serialOut().print(" accepted=");
-    serialOut().print(_rbPatternAcceptedCount);
+    serialOut().print(_counters.patternAccepted);
     serialOut().print(" validPatterns=");
-    serialOut().print(_rbValidPatternCount);
+    serialOut().print(_counters.validPatterns);
     serialOut().print(" chirpStarted=");
-    serialOut().print(_rbChirpStartedCount);
+    serialOut().print(_counters.chirpStarted);
     serialOut().print(" overflowPending=");
-    serialOut().print(_rbOverflowPending);
+    serialOut().print(_counters.overflowPending);
     serialOut().print(" avg_strength=");
     serialOut().print(avgStrength, 1);
     serialOut().print(" avg_duration=");

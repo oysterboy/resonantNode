@@ -61,3 +61,4 @@ the NET wire format; FirmwareOta; printed line formats.
 ## Progress
 
 - 2026-10-28: opened.
+- 2026-10-28, N1 done: the eight RB tallies (`_rbPendingCount` ... `_rbDurationSumMs`, `resetRbCounters`) moved into `NodeCounters` (new src/modes/resonant/ResonantNodeCounters.h, 40 lines: fields plus `noteVerdict()`), reset by assignment in `begin()` and `performRbRebase()`; `_rbLevelMaxSinceStatus` stays a Node member (reset by RB STATUS, not by a rebase). Host gate green; esp32dev RAM 97080 -> 97088 B, flash 929369 -> 929297 B.

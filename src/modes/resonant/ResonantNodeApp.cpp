@@ -315,7 +315,7 @@ void Node::begin() {
     resetDetectionState();
     _audioSignal.resetStats();
     _audioSource.resetStats();
-    resetRbCounters();
+    _counters = NodeCounters{};
     // Boot: the mic warmup first (kRbStartupMicWarmupMs, the loop keeps running), then the floor is rebased and
     // the quiet gate starts (decisions/2026-10-26-node-boot-warmup-runs.md; it had been skipped since begin(false)).
     _rbBaselineState = RBBaselineState::Boot;
@@ -370,17 +370,6 @@ void Node::startRbQuietBaseline() {
     _rbBaselineSettleUntilMs = 0;
 }
 
-void Node::resetRbCounters() {
-    _rbPendingCount = 0;
-    _rbPatternAcceptedCount = 0;
-    _rbValidPatternCount = 0;
-    _rbChirpStartedCount = 0;
-    _rbOverflowPending = 0;
-    _rbStrengthSumScaled = 0;
-    _rbValidStrengthSum = 0;
-    _rbDurationSumMs = 0;
-}
-
 void Node::resetDetectionState() {
     _audioSignal.resetSignalState();
     _detection.resetState();
@@ -402,7 +391,7 @@ void Node::performRbRebase() {
     resetDetectionState();
     _audioSignal.resetStats();
     _audioSource.resetStats();
-    resetRbCounters();
+    _counters = NodeCounters{};
 }
 
 // --- baseline / startup ---
@@ -801,7 +790,7 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
         return;
     }
     _behavior.notifyChirpStarted(now, emitSpanMs);
-    ++_rbChirpStartedCount;
+    ++_counters.chirpStarted;
     selfTestNoteChirpStarted(now, sourceName);
 }
 
@@ -847,21 +836,10 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
             sawPatternThisLoop = true;
         }
 
-        ++_rbPendingCount;
+        _counters.noteVerdict(verdict);
         if (verdict.accepted) {
-            ++_rbPatternAcceptedCount;
             _led.flash(now, 1);
         }
-        if (verdict.valid) {
-            ++_rbValidPatternCount;
-            _rbValidStrengthSum += static_cast<uint64_t>(verdict.primaryStrength + 0.5f);
-        }
-
-        if (verdict.primaryAudioOverflow) {
-            ++_rbOverflowPending;
-        }
-        _rbStrengthSumScaled += static_cast<uint64_t>(verdict.primaryStrength * 100.0f);
-        _rbDurationSumMs += verdict.primaryDurationMs;
         if (_selfTest.phase != SelfTestState::Phase::Idle) {
             selfTestObserveVerdict(verdict, now);
         }

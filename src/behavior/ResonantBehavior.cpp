@@ -44,6 +44,15 @@ unsigned long randomIdleDelayMs(unsigned long minMs, unsigned long maxMs) {
 }
 }
 
+// The decision and, for a decision that blocks, the same value as the block reason; a go-ahead (ConsumedPattern,
+// WouldEmit, Emitted) and None clear the block reason. One place for the pair (step 11j).
+void ResonantBehavior::setDecision(BehaviorDecision decision) {
+    _lastDecision = decision;
+    const bool goAhead = decision == BehaviorDecision::None || decision == BehaviorDecision::ConsumedPattern ||
+        decision == BehaviorDecision::WouldEmit || decision == BehaviorDecision::Emitted;
+    _lastBlockReason = goAhead ? BehaviorDecision::None : decision;
+}
+
 void ResonantBehavior::resetState() {
     _state = State::Idle;
     _activityLevel = 0.0f;
@@ -63,8 +72,7 @@ void ResonantBehavior::resetState() {
     _lastVerdictType = detection::VerdictType::None;
     _lastPatternHeardAtMs = 0;
     _lastDecisionMs = 0;
-    _lastDecision = BehaviorDecision::None;
-    _lastBlockReason = BehaviorDecision::None;
+    setDecision(BehaviorDecision::None);
     _behaviorEligible = false;
     _wouldEmit = false;
     _chirpRequested = false;
@@ -132,8 +140,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
 
     if (!result.accepted) {
         _behaviorEligible = false;
-        _lastDecision = BehaviorDecision::IgnoredInvalidPattern;
-        _lastBlockReason = BehaviorDecision::IgnoredInvalidPattern;
+        setDecision(BehaviorDecision::IgnoredInvalidPattern);
         _patternsIgnoredInvalid++;
         return _lastDecision;
     }
@@ -141,14 +148,11 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
     if (!result.valid) {
         _behaviorEligible = false;
         if (result.rejectReason == detection::VerdictRejectReason::MissingSupport) {
-            _lastDecision = BehaviorDecision::IgnoredMissingSupport;
-            _lastBlockReason = BehaviorDecision::IgnoredMissingSupport;
+            setDecision(BehaviorDecision::IgnoredMissingSupport);
         } else if (result.rejectReason == detection::VerdictRejectReason::SupportTooLow) {
-            _lastDecision = BehaviorDecision::IgnoredSupportTooLow;
-            _lastBlockReason = BehaviorDecision::IgnoredSupportTooLow;
+            setDecision(BehaviorDecision::IgnoredSupportTooLow);
         } else {
-            _lastDecision = BehaviorDecision::IgnoredInvalidPattern;
-            _lastBlockReason = BehaviorDecision::IgnoredInvalidPattern;
+            setDecision(BehaviorDecision::IgnoredInvalidPattern);
         }
         _patternsIgnoredInvalid++;
         return _lastDecision;
@@ -158,36 +162,29 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
 
     if (resting(now)) {
         // Hard pause: a busy network is not answered (rest decision, 2026-10-17).
-        _lastDecision = BehaviorDecision::Resting;
-        _lastBlockReason = BehaviorDecision::Resting;
+        setDecision(BehaviorDecision::Resting);
         _blockedResting++;
     } else if (_config.restAfterFieldPatterns > 0 &&
                _lastFieldState.recentPatternCount >= _config.restAfterFieldPatterns) {
         // The field window holds enough valid network patterns: rest instead of answering.
         enterRest(now + _config.restMs, BehaviorDecision::RestFieldDense);
-        _lastDecision = BehaviorDecision::RestFieldDense;
-        _lastBlockReason = BehaviorDecision::RestFieldDense;
+        setDecision(BehaviorDecision::RestFieldDense);
         _blockedResting++;
     } else if (_state == State::Chirping) {
-        _lastDecision = BehaviorDecision::OutputBusy;
-        _lastBlockReason = BehaviorDecision::OutputBusy;
+        setDecision(BehaviorDecision::OutputBusy);
         _blockedOutputBusy++;
     } else if (_state == State::Refractory) {
-        _lastDecision = BehaviorDecision::RefractoryAfterEmit;
-        _lastBlockReason = BehaviorDecision::RefractoryAfterEmit;
+        setDecision(BehaviorDecision::RefractoryAfterEmit);
         _blockedRefractory++;
     } else if (_state == State::HeardPattern) {
-        _lastDecision = BehaviorDecision::AlreadyScheduled;
-        _lastBlockReason = BehaviorDecision::AlreadyScheduled;
+        setDecision(BehaviorDecision::AlreadyScheduled);
         _blockedWaiting++;
     } else if (behaviorSuppressed(now)) {
-        _lastDecision = BehaviorDecision::SelfSuppressed;
-        _lastBlockReason = BehaviorDecision::SelfSuppressed;
+        setDecision(BehaviorDecision::SelfSuppressed);
         _blockedSelfSuppressed++;
     } else {
         _behaviorEligible = true;
-        _lastDecision = BehaviorDecision::ConsumedPattern;
-        _lastBlockReason = BehaviorDecision::None;
+        setDecision(BehaviorDecision::ConsumedPattern);
         _pendingHeardPatternDetected = true;
         if (result.primaryStrength > _pendingHeardPatternStrength) {
             _pendingHeardPatternStrength = result.primaryStrength;
@@ -259,8 +256,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _state = State::Chirping;
             } else if (canIdle(now)) {
                 _wouldEmit = true;
-                _lastDecision = BehaviorDecision::WouldEmit;
-                _lastBlockReason = BehaviorDecision::None;
+                setDecision(BehaviorDecision::WouldEmit);
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Idle;
                 _chirpPattern = ChirpPattern::Idle;
@@ -275,8 +271,7 @@ void ResonantBehavior::update(unsigned long now) {
             // Wait after the transient settles, then respond.
             if (timing::atOrAfter(now, _waitUntilMs)) {
                 _wouldEmit = true;
-                _lastDecision = BehaviorDecision::WouldEmit;
-                _lastBlockReason = BehaviorDecision::None;
+                setDecision(BehaviorDecision::WouldEmit);
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::HeardPattern;
                 _chirpPattern = ChirpPattern::Single;
@@ -395,8 +390,7 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitS
     extendBehaviorSuppress(suppressUntilMs);
     _ownEmitDetectionSuppressUntilMs = suppressUntilMs;
     _ownEmitDetectionSuppressArmed = true;
-    _lastDecision = BehaviorDecision::Emitted;
-    _lastBlockReason = BehaviorDecision::None;
+    setDecision(BehaviorDecision::Emitted);
     _emittedCount++;
 
     // Own budget: count this emission; at the budget the node rests from the

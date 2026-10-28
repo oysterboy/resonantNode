@@ -186,5 +186,8 @@ private:
     void resetAcceptedOccurrencePending();
     void freezeReport(unsigned long nowMs);
     void clearFrozenReport();
+    // The fields of one summary, without the report clear (resetState clears the report once for both).
+    void clearAcceptedSummary();
+    void clearSelectedRejectSummary();
     void refreshReportDetail();
 };

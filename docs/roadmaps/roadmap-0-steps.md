@@ -1163,6 +1163,9 @@ the previous gate open unless the step says it can run in parallel.
    Progress 2026-10-28 (11j 2): the case-insensitive helpers live only in app/TextParse.h (AnalyzerText.h deleted,
    node_internal's and the Emitter's forwarders gone; call sites use text_parse:: by using-declarations); the four
    serial poll loops (Emitter x2, Node, Analyzer) are serial_line::pollLines next to LineReader, same replies.
+   Progress 2026-10-28 (11j 3): ResonantBehavior::setDecision sets the decision / block-reason pair (15 sites; a
+   go-ahead clears the reason), decisions unchanged; ScalarTransientDetector::resetState calls the summary clears
+   its reset helpers use, with one report clear (the printed sourceReportGeneration steps once, as before).
 
 11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the

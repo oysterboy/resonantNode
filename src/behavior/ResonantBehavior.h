@@ -166,6 +166,7 @@ private:
     // Moves the behavior-suppress deadline to suppressUntilMs if that is later.
     void extendBehaviorSuppress(unsigned long suppressUntilMs);
     void enterRest(unsigned long untilMs, BehaviorDecision reason);
+    void setDecision(BehaviorDecision decision);
     unsigned long ownEmitsInWindow(unsigned long now) const;
 
     // --- configured timing (BehaviorGateConfig.h documents the fields) ---

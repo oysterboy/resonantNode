@@ -41,8 +41,6 @@ void ScalarTransientDetector::resetState() {
     resetCandidateFacts();
     _transientRejectedCount = 0;
     _lastObservedAcceptedOccurrenceRejectedCount = 0;
-    _acceptedOccurrenceId = 0;
-    _selectedRejectOccurrenceId = 0;
     _nextOccurrenceId = 0;
     _currentOccurrenceId = 0;
     _peakAcceptedCount = 0;
@@ -50,19 +48,25 @@ void ScalarTransientDetector::resetState() {
     _trialRejectedCountBase = 0;
     _reportDetail = {};
     resetAcceptedOccurrencePending();
-    _acceptedOccurrencePresent = false;
-    _acceptedOccurrence = {};
-    _acceptedOccurrenceReleaseMs = 0;
-    _reportDetail.accepted = {};
-    _pendingOccurrencePresent = false;
-    _pendingOccurrence = {};
-    _selectedRejectPresent = false;
-    _selectedReject = {};
-    _reportDetail.selectedReject = {};
+    clearAcceptedSummary();
+    clearSelectedRejectSummary();
+    // One clear, one generation step: the generation is printed (SEQ sourceReportGeneration).
     clearFrozenReport();
 }
 
 void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
+    clearAcceptedSummary();
+    clearFrozenReport();
+}
+
+void ScalarTransientDetector::resetSelectedRejectSummary() {
+    _trialAcceptedCountBase = _peakAcceptedCount;
+    _trialRejectedCountBase = _transientRejectedCount;
+    clearSelectedRejectSummary();
+    clearFrozenReport();
+}
+
+void ScalarTransientDetector::clearAcceptedSummary() {
     _acceptedOccurrencePresent = false;
     _acceptedOccurrence = {};
     _acceptedOccurrenceReleaseMs = 0;
@@ -70,17 +74,13 @@ void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
     _reportDetail.accepted = {};
     _pendingOccurrencePresent = false;
     _pendingOccurrence = {};
-    clearFrozenReport();
 }
 
-void ScalarTransientDetector::resetSelectedRejectSummary() {
-    _trialAcceptedCountBase = _peakAcceptedCount;
-    _trialRejectedCountBase = _transientRejectedCount;
+void ScalarTransientDetector::clearSelectedRejectSummary() {
     _selectedRejectPresent = false;
     _selectedReject = {};
     _selectedRejectOccurrenceId = 0;
     _reportDetail.selectedReject = {};
-    clearFrozenReport();
 }
 
 void ScalarTransientDetector::clearFrozenReport() {

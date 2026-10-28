@@ -53,6 +53,11 @@ esp32dev RAM and flash noted.
 All Nodes on the split build: boot lines and timing as on 40c92e3, RB STATUS key set identical, 10 hop trains
 answered, SELFTEST PASS, SELFTEST external, `NET * NET PING`, `NET * PARAM SET` round trip, PARAM DUMP identical.
 
+Targets from N1-N4 (argued identical by reading, not run): the boot and `RB rebase` / `RB rebase force` lines
+(N2 enters Settle before the rebase runs, not after); `NET * NET PING`, a `NET * PARAM SET` round trip and
+`NET <node> SELFTEST` with its reply open across loops (N3); SELFTEST, SELFTEST external and SELFTEST chirp (N4 reads
+the outputs gate, chirp-active and last-chirp-end once per tick before the phase logic).
+
 ## Don't touch without saying so
 
 Detection, the shape rule, thresholds; Behavior's decisions (N6 adds a snapshot and a setter only); SoundOutput;

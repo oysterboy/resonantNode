@@ -29,6 +29,7 @@
 #include "ResonantNodeBaseline.h"
 #include "ResonantNodeNetGateway.h"
 #include "ResonantNodeSelfTest.h"
+#include "ResonantNodeSignalComposer.h"
 
 /*
 Node
@@ -109,9 +110,7 @@ private:
     // Network band and the node's hop signal (BEH-005 / OUT-005 / DET-013).
     void registerOutputParams();
     void applyBandParams();              // band params -> FreqBandStream, when they differ
-    size_t bandBinCount() const;         // 250 Hz bins from band_low to band_high
-    size_t hopFrequencies(uint32_t* out, size_t capacity) const;  // the train's bins, rotated per node
-    bool composeHopTrain(OutputRequest& request) const;  // the node's train from output.* and the band; false = no bins
+    NodeSignalComposer::BandGrid bandGrid() const;  // FreqBandStream's applied grid (call after applyBandParams())
     void printHopShape(const OutputRequest& request);
     void printSignalConfig();
     void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)
@@ -148,32 +147,21 @@ private:
     param::ParamRegistry _paramRegistry;
     NvsParamStore _paramStore;
 
-    // Network band the detector listens to (FreqBandStream bank; 0 = single
-    // target at the chirp tone) and the node's network signal: a hop train
-    // over the band's 250 Hz bins, started on bin `rotation` (from the MAC
-    // at boot, PARAM SET output.hop_rotation overrides). Shape from the
-    // 2026-10-16 battery (25 ms x 5, gap 10); band 2950-3950 so the 3,200 Hz
-    // chirp sits on a bin (2950/3200/3450/3700/3950), owner 2026-10-16.
-    // decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md,
-    // decisions/2026-10-16-network-band-2950-3950.md
+    // Network band the detector listens to (detection.band_*, applied to the
+    // FreqBandStream bank; 0 = single target at the chirp tone). Band
+    // 2950-3950 so the 3,200 Hz chirp sits on a bin (2950/3200/3450/3700/3950),
+    // owner 2026-10-16. decisions/2026-10-16-network-band-2950-3950.md
     uint32_t _bandLowHz = runtime::kDefaultNetworkBandLowHz;
     uint32_t _bandHighHz = runtime::kDefaultNetworkBandHighHz;
-    bool _hopEnabled = true;
-    uint32_t _hopRotation = 0;
-    uint32_t _hopPulseMs = runtime::kDefaultHopPulseMs;
-    uint32_t _hopGapMs = runtime::kDefaultHopGapMs;
-    uint32_t _hopSteps = runtime::kDefaultHopSteps;
-    // Idle call (owner 2026-10-17): announcement tone below the band, a gap,
-    // then the node's call (its hop train). 0 Hz = plain idle chirp pattern.
-    uint32_t _idleAnnounceHz = 300;
-    uint32_t _idleAnnounceMs = 500;
+    // The node's network signal and idle call (output.hop_*, output.idle_announce_*) on the band's grid
+    // -> OutputRequest (step 11i N5).
+    NodeSignalComposer _composer;
     // output.silent: the outputs-off gate held shut (rbOutputsEnabled()), so
     // detection runs and verdicts are counted, but Behavior never fires: no
     // answer, no idle call, no RB CALL. _silentApplied is what the loop last
     // acted on, so a change quiesces Behavior once.
     bool _silent = false;
     bool _silentApplied = false;
-    static constexpr unsigned long kIdleAnnounceGapMs = 200;
 
     // For RB STATUS (2026-10-17): the newest audio sample's time on the ms
     // axis and how many samples the own-emit suppression has dropped.

@@ -15,24 +15,26 @@
 #include "../../app/FreqStatusFields.h"
 
 void Node::printSignalConfig() {
+    const NodeSignalComposer::Values& hop = _composer.values();
+    const NodeSignalComposer::BandGrid grid = bandGrid();
     uint32_t hz[8];
-    const size_t n = hopFrequencies(hz, sizeof(hz) / sizeof(hz[0]));
+    const size_t n = _composer.hopFrequencies(grid, hz, sizeof(hz) / sizeof(hz[0]));
     serialOut().print("RB signal band=");
     serialOut().print(_bandLowHz);
     serialOut().print('-');
     serialOut().print(_bandHighHz);
     serialOut().print(" bins=");
-    serialOut().print(static_cast<unsigned long>(bandBinCount()));
+    serialOut().print(static_cast<unsigned long>(grid.bins));
     serialOut().print(" hop=");
-    serialOut().print(_hopEnabled ? "on" : "off");
+    serialOut().print(hop.hopEnabled ? "on" : "off");
     serialOut().print(" rotation=");
-    serialOut().print(_hopRotation);
+    serialOut().print(hop.hopRotation);
     serialOut().print(" steps=");
-    serialOut().print(_hopSteps);
+    serialOut().print(hop.hopSteps);
     serialOut().print(" pulse_ms=");
-    serialOut().print(_hopPulseMs);
+    serialOut().print(hop.hopPulseMs);
     serialOut().print(" gap_ms=");
-    serialOut().print(_hopGapMs);
+    serialOut().print(hop.hopGapMs);
     serialOut().print(" order=");
     for (size_t k = 0; k < n; ++k) {
         if (k > 0) {
@@ -95,16 +97,19 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(_freqBandStream.bandLowHz());
     serialOut().print('-');
     serialOut().print(_freqBandStream.bandHighHz());
-    serialOut().print(" hop_enabled=");
-    serialOut().print(_hopEnabled ? 1 : 0);
-    serialOut().print(" hop_rotation=");
-    serialOut().print(_hopRotation);
-    serialOut().print(" hop_steps=");
-    serialOut().print(_hopSteps);
-    serialOut().print(" hop_pulse_ms=");
-    serialOut().print(_hopPulseMs);
-    serialOut().print(" hop_gap_ms=");
-    serialOut().print(_hopGapMs);
+    {
+        const NodeSignalComposer::Values& hop = _composer.values();
+        serialOut().print(" hop_enabled=");
+        serialOut().print(hop.hopEnabled ? 1 : 0);
+        serialOut().print(" hop_rotation=");
+        serialOut().print(hop.hopRotation);
+        serialOut().print(" hop_steps=");
+        serialOut().print(hop.hopSteps);
+        serialOut().print(" hop_pulse_ms=");
+        serialOut().print(hop.hopPulseMs);
+        serialOut().print(" hop_gap_ms=");
+        serialOut().print(hop.hopGapMs);
+    }
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     printFreqStatusFields(serialOut(), _freqBandStream, sampleRateHz);
     const AudioSourceStats& audioStats = _audioSource.stats();
@@ -217,14 +222,15 @@ void Node::printRbStatus(const char* line) {
 // occurrence; status=warn: only where the room tail bridges the gaps (the
 // shipped 10 ms gap against release debounce 10 is warn, step 5h item 1).
 void Node::printHopGapCheck() {
-    if (!_hopEnabled) {
+    const NodeSignalComposer::Values& hop = _composer.values();
+    if (!hop.hopEnabled) {
         return;
     }
     uint32_t hz[8];
     detection::HopTrainShape shape;
-    shape.steps = static_cast<unsigned long>(hopFrequencies(hz, sizeof(hz) / sizeof(hz[0])));
-    shape.pulseMs = _hopPulseMs;
-    shape.gapMs = _hopGapMs;
+    shape.steps = static_cast<unsigned long>(_composer.hopFrequencies(bandGrid(), hz, sizeof(hz) / sizeof(hz[0])));
+    shape.pulseMs = hop.hopPulseMs;
+    shape.gapMs = hop.hopGapMs;
     const detection::ScalarTransientConfig& sc = _activeDetectionProfile.scalarTransient;
     const detection::HopGapCheck c = detection::checkHopGap(shape, sc);
     serialOut().print("RB hop_check status=");

@@ -323,7 +323,8 @@ src/modes/resonant/  the Node, split by role: ResonantNodeApp.cpp (boot, loop, p
                      (serial and the command dispatch), ResonantNodeNet.cpp (radio), ResonantNodeStatus.cpp
                      (diagnostics); its parts (step 11i): ResonantNodeCounters.h (RB tallies),
                      ResonantNodeBaseline (quiet-gated rebase), ResonantNodeNetGateway (radio replies),
-                     ResonantNodeSelfTest (SELFTEST phases)
+                     ResonantNodeSelfTest (SELFTEST phases), ResonantNodeSignalComposer (band grid,
+                     output.hop_* / idle call -> OutputRequest)
 src/app/            board config, runtime defaults, roster, param ids, NVS store, serial
 lib/ParamRegistry/  the param registry (no src/ includes)
 test/, test/fixtures/   on-device and host suites, replay corpus

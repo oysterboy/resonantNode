@@ -260,12 +260,13 @@ void Node::begin() {
     // (app/NodeRoster.h, step 5g: E1=0 ... E5=4), else MAC % bins. The band
     // is applied inside applyActiveProfiles().
     {
-        const size_t bins = bandBinCount();
+        const size_t bins = bandGrid().bins;
         const roster::Entry* me = roster::find(ESP.getEfuseMac());
+        uint32_t& rotation = _composer.values().hopRotation;
         if (me != nullptr && bins > 0) {
-            _hopRotation = static_cast<uint32_t>(me->hopRotation % bins);
+            rotation = static_cast<uint32_t>(me->hopRotation % bins);
         } else {
-            _hopRotation = bins > 0 ? static_cast<uint32_t>(ESP.getEfuseMac() % bins) : 0U;
+            rotation = bins > 0 ? static_cast<uint32_t>(ESP.getEfuseMac() % bins) : 0U;
         }
         _nodeName = me != nullptr ? me->name : "unknown";
         serialOut().print("RB node name=");
@@ -282,7 +283,7 @@ void Node::begin() {
         const param::ParamBinding* rotation = _paramRegistry.find("output.hop_rotation");
         if (rotation != nullptr && !_paramRegistry.isDefault(*rotation)) {
             serialOut().print("RB node rotation_source=stored rotation=");
-            serialOut().println(_hopRotation);
+            serialOut().println(_composer.values().hopRotation);
         }
     }
     // The radio comes up after the stored values, so node.radio_enabled saved
@@ -547,45 +548,10 @@ void Node::applyBandParams() {
     _freqBandStream.setBand(lo, hi);
 }
 
-// The grid the hop train is played on is the grid the detector listens on:
-// both come from FreqBandStream (band edges as applied, clamped to its bank,
-// and its bin spacing), never recomputed here. Call after applyBandParams().
-size_t Node::bandBinCount() const {
-    return static_cast<size_t>(_freqBandStream.bandBinCount());
-}
-
-size_t Node::hopFrequencies(uint32_t* out, size_t capacity) const {
-    const size_t bins = bandBinCount();
-    if (bins == 0 || capacity == 0) {
-        return 0;
-    }
-    const uint32_t spacing = static_cast<uint32_t>(_freqBandStream.bandSpacingHz() + 0.5f);
-    const uint32_t lowHz = static_cast<uint32_t>(_freqBandStream.bandLowHz());
-    size_t steps = _hopSteps;
-    if (steps > capacity) {
-        steps = capacity;
-    }
-    // Bin-aligned by construction (the detector's bank sits on the same
-    // grid); the rotation picks the start bin, the order is the grid's.
-    for (size_t k = 0; k < steps; ++k) {
-        const size_t bin = (k + static_cast<size_t>(_hopRotation)) % bins;
-        out[k] = lowHz + static_cast<uint32_t>(bin) * spacing;
-    }
-    return steps;
-}
-
-// The node's network signal as a request (BEH-005): the hop train on the band's
-// bins, rotated per node. False when the band has no bins.
-bool Node::composeHopTrain(OutputRequest& request) const {
-    const size_t n = hopFrequencies(request.hopHz, kMaxHopSteps);
-    if (n == 0 || _hopPulseMs == 0) {
-        request.hopSteps = 0;
-        return false;
-    }
-    request.hopSteps = n;
-    request.pulseMs = _hopPulseMs;
-    request.gapMs = _hopGapMs;
-    return true;
+// The hop train's grid is the detector's (NodeSignalComposer::gridOf reads FreqBandStream as applied).
+// Call after applyBandParams().
+NodeSignalComposer::BandGrid Node::bandGrid() const {
+    return NodeSignalComposer::gridOf(_freqBandStream);
 }
 
 void Node::printHopShape(const OutputRequest& request) {
@@ -759,28 +725,11 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
         serialOut().println(chirpPatternName(chirpPattern));
     }
     _led.flash(now, 2);
-    // A response to a heard pattern is the network signal: the node's hop
-    // train inside the band (BEH-005). The idle call is an announcement tone
-    // outside the band (not detected), a gap, then the node's own call (owner
-    // 2026-10-17): the hop train, or the plain chirp when the hop is off. Idle
-    // voice and self-test stay plain chirps. SoundOutput plays the request
-    // (step 10f); own-emit suppression covers its span.
-    OutputRequest request;
-    request.pattern = chirpPattern;
-    if (_hopEnabled && _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal &&
-        composeHopTrain(request)) {
-        request.kind = OutputRequest::Kind::HopTrain;
-    } else if (_idleAnnounceHz > 0 && chirpPattern == ChirpPattern::Idle) {
-        request.kind = OutputRequest::Kind::IdleCall;
-        request.announceHz = _idleAnnounceHz;
-        request.announceMs = _idleAnnounceMs;
-        request.announceGapMs = kIdleAnnounceGapMs;
-        if (!_hopEnabled || !composeHopTrain(request)) {
-            request.hopSteps = 0;
-        }
-    } else {
-        request.kind = OutputRequest::Kind::Pattern;
-    }
+    // The request from Behavior's ask, the band grid and output.* (NodeSignalComposer, step 11i N5): a heard
+    // pattern is answered with the hop train, the idle call is announcement, gap, then the call. SoundOutput plays
+    // it (step 10f); own-emit suppression covers its span.
+    OutputRequest request = _composer.compose(
+        bandGrid(), chirpPattern, _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal);
     bool started = _soundOutput.start(request);
     if (!started && request.kind != OutputRequest::Kind::Pattern) {
         // As before step 10f: a train or call that does not start falls back to the pattern.

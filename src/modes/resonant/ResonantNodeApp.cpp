@@ -166,26 +166,26 @@ static void printDetectionProfileDetails(const detection::DetectionProfile& prof
     serialOut().println(profile.fieldStateConfig.busyActivityThreshold, 2);
 }
 
-static void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
+static void printBehaviorRuntimeDetails(const BehaviorStatus& behavior) {
     serialOut().println("RB behavior");
     serialOut().print("  idleEnabled=");
-    serialOut().println(behavior.config().idleEnabled ? 1 : 0);
+    serialOut().println(behavior.config.idleEnabled ? 1 : 0);
     serialOut().print("  waitAfterHeardMs=");
-    serialOut().println(behavior.config().waitAfterHeardMs);
+    serialOut().println(behavior.config.waitAfterHeardMs);
     serialOut().print("  refractoryAfterEmitMs=");
-    serialOut().println(behavior.config().refractoryAfterEmitMs);
+    serialOut().println(behavior.config.refractoryAfterEmitMs);
     serialOut().print("  behaviorSuppressSelfChirpMs=");
-    serialOut().println(behavior.config().behaviorSuppressSelfChirpMs);
+    serialOut().println(behavior.config.behaviorSuppressSelfChirpMs);
     serialOut().print("  detectionSuppressTailMsOwnEmit=");
-    serialOut().println(behavior.config().detectionSuppressTailMsOwnEmit);
+    serialOut().println(behavior.config.detectionSuppressTailMsOwnEmit);
     serialOut().print("  idleTimeoutMs=");
-    serialOut().println(behavior.config().idleTimeoutMs);
+    serialOut().println(behavior.config.idleTimeoutMs);
     serialOut().print("  idleTimeVariationMs=");
-    serialOut().println(behavior.config().idleTimeVariationMs);
+    serialOut().println(behavior.config.idleTimeVariationMs);
     serialOut().print("  idleBlockedAfterHeardMs=");
-    serialOut().println(behavior.config().idleBlockedAfterHeardMs);
+    serialOut().println(behavior.config.idleBlockedAfterHeardMs);
     serialOut().print("  idleBlockedAfterOwnEmitMs=");
-    serialOut().println(behavior.config().idleBlockedAfterOwnEmitMs);
+    serialOut().println(behavior.config.idleBlockedAfterOwnEmitMs);
 }
 
 static void printNodeBuildIdentity() {
@@ -198,20 +198,21 @@ static void printNodeBuildIdentity() {
     serialOut().println(nodeIdBuffer);
 }
 
-static const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool patternDetected, bool selfChirpSuppressed) {
+// The gate an accepted emission passed, from Behavior's snapshot (taken at the loop's now).
+static const char* behaviorGateName(const BehaviorStatus& behavior, bool patternDetected, bool selfChirpSuppressed) {
     if (selfChirpSuppressed) {
         return "self_ignore";
     }
-    if (behavior.refractoryRemainingMs(now) > 0) {
+    if (behavior.refractoryRemainingMs > 0) {
         return "refractory";
     }
-    if (behavior.waitRemainingMs(now) > 0) {
+    if (behavior.waitRemainingMs > 0) {
         return "wait";
     }
     if (patternDetected) {
         return "pattern";
     }
-    return behavior.state() == ResonantBehavior::State::Idle ? "idle" : behavior.stateName();
+    return behavior.idle ? "idle" : behavior.stateName;
 }
 
 // --- constructors ---
@@ -331,7 +332,7 @@ void Node::begin() {
     serialOut().println();
     printDetectionProfileDetails(activeDetectionProfile());
     serialOut().println();
-    printBehaviorRuntimeDetails(_behavior);
+    printBehaviorRuntimeDetails(_behavior.status(timebase::nowMs()));
     serialOut().println();
     serialOut().print("RB startup baseline=");
     serialOut().println(_baseline.stateName());
@@ -595,6 +596,9 @@ void Node::update() {
 
     pollSerialCommands();
     pollNet();
+    // The outputs-off gate (output.silent, the baseline machine) as Behavior's block reason (step 11i N6): set here
+    // for the verdicts of this tick's samples, again below after the baseline step.
+    _behavior.setOutputsEnabled(rbOutputsEnabled());
 
     // Update input first, then detection, then behavior, so each layer sees the
     // latest state from the layer below it.
@@ -632,21 +636,20 @@ void Node::update() {
 
     updateRbBaselineState(now);
     applySilent();  // output.silent from any path (two compares when unchanged)
-    const bool rbOutputsEnabledNow = rbOutputsEnabled();
+    _behavior.setOutputsEnabled(rbOutputsEnabled());  // outputs off: update() and shouldStartChirp() do nothing
     applyBandParams();  // PARAM SET detection.band_* takes effect here (two compares when unchanged)
 
-    if (rbOutputsEnabledNow) {
-        _behavior.update(now);
-    }
+    _behavior.update(now);
     if (_behavior.restsEntered() != _rbLastRestsEntered) {
         _rbLastRestsEntered = _behavior.restsEntered();
         if (rbShouldLogDetail()) {
+            const BehaviorStatus b = _behavior.status(now);
             serialOut().print("RB rest start reason=");
-            serialOut().print(ResonantBehavior::behaviorDecisionName(_behavior.lastRestReason()));
+            serialOut().print(b.lastRestReasonName);
             serialOut().print(" now=");
             serialOut().print(now);
             serialOut().print(" until=");
-            serialOut().print(_behavior.restUntilMs());
+            serialOut().print(b.restUntilMs);
             serialOut().print(" field_patterns=");
             serialOut().println(_detection.fieldState().recentPatternCount);
         }
@@ -656,24 +659,25 @@ void Node::update() {
                                     (_behavior.lastHeardMs() != _rbLastWouldEmitHeardMs ||
                                      _behavior.lastDecision() != _rbLastWouldEmitDecision);
     if (shouldLogWouldEmit) {
+        const BehaviorStatus b = _behavior.status(now);
         serialOut().print("BEH verdict=");
-        serialOut().print(_behavior.lastVerdictTypeName());
+        serialOut().print(b.lastVerdictTypeName);
         serialOut().print(" heard=");
-        serialOut().print(_behavior.lastHeardMs());
+        serialOut().print(b.lastHeardMs);
         serialOut().print(" now=");
         serialOut().print(now);
         serialOut().print(" decision=");
-        serialOut().print(_behavior.lastDecisionName());
+        serialOut().print(b.lastDecisionName);
         serialOut().print(" block=");
-        serialOut().print(_behavior.lastBlockReasonName());
+        serialOut().print(b.lastBlockReasonName);
         serialOut().print(" waitMs=");
-        serialOut().print(_behavior.waitRemainingMs(now));
+        serialOut().print(b.waitRemainingMs);
         serialOut().print(" refractoryMs=");
-        serialOut().print(_behavior.refractoryRemainingMs(now));
+        serialOut().print(b.refractoryRemainingMs);
         serialOut().print(" behaviorSuppressMs=");
-        serialOut().print(_behavior.behaviorSuppressRemainingMs(now));
+        serialOut().print(b.behaviorSuppressRemainingMs);
         serialOut().print(" outputBusy=");
-        serialOut().print(_behavior.outputBusy() ? 1 : 0);
+        serialOut().print(b.outputBusy ? 1 : 0);
         serialOut().print(" wouldEmit=");
         serialOut().println(1);
         _rbLastWouldEmitHeardMs = _behavior.lastHeardMs();
@@ -687,7 +691,7 @@ void Node::update() {
         }
     }
 
-    if (rbOutputsEnabledNow && _behavior.shouldStartChirp()) {
+    if (_behavior.shouldStartChirp()) {
         startEmission(now, sawPatternThisLoop, selfChirpSuppressed);
     }
     updateEmissions(now);
@@ -707,20 +711,21 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
     const auto chirpPattern = _behavior.chirpPattern();
     const char* sourceName = _behavior.chirpRequestSourceName();
     if (rbShouldLogDetail()) {
+        const BehaviorStatus b = _behavior.status(now);
         serialOut().print("BEH emit start now=");
         serialOut().print(now);
         serialOut().print(" source=");
         serialOut().print(sourceName);
         serialOut().print(" state=");
-        serialOut().print(_behavior.stateName());
+        serialOut().print(b.stateName);
         serialOut().print(" pattern=");
         serialOut().println(chirpPatternName(chirpPattern));
         serialOut().print("RB emit accepted source=");
         serialOut().print(sourceName);
         serialOut().print(" state=");
-        serialOut().print(_behavior.stateName());
+        serialOut().print(b.stateName);
         serialOut().print(" gate=");
-        serialOut().print(behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
+        serialOut().print(behaviorGateName(b, sawPatternThisLoop, selfChirpSuppressed));
         serialOut().print(" pattern=");
         serialOut().println(chirpPatternName(chirpPattern));
     }
@@ -797,15 +802,10 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
 
     detection::OccurrenceVerdict verdict;
     while (_detection.popOccurrenceVerdict(verdict)) {
-        // Outputs off (Settle, ListenForQuiet): a verdict must not leave
-        // Behavior in HeardPattern to fire late once Active (issue #31).
-        const bool behaviorSeesVerdict = rbOutputsEnabled();
-        const auto behaviorDecision = behaviorSeesVerdict
-            ? _behavior.handleOccurrenceVerdict(verdict, _detection.fieldState(), now)
-            : ResonantBehavior::BehaviorDecision::None;
-        if (!behaviorSeesVerdict) {
-            _behavior.notePatternHeardWhileOutputsOff(verdict, now);
-        }
+        // Outputs off (Settle, ListenForQuiet, silent): Behavior notes the
+        // pattern as heard and decides nothing (setOutputsEnabled, step 11i N6).
+        const bool behaviorSeesVerdict = _behavior.outputsEnabled();
+        const auto behaviorDecision = _behavior.handleOccurrenceVerdict(verdict, _detection.fieldState(), now);
         if (behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
             sawPatternThisLoop = true;
         }
@@ -819,6 +819,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         }
 
         if (rbShouldLogDetail()) {
+            const BehaviorStatus b = _behavior.status(now);
             serialOut().print("RB verdict=");
             serialOut().print(detection::verdictTypeName(verdict.type));
             serialOut().print(" fieldQuiet=");
@@ -830,9 +831,9 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
             // Outputs off: Behavior never saw this verdict, so its last
             // decision belongs to an earlier one (issue #31 R2-11).
             serialOut().print(" behaviorEligible=");
-            serialOut().print(behaviorSeesVerdict && _behavior.behaviorEligible() ? 1 : 0);
+            serialOut().print(behaviorSeesVerdict && b.behaviorEligible ? 1 : 0);
             serialOut().print(" decision=");
-            serialOut().print(behaviorSeesVerdict ? _behavior.lastDecisionName() : "outputs_off");
+            serialOut().print(behaviorSeesVerdict ? b.lastDecisionName : "outputs_off");
             serialOut().print(" valid=");
             serialOut().print(verdict.valid ? 1 : 0);
             // Step 10c: per-board strength drift, attributed to a sender by nodegroup.py.

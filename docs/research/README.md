@@ -82,4 +82,9 @@ node-structure.md              Node classes and files against the spec and the
                                later roadmap: the A7 cut (step 11g D), then where
                                CommandRouter, BehaviorInput, OutputProfile /
                                ResonantProgram, ConfigStore, OTA, VEKTOR land
+code-standards-read-2026-10-28.md
+                               the tree at 2def60f against a generic standards
+                               list (readability, KISS, DRY, YAGNI, naming,
+                               formatting, comments): what holds, what slips,
+                               measured; cites the 2026-10-25 review's items
 ```

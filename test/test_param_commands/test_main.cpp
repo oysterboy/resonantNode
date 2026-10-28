@@ -48,8 +48,8 @@ BehaviorGateConfig behavior;
 param::ParamRegistry makeRegistry() {
     param::ParamRegistry r;
     r.setGroupNamer(param::moduleNameForGroup);
-    param::bindScalarTransientParams(r, scalar);
-    param::bindBehaviorParams(r, behavior);
+    param::describeParams(r, scalar);
+    param::describeParams(r, behavior);
     r.captureDefaults();
     return r;
 }

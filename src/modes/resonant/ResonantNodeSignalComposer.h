@@ -3,6 +3,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <ParamRegistry.h>
+
+#include "../../app/ParamIds.h"
 #include "../../app/RuntimeDefaults.h"
 #include "../../output/OutputRequest.h"
 
@@ -19,8 +22,8 @@ The grid is the detector's: `gridOf()` reads FreqBandStream's applied band edges
 recomputes them, so the train is played on the bins the detector listens on. The band itself stays detection's
 (detection.band_*, applied by the Node to FreqBandStream).
 
-Pure: no Arduino calls, no printing, no device; it builds on the host (test/test_node_composer). The output.*
-params bind to `values()` (registered by the Node; the same paths and ranges as before the split).
+Pure: no Arduino calls, no printing, no device; it builds on the host (test/test_node_composer). The output.hop_*
+and output.idle_announce_* params bind to `values()` (param::describeParams below, registered by NodeParams).
 */
 class NodeSignalComposer {
 public:
@@ -67,3 +70,22 @@ public:
 private:
     Values _values;
 };
+
+namespace param {
+
+// output.hop_* and output.idle_announce_*. Bound so the longest emission fits OutputLimits.maxSpanMs (6000): 8 steps
+// of 250 + 7 gaps of 250 = 3750 ms, and the idle call adds announce (<= 2000) + its 200 ms gap = 5950 (review D1.2,
+// 2026-10-26: 1000 / 2000 let a legal SET turn every answer into a chirp; test/test_node_composer).
+inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& hop) {
+    registry.addBool(ParamId::Output_HopEnabled, ModuleId::Output, "output.hop_enabled", &hop.hopEnabled);
+    registry.addUInt32(ParamId::Output_HopRotation, ModuleId::Output, "output.hop_rotation", &hop.hopRotation, 0U, 15U);
+    registry.addUInt32(ParamId::Output_HopPulseMs, ModuleId::Output, "output.hop_pulse_ms", &hop.hopPulseMs, 1U, 250U);
+    registry.addUInt32(ParamId::Output_HopGapMs, ModuleId::Output, "output.hop_gap_ms", &hop.hopGapMs, 0U, 250U);
+    registry.addUInt32(ParamId::Output_HopSteps, ModuleId::Output, "output.hop_steps", &hop.hopSteps, 1U, 8U);
+    registry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &hop.idleAnnounceHz, 0U,
+                       runtime::kMaxToneHz);
+    registry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &hop.idleAnnounceMs, 20U,
+                       2000U);
+}
+
+}  // namespace param

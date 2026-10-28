@@ -1,6 +1,6 @@
-// Node configuration (owner 2026-10-25 split by role): the param registry's bindings, live
-// apply, persistence (PARAM SAVE / LOAD / RESET) and the profile switch. Moved verbatim from
-// ResonantNodeApp.cpp.
+// Node configuration (owner 2026-10-25 split by role): NodeParams (the registry, the NVS store, the
+// owners' param descriptions in PARAM LIST order; step 11i N7), and the Node's side: live apply per
+// module through the owners' setters, persistence at boot, the profile switch.
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
 #include <string.h>
@@ -14,79 +14,77 @@
 
 using namespace node_internal;
 
+// --- NodeParams ---
+
+// The PARAM LIST / DUMP order since step 11g B2; a new param goes at the end of its owner's describeParams or here.
+void NodeParams::describe(const Fields& f) {
+    _registry.setGroupNamer(param::moduleNameForGroup);
+    param::describeParams(_registry, f.scalar);      // detection.scalar_* (13)
+    param::describeParams(_registry, f.band);        // detection.band_low_hz / band_high_hz
+    param::describeParams(_registry, f.output);      // output.hop_* / idle_announce_* (7)
+    param::describeParams(_registry, f.node);        // output.silent, node.radio_enabled
+    param::describeParams(_registry, f.behavior);    // behavior.* (13)
+    param::describeParams(_registry, f.inspection);  // detection.contrast_medium / amp_medium, detection.shape_* (8)
+}
+
+param::ParamLoadReport NodeParams::loadStored(Print& out) {
+    return param::loadStoredParams(_registry, _store, out);
+}
+
+param::ParamCommandResult NodeParams::handleCommand(const char* line, Print& out) {
+    return param::handleParamCommand(line, _registry, &_store, out);
+}
+
+bool NodeParams::changedFromDefault(const char* path) const {
+    const param::ParamBinding* binding = _registry.find(path);
+    return binding != nullptr && !_registry.isDefault(*binding);
+}
+
+void NodeParams::rememberValues() {
+    const size_t count = _registry.count();
+    for (size_t i = 0; i < count; ++i) {
+        _remembered[i] = _registry.numericValue(_registry.at(i));
+    }
+}
+
+unsigned long NodeParams::printChangedSinceRemembered(Print& out) const {
+    unsigned long changed = 0;
+    const size_t count = _registry.count();
+    for (size_t i = 0; i < count; ++i) {
+        const param::ParamBinding& binding = _registry.at(i);
+        if (_registry.numericValue(binding) == _remembered[i]) {
+            continue;
+        }
+        ++changed;
+        out.print("RB PROFILE reset path=");
+        out.print(binding.path);
+        out.print(" old=");
+        out.print(_remembered[i], binding.type == param::ParamType::Float ? 3 : 0);
+        out.print(" new=");
+        _registry.printValue(out, binding);
+        out.println();
+    }
+    return changed;
+}
+
+// --- the Node's side ---
+
+// The scalar fields bind inside _activeDetectionProfile, a stable Node member, so the pointers stay valid across
+// value changes; a profile switch by kind replaces the struct's contents (setProfileFromName). Behavior's
+// BehaviorGateConfig binds into the Node-owned _activeBehaviorProfile (PAR-006); a PARAM SET applies it through
+// ResonantBehavior::configure() (setters only, no state reset). The inspection limits are the Node's copy of the
+// active plan's (InspectionLimits), written back by applyLiveDetectionParams().
 void Node::configureParameters() {
     configureI2SParameters();
-    _paramRegistry.setGroupNamer(param::moduleNameForGroup);
-    registerDetectionParams();
-    registerOutputParams();
-    // Behavior's BehaviorGateConfig on the registry (PAR-006, step 10 item 4):
-    // bound into the Node-owned _activeBehaviorProfile; a PARAM SET applies it
-    // through ResonantBehavior::configure() (setters only, no state reset).
-    param::bindBehaviorParams(_paramRegistry, _activeBehaviorProfile);
     loadInspectionLimitsFromProfile();
-    _paramRegistry.addFloat(param::ParamId::Detection_ContrastMedium, param::ModuleId::Detection,
-                            "detection.contrast_medium", &_contrastMediumThreshold, 0.0f, 32767.0f);
-    _paramRegistry.addFloat(param::ParamId::Detection_AmpMedium, param::ModuleId::Detection,
-                            "detection.amp_medium", &_ampMediumThreshold, 0.0f, 32767.0f);
-    param::bindShapeParams(_paramRegistry, _shapeConfig);
+    _params.describe(NodeParams::Fields{_activeDetectionProfile.scalarTransient, _band, _composer.values(), _switches,
+                                        _activeBehaviorProfile, _inspectionLimits});
 }
 
-// The live detection params. The scalar fields bind inside _activeDetectionProfile,
-// a stable Node member, so the pointers stay valid across value changes; a
-// profile switch by kind replaces the struct's contents (setProfileFromName).
-void Node::registerDetectionParams() {
-    param::bindScalarTransientParams(_paramRegistry, _activeDetectionProfile.scalarTransient);
-    // Network band (DET-013). Applied by applyBandParams() when the values
-    // change; 0 = single target at the chirp tone.
-    _paramRegistry.addUInt32(param::ParamId::Detection_BandLowHz, param::ModuleId::Detection,
-                             "detection.band_low_hz", &_bandLowHz, 0U, runtime::kMaxToneHz);
-    _paramRegistry.addUInt32(param::ParamId::Detection_BandHighHz, param::ModuleId::Detection,
-                             "detection.band_high_hz", &_bandHighHz, 0U, runtime::kMaxToneHz);
-}
-
-void Node::registerOutputParams() {
-    using param::ModuleId;
-    using param::ParamId;
-    NodeSignalComposer::Values& hop = _composer.values();  // output.hop_* / idle_announce_* (step 11i N5)
-    _paramRegistry.addBool(ParamId::Output_HopEnabled, ModuleId::Output, "output.hop_enabled", &hop.hopEnabled);
-    _paramRegistry.addUInt32(ParamId::Output_HopRotation, ModuleId::Output, "output.hop_rotation", &hop.hopRotation, 0U, 15U);
-    // Bound so the longest emission fits OutputLimits.maxSpanMs (6000): 8 steps of 250 + 7 gaps of 250 = 3750 ms, and the
-    // idle call adds announce (<= 2000) + its 200 ms gap = 5950 (review D1.2, 2026-10-26: 1000 / 2000 let a legal SET
-    // turn every answer into a chirp).
-    _paramRegistry.addUInt32(ParamId::Output_HopPulseMs, ModuleId::Output, "output.hop_pulse_ms", &hop.hopPulseMs, 1U, 250U);
-    _paramRegistry.addUInt32(ParamId::Output_HopGapMs, ModuleId::Output, "output.hop_gap_ms", &hop.hopGapMs, 0U, 250U);
-    _paramRegistry.addUInt32(ParamId::Output_HopSteps, ModuleId::Output, "output.hop_steps", &hop.hopSteps, 1U, 8U);
-    _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &hop.idleAnnounceHz, 0U, runtime::kMaxToneHz);
-    _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &hop.idleAnnounceMs, 20U, 2000U);
-    _paramRegistry.addBool(ParamId::Output_Silent, ModuleId::Output, "output.silent", &_silent);
-    _paramRegistry.addBool(ParamId::Node_RadioEnabled, ModuleId::Node, "node.radio_enabled", &_radioEnabled);
-}
-
-namespace {
-// The plan module that inspects `target`, or nullptr (step 10 item 7).
-detection::InspectionModuleConfig* moduleForTarget(detection::InspectionPlan& plan, detection::InspectionTarget target) {
-    const size_t count = plan.count > detection::kMaxInspectionModules ? detection::kMaxInspectionModules : plan.count;
-    for (size_t i = 0; i < count; ++i) {
-        if (plan.modules[i].target == target) {
-            return &plan.modules[i];
-        }
-    }
-    return nullptr;
-}
-}  // namespace
-
-// The inspectors' medium limits as live params (step 10 item 7). They are Node
-// values copied from the active profile's plan, so the binding does not depend
-// on the plan's module order; applyLiveDetectionParams() writes them back into
-// the module with the matching target. A profile without such a module ignores
-// the value.
+// The inspectors' medium limits and the shape settings as live params (step 10 item 7, step 11g B2), read from the
+// active profile's plan by target (detection::inspectionLimitsFromPlan).
 void Node::loadInspectionLimitsFromProfile() {
-    detection::InspectionModuleConfig* contrast = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Contrast);
-    detection::InspectionModuleConfig* amp = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Amp);
-    _contrastMediumThreshold = contrast != nullptr ? contrast->magnitude.supportStrength.mediumPeakThreshold : 0.0f;
-    _ampMediumThreshold = amp != nullptr ? amp->magnitude.supportStrength.mediumPeakThreshold : 0.0f;
-    detection::InspectionModuleConfig* shape = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Shape);
-    _shapeConfig = shape != nullptr ? shape->shape : detection::ShapeInspectionConfig{};
+    _inspectionLimits = detection::inspectionLimitsFromPlan(_activeDetectionProfile.inspectionPlan);
 }
 
 // The registered detection params (detection.scalar_*, detection.band_*) applied
@@ -97,18 +95,7 @@ void Node::loadInspectionLimitsFromProfile() {
 // switch still goes through applyActiveDetectionProfile().
 void Node::applyLiveDetectionParams() {
     _detection.setScalarTransientConfig(_activeDetectionProfile.scalarTransient);
-    detection::InspectionModuleConfig* contrast = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Contrast);
-    detection::InspectionModuleConfig* amp = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Amp);
-    if (contrast != nullptr) {
-        contrast->magnitude.supportStrength.mediumPeakThreshold = _contrastMediumThreshold;
-    }
-    if (amp != nullptr) {
-        amp->magnitude.supportStrength.mediumPeakThreshold = _ampMediumThreshold;
-    }
-    detection::InspectionModuleConfig* shape = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Shape);
-    if (shape != nullptr) {
-        shape->shape = _shapeConfig;
-    }
+    detection::applyInspectionLimits(_activeDetectionProfile.inspectionPlan, _inspectionLimits);
     _detection.setInspectionPlan(_activeDetectionProfile.inspectionPlan);  // same streams: history kept
     applyBandParams();
 }
@@ -119,7 +106,7 @@ void Node::applyLiveDetectionParams() {
 // were removed; docs/roadmaps/roadmap-param-config.md PAR-015). What it wrote,
 // the owning module applies here.
 void Node::handleParamCommand(const char* line) {
-    const param::ParamCommandResult result = param::handleParamCommand(line, _paramRegistry, &_paramStore, serialOut());
+    const param::ParamCommandResult result = _params.handleCommand(line, serialOut());
     switch (result.effect) {
         case param::ParamCommandEffect::Group:
             applyParamModule(static_cast<param::ModuleId>(result.group));
@@ -140,7 +127,7 @@ void Node::handleParamCommand(const char* line) {
 // once. Runs before the signal config prints; PARAM LOAD goes through
 // handleParamCommand and applies every module.
 void Node::loadStoredParams() {
-    const param::ParamLoadReport report = param::loadStoredParams(_paramRegistry, _paramStore, serialOut());
+    const param::ParamLoadReport report = _params.loadStored(serialOut());
     if (report.applied > 0) {
         applyLiveDetectionParams();
         applyActiveBehaviorGateConfig();
@@ -178,31 +165,13 @@ bool Node::setProfileFromName(const char* name) {
     // profile switch starts from the new profile's defaults (detection.scalar_*
     // and behavior.*; band and output.* are Node values and stay), and says
     // which live values it reset.
-    static double before[param::ParamRegistry::kMaxParams];  // static: not on the loop stack (3.4 KB headroom, step 8b)
-    const size_t count = _paramRegistry.count();
-    for (size_t i = 0; i < count; ++i) {
-        before[i] = _paramRegistry.numericValue(_paramRegistry.at(i));
-    }
+    _params.rememberValues();
     _profileKind = parsed;
     _activeDetectionProfile = detection::detectionProfileForKind(_profileKind);
     _activeBehaviorProfile = makeTonalPulseBehaviorProfile();
     loadInspectionLimitsFromProfile();
     applyActiveProfiles();
-    unsigned long resetCount = 0;
-    for (size_t i = 0; i < count; ++i) {
-        const param::ParamBinding& binding = _paramRegistry.at(i);
-        if (_paramRegistry.numericValue(binding) == before[i]) {
-            continue;
-        }
-        ++resetCount;
-        serialOut().print("RB PROFILE reset path=");
-        serialOut().print(binding.path);
-        serialOut().print(" old=");
-        serialOut().print(before[i], binding.type == param::ParamType::Float ? 3 : 0);
-        serialOut().print(" new=");
-        _paramRegistry.printValue(serialOut(), binding);
-        serialOut().println();
-    }
+    const unsigned long resetCount = _params.printChangedSinceRemembered(serialOut());
     serialOut().print("RB PROFILE reset_count=");
     serialOut().println(resetCount);
     return true;

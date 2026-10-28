@@ -23,13 +23,13 @@
 #include "../../detection/evaluation/OccurrenceVerdict.h"
 #include <ParamRegistry.h>
 #include "../../app/ParamIds.h"
-#include "../../app/NvsParamStore.h"
 #include "ResonantNodeLed.h"
 #include "ResonantNodeCounters.h"
 #include "ResonantNodeBaseline.h"
 #include "ResonantNodeNetGateway.h"
 #include "ResonantNodeSelfTest.h"
 #include "ResonantNodeSignalComposer.h"
+#include "ResonantNodeParams.h"
 
 /*
 Node
@@ -61,7 +61,6 @@ public:
 private:
     void configureParameters();
     void configureI2SParameters();
-    void registerDetectionParams();
     void handleParamCommand(const char* line);
     void applyParamModule(param::ModuleId module);
     void loadStoredParams();
@@ -108,7 +107,6 @@ private:
     static void selfTestCancelChirp(void* ctx);
 
     // Network band and the node's hop signal (BEH-005 / OUT-005 / DET-013).
-    void registerOutputParams();
     void applyBandParams();              // band params -> FreqBandStream, when they differ
     NodeSignalComposer::BandGrid bandGrid() const;  // FreqBandStream's applied grid (call after applyBandParams())
     void printHopShape(const OutputRequest& request);
@@ -135,7 +133,6 @@ private:
     SoundOutput _soundOutput{_chirpOutput};
     NodeNet _net;
     NetGateway _netGateway{_net};  // reply tee and reply reassembly (step 11i N3)
-    bool _radioEnabled = true;          // node.radio_enabled, read at boot
     const char* _nodeName = "unknown";  // from the roster (app/NodeRoster.h)
 
     // Occurrence / detection / behavior pipeline.
@@ -144,23 +141,22 @@ private:
     detection::DetectionRuntime _detection;
     detection::DetectionProfile _activeDetectionProfile = detection::makeTonalPulseScalarProfile();
     ResonantBehavior _behavior;
-    param::ParamRegistry _paramRegistry;
-    NvsParamStore _paramStore;
+    NodeParams _params;  // registry + NVS store; each owner describes its params (step 11i N7)
 
     // Network band the detector listens to (detection.band_*, applied to the
     // FreqBandStream bank; 0 = single target at the chirp tone). Band
     // 2950-3950 so the 3,200 Hz chirp sits on a bin (2950/3200/3450/3700/3950),
     // owner 2026-10-16. decisions/2026-10-16-network-band-2950-3950.md
-    uint32_t _bandLowHz = runtime::kDefaultNetworkBandLowHz;
-    uint32_t _bandHighHz = runtime::kDefaultNetworkBandHighHz;
+    NetworkBand _band;  // detection.band_* (step 11i N7: NetworkBand::applyTo)
     // The node's network signal and idle call (output.hop_*, output.idle_announce_*) on the band's grid
     // -> OutputRequest (step 11i N5).
     NodeSignalComposer _composer;
-    // output.silent: the outputs-off gate held shut (rbOutputsEnabled()), so
-    // detection runs and verdicts are counted, but Behavior never fires: no
-    // answer, no idle call, no RB CALL. _silentApplied is what the loop last
-    // acted on, so a change quiesces Behavior once.
-    bool _silent = false;
+    // output.silent and node.radio_enabled. silent holds the outputs-off gate
+    // shut (rbOutputsEnabled()), so detection runs and verdicts are counted,
+    // but Behavior never fires: no answer, no idle call, no RB CALL.
+    // _silentApplied is what the loop last acted on, so a change quiesces
+    // Behavior once. radioEnabled is read at boot.
+    NodeSwitches _switches;
     bool _silentApplied = false;
 
     // For RB STATUS (2026-10-17): the newest audio sample's time on the ms
@@ -179,9 +175,8 @@ private:
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;
     BehaviorGateConfig _activeBehaviorProfile = {};  // the behavior.* params bind into it (step 10 item 4)
-    float _contrastMediumThreshold = 0.0f;  // detection.contrast_medium (step 10 item 7)
-    float _ampMediumThreshold = 0.0f;       // detection.amp_medium
-    detection::ShapeInspectionConfig _shapeConfig = {};  // detection.shape_* (step 11g B2)
+    // detection.contrast_medium / amp_medium / shape_* (step 10 item 7, step 11g B2): the active plan's limits.
+    detection::InspectionLimits _inspectionLimits = {};
     // When the last own chirp stopped; SELFTEST Settle waits out its echo.
     unsigned long _lastOwnChirpEndMs = 0;
     unsigned long _rbLastWouldEmitHeardMs = 0;

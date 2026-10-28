@@ -38,7 +38,7 @@ void Node::handleSerialLine(const char* line) {
         // back to its channel.
         _soundOutput.stop();
         ota::runCommand(line, serialOut());
-        if (_radioEnabled) {
+        if (_switches.radioEnabled) {
             _net.restoreChannel();
         }
         return;
@@ -130,7 +130,7 @@ void Node::handleSerialLine(const char* line) {
     }
     if (equalsIgnoreCase(line, "RB CALL") || equalsIgnoreCase(line, "RB call")) {
         // Step 5g: play the node's network signal now, through Behavior (kick).
-        if (_silent) {
+        if (_switches.silent) {
             serialOut().println("RB CALL ignored silent=1");
             return;
         }

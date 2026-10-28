@@ -592,7 +592,7 @@ void AnalyzerApp::configureParameters() {
     // The SEQ tuning on the registry (PAR-003): the Node's paths through the
     // shared binding; the profile's values are the defaults PARAM RESET returns to.
     _paramRegistry.setGroupNamer(param::moduleNameForGroup);
-    param::bindScalarTransientParams(_paramRegistry, _scalarTuning);
+    param::describeParams(_paramRegistry, _scalarTuning);
     _paramRegistry.captureDefaults();
 }
 

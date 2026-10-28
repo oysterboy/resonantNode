@@ -80,7 +80,9 @@ A line the Node does not know gets `RB ERR unknown_command` (since 2026-10-28; b
 
 Every tunable knob on the Node is a registered param in `lib/ParamRegistry/` (an in-repo library
 that includes nothing from `src/`). `PARAM LIST` prints the paths with their ranges, `PARAM DUMP`
-the current values. The groups, registered in `src/modes/resonant/ResonantNodeParams.cpp`:
+the current values. Each config describes its own params (`param::describeParams`, next to the struct; the
+list of sites is in `src/app/ParamBindings.h`); `NodeParams::describe()` in
+`src/modes/resonant/ResonantNodeParams.cpp` registers them in the PARAM LIST order. The groups:
 
 ```text
 detection.scalar_*        ScalarTransientDetector thresholds and timing (13 params)
@@ -196,7 +198,8 @@ SELFTEST [external | chirp n=N gap_ms=MS dur_ms=MS | help]   external: board onl
 
 The Analyzer's `PARAM` is the Node's since step 11e (2026-10-26, `src/app/ParamCommands`): the 13
 `detection.scalar_*` knobs of the TonalPulseScalar profile are on a `ParamRegistry` through the same
-binding the Node uses (`src/app/ParamBindings.h`), so `PARAM SET detection.scalar_onset_threshold 2000`
+description the Node uses (`param::describeParams` in `src/detection/detectors/scalar/ScalarTransientParams.h`,
+gathered by `src/app/ParamBindings.h`), so `PARAM SET detection.scalar_onset_threshold 2000`
 is the same line on both boards and `PARAM DUMP` shows the values. Differences from the Node: no
 store (`SAVE` / `LOAD` answer `status=no_store`; `RESET` returns to the profile's values), and a value
 takes effect at the next `SEQ start`, not live. The observed stream is the profile's (`SEQ PROFILE`),
@@ -319,7 +322,8 @@ src/audio/, src/hal/  signal chain and I2S input / output
 src/net/            ESP-NOW frames for NET commands
 src/modes/resonant|analyzer|emitter/   per-mode command handling and wiring
 src/modes/resonant/  the Node, split by role: ResonantNodeApp.cpp (boot, loop, pipeline, SELFTEST glue),
-                     ResonantNodeParams.cpp (params, persistence, profile), ResonantNodeCommands.cpp
+                     ResonantNodeParams (NodeParams: registry, NVS store, registration order; the Node's
+                     apply per module, persistence, profile), ResonantNodeCommands.cpp
                      (serial and the command dispatch), ResonantNodeNet.cpp (radio), ResonantNodeStatus.cpp
                      (diagnostics); its parts (step 11i): ResonantNodeCounters.h (RB tallies),
                      ResonantNodeBaseline (quiet-gated rebase), ResonantNodeNetGateway (radio replies),

@@ -278,18 +278,15 @@ void Node::begin() {
     // PAR-010 boot order: the fields hold the firmware defaults now (profile,
     // roster rotation), so capture them, then let valid stored values win
     // (decisions/2026-10-23-param-persistence-save-only.md) and apply once.
-    _paramRegistry.captureDefaults();
+    _params.captureDefaults();
     loadStoredParams();
-    {
-        const param::ParamBinding* rotation = _paramRegistry.find("output.hop_rotation");
-        if (rotation != nullptr && !_paramRegistry.isDefault(*rotation)) {
-            serialOut().print("RB node rotation_source=stored rotation=");
-            serialOut().println(_composer.values().hopRotation);
-        }
+    if (_params.changedFromDefault("output.hop_rotation")) {
+        serialOut().print("RB node rotation_source=stored rotation=");
+        serialOut().println(_composer.values().hopRotation);
     }
     // The radio comes up after the stored values, so node.radio_enabled saved
     // as 0 keeps it off (PAR-013, step 11a).
-    if (_radioEnabled) {
+    if (_switches.radioEnabled) {
         const bool up = _net.begin();
         serialOut().print("RB net started=");
         serialOut().print(up ? 1 : 0);
@@ -318,8 +315,8 @@ void Node::begin() {
     _chirpOutput.begin();
     _led.begin(_ledPin);
     _behavior.seedIdleSchedule(timebase::nowMs());
-    _silentApplied = _silent;
-    if (_silent) {
+    _silentApplied = _switches.silent;
+    if (_switches.silent) {
         serialOut().println("RB silent=1 (output.silent: listening, never sounding)");
     }
     _serialLine.reset();
@@ -384,7 +381,7 @@ void Node::performRbRebase() {
 // --- baseline / startup ---
 
 bool Node::rbOutputsEnabled() const {
-    if (_silent) {
+    if (_switches.silent) {
         return false;
     }
     return _baseline.outputsAllowed();
@@ -395,14 +392,14 @@ bool Node::rbOutputsEnabled() const {
 // heard or a call queued before the change does not fire after it, and the
 // idle call starts its schedule fresh.
 void Node::applySilent() {
-    if (_silent == _silentApplied) {
+    if (_switches.silent == _silentApplied) {
         return;
     }
-    _silentApplied = _silent;
+    _silentApplied = _switches.silent;
     quiesceBehaviorForOutputsOff();
     _behavior.seedIdleSchedule(timebase::nowMs());
     serialOut().print("RB silent=");
-    serialOut().println(_silent ? 1 : 0);
+    serialOut().println(_switches.silent ? 1 : 0);
 }
 
 // The machine (NodeBaseline) says what happened this tick; the Node does the side effects and prints the RB lines.
@@ -539,14 +536,7 @@ void Node::restoreAfterSelfTestHardware() {
 // --- band and hop composition ---
 
 void Node::applyBandParams() {
-    // An empty or inverted band means "single target at the chirp tone".
-    const bool bandValid = _bandLowHz != 0 && _bandHighHz >= _bandLowHz;
-    const unsigned long lo = bandValid ? _bandLowHz : 0UL;
-    const unsigned long hi = bandValid ? _bandHighHz : 0UL;
-    if (_freqBandStream.bandLowHz() == lo && _freqBandStream.bandHighHz() == hi) {
-        return;
-    }
-    _freqBandStream.setBand(lo, hi);
+    _band.applyTo(_freqBandStream);  // an empty or inverted band means "single target at the chirp tone"
 }
 
 // The hop train's grid is the detector's (NodeSignalComposer::gridOf reads FreqBandStream as applied).

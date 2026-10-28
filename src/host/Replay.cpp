@@ -256,7 +256,7 @@ bool loadCapture(const std::string& path, Capture& out) {
 const char* applyProfileSet(detection::DetectionProfile& profile, const std::string& path, const std::string& valueText) {
     param::ParamRegistry registry;
     registry.setGroupNamer(param::moduleNameForGroup);
-    param::bindScalarTransientParams(registry, profile.scalarTransient);
+    param::describeParams(registry, profile.scalarTransient);
     // The inspectors' medium limits, bound straight into the plan's module for
     // the target (the Node keeps its own copies, ResonantNodeParams.cpp).
     const size_t moduleCount = profile.inspectionPlan.count > detection::kMaxInspectionModules
@@ -272,7 +272,7 @@ const char* applyProfileSet(detection::DetectionProfile& profile, const std::str
             registry.addFloat(param::ParamId::Detection_AmpMedium, param::ModuleId::Detection,
                               "detection.amp_medium", medium, 0.0f, 32767.0f);
         } else if (module.kind == detection::InspectionModuleKind::BinShape) {
-            param::bindShapeParams(registry, module.shape);
+            param::describeParams(registry, module.shape);
         }
     }
     const param::ParamBinding* binding = registry.find(path.c_str());

@@ -20,9 +20,9 @@ void Node::printSignalConfig() {
     uint32_t hz[8];
     const size_t n = _composer.hopFrequencies(grid, hz, sizeof(hz) / sizeof(hz[0]));
     serialOut().print("RB signal band=");
-    serialOut().print(_bandLowHz);
+    serialOut().print(_band.lowHz);
     serialOut().print('-');
-    serialOut().print(_bandHighHz);
+    serialOut().print(_band.highHz);
     serialOut().print(" bins=");
     serialOut().print(static_cast<unsigned long>(grid.bins));
     serialOut().print(" hop=");
@@ -75,7 +75,7 @@ void Node::printRbStatus(const char* line) {
     serialOut().print(" output_busy=");
     serialOut().print(b.outputBusy ? 1 : 0);
     serialOut().print(" silent=");
-    serialOut().print(_silent ? 1 : 0);
+    serialOut().print(_switches.silent ? 1 : 0);
     // OutputStatus (OUT-002, step 10f): what SoundOutput is doing and has done.
     {
         const OutputStatus& out = _soundOutput.status();

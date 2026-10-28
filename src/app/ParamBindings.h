@@ -1,107 +1,20 @@
 #pragma once
 
-#include <ParamRegistry.h>
-
-#include "../behavior/BehaviorProfile.h"
-#include "../detection/detectors/scalar/ScalarTransientConfig.h"
-#include "../detection/inspection/InspectorTypes.h"
-#include "ParamIds.h"
-
 /*
-ParamBindings (step 11e item 9, PAR-003)
+ParamBindings (step 11e item 9, PAR-003; step 11i N7)
 
-The one place that spells a config struct's fields as param paths. The Node
-binds its live copies here, the Analyzer binds its SEQ tuning, the host
-replay binds the profile its --set flags override: same paths, same ranges,
-same ids on every build. A field that gets a new path or range changes here
-and nowhere else.
+The shared param descriptions in one include: each config struct describes its own fields as param paths, ids and
+ranges next to its header (`param::describeParams(registry, config)`, review A10). The Node registers them all
+(modes/resonant/ResonantNodeParams.h, NodeParams::describe, in the PARAM LIST order), the Analyzer its SEQ tuning,
+the host replay the profile its --set flags override: same paths, same ranges, same ids on every build.
 
-ScalarTransientConfig::observedStream (an enum) is not a param: the profile
-sets it (SEQ PROFILE on the Analyzer; the Node ships TonalPulseScalar), owner
-decision 2026-10-25 (decisions/2026-10-25-analyzer-params-on-registry-and-
-line-policy.md).
+  detection.scalar_*                    detection/detectors/scalar/ScalarTransientParams.h
+  detection.shape_*, *_medium           detection/inspection/InspectionParams.h
+  detection.band_*                      detection/features/NetworkBand.h (the Node only)
+  behavior.*                            behavior/BehaviorParams.h
+  output.hop_*, output.idle_announce_*  modes/resonant/ResonantNodeSignalComposer.h (the Node only)
+  output.silent, node.radio_enabled     modes/resonant/ResonantNodeParams.h (the Node only)
 */
-namespace param {
-
-// detection.scalar_*: the 13 numeric and bool fields of ScalarTransientConfig
-// (the Node's production profile is TonalPulseScalar, decisions/2026-10-14-
-// node-ships-tonalpulsescalar.md). Strengths are Strength16 values, times ms.
-inline void bindScalarTransientParams(ParamRegistry& registry, detection::ScalarTransientConfig& sc) {
-    registry.addFloat(ParamId::Detection_ScalarOnsetThreshold, ModuleId::Detection,
-                      "detection.scalar_onset_threshold", &sc.onsetDetectionThreshold, 0.0f, 200000.0f);
-    registry.addFloat(ParamId::Detection_ScalarReleaseThreshold, ModuleId::Detection,
-                      "detection.scalar_release_threshold", &sc.onsetReleaseThreshold, 0.0f, 200000.0f);
-    registry.addUInt32(ParamId::Detection_ScalarCooldownMs, ModuleId::Detection,
-                       "detection.scalar_cooldown_ms", &sc.cooldownAfterOnsetMs, 0U, 10000U);
-    registry.addUInt32(ParamId::Detection_ScalarMinDurationMs, ModuleId::Detection,
-                       "detection.scalar_min_duration_ms", &sc.minTransientDurationMs, 0U, 5000U);
-    registry.addUInt32(ParamId::Detection_ScalarMaxDurationMs, ModuleId::Detection,
-                       "detection.scalar_max_duration_ms", &sc.maxTransientDurationMs, 0U, 5000U);
-    registry.addFloat(ParamId::Detection_ScalarMinPeakStrength, ModuleId::Detection,
-                      "detection.scalar_min_peak_strength", &sc.minTransientPeakStrength, 0.0f, 200000.0f);
-    registry.addUInt32(ParamId::Detection_ScalarReleaseDebounceMs, ModuleId::Detection,
-                       "detection.scalar_release_debounce_ms", &sc.releaseDebounceMs, 0U, 1000U);
-    registry.addBool(ParamId::Detection_ScalarRequireCarrierQuality, ModuleId::Detection,
-                     "detection.scalar_require_carrier_quality", &sc.requireCarrierQuality);
-    registry.addBool(ParamId::Detection_ScalarRequireMinStrength, ModuleId::Detection,
-                     "detection.scalar_require_min_strength", &sc.requireMinStrength);
-    registry.addFloat(ParamId::Detection_ScalarMinStrength, ModuleId::Detection,
-                      "detection.scalar_min_strength", &sc.minMatchedMeanStrength, 0.0f, 200000.0f);
-    registry.addUInt32(ParamId::Detection_ScalarMinReleaseCoverageMs, ModuleId::Detection,
-                       "detection.scalar_min_release_coverage_ms", &sc.minCoverageAboveReleaseMs, 0U, 5000U);
-    registry.addUInt32(ParamId::Detection_ScalarMinLongestIslandMs, ModuleId::Detection,
-                       "detection.scalar_min_longest_island_ms", &sc.minLongestIslandMs, 0U, 5000U);
-    registry.addUInt32(ParamId::Detection_ScalarMaxGapMs, ModuleId::Detection,
-                       "detection.scalar_max_gap_ms", &sc.maxGapMs, 0U, 5000U);
-}
-
-// detection.shape_*: the BinShape module's settings (DET-015; step 11g B2, review D2.7). The window must fit the
-// BinTrack (preMs + max duration + tailMs <= BinTrack::kMs): RB plan_check prints shape_window_too_long if not.
-inline void bindShapeParams(ParamRegistry& registry, detection::ShapeInspectionConfig& shape) {
-    registry.addUInt32(ParamId::Detection_ShapePreMs, ModuleId::Detection, "detection.shape_pre_ms", &shape.preMs, 0U, 200U);
-    registry.addUInt32(ParamId::Detection_ShapeTailMs, ModuleId::Detection, "detection.shape_tail_ms", &shape.tailMs, 0U, 200U);
-    registry.addUInt16(ParamId::Detection_ShapeMaxRisingStepBins, ModuleId::Detection, "detection.shape_max_rising_step_bins",
-                       &shape.maxRisingStepBins, 1U, 4U);
-    registry.addUInt32(ParamId::Detection_ShapeMinRunMs, ModuleId::Detection, "detection.shape_min_run_ms", &shape.minRunMs, 1U, 50U);
-    registry.addUInt16(ParamId::Detection_ShapeMediumMinBins, ModuleId::Detection, "detection.shape_medium_min_bins",
-                       &shape.mediumMinBins, 1U, 16U);
-    registry.addUInt16(ParamId::Detection_ShapeMediumMinRisingSteps, ModuleId::Detection, "detection.shape_medium_min_rising_steps",
-                       &shape.mediumMinRisingSteps, 0U, 16U);
-    registry.addUInt16(ParamId::Detection_ShapeStrongMinBins, ModuleId::Detection, "detection.shape_strong_min_bins",
-                       &shape.strongMinBins, 1U, 16U);
-    registry.addUInt16(ParamId::Detection_ShapeStrongMinRisingSteps, ModuleId::Detection, "detection.shape_strong_min_rising_steps",
-                       &shape.strongMinRisingSteps, 0U, 16U);
-}
-
-// behavior.*: one param per BehaviorGateConfig field (PAR-006, step 10 item 4).
-// The paths are the snake_case field names; the RB BEHAV keys they replaced
-// are mapped in decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md.
-inline void bindBehaviorParams(ParamRegistry& registry, BehaviorGateConfig& b) {
-    registry.addBool(ParamId::Behavior_IdleEnabled, ModuleId::Behavior, "behavior.idle_enabled", &b.idleEnabled);
-    registry.addUInt32(ParamId::Behavior_WaitAfterHeardMs, ModuleId::Behavior,
-                       "behavior.wait_after_heard_ms", &b.waitAfterHeardMs, 0U, 10000U);
-    registry.addUInt32(ParamId::Behavior_RefractoryAfterEmitMs, ModuleId::Behavior,
-                       "behavior.refractory_after_emit_ms", &b.refractoryAfterEmitMs, 0U, 60000U);
-    registry.addUInt32(ParamId::Behavior_SuppressSelfChirpMs, ModuleId::Behavior,
-                       "behavior.suppress_self_chirp_ms", &b.behaviorSuppressSelfChirpMs, 0U, 10000U);
-    registry.addUInt32(ParamId::Behavior_DetectionSuppressTailMs, ModuleId::Behavior,
-                       "behavior.detection_suppress_tail_ms", &b.detectionSuppressTailMsOwnEmit, 0U, 5000U);
-    registry.addUInt32(ParamId::Behavior_IdleTimeoutMs, ModuleId::Behavior,
-                       "behavior.idle_timeout_ms", &b.idleTimeoutMs, 0U, 3600000U);
-    registry.addUInt32(ParamId::Behavior_IdleTimeoutVariationMs, ModuleId::Behavior,
-                       "behavior.idle_timeout_variation_ms", &b.idleTimeVariationMs, 0U, 3600000U);
-    registry.addUInt32(ParamId::Behavior_IdleBlockedAfterHeardMs, ModuleId::Behavior,
-                       "behavior.idle_blocked_after_heard_ms", &b.idleBlockedAfterHeardMs, 0U, 600000U);
-    registry.addUInt32(ParamId::Behavior_IdleBlockedAfterOwnEmitMs, ModuleId::Behavior,
-                       "behavior.idle_blocked_after_own_emit_ms", &b.idleBlockedAfterOwnEmitMs, 0U, 600000U);
-    registry.addUInt32(ParamId::Behavior_RestAfterFieldPatterns, ModuleId::Behavior,
-                       "behavior.rest_after_field_patterns", &b.restAfterFieldPatterns, 0U, 100U);
-    registry.addUInt32(ParamId::Behavior_OwnEmitBudget, ModuleId::Behavior,
-                       "behavior.own_emit_budget", &b.ownEmitBudget, 0U, 100U);
-    registry.addUInt32(ParamId::Behavior_OwnEmitBudgetWindowMs, ModuleId::Behavior,
-                       "behavior.own_emit_budget_window_ms", &b.ownEmitBudgetWindowMs, 0U, 600000U);
-    registry.addUInt32(ParamId::Behavior_RestMs, ModuleId::Behavior,
-                       "behavior.rest_ms", &b.restMs, 0U, 600000U);
-}
-
-}  // namespace param
+#include "../behavior/BehaviorParams.h"
+#include "../detection/detectors/scalar/ScalarTransientParams.h"
+#include "../detection/inspection/InspectionParams.h"

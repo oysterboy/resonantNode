@@ -145,7 +145,7 @@ void Node::printNetStatus() {
     serialOut().print(" build=");
     serialOut().print(BUILD_GIT_SHA);
     serialOut().print(" silent=");
-    serialOut().print(_silent ? 1 : 0);
+    serialOut().print(_switches.silent ? 1 : 0);
     serialOut().print(" uptime_s=");
     serialOut().print(timebase::nowMs() / 1000UL);
     serialOut().print(" rx=");

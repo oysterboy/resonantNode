@@ -107,11 +107,20 @@ void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
 }
 
 ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, const detection::FieldState& field, unsigned long now) {
+    if (!_outputsEnabled) {
+        // Outputs off: a verdict must not leave Behavior in HeardPattern to fire late once on (issue #31).
+        notePatternHeardWhileOutputsOff(result, now);
+        return BehaviorDecision::None;
+    }
     _lastFieldState = field;
     return handleOccurrenceVerdict(result, now);
 }
 
 ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, unsigned long now) {
+    if (!_outputsEnabled) {
+        notePatternHeardWhileOutputsOff(result, now);
+        return BehaviorDecision::None;
+    }
     _patternsReceived++;
     _lastVerdictType = result.type;
     _lastPatternHeardAtMs = result.primaryHeardAtMs != 0 ? result.primaryHeardAtMs : result.primaryStartMs;
@@ -198,6 +207,9 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
 }
 
 void ResonantBehavior::update(unsigned long now) {
+    if (!_outputsEnabled) {
+        return;  // as when the Node skipped the call (before step 11i N6)
+    }
     const bool heardPatternDetected = _pendingHeardPatternDetected;
     const float heardPatternStrength = _pendingHeardPatternStrength;
     const unsigned long heardPatternMs = _pendingHeardPatternMs;
@@ -304,7 +316,7 @@ bool ResonantBehavior::behaviorEligible() const {
 // --- outputs ---
 
 bool ResonantBehavior::shouldStartChirp() {
-    return _chirpRequested;
+    return _outputsEnabled && _chirpRequested;
 }
 
 const char* ResonantBehavior::chirpRequestSourceName() const {
@@ -666,4 +678,41 @@ void ResonantBehavior::notePatternHeardWhileOutputsOff(const detection::Occurren
     if (verdict.valid) {
         _lastHeardPatternMs = verdict.primaryAcceptedMs != 0 ? verdict.primaryAcceptedMs : now;
     }
+}
+
+BehaviorStatus ResonantBehavior::status(unsigned long now) const {
+    BehaviorStatus st;
+    st.nowMs = now;
+    st.stateName = stateName();
+    st.idle = _state == State::Idle;
+    st.outputsEnabled = _outputsEnabled;
+    st.outputBusy = outputBusy();
+    st.behaviorEligible = _behaviorEligible;
+    st.config = _config;
+    st.lastDecisionName = lastDecisionName();
+    st.lastBlockReasonName = lastBlockReasonName();
+    st.lastVerdictTypeName = lastVerdictTypeName();
+    st.lastHeardMs = _lastPatternHeardAtMs;
+    st.lastEmitMs = _lastEmitMs;
+    st.waitUntilMs = _waitUntilMs;
+    st.refractoryUntilMs = _refractoryUntilMs;
+    st.waitRemainingMs = waitRemainingMs(now);
+    st.refractoryRemainingMs = refractoryRemainingMs(now);
+    st.behaviorSuppressRemainingMs = behaviorSuppressRemainingMs(now);
+    st.ownEmitSuppressArmed = _ownEmitDetectionSuppressArmed;
+    st.ownEmitSuppressUntilMs = _ownEmitDetectionSuppressUntilMs;
+    st.resting = resting(now);
+    st.restUntilMs = _restUntilMs;
+    st.restsEntered = _restsEntered;
+    st.lastRestReasonName = behaviorDecisionName(_lastRestReason);
+    st.blockedResting = _blockedResting;
+    st.patternsReceived = _patternsReceived;
+    st.patternsIgnoredInvalid = _patternsIgnoredInvalid;
+    st.blockedOutputBusy = _blockedOutputBusy;
+    st.blockedRefractory = _blockedRefractory;
+    st.blockedWaiting = _blockedWaiting;
+    st.blockedSelfSuppressed = _blockedSelfSuppressed;
+    st.wouldEmitCount = _wouldEmitCount;
+    st.emittedCount = _emittedCount;
+    return st;
 }

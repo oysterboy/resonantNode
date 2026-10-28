@@ -135,10 +135,11 @@ void Node::handleSerialLine(const char* line) {
             return;
         }
         _behavior.requestNetworkCall();
+        const BehaviorStatus b = _behavior.status(timebase::nowMs());
         serialOut().print("RB CALL queued resting=");
-        serialOut().print(_behavior.resting(timebase::nowMs()) ? 1 : 0);
+        serialOut().print(b.resting ? 1 : 0);
         serialOut().print(" state=");
-        serialOut().println(_behavior.stateName());
+        serialOut().println(b.stateName);
         return;
     }
     if (equalsIgnoreCase(line, "RB summary") || equalsIgnoreCase(line, "RB stop")) {

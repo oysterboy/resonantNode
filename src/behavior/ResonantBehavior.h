@@ -3,6 +3,7 @@
 
 #include "../app/RingQueue.h"
 #include "BehaviorProfile.h"
+#include "BehaviorStatus.h"
 #include "../detection/field/FieldState.h"
 #include "../detection/evaluation/OccurrenceVerdict.h"
 #include "../output/OutputRequest.h"
@@ -51,6 +52,16 @@ public:
     BehaviorDecision handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);
     void seedIdleSchedule(unsigned long now);
+
+    // Outputs off (step 11i N6, review A9; myspec 6.1 lists blocking reasons under Behavior): the Node's gate
+    // (output.silent, the baseline's Settle / ListenForQuiet) handed in. While off, update() does nothing,
+    // shouldStartChirp() is false, and a verdict goes to notePatternHeardWhileOutputsOff() (decision None, the
+    // field state not taken). resetState() keeps it; default on.
+    void setOutputsEnabled(bool enabled) { _outputsEnabled = enabled; }
+    bool outputsEnabled() const { return _outputsEnabled; }
+
+    // One snapshot of the state, decisions, deadlines, rest and counters at `now`, for printing (BehaviorStatus.h).
+    BehaviorStatus status(unsigned long now) const;
 
     // The gate timing as configured (configure() applies it in place; the
     // idle wait already running is rescheduled from its start when the idle
@@ -206,6 +217,7 @@ private:
 
     // --- action latch ---
     bool _chirpRequested = false;
+    bool _outputsEnabled = true;  // setOutputsEnabled(); not reset by resetState()
 
     enum class ChirpRequestSource {
         None,

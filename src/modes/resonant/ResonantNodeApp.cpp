@@ -58,8 +58,6 @@ constexpr int kMaxSamplesPerLoop = 512;
 }
 
 
-
-
 // RB PROFILE detail prints the stream in CamelCase (detection::featureStreamName is snake_case).
 static const char* streamDisplayName(detection::FeatureStreamId stream) {
     switch (stream) {
@@ -127,9 +125,10 @@ static void printDetectionProfileDetails(const detection::DetectionProfile& prof
         serialOut().print("  inspectionPlan.module[");
         serialOut().print(static_cast<unsigned int>(i));
         serialOut().print("].kind=");
-        serialOut().print(module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength ? "MagnitudeFeatureStrength"
-                          : module.kind == detection::InspectionModuleKind::BinShape         ? "BinShape"
-                                                                                              : "None");
+        serialOut().print(module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength
+                              ? "MagnitudeFeatureStrength"
+                              : module.kind == detection::InspectionModuleKind::BinShape ? "BinShape"
+                                                                                         : "None");
         serialOut().print(" label=");
         serialOut().print(detection::inspectionTargetName(module.target));
         if (module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength) {
@@ -219,21 +218,18 @@ static const char* behaviorGateName(const BehaviorStatus& behavior, bool pattern
 
 Node::Node(int ledPin, int chirpPin, int chirpBtlPin)
     : _ledPin(ledPin),
-      _i2sSource(runtime::kDefaultAudioI2SSckPin,
-                  runtime::kDefaultAudioI2SWsPin,
-                  runtime::kDefaultAudioI2SDataPin,
-                  static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
-                  static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample),
-                  runtime::kDefaultAudioI2SDataOutPin),
+      _i2sSource(runtime::kDefaultAudioI2SSckPin, runtime::kDefaultAudioI2SWsPin, runtime::kDefaultAudioI2SDataPin,
+                 static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
+                 static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample), runtime::kDefaultAudioI2SDataOutPin),
       _audioSource(_i2sSource),
       _audioSignal(_audioSource),
       _freqBandStream(),
 #if defined(BOARD_PIEZO)
       _toneOutput(chirpPin),
       _toneOutputBTL(chirpPin, chirpBtlPin),
-      _chirpOutput(chirpBtlPin >= 0
-                       ? static_cast<ToneOutput&>(_toneOutputBTL)
-                       : static_cast<ToneOutput&>(_toneOutput)) {}
+      _chirpOutput(chirpBtlPin >= 0 ? static_cast<ToneOutput&>(_toneOutputBTL)
+                                    : static_cast<ToneOutput&>(_toneOutput)) {
+}
 #else
       _toneOutput(_i2sSource),
       _chirpOutput(_toneOutput) {
@@ -404,8 +400,7 @@ void Node::applySilent() {
 
 // The machine (NodeBaseline) says what happened this tick; the Node does the side effects and prints the RB lines.
 void Node::updateRbBaselineState(unsigned long now) {
-    const NodeBaseline::Tick tick =
-        _baseline.update(now, static_cast<float>(_audioSignal.smoothedSignalMagnitude()));
+    const NodeBaseline::Tick tick = _baseline.update(now, static_cast<float>(_audioSignal.smoothedSignalMagnitude()));
     switch (tick.step) {
         case NodeBaseline::Step::None:
             break;
@@ -504,8 +499,8 @@ void Node::runSelfTestHardware(unsigned long now) {
 #else
         const char* path = "i2s";
 #endif
-        amp = selftest::runAmpCheck(serialOut(), tally, _i2sSource, _chirpOutput.toneOutput(),
-                                    _chirpOutput.toneHz(), path);
+        amp = selftest::runAmpCheck(serialOut(), tally, _i2sSource, _chirpOutput.toneOutput(), _chirpOutput.toneHz(),
+                                    path);
     }
     restoreAfterSelfTestHardware();
     _selfTest.hardwareDone(mic, amp, timebase::nowMs());
@@ -601,18 +596,22 @@ void Node::update() {
             break;
         }
 
-        const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
+        const uint32_t sampleRateHz =
+            _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const uint64_t sampleTimeUs64 = block.approxStartUs64 + timebase::sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
+            const uint64_t sampleTimeUs64 =
+                block.approxStartUs64 + timebase::sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSamplePacket audioSamplePacket;
-            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket, block.overflowBeforeBlock);
+            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket,
+                                block.overflowBeforeBlock);
             const bool ownEmitSuppressed = _behavior.ownEmitDetectionSuppressed(audioSamplePacket.timeMs);
             _lastSampleTimeMs = audioSamplePacket.timeMs;
             if (ownEmitSuppressed) {
                 ++_suppressedSampleCount;
             }
             if (!ownEmitSuppressed) {
-                _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
+                _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue,
+                                                      audioSamplePacket.timeMs);
                 processDetectionFrame(audioSamplePacket, now, selfChirpSuppressed, sawPatternThisLoop);
             }
         }
@@ -646,8 +645,7 @@ void Node::update() {
     }
     const bool behaviorWouldEmit = _behavior.takeWouldEmit();
     const bool shouldLogWouldEmit = behaviorWouldEmit && rbShouldLogDetail() &&
-                                    (_behavior.lastHeardMs() != _rbLastWouldEmitHeardMs ||
-                                     _behavior.lastDecision() != _rbLastWouldEmitDecision);
+        (_behavior.lastHeardMs() != _rbLastWouldEmitHeardMs || _behavior.lastDecision() != _rbLastWouldEmitDecision);
     if (shouldLogWouldEmit) {
         const BehaviorStatus b = _behavior.status(now);
         serialOut().print("BEH verdict=");
@@ -691,7 +689,6 @@ void Node::update() {
     if (_selfTest.active()) {
         updateSelfTest(timebase::nowMs());
     }
-
 }
 
 // Behavior asked for a chirp: start the emission it asked for (step 10 item 9:
@@ -723,8 +720,8 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
     // The request from Behavior's ask, the band grid and output.* (NodeSignalComposer, step 11i N5): a heard
     // pattern is answered with the hop train, the idle call is announcement, gap, then the call. SoundOutput plays
     // it (step 10f); own-emit suppression covers its span.
-    OutputRequest request = _composer.compose(
-        bandGrid(), chirpPattern, _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal);
+    OutputRequest request = _composer.compose(bandGrid(), chirpPattern,
+                                              _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal);
     bool started = _soundOutput.start(request);
     if (!started && request.kind != OutputRequest::Kind::Pattern) {
         // As before step 10f: a train or call that does not start falls back to the pattern.
@@ -783,10 +780,8 @@ void Node::updateEmissions(unsigned long now) {
 
 // --- detection frame -> Behavior -> SoundOutput ---
 
-void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
-                              unsigned long now,
-                              bool selfChirpSuppressed,
-                              bool& sawPatternThisLoop) {
+void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket, unsigned long now,
+                                 bool selfChirpSuppressed, bool& sawPatternThisLoop) {
     const auto liveFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
     _detection.observeFrame(audioSamplePacket, liveFrequencyMeasurementPacket, audioSamplePacket.timeMs);
 
@@ -834,9 +829,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
             serialOut().print(" profile=");
             serialOut().println(profileName());
         }
-
     }
-
 }
 
 // --- logging / summaries ---
@@ -845,7 +838,7 @@ bool Node::rbShouldLogDetail() const {
     return _rbLogMode == RbLogMode::Full;
 }
 
-detection::FrequencyBandMeasurementPacket Node::captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const {
+detection::FrequencyBandMeasurementPacket Node::captureFrequencyMeasurementPacket(
+    const AudioSamplePacket& audioSamplePacket) const {
     return detection::buildFrequencyMeasurementPacket(_freqBandStream, audioSamplePacket);
 }
-

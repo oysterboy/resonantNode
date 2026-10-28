@@ -14,11 +14,10 @@ void printScalarTransientDetailLine(const char* prefix, const detection::Detecto
     const auto& scalar = report->scalar;
     const bool acceptedSelected = report->accepted.present;
     const bool rejectSelected = !acceptedSelected && report->selectedReject.present;
-    const char* selectedInspectReason = rejectSelected &&
-        report->selectedReject.detectorReason != nullptr &&
-        report->selectedReject.detectorReason[0] != '\0'
-            ? report->selectedReject.detectorReason
-            : "none";
+    const char* selectedInspectReason = rejectSelected && report->selectedReject.detectorReason != nullptr &&
+            report->selectedReject.detectorReason[0] != '\0'
+        ? report->selectedReject.detectorReason
+        : "none";
     serialOut().print(prefix);
     serialOut().print(" detail.scalar.accepted.value=");
     serialOut().print(scalar.accepted.value, 1);

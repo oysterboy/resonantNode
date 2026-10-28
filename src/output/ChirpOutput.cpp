@@ -130,7 +130,6 @@ void ChirpOutput::update() {
                 _toneOutput.toneOn();
             }
             break;
-
     }
 }
 

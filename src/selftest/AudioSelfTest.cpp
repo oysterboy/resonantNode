@@ -98,8 +98,8 @@ AmpTrial runAmpTrial(AudioSourceI2S& source, ToneOutput& tone) {
             continue;
         }
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const uint32_t t = timebase::lowUs32(block.approxStartUs64)
-                + static_cast<uint32_t>((static_cast<uint64_t>(i) * 1000000ULL) / rateHz);
+            const uint32_t t = timebase::lowUs32(block.approxStartUs64) +
+                static_cast<uint32_t>((static_cast<uint64_t>(i) * 1000000ULL) / rateHz);
             const float env = envelope.push(block.samples[i]);
             ++trial.samples;
             if (inWindow(t, start + kAmpFloorFromUs, t0 - kAmpFloorGuardUs)) {
@@ -127,8 +127,7 @@ void drainSource(AudioSourceI2S& source, uint32_t ms) {
     const uint32_t until = timebase::nowMs() + ms;
     AudioBlock block;
     for (;;) {
-        while (source.readBlock(block)) {
-        }
+        while (source.readBlock(block)) {}
         if (static_cast<int32_t>(timebase::nowMs() - until) >= 0) {
             return;
         }
@@ -241,8 +240,8 @@ Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t ca
     return result;
 }
 
-Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput& tone,
-                   uint32_t toneHz, const char* path, uint8_t chirps) {
+Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput& tone, uint32_t toneHz,
+                   const char* path, uint8_t chirps) {
     if (chirps == 0) {
         chirps = 1;
     }
@@ -341,8 +340,8 @@ Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput&
     return result;
 }
 
-void emitChirpsBlocking(Print& out, AudioSourceI2S* source, ToneOutput& tone, uint32_t toneHz,
-                        uint8_t n, uint32_t durMs, uint32_t gapMs) {
+void emitChirpsBlocking(Print& out, AudioSourceI2S* source, ToneOutput& tone, uint32_t toneHz, uint8_t n,
+                        uint32_t durMs, uint32_t gapMs) {
     out.print("SELFTEST_CHIRP start n=");
     out.print(n);
     out.print(" freq_hz=");

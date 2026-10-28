@@ -48,8 +48,9 @@ bool endsWith(const std::string& s, const char* suffix) {
 }
 
 void usage() {
-    printf("usage: program [--band LO-HI|off] [--target HZ] [--set path=value]... [--preprocess none|dc|fd]\n"
-           "               [--tail-ms N] [--skip-ms N] [--compare] [--verbose] [--quiet] <capture>... | --dir <folder>\n");
+    printf(
+        "usage: program [--band LO-HI|off] [--target HZ] [--set path=value]... [--preprocess none|dc|fd]\n"
+        "               [--tail-ms N] [--skip-ms N] [--compare] [--verbose] [--quiet] <capture>... | --dir <folder>\n");
 }
 
 }  // namespace
@@ -93,9 +94,9 @@ int main(int argc, char** argv) {
         } else if (a == "--preprocess") {
             const std::string v = next("--preprocess");
             opt.preprocessForced = true;
-            opt.preprocess = v == "dc"   ? runtime::PcmPreprocessMode::DcBlocker
-                             : v == "fd" ? runtime::PcmPreprocessMode::FirstDifference
-                                         : runtime::PcmPreprocessMode::None;
+            opt.preprocess = v == "dc" ? runtime::PcmPreprocessMode::DcBlocker
+                : v == "fd"            ? runtime::PcmPreprocessMode::FirstDifference
+                                       : runtime::PcmPreprocessMode::None;
         } else if (a == "--tail-ms") {
             opt.tailMs = strtoul(next("--tail-ms"), nullptr, 10);
         } else if (a == "--skip-ms") {
@@ -185,15 +186,18 @@ int main(int argc, char** argv) {
             }
             if (!r.verdicts.empty()) {
                 const detection::OccurrenceVerdict& v = r.verdicts.front();
-                printf(" first: %s start_ms=%lu dur_ms=%lu strength=%.0f", v.accepted ? "accepted" : detection::verdictRejectReasonName(v.rejectReason),
-                       v.primaryStartMs, v.primaryDurationMs, static_cast<double>(v.primaryStrength));
+                printf(" first: %s start_ms=%lu dur_ms=%lu strength=%.0f",
+                       v.accepted ? "accepted" : detection::verdictRejectReasonName(v.rejectReason), v.primaryStartMs,
+                       v.primaryDurationMs, static_cast<double>(v.primaryStrength));
             }
             if (r.ampCompared > 0) {
-                printf(" amp_vs_board: n=%zu mean_abs=%.1f max_abs=%.0f", r.ampCompared, r.ampMeanAbsDiff, r.ampMaxAbsDiff);
+                printf(" amp_vs_board: n=%zu mean_abs=%.1f max_abs=%.0f", r.ampCompared, r.ampMeanAbsDiff,
+                       r.ampMaxAbsDiff);
             }
             if (r.freqCompared > 0) {
-                printf(" freq_vs_board: n=%zu mean_abs=%.1f max_abs=%.0f contrast_rel mean=%.4f max=%.4f", r.freqCompared,
-                       r.freqMeanAbsDiff, r.freqMaxAbsDiff, r.contrastMeanRelDiff, r.contrastMaxRelDiff);
+                printf(" freq_vs_board: n=%zu mean_abs=%.1f max_abs=%.0f contrast_rel mean=%.4f max=%.4f",
+                       r.freqCompared, r.freqMeanAbsDiff, r.freqMaxAbsDiff, r.contrastMeanRelDiff,
+                       r.contrastMaxRelDiff);
             }
             printf("\n");
         }

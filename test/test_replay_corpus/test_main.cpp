@@ -265,7 +265,8 @@ void test_dry_hop_train_loses_its_first_step() {
     const hostreplay::Result r = hostreplay::replay(cap, networkBand(), profile);
     for (const detection::OccurrenceVerdict& v : r.verdicts) {
         if (v.accepted) {
-            TEST_ASSERT_TRUE_MESSAGE(v.primaryStartMs > kHopTrainStartMaxMs, "a dry train was read from its first step");
+            TEST_ASSERT_TRUE_MESSAGE(v.primaryStartMs > kHopTrainStartMaxMs,
+                                     "a dry train was read from its first step");
         }
     }
 }
@@ -369,7 +370,8 @@ void test_shipped_hop_train_fits_the_scalar_detector() {
 // 0..+100 ms window ends. Before, at 85 ms, it was inspected 5 ms early (audit 3.1).
 void test_shipped_plan_fits_the_history_and_the_window() {
     const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
-    const detection::InspectionPlanCheck c = detection::checkInspectionPlan(profile.scalarTransient, profile.inspectionPlan);
+    const detection::InspectionPlanCheck c =
+        detection::checkInspectionPlan(profile.scalarTransient, profile.inspectionPlan);
     TEST_ASSERT_EQUAL_UINT32(410, c.historyNeededMs);
     TEST_ASSERT_EQUAL_UINT32(512, c.historySpanMs);
     TEST_ASSERT_TRUE(c.hardOk());
@@ -437,8 +439,8 @@ void test_band_grid_is_shared_by_detector_and_hop_train() {
 // sin(pi * f / fs), kept as a literal because every capture since bfbe0c8
 // used it. A change of the chirp or the sample rate must come back here.
 void test_dc_blocker_scale_is_the_first_difference_gain_at_the_chirp() {
-    const double expected = sin(PI * static_cast<double>(runtime::kDefaultChirpFrequencyHz)
-                                / static_cast<double>(runtime::kDefaultAudioI2SSampleRateHz));
+    const double expected = sin(PI * static_cast<double>(runtime::kDefaultChirpFrequencyHz) /
+                                static_cast<double>(runtime::kDefaultAudioI2SSampleRateHz));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, static_cast<float>(expected), runtime::kDcBlockerOutputScale);
 }
 

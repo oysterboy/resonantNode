@@ -354,7 +354,6 @@ struct AnalyzerDebugSummary {
     const char* pipelineSource = "actual_pipeline";
     bool pipelineFallback = false;
     const char* mainRejectReason = "none";
-
 };
 
 struct AnalyzerCleanSummary {
@@ -413,4 +412,3 @@ struct AnalyzerReport {
 inline AnalyzerReport makeEmptyAnalyzerReport() {
     return AnalyzerReport{};
 }
-

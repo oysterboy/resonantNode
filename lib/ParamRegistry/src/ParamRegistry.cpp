@@ -107,19 +107,24 @@ bool ParamRegistry::addBinding(const ParamBinding& binding) {
     return true;
 }
 
-bool ParamRegistry::addUInt16Raw(uint16_t id, uint8_t group, const char* path, uint16_t* field, uint16_t minValue, uint16_t maxValue) {
-    ParamBinding binding{id, group, ParamType::UInt16, path, field, static_cast<float>(minValue), static_cast<float>(maxValue),
-                         minValue, maxValue};
+bool ParamRegistry::addUInt16Raw(uint16_t id, uint8_t group, const char* path, uint16_t* field, uint16_t minValue,
+                                 uint16_t maxValue) {
+    ParamBinding binding{
+        id,       group,   ParamType::UInt16, path, field, static_cast<float>(minValue), static_cast<float>(maxValue),
+        minValue, maxValue};
     return addBinding(binding);
 }
 
-bool ParamRegistry::addUInt32Raw(uint16_t id, uint8_t group, const char* path, uint32_t* field, uint32_t minValue, uint32_t maxValue) {
-    ParamBinding binding{id, group, ParamType::UInt32, path, field, static_cast<float>(minValue), static_cast<float>(maxValue),
-                         minValue, maxValue};
+bool ParamRegistry::addUInt32Raw(uint16_t id, uint8_t group, const char* path, uint32_t* field, uint32_t minValue,
+                                 uint32_t maxValue) {
+    ParamBinding binding{
+        id,       group,   ParamType::UInt32, path, field, static_cast<float>(minValue), static_cast<float>(maxValue),
+        minValue, maxValue};
     return addBinding(binding);
 }
 
-bool ParamRegistry::addFloatRaw(uint16_t id, uint8_t group, const char* path, float* field, float minValue, float maxValue) {
+bool ParamRegistry::addFloatRaw(uint16_t id, uint8_t group, const char* path, float* field, float minValue,
+                                float maxValue) {
     ParamBinding binding{id, group, ParamType::Float, path, field, minValue, maxValue, 0, 0};
     return addBinding(binding);
 }

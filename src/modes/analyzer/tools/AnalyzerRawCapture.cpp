@@ -100,12 +100,8 @@ unsigned long rawCaptureChunkSize(unsigned long sampleRateHz, unsigned long deci
 
 } // namespace
 
-bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
-                                unsigned long durationMs,
-                                unsigned long postMs,
-                                unsigned long preMs,
-                                unsigned long decim,
-                                RawCaptureMode mode,
+bool AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs,
+                                unsigned long preMs, unsigned long decim, RawCaptureMode mode,
                                 const RawTriggerShape& shape) {
     stopSequenceTest();
     // band= (step 7b): set for this capture, restored on every way out.
@@ -151,15 +147,18 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     }
     serialOut().println();
 
-    const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
+    const uint32_t sampleRateHz =
+        _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     const unsigned long maxSamples = 6000UL;
     // mode=i2s with decim=N keeps every Nth word, so the fixed row budget
     // covers N times longer (e.g. a clap test over seconds). Other modes
     // keep using decim for output chunking only.
     const unsigned long i2sKeepEvery = (mode == RawCaptureMode::I2s && decim > 1) ? decim : 1UL;
     const uint32_t storedRateHz = sampleRateHz / i2sKeepEvery;
-    unsigned long preWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(preMs) * static_cast<uint64_t>(storedRateHz)) / 1000ULL);
-    unsigned long postWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(postMs) * static_cast<uint64_t>(storedRateHz)) / 1000ULL);
+    unsigned long preWantedSamples =
+        static_cast<unsigned long>((static_cast<uint64_t>(preMs) * static_cast<uint64_t>(storedRateHz)) / 1000ULL);
+    unsigned long postWantedSamples =
+        static_cast<unsigned long>((static_cast<uint64_t>(postMs) * static_cast<uint64_t>(storedRateHz)) / 1000ULL);
     if (preWantedSamples > maxSamples) {
         preWantedSamples = maxSamples;
     }
@@ -195,7 +194,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     if (mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s) {
         if (preWantedSamples > 0) {
-            prePcmRingBuffer = static_cast<RawCapturePcmSample*>(allocRows(preWantedSamples, sizeof(RawCapturePcmSample)));
+            prePcmRingBuffer =
+                static_cast<RawCapturePcmSample*>(allocRows(preWantedSamples, sizeof(RawCapturePcmSample)));
             if (prePcmRingBuffer == nullptr) {
                 serialOut().println("RAW_ERR memory=pre_ring_alloc_failed");
                 printRawMemoryState("pre_ring");
@@ -214,7 +214,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
     } else if (mode == RawCaptureMode::Features) {
         if (preWantedSamples > 0) {
-            preFeatureRingBuffer = static_cast<RawCaptureFeatureSample*>(allocRows(preWantedSamples, sizeof(RawCaptureFeatureSample)));
+            preFeatureRingBuffer =
+                static_cast<RawCaptureFeatureSample*>(allocRows(preWantedSamples, sizeof(RawCaptureFeatureSample)));
             if (preFeatureRingBuffer == nullptr) {
                 serialOut().println("RAW_ERR memory=pre_ring_alloc_failed");
                 printRawMemoryState("pre_ring");
@@ -222,7 +223,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             }
         }
 
-        featureCaptureBuffer = static_cast<RawCaptureFeatureSample*>(allocRows(captureRows, sizeof(RawCaptureFeatureSample)));
+        featureCaptureBuffer =
+            static_cast<RawCaptureFeatureSample*>(allocRows(captureRows, sizeof(RawCaptureFeatureSample)));
         if (featureCaptureBuffer == nullptr) {
             if (preFeatureRingBuffer != nullptr) {
                 free(preFeatureRingBuffer);
@@ -233,7 +235,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
     } else {
         if (preWantedSamples > 0) {
-            preBothRingBuffer = static_cast<RawCaptureBothSample*>(allocRows(preWantedSamples, sizeof(RawCaptureBothSample)));
+            preBothRingBuffer =
+                static_cast<RawCaptureBothSample*>(allocRows(preWantedSamples, sizeof(RawCaptureBothSample)));
             if (preBothRingBuffer == nullptr) {
                 serialOut().println("RAW_ERR memory=pre_ring_alloc_failed");
                 printRawMemoryState("pre_ring");
@@ -322,7 +325,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             snprintf(emitterCommand + written, sizeof(emitterCommand) - written, " hop=%s", shape.hop);
         }
     } else if (shape.sweepToHz != 0) {
-        snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu sweep=%lu", toneHz, durationMs, shape.sweepToHz);
+        snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu sweep=%lu", toneHz, durationMs,
+                 shape.sweepToHz);
     } else {
         snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
     }
@@ -360,11 +364,13 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
 
         const unsigned long startIndex = preCapturedTotal < preWantedSamples ? 0UL : preWriteIndex;
-        if ((mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s) && prePcmRingBuffer != nullptr && pcmCaptureBuffer != nullptr) {
+        if ((mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s) && prePcmRingBuffer != nullptr &&
+            pcmCaptureBuffer != nullptr) {
             for (unsigned long i = 0; i < preWindowSamples; ++i) {
                 pcmCaptureBuffer[i] = prePcmRingBuffer[(startIndex + i) % preWantedSamples];
             }
-        } else if (mode == RawCaptureMode::Features && preFeatureRingBuffer != nullptr && featureCaptureBuffer != nullptr) {
+        } else if (mode == RawCaptureMode::Features && preFeatureRingBuffer != nullptr &&
+                   featureCaptureBuffer != nullptr) {
             for (unsigned long i = 0; i < preWindowSamples; ++i) {
                 featureCaptureBuffer[i] = preFeatureRingBuffer[(startIndex + i) % preWantedSamples];
             }
@@ -381,8 +387,10 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             return;
         }
 
-        const bool startLine = startsWithTokenIgnoreCase(line, "EMIT_START") || startsWithTokenIgnoreCase(line, "EMIT_DRIVE_ON");
-        const bool doneLine = startsWithTokenIgnoreCase(line, "EMIT_DONE") || startsWithTokenIgnoreCase(line, "EMIT_DRIVE_OFF");
+        const bool startLine =
+            startsWithTokenIgnoreCase(line, "EMIT_START") || startsWithTokenIgnoreCase(line, "EMIT_DRIVE_ON");
+        const bool doneLine =
+            startsWithTokenIgnoreCase(line, "EMIT_DONE") || startsWithTokenIgnoreCase(line, "EMIT_DRIVE_OFF");
         if (startLine && !emitStarted) {
             emitStarted = true;
             emitStartMs = timebase::nowMs();
@@ -435,7 +443,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         const int32_t signedRawSample = static_cast<int32_t>(sourceSample);
         rawWindowSum += static_cast<int64_t>(signedRawSample);
         ++rawWindowCount;
-        rawWindowAbsSum += static_cast<uint64_t>(signedRawSample < 0 ? -static_cast<int64_t>(signedRawSample) : static_cast<int64_t>(signedRawSample));
+        rawWindowAbsSum += static_cast<uint64_t>(signedRawSample < 0 ? -static_cast<int64_t>(signedRawSample)
+                                                                     : static_cast<int64_t>(signedRawSample));
         if (signedRawSample < rawWindowMin) {
             rawWindowMin = signedRawSample;
         }
@@ -467,7 +476,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             }
 
             _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
-            const detection::FrequencyBandMeasurementPacket frequencyEvidence = captureFrequencyMeasurementPacket(audioSamplePacket);
+            const detection::FrequencyBandMeasurementPacket frequencyEvidence =
+                captureFrequencyMeasurementPacket(audioSamplePacket);
             _detection.observeFrame(audioSamplePacket, frequencyEvidence, audioSamplePacket.timeMs);
 
             const uint16_t ampStrength = audioSamplePacket.audioMagnitudeValue;
@@ -498,14 +508,16 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
                     featureCaptureBuffer[preWindowSamples + postCaptured].ampStrength = ampStrength;
                     featureCaptureBuffer[preWindowSamples + postCaptured].envStrength = envStrength;
                     featureCaptureBuffer[preWindowSamples + postCaptured].frequencyScore = frequencyScore;
-                    featureCaptureBuffer[preWindowSamples + postCaptured].targetFresh = frequencyEvidence.fresh ? 1U : 0U;
+                    featureCaptureBuffer[preWindowSamples + postCaptured].targetFresh =
+                        frequencyEvidence.fresh ? 1U : 0U;
                 } else if (mode == RawCaptureMode::Both && bothCaptureBuffer != nullptr) {
                     bothCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
                     bothCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(sourceSample);
                     bothCaptureBuffer[preWindowSamples + postCaptured].amp = ampStrength;
                     bothCaptureBuffer[preWindowSamples + postCaptured].freq = frequencyScore;
                     bothCaptureBuffer[preWindowSamples + postCaptured].fresh = frequencyEvidence.fresh ? 1U : 0U;
-                    bothCaptureBuffer[preWindowSamples + postCaptured].contrast = frequencyEvidence.targetBandContrastValue;
+                    bothCaptureBuffer[preWindowSamples + postCaptured].contrast =
+                        frequencyEvidence.targetBandContrastValue;
                 }
                 ++postCaptured;
             }
@@ -560,11 +572,11 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     const unsigned long requestedSamples = preWantedSamples + postWantedSamples;
     const unsigned long capturedSamples = preWindowSamples + postCaptured;
-    const unsigned long unusedCapacitySamples = captureRows > capturedSamples
-        ? captureRows - capturedSamples
-        : 0;
-    const float rawWindowMean = rawWindowCount > 0 ? static_cast<float>(rawWindowSum) / static_cast<float>(rawWindowCount) : 0.0f;
-    const float rawWindowAbsMean = rawWindowCount > 0 ? static_cast<float>(rawWindowAbsSum) / static_cast<float>(rawWindowCount) : 0.0f;
+    const unsigned long unusedCapacitySamples = captureRows > capturedSamples ? captureRows - capturedSamples : 0;
+    const float rawWindowMean =
+        rawWindowCount > 0 ? static_cast<float>(rawWindowSum) / static_cast<float>(rawWindowCount) : 0.0f;
+    const float rawWindowAbsMean =
+        rawWindowCount > 0 ? static_cast<float>(rawWindowAbsSum) / static_cast<float>(rawWindowCount) : 0.0f;
     const int32_t rawWindowMinOut = rawWindowCount > 0 ? rawWindowMin : 0;
     const int32_t rawWindowMaxOut = rawWindowCount > 0 ? rawWindowMax : 0;
 
@@ -648,8 +660,9 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     // raw PCM, every other mode what AudioSignal received), so a transcript
     // used as a host fixture says which chain it represents.
     serialOut().print(" preprocess=");
-    serialOut().print(runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::DcBlocker ? "dc"
-                 : runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::FirstDifference ? "fd" : "none");
+    serialOut().print(runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::DcBlocker             ? "dc"
+                          : runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::FirstDifference ? "fd"
+                                                                                                       : "none");
     serialOut().print(" decim=");
     serialOut().print(decim);
     serialOut().print(" pre_samples=");

@@ -49,7 +49,8 @@ public:
     // heard for idleBlockedAfterHeardMs, without entering HeardPattern
     // (issue #31 R2-12).
     void notePatternHeardWhileOutputsOff(const detection::OccurrenceVerdict& verdict, unsigned long now);
-    BehaviorDecision handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, const detection::FieldState& field, unsigned long now);
+    BehaviorDecision handleOccurrenceVerdict(const detection::OccurrenceVerdict& result,
+                                             const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);
     void seedIdleSchedule(unsigned long now);
 
@@ -249,4 +250,3 @@ private:
     unsigned long idleMinMs() const;
     unsigned long idleMaxMs() const;
 };
-

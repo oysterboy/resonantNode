@@ -88,15 +88,12 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     serialOut().print(selectedReject.rms, 1);
     const bool useAcceptedCandidate = accepted.present || !selectedReject.present;
     const float candidateMeanStrength = useAcceptedCandidate ? accepted.meanStrength : selectedReject.meanStrength;
-    const float candidateMatchedMeanStrength = useAcceptedCandidate
-        ? accepted.matchedMeanStrength
-        : selectedReject.matchedMeanStrength;
-    const unsigned int candidateStrengthCount = useAcceptedCandidate
-        ? accepted.strengthCount
-        : selectedReject.strengthCount;
-    const unsigned int candidateMatchedStrengthCount = useAcceptedCandidate
-        ? accepted.matchedStrengthCount
-        : selectedReject.matchedStrengthCount;
+    const float candidateMatchedMeanStrength =
+        useAcceptedCandidate ? accepted.matchedMeanStrength : selectedReject.matchedMeanStrength;
+    const unsigned int candidateStrengthCount =
+        useAcceptedCandidate ? accepted.strengthCount : selectedReject.strengthCount;
+    const unsigned int candidateMatchedStrengthCount =
+        useAcceptedCandidate ? accepted.matchedStrengthCount : selectedReject.matchedStrengthCount;
     serialOut().print(" candidate.mean_strength=");
     serialOut().print(candidateMeanStrength, 1);
     serialOut().print(" candidate.min_strength=");
@@ -123,8 +120,7 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     if (detectorReport.detectorId == DetectorId::ScalarTransient) {
         const bool carrierQualityPass = detectorReport.scalar.inspect.carrierQualityRequired
             ? (detectorReport.scalar.inspect.carrierCoveragePassed &&
-               detectorReport.scalar.inspect.carrierIslandPassed &&
-               detectorReport.scalar.inspect.carrierGapPassed)
+               detectorReport.scalar.inspect.carrierIslandPassed && detectorReport.scalar.inspect.carrierGapPassed)
             : true;
         serialOut().print(carrierQualityPass ? 1 : 0);
     } else if (accepted.present) {
@@ -134,7 +130,9 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     }
     serialOut().print(" candidate.min_strength_pass=");
     serialOut().print(detectorReport.detectorId == DetectorId::ScalarTransient &&
-        detectorReport.scalar.inspect.matchedMeanPassed ? 1 : 0);
+                              detectorReport.scalar.inspect.matchedMeanPassed
+                          ? 1
+                          : 0);
     serialOut().print(" threshold.min_duration_ms=");
     serialOut().print(detectorReport.thresholds.minDurationMs);
     serialOut().print(" threshold.max_duration_ms=");

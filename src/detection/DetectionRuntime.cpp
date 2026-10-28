@@ -6,13 +6,15 @@
 // DetectionRuntime pipeline execution in source order.
 namespace detection {
 
-DetectionRuntime::DetectionRuntime() : _diagnostics(_scalarDetector, _featureHistory) {
+DetectionRuntime::DetectionRuntime()
+    : _diagnostics(_scalarDetector, _featureHistory) {
     _occurrenceInspector.setBinTrack(&_binTrack);
 }
 
 namespace {
 
-float selectedScalarValue(const AudioSamplePacket& audioSamplePacket, const FrequencyBandMeasurementPacket& frequencyEvidence, FeatureStreamId stream) {
+float selectedScalarValue(const AudioSamplePacket& audioSamplePacket,
+                          const FrequencyBandMeasurementPacket& frequencyEvidence, FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpMagnitude:
             return static_cast<float>(audioSamplePacket.audioMagnitudeValue);
@@ -86,7 +88,7 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection /*selection*/) {
 // authority on which streams are worth recording. The header can't depend
 // on InspectorTypes.h, so the bound is enforced here, where both are visible.
 static_assert(FeatureHistory::kMaxActiveStreams >= kMaxInspectionModules,
-    "FeatureHistory must have a slot for every stream an InspectionPlan can name");
+              "FeatureHistory must have a slot for every stream an InspectionPlan can name");
 
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _inspectionPlan = plan;
@@ -126,11 +128,9 @@ void DetectionRuntime::setVerdictQueueEnabled(bool enabled) {
 
 // --- the frame --------------------------------------------------------------
 
-void IRAM_ATTR DetectionRuntime::observeFrame(
-    const AudioSamplePacket& audioSamplePacket,
-    const FrequencyBandMeasurementPacket& frequencyEvidence,
-    unsigned long nowMs
-) {
+void IRAM_ATTR DetectionRuntime::observeFrame(const AudioSamplePacket& audioSamplePacket,
+                                              const FrequencyBandMeasurementPacket& frequencyEvidence,
+                                              unsigned long nowMs) {
     _diagnostics.onObserveFrame();
     _fieldStateTracker.update(nowMs);
     if (!audioSamplePacket.valid) {
@@ -150,8 +150,7 @@ void IRAM_ATTR DetectionRuntime::observeFrame(
     } else {
         _scalarDetector.update(
             audioSamplePacket,
-            selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream)
-        );
+            selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream));
         detectorInputProcessed = true;
         _diagnostics.onFreshDetectorInput();
     }
@@ -225,8 +224,8 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
     }
 }
 
-void DetectionRuntime::inspectAndRender(const Occurrence& occurrence, const ActiveDetectionDiagnostics::ReportSlot& report,
-                                        unsigned long nowMs) {
+void DetectionRuntime::inspectAndRender(const Occurrence& occurrence,
+                                        const ActiveDetectionDiagnostics::ReportSlot& report, unsigned long nowMs) {
     const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
     _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
     _diagnostics.onInspected(inspected);

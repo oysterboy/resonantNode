@@ -6,10 +6,8 @@
 
 namespace detection {
 
-inline FrequencyBandMeasurementPacket buildFrequencyMeasurementPacket(
-    const FreqBandStream& freqBandStream,
-    const AudioSamplePacket& audioSamplePacket
-) {
+inline FrequencyBandMeasurementPacket buildFrequencyMeasurementPacket(const FreqBandStream& freqBandStream,
+                                                                      const AudioSamplePacket& audioSamplePacket) {
     FrequencyBandMeasurementPacket evidence = {};
     const bool present = freqBandStream.windowReady();
 

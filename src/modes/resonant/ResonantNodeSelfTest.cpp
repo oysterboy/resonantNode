@@ -117,9 +117,9 @@ NodeSelfTest::Request NodeSelfTest::update(unsigned long now, const Inputs& in) 
             return Request::None;
 
         case Phase::QuietBoot: {
-            const bool pending = _baseline.lastResult() == NodeBaseline::RebaseResult::Pending
-                || _baseline.state() == NodeBaseline::State::Boot
-                || _baseline.state() == NodeBaseline::State::ListenForQuiet;
+            const bool pending = _baseline.lastResult() == NodeBaseline::RebaseResult::Pending ||
+                _baseline.state() == NodeBaseline::State::Boot ||
+                _baseline.state() == NodeBaseline::State::ListenForQuiet;
             if (pending && !deadlinePassed(now, st.deadlineMs)) {
                 return Request::None;
             }
@@ -135,8 +135,7 @@ NodeSelfTest::Request NodeSelfTest::update(unsigned long now, const Inputs& in) 
             // A chirp from before SELFTEST started has no own-chirp window;
             // its echo would count as external (issue #31 R2-16). Wait for
             // it to stop and for kEchoWindowMs after.
-            const bool ownChirpEcho = in.chirpActive
-                || !timing::elapsedSince(now, in.lastOwnChirpEndMs, kEchoWindowMs);
+            const bool ownChirpEcho = in.chirpActive || !timing::elapsedSince(now, in.lastOwnChirpEndMs, kEchoWindowMs);
             if ((!in.outputsEnabled || ownChirpEcho) && !deadlinePassed(now, st.deadlineMs)) {
                 return Request::None;
             }
@@ -152,8 +151,8 @@ NodeSelfTest::Request NodeSelfTest::update(unsigned long now, const Inputs& in) 
                 st.firstOtherValidMs = 0;
                 return Request::None;
             }
-            if (st.command.kind == selftest::Command::Kind::Full
-                && (st.micResult != selftest::Result::Pass || st.ampResult != selftest::Result::Pass)) {
+            if (st.command.kind == selftest::Command::Kind::Full &&
+                (st.micResult != selftest::Result::Pass || st.ampResult != selftest::Result::Pass)) {
                 selftest::skip(serialOut(), st.tally, "own_chirp_suppressed",
                                st.micResult != selftest::Result::Pass ? "mic_failed" : "amp_failed");
                 selftest::skip(serialOut(), st.tally, "external_chirp", "not_requested");
@@ -275,8 +274,8 @@ void NodeSelfTest::driveChirps(unsigned long now, const Inputs& in) {
         finishOwnChirp(true, in.suppressTailMs);
         return;
     }
-    if (!st.waitingForChirp && st.chirpsRequested < st.command.chirps
-        && deadlinePassed(now, st.nextChirpAtMs) && in.outputsEnabled) {
+    if (!st.waitingForChirp && st.chirpsRequested < st.command.chirps && deadlinePassed(now, st.nextChirpAtMs) &&
+        in.outputsEnabled) {
         _chirps.request(_chirps.ctx);
         ++st.chirpsRequested;
         st.waitingForChirp = true;
@@ -346,8 +345,8 @@ bool NodeSelfTest::verdictIsOwn(unsigned long occurrenceStartMs, uint32_t suppre
     for (uint8_t i = 0; i < st.windowCount; ++i) {
         const unsigned long start = st.chirpStartMs[i];
         const unsigned long end = st.chirpEndMs[i] != 0 ? st.chirpEndMs[i] : start + kOpenChirpSpanMs;
-        if (static_cast<long>(occurrenceStartMs - (start - 20UL)) >= 0
-            && static_cast<long>(occurrenceStartMs - (end + ownStartLimitMs)) <= 0) {
+        if (static_cast<long>(occurrenceStartMs - (start - 20UL)) >= 0 &&
+            static_cast<long>(occurrenceStartMs - (end + ownStartLimitMs)) <= 0) {
             return true;
         }
     }
@@ -357,14 +356,13 @@ bool NodeSelfTest::verdictIsOwn(unsigned long occurrenceStartMs, uint32_t suppre
 void NodeSelfTest::observeVerdict(const detection::OccurrenceVerdict& verdict, unsigned long now,
                                   uint32_t suppressTailMs) {
     State& st = _st;
-    const bool watching = st.phase == Phase::OwnChirp
-        || st.phase == Phase::OwnChirpTail
-        || st.phase == Phase::External
-        || st.phase == Phase::ExternalTail;
+    const bool watching = st.phase == Phase::OwnChirp || st.phase == Phase::OwnChirpTail ||
+        st.phase == Phase::External || st.phase == Phase::ExternalTail;
     if (!watching) {
         return;
     }
-    const unsigned long startMs = verdict.primaryStartMs != 0 ? verdict.primaryStartMs
+    const unsigned long startMs = verdict.primaryStartMs != 0
+        ? verdict.primaryStartMs
         : (verdict.primaryHeardAtMs != 0 ? verdict.primaryHeardAtMs : now);
     if (verdictIsOwn(startMs, suppressTailMs)) {
         ++st.ownVerdicts;

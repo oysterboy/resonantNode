@@ -45,18 +45,16 @@ EmitterApp::EmitterApp(int outputPin, int outputBtlPin, int rxPin, int txPin, un
 #if defined(BOARD_PIEZO)
       _toneOutput(outputPin),
       _toneOutputBTL(outputPin, outputBtlPin),
-      _chirpOutput(outputBtlPin >= 0
-                       ? static_cast<ToneOutput&>(_toneOutputBTL)
-                       : static_cast<ToneOutput&>(_toneOutput)) {}
+      _chirpOutput(outputBtlPin >= 0 ? static_cast<ToneOutput&>(_toneOutputBTL)
+                                     : static_cast<ToneOutput&>(_toneOutput)) {
+}
 #else
-      _i2sPort(runtime::kDefaultAudioI2SSckPin,
-               runtime::kDefaultAudioI2SWsPin,
-               runtime::kDefaultAudioI2SDataPin,
+      _i2sPort(runtime::kDefaultAudioI2SSckPin, runtime::kDefaultAudioI2SWsPin, runtime::kDefaultAudioI2SDataPin,
                static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
-               static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample),
-               runtime::kDefaultAudioI2SDataOutPin),
+               static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample), runtime::kDefaultAudioI2SDataOutPin),
       _toneOutput(_i2sPort),
-      _chirpOutput(_toneOutput) {}
+      _chirpOutput(_toneOutput) {
+}
 #endif
 
 void EmitterApp::begin() {
@@ -94,7 +92,8 @@ void EmitterApp::update() {
         char markerLine[96];
         snprintf(markerLine, sizeof(markerLine), "EMIT_DONE trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
         sendEmitterMarker(markerLine);
-        snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_OFF trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
+        snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_OFF trial=%lu t_ms=%lu", _activeTrialId,
+                 timebase::nowMs());
         sendEmitterMarker(markerLine);
         _activeTrialId = 0;
         serialOut().println("EVT emitter_chirp_finished");
@@ -227,7 +226,8 @@ void EmitterApp::handleLine(const char* line) {
         return;
     }
 
-    if (strcmp(token, "AUTO") == 0 || strcmp(token, "REMOTE") == 0 || strcmp(token, "REMOTE_CONTROL") == 0 || strcmp(token, "MODE") == 0 || strcmp(token, "SWEEP") == 0) {
+    if (strcmp(token, "AUTO") == 0 || strcmp(token, "REMOTE") == 0 || strcmp(token, "REMOTE_CONTROL") == 0 ||
+        strcmp(token, "MODE") == 0 || strcmp(token, "SWEEP") == 0) {
         claimExternalControl();
         handleModeCommand(line);
     }
@@ -399,8 +399,8 @@ void EmitterApp::handlePulsesCommand(const char* line) {
         token = nextToken(savePtr);
     }
 
-    if (count == 0 || count > kPulsesMaxCount || pulseMs == 0 || pulseMs > kPulsesMaxPulseMs ||
-        gapMs == 0 || gapMs > kPulsesMaxGapMs || rampMs > kPulsesMaxRampMs) {
+    if (count == 0 || count > kPulsesMaxCount || pulseMs == 0 || pulseMs > kPulsesMaxPulseMs || gapMs == 0 ||
+        gapMs > kPulsesMaxGapMs || rampMs > kPulsesMaxRampMs) {
         serialOut().print("ERR PULSES n=");
         serialOut().print(count);
         serialOut().print(" pulse=");
@@ -489,13 +489,8 @@ void EmitterApp::handleModeCommand(const char* line) {
         setMode(EmitterMode::Auto);
         _nextAutoChirpAtMs = timebase::nowMs();
         char modeLine[96];
-        snprintf(modeLine,
-                 sizeof(modeLine),
-                 "OK MODE %s interval=%lu freq=%lu dur=%lu",
-                 modeName(),
-                 _autoIntervalMs,
-                 _autoToneHz,
-                 _autoDurationMs);
+        snprintf(modeLine, sizeof(modeLine), "OK MODE %s interval=%lu freq=%lu dur=%lu", modeName(), _autoIntervalMs,
+                 _autoToneHz, _autoDurationMs);
         sendControlAck(modeLine);
         return;
     }
@@ -562,19 +557,13 @@ void EmitterApp::handleSweepCommand(const char* line) {
     setMode(EmitterMode::Sweep);
     _nextSweepStepAtMs = timebase::nowMs();
     char modeLine[128];
-    snprintf(modeLine,
-             sizeof(modeLine),
-             "OK MODE %s start=%lu stop=%lu step=%lu dur=%lu pause=%lu",
-             modeName(),
-             _sweepStartHz,
-             _sweepStopHz,
-             _sweepStepHz,
-             _sweepDurationMs,
-             _sweepPauseMs);
+    snprintf(modeLine, sizeof(modeLine), "OK MODE %s start=%lu stop=%lu step=%lu dur=%lu pause=%lu", modeName(),
+             _sweepStartHz, _sweepStopHz, _sweepStepHz, _sweepDurationMs, _sweepPauseMs);
     sendControlAck(modeLine);
 }
 
-void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId, unsigned long sweepToHz) {
+void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId,
+                            unsigned long sweepToHz) {
     if (_chirpOutput.isActive()) {
         _chirpOutput.stop();
     }
@@ -598,12 +587,8 @@ void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsi
     sendControlAck(chirpLine);
 }
 
-void EmitterApp::startPulses(unsigned long toneHz,
-                             unsigned long count,
-                             unsigned long pulseMs,
-                             unsigned long gapMs,
-                             unsigned long rampMs,
-                             unsigned long trialId) {
+void EmitterApp::startPulses(unsigned long toneHz, unsigned long count, unsigned long pulseMs, unsigned long gapMs,
+                             unsigned long rampMs, unsigned long trialId) {
     if (_chirpOutput.isActive()) {
         _chirpOutput.stop();
     }
@@ -624,16 +609,8 @@ void EmitterApp::startPulses(unsigned long toneHz,
     // is first sound to last silence.
     const unsigned long spanMs = count * pulseMs + (count - 1) * gapMs;
     char ackLine[128];
-    snprintf(ackLine,
-             sizeof(ackLine),
-             "OK PULSES n=%lu pulse=%lu gap=%lu freq=%lu ramp=%lu span=%lu hop=%u",
-             count,
-             pulseMs,
-             gapMs,
-             toneHz,
-             rampMs,
-             spanMs,
-             static_cast<unsigned>(_pulseHopCount));
+    snprintf(ackLine, sizeof(ackLine), "OK PULSES n=%lu pulse=%lu gap=%lu freq=%lu ramp=%lu span=%lu hop=%u", count,
+             pulseMs, gapMs, toneHz, rampMs, spanMs, static_cast<unsigned>(_pulseHopCount));
     sendControlAck(ackLine);
 }
 
@@ -668,7 +645,8 @@ void EmitterApp::configureAuto(unsigned long intervalMs, unsigned long toneHz, u
     _chirpOutput.setTiming(_autoDurationMs, 0);
 }
 
-void EmitterApp::configureSweep(unsigned long startHz, unsigned long stopHz, unsigned long stepHz, unsigned long durationMs, unsigned long pauseMs) {
+void EmitterApp::configureSweep(unsigned long startHz, unsigned long stopHz, unsigned long stepHz,
+                                unsigned long durationMs, unsigned long pauseMs) {
     if (stepHz == 0) {
         stepHz = 1;
     }

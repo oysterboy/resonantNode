@@ -34,8 +34,12 @@ inline void yield() {}
 
 // millis()/micros() exist so legacy includes compile; they do not advance.
 // Board code reads timebase::nowMs() instead (issue #30).
-inline unsigned long millis() { return 0; }
-inline unsigned long micros() { return 0; }
+inline unsigned long millis() {
+    return 0;
+}
+inline unsigned long micros() {
+    return 0;
+}
 
 inline long random(long maxValue) {
     return maxValue <= 0 ? 0 : static_cast<long>(rand() % maxValue);
@@ -43,7 +47,9 @@ inline long random(long maxValue) {
 inline long random(long minValue, long maxValue) {
     return maxValue <= minValue ? minValue : minValue + random(maxValue - minValue);
 }
-inline void randomSeed(unsigned long seed) { srand(static_cast<unsigned int>(seed)); }
+inline void randomSeed(unsigned long seed) {
+    srand(static_cast<unsigned int>(seed));
+}
 
 template <typename T>
 inline T constrain(T value, T low, T high) {
@@ -56,7 +62,10 @@ inline T constrain(T value, T low, T high) {
 class Print {
 public:
     size_t print(const char* text) { return text != nullptr ? static_cast<size_t>(fputs(text, stdout)) : 0; }
-    size_t print(char c) { fputc(c, stdout); return 1; }
+    size_t print(char c) {
+        fputc(c, stdout);
+        return 1;
+    }
     size_t print(int v) { return static_cast<size_t>(printf("%d", v)); }
     size_t print(unsigned int v) { return static_cast<size_t>(printf("%u", v)); }
     size_t print(long v) { return static_cast<size_t>(printf("%ld", v)); }
@@ -66,10 +75,21 @@ public:
     size_t print(double v, int digits = 2) { return static_cast<size_t>(printf("%.*f", digits, v)); }
     size_t print(float v, int digits = 2) { return print(static_cast<double>(v), digits); }
     template <typename T>
-    size_t println(T v) { const size_t n = print(v); fputc('\n', stdout); return n + 1; }
+    size_t println(T v) {
+        const size_t n = print(v);
+        fputc('\n', stdout);
+        return n + 1;
+    }
     template <typename T>
-    size_t println(T v, int digits) { const size_t n = print(v, digits); fputc('\n', stdout); return n + 1; }
-    size_t println() { fputc('\n', stdout); return 1; }
+    size_t println(T v, int digits) {
+        const size_t n = print(v, digits);
+        fputc('\n', stdout);
+        return n + 1;
+    }
+    size_t println() {
+        fputc('\n', stdout);
+        return 1;
+    }
 };
 
 class HostSerial : public Print {

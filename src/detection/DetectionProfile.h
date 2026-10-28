@@ -63,7 +63,7 @@ enum class DetectionProfileKind {
 
 struct DetectionProfile {
     // Declaration and defaults
-    
+
     // Identity and composition.
     DetectionProfileKind kind = DetectionProfileKind::TonalPulseScalar;
     DetectorSelection detectorSelection = DetectorSelection::ScalarTransient;
@@ -111,54 +111,71 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     // This profile observes a frequency-derived scalar stream, not raw PCM.
     // "Offline" values here are deduced from RAW PCM captures and then mapped
     // into the normalized magnitude-like 0..32767 scale.
-    profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTarget; // Track the target-band scalar stream.
-    profile.scalarTransient.onsetDetectionThreshold = 2000.0f; // Attack threshold for candidate start.
-    profile.scalarTransient.onsetReleaseThreshold = 1500.0f; // Release threshold for candidate end.
-    profile.scalarTransient.minTransientDurationMs = 92; // Reject pulses that are too short. 92 since 2026-10-23 (was 85; DET-017, owner): above a 40 ms beep + room reflection (86 ms, bench/sessions/2026-10-22-7d-dur40-raw), below the shortest hop train with one step in a deep null (97 ms, host notch sweep). 100 lost the deep null on the middle step.
-    profile.scalarTransient.maxTransientDurationMs = 300; // Reject pulses that are too long. 300 since 2026-10-16 (was 200): a 5-step hop train (25 ms x 5, gap 10, 165 ms) is seen as up to 214 ms with the room tail; the 100 ms chirp is unaffected. Noise cost of 300 alone not yet measured (lab note 2026-10-16, open items).
+    profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTarget;  // Track the target-band scalar stream.
+    profile.scalarTransient.onsetDetectionThreshold = 2000.0f;  // Attack threshold for candidate start.
+    profile.scalarTransient.onsetReleaseThreshold = 1500.0f;  // Release threshold for candidate end.
+    profile.scalarTransient.minTransientDurationMs =
+        92;  // Reject pulses that are too short. 92 since 2026-10-23 (was 85; DET-017, owner): above a 40 ms beep + room reflection (86 ms, bench/sessions/2026-10-22-7d-dur40-raw), below the shortest hop train with one step in a deep null (97 ms, host notch sweep). 100 lost the deep null on the middle step.
+    profile.scalarTransient.maxTransientDurationMs =
+        300;  // Reject pulses that are too long. 300 since 2026-10-16 (was 200): a 5-step hop train (25 ms x 5, gap 10, 165 ms) is seen as up to 214 ms with the room tail; the 100 ms chirp is unaffected. Noise cost of 300 alone not yet measured (lab note 2026-10-16, open items).
 
-    profile.scalarTransient.releaseDebounceMs = 10; // Require a short stable release before ending.
-    profile.scalarTransient.cooldownAfterOnsetMs = 50; // Avoid immediate re-triggering on the same pulse.
+    profile.scalarTransient.releaseDebounceMs = 10;  // Require a short stable release before ending.
+    profile.scalarTransient.cooldownAfterOnsetMs = 50;  // Avoid immediate re-triggering on the same pulse.
     // Minimum strength gate for the matched mean / peak utility switch.
     profile.scalarTransient.requireMinStrength = true;
-    profile.scalarTransient.minTransientPeakStrength = 3000.0f; // Minimum peak gate for the carrier.
-    profile.scalarTransient.minMatchedMeanStrength = 0.0f; // Mean over samples above the release threshold.
+    profile.scalarTransient.minTransientPeakStrength = 3000.0f;  // Minimum peak gate for the carrier.
+    profile.scalarTransient.minMatchedMeanStrength = 0.0f;  // Mean over samples above the release threshold.
     // Carrier quality gates to reject fragmented or weak target-band coverage.
     profile.scalarTransient.requireCarrierQuality = true;
-    profile.scalarTransient.minCoverageAboveReleaseMs = 80; // Minimum time above release level.
-    profile.scalarTransient.minLongestIslandMs = 20; // Longest continuous island above release level.
-    profile.scalarTransient.maxGapMs = 20; // Largest allowed gap inside the candidate.
+    profile.scalarTransient.minCoverageAboveReleaseMs = 80;  // Minimum time above release level.
+    profile.scalarTransient.minLongestIslandMs = 20;  // Longest continuous island above release level.
+    profile.scalarTransient.maxGapMs = 20;  // Largest allowed gap inside the candidate.
 
 
     // Inspection: Frequency Contrast
     profile.inspectionPlan = InspectionPlan{};  // not "= {}": g++ 13 rejects a brace list on this aggregate (NODE-007)
-    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::MagnitudeFeatureStrength; // Magnitude inspector module.
-    profile.inspectionPlan.modules[0].target = InspectionTarget::Contrast; // Route this observation as contrast evidence.
-    profile.inspectionPlan.modules[0].enabled = true; // Enable the module in the matcher.
-    profile.inspectionPlan.modules[0].magnitude.stream = FeatureStreamId::FrequencyContrast; // Measure frequency contrast.
-    profile.inspectionPlan.modules[0].magnitude.anchor = MagnitudeInspectionAnchor::Start; // Window from occurrence start.
-    profile.inspectionPlan.modules[0].magnitude.windowPreMs = 0; // No look-back before the anchor.
-    profile.inspectionPlan.modules[0].magnitude.windowPostMs = 100; // Inspect the first 100 ms after onset.
-    profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
-    profile.inspectionPlan.modules[0].magnitude.mode = MagnitudeInspectionMode::P75; // Use a robust percentile summary.
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 300000.0f; // Above the 0..32,767 contrast range on purpose: Strong is unused for contrast; the requirement is Medium (step 8b item 4, owner 2026-10-22).
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = SCALAR_CONTRAST_MEDIUM_THRESHOLD; // Medium contrast limit, SCALAR_CONTRAST_MEDIUM_THRESHOLD above; live as detection.contrast_medium.
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 10000.0f; // Weak contrast threshold.
+    profile.inspectionPlan.modules[0].kind =
+        InspectionModuleKind::MagnitudeFeatureStrength;  // Magnitude inspector module.
+    profile.inspectionPlan.modules[0].target =
+        InspectionTarget::Contrast;  // Route this observation as contrast evidence.
+    profile.inspectionPlan.modules[0].enabled = true;  // Enable the module in the matcher.
+    profile.inspectionPlan.modules[0].magnitude.stream =
+        FeatureStreamId::FrequencyContrast;  // Measure frequency contrast.
+    profile.inspectionPlan.modules[0].magnitude.anchor =
+        MagnitudeInspectionAnchor::Start;  // Window from occurrence start.
+    profile.inspectionPlan.modules[0].magnitude.windowPreMs = 0;  // No look-back before the anchor.
+    profile.inspectionPlan.modules[0].magnitude.windowPostMs = 100;  // Inspect the first 100 ms after onset.
+    profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium;  // Require at least medium evidence.
+    profile.inspectionPlan.modules[0].magnitude.mode =
+        MagnitudeInspectionMode::P75;  // Use a robust percentile summary.
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold =
+        300000.0f;  // Above the 0..32,767 contrast range on purpose: Strong is unused for contrast; the requirement is Medium (step 8b item 4, owner 2026-10-22).
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold =
+        SCALAR_CONTRAST_MEDIUM_THRESHOLD;  // Medium contrast limit, SCALAR_CONTRAST_MEDIUM_THRESHOLD above; live as detection.contrast_medium.
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold =
+        10000.0f;  // Weak contrast threshold.
 
 
     // Secondary Inspection: Amplitude
-    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::MagnitudeFeatureStrength; // Magnitude inspector module.
-    profile.inspectionPlan.modules[1].target = InspectionTarget::Amp; // Route this observation as amplitude evidence.
-    profile.inspectionPlan.modules[1].enabled = true; // Enable the module in the matcher.
-    profile.inspectionPlan.modules[1].magnitude.stream = FeatureStreamId::AmpMagnitude; // Measure the magnitude stream.
-    profile.inspectionPlan.modules[1].magnitude.anchor = MagnitudeInspectionAnchor::Start; // Window from occurrence start.
-    profile.inspectionPlan.modules[1].magnitude.windowPreMs = 0; // No look-back before the anchor.
-    profile.inspectionPlan.modules[1].magnitude.windowPostMs = 100; // Inspect the first 100 ms after onset.
-    profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
-    profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::P75; // Use a robust percentile summary.
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 5000.0f; // Strong amplitude threshold.
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = SCALAR_AMP_MEDIUM_THRESHOLD; // Medium amplitude limit, SCALAR_AMP_MEDIUM_THRESHOLD above; live as detection.amp_medium.
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1000.0f; // Weak amplitude threshold.
+    profile.inspectionPlan.modules[1].kind =
+        InspectionModuleKind::MagnitudeFeatureStrength;  // Magnitude inspector module.
+    profile.inspectionPlan.modules[1].target = InspectionTarget::Amp;  // Route this observation as amplitude evidence.
+    profile.inspectionPlan.modules[1].enabled = true;  // Enable the module in the matcher.
+    profile.inspectionPlan.modules[1].magnitude.stream =
+        FeatureStreamId::AmpMagnitude;  // Measure the magnitude stream.
+    profile.inspectionPlan.modules[1].magnitude.anchor =
+        MagnitudeInspectionAnchor::Start;  // Window from occurrence start.
+    profile.inspectionPlan.modules[1].magnitude.windowPreMs = 0;  // No look-back before the anchor.
+    profile.inspectionPlan.modules[1].magnitude.windowPostMs = 100;  // Inspect the first 100 ms after onset.
+    profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium;  // Require at least medium evidence.
+    profile.inspectionPlan.modules[1].magnitude.mode =
+        MagnitudeInspectionMode::P75;  // Use a robust percentile summary.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold =
+        5000.0f;  // Strong amplitude threshold.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold =
+        SCALAR_AMP_MEDIUM_THRESHOLD;  // Medium amplitude limit, SCALAR_AMP_MEDIUM_THRESHOLD above; live as detection.amp_medium.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold =
+        1000.0f;  // Weak amplitude threshold.
 
     // Third: shape (DET-015, decisions/2026-10-26-det015-bin-track-inspector.md, E002). The Node hears the hop
     // train only (decisions/2026-10-23-node-hears-the-hop-train-only.md): at least 3 distinct band bins with 2
@@ -177,15 +194,15 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[2].shape.maxRisingStepBins = 2;
     // The level a bin must reach to count is the detector's release threshold, read live by the runtime (not a
     // field of the plan: review D1.5).
-    profile.inspectionPlan.count = 3; // contrast, amp, shape.
+    profile.inspectionPlan.count = 3;  // contrast, amp, shape.
 
 
     // Field-state windowing.
-    profile.fieldStateConfig.occurrenceWindowMs = 4000; // Window for occurrence density tracking.
-    profile.fieldStateConfig.patternWindowMs = 4000; // Window for pattern density tracking.
-    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3; // Occurrence count considered busy.
-    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6; // Occurrence count considered dense.
-    profile.fieldStateConfig.busyActivityThreshold = 0.45f; // Activity threshold for busy field state.
+    profile.fieldStateConfig.occurrenceWindowMs = 4000;  // Window for occurrence density tracking.
+    profile.fieldStateConfig.patternWindowMs = 4000;  // Window for pattern density tracking.
+    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;  // Occurrence count considered busy.
+    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;  // Occurrence count considered dense.
+    profile.fieldStateConfig.busyActivityThreshold = 0.45f;  // Activity threshold for busy field state.
     return profile;
 }
 
@@ -235,7 +252,7 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 12000.0f;
     profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 8000.0f;
     //profile.inspectionPlan.modules[1].magnitude.minSustainedMs = 25;
-    
+
     profile.inspectionPlan.modules[2].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[2].target = InspectionTarget::Contrast;
     profile.inspectionPlan.modules[2].enabled = true;
@@ -248,8 +265,8 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.inspectionPlan.modules[2].magnitude.supportStrength.strongPeakThreshold = 80.0f;
     profile.inspectionPlan.modules[2].magnitude.supportStrength.mediumPeakThreshold = 50.0f;
     profile.inspectionPlan.modules[2].magnitude.supportStrength.weakPeakThreshold = 25.0f;
-    //profile.inspectionPlan.modules[2].magnitude.minSustainedMs = 25;  
-    
+    //profile.inspectionPlan.modules[2].magnitude.minSustainedMs = 25;
+
     profile.inspectionPlan.count = 3;
 
     // Field-state windowing.
@@ -306,7 +323,8 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
         outKind = DetectionProfileKind::AmpExperimental;
         return true;
     }
-    if (strcasecmp(name, "tonalpulsescalar") == 0 || strcasecmp(name, "tonal_pulse_scalar") == 0 || strcasecmp(name, "scalar_freq_experimental") == 0) {
+    if (strcasecmp(name, "tonalpulsescalar") == 0 || strcasecmp(name, "tonal_pulse_scalar") == 0 ||
+        strcasecmp(name, "scalar_freq_experimental") == 0) {
         outKind = DetectionProfileKind::TonalPulseScalar;
         return true;
     }
@@ -314,5 +332,4 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
     return false;
 }
 
-} // namespace detection
-
+}  // namespace detection

@@ -48,8 +48,7 @@ std::unique_ptr<detection::FeatureHistory> makeHistory(
     return history;
 }
 
-void recordSeries(detection::FeatureHistory& history,
-                  std::initializer_list<float> values,
+void recordSeries(detection::FeatureHistory& history, std::initializer_list<float> values,
                   detection::FeatureStreamId stream = detection::FeatureStreamId::AmpMagnitude) {
     unsigned long timeMs = 0;
     for (float value : values) {
@@ -64,11 +63,8 @@ void assertQuantileOrdering(const detection::MagnitudeWindow& window) {
     TEST_ASSERT_TRUE_MESSAGE(window.p90 <= window.max + kQuantileEpsilon, "p90 should be <= max");
 }
 
-void driveAcceptedOccurrence(ScalarTransientDetector& detector,
-                             unsigned long startMs,
-                             unsigned long highFrames,
-                             unsigned long lowFrames,
-                             detection::Occurrence& outOccurrence,
+void driveAcceptedOccurrence(ScalarTransientDetector& detector, unsigned long startMs, unsigned long highFrames,
+                             unsigned long lowFrames, detection::Occurrence& outOccurrence,
                              detection::DetectorReport& outReport) {
     for (unsigned long i = 0; i < highFrames; ++i) {
         const unsigned long timeMs = startMs + i;
@@ -91,11 +87,7 @@ void driveAcceptedOccurrence(ScalarTransientDetector& detector,
 void test_feature_history_empty_window() {
     auto historyOwner = makeHistory();
     detection::FeatureHistory& history = *historyOwner;
-    const auto window = history.getWindow(
-        detection::FeatureStreamId::AmpMagnitude,
-        0,
-        10,
-        10);
+    const auto window = history.getWindow(detection::FeatureStreamId::AmpMagnitude, 0, 10, 10);
 
     TEST_ASSERT_FALSE(window.hasValues);
     TEST_ASSERT_FALSE(window.valid);
@@ -215,15 +207,11 @@ void test_scalar_detector_emits_distinct_occurrence_ids() {
                              "accepted occurrences should not reuse occurrence IDs");
     TEST_ASSERT_EQUAL_UINT32(firstOccurrence.occurrenceId, firstReport.accepted.occurrenceId);
     TEST_ASSERT_EQUAL_UINT32(secondOccurrence.occurrenceId, secondReport.accepted.occurrenceId);
-    TEST_ASSERT_TRUE_MESSAGE(
-        detection::analyzer::sourceReportMatchesIdentity(
-            firstReport.accepted.occurrenceId,
-            firstOccurrence.occurrenceId,
-            firstReport.accepted.startMs,
-            firstOccurrence.startMs,
-            firstReport.accepted.endMs,
-            firstOccurrence.endMs),
-        "accepted report should match the occurrence identity");
+    TEST_ASSERT_TRUE_MESSAGE(detection::analyzer::sourceReportMatchesIdentity(
+                                 firstReport.accepted.occurrenceId, firstOccurrence.occurrenceId,
+                                 firstReport.accepted.startMs, firstOccurrence.startMs, firstReport.accepted.endMs,
+                                 firstOccurrence.endMs),
+                             "accepted report should match the occurrence identity");
 }
 
 void test_pattern_rejected_helper_excludes_source_rejects() {

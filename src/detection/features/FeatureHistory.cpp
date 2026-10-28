@@ -131,8 +131,7 @@ FeatureStreamId FeatureHistory::activeStream(size_t slot) const {
 }
 
 bool FeatureHistory::streamRequiresFreshAggregation(FeatureStreamId stream) {
-    return stream == FeatureStreamId::FrequencyTarget
-        || stream == FeatureStreamId::FrequencyContrast;
+    return stream == FeatureStreamId::FrequencyTarget || stream == FeatureStreamId::FrequencyContrast;
 }
 
 float FeatureHistory::representativeValueForStream(FeatureStreamId stream, const FeatureHistoryBin& bin) {
@@ -265,13 +264,8 @@ void IRAM_ATTR FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, 
     accumulateIntoCurrentBin(buffer, value, fresh);
 }
 
-MagnitudeWindow FeatureHistory::getWindow(
-    FeatureStreamId stream,
-    unsigned long startMs,
-    unsigned long endMs,
-    unsigned long inspectionNowMs,
-    float sustainedThreshold
-) const {
+MagnitudeWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs,
+                                          unsigned long inspectionNowMs, float sustainedThreshold) const {
     MagnitudeWindow out;
     out.stream = stream;
     out.startMs = startMs;
@@ -389,25 +383,24 @@ MagnitudeWindow FeatureHistory::getWindow(
     out.availableStartMs = firstValueMs;
     out.availableEndMs = lastValueMs;
     out.leftMissingMs = timing::after(firstValueMs, startMs) ? firstValueMs - startMs : 0UL;
-    out.rightMissingMs = timing::after(endMs, lastValueMs + kBinDurationMs) ? endMs - (lastValueMs + kBinDurationMs) : 0UL;
-    out.coverageComplete = haveWindow &&
-        out.leftMissingMs == 0UL &&
-        out.rightMissingMs == 0UL &&
-        !out.requestedFutureAtInspection;
+    out.rightMissingMs =
+        timing::after(endMs, lastValueMs + kBinDurationMs) ? endMs - (lastValueMs + kBinDurationMs) : 0UL;
+    out.coverageComplete =
+        haveWindow && out.leftMissingMs == 0UL && out.rightMissingMs == 0UL && !out.requestedFutureAtInspection;
     out.valid = out.coverageComplete && out.hasValues;
     out.coveredDurationMs = coveredDurationMs * kBinDurationMs;
     out.sampleCount = bucketCount;
     out.valueCount = totalInputCount;
     out.freshValueCount = totalFreshCount;
     out.bucketCount = bucketCount;
-    out.valuesPerBucket = bucketCount > 0 ? static_cast<float>(totalInputCount) / static_cast<float>(bucketCount) : 0.0f;
+    out.valuesPerBucket =
+        bucketCount > 0 ? static_cast<float>(totalInputCount) / static_cast<float>(bucketCount) : 0.0f;
     if (out.durationMs > 0 && out.coveredDurationMs > out.durationMs) {
         out.coveredDurationMs = out.durationMs;
     }
     out.coveredMs = out.coveredDurationMs;
-    out.coverageRatio = out.durationMs > 0
-        ? static_cast<float>(out.coveredDurationMs) / static_cast<float>(out.durationMs)
-        : 0.0f;
+    out.coverageRatio =
+        out.durationMs > 0 ? static_cast<float>(out.coveredDurationMs) / static_cast<float>(out.durationMs) : 0.0f;
     out.firstValueMs = firstValueMs;
     out.lastValueMs = lastValueMs;
     out.spanMs = haveWindow && timing::atOrAfter(lastValueMs, firstValueMs) ? lastValueMs - firstValueMs : 0UL;

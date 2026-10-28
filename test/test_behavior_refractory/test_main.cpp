@@ -107,8 +107,10 @@ void test_reply_arrives_inside_the_shipped_refractory() {
     const BehaviorGateConfig cfg = shippedDefaults();
     const unsigned long fast = replyVerdictDelayMs(cfg, kCloseFastMs);
     const unsigned long slow = replyVerdictDelayMs(cfg, kCloseSlowMs);
-    TEST_ASSERT_TRUE_MESSAGE(fast < cfg.refractoryAfterEmitMs, "fastest reply is after the refractory: chain can continue");
-    TEST_ASSERT_TRUE_MESSAGE(slow < cfg.refractoryAfterEmitMs, "slowest reply is after the refractory: chain can continue");
+    TEST_ASSERT_TRUE_MESSAGE(fast < cfg.refractoryAfterEmitMs,
+                             "fastest reply is after the refractory: chain can continue");
+    TEST_ASSERT_TRUE_MESSAGE(slow < cfg.refractoryAfterEmitMs,
+                             "slowest reply is after the refractory: chain can continue");
 }
 
 // Node A, shipped defaults: B's reply verdict is dropped as RefractoryAfterEmit.

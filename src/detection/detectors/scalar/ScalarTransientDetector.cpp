@@ -109,7 +109,8 @@ void ScalarTransientDetector::resetCandidateFacts() {
     _candidateLastUpdateUs = 0;
 }
 
-void IRAM_ATTR ScalarTransientDetector::updateCandidateFacts(uint64_t nowUs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
+void IRAM_ATTR ScalarTransientDetector::updateCandidateFacts(uint64_t nowUs, float strength, bool aboveAttackThreshold,
+                                                             bool aboveReleaseThreshold) {
     const unsigned long deltaUs = _candidateLastUpdateUs == 0 || nowUs < _candidateLastUpdateUs
         ? 0UL
         : static_cast<unsigned long>(nowUs - _candidateLastUpdateUs);
@@ -148,7 +149,8 @@ void IRAM_ATTR ScalarTransientDetector::updateCandidateFacts(uint64_t nowUs, flo
     } else if (_candidateWasAboveRelease) {
         ++_candidateGapCount;
         if (_candidateCurrentIslandStartUs != 0 && nowUs >= _candidateCurrentIslandStartUs) {
-            const unsigned long islandMs = static_cast<unsigned long>((nowUs - _candidateCurrentIslandStartUs) / 1000ULL);
+            const unsigned long islandMs =
+                static_cast<unsigned long>((nowUs - _candidateCurrentIslandStartUs) / 1000ULL);
             if (islandMs > _candidateIslandMaxMs) {
                 _candidateIslandMaxMs = islandMs;
             }
@@ -162,13 +164,17 @@ void IRAM_ATTR ScalarTransientDetector::updateCandidateFacts(uint64_t nowUs, flo
 }
 
 void ScalarTransientDetector::finalizeCandidateFacts(uint64_t releaseObservedUs) {
-    if (_candidateWasAboveRelease && _candidateCurrentIslandStartUs != 0 && releaseObservedUs >= _candidateCurrentIslandStartUs) {
-        const unsigned long islandMs = static_cast<unsigned long>((releaseObservedUs - _candidateCurrentIslandStartUs) / 1000ULL);
+    if (_candidateWasAboveRelease && _candidateCurrentIslandStartUs != 0 &&
+        releaseObservedUs >= _candidateCurrentIslandStartUs) {
+        const unsigned long islandMs =
+            static_cast<unsigned long>((releaseObservedUs - _candidateCurrentIslandStartUs) / 1000ULL);
         if (islandMs > _candidateIslandMaxMs) {
             _candidateIslandMaxMs = islandMs;
         }
-    } else if (!_candidateWasAboveRelease && _candidateCurrentGapStartUs != 0 && releaseObservedUs >= _candidateCurrentGapStartUs) {
-        const unsigned long gapMs = static_cast<unsigned long>((releaseObservedUs - _candidateCurrentGapStartUs) / 1000ULL);
+    } else if (!_candidateWasAboveRelease && _candidateCurrentGapStartUs != 0 &&
+               releaseObservedUs >= _candidateCurrentGapStartUs) {
+        const unsigned long gapMs =
+            static_cast<unsigned long>((releaseObservedUs - _candidateCurrentGapStartUs) / 1000ULL);
         if (gapMs > _candidateGapMaxMs) {
             _candidateGapMaxMs = gapMs;
         }
@@ -176,7 +182,8 @@ void ScalarTransientDetector::finalizeCandidateFacts(uint64_t releaseObservedUs)
 }
 
 // Core lifecycle helpers.
-void IRAM_ATTR ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
+void IRAM_ATTR ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float signalMagnitude,
+                                                         bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     // Use raw magnitude for the edge so short bursts are not delayed by smoothing.
     // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed && !_awaitReleaseBeforeOnset) {
@@ -213,7 +220,8 @@ void IRAM_ATTR ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float s
     }
 }
 
-void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, float signalMagnitude, bool aboveReleaseThreshold) {
+void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, float signalMagnitude,
+                                                             bool aboveReleaseThreshold) {
     if (_peakActive && signalMagnitude > _peakStrength) {
         _peakStrength = signalMagnitude;
         _peakStrengthObservedUs = nowUs;
@@ -240,7 +248,8 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
     // the debounce can only be rejected as too long, so close it now instead of
     // when the sound ends, and open no new one until the signal has dropped
     // below release (one reject per continuous tone, not one per max duration).
-    const uint64_t maxOpenUs = (static_cast<uint64_t>(_config.maxTransientDurationMs) + _config.releaseDebounceMs) * 1000ULL;
+    const uint64_t maxOpenUs =
+        (static_cast<uint64_t>(_config.maxTransientDurationMs) + _config.releaseDebounceMs) * 1000ULL;
     const bool openPastMax = _peakActive && _config.maxTransientDurationMs > 0 && nowUs - _peakStartedUs > maxOpenUs;
     const bool releaseDebounced =
         _peakActive && _releaseCandidateStartedUs != 0 && nowUs - _releaseCandidateStartedUs >= releaseDebounceUs;
@@ -252,12 +261,11 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
         const unsigned long peakDurationUs = static_cast<unsigned long>(releaseObservedUs - _peakStartedUs);
         const unsigned long minTransientDurationUs = _config.minTransientDurationMs * 1000UL;
         const unsigned long maxTransientDurationUs = _config.maxTransientDurationMs * 1000UL;
-        const bool durationAccepted = peakDurationUs >= minTransientDurationUs && peakDurationUs <= maxTransientDurationUs;
+        const bool durationAccepted =
+            peakDurationUs >= minTransientDurationUs && peakDurationUs <= maxTransientDurationUs;
         // Duration alone is not enough: weak ambient crossings can still last
         // long enough to look valid, so require a minimum peak strength too.
-        const bool strengthAccepted =
-            !_config.requireMinStrength ||
-            _peakStrength >= _config.minTransientPeakStrength;
+        const bool strengthAccepted = !_config.requireMinStrength || _peakStrength >= _config.minTransientPeakStrength;
         const float candidateMeanStrength = _candidateStrengthCount > 0
             ? static_cast<float>(_candidateStrengthSum / static_cast<double>(_candidateStrengthCount))
             : 0.0f;
@@ -265,24 +273,14 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
             ? static_cast<float>(_candidateMatchedStrengthSum / static_cast<double>(_candidateMatchedStrengthCount))
             : 0.0f;
         const bool matchedMeanAccepted =
-            !_config.requireMinStrength ||
-            candidateMatchedMeanStrength >= _config.minMatchedMeanStrength;
-        const bool coverageAccepted =
-            !_config.requireCarrierQuality ||
+            !_config.requireMinStrength || candidateMatchedMeanStrength >= _config.minMatchedMeanStrength;
+        const bool coverageAccepted = !_config.requireCarrierQuality ||
             _candidateCoverageAboveReleaseUs >= static_cast<uint64_t>(_config.minCoverageAboveReleaseMs) * 1000ULL;
         const bool islandAccepted =
-            !_config.requireCarrierQuality ||
-            _candidateIslandMaxMs >= _config.minLongestIslandMs;
-        const bool gapAccepted =
-            !_config.requireCarrierQuality ||
-            _candidateGapMaxMs <= _config.maxGapMs;
-        const bool accepted =
-            durationAccepted &&
-            strengthAccepted &&
-            matchedMeanAccepted &&
-            coverageAccepted &&
-            islandAccepted &&
-            gapAccepted;
+            !_config.requireCarrierQuality || _candidateIslandMaxMs >= _config.minLongestIslandMs;
+        const bool gapAccepted = !_config.requireCarrierQuality || _candidateGapMaxMs <= _config.maxGapMs;
+        const bool accepted = durationAccepted && strengthAccepted && matchedMeanAccepted && coverageAccepted &&
+            islandAccepted && gapAccepted;
 
         if (accepted) {
             _peakAcceptedCount++;
@@ -299,8 +297,8 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
             _transientRejectedCount++;
             if (!durationAccepted) {
                 _lastTransientRejectReason = peakDurationUs < minTransientDurationUs
-                                                ? TransientRejectReason::DurationTooShort
-                                                : TransientRejectReason::DurationTooLong;
+                    ? TransientRejectReason::DurationTooShort
+                    : TransientRejectReason::DurationTooLong;
                 if (_lastTransientRejectReason == TransientRejectReason::DurationTooShort) {
                     _transientRejectedDurationTooShortCount++;
                 } else {
@@ -372,10 +370,7 @@ const char* ScalarTransientDetector::lastTransientRejectReasonName() const {
 }
 
 // Main detector update.
-void IRAM_ATTR ScalarTransientDetector::update(
-    const AudioSamplePacket& audioSamplePacket,
-    float signalMagnitude
-) {
+void IRAM_ATTR ScalarTransientDetector::update(const AudioSamplePacket& audioSamplePacket, float signalMagnitude) {
     const uint64_t nowUs = audioSamplePacket.timeUs64;
     _onsetDetected = false;
     _onsetStrength = 0.0f;
@@ -425,4 +420,3 @@ void ScalarTransientDetector::setConfig(const detection::ScalarTransientConfig& 
 const detection::ScalarTransientConfig& ScalarTransientDetector::config() const {
     return _config;
 }
-

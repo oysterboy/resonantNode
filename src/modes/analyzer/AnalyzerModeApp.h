@@ -147,7 +147,8 @@ private:
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
     void refreshCapturedDetectorReportAggregates();
-    bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, RawCaptureMode mode, const RawTriggerShape& shape);
+    bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs,
+                       unsigned long decim, RawCaptureMode mode, const RawTriggerShape& shape);
     void printAudioSourceSummary() const;
     void printAudioRunSummary() const;
     void printFeatureHistoryRecordCounts() const;
@@ -166,8 +167,10 @@ private:
     const char* activeAnalyzerProfileName() const;
     const detection::DetectionProfile& effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
-    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, bool rejectedInWindow, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const TrialDiagnostics& diagnostics) const;
-        struct SequenceTrialSelection {
+    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, bool rejectedInWindow,
+                                     long dtMs, long durMs, float strength, bool bufferOverrun,
+                                     unsigned long duplicateCount, const TrialDiagnostics& diagnostics) const;
+    struct SequenceTrialSelection {
         enum class Kind {
             None,
             ValidPattern,
@@ -207,7 +210,8 @@ private:
     void flushSequenceSampleHistory(unsigned long currentSampleMs);
     void printSequenceSampleReport(unsigned long trialNumber) const;
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
-    detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const;
+    detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(
+        const AudioSamplePacket& audioSamplePacket) const;
 
     // Miscellaneous output helpers.
     bool shouldPrintSequenceTrial() const;
@@ -247,28 +251,31 @@ private:
     unsigned long _controlBaudRate = EMITTER_UART_BAUD; // Serial2 baud rate to the emitter.
     int _controlRxPin = EMITTER_UART_RX_PIN; // UART RX pin for emitter control.
     int _controlTxPin = EMITTER_UART_TX_PIN; // UART TX pin for emitter control.
-    serial_line::LineReader<serial_line::kCommandLineMax> _usbLine;      // the USB console (app/SerialLine.h: long lines refused)
-    char _commandScratch[serial_line::kCommandLineMax + 1];                   // mutable scratch for strtok_r over a finished line
+    serial_line::LineReader<serial_line::kCommandLineMax>
+        _usbLine;      // the USB console (app/SerialLine.h: long lines refused)
+    char _commandScratch[serial_line::kCommandLineMax + 1];  // mutable scratch for strtok_r over a finished line
     serial_line::LineReader<serial_line::kCommandLineMax> _emitterLine;  // the Emitter's replies on Serial2
 
-    bool _controlClaimPending = false; // Waiting to request emitter control.
-    bool _controlClaimSent = false; // Control claim has already been sent.
-    bool _controlClaimAcked = false; // The Emitter answered the boot claim (ANA-005).
-    unsigned long _controlClaimAtMs = 0; // When the claim was queued.
+    bool _controlClaimPending = false;  // Waiting to request emitter control.
+    bool _controlClaimSent = false;  // Control claim has already been sent.
+    bool _controlClaimAcked = false;  // The Emitter answered the boot claim (ANA-005).
+    unsigned long _controlClaimAtMs = 0;  // When the claim was queued.
 
     // Session state.
-    SequenceTest _sequenceTest; // Current sequence-test execution state.
-    unsigned long _rawCaptureSequenceId = 0; // Monotonic RAW capture identifier.
-    AnalyzerReport _sequenceReportScratch = {}; // Reusable scratch report buffer.
+    SequenceTest _sequenceTest;  // Current sequence-test execution state.
+    unsigned long _rawCaptureSequenceId = 0;  // Monotonic RAW capture identifier.
+    AnalyzerReport _sequenceReportScratch = {};  // Reusable scratch report buffer.
     // The one mutable: effectiveSequenceProfile() const builds the tuned profile here, a
     // scratch for const printers (printDetectionParameters) rather than a stack copy.
     mutable detection::DetectionProfile _sequenceProfileScratch = {};
-    detection::FrequencyBandMeasurementPacket _runtimeFrequencyMeasurementPacketScratch = {}; // Reusable per-sample frequency packet scratch.
-    detection::DetectionPipelineEvent _runtimePipelineEventScratch = {}; // Reusable pipeline event scratch for the loop task.
+    detection::FrequencyBandMeasurementPacket _runtimeFrequencyMeasurementPacketScratch =
+        {};  // Reusable per-sample frequency packet scratch.
+    detection::DetectionPipelineEvent _runtimePipelineEventScratch =
+        {};  // Reusable pipeline event scratch for the loop task.
 
-    uint32_t _loopLastUs = 0; // Previous loop timestamp for timing diagnostics.
-    unsigned long _loopMaxSinceBootUs = 0; // Worst loop duration since boot.
-    LoopHealthStats _loopHealth; // Rolling loop health statistics.
+    uint32_t _loopLastUs = 0;  // Previous loop timestamp for timing diagnostics.
+    unsigned long _loopMaxSinceBootUs = 0;  // Worst loop duration since boot.
+    LoopHealthStats _loopHealth;  // Rolling loop health statistics.
 };
 
 using AnalyzerModeApp = AnalyzerApp;
@@ -284,4 +291,3 @@ constexpr size_t AnalyzerApp::debugSequenceTestSampleHistoryCapacity() {
 constexpr size_t AnalyzerApp::debugSequenceTestSampleRowsCapacity() {
     return SampleDumpState::kMaxSampleRows;
 }
-

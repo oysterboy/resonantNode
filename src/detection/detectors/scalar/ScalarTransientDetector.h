@@ -65,10 +65,7 @@ public:
     void resetState();
     void resetAcceptedOccurrenceSummary();
     void resetSelectedRejectSummary();
-    void update(
-        const AudioSamplePacket& audioSamplePacket,
-        float signalLevel
-    );
+    void update(const AudioSamplePacket& audioSamplePacket, float signalLevel);
 
     // The thresholds and gates, as one value (step 11e item 5): applied in
     // place, no state reset (a live PARAM SET keeps the occurrence in flight).
@@ -184,10 +181,7 @@ private:
     void updateTransientStage(uint64_t nowUs, float signalMagnitude, bool aboveReleaseThreshold);
     void captureAcceptedOccurrence(uint64_t releaseObservedUs, unsigned long peakDurationUs);
     void captureSelectedReject(uint64_t releaseObservedUs);
-    void updateAcceptedOccurrencePending(
-        const AudioSamplePacket& audioSamplePacket,
-        float signalMagnitude
-    );
+    void updateAcceptedOccurrencePending(const AudioSamplePacket& audioSamplePacket, float signalMagnitude);
     void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
     void resetAcceptedOccurrencePending();
     void freezeReport(unsigned long nowMs);

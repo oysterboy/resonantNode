@@ -70,7 +70,8 @@ public:
     };
 
     NodeBaseline() = default;
-    explicit NodeBaseline(const Config& config) : _config(config) {}
+    explicit NodeBaseline(const Config& config)
+        : _config(config) {}
 
     // Boot state from `now`, results and counts cleared.
     void begin(unsigned long now);

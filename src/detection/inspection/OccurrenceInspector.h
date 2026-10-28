@@ -26,11 +26,8 @@ public:
 
     // Annotates an accepted occurrence with the plan's evidence from the
     // history; an absent or invalid occurrence comes back Rejected.
-    InspectedOccurrence inspectWithHistory(
-        const Occurrence& occurrence,
-        const FeatureHistory* featureHistory,
-        unsigned long inspectionNowMs
-    ) const;
+    InspectedOccurrence inspectWithHistory(const Occurrence& occurrence, const FeatureHistory* featureHistory,
+                                           unsigned long inspectionNowMs) const;
 
     // When the latest window the plan inspects for this occurrence ends (ms,
     // the occurrence's time axis); 0 when the plan inspects no window. The
@@ -39,26 +36,18 @@ public:
     unsigned long windowCompleteAtMs(const Occurrence& occurrence) const;
 
 private:
-    void annotateMagnitudeFeatureStrength(
-        InspectedOccurrence& out,
-        const Occurrence& occurrence,
-        const FeatureHistory* featureHistory,
-        unsigned long inspectionNowMs,
-        const MagnitudeFeatureInspectionConfig& config,
-        InspectionTarget target
-    ) const;
-    void runInspectionModule(
-        InspectedOccurrence& out,
-        const Occurrence& occurrence,
-        const FeatureHistory* featureHistory,
-        unsigned long inspectionNowMs,
-        const InspectionModuleConfig& module
-    ) const;
-    void annotateShape(InspectedOccurrence& out, const Occurrence& occurrence, const ShapeInspectionConfig& config) const;
+    void annotateMagnitudeFeatureStrength(InspectedOccurrence& out, const Occurrence& occurrence,
+                                          const FeatureHistory* featureHistory, unsigned long inspectionNowMs,
+                                          const MagnitudeFeatureInspectionConfig& config,
+                                          InspectionTarget target) const;
+    void runInspectionModule(InspectedOccurrence& out, const Occurrence& occurrence,
+                             const FeatureHistory* featureHistory, unsigned long inspectionNowMs,
+                             const InspectionModuleConfig& module) const;
+    void annotateShape(InspectedOccurrence& out, const Occurrence& occurrence,
+                       const ShapeInspectionConfig& config) const;
     InspectionPlan _inspectionPlan = {};
     const BinTrack* _binTrack = nullptr;
     float _shapeMinLevel = 0.0f;
 };
 
 } // namespace detection
-

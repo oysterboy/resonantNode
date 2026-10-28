@@ -7,12 +7,10 @@
 #include "../../../app/TimingUtils.h"
 #include "../../../detection/features/FrequencyMeasurementPacketBuilder.h"
 
-namespace {
+namespace {} // namespace
 
-
-} // namespace
-
-detection::FrequencyBandMeasurementPacket IRAM_ATTR AnalyzerApp::captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const {
+detection::FrequencyBandMeasurementPacket IRAM_ATTR
+AnalyzerApp::captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const {
     return detection::buildFrequencyMeasurementPacket(_freqBandStream, audioSamplePacket);
 }
 
@@ -22,13 +20,9 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
     }
 
     auto& diagnostics = _sequenceTest.trial.diagnostics;
-    const bool rejectHasIdentity =
-        event.kind == detection::DetectionEventKind::RejectedSourceCandidate &&
-        event.hasSourceRecord &&
-        event.sourceRecord.eventId != 0 &&
-        event.sourceRecord.reportGeneration != 0;
-    const bool rejectAlreadyConsumed =
-        rejectHasIdentity &&
+    const bool rejectHasIdentity = event.kind == detection::DetectionEventKind::RejectedSourceCandidate &&
+        event.hasSourceRecord && event.sourceRecord.eventId != 0 && event.sourceRecord.reportGeneration != 0;
+    const bool rejectAlreadyConsumed = rejectHasIdentity &&
         event.sourceRecord.eventId == _sequenceTest.totals.consumedSourceRejectEventId &&
         event.sourceRecord.reportGeneration == _sequenceTest.totals.consumedSourceRejectReportGeneration;
     if (rejectAlreadyConsumed) {
@@ -52,15 +46,13 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
         }
     }
 
-    const detection::DetectorReport* selectedDetectorReport = event.hasSourceRecord
-        ? &event.sourceRecord.detectorReport
-        : &_detection.diagnostics().activeDetectorReport();
-    const bool selectedDetectorReportAvailable = selectedDetectorReport != nullptr &&
-        selectedDetectorReport->detectorId != detection::DetectorId::Unknown;
+    const detection::DetectorReport* selectedDetectorReport =
+        event.hasSourceRecord ? &event.sourceRecord.detectorReport : &_detection.diagnostics().activeDetectorReport();
+    const bool selectedDetectorReportAvailable =
+        selectedDetectorReport != nullptr && selectedDetectorReport->detectorId != detection::DetectorId::Unknown;
     const detection::InspectedOccurrence* selectedInspectedOccurrence =
-        event.hasInspectedOccurrence && event.inspectedOccurrence.occurrence.present
-            ? &event.inspectedOccurrence
-            : nullptr;
+        event.hasInspectedOccurrence && event.inspectedOccurrence.occurrence.present ? &event.inspectedOccurrence
+                                                                                     : nullptr;
     const detection::OccurrenceVerdict* verdict = event.hasVerdict ? &event.verdict : nullptr;
 
     if (event.kind == detection::DetectionEventKind::RejectedSourceCandidate) {
@@ -71,7 +63,8 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
             _sequenceTest.totals.consumedSourceRejectEventId = event.sourceRecord.eventId;
             _sequenceTest.totals.consumedSourceRejectReportGeneration = event.sourceRecord.reportGeneration;
         }
-        const unsigned long sourceOnsetMs = event.hasSourceRecord && event.sourceRecord.detectorReport.selectedReject.present
+        const unsigned long sourceOnsetMs =
+            event.hasSourceRecord && event.sourceRecord.detectorReport.selectedReject.present
             ? event.sourceRecord.detectorReport.selectedReject.startMs
             : 0UL;
         const bool preWindow = sourceOnsetMs > 0 && timing::beforeDeadline(sourceOnsetMs, _sequenceTest.trial.startMs);
@@ -91,14 +84,14 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
 
     const unsigned long onsetMs = verdict->primaryStartMs;
 
-    const bool bufferOverrunSeenNow = verdict->primaryAudioOverflow
-                                      || _audioSource.stats().overflowCount != _sequenceTest.trial.overflowCountAtStart;
+    const bool bufferOverrunSeenNow =
+        verdict->primaryAudioOverflow || _audioSource.stats().overflowCount != _sequenceTest.trial.overflowCountAtStart;
     if (bufferOverrunSeenNow) {
         _sequenceTest.trial.bufferOverrun = true;
     }
 
     const char* selectedSourceSelection = selectedInspectedOccurrence != nullptr &&
-        selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
+            selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
         ? "selected_reject"
         : "selected_occurrence";
 
@@ -113,10 +106,9 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
         return;
     }
 
-    if (selectedInspectedOccurrence != nullptr
-        && selectedInspectedOccurrence->occurrence.present
-        && selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Accepted
-        && !_sequenceTest.trial.primaryAcceptedOccurrenceCaptured) {
+    if (selectedInspectedOccurrence != nullptr && selectedInspectedOccurrence->occurrence.present &&
+        selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Accepted &&
+        !_sequenceTest.trial.primaryAcceptedOccurrenceCaptured) {
         _sequenceTest.trial.primaryAcceptedOccurrenceCaptured = true;
         _sequenceTest.trial.primaryAcceptedInspectedOccurrence = *selectedInspectedOccurrence;
         if (selectedDetectorReportAvailable) {
@@ -140,8 +132,8 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
     }
 
     if (!verdict->valid) {
-        const bool shouldUpdateBestRejected = !_sequenceTest.trial.bestRejectedPatternCaptured
-            || verdict->primaryStrength > _sequenceTest.trial.bestRejectedInWindow.primaryStrength;
+        const bool shouldUpdateBestRejected = !_sequenceTest.trial.bestRejectedPatternCaptured ||
+            verdict->primaryStrength > _sequenceTest.trial.bestRejectedInWindow.primaryStrength;
         if (shouldUpdateBestRejected) {
             _sequenceTest.trial.bestRejectedPatternCaptured = true;
             _sequenceTest.trial.bestRejectedInWindow = *verdict;

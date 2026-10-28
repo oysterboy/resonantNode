@@ -113,7 +113,8 @@ void Node::printRbStatus(const char* line) {
         serialOut().print(" hop_gap_ms=");
         serialOut().print(hop.hopGapMs);
     }
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
+    const unsigned long sampleRateHz =
+        _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     printFreqStatusFields(serialOut(), _freqBandStream, sampleRateHz);
     const AudioSourceStats& audioStats = _audioSource.stats();
     serialOut().print(" i2s.samples_read=");
@@ -311,8 +312,12 @@ void Node::printInspectionPlanCheck() {
 }
 
 void Node::printRbSummary() const {
-    const float avgStrength = _counters.pending > 0 ? (static_cast<float>(_counters.strengthSumScaled) / 100.0f) / static_cast<float>(_counters.pending) : 0.0f;
-    const float avgDuration = _counters.pending > 0 ? static_cast<float>(_counters.durationSumMs) / static_cast<float>(_counters.pending) : 0.0f;
+    const float avgStrength = _counters.pending > 0
+        ? (static_cast<float>(_counters.strengthSumScaled) / 100.0f) / static_cast<float>(_counters.pending)
+        : 0.0f;
+    const float avgDuration = _counters.pending > 0
+        ? static_cast<float>(_counters.durationSumMs) / static_cast<float>(_counters.pending)
+        : 0.0f;
     const AudioSignalStats& stats = _audioSignal.stats();
 
     serialOut().print("RB summary: pending=");

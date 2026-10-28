@@ -13,15 +13,13 @@ inline void printFreqStatusFields(Print& out, const FreqBandStream& stream, unsi
     const unsigned long windowSizeSamples = stream.windowSizeSamples();
     const unsigned long frequencyUpdateEverySamples = stream.frequencyUpdateEverySamples();
     const unsigned long ageSamples = stream.lastPacketAgeSamples();
-    const float windowMs = sampleRateHz > 0
-        ? (static_cast<float>(windowSizeSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
-        : 0.0f;
+    const float windowMs =
+        sampleRateHz > 0 ? (static_cast<float>(windowSizeSamples) * 1000.0f) / static_cast<float>(sampleRateHz) : 0.0f;
     const float updateStepMs = sampleRateHz > 0
         ? (static_cast<float>(frequencyUpdateEverySamples) * 1000.0f) / static_cast<float>(sampleRateHz)
         : 0.0f;
-    const float ageMs = sampleRateHz > 0
-        ? (static_cast<float>(ageSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
-        : 0.0f;
+    const float ageMs =
+        sampleRateHz > 0 ? (static_cast<float>(ageSamples) * 1000.0f) / static_cast<float>(sampleRateHz) : 0.0f;
     out.print(" freq.window_samples=");
     out.print(windowSizeSamples);
     out.print(" freq.window_ms=");

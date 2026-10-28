@@ -43,4 +43,3 @@ struct FieldState {
 };
 
 } // namespace detection
-

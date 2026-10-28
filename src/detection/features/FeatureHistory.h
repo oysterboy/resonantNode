@@ -57,13 +57,8 @@ public:
 
     void record(FeatureStreamId id, unsigned long timeMs, float value, bool fresh = true);
 
-    MagnitudeWindow getWindow(
-        FeatureStreamId stream,
-        unsigned long startMs,
-        unsigned long endMs,
-        unsigned long inspectionNowMs,
-        float sustainedThreshold = 0.0f
-    ) const;
+    MagnitudeWindow getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs,
+                              unsigned long inspectionNowMs, float sustainedThreshold = 0.0f) const;
 
     size_t sampleCount(FeatureStreamId stream) const;
     // Diagnostics: span of the resident ring for a stream, and how often a

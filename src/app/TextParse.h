@@ -73,7 +73,8 @@ inline bool startsWith(const char* line, const char* prefix) {
 
 inline bool startsWithIgnoreCase(const char* line, const char* prefix) {
     while (*prefix != '\0') {
-        if (*line == '\0' || toupper(static_cast<unsigned char>(*line)) != toupper(static_cast<unsigned char>(*prefix))) {
+        if (*line == '\0' ||
+            toupper(static_cast<unsigned char>(*line)) != toupper(static_cast<unsigned char>(*prefix))) {
             return false;
         }
         ++line;
@@ -85,7 +86,8 @@ inline bool startsWithIgnoreCase(const char* line, const char* prefix) {
 inline bool startsWithWordIgnoreCase(const char* line, const char* prefix) {
     char last = '\0';
     while (*prefix != '\0') {
-        if (*line == '\0' || toupper(static_cast<unsigned char>(*line)) != toupper(static_cast<unsigned char>(*prefix))) {
+        if (*line == '\0' ||
+            toupper(static_cast<unsigned char>(*line)) != toupper(static_cast<unsigned char>(*prefix))) {
             return false;
         }
         last = *prefix;

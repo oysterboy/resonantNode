@@ -23,20 +23,11 @@ public:
 
     void update(unsigned long nowMs);
 
-    void observeOccurrence(
-        const Occurrence& occurrence,
-        unsigned long nowMs
-    );
+    void observeOccurrence(const Occurrence& occurrence, unsigned long nowMs);
 
-    void observeInspectedOccurrence(
-        const InspectedOccurrence& occurrence,
-        unsigned long nowMs
-    );
+    void observeInspectedOccurrence(const InspectedOccurrence& occurrence, unsigned long nowMs);
 
-    void observeOccurrenceVerdict(
-        const OccurrenceVerdict& result,
-        unsigned long nowMs
-    );
+    void observeOccurrenceVerdict(const OccurrenceVerdict& result, unsigned long nowMs);
 
     const FieldState& state() const;
 
@@ -55,4 +46,3 @@ private:
 };
 
 } // namespace detection
-

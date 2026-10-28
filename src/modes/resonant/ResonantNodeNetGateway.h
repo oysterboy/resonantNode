@@ -19,7 +19,8 @@ transport. Interim: VEKTOR replaces this layer, NodeNet stays
 */
 class NetGateway {
 public:
-    explicit NetGateway(NodeNet& net) : _net(net) {}
+    explicit NetGateway(NodeNet& net)
+        : _net(net) {}
     ~NetGateway();
 
     NetGateway(const NetGateway&) = delete;

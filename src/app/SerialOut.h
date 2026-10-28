@@ -25,7 +25,9 @@ out. The host replay keeps printing straight to stdout.
 */
 #if defined(HOST_REPLAY)
 
-inline auto& serialOut() { return Serial; }
+inline auto& serialOut() {
+    return Serial;
+}
 inline void serialOutFlush() {}
 
 #else
@@ -66,9 +68,7 @@ public:
         }
     }
 
-    int availableForWrite() override {
-        return Serial.availableForWrite();
-    }
+    int availableForWrite() override { return Serial.availableForWrite(); }
 
 private:
     uint8_t _buf[1024];

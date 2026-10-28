@@ -66,7 +66,8 @@ void AnalyzerApp::printDetectionParameters() const {
     serialOut().print(" max_gap_ms=");
     serialOut().println(scalar.maxGapMs);
 
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
+    const unsigned long sampleRateHz =
+        _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     serialOut().print("FREQBAND runtime:");
     printFreqStatusFields(serialOut(), _freqBandStream, sampleRateHz);
     serialOut().println();
@@ -101,18 +102,18 @@ void AnalyzerApp::printAudioRunSummary() const {
     }
 
     const unsigned long now = timebase::nowMs();
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
-    const unsigned long runElapsedMs = _sequenceTest.startedAtMs > 0
-        ? timing::elapsedOrZero(now, _sequenceTest.startedAtMs)
-        : 0UL;
+    const unsigned long sampleRateHz =
+        _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
+    const unsigned long runElapsedMs =
+        _sequenceTest.startedAtMs > 0 ? timing::elapsedOrZero(now, _sequenceTest.startedAtMs) : 0UL;
     const unsigned long expectedSamples = static_cast<unsigned long>(
         (static_cast<unsigned long long>(runElapsedMs) * static_cast<unsigned long long>(sampleRateHz)) / 1000ULL);
     const unsigned long processedSamples = _sequenceTest.totals.samplesProcessed;
-    const float processedRatio = expectedSamples > 0
-        ? static_cast<float>(processedSamples) / static_cast<float>(expectedSamples)
-        : 0.0f;
+    const float processedRatio =
+        expectedSamples > 0 ? static_cast<float>(processedSamples) / static_cast<float>(expectedSamples) : 0.0f;
     const unsigned long avgAvailableBytes = _sequenceTest.totals.availableBytesSamples > 0
-        ? static_cast<unsigned long>(_sequenceTest.totals.availableBytesSum / static_cast<uint64_t>(_sequenceTest.totals.availableBytesSamples))
+        ? static_cast<unsigned long>(_sequenceTest.totals.availableBytesSum /
+                                     static_cast<uint64_t>(_sequenceTest.totals.availableBytesSamples))
         : 0UL;
 
     serialOut().println("AUDIO run:");
@@ -142,9 +143,8 @@ void AnalyzerApp::printAudioRunSummary() const {
     serialOut().println(_seqOutputConfig.frequencyUpdateEverySamples);
 
     const unsigned long freqAgeSamples = _freqBandStream.lastPacketAgeSamples();
-    const unsigned long freqComputedAtSample = _freqBandStream.sampleCount() >= freqAgeSamples
-        ? _freqBandStream.sampleCount() - freqAgeSamples
-        : 0UL;
+    const unsigned long freqComputedAtSample =
+        _freqBandStream.sampleCount() >= freqAgeSamples ? _freqBandStream.sampleCount() - freqAgeSamples : 0UL;
 
     serialOut().print("FREQBAND profile:");
 #if FREQBAND_ENABLE_PROFILING
@@ -182,7 +182,8 @@ void AnalyzerApp::printAudioRunSummary() const {
     serialOut().print("FREQBAND freshness:");
 #if FREQBAND_ENABLE_PROFILING
     const unsigned long freqFreshObserveCalls = _freqBandStream.profileComputeCalls();
-    const unsigned long freqHeldObserveCalls = _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
+    const unsigned long freqHeldObserveCalls =
+        _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
         ? _freqBandStream.profileObserveCalls() - _freqBandStream.profileComputeCalls()
         : 0UL;
     serialOut().print(" fresh_frames=");

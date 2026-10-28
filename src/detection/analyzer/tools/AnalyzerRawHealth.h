@@ -2,22 +2,12 @@
 
 #include <stdint.h>
 
-inline const char* rawHealthClassNameFromCounters(unsigned long clipFrames,
-                                                  unsigned long rawFrames,
-                                                  unsigned long rawMaxAbs,
-                                                  float rawDcMean,
-                                                  float rawMeanAbs,
-                                                  int rawMin,
-                                                  int rawMax,
-                                                  float rawSameValueRatio,
-                                                  unsigned long rawSameValueMaxRun,
-                                                  unsigned long rawBlockHashRepeatCount,
-                                                  unsigned long audioFlatlineFrames,
-                                                  unsigned long audioZeroishFrames,
-                                                  unsigned long audioLargeJumpFrames,
-                                                  float audioRms,
-                                                  unsigned long audioRmsTooLowFrames,
-                                                  unsigned long audioRmsTooHighFrames) {
+inline const char* rawHealthClassNameFromCounters(
+    unsigned long clipFrames, unsigned long rawFrames, unsigned long rawMaxAbs, float rawDcMean, float rawMeanAbs,
+    int rawMin, int rawMax, float rawSameValueRatio, unsigned long rawSameValueMaxRun,
+    unsigned long rawBlockHashRepeatCount, unsigned long audioFlatlineFrames, unsigned long audioZeroishFrames,
+    unsigned long audioLargeJumpFrames, float audioRms, unsigned long audioRmsTooLowFrames,
+    unsigned long audioRmsTooHighFrames) {
     if (clipFrames > 0) {
         return "clipped";
     }
@@ -35,9 +25,9 @@ inline const char* rawHealthClassNameFromCounters(unsigned long clipFrames,
     if (rawSameValueMaxRun >= 8UL || rawBlockHashRepeatCount >= 2UL || rawSameValueRatio >= 0.25f) {
         return "repeated";
     }
-    if (rawRange <= 16UL &&
-        rawMeanAbs <= 8.0f &&
-        (audioFlatlineFrames > 0 || audioZeroishFrames > 0 || audioLargeJumpFrames > 0 || audioRmsTooLowFrames > 0 || audioRms < 40.0f)) {
+    if (rawRange <= 16UL && rawMeanAbs <= 8.0f &&
+        (audioFlatlineFrames > 0 || audioZeroishFrames > 0 || audioLargeJumpFrames > 0 || audioRmsTooLowFrames > 0 ||
+         audioRms < 40.0f)) {
         return "low_information";
     }
     return "ok";

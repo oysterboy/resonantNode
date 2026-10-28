@@ -37,10 +37,10 @@ namespace param {
 
 // detection.band_low_hz / band_high_hz (0 = single target at the chirp tone).
 inline void describeParams(ParamRegistry& registry, NetworkBand& band) {
-    registry.addUInt32(ParamId::Detection_BandLowHz, ModuleId::Detection,
-                       "detection.band_low_hz", &band.lowHz, 0U, runtime::kMaxToneHz);
-    registry.addUInt32(ParamId::Detection_BandHighHz, ModuleId::Detection,
-                       "detection.band_high_hz", &band.highHz, 0U, runtime::kMaxToneHz);
+    registry.addUInt32(ParamId::Detection_BandLowHz, ModuleId::Detection, "detection.band_low_hz", &band.lowHz, 0U,
+                       runtime::kMaxToneHz);
+    registry.addUInt32(ParamId::Detection_BandHighHz, ModuleId::Detection, "detection.band_high_hz", &band.highHz, 0U,
+                       runtime::kMaxToneHz);
 }
 
 }  // namespace param

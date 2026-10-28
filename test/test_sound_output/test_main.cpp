@@ -154,7 +154,8 @@ void test_stop_in_the_gap_cancels_the_call() {
     TEST_ASSERT_EQUAL(OutputPhase::AnnounceGap, out.status().phase);
     out.stop();
     TEST_ASSERT_FALSE(out.busy());
-    TEST_ASSERT_EQUAL_UINT32(0, runUntil(out, 1601, 3000, SoundOutput::kEventCallStarted | SoundOutput::kEventFinished));
+    TEST_ASSERT_EQUAL_UINT32(0,
+                             runUntil(out, 1601, 3000, SoundOutput::kEventCallStarted | SoundOutput::kEventFinished));
     TEST_ASSERT_EQUAL_INT(0, tone.trains);
 }
 

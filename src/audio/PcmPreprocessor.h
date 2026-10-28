@@ -48,8 +48,7 @@ public:
             _dcOut = out;
             return clampToCanonicalPcm(static_cast<PcmIntermediate>(out * runtime::kDcBlockerOutputScale));
         }
-        const PcmIntermediate diff =
-            static_cast<PcmIntermediate>(current) - static_cast<PcmIntermediate>(_previous);
+        const PcmIntermediate diff = static_cast<PcmIntermediate>(current) - static_cast<PcmIntermediate>(_previous);
         _previous = current;
         return clampToCanonicalPcm(diff / 2);
     }

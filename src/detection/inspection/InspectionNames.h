@@ -125,8 +125,7 @@ inline const char* inspectionPlanName(const InspectionPlan& plan) {
 }
 
 inline const char* inspectionModulesName(const InspectionPlan& plan) {
-    if (plan.count == 1 &&
-        plan.modules[0].kind == InspectionModuleKind::MagnitudeFeatureStrength) {
+    if (plan.count == 1 && plan.modules[0].kind == InspectionModuleKind::MagnitudeFeatureStrength) {
         return "MagnitudeFeatureStrength";
     }
 

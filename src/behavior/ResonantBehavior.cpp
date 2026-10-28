@@ -95,8 +95,8 @@ void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
     // applies to the wait already running, counted from when it started: before
     // step 10e an idle call scheduled under a 60 s timeout still came at 60 s
     // after the timeout was set to 5 s.
-    const bool idleChanged = profile.idleTimeoutMs != _config.idleTimeoutMs ||
-                             profile.idleTimeVariationMs != _config.idleTimeVariationMs;
+    const bool idleChanged =
+        profile.idleTimeoutMs != _config.idleTimeoutMs || profile.idleTimeVariationMs != _config.idleTimeVariationMs;
     _config = profile;
     if (_config.ownEmitBudget > kEmitHistory) {
         _config.ownEmitBudget = kEmitHistory;  // the history holds this many
@@ -106,7 +106,9 @@ void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
     }
 }
 
-ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, const detection::FieldState& field, unsigned long now) {
+ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result,
+                                                                             const detection::FieldState& field,
+                                                                             unsigned long now) {
     if (!_outputsEnabled) {
         // Outputs off: a verdict must not leave Behavior in HeardPattern to fire late once on (issue #31).
         notePatternHeardWhileOutputsOff(result, now);
@@ -116,7 +118,8 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
     return handleOccurrenceVerdict(result, now);
 }
 
-ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, unsigned long now) {
+ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result,
+                                                                             unsigned long now) {
     if (!_outputsEnabled) {
         notePatternHeardWhileOutputsOff(result, now);
         return BehaviorDecision::None;
@@ -158,7 +161,8 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         _lastDecision = BehaviorDecision::Resting;
         _lastBlockReason = BehaviorDecision::Resting;
         _blockedResting++;
-    } else if (_config.restAfterFieldPatterns > 0 && _lastFieldState.recentPatternCount >= _config.restAfterFieldPatterns) {
+    } else if (_config.restAfterFieldPatterns > 0 &&
+               _lastFieldState.recentPatternCount >= _config.restAfterFieldPatterns) {
         // The field window holds enough valid network patterns: rest instead of answering.
         enterRest(now + _config.restMs, BehaviorDecision::RestFieldDense);
         _lastDecision = BehaviorDecision::RestFieldDense;
@@ -196,10 +200,8 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         scheduleNextIdle(now);
     }
 
-    if (_lastDecision == BehaviorDecision::OutputBusy
-        || _lastDecision == BehaviorDecision::RefractoryAfterEmit
-        || _lastDecision == BehaviorDecision::AlreadyScheduled
-        || _lastDecision == BehaviorDecision::SelfSuppressed) {
+    if (_lastDecision == BehaviorDecision::OutputBusy || _lastDecision == BehaviorDecision::RefractoryAfterEmit ||
+        _lastDecision == BehaviorDecision::AlreadyScheduled || _lastDecision == BehaviorDecision::SelfSuppressed) {
         _lastPatternHeardAtMs = _pendingHeardPatternMs != 0 ? _pendingHeardPatternMs : _lastPatternHeardAtMs;
     }
 
@@ -241,24 +243,21 @@ void ResonantBehavior::update(unsigned long now) {
                 _heardPatternStartedMs = now;
                 _state = State::HeardPattern;
                 _waitUntilMs = now + _config.waitAfterHeardMs;
-            }
-            else if (_networkCallPending && !resting(now)) {
+            } else if (_networkCallPending && !resting(now)) {
                 _networkCallPending = false;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Call;
                 _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
                 _state = State::Chirping;
-            }
-            else if (_testChirpPending) {
+            } else if (_testChirpPending) {
                 _testChirpPending = false;
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::SelfTest;
                 _chirpPattern = ChirpPattern::Single;
                 _lastEmitMs = now;
                 _state = State::Chirping;
-            }
-            else if (canIdle(now)) {
+            } else if (canIdle(now)) {
                 _wouldEmit = true;
                 _lastDecision = BehaviorDecision::WouldEmit;
                 _lastBlockReason = BehaviorDecision::None;
@@ -378,9 +377,10 @@ void ResonantBehavior::extendBehaviorSuppress(unsigned long suppressUntilMs) {
 ResonantBehavior::SignalShape ResonantBehavior::signalShape() const {
     // The self-test's chirps are the network signal too: with hop-train-only detection (DET-015) another node's
     // SELFTEST external would not hear a plain chirp.
-    return (_chirpRequestSource == ChirpRequestSource::HeardPattern || _chirpRequestSource == ChirpRequestSource::Call ||
-            _chirpRequestSource == ChirpRequestSource::SelfTest)
-        ? SignalShape::NetworkSignal : SignalShape::Chirp;
+    return (_chirpRequestSource == ChirpRequestSource::HeardPattern ||
+            _chirpRequestSource == ChirpRequestSource::Call || _chirpRequestSource == ChirpRequestSource::SelfTest)
+        ? SignalShape::NetworkSignal
+        : SignalShape::Chirp;
 }
 
 void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitSpanMs) {
@@ -431,10 +431,18 @@ bool ResonantBehavior::resting(unsigned long now) const {
     return _restArmed && timing::beforeDeadline(now, _restUntilMs);
 }
 
-unsigned long ResonantBehavior::restUntilMs() const { return _restUntilMs; }
-unsigned long ResonantBehavior::restsEntered() const { return _restsEntered; }
-ResonantBehavior::BehaviorDecision ResonantBehavior::lastRestReason() const { return _lastRestReason; }
-unsigned long ResonantBehavior::blockedResting() const { return _blockedResting; }
+unsigned long ResonantBehavior::restUntilMs() const {
+    return _restUntilMs;
+}
+unsigned long ResonantBehavior::restsEntered() const {
+    return _restsEntered;
+}
+ResonantBehavior::BehaviorDecision ResonantBehavior::lastRestReason() const {
+    return _lastRestReason;
+}
+unsigned long ResonantBehavior::blockedResting() const {
+    return _blockedResting;
+}
 
 void ResonantBehavior::notifyChirpFinished(unsigned long now) {
     if (_state == State::Chirping) {
@@ -545,7 +553,7 @@ bool ResonantBehavior::ownEmitDetectionSuppressed(unsigned long sampleTimeMs) co
     // sampleTimeMs is AudioSamplePacket::timeMs, the deadline comes from
     // timebase::nowMs(): one axis (app/TimeBase.h), compared wrap-safe (#30).
     return _state == State::Chirping ||
-           (_ownEmitDetectionSuppressArmed && timing::beforeDeadline(sampleTimeMs, _ownEmitDetectionSuppressUntilMs));
+        (_ownEmitDetectionSuppressArmed && timing::beforeDeadline(sampleTimeMs, _ownEmitDetectionSuppressUntilMs));
 }
 
 bool ResonantBehavior::ownEmitSuppressArmed() const {

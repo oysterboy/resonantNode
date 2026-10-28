@@ -103,7 +103,8 @@ AnalyzerClassification classifySequenceTrial(const AnalyzerSequenceClassificatio
     resolved.result = sequenceTrialResult(input);
     AnalyzerClassification classification = {};
     classification.result = resolved.result;
-    classification.reason = (resolved.patternAvailable || resolved.detectorReportAvailable || resolved.pipelineQueueOverflowCount > 0)
+    classification.reason =
+        (resolved.patternAvailable || resolved.detectorReportAvailable || resolved.pipelineQueueOverflowCount > 0)
         ? analyzerReasonFromSequenceOutcome(resolved)
         : AnalyzerReason::MissingPipelineResult;
     classification.primaryStage = analyzerPrimaryStageFromReason(classification.reason);

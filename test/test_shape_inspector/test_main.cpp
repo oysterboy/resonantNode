@@ -214,11 +214,13 @@ void test_shipped_settings_still_reject_jumps_and_steady_tones() {
     BinTrack track;
     const uint32_t jumps[5] = {3700, 2950, 3450, 3200, 3950};
     playSteps(track, 300, jumps, 5, 25, 10);
-    TEST_ASSERT_TRUE(inspect(track, shippedShapePlan(), occurrence(300, 165)).occurrence.shape.shapeClass < StrengthClass::Medium);
+    TEST_ASSERT_TRUE(inspect(track, shippedShapePlan(), occurrence(300, 165)).occurrence.shape.shapeClass <
+                     StrengthClass::Medium);
     BinTrack steady;
     const uint32_t tone[1] = {3200};
     playSteps(steady, 300, tone, 1, 130, 0);
-    TEST_ASSERT_EQUAL(StrengthClass::None, inspect(steady, shippedShapePlan(), occurrence(300, 130)).occurrence.shape.shapeClass);
+    TEST_ASSERT_EQUAL(StrengthClass::None,
+                      inspect(steady, shippedShapePlan(), occurrence(300, 130)).occurrence.shape.shapeClass);
 }
 
 // Critique D1.1 (reproduced on the board 2026-10-26: after the ms wrap the track froze, the shape was "not
@@ -256,7 +258,8 @@ void test_shape_level_follows_the_release_threshold() {
     inspector.configure(shapePlan());
     inspector.setBinTrack(&track);
     inspector.setShapeMinLevel(8000.0f);
-    TEST_ASSERT_EQUAL(StrengthClass::Strong, inspector.inspectWithHistory(occurrence(100, 165), nullptr, 400).occurrence.shape.shapeClass);
+    TEST_ASSERT_EQUAL(StrengthClass::Strong,
+                      inspector.inspectWithHistory(occurrence(100, 165), nullptr, 400).occurrence.shape.shapeClass);
     inspector.setShapeMinLevel(9500.0f);
     TEST_ASSERT_FALSE(inspector.inspectWithHistory(occurrence(100, 165), nullptr, 400).occurrence.shape.applicable);
 }

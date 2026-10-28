@@ -27,8 +27,7 @@ and does not generate output audio.
 */
 class AudioSourceI2S : public AudioSource {
 public:
-    AudioSourceI2S(int sckPin = runtime::kDefaultAudioI2SSckPin,
-                   int fsPin = runtime::kDefaultAudioI2SWsPin,
+    AudioSourceI2S(int sckPin = runtime::kDefaultAudioI2SSckPin, int fsPin = runtime::kDefaultAudioI2SWsPin,
                    int dataInPin = runtime::kDefaultAudioI2SDataPin,
                    int sampleRate = static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
                    int bitsPerSample = static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample),

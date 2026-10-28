@@ -95,4 +95,3 @@ struct Occurrence {
 };
 
 } // namespace detection
-

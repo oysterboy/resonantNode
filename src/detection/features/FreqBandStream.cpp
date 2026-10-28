@@ -16,9 +16,7 @@ constexpr float kNormalizedBandScoreEpsilon = 1.0f;
 
 float normalizeContrastQuality(float targetPower, float neighborPower) {
     const float denominator = fmaxf(targetPower, 0.0f) + fmaxf(neighborPower, 0.0f) + kNormalizedBandScoreEpsilon;
-    return denominator > 0.0f
-        ? (fmaxf(targetPower, 0.0f) / denominator) * kNormalizedBandScoreScale
-        : 0.0f;
+    return denominator > 0.0f ? (fmaxf(targetPower, 0.0f) / denominator) * kNormalizedBandScoreScale : 0.0f;
 }
 }
 
@@ -161,9 +159,8 @@ void IRAM_ATTR FreqBandStream::updateCachedGoertzelCoefficients() {
     const float sampleRateHz = static_cast<float>(_sampleRateHz == 0 ? 1 : _sampleRateHz);
     const float targetHz = static_cast<float>(_targetFrequencyHz);
     const float binSpacingHz = bandSpacingHz();
-    const float lowerFrequency = _targetFrequencyHz > static_cast<unsigned long>(binSpacingHz)
-        ? targetHz - binSpacingHz
-        : targetHz * 0.5f;
+    const float lowerFrequency =
+        _targetFrequencyHz > static_cast<unsigned long>(binSpacingHz) ? targetHz - binSpacingHz : targetHz * 0.5f;
     const float upperFrequency = targetHz + binSpacingHz;
 
     _cachedTargetFrequencyHz = targetHz;
@@ -288,8 +285,7 @@ audio::FrequencyScore16 IRAM_ATTR FreqBandStream::computeFrequencyScore() {
     const float upperPower = computeGoertzelPowerAtFrequency(_cachedUpperFrequencyHz);
     const float neighborPower = (lowerPower + upperPower) * 0.5f;
     const double targetAmplitude =
-        (2.0 * sqrt(static_cast<double>(fmaxf(targetPower, 0.0f)))) /
-        static_cast<double>(_windowSizeSamples);
+        (2.0 * sqrt(static_cast<double>(fmaxf(targetPower, 0.0f)))) / static_cast<double>(_windowSizeSamples);
     const audio::FrequencyScore16 normalizedScore = audio::frequencyAmplitudeToScore(targetAmplitude);
     const float contrast = normalizeContrastQuality(targetPower, neighborPower);
 
@@ -326,8 +322,7 @@ audio::FrequencyScore16 IRAM_ATTR FreqBandStream::computeBandScore() {
     const float upperPower = power[peak + 1];
     const float neighborPower = (lowerPower + upperPower) * 0.5f;
     const double targetAmplitude =
-        (2.0 * sqrt(static_cast<double>(fmaxf(targetPower, 0.0f)))) /
-        static_cast<double>(_windowSizeSamples);
+        (2.0 * sqrt(static_cast<double>(fmaxf(targetPower, 0.0f)))) / static_cast<double>(_windowSizeSamples);
     const audio::FrequencyScore16 normalizedScore = audio::frequencyAmplitudeToScore(targetAmplitude);
     _lastTargetBandValue = normalizedScore;
     _lastTargetBandPowerValue = targetPower;

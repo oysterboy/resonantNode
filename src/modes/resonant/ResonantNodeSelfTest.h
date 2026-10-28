@@ -45,7 +45,9 @@ public:
     // Settle after the hardware checks, same as the post-rebase settle.
     static constexpr unsigned long kSettleAfterHardwareMs = 500;
 
-    NodeSelfTest(const NodeBaseline& baseline, const Chirps& chirps) : _baseline(baseline), _chirps(chirps) {}
+    NodeSelfTest(const NodeBaseline& baseline, const Chirps& chirps)
+        : _baseline(baseline),
+          _chirps(chirps) {}
 
     // Boot: no self-test running.
     void begin();

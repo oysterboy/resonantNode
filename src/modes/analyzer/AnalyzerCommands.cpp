@@ -57,9 +57,12 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println("CMD: SEQ help");
     serialOut().println("CMD: SEQ");
     serialOut().println("CMD: SEQ stop");
-    serialOut().println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [band=LOW-HIGH|off] [test=LABEL]");
-    serialOut().println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
-    serialOut().println("SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]");
+    serialOut().println(
+        "SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [band=LOW-HIGH|off] [test=LABEL]");
+    serialOut().println(
+        "SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
+    serialOut().println(
+        "SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]");
     serialOut().println("SEQ IN: sweep inside the chirp (OUT-005): start ... freq=START_HZ dur=MS sweep=END_HZ");
     serialOut().println("SEQ IN: TRIES N");
     serialOut().println("SEQ IN: [profile=TonalPulseScalar|AmpExperimental]");
@@ -80,17 +83,22 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println("SEQ IN: REPORT");
     serialOut().println("SEQ IN: TRIES N");
     serialOut().println("SEQ IN: STATUS");
-    serialOut().println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    serialOut().println("SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN, and not canonical Analyzer truth");
-    serialOut().println("SEQ IN: sampleMax is the row budget over all dumped trials (default 5000); one trial must also fit the 256-row sampleRows buffer (default sampleStep=4)");
-    serialOut().println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SOURCE_CORE / SEQ_SOURCE_SPEC / SEQ_SUMMARY / SEQ_STATUS / SEQ REPORT / AUDIO run");
+    serialOut().println(
+        "SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
+    serialOut().println(
+        "SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN, and not canonical Analyzer truth");
+    serialOut().println(
+        "SEQ IN: sampleMax is the row budget over all dumped trials (default 5000); one trial must also fit the 256-row sampleRows buffer (default sampleStep=4)");
+    serialOut().println(
+        "SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SOURCE_CORE / SEQ_SOURCE_SPEC / SEQ_SUMMARY / SEQ_STATUS / SEQ REPORT / AUDIO run");
     serialOut().println("SEQ OUT: SAMPLES_BEGIN / SAMPLES_NOTE / SAMPLES_END");
     serialOut().println("SEQ OUT: sample fields are t,value (value is the selected detector input stream)");
     serialOut().println("SEQ OBS: passive observe mode for an already-running external emitter");
     serialOut().println("SEQ IN: PROFILE TonalPulseScalar|AmpExperimental");
     serialOut().println("SEQ PROFILE TonalPulseScalar");
     serialOut().println("SEQ PROFILE AmpExperimental");
-    serialOut().println("SEQ PARAM: PARAM SET detection.scalar_<key> <value> (PARAM LIST shows the keys, PARAM DUMP the values; applied at the next SEQ start)");
+    serialOut().println(
+        "SEQ PARAM: PARAM SET detection.scalar_<key> <value> (PARAM LIST shows the keys, PARAM DUMP the values; applied at the next SEQ start)");
 }
 
 void AnalyzerApp::pollUsbConsole() {
@@ -109,17 +117,20 @@ void AnalyzerApp::pollUsbConsole() {
 
 void AnalyzerApp::handleUsbLine(const char* line) {
     if (equalsIgnoreCase(line, "HELP")) {
-        serialOut().println("CMD: PARAM LIST|GET <path>|SET <path> <value>|DUMP|RESET (detection.scalar_*, applied at the next SEQ start; SAVE|LOAD answer status=no_store)");
+        serialOut().println(
+            "CMD: PARAM LIST|GET <path>|SET <path> <value>|DUMP|RESET (detection.scalar_*, applied at the next SEQ start; SAVE|LOAD answer status=no_store)");
         serialOut().println("CMD: EMIT CHIRP freq=3200 dur=100");
         serialOut().println("CMD: EMIT MODE REMOTE");
         serialOut().println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         serialOut().println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
         serialOut().println("CMD: EMIT PULSES n pulse_ms gap_ms [freq=3200] [ramp=5] (e.g. EMIT PULSES 5 10 20)");
-        serialOut().println("CMD: RAW trigger f=3200 dur=100 post=1000 [pre=MS] [decim=N] mode=feat (default)|mode=pcm|mode=i2s|mode=both [pulses=N gap=MS hop=F1,F2,...] [sweep=END_HZ] [band=LOW-HIGH|off] (pulses= plays a PULSES train instead of one CHIRP; dur= is then the pulse length)");
+        serialOut().println(
+            "CMD: RAW trigger f=3200 dur=100 post=1000 [pre=MS] [decim=N] mode=feat (default)|mode=pcm|mode=i2s|mode=both [pulses=N gap=MS hop=F1,F2,...] [sweep=END_HZ] [band=LOW-HIGH|off] (pulses= plays a PULSES train instead of one CHIRP; dur= is then the pulse length)");
         serialOut().println("CMD: SEQ");
         serialOut().println("CMD: SEQ help");
         serialOut().println("CMD: SEQ stop");
-        serialOut().println("CMD: SELFTEST | SELFTEST external | SELFTEST chirp n=5 gap_ms=1500 dur_ms=100 | SELFTEST help");
+        serialOut().println(
+            "CMD: SELFTEST | SELFTEST external | SELFTEST chirp n=5 gap_ms=1500 dur_ms=100 | SELFTEST help");
         return;
     }
 
@@ -239,7 +250,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 shape.hop[sizeof(shape.hop) - 1] = '\0';
             } else if (startsWithTokenIgnoreCase(token, "mode=")) {
                 const char* modeValue = text_parse::tokenValue(token);
-                if (equalsIgnoreCase(modeValue, "feat") || equalsIgnoreCase(modeValue, "features") || equalsIgnoreCase(modeValue, "csv")) {
+                if (equalsIgnoreCase(modeValue, "feat") || equalsIgnoreCase(modeValue, "features") ||
+                    equalsIgnoreCase(modeValue, "csv")) {
                     rawMode = AnalyzerApp::RawCaptureMode::Features;
                 } else if (equalsIgnoreCase(modeValue, "pcm")) {
                     rawMode = AnalyzerApp::RawCaptureMode::Pcm;
@@ -274,63 +286,64 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
 
-    if (equalsIgnoreCase(token, "STATUS")) {
-        printSequenceStatus();
-        return;
-    }
+        if (equalsIgnoreCase(token, "STATUS")) {
+            printSequenceStatus();
+            return;
+        }
 
-    if (equalsIgnoreCase(token, "DIAG") || equalsIgnoreCase(token, "DIAGNOSTICS")) {
-        const char* enabledToken = strtok_r(nullptr, " ", &savePtr);
-        bool valid = false;
-        const bool enabled = parseOnOffToken(enabledToken, &valid);
-        if (!valid) {
-            serialOut().println("ERR SEQ unknown diagnostics use DIAG on|off");
+        if (equalsIgnoreCase(token, "DIAG") || equalsIgnoreCase(token, "DIAGNOSTICS")) {
+            const char* enabledToken = strtok_r(nullptr, " ", &savePtr);
+            bool valid = false;
+            const bool enabled = parseOnOffToken(enabledToken, &valid);
+            if (!valid) {
+                serialOut().println("ERR SEQ unknown diagnostics use DIAG on|off");
+                return;
+            }
+            changeSeqOutputConfig([enabled](SeqOutputConfig& config) { config.diagnosticsEnabled = enabled; });
+            serialOut().print("OK SEQ DIAG ");
+            serialOut().println(onOffName(enabled));
             return;
         }
-        changeSeqOutputConfig([enabled](SeqOutputConfig& config) { config.diagnosticsEnabled = enabled; });
-        serialOut().print("OK SEQ DIAG ");
-        serialOut().println(onOffName(enabled));
-        return;
-    }
 
-    if (equalsIgnoreCase(token, "FREQBAND")) {
-        const char* enabledToken = strtok_r(nullptr, " ", &savePtr);
-        bool valid = false;
-        const bool enabled = parseOnOffToken(enabledToken, &valid);
-        if (!valid) {
-            serialOut().println("ERR SEQ unknown freqband use FREQBAND on|off");
+        if (equalsIgnoreCase(token, "FREQBAND")) {
+            const char* enabledToken = strtok_r(nullptr, " ", &savePtr);
+            bool valid = false;
+            const bool enabled = parseOnOffToken(enabledToken, &valid);
+            if (!valid) {
+                serialOut().println("ERR SEQ unknown freqband use FREQBAND on|off");
+                return;
+            }
+            changeSeqOutputConfig([enabled](SeqOutputConfig& config) { config.frequencyBandEnabled = enabled; });
+            serialOut().print("OK SEQ FREQBAND ");
+            serialOut().println(onOffName(enabled));
             return;
         }
-        changeSeqOutputConfig([enabled](SeqOutputConfig& config) { config.frequencyBandEnabled = enabled; });
-        serialOut().print("OK SEQ FREQBAND ");
-        serialOut().println(onOffName(enabled));
-        return;
-    }
 
-    if (equalsIgnoreCase(token, "FREQUPDATEEVERYSAMPLES")) {
-        const char* decimateToken = strtok_r(nullptr, " ", &savePtr);
-        if (decimateToken == nullptr || *decimateToken == '\0') {
-            serialOut().println("ERR SEQ missing freqUpdateEverySamples use FREQUPDATEEVERYSAMPLES 1|4|8|16");
+        if (equalsIgnoreCase(token, "FREQUPDATEEVERYSAMPLES")) {
+            const char* decimateToken = strtok_r(nullptr, " ", &savePtr);
+            if (decimateToken == nullptr || *decimateToken == '\0') {
+                serialOut().println("ERR SEQ missing freqUpdateEverySamples use FREQUPDATEEVERYSAMPLES 1|4|8|16");
+                return;
+            }
+            unsigned long decimation = 0;
+            if (!text_parse::parseUnsigned(decimateToken, decimation) || decimation == 0UL) {
+                serialOut().println("ERR SEQ freqUpdateEverySamples out of range use N>=1");
+                return;
+            }
+            changeSeqOutputConfig(
+                [decimation](SeqOutputConfig& config) { config.frequencyUpdateEverySamples = decimation; });
+            _freqBandStream.setFrequencyUpdateEverySamples(decimation);
+            serialOut().print("OK SEQ FREQUPDATEEVERYSAMPLES ");
+            serialOut().println(decimation);
             return;
         }
-        unsigned long decimation = 0;
-        if (!text_parse::parseUnsigned(decimateToken, decimation) || decimation == 0UL) {
-            serialOut().println("ERR SEQ freqUpdateEverySamples out of range use N>=1");
-            return;
-        }
-        changeSeqOutputConfig([decimation](SeqOutputConfig& config) { config.frequencyUpdateEverySamples = decimation; });
-        _freqBandStream.setFrequencyUpdateEverySamples(decimation);
-        serialOut().print("OK SEQ FREQUPDATEEVERYSAMPLES ");
-        serialOut().println(decimation);
-        return;
-    }
 
         if (equalsIgnoreCase(token, "MODE")) {
             const char* modeToken = strtok_r(nullptr, " ", &savePtr);
             bool valid = false;
             const AnalyzerApp::SeqOutputMode mode = AnalyzerApp::sequenceOutputModeFromToken(modeToken, &valid);
             if (!valid) {
-            serialOut().println("ERR SEQ unknown mode use MODE quiet|trial|inspect|source|system|detail");
+                serialOut().println("ERR SEQ unknown mode use MODE quiet|trial|inspect|source|system|detail");
                 return;
             }
             changeSeqOutputConfig([mode](SeqOutputConfig& config) {
@@ -398,7 +411,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR SEQ verbosity out of range use 0|1|2");
                 return;
             }
-            changeSeqOutputConfig([verbosity](SeqOutputConfig& config) { config.verbosity = static_cast<uint8_t>(verbosity); });
+            changeSeqOutputConfig(
+                [verbosity](SeqOutputConfig& config) { config.verbosity = static_cast<uint8_t>(verbosity); });
             serialOut().print("OK SEQ VERBOSE ");
             serialOut().println(static_cast<unsigned long>(_seqOutputConfig.verbosity));
             return;
@@ -415,7 +429,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("ERR SEQ tries out of range use N>=1");
                 return;
             }
-            _seqOutputConfig.totalTrials = totalTrials;  // the next start's shape only, as PROFILE: a running run keeps its own
+            _seqOutputConfig.totalTrials =
+                totalTrials;  // the next start's shape only, as PROFILE: a running run keeps its own
             serialOut().print("OK SEQ TRIES ");
             serialOut().println(_seqOutputConfig.totalTrials);
             return;
@@ -504,7 +519,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     } else {
                         char* dash = nullptr;
                         const unsigned long lo = strtoul(spec, &dash, 10);
-                        const unsigned long hi = (dash != nullptr && *dash == '-') ? strtoul(dash + 1, nullptr, 10) : 0UL;
+                        const unsigned long hi =
+                            (dash != nullptr && *dash == '-') ? strtoul(dash + 1, nullptr, 10) : 0UL;
                         if (lo == 0 || hi < lo || hi > runtime::kMaxToneHz) {
                             serialOut().print("ERR SEQ bad value token=");
                             serialOut().println(token);
@@ -559,7 +575,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         serialOut().println(token);
                         return;
                     }
-                } else if (startsWithTokenIgnoreCase(token, "report_settle=") || startsWithTokenIgnoreCase(token, "settle=")) {
+                } else if (startsWithTokenIgnoreCase(token, "report_settle=") ||
+                           startsWithTokenIgnoreCase(token, "settle=")) {
                     if (!text_parse::parseUnsigned(strchr(token, '=') + 1, request.reportSettleMs)) {
                         serialOut().print("ERR SEQ bad value token=");
                         serialOut().println(token);
@@ -588,7 +605,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     if (!valid) {
                         serialOut().print("ERR SEQ unknown mode=");
                         serialOut().print(text_parse::tokenValue(token));
-                    serialOut().println(" use mode=quiet, mode=trial, mode=inspect, mode=source, mode=system or mode=detail");
+                        serialOut().println(
+                            " use mode=quiet, mode=trial, mode=inspect, mode=source, mode=system or mode=detail");
                         return;
                     }
                     if (outputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet) {
@@ -613,7 +631,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         return;
                     }
                     outputConfig.verbosity = static_cast<uint8_t>(verbosity);
-                } else if (startsWithTokenIgnoreCase(token, "diag=") || startsWithTokenIgnoreCase(token, "diagnostics=")) {
+                } else if (startsWithTokenIgnoreCase(token, "diag=") ||
+                           startsWithTokenIgnoreCase(token, "diagnostics=")) {
                     const char* valueToken = strchr(token, '=') != nullptr ? strchr(token, '=') + 1 : nullptr;
                     bool valid = false;
                     const bool enabled = parseOnOffToken(valueToken, &valid);
@@ -688,13 +707,10 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             // Same bounds the Emitter applies to PULSES; refused here so a
             // run never starts with every trial rejected on the Emitter.
             if (request.pulseCount > 0 &&
-                (request.pulseCount > emitter_limits::kPulsesMaxCount ||
-                 request.durationMs == 0 ||
-                 request.durationMs > emitter_limits::kPulsesMaxPulseMs ||
-                 request.pulseGapMs == 0 ||
+                (request.pulseCount > emitter_limits::kPulsesMaxCount || request.durationMs == 0 ||
+                 request.durationMs > emitter_limits::kPulsesMaxPulseMs || request.pulseGapMs == 0 ||
                  request.pulseGapMs > emitter_limits::kPulsesMaxGapMs ||
-                 (request.pulseRampSet &&
-                  request.pulseRampMs > emitter_limits::kPulsesMaxRampMs))) {
+                 (request.pulseRampSet && request.pulseRampMs > emitter_limits::kPulsesMaxRampMs))) {
                 serialOut().print("ERR SEQ pulses use pulses=1-");
                 serialOut().print(emitter_limits::kPulsesMaxCount);
                 serialOut().print(" dur=1-");
@@ -711,8 +727,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             // trigger: 2200 + 500 > 2500 credited early chirps of trial N+1
             // to trial N (issue #31 R2-5). An explicit window= is kept (and
             // warned about at start).
-            if (request.externalEmitter && !windowSet &&
-                request.periodMs > request.reportSettleMs) {
+            if (request.externalEmitter && !windowSet && request.periodMs > request.reportSettleMs) {
                 request.windowEndOffsetMs = request.periodMs - request.reportSettleMs;
             }
 
@@ -733,7 +748,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             serialOut().println("OK SEQ");
             return;
         }
-
     }
 
     if (startsWithTokenIgnoreCase(line, "EMIT ")) {

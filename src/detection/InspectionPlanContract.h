@@ -45,7 +45,7 @@ struct InspectionPlanCheck {
 
 inline InspectionPlanCheck checkInspectionPlan(const ScalarTransientConfig& scalar, const InspectionPlan& plan,
                                                unsigned long historySpanMs = FeatureHistory::kBinsPerStream *
-                                                                             FeatureHistory::kBinDurationMs) {
+                                                   FeatureHistory::kBinDurationMs) {
     InspectionPlanCheck c;
     c.historySpanMs = historySpanMs;
     const unsigned long inspectedAfterStartMs = scalar.minTransientDurationMs + scalar.releaseDebounceMs;
@@ -56,8 +56,8 @@ inline InspectionPlanCheck checkInspectionPlan(const ScalarTransientConfig& scal
             // DET-015: the shape window (look-back + the longest occurrence + margin) must fit the bin track
             // at the time it is read, which is up to the release debounce after the release; the track holds
             // the kMs ms up to and including now, hence the + 1.
-            const unsigned long shapeNeeded = module.shape.preMs + scalar.maxTransientDurationMs +
-                                              scalar.releaseDebounceMs + module.shape.tailMs + 1;
+            const unsigned long shapeNeeded =
+                module.shape.preMs + scalar.maxTransientDurationMs + scalar.releaseDebounceMs + module.shape.tailMs + 1;
             if (shapeNeeded > BinTrack::kMs) {
                 c.shapeFits = false;
             }

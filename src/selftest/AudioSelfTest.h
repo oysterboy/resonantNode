@@ -43,8 +43,8 @@ Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t ca
 // reason=mic_failed when runMicCheck failed. Prints one SELFTEST_AMP
 // line per chirp, then the check line with the median tone level, floor and
 // SNR (the runner compares the tone level with an earlier run).
-Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput& tone,
-                   uint32_t toneHz, const char* path, uint8_t chirps = 5);
+Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput& tone, uint32_t toneHz,
+                   const char* path, uint8_t chirps = 5);
 
 // Read and discard RX data for `ms` (keeps the DMA queue from holding stale
 // audio; 0 = only what is queued now).
@@ -52,8 +52,8 @@ void drainSource(AudioSourceI2S& source, uint32_t ms);
 
 // Emit `n` tones and return; source (may be null) is drained meanwhile.
 // Prints SELFTEST_CHIRP start ... and SELFTEST_CHIRP done ....
-void emitChirpsBlocking(Print& out, AudioSourceI2S* source, ToneOutput& tone, uint32_t toneHz,
-                        uint8_t n, uint32_t durMs, uint32_t gapMs);
+void emitChirpsBlocking(Print& out, AudioSourceI2S* source, ToneOutput& tone, uint32_t toneHz, uint8_t n,
+                        uint32_t durMs, uint32_t gapMs);
 
 // Thresholds. Provisional, from the #20 bench (2026-10-10): healthy D-AMP
 // floor 850-5,900, own tone ~290k-350k; failing amp -19..+2 dB.

@@ -26,11 +26,7 @@ public:
         Sweep
     };
 
-    EmitterApp(int outputPin,
-               int outputBtlPin,
-               int rxPin,
-               int txPin,
-               unsigned long baudRate);
+    EmitterApp(int outputPin, int outputBtlPin, int rxPin, int txPin, unsigned long baudRate);
 
     void begin();
     void update();
@@ -50,14 +46,16 @@ private:
     // n=/pulse=/gap= work as keys too.
     void handlePulsesCommand(const char* line);
     // sweepToHz != 0: the chirp glides from toneHz to sweepToHz over durationMs (OUT-005).
-    void startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId = 0, unsigned long sweepToHz = 0);
+    void startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId = 0,
+                    unsigned long sweepToHz = 0);
     void startPulses(unsigned long toneHz, unsigned long count, unsigned long pulseMs, unsigned long gapMs,
                      unsigned long rampMs, unsigned long trialId);
     void sendStartMarkers();
     void setMode(EmitterMode mode);
     void claimExternalControl();
     void configureAuto(unsigned long intervalMs, unsigned long toneHz, unsigned long durationMs);
-    void configureSweep(unsigned long startHz, unsigned long stopHz, unsigned long stepHz, unsigned long durationMs, unsigned long pauseMs);
+    void configureSweep(unsigned long startHz, unsigned long stopHz, unsigned long stepHz, unsigned long durationMs,
+                        unsigned long pauseMs);
     void advanceSweep(unsigned long now);
     const char* modeName() const;
 

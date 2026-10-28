@@ -71,7 +71,8 @@ bool loadRawCsv(const std::string& path, Capture& out);
 bool loadCapture(const std::string& path, Capture& out);
 
 struct Options {
-    unsigned long bandLow = runtime::kDefaultNetworkBandLowHz;   // the network band (decisions/2026-10-16-network-band-2950-3950.md)
+    unsigned long bandLow =
+        runtime::kDefaultNetworkBandLowHz;   // the network band (decisions/2026-10-16-network-band-2950-3950.md)
     unsigned long bandHigh = runtime::kDefaultNetworkBandHighHz;
     unsigned long targetHz = runtime::kDefaultChirpFrequencyHz;
     bool preprocessForced = false;
@@ -111,7 +112,8 @@ struct Result {
 // detection.scalar_* params as on the board, plus detection.contrast_medium /
 // detection.amp_medium on the plan's modules), parsed and range-checked by
 // ParamRegistry. Returns the status name, "ok" on success.
-const char* applyProfileSet(detection::DetectionProfile& profile, const std::string& path, const std::string& valueText);
+const char* applyProfileSet(detection::DetectionProfile& profile, const std::string& path,
+                            const std::string& valueText);
 
 Result replay(const Capture& capture, const Options& options, const detection::DetectionProfile& profile);
 

@@ -39,9 +39,8 @@ AudioSamplePacket makePacketUs(uint64_t timeUs64, uint64_t sampleIndex, int leve
 
 // One accepted occurrence: highFrames frames at 100, then lowFrames at 0,
 // 1 ms apart, the first at startUs.
-bool driveOccurrenceUs(ScalarTransientDetector& detector, uint64_t startUs,
-                       unsigned long highFrames, unsigned long lowFrames,
-                       detection::Occurrence& out) {
+bool driveOccurrenceUs(ScalarTransientDetector& detector, uint64_t startUs, unsigned long highFrames,
+                       unsigned long lowFrames, detection::Occurrence& out) {
     uint64_t index = 0;
     for (unsigned long i = 0; i < highFrames; ++i, ++index) {
         detector.update(makePacketUs(startUs + index * 1000ULL, index, 100), 100.0f);
@@ -165,7 +164,8 @@ void test_scalar_occurrence_across_us_wrap() {
     TEST_ASSERT_TRUE(driveOccurrenceUs(detector, startUs, 6, 25, occurrence));
     TEST_ASSERT_TRUE(occurrence.present);
     // Onset at one of the six high frames, on the packet ms axis.
-    TEST_ASSERT_TRUE(timing::inWindow(occurrence.startMs, timebase::msFromUs64(startUs), timebase::msFromUs64(startUs) + 5UL));
+    TEST_ASSERT_TRUE(
+        timing::inWindow(occurrence.startMs, timebase::msFromUs64(startUs), timebase::msFromUs64(startUs) + 5UL));
     TEST_ASSERT_TRUE(timing::atOrAfter(occurrence.endMs, occurrence.startMs));
     TEST_ASSERT_TRUE(timing::delta(occurrence.endMs, occurrence.startMs) < 100);
 }

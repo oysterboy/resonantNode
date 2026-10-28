@@ -178,8 +178,10 @@ void test_line_joiner_rebuilds_lines_across_frames() {
         got[n][len] = '\0';
         ++n;
     };
-    const char f1[] = "first\x1F" "second-sta";
-    const char f2[] = "rts-here\x1F" "third";
+    const char f1[] = "first\x1F"
+                      "second-sta";
+    const char f2[] = "rts-here\x1F"
+                      "third";
     j.feed(f1, sizeof(f1) - 1, false, emit);
     TEST_ASSERT_EQUAL_INT(1, n);
     j.feed(f2, sizeof(f2) - 1, true, emit);

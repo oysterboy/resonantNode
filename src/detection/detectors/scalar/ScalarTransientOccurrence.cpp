@@ -8,11 +8,8 @@
 
 namespace {
 
-bool scalarRejectCandidateBeatsCurrent(
-    const detection::SelectedRejectSummary& current,
-    unsigned long candidateDurationMs,
-    float candidateStrength
-) {
+bool scalarRejectCandidateBeatsCurrent(const detection::SelectedRejectSummary& current,
+                                       unsigned long candidateDurationMs, float candidateStrength) {
     if (!current.present) {
         return true;
     }
@@ -57,15 +54,13 @@ void ScalarTransientDetector::captureAcceptedOccurrence(uint64_t releaseObserved
     const float candidateMatchedMean = _candidateMatchedStrengthCount > 0
         ? static_cast<float>(_candidateMatchedStrengthSum / static_cast<double>(_candidateMatchedStrengthCount))
         : 0.0f;
-    const float candidateRms = _candidateStrengthCount > 0
-        ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateStrengthCount))
-        : 0.0f;
+    const float candidateRms =
+        _candidateStrengthCount > 0 ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateStrengthCount)) : 0.0f;
 
     _acceptedOccurrencePresent = true;
     _acceptedOccurrenceReleaseMs = timebase::msFromUs64(releaseObservedUs);
-    _acceptedOccurrenceId = _currentOccurrenceId != 0
-        ? _currentOccurrenceId
-        : detection::nextOccurrenceId(_nextOccurrenceId);
+    _acceptedOccurrenceId =
+        _currentOccurrenceId != 0 ? _currentOccurrenceId : detection::nextOccurrenceId(_nextOccurrenceId);
     _nextOccurrenceId = _acceptedOccurrenceId;
     _acceptedOccurrence.present = true;
     _acceptedOccurrence.occurrenceId = _acceptedOccurrenceId;
@@ -93,8 +88,7 @@ void ScalarTransientDetector::captureAcceptedOccurrence(uint64_t releaseObserved
     _selectedReject = {};
     _reportDetail.selectedReject = {};
     _reportDetail.inspect.matchedMeanPassed =
-        !_config.requireMinStrength ||
-        candidateMatchedMean >= _config.minMatchedMeanStrength;
+        !_config.requireMinStrength || candidateMatchedMean >= _config.minMatchedMeanStrength;
     resetCandidateFacts();
 }
 
@@ -110,9 +104,8 @@ void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) 
     const float candidateMatchedMean = _candidateMatchedStrengthCount > 0
         ? static_cast<float>(_candidateMatchedStrengthSum / static_cast<double>(_candidateMatchedStrengthCount))
         : 0.0f;
-    const float candidateRms = _candidateStrengthCount > 0
-        ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateStrengthCount))
-        : 0.0f;
+    const float candidateRms =
+        _candidateStrengthCount > 0 ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateStrengthCount)) : 0.0f;
 
     const unsigned long rejectStartMs = timebase::msFromUs64(_peakStartedUs);
     const unsigned long rejectPeakMs = timebase::msFromUs64(_peakStrengthObservedUs);
@@ -132,9 +125,8 @@ void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) 
     ++_selectedRejectGeneration;
     _selectedRejectPresent = true;
     _selectedReject.present = true;
-    _selectedRejectOccurrenceId = _currentOccurrenceId != 0
-        ? _currentOccurrenceId
-        : detection::nextOccurrenceId(_nextOccurrenceId);
+    _selectedRejectOccurrenceId =
+        _currentOccurrenceId != 0 ? _currentOccurrenceId : detection::nextOccurrenceId(_nextOccurrenceId);
     _nextOccurrenceId = _selectedRejectOccurrenceId;
     _selectedReject.rejectClass = scalarTransientRejectClass(_lastTransientRejectReason);
     _selectedReject.detectorReason = lastTransientRejectReasonName();
@@ -165,8 +157,7 @@ void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) 
     _reportDetail.selectedReject.crossedOnset = true;
     _reportDetail.selectedReject.crossedRelease = true;
     _reportDetail.inspect.matchedMeanPassed =
-        !_config.requireMinStrength ||
-        candidateMatchedMean >= _config.minMatchedMeanStrength;
+        !_config.requireMinStrength || candidateMatchedMean >= _config.minMatchedMeanStrength;
     // Detail from this reject, not from the previous update (issue #31 R2-6),
     // as capturePendingOccurrence already does.
     refreshReportDetail();
@@ -190,7 +181,8 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _pendingOccurrence.releaseSample = audioSamplePacket.sampleIndex;
     _pendingOccurrence.startMs = _acceptedOccurrenceStartMs;
     _pendingOccurrence.peakMs = _acceptedOccurrencePeakMs;
-    _pendingOccurrence.releaseMs = _acceptedOccurrenceReleaseMs != 0 ? _acceptedOccurrenceReleaseMs : audioSamplePacket.timeMs;
+    _pendingOccurrence.releaseMs =
+        _acceptedOccurrenceReleaseMs != 0 ? _acceptedOccurrenceReleaseMs : audioSamplePacket.timeMs;
     _pendingOccurrence.endMs = _pendingOccurrence.releaseMs;
     _pendingOccurrence.durationMs = timing::atOrAfter(_pendingOccurrence.releaseMs, _pendingOccurrence.startMs)
         ? _pendingOccurrence.releaseMs - _pendingOccurrence.startMs
@@ -205,7 +197,8 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _pendingOccurrence.magnitude.onsetStrength = _acceptedOccurrenceOnsetStrength;
     _pendingOccurrence.magnitude.peakStrength = _acceptedOccurrencePeakStrength;
     _pendingOccurrence.magnitude.releaseStrength = _acceptedOccurrenceCurrentStrength;
-    _pendingOccurrence.magnitude.audioOverflowDuringOccurrence = _acceptedOccurrenceAudioOverflow || audioSamplePacket.overflowDuringBlock;
+    _pendingOccurrence.magnitude.audioOverflowDuringOccurrence =
+        _acceptedOccurrenceAudioOverflow || audioSamplePacket.overflowDuringBlock;
     _reportDetail.accepted.present = true;
     _reportDetail.accepted.value = _pendingOccurrence.magnitude.value;
     _reportDetail.accepted.baseline = _pendingOccurrence.magnitude.baseline;
@@ -215,10 +208,8 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     freezeReport(audioSamplePacket.timeMs);
 }
 
-void ScalarTransientDetector::updateAcceptedOccurrencePending(
-    const AudioSamplePacket& audioSamplePacket,
-    float signalMagnitude
-) {
+void ScalarTransientDetector::updateAcceptedOccurrencePending(const AudioSamplePacket& audioSamplePacket,
+                                                              float signalMagnitude) {
     if (_onsetDetected) {
         _acceptedOccurrencePendingActive = true;
         _acceptedOccurrenceStartSample = audioSamplePacket.sampleIndex;

@@ -110,8 +110,10 @@ private:
     void applyActiveDetectionProfile();
     void applyActiveBehaviorGateConfig();
     void applyActiveProfiles();
-    void processDetectionFrame(const AudioSamplePacket& audioSamplePacket, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
-    detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const;
+    void processDetectionFrame(const AudioSamplePacket& audioSamplePacket, unsigned long now, bool selfChirpSuppressed,
+                               bool& sawPatternThisLoop);
+    detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(
+        const AudioSamplePacket& audioSamplePacket) const;
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbBehaviorSummary() const;
@@ -134,7 +136,7 @@ private:
     void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)
     void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history (step 8b item 2)
     void startEmission(unsigned long now, bool sawPatternThisLoop, bool selfChirpSuppressed);  // step 10 item 9
-    void updateEmissions(unsigned long now);                                                     // step 10 item 9
+    void updateEmissions(unsigned long now);  // step 10 item 9
     void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset (step 10 item 2)
     void loadInspectionLimitsFromProfile();  // detection.contrast_medium / amp_medium / shape_* from the plan
 
@@ -207,5 +209,6 @@ private:
     NodeBaseline _baseline;
 
     // SELFTEST and its phases (step 11i N4); asks Behavior for test chirps through the callbacks.
-    NodeSelfTest _selfTest{_baseline, NodeSelfTest::Chirps{this, &Node::selfTestRequestChirp, &Node::selfTestCancelChirp}};
+    NodeSelfTest _selfTest{_baseline,
+                           NodeSelfTest::Chirps{this, &Node::selfTestRequestChirp, &Node::selfTestCancelChirp}};
 };

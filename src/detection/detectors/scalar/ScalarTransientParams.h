@@ -20,16 +20,16 @@ namespace param {
 // (the Node's production profile is TonalPulseScalar, decisions/2026-10-14-
 // node-ships-tonalpulsescalar.md). Strengths are Strength16 values, times ms.
 inline void describeParams(ParamRegistry& registry, detection::ScalarTransientConfig& sc) {
-    registry.addFloat(ParamId::Detection_ScalarOnsetThreshold, ModuleId::Detection,
-                      "detection.scalar_onset_threshold", &sc.onsetDetectionThreshold, 0.0f, 200000.0f);
+    registry.addFloat(ParamId::Detection_ScalarOnsetThreshold, ModuleId::Detection, "detection.scalar_onset_threshold",
+                      &sc.onsetDetectionThreshold, 0.0f, 200000.0f);
     registry.addFloat(ParamId::Detection_ScalarReleaseThreshold, ModuleId::Detection,
                       "detection.scalar_release_threshold", &sc.onsetReleaseThreshold, 0.0f, 200000.0f);
-    registry.addUInt32(ParamId::Detection_ScalarCooldownMs, ModuleId::Detection,
-                       "detection.scalar_cooldown_ms", &sc.cooldownAfterOnsetMs, 0U, 10000U);
-    registry.addUInt32(ParamId::Detection_ScalarMinDurationMs, ModuleId::Detection,
-                       "detection.scalar_min_duration_ms", &sc.minTransientDurationMs, 0U, 5000U);
-    registry.addUInt32(ParamId::Detection_ScalarMaxDurationMs, ModuleId::Detection,
-                       "detection.scalar_max_duration_ms", &sc.maxTransientDurationMs, 0U, 5000U);
+    registry.addUInt32(ParamId::Detection_ScalarCooldownMs, ModuleId::Detection, "detection.scalar_cooldown_ms",
+                       &sc.cooldownAfterOnsetMs, 0U, 10000U);
+    registry.addUInt32(ParamId::Detection_ScalarMinDurationMs, ModuleId::Detection, "detection.scalar_min_duration_ms",
+                       &sc.minTransientDurationMs, 0U, 5000U);
+    registry.addUInt32(ParamId::Detection_ScalarMaxDurationMs, ModuleId::Detection, "detection.scalar_max_duration_ms",
+                       &sc.maxTransientDurationMs, 0U, 5000U);
     registry.addFloat(ParamId::Detection_ScalarMinPeakStrength, ModuleId::Detection,
                       "detection.scalar_min_peak_strength", &sc.minTransientPeakStrength, 0.0f, 200000.0f);
     registry.addUInt32(ParamId::Detection_ScalarReleaseDebounceMs, ModuleId::Detection,
@@ -38,14 +38,14 @@ inline void describeParams(ParamRegistry& registry, detection::ScalarTransientCo
                      "detection.scalar_require_carrier_quality", &sc.requireCarrierQuality);
     registry.addBool(ParamId::Detection_ScalarRequireMinStrength, ModuleId::Detection,
                      "detection.scalar_require_min_strength", &sc.requireMinStrength);
-    registry.addFloat(ParamId::Detection_ScalarMinStrength, ModuleId::Detection,
-                      "detection.scalar_min_strength", &sc.minMatchedMeanStrength, 0.0f, 200000.0f);
+    registry.addFloat(ParamId::Detection_ScalarMinStrength, ModuleId::Detection, "detection.scalar_min_strength",
+                      &sc.minMatchedMeanStrength, 0.0f, 200000.0f);
     registry.addUInt32(ParamId::Detection_ScalarMinReleaseCoverageMs, ModuleId::Detection,
                        "detection.scalar_min_release_coverage_ms", &sc.minCoverageAboveReleaseMs, 0U, 5000U);
     registry.addUInt32(ParamId::Detection_ScalarMinLongestIslandMs, ModuleId::Detection,
                        "detection.scalar_min_longest_island_ms", &sc.minLongestIslandMs, 0U, 5000U);
-    registry.addUInt32(ParamId::Detection_ScalarMaxGapMs, ModuleId::Detection,
-                       "detection.scalar_max_gap_ms", &sc.maxGapMs, 0U, 5000U);
+    registry.addUInt32(ParamId::Detection_ScalarMaxGapMs, ModuleId::Detection, "detection.scalar_max_gap_ms",
+                       &sc.maxGapMs, 0U, 5000U);
 }
 
 }  // namespace param

@@ -92,7 +92,8 @@ BinShapeMeasure measureBinShape(const BinSource& source, uint32_t startMs, uint3
             continue;
         }
         if (keptCount > 0 && kept[keptCount - 1].hz == raw[i].hz) {
-            kept[keptCount - 1].lengthMs = static_cast<uint32_t>(raw[i].startMs + raw[i].lengthMs - kept[keptCount - 1].startMs);
+            kept[keptCount - 1].lengthMs =
+                static_cast<uint32_t>(raw[i].startMs + raw[i].lengthMs - kept[keptCount - 1].startMs);
         } else if (keptCount < BinShapeMeasure::kMaxRuns) {
             kept[keptCount++] = raw[i];
         }
@@ -110,7 +111,7 @@ BinShapeMeasure measureBinShape(const BinSource& source, uint32_t startMs, uint3
         if (i > 0) {
             const long d = static_cast<long>(kept[i].hz) - static_cast<long>(kept[i - 1].hz);
             const bool up = d > 0 && d <= static_cast<long>(config.maxRisingStepBins * kBinShapeSpacingHz) &&
-                            d % static_cast<long>(kBinShapeSpacingHz) == 0;
+                d % static_cast<long>(kBinShapeSpacingHz) == 0;
             if (up || d < -static_cast<long>(3 * kBinShapeSpacingHz)) {
                 ++shape.risingSteps;
             } else {

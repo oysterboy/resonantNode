@@ -81,7 +81,8 @@ inline uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
         return 0;
     }
 
-    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
+    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) /
+                                 static_cast<uint64_t>(sampleRateHz));
 }
 
 // --- the clock --------------------------------------------------------------

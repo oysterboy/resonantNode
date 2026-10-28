@@ -13,8 +13,17 @@ native-test-behavior.
 
 namespace {
 
-enum class Group : uint8_t { A, B };
-enum class Id : uint16_t { U16, U32, F, Flag, Other };
+enum class Group : uint8_t {
+    A,
+    B
+};
+enum class Id : uint16_t {
+    U16,
+    U32,
+    F,
+    Flag,
+    Other
+};
 
 const char* groupName(uint8_t g) {
     return g == 0 ? "a" : (g == 1 ? "b" : nullptr);

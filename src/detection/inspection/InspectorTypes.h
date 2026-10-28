@@ -144,7 +144,7 @@ struct MagnitudeFeatureInspectionConfig {
 // + tailMs] with the target at or above the detector's release threshold (OccurrenceInspector::setShapeMinLevel); runs shorter than minRunMs are folded away. The class: Strong
 // from strongMin* bins / steps up, Medium from mediumMin*, Weak from 2 bins, None for one bin.
 struct ShapeInspectionConfig {
-    uint32_t preMs = 0;   // look back before the start: a train the detector split keeps its first steps here
+    uint32_t preMs = 0;  // look back before the start: a train the detector split keeps its first steps here
     uint32_t tailMs = 0;
     uint16_t maxRisingStepBins = 1;  // a step up by up to this many bins counts as rising (2: one bin missing)
     uint32_t minRunMs = 4;
@@ -253,4 +253,4 @@ struct TransientEvidence {
     bool audioOverflowDuringOccurrence = false;
 };
 
-} // namespace detection
+}  // namespace detection

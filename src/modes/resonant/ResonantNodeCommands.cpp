@@ -89,7 +89,8 @@ void Node::printHelp(const char* line) {
     serialOut().println("RB CMD: PARAM GET <path>");
     serialOut().println("RB CMD: PARAM SET <path> <value>");
     serialOut().println("RB CMD: PARAM DUMP | PARAM SAVE | PARAM LOAD | PARAM RESET (NVS store)");
-    serialOut().println("RB CMD: NET <target|*> <command> (PARAM, RB, SELFTEST to one target, NET PING) | NET STATUS (by radio)");
+    serialOut().println(
+        "RB CMD: NET <target|*> <command> (PARAM, RB, SELFTEST to one target, NET PING) | NET STATUS (by radio)");
     serialOut().println("RB CMD: SELFTEST | SELFTEST external wait_ms=10000 | SELFTEST chirp n=5 | SELFTEST help");
 }
 

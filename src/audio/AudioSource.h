@@ -59,7 +59,10 @@ public:
     // sampleTimeUs64: the sample's time on the 64-bit time base (app/TimeBase.h).
     virtual bool readSample(int& sample, uint64_t& sampleTimeUs64) = 0;
     virtual bool readRawSample(int& sample, uint64_t& sampleTimeUs64) { return readSample(sample, sampleTimeUs64); }
-    virtual bool readBlock(AudioBlock& block) { (void)block; return false; }
+    virtual bool readBlock(AudioBlock& block) {
+        (void)block;
+        return false;
+    }
     virtual uint32_t sampleRateHz() const { return 0; }
     virtual const AudioSourceStats& stats() const {
         static const AudioSourceStats emptyStats{};

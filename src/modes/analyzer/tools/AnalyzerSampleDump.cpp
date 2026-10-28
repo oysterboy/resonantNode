@@ -25,8 +25,10 @@ bool AnalyzerApp::sequenceSampleDumpSelected(unsigned long trialNumber) const {
         return false;
     }
 
-    const bool firstSelected = _sequenceTest.config.sampleDumpFirstTrials > 0 && trialNumber <= _sequenceTest.config.sampleDumpFirstTrials;
-    const bool everySelected = _sequenceTest.config.sampleDumpEveryNth > 0 && trialNumber % _sequenceTest.config.sampleDumpEveryNth == 0;
+    const bool firstSelected =
+        _sequenceTest.config.sampleDumpFirstTrials > 0 && trialNumber <= _sequenceTest.config.sampleDumpFirstTrials;
+    const bool everySelected =
+        _sequenceTest.config.sampleDumpEveryNth > 0 && trialNumber % _sequenceTest.config.sampleDumpEveryNth == 0;
     return firstSelected || everySelected;
 }
 
@@ -62,23 +64,25 @@ void AnalyzerApp::flushSequenceSampleHistory(unsigned long currentSampleMs) {
     _sequenceTest.sampleDump.historyPending = {};
 
     if (_sequenceTest.sampleDump.historyCount < SampleDumpState::kMaxSampleHistory) {
-        const size_t index = (_sequenceTest.sampleDump.historyStart + _sequenceTest.sampleDump.historyCount) % SampleDumpState::kMaxSampleHistory;
+        const size_t index = (_sequenceTest.sampleDump.historyStart + _sequenceTest.sampleDump.historyCount) %
+            SampleDumpState::kMaxSampleHistory;
         _sequenceTest.sampleDump.history[index] = committed;
         ++_sequenceTest.sampleDump.historyCount;
     } else {
         _sequenceTest.sampleDump.history[_sequenceTest.sampleDump.historyStart] = committed;
-        _sequenceTest.sampleDump.historyStart = (_sequenceTest.sampleDump.historyStart + 1) % SampleDumpState::kMaxSampleHistory;
+        _sequenceTest.sampleDump.historyStart =
+            (_sequenceTest.sampleDump.historyStart + 1) % SampleDumpState::kMaxSampleHistory;
     }
 
     _sequenceTest.sampleDump.historyLastMs = committed.sampleMs;
 
-    if (!_sequenceTest.sampleDump.capturing
-        || !_sequenceTest.sampleDump.selectedForTrial
-        || _sequenceTest.sampleDump.trialNumber != _sequenceTest.trial.number) {
+    if (!_sequenceTest.sampleDump.capturing || !_sequenceTest.sampleDump.selectedForTrial ||
+        _sequenceTest.sampleDump.trialNumber != _sequenceTest.trial.number) {
         return;
     }
 
-    if (!timing::inWindow(committed.sampleMs, _sequenceTest.sampleDump.captureStartMs, _sequenceTest.sampleDump.captureEndMs)) {
+    if (!timing::inWindow(committed.sampleMs, _sequenceTest.sampleDump.captureStartMs,
+                          _sequenceTest.sampleDump.captureEndMs)) {
         return;
     }
     if (timing::beforeDeadline(committed.sampleMs, _sequenceTest.sampleDump.nextEmitMs)) {
@@ -128,10 +132,12 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
     _sequenceTest.sampleDump.capturing = _sequenceTest.sampleDump.selectedForTrial;
     _sequenceTest.sampleDump.triggerMs = _sequenceTest.trial.startMs;
     _sequenceTest.sampleDump.triggerSampleMs = timebase::msFromUs64(_audioSignal.sampleTimeUs64());
-    _sequenceTest.sampleDump.captureStartMs = _sequenceTest.sampleDump.triggerSampleMs > _sequenceTest.config.sampleDumpLeadMs
+    _sequenceTest.sampleDump.captureStartMs =
+        _sequenceTest.sampleDump.triggerSampleMs > _sequenceTest.config.sampleDumpLeadMs
         ? _sequenceTest.sampleDump.triggerSampleMs - _sequenceTest.config.sampleDumpLeadMs
         : 0;
-    _sequenceTest.sampleDump.captureEndMs = _sequenceTest.sampleDump.triggerSampleMs + _sequenceTest.config.sampleDumpTailMs;
+    _sequenceTest.sampleDump.captureEndMs =
+        _sequenceTest.sampleDump.triggerSampleMs + _sequenceTest.config.sampleDumpTailMs;
     _sequenceTest.sampleDump.nextEmitMs = _sequenceTest.sampleDump.captureStartMs;
     _sequenceTest.sampleDump.rowCount = 0;
 
@@ -169,7 +175,8 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
 
 // Sample-dump output is detector-input tooling, not detector truth.
 void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
-    if (!_sequenceTest.config.sampleDumpEnabled || !_sequenceTest.sampleDump.selectedForTrial || _sequenceTest.sampleDump.trialNumber != trialNumber) {
+    if (!_sequenceTest.config.sampleDumpEnabled || !_sequenceTest.sampleDump.selectedForTrial ||
+        _sequenceTest.sampleDump.trialNumber != trialNumber) {
         return;
     }
 
@@ -184,7 +191,8 @@ void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
     serialOut().print("SAMPLES_NOTE trial=");
     serialOut().print(trialNumber);
     serialOut().print(" input=");
-    serialOut().print(detectorInputName(_sequenceTest.sampleDump.detectorSelection, _sequenceTest.sampleDump.observedStream));
+    serialOut().print(
+        detectorInputName(_sequenceTest.sampleDump.detectorSelection, _sequenceTest.sampleDump.observedStream));
     serialOut().print(" rows_cap=");
     serialOut().print(SampleDumpState::kMaxSampleRows);
     serialOut().print(" sample_max_budget=");

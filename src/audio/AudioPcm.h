@@ -21,17 +21,14 @@ constexpr PcmSample kAmpStrengthGainReferencePcm = 262143;
 constexpr double kFrequencyAmplitudeReference = 262143;
 
 constexpr PcmIntermediate pcmMagnitude(PcmSample sample) {
-    return static_cast<PcmIntermediate>(sample) < 0
-        ? -static_cast<PcmIntermediate>(sample)
-        : static_cast<PcmIntermediate>(sample);
+    return static_cast<PcmIntermediate>(sample) < 0 ? -static_cast<PcmIntermediate>(sample)
+                                                    : static_cast<PcmIntermediate>(sample);
 }
 
 constexpr PcmSample clampToCanonicalPcm(PcmIntermediate value) {
-    return value > static_cast<PcmIntermediate>(kCanonicalPcmMax)
-        ? kCanonicalPcmMax
-        : value < static_cast<PcmIntermediate>(kCanonicalPcmMin)
-            ? kCanonicalPcmMin
-            : static_cast<PcmSample>(value);
+    return value > static_cast<PcmIntermediate>(kCanonicalPcmMax) ? kCanonicalPcmMax
+        : value < static_cast<PcmIntermediate>(kCanonicalPcmMin)  ? kCanonicalPcmMin
+                                                                  : static_cast<PcmSample>(value);
 }
 
 constexpr PcmIntermediate clampPcmMagnitude(PcmIntermediate magnitude) {
@@ -39,12 +36,11 @@ constexpr PcmIntermediate clampPcmMagnitude(PcmIntermediate magnitude) {
 }
 
 constexpr Strength16 pcmMagnitudeToStrength(PcmSample sample) {
-    return static_cast<Strength16>(
-        (((pcmMagnitude(sample) > static_cast<PcmIntermediate>(kAmpStrengthGainReferencePcm))
-              ? static_cast<PcmIntermediate>(kAmpStrengthGainReferencePcm)
-              : pcmMagnitude(sample)) *
-         static_cast<PcmIntermediate>(kStrength16Max)) /
-        static_cast<PcmIntermediate>(kAmpStrengthGainReferencePcm));
+    return static_cast<Strength16>((((pcmMagnitude(sample) > static_cast<PcmIntermediate>(kAmpStrengthGainReferencePcm))
+                                         ? static_cast<PcmIntermediate>(kAmpStrengthGainReferencePcm)
+                                         : pcmMagnitude(sample)) *
+                                    static_cast<PcmIntermediate>(kStrength16Max)) /
+                                   static_cast<PcmIntermediate>(kAmpStrengthGainReferencePcm));
 }
 
 inline FrequencyScore16 frequencyAmplitudeToScore(double amplitude) {
@@ -69,22 +65,23 @@ inline Strength16 strengthFromFloat(float value) {
 }
 
 constexpr HistorySample pcmToHistorySample(PcmSample sample) {
-    return sample <= kCanonicalPcmMin
-        ? static_cast<HistorySample>(-32768)
-        : sample >= kCanonicalPcmMax
-            ? static_cast<HistorySample>(32767)
-            : static_cast<HistorySample>(
-                (static_cast<PcmIntermediate>(sample) * static_cast<PcmIntermediate>(kStrength16Max)) /
-                kCanonicalPcmMagnitudeMax);
+    return sample <= kCanonicalPcmMin ? static_cast<HistorySample>(-32768)
+        : sample >= kCanonicalPcmMax  ? static_cast<HistorySample>(32767)
+                                      : static_cast<HistorySample>((static_cast<PcmIntermediate>(sample) *
+                                                                   static_cast<PcmIntermediate>(kStrength16Max)) /
+                                                                   kCanonicalPcmMagnitudeMax);
 }
 
 static_assert(pcmMagnitudeToStrength(0) == 0, "zero PCM maps to zero strength");
 static_assert(pcmMagnitudeToStrength(kAmpStrengthGainReferencePcm / 2) >= 16383 &&
                   pcmMagnitudeToStrength(kAmpStrengthGainReferencePcm / 2) <= 16384,
               "half-scale PCM maps near half strength");
-static_assert(pcmMagnitudeToStrength(kAmpStrengthGainReferencePcm) == kStrength16Max, "AMP reference maps to max strength");
-static_assert(pcmMagnitudeToStrength(kCanonicalPcmMax) == kStrength16Max, "above AMP reference saturates to max strength");
-static_assert(pcmMagnitudeToStrength(kCanonicalPcmMin) == kStrength16Max, "large negative PCM saturates to max strength");
+static_assert(pcmMagnitudeToStrength(kAmpStrengthGainReferencePcm) == kStrength16Max,
+              "AMP reference maps to max strength");
+static_assert(pcmMagnitudeToStrength(kCanonicalPcmMax) == kStrength16Max,
+              "above AMP reference saturates to max strength");
+static_assert(pcmMagnitudeToStrength(kCanonicalPcmMin) == kStrength16Max,
+              "large negative PCM saturates to max strength");
 static_assert(pcmMagnitudeToStrength(123456) == pcmMagnitudeToStrength(-123456),
               "positive and negative PCM magnitudes match");
 static_assert(pcmToHistorySample(kCanonicalPcmMax) == 32767, "max PCM maps to max history sample");

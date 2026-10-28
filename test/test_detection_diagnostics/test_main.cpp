@@ -57,7 +57,8 @@ Run with `pio test -e native-test-diag` (needs a host C++ compiler on PATH).
 // Item 7 of the handoff list: the Node's variant carries nothing, and this build holds the full one.
 static_assert(std::is_empty<detection::NullDetectionDiagnostics>::value, "NullDetectionDiagnostics must be empty");
 static_assert(sizeof(detection::NullDetectionDiagnostics) == 1, "NullDetectionDiagnostics must be empty");
-static_assert(std::is_empty<detection::NullDetectionDiagnostics::ReportSlot>::value, "the Null ReportSlot must be empty");
+static_assert(std::is_empty<detection::NullDetectionDiagnostics::ReportSlot>::value,
+              "the Null ReportSlot must be empty");
 static_assert(std::is_same<detection::ActiveDetectionDiagnostics, detection::DetectionDiagnostics>::value,
               "ANALYZER_MODE must select the full DetectionDiagnostics");
 
@@ -73,7 +74,9 @@ using detection::OccurrenceVerdict;
 
 class VectorSource : public AudioSource {
 public:
-    VectorSource(const std::vector<int32_t>& pcm, uint32_t rate) : _pcm(pcm), _rate(rate) {}
+    VectorSource(const std::vector<int32_t>& pcm, uint32_t rate)
+        : _pcm(pcm),
+          _rate(rate) {}
     void begin() override {}
     bool available() override { return _index < _pcm.size(); }
     bool readSample(int& sample, uint64_t& sampleTimeUs64) override {
@@ -156,7 +159,8 @@ FixtureRun runFixture(const std::string& path, const hostreplay::Options& opt) {
     gRuntime.setFieldStateConfig(profile.fieldStateConfig);
     gRuntime.setVerdictQueueEnabled(true);
 
-    const size_t total = cap.pcm.size() + static_cast<size_t>((static_cast<uint64_t>(opt.tailMs) * cap.sampleRateHz) / 1000ULL);
+    const size_t total =
+        cap.pcm.size() + static_cast<size_t>((static_cast<uint64_t>(opt.tailMs) * cap.sampleRateHz) / 1000ULL);
     for (size_t i = 0; i < total; ++i) {
         const int sample = i < cap.pcm.size() ? cap.pcm[i] : 0;
         const uint64_t us = source.timeUs(i);
@@ -164,7 +168,8 @@ FixtureRun runFixture(const std::string& path, const hostreplay::Options& opt) {
         AudioSamplePacket packet;
         audioSignal->update(sample, us, packet, false);
         band->observeCenteredSample(packet.baselineCorrectedValue, packet.timeMs);
-        const detection::FrequencyBandMeasurementPacket evidence = detection::buildFrequencyMeasurementPacket(*band, packet);
+        const detection::FrequencyBandMeasurementPacket evidence =
+            detection::buildFrequencyMeasurementPacket(*band, packet);
         gRuntime.observeFrame(packet, evidence, packet.timeMs);
         ++run.framesFed;
         if (packet.valid) {
@@ -340,8 +345,10 @@ void test_fixture_loop_is_the_replay() {
     for (const FixtureRun& run : runs) {
         TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.replayVerdicts.size(), run.verdicts.size(), run.name.c_str());
         for (size_t i = 0; i < run.verdicts.size(); ++i) {
-            TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.replayVerdicts[i].occurrenceId, run.verdicts[i].occurrenceId, run.name.c_str());
-            TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.replayVerdicts[i].primaryStartMs, run.verdicts[i].primaryStartMs, run.name.c_str());
+            TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.replayVerdicts[i].occurrenceId, run.verdicts[i].occurrenceId,
+                                             run.name.c_str());
+            TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.replayVerdicts[i].primaryStartMs, run.verdicts[i].primaryStartMs,
+                                             run.name.c_str());
             TEST_ASSERT_EQUAL_MESSAGE(run.replayVerdicts[i].accepted, run.verdicts[i].accepted, run.name.c_str());
         }
         verdictTotal += run.verdicts.size();
@@ -358,9 +365,11 @@ void test_one_event_per_verdict_over_every_fixture() {
         const char* name = run.name.c_str();
         TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, run.verdictQueueOverflowCount, name);
         TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.verdicts.size(), run.verdictProducedCount, name);
-        TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.verdictProducedCount, run.verdictEventPushedCount + run.verdictEventDroppedCount, name);
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.verdictProducedCount,
+                                         run.verdictEventPushedCount + run.verdictEventDroppedCount, name);
         TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.verdictEventPushedCount, acceptedEventCount(run.events), name);
-        TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.verdictProducedCount, acceptedEventCount(run.events) + run.verdictEventDroppedCount, name);
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.verdictProducedCount,
+                                         acceptedEventCount(run.events) + run.verdictEventDroppedCount, name);
         TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, run.verdictEventDroppedCount, name);
         TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, run.pipelineEventOverflowCount, name);
         TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, run.detectorReportMismatchCount, name);
@@ -389,14 +398,17 @@ void test_one_event_per_verdict_over_every_fixture() {
             TEST_ASSERT_EQUAL_MESSAGE(detection::PipelineIntegrityReason::None, e.integrity.reason, name);
             TEST_ASSERT_TRUE_MESSAGE(e.sourceRecord.sourceReportMatched, name);
             TEST_ASSERT_EQUAL_UINT32_MESSAGE(e.eventId, e.sourceRecord.eventId, name);
-            TEST_ASSERT_EQUAL_UINT32_MESSAGE(verdict.occurrenceId, e.sourceRecord.detectorReport.accepted.occurrenceId, name);
-            TEST_ASSERT_EQUAL_UINT32_MESSAGE(verdict.primaryStartMs, e.sourceRecord.detectorReport.accepted.startMs, name);
+            TEST_ASSERT_EQUAL_UINT32_MESSAGE(verdict.occurrenceId, e.sourceRecord.detectorReport.accepted.occurrenceId,
+                                             name);
+            TEST_ASSERT_EQUAL_UINT32_MESSAGE(verdict.primaryStartMs, e.sourceRecord.detectorReport.accepted.startMs,
+                                             name);
             TEST_ASSERT_TRUE_MESSAGE(e.hasInspectedOccurrence, name);
             TEST_ASSERT_EQUAL_UINT32_MESSAGE(verdict.occurrenceId, e.inspectedOccurrence.occurrence.occurrenceId, name);
             TEST_ASSERT_EQUAL_UINT32_MESSAGE(verdict.occurrenceId, e.sourceOccurrenceId, name);
-            TEST_ASSERT_EQUAL_STRING_MESSAGE(
-                e.inspectedOccurrence.decision == detection::OccurrenceDecision::Rejected ? "selected_reject" : "selected_occurrence",
-                e.sourceSelection, name);
+            TEST_ASSERT_EQUAL_STRING_MESSAGE(e.inspectedOccurrence.decision == detection::OccurrenceDecision::Rejected
+                                                 ? "selected_reject"
+                                                 : "selected_occurrence",
+                                             e.sourceSelection, name);
         }
         TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.verdicts.size(), v, name);
     }
@@ -409,7 +421,8 @@ void test_counters_match_the_frames_fed_over_every_fixture() {
     for (const FixtureRun& run : fixtureRuns()) {
         const char* name = run.name.c_str();
         TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.framesFed, run.observeFrameCount, name);
-        TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.validFrames, run.freshDetectorInputCount + run.noFreshFrequencySkipCount, name);
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(run.validFrames, run.freshDetectorInputCount + run.noFreshFrequencySkipCount,
+                                         name);
         TEST_ASSERT_TRUE_MESSAGE(run.noFreshFrequencySkipCount > 0, name);  // the shipped profile reads FrequencyTarget
         TEST_ASSERT_TRUE_MESSAGE(run.detectorDrainCount >= run.freshDetectorInputCount, name);
         TEST_ASSERT_TRUE_MESSAGE(run.detectorDrainCount <= run.validFrames, name);
@@ -448,8 +461,8 @@ void test_report_is_captured_when_the_occurrence_is_popped() {
     configureSynthetic(syntheticProfile(0, 400));
     SyntheticFeed feed;
     feed.hold(100, 0.0f);
-    feed.pulse(30);   // occurrence 1 closes; its window ends 400 ms after its start
-    feed.pulse(30);   // occurrence 2 closes while occurrence 1 still waits
+    feed.pulse(30);  // occurrence 1 closes; its window ends 400 ms after its start
+    feed.pulse(30);  // occurrence 2 closes while occurrence 1 still waits
     const DetectionDiagnostics& d = gRuntime.diagnostics();
     TEST_ASSERT_EQUAL_UINT32(2, d.detectorOccurrencePoppedCount());
     TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, d.verdictProducedCount(), "occurrence 1 should still be waiting");
@@ -470,7 +483,8 @@ void test_report_is_captured_when_the_occurrence_is_popped() {
     // reading it here changes nothing the frame still has to do).
     const detection::DetectorReport& live = gRuntime.diagnostics().activeDetectorReport();
     TEST_ASSERT_TRUE(live.accepted.present);
-    TEST_ASSERT_TRUE_MESSAGE(live.accepted.occurrenceId != firstId, "the second occurrence should have refreshed the report");
+    TEST_ASSERT_TRUE_MESSAGE(live.accepted.occurrenceId != firstId,
+                             "the second occurrence should have refreshed the report");
     // The event still carries the report occurrence 1 was popped with.
     TEST_ASSERT_TRUE(first.detectorReportMatched);
     TEST_ASSERT_TRUE(first.integrity.correlationComplete);
@@ -592,7 +606,7 @@ void test_reset_detection_state_leaves_no_event_behind() {
     feed.hold(30, 0.0f);
     feed.pulse(500);  // verdict 1 (window incomplete on the left: the snapshot fills)
     feed.pulse(500);  // verdict 2
-    feed.pulse(30);   // occurrence 3 popped, waiting for its 400 ms window
+    feed.pulse(30);  // occurrence 3 popped, waiting for its 400 ms window
     DetectionDiagnostics& d = gRuntime.diagnostics();
     TEST_ASSERT_EQUAL_UINT32(2, d.verdictProducedCount());
     TEST_ASSERT_EQUAL_UINT32(3, d.detectorOccurrencePoppedCount());
@@ -636,10 +650,11 @@ void test_reset_detection_state_leaves_no_event_behind() {
 // static_assert on the byte count would be too brittle (handoff), so this prints it.
 void test_sizes_probe() {
     char line[160];
-    snprintf(line, sizeof(line),
-             "sizeof(DetectionRuntime) Analyzer variant (ANALYZER_MODE) = %u, DetectionDiagnostics = %u, NullDetectionDiagnostics = %u",
-             static_cast<unsigned>(sizeof(DetectionRuntime)), static_cast<unsigned>(sizeof(DetectionDiagnostics)),
-             static_cast<unsigned>(sizeof(detection::NullDetectionDiagnostics)));
+    snprintf(
+        line, sizeof(line),
+        "sizeof(DetectionRuntime) Analyzer variant (ANALYZER_MODE) = %u, DetectionDiagnostics = %u, NullDetectionDiagnostics = %u",
+        static_cast<unsigned>(sizeof(DetectionRuntime)), static_cast<unsigned>(sizeof(DetectionDiagnostics)),
+        static_cast<unsigned>(sizeof(detection::NullDetectionDiagnostics)));
     printf("%s\n", line);
     TEST_MESSAGE(line);
     TEST_ASSERT_TRUE(sizeof(DetectionRuntime) > sizeof(DetectionDiagnostics));

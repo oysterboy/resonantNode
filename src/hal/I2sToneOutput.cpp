@@ -32,8 +32,8 @@ void I2sToneOutput::begin() {
     }
     _stopRequested = false;
     TaskHandle_t task = nullptr;
-    xTaskCreatePinnedToCore(&I2sToneOutput::taskEntry, "i2s_tone", kTaskStackBytes, this,
-                            kTaskPriority, &task, kTaskCore);
+    xTaskCreatePinnedToCore(&I2sToneOutput::taskEntry, "i2s_tone", kTaskStackBytes, this, kTaskPriority, &task,
+                            kTaskCore);
     _task = task;
 }
 
@@ -187,10 +187,11 @@ void I2sToneOutput::run() {
 }
 
 void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
-    const uint32_t sampleRateHz = _port.sampleRateHz() > 0 ? _port.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
+    const uint32_t sampleRateHz =
+        _port.sampleRateHz() > 0 ? _port.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     takePulseTrainRequest(sampleRateHz);
-    const uint32_t phaseStep = static_cast<uint32_t>(
-        (static_cast<uint64_t>(_toneHz) << 32) / static_cast<uint64_t>(sampleRateHz));
+    const uint32_t phaseStep =
+        static_cast<uint32_t>((static_cast<uint64_t>(_toneHz) << 32) / static_cast<uint64_t>(sampleRateHz));
     const bool trainShape = _trainRunning || _trainDraining;
     // Sweep (plain tone only): phase step glides from _toneHz to _sweepEndHz
     // over _sweepMs, then holds. The accumulator restarts with the tone
@@ -199,9 +200,10 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
     const bool sweeping = !trainShape && sweepSamples > 0 && _sweepEndHz != 0;
     float sweepIncrement = 0.0f;
     if (sweeping) {
-        const uint32_t endStep = static_cast<uint32_t>(
-            (static_cast<uint64_t>(_sweepEndHz) << 32) / static_cast<uint64_t>(sampleRateHz));
-        sweepIncrement = (static_cast<float>(endStep) - static_cast<float>(phaseStep)) / static_cast<float>(sweepSamples);
+        const uint32_t endStep =
+            static_cast<uint32_t>((static_cast<uint64_t>(_sweepEndHz) << 32) / static_cast<uint64_t>(sampleRateHz));
+        sweepIncrement =
+            (static_cast<float>(endStep) - static_cast<float>(phaseStep)) / static_cast<float>(sweepSamples);
     }
     const uint32_t rampSamples = (sampleRateHz * (trainShape ? _trainRampMs : _rampMs)) / 1000U;
     const float envelopeStep = rampSamples > 0 ? 1.0f / static_cast<float>(rampSamples) : 1.0f;

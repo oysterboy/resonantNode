@@ -13,28 +13,24 @@
 void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) {
     const AudioSourceStats& sourceStats = _audioSource.stats();
     const AudioSignalStats& signalStats = _audioSignal.stats();
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
+    const unsigned long sampleRateHz =
+        _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     const bool compactHealth = _sequenceTest.config.outputConfig.verbosity == 0U;
-    const bool hasTrialWindow = _sequenceTest.active
-        && _sequenceTest.trial.number > 0
-        && timing::atOrAfter(_sequenceTest.trial.endMs, _sequenceTest.trial.startMs);
-    const unsigned long windowStartMs = hasTrialWindow
-        ? _sequenceTest.trial.startMs
-        : activeRunStartMs();
-    const unsigned long windowEndMs = hasTrialWindow
-        ? _sequenceTest.trial.endMs
-        : activeRunEndMs();
+    const bool hasTrialWindow = _sequenceTest.active && _sequenceTest.trial.number > 0 &&
+        timing::atOrAfter(_sequenceTest.trial.endMs, _sequenceTest.trial.startMs);
+    const unsigned long windowStartMs = hasTrialWindow ? _sequenceTest.trial.startMs : activeRunStartMs();
+    const unsigned long windowEndMs = hasTrialWindow ? _sequenceTest.trial.endMs : activeRunEndMs();
     const unsigned long windowElapsedMs = windowStartMs > 0 ? timing::elapsedOrZero(windowEndMs, windowStartMs) : 0UL;
     const unsigned long expectedSamples = static_cast<unsigned long>(
         (static_cast<unsigned long long>(windowElapsedMs) * static_cast<unsigned long long>(sampleRateHz)) / 1000ULL);
     const unsigned long processedSamples = hasTrialWindow
         ? _sequenceTest.trial.samplesProcessed
         : (_sequenceTest.active ? _sequenceTest.totals.samplesProcessed
-            : static_cast<unsigned long>(signalStats.samplesProcessed));
-    const float processedRatio = expectedSamples > 0
-        ? static_cast<float>(processedSamples) / static_cast<float>(expectedSamples)
-        : 0.0f;
-    const unsigned long loopAvgUs = _loopHealth.count > 0 ? static_cast<unsigned long>(_loopHealth.sumUs / _loopHealth.count) : 0UL;
+                                : static_cast<unsigned long>(signalStats.samplesProcessed));
+    const float processedRatio =
+        expectedSamples > 0 ? static_cast<float>(processedSamples) / static_cast<float>(expectedSamples) : 0.0f;
+    const unsigned long loopAvgUs =
+        _loopHealth.count > 0 ? static_cast<unsigned long>(_loopHealth.sumUs / _loopHealth.count) : 0UL;
     const unsigned long updateLoopAvgUs = _sequenceTest.trial.updateLoopCount > 0
         ? static_cast<unsigned long>(_sequenceTest.trial.totalUpdateLoopUs / _sequenceTest.trial.updateLoopCount)
         : 0UL;
@@ -149,30 +145,21 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) {
     const float rawMeanAbs = rawDiagnostics.rawFrames > 0
         ? static_cast<float>(rawDiagnostics.rawAbsSum) / static_cast<float>(rawDiagnostics.rawFrames)
         : 0.0f;
-    const int32_t rawMinAbs = rawDiagnostics.rawMin < 0 ? -static_cast<int32_t>(rawDiagnostics.rawMin) : static_cast<int32_t>(rawDiagnostics.rawMin);
-    const int32_t rawMaxAbsValue = rawDiagnostics.rawMax < 0 ? -static_cast<int32_t>(rawDiagnostics.rawMax) : static_cast<int32_t>(rawDiagnostics.rawMax);
+    const int32_t rawMinAbs = rawDiagnostics.rawMin < 0 ? -static_cast<int32_t>(rawDiagnostics.rawMin)
+                                                        : static_cast<int32_t>(rawDiagnostics.rawMin);
+    const int32_t rawMaxAbsValue = rawDiagnostics.rawMax < 0 ? -static_cast<int32_t>(rawDiagnostics.rawMax)
+                                                             : static_cast<int32_t>(rawDiagnostics.rawMax);
     const uint16_t rawMaxAbs = static_cast<uint16_t>(rawMinAbs > rawMaxAbsValue ? rawMinAbs : rawMaxAbsValue);
     const float rawZeroRatio = rawDiagnostics.rawFrames > 0
-        ? static_cast<float>(_sequenceTest.trial.diagnostics.audioZeroishFrames) / static_cast<float>(rawDiagnostics.rawFrames)
+        ? static_cast<float>(_sequenceTest.trial.diagnostics.audioZeroishFrames) /
+            static_cast<float>(rawDiagnostics.rawFrames)
         : 0.0f;
     const char* rawHealth = rawHealthClassNameFromCounters(
-        _sequenceTest.trial.diagnostics.audioRmsTooHighFrames,
-        rawDiagnostics.rawFrames,
-        rawMaxAbs,
-        rawDcMean,
-        rawMeanAbs,
-        rawDiagnostics.rawMin,
-        rawDiagnostics.rawMax,
-        0.0f,
-        0UL,
-        0UL,
-        _sequenceTest.trial.diagnostics.audioFlatlineFrames,
-        _sequenceTest.trial.diagnostics.audioZeroishFrames,
-        _sequenceTest.trial.diagnostics.audioLargeJumpFrames,
-        _sequenceTest.trial.diagnostics.audioRms,
-        _sequenceTest.trial.diagnostics.audioRmsTooLowFrames,
-        _sequenceTest.trial.diagnostics.audioRmsTooHighFrames
-    );
+        _sequenceTest.trial.diagnostics.audioRmsTooHighFrames, rawDiagnostics.rawFrames, rawMaxAbs, rawDcMean,
+        rawMeanAbs, rawDiagnostics.rawMin, rawDiagnostics.rawMax, 0.0f, 0UL, 0UL,
+        _sequenceTest.trial.diagnostics.audioFlatlineFrames, _sequenceTest.trial.diagnostics.audioZeroishFrames,
+        _sequenceTest.trial.diagnostics.audioLargeJumpFrames, _sequenceTest.trial.diagnostics.audioRms,
+        _sequenceTest.trial.diagnostics.audioRmsTooLowFrames, _sequenceTest.trial.diagnostics.audioRmsTooHighFrames);
     if (_sequenceTest.config.outputConfig.verbosity >= 1U) {
         serialOut().print("RAW_AUDIO_HEALTH");
         serialOut().print(" verdict=");

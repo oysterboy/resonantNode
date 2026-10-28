@@ -17,7 +17,8 @@
 namespace {
 
 
-unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned long firstTrials, unsigned long everyNth) {
+unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned long firstTrials,
+                                            unsigned long everyNth) {
     if (totalTrials == 0) {
         return 0;
     }
@@ -37,25 +38,19 @@ detection::DetectorId cleanSummaryDetectorId(const AnalyzerReport& report) {
 }
 
 bool detectorReportMatchesOccurrence(const detection::DetectorReport* detectorReport,
-                                    const detection::InspectedOccurrence* inspectedOccurrence) {
+                                     const detection::InspectedOccurrence* inspectedOccurrence) {
     if (detectorReport == nullptr || inspectedOccurrence == nullptr || !inspectedOccurrence->occurrence.present) {
         return false;
     }
 
     return detection::analyzer::sourceReportMatchesIdentity(
-               detectorReport->accepted.occurrenceId,
-               inspectedOccurrence->occurrence.occurrenceId,
-               detectorReport->accepted.startMs,
-               inspectedOccurrence->occurrence.startMs,
-               detectorReport->accepted.endMs,
-               inspectedOccurrence->occurrence.endMs) ||
-           detection::analyzer::sourceReportMatchesIdentity(
-               detectorReport->selectedReject.occurrenceId,
-               inspectedOccurrence->occurrence.occurrenceId,
-               detectorReport->selectedReject.startMs,
-               inspectedOccurrence->occurrence.startMs,
-               detectorReport->selectedReject.endMs,
-               inspectedOccurrence->occurrence.endMs);
+               detectorReport->accepted.occurrenceId, inspectedOccurrence->occurrence.occurrenceId,
+               detectorReport->accepted.startMs, inspectedOccurrence->occurrence.startMs,
+               detectorReport->accepted.endMs, inspectedOccurrence->occurrence.endMs) ||
+        detection::analyzer::sourceReportMatchesIdentity(
+               detectorReport->selectedReject.occurrenceId, inspectedOccurrence->occurrence.occurrenceId,
+               detectorReport->selectedReject.startMs, inspectedOccurrence->occurrence.startMs,
+               detectorReport->selectedReject.endMs, inspectedOccurrence->occurrence.endMs);
 }
 
 } // namespace
@@ -90,8 +85,7 @@ void AnalyzerApp::initializeSequenceTest(const RunConfig& requested) {
         serialOut().println(config.windowEndOffsetMs);
     }
     config.reportSettleMs = requested.reportSettleMs == 0 ? 1 : requested.reportSettleMs;
-    if (config.externalEmitter &&
-        config.windowEndOffsetMs + config.reportSettleMs > config.periodMs) {
+    if (config.externalEmitter && config.windowEndOffsetMs + config.reportSettleMs > config.periodMs) {
         // A trial finalizes reportSettleMs after its window; until then the
         // next emitter chirp is credited to the old trial (issue #31).
         serialOut().print("OBS_WARN window+report_settle>period window=");
@@ -154,7 +148,8 @@ void AnalyzerApp::startSequenceTest(const RunConfig& requested) {
 
     // One history entry per ms holds the lead before the trigger; a longer
     // sampleLead was cut silently (issue #31 R2-19).
-    if (_sequenceTest.config.sampleDumpEnabled && _sequenceTest.config.sampleDumpLeadMs >= SampleDumpState::kMaxSampleHistory) {
+    if (_sequenceTest.config.sampleDumpEnabled &&
+        _sequenceTest.config.sampleDumpLeadMs >= SampleDumpState::kMaxSampleHistory) {
         serialOut().print("SAMPLES_WARN reason=lead_beyond_history requested_lead_ms=");
         serialOut().print(_sequenceTest.config.sampleDumpLeadMs);
         serialOut().print(" max_lead_ms=");
@@ -162,10 +157,13 @@ void AnalyzerApp::startSequenceTest(const RunConfig& requested) {
         _sequenceTest.config.sampleDumpLeadMs = SampleDumpState::kMaxSampleHistory - 1;
     }
     if (_sequenceTest.config.sampleDumpEnabled) {
-        const unsigned long selectedTrialsEstimate = countSelectedSampleDumpTrials(
-            _sequenceTest.config.totalTrials, _sequenceTest.config.sampleDumpFirstTrials, _sequenceTest.config.sampleDumpEveryNth);
-        const unsigned long rowsPerTrial = ((_sequenceTest.config.sampleDumpLeadMs + _sequenceTest.config.sampleDumpTailMs) /
-                                            _sequenceTest.config.sampleDumpStepMs) + 1UL;
+        const unsigned long selectedTrialsEstimate =
+            countSelectedSampleDumpTrials(_sequenceTest.config.totalTrials, _sequenceTest.config.sampleDumpFirstTrials,
+                                          _sequenceTest.config.sampleDumpEveryNth);
+        const unsigned long rowsPerTrial =
+            ((_sequenceTest.config.sampleDumpLeadMs + _sequenceTest.config.sampleDumpTailMs) /
+             _sequenceTest.config.sampleDumpStepMs) +
+            1UL;
         const unsigned long requestedRows = selectedTrialsEstimate * rowsPerTrial;
         if (requestedRows > _sequenceTest.config.sampleDumpMaxRows || rowsPerTrial > SampleDumpState::kMaxSampleRows) {
             serialOut().print("SAMPLES_WARN reason=too_many_samples requested=");
@@ -390,8 +388,8 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         char command[128];
         if (_sequenceTest.config.pulseCount > 0) {
             int written = snprintf(command, sizeof(command), "PULSES %lu %lu %lu trial=%lu freq=%lu",
-                                   _sequenceTest.config.pulseCount, _sequenceTest.config.durationMs, _sequenceTest.config.pulseGapMs,
-                                   trialNumber, _sequenceTest.config.toneHz);
+                                   _sequenceTest.config.pulseCount, _sequenceTest.config.durationMs,
+                                   _sequenceTest.config.pulseGapMs, trialNumber, _sequenceTest.config.toneHz);
             if (_sequenceTest.config.pulseRampSet && written > 0 && static_cast<size_t>(written) < sizeof(command)) {
                 snprintf(command + written, sizeof(command) - written, " ramp=%lu", _sequenceTest.config.pulseRampMs);
             }
@@ -403,7 +401,8 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
             snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu sweep=%lu", trialNumber,
                      _sequenceTest.config.toneHz, _sequenceTest.config.durationMs, _sequenceTest.config.sweepToHz);
         } else {
-            snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber, _sequenceTest.config.toneHz, _sequenceTest.config.durationMs);
+            snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber,
+                     _sequenceTest.config.toneHz, _sequenceTest.config.durationMs);
         }
         _sequenceTest.trial.commandSentMs = timebase::nowMs();
         _sequenceTest.trial.commandSent = true;
@@ -448,28 +447,32 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.inspectedOccurrence = _sequenceTest.trial.primaryValidInspectedOccurrence.occurrence.present
             ? &_sequenceTest.trial.primaryValidInspectedOccurrence
             : nullptr;
-        selection.detectorReport = _sequenceTest.trial.primaryValidDetectorReport.detectorId != detection::DetectorId::Unknown
+        selection.detectorReport =
+            _sequenceTest.trial.primaryValidDetectorReport.detectorId != detection::DetectorId::Unknown
             ? &_sequenceTest.trial.primaryValidDetectorReport
             : nullptr;
         selection.sourceEventId = _sequenceTest.trial.primaryAcceptedSourceRecord.eventId;
         selection.sourceReportGeneration = _sequenceTest.trial.primaryAcceptedSourceRecord.reportGeneration;
         selection.sourceEventTrialAttribution = _sequenceTest.trial.primaryAcceptedSourceRecord.eventTrialAttribution;
-        selection.occurrenceId = selection.inspectedOccurrence != nullptr
-            ? selection.inspectedOccurrence->occurrence.occurrenceId
-            : 0UL;
+        selection.occurrenceId =
+            selection.inspectedOccurrence != nullptr ? selection.inspectedOccurrence->occurrence.occurrenceId : 0UL;
         selection.candidateId = 0;
-        selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.primaryValidPattern.primaryStartMs, trialOnsetAnchorMs));
+        selection.reportMatched =
+            detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
+        selection.dtMs = static_cast<long>(
+            timing::delta(_sequenceTest.trial.primaryValidPattern.primaryStartMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.trial.primaryValidPattern.primaryDurationMs;
         selection.strength = _sequenceTest.trial.primaryValidPattern.primaryStrength;
         selection.result = selection.dtMs >= kAnalyzerLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
         return selection;
     }
 
-    if (_sequenceTest.trial.primaryAcceptedOccurrenceCaptured && _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.present) {
+    if (_sequenceTest.trial.primaryAcceptedOccurrenceCaptured &&
+        _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.present) {
         selection.kind = SequenceTrialSelection::Kind::AcceptedOccurrence;
         selection.inspectedOccurrence = &_sequenceTest.trial.primaryAcceptedInspectedOccurrence;
-        selection.detectorReport = _sequenceTest.trial.primaryAcceptedDetectorReport.detectorId != detection::DetectorId::Unknown
+        selection.detectorReport =
+            _sequenceTest.trial.primaryAcceptedDetectorReport.detectorId != detection::DetectorId::Unknown
             ? &_sequenceTest.trial.primaryAcceptedDetectorReport
             : nullptr;
         selection.sourceEventId = _sequenceTest.trial.primaryAcceptedSourceRecord.eventId;
@@ -477,14 +480,17 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.sourceEventTrialAttribution = _sequenceTest.trial.primaryAcceptedSourceRecord.eventTrialAttribution;
         selection.occurrenceId = selection.inspectedOccurrence->occurrence.occurrenceId;
         selection.candidateId = 0;
-        selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.startMs, trialOnsetAnchorMs));
+        selection.reportMatched =
+            detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
+        selection.dtMs = static_cast<long>(timing::delta(
+            _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.startMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
         selection.strength = _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.strength;
         if (_sequenceTest.trial.bestRejectedPatternCaptured &&
             _sequenceTest.trial.bestRejectedInWindow.occurrenceId == selection.occurrenceId) {
             selection.verdict = &_sequenceTest.trial.bestRejectedInWindow;
-            selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
+            selection.dtMs = static_cast<long>(
+                timing::delta(_sequenceTest.trial.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
             selection.durationMs = _sequenceTest.trial.bestRejectedInWindow.primaryDurationMs;
             selection.strength = _sequenceTest.trial.bestRejectedInWindow.primaryStrength;
         }
@@ -503,7 +509,8 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.occurrenceId = _sequenceTest.trial.selectedSourceReject.sourceOccurrenceId;
         selection.candidateId = _sequenceTest.trial.selectedSourceReject.sourceCandidateId;
         selection.reportMatched = _sequenceTest.trial.selectedSourceReject.sourceReportMatched;
-        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.selectedSourceReject.detectorReport.selectedReject.startMs, trialOnsetAnchorMs));
+        selection.dtMs = static_cast<long>(timing::delta(
+            _sequenceTest.trial.selectedSourceReject.detectorReport.selectedReject.startMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.trial.selectedSourceReject.detectorReport.selectedReject.durationMs;
         selection.strength = _sequenceTest.trial.selectedSourceReject.detectorReport.selectedReject.strength;
         selection.result = AnalyzerResult::Rejected;
@@ -516,15 +523,17 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.inspectedOccurrence = _sequenceTest.trial.bestRejectedInspectedOccurrence.occurrence.present
             ? &_sequenceTest.trial.bestRejectedInspectedOccurrence
             : nullptr;
-        selection.detectorReport = _sequenceTest.trial.bestRejectedDetectorReport.detectorId != detection::DetectorId::Unknown
+        selection.detectorReport =
+            _sequenceTest.trial.bestRejectedDetectorReport.detectorId != detection::DetectorId::Unknown
             ? &_sequenceTest.trial.bestRejectedDetectorReport
             : nullptr;
-        selection.occurrenceId = selection.inspectedOccurrence != nullptr
-            ? selection.inspectedOccurrence->occurrence.occurrenceId
-            : 0UL;
+        selection.occurrenceId =
+            selection.inspectedOccurrence != nullptr ? selection.inspectedOccurrence->occurrence.occurrenceId : 0UL;
         selection.candidateId = 0;
-        selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.trial.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
+        selection.reportMatched =
+            detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
+        selection.dtMs = static_cast<long>(
+            timing::delta(_sequenceTest.trial.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.trial.bestRejectedInWindow.primaryDurationMs;
         selection.strength = _sequenceTest.trial.bestRejectedInWindow.primaryStrength;
         selection.result = AnalyzerResult::Rejected;
@@ -579,8 +588,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const uint32_t finalizeStartUs = timebase::nowUs();
     auto& diagnostics = _sequenceTest.trial.diagnostics;
 
-    const bool bufferOverrunTrial = _sequenceTest.trial.bufferOverrun
-                                    || _audioSource.stats().overflowCount != _sequenceTest.trial.overflowCountAtStart;
+    const bool bufferOverrunTrial = _sequenceTest.trial.bufferOverrun ||
+        _audioSource.stats().overflowCount != _sequenceTest.trial.overflowCountAtStart;
     const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
     const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
     const bool rejectedInWindow = _sequenceTest.trial.rejectedInWindowCount > 0;
@@ -590,7 +599,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     // The trial result is decided once, by classifySequenceTrial inside the report builder (11g C5).
     AnalyzerReport* finalizedReport = sequenceReportScratch();
-    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.trial.number, rejectedInWindow, dtMs, durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
+    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.trial.number, rejectedInWindow, dtMs, durMs, strength,
+                                bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.totals.completedTrials++;
     flushSequenceSampleHistory(now + 1UL);
@@ -639,7 +649,8 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
     AnalyzerCleanSummary& summary = _sequenceTest.totals.cleanSummary;
     summary.profileName = activeAnalyzerProfileName();
     if (summary.detectorId == detection::DetectorId::Unknown) {
-        const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.config.profileKind);
+        const detection::DetectionProfile& selectedProfile =
+            detection::detectionProfileForKind(_sequenceTest.config.profileKind);
         (void)selectedProfile;  // one family: the scalar detector
         summary.detectorId = detection::DetectorId::ScalarTransient;
         if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
@@ -705,9 +716,8 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
     // a Miss can carry the dt of a settle-period candidate (issue #31 B12,
     // R2-15).
     const AnalyzerResult dtResult = report.classification.result;
-    const bool dtCounts = dtResult == AnalyzerResult::Expected
-        || dtResult == AnalyzerResult::Early
-        || dtResult == AnalyzerResult::Late;
+    const bool dtCounts =
+        dtResult == AnalyzerResult::Expected || dtResult == AnalyzerResult::Early || dtResult == AnalyzerResult::Late;
     if (report.classification.dtMs >= 0 && dtCounts) {
         summary.totalDtMs += report.classification.dtMs;
         ++summary.dtCount;
@@ -735,5 +745,3 @@ unsigned long AnalyzerApp::sequenceTrialOnsetAnchorMs() const {
     }
     return _sequenceTest.trial.scheduledAtMs;
 }
-
-

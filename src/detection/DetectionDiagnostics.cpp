@@ -8,7 +8,8 @@
 namespace detection {
 
 DetectionDiagnostics::DetectionDiagnostics(ScalarTransientDetector& detector, const FeatureHistory& history)
-    : _detector(detector), _history(history) {}
+    : _detector(detector),
+      _history(history) {}
 
 void DetectionDiagnostics::resetCounters() {
     _detectorReport = {};
@@ -103,8 +104,7 @@ void DetectionDiagnostics::afterDrain() {
     const uint32_t currentReportGeneration = _detector.reportGeneration();
     const uint32_t currentRejectGeneration = _detector.selectedRejectGeneration();
 
-    if (_detectorReport.selectedReject.present &&
-        _detectorReport.selectedReject.occurrenceId != 0 &&
+    if (_detectorReport.selectedReject.present && _detectorReport.selectedReject.occurrenceId != 0 &&
         (_detectorReport.selectedReject.occurrenceId != _lastEmittedSelectedRejectOccurrenceId ||
          _lastEmittedSelectedRejectReportGeneration != currentRejectGeneration)) {
         DetectionPipelineEvent event = {};
@@ -154,11 +154,8 @@ void DetectionDiagnostics::onVerdict(const OccurrenceVerdict& result, const Insp
     event.hasCandidateId = false;
     event.candidateId = 0;
     event.detectorReportPresent = detectorReport.detectorId != DetectorId::Unknown;
-    event.detectorReportMatched =
-        event.detectorReportPresent &&
-        inspected.occurrence.present &&
-        detectorReport.accepted.present &&
-        detectorReport.accepted.occurrenceId == result.occurrenceId &&
+    event.detectorReportMatched = event.detectorReportPresent && inspected.occurrence.present &&
+        detectorReport.accepted.present && detectorReport.accepted.occurrenceId == result.occurrenceId &&
         inspected.occurrence.occurrenceId == result.occurrenceId;
     event.sourceSelection = inspected.occurrence.present && inspected.decision == OccurrenceDecision::Rejected
         ? "selected_reject"

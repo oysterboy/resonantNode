@@ -21,8 +21,7 @@ enum class FeatureStreamId {
 };
 
 inline bool streamRequiresFreshFrequency(FeatureStreamId stream) {
-    return stream == FeatureStreamId::FrequencyTarget
-        || stream == FeatureStreamId::FrequencyContrast;
+    return stream == FeatureStreamId::FrequencyTarget || stream == FeatureStreamId::FrequencyContrast;
 }
 
 inline const char* featureStreamName(FeatureStreamId value) {

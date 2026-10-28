@@ -47,9 +47,9 @@ const char* outputPhaseName(OutputPhase phase) {
 namespace {
 
 unsigned long trainMs(const OutputRequest& r) {
-    return r.hopSteps == 0 ? 0UL
-                           : static_cast<unsigned long>(r.hopSteps) * r.pulseMs +
-                                 static_cast<unsigned long>(r.hopSteps - 1) * r.gapMs;
+    return r.hopSteps == 0
+        ? 0UL
+        : static_cast<unsigned long>(r.hopSteps) * r.pulseMs + static_cast<unsigned long>(r.hopSteps - 1) * r.gapMs;
 }
 
 OutputReject validateTrain(const OutputRequest& r, const OutputLimits& limits) {
@@ -72,7 +72,9 @@ OutputReject validateTrain(const OutputRequest& r, const OutputLimits& limits) {
 
 }  // namespace
 
-SoundOutput::SoundOutput(ChirpOutput& chirp, const OutputLimits& limits) : _chirp(chirp), _limits(limits) {}
+SoundOutput::SoundOutput(ChirpOutput& chirp, const OutputLimits& limits)
+    : _chirp(chirp),
+      _limits(limits) {}
 
 unsigned long SoundOutput::plannedSpanMs(const OutputRequest& request, unsigned long plainCallMs) {
     switch (request.kind) {

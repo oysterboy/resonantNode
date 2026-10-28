@@ -6,32 +6,40 @@
 // OccurrenceInspector evidence annotation and inspection in source order.
 namespace {
 
-unsigned long anchorMsForOccurrence(const detection::Occurrence& occurrence, detection::MagnitudeInspectionAnchor anchor);
+unsigned long anchorMsForOccurrence(const detection::Occurrence& occurrence,
+                                    detection::MagnitudeInspectionAnchor anchor);
 
-detection::MagnitudeInspectionAnchor resolvedAnchorForOccurrence(
-    const detection::Occurrence& occurrence,
-    detection::MagnitudeInspectionAnchor anchor
-) {
+detection::MagnitudeInspectionAnchor resolvedAnchorForOccurrence(const detection::Occurrence& occurrence,
+                                                                 detection::MagnitudeInspectionAnchor anchor) {
     switch (anchor) {
         case detection::MagnitudeInspectionAnchor::Start:
-            return occurrence.startMs != 0 ? detection::MagnitudeInspectionAnchor::Start
-                : (occurrence.peakMs != 0 ? detection::MagnitudeInspectionAnchor::Peak
-                    : (occurrence.releaseMs != 0 ? detection::MagnitudeInspectionAnchor::Release : detection::MagnitudeInspectionAnchor::Fallback));
+            return occurrence.startMs != 0
+                ? detection::MagnitudeInspectionAnchor::Start
+                : (occurrence.peakMs != 0
+                       ? detection::MagnitudeInspectionAnchor::Peak
+                       : (occurrence.releaseMs != 0 ? detection::MagnitudeInspectionAnchor::Release
+                                                    : detection::MagnitudeInspectionAnchor::Fallback));
         case detection::MagnitudeInspectionAnchor::Release:
-            return occurrence.releaseMs != 0 ? detection::MagnitudeInspectionAnchor::Release
+            return occurrence.releaseMs != 0
+                ? detection::MagnitudeInspectionAnchor::Release
                 : (occurrence.peakMs != 0 ? detection::MagnitudeInspectionAnchor::Peak
-                    : (occurrence.startMs != 0 ? detection::MagnitudeInspectionAnchor::Start : detection::MagnitudeInspectionAnchor::Fallback));
+                                          : (occurrence.startMs != 0 ? detection::MagnitudeInspectionAnchor::Start
+                                                                     : detection::MagnitudeInspectionAnchor::Fallback));
         case detection::MagnitudeInspectionAnchor::Peak:
         case detection::MagnitudeInspectionAnchor::Fallback:
         case detection::MagnitudeInspectionAnchor::None:
         default:
-            return occurrence.peakMs != 0 ? detection::MagnitudeInspectionAnchor::Peak
-                : (occurrence.startMs != 0 ? detection::MagnitudeInspectionAnchor::Start
-                    : (occurrence.releaseMs != 0 ? detection::MagnitudeInspectionAnchor::Release : detection::MagnitudeInspectionAnchor::Fallback));
+            return occurrence.peakMs != 0
+                ? detection::MagnitudeInspectionAnchor::Peak
+                : (occurrence.startMs != 0
+                       ? detection::MagnitudeInspectionAnchor::Start
+                       : (occurrence.releaseMs != 0 ? detection::MagnitudeInspectionAnchor::Release
+                                                    : detection::MagnitudeInspectionAnchor::Fallback));
     }
 }
 
-unsigned long anchorMsForOccurrence(const detection::Occurrence& occurrence, detection::MagnitudeInspectionAnchor anchor) {
+unsigned long anchorMsForOccurrence(const detection::Occurrence& occurrence,
+                                    detection::MagnitudeInspectionAnchor anchor) {
     switch (resolvedAnchorForOccurrence(occurrence, anchor)) {
         case detection::MagnitudeInspectionAnchor::Start:
             return occurrence.startMs;
@@ -42,7 +50,8 @@ unsigned long anchorMsForOccurrence(const detection::Occurrence& occurrence, det
         case detection::MagnitudeInspectionAnchor::Fallback:
         case detection::MagnitudeInspectionAnchor::None:
         default:
-            return occurrence.peakMs != 0 ? occurrence.peakMs : (occurrence.startMs != 0 ? occurrence.startMs : occurrence.releaseMs);
+            return occurrence.peakMs != 0 ? occurrence.peakMs
+                                          : (occurrence.startMs != 0 ? occurrence.startMs : occurrence.releaseMs);
     }
 }
 
@@ -51,13 +60,9 @@ void setRejected(detection::InspectedOccurrence& out, detection::OccurrenceRejec
     out.rejectReason = reason;
 }
 
-void fillMagnitudeObservation(
-    detection::MagnitudeInspectionObservation& obs,
-    const detection::Occurrence& occurrence,
-    const detection::MagnitudeWindow& magnitudeWindow,
-    bool available,
-    const detection::MagnitudeFeatureInspectionConfig& config
-) {
+void fillMagnitudeObservation(detection::MagnitudeInspectionObservation& obs, const detection::Occurrence& occurrence,
+                              const detection::MagnitudeWindow& magnitudeWindow, bool available,
+                              const detection::MagnitudeFeatureInspectionConfig& config) {
     const float peak = magnitudeWindow.peak;
     const float mean = magnitudeWindow.mean;
     const size_t sampleCount = magnitudeWindow.sampleCount;
@@ -73,12 +78,14 @@ void fillMagnitudeObservation(
         case detection::MagnitudeInspectionMode::PeakAbsolute:
             classificationValue = peak;
             supportBasis = detection::MagnitudeInspectionBasis::PeakAbsolute;
-            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength)
+                                 : detection::StrengthClass::Unknown;
             break;
         case detection::MagnitudeInspectionMode::MeanAbsolute:
             classificationValue = mean;
             supportBasis = detection::MagnitudeInspectionBasis::MeanAbsolute;
-            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength)
+                                 : detection::StrengthClass::Unknown;
             break;
         case detection::MagnitudeInspectionMode::SustainedAboveThreshold:
             classificationValue = peak;
@@ -89,28 +96,33 @@ void fillMagnitudeObservation(
                     : static_cast<size_t>(config.minSustainedMs > 0 ? config.minSustainedMs : 1U);
                 const bool sustainedEnough = sustainedCount >= requiredSustainedCount;
                 classified = available && sustainedEnough;
-                strength = classified ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
+                strength = classified ? classifySupportStrength(classificationValue, available, config.supportStrength)
+                                      : detection::StrengthClass::Unknown;
             }
             break;
         case detection::MagnitudeInspectionMode::PeakCentered:
             classificationValue = mean;
             supportBasis = detection::MagnitudeInspectionBasis::PeakCenteredMean;
-            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength)
+                                 : detection::StrengthClass::Unknown;
             break;
         case detection::MagnitudeInspectionMode::PeakCenteredLift:
             classificationValue = peak - mean;
             supportBasis = detection::MagnitudeInspectionBasis::PeakCenteredLift;
-            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength)
+                                 : detection::StrengthClass::Unknown;
             break;
         case detection::MagnitudeInspectionMode::Rms:
             classificationValue = magnitudeWindow.rms;
             supportBasis = detection::MagnitudeInspectionBasis::Rms;
-            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength)
+                                 : detection::StrengthClass::Unknown;
             break;
         case detection::MagnitudeInspectionMode::P75:
             classificationValue = magnitudeWindow.p75;
             supportBasis = detection::MagnitudeInspectionBasis::P75;
-            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength)
+                                 : detection::StrengthClass::Unknown;
             break;
     }
 
@@ -122,7 +134,8 @@ void fillMagnitudeObservation(
     obs.stream = magnitudeWindow.stream;
     obs.mode = config.mode;
     obs.supportBasis = supportBasis;
-    obs.note = available ? detection::MagnitudeInspectionNote::MagnitudeObserved : detection::MagnitudeInspectionNote::MagnitudeUnavailable;
+    obs.note = available ? detection::MagnitudeInspectionNote::MagnitudeObserved
+                         : detection::MagnitudeInspectionNote::MagnitudeUnavailable;
     obs.inspectionNowMs = magnitudeWindow.inspectionNowMs;
     obs.anchorMs = magnitudeWindow.requestedStartMs + config.windowPreMs;
     obs.requestedStartMs = magnitudeWindow.requestedStartMs;
@@ -198,14 +211,11 @@ unsigned long OccurrenceInspector::windowCompleteAtMs(const Occurrence& occurren
     return latest;
 }
 
-void OccurrenceInspector::annotateMagnitudeFeatureStrength(
-    InspectedOccurrence& out,
-    const Occurrence& occurrence,
-    const FeatureHistory* featureHistory,
-    unsigned long inspectionNowMs,
-    const MagnitudeFeatureInspectionConfig& config,
-    InspectionTarget target
-) const {
+void OccurrenceInspector::annotateMagnitudeFeatureStrength(InspectedOccurrence& out, const Occurrence& occurrence,
+                                                           const FeatureHistory* featureHistory,
+                                                           unsigned long inspectionNowMs,
+                                                           const MagnitudeFeatureInspectionConfig& config,
+                                                           InspectionTarget target) const {
     const unsigned long anchorMs = anchorMsForOccurrence(occurrence, config.anchor);
     const unsigned long startMs = anchorMs > config.windowPreMs ? anchorMs - config.windowPreMs : 0UL;
     const unsigned long endMs = anchorMs + config.windowPostMs;
@@ -223,7 +233,8 @@ void OccurrenceInspector::annotateMagnitudeFeatureStrength(
         const float sustainedThreshold = config.mode == detection::MagnitudeInspectionMode::SustainedAboveThreshold
             ? config.supportStrength.weakPeakThreshold
             : 0.0f;
-        const MagnitudeWindow magnitudeWindow = featureHistory->getWindow(config.stream, startMs, endMs, inspectionNowMs, sustainedThreshold);
+        const MagnitudeWindow magnitudeWindow =
+            featureHistory->getWindow(config.stream, startMs, endMs, inspectionNowMs, sustainedThreshold);
         if (magnitudeWindow.valid) {
             const bool usable = magnitudeWindow.valid;
             fillMagnitudeObservation(observation, occurrence, magnitudeWindow, usable, config);
@@ -250,40 +261,36 @@ void OccurrenceInspector::annotateMagnitudeFeatureStrength(
 
     switch (target) {
         case InspectionTarget::Amp:
-        // The class only: value / baseline / lift stay the detector's facts (PCM floor, peak strength). The window
-        // statistics are on InspectedOccurrence.magnitudeObservations (review D1.6, 2026-10-26; myspec 5.2, 5.6).
-        out.occurrence.magnitude.strengthClass = observation.strength;
+            // The class only: value / baseline / lift stay the detector's facts (PCM floor, peak strength). The window
+            // statistics are on InspectedOccurrence.magnitudeObservations (review D1.6, 2026-10-26; myspec 5.2, 5.6).
+            out.occurrence.magnitude.strengthClass = observation.strength;
             break;
         case InspectionTarget::TargetScore:
-        out.occurrence.band.scoreStrength = observation.strength;
+            out.occurrence.band.scoreStrength = observation.strength;
             break;
         case InspectionTarget::Contrast:
-        out.occurrence.band.contrastQuality = observation.strength;
+            out.occurrence.band.contrastQuality = observation.strength;
             break;
         case InspectionTarget::TargetBand:
-        out.occurrence.band.targetBandStrength = observation.strength;
+            out.occurrence.band.targetBandStrength = observation.strength;
             break;
         case InspectionTarget::None:
         default:
             break;
     }
-
 }
 
-void OccurrenceInspector::runInspectionModule(
-    InspectedOccurrence& out,
-    const Occurrence& occurrence,
-    const FeatureHistory* featureHistory,
-    unsigned long inspectionNowMs,
-    const InspectionModuleConfig& module
-) const {
+void OccurrenceInspector::runInspectionModule(InspectedOccurrence& out, const Occurrence& occurrence,
+                                              const FeatureHistory* featureHistory, unsigned long inspectionNowMs,
+                                              const InspectionModuleConfig& module) const {
     switch (module.kind) {
-    case InspectionModuleKind::MagnitudeFeatureStrength:
-        annotateMagnitudeFeatureStrength(out, occurrence, featureHistory, inspectionNowMs, module.magnitude, module.target);
-        break;
-    case InspectionModuleKind::BinShape:
-        annotateShape(out, occurrence, module.shape);
-        break;
+        case InspectionModuleKind::MagnitudeFeatureStrength:
+            annotateMagnitudeFeatureStrength(out, occurrence, featureHistory, inspectionNowMs, module.magnitude,
+                                             module.target);
+            break;
+        case InspectionModuleKind::BinShape:
+            annotateShape(out, occurrence, module.shape);
+            break;
         case InspectionModuleKind::None:
         default:
             break;
@@ -303,11 +310,9 @@ void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurren
     out.occurrence.shape = measureBinShape(*_binTrack, start, span, _shapeMinLevel, config).shape;
 }
 
-InspectedOccurrence OccurrenceInspector::inspectWithHistory(
-    const Occurrence& occurrence,
-    const FeatureHistory* featureHistory,
-    unsigned long inspectionNowMs
-) const {
+InspectedOccurrence OccurrenceInspector::inspectWithHistory(const Occurrence& occurrence,
+                                                            const FeatureHistory* featureHistory,
+                                                            unsigned long inspectionNowMs) const {
     InspectedOccurrence out;
     out.occurrence = occurrence;
     if (!occurrence.present) {
@@ -330,4 +335,4 @@ InspectedOccurrence OccurrenceInspector::inspectWithHistory(
     return out;
 }
 
-} // namespace detection
+}  // namespace detection

@@ -96,7 +96,8 @@ private:
     // Processes one sample and updates the internal signal state.
     void processSample(int sample, uint64_t sampleTimeUs64);
     // Copies the current signal state into a public frame.
-    void emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint64_t sampleTimeUs64, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow);
+    void emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint64_t sampleTimeUs64, uint32_t sampleTimeMs,
+                   unsigned long sampleRateHz, bool blockOverflow);
 
     // Last decoded source sample.
     int _rawSignal = 0;

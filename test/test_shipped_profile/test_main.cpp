@@ -52,7 +52,10 @@ namespace {
 
 class ArrayAudioSource : public AudioSource {
 public:
-    ArrayAudioSource(const int32_t* pcm, size_t count, uint32_t rate) : _pcm(pcm), _count(count), _rate(rate) {}
+    ArrayAudioSource(const int32_t* pcm, size_t count, uint32_t rate)
+        : _pcm(pcm),
+          _count(count),
+          _rate(rate) {}
     void begin() override {}
     bool available() override { return _index < _count; }
     bool readSample(int& sample, uint64_t& sampleTimeUs64) override {
@@ -82,7 +85,10 @@ struct Fixture {
     float baseline;
 };
 
-#define FIXTURE(name) Fixture{k##name##Pcm, k##name##Samples, k##name##RateHz, k##name##HasBaseline, k##name##Baseline}
+#define FIXTURE(name) \
+    Fixture { \
+        k##name##Pcm, k##name##Samples, k##name##RateHz, k##name##HasBaseline, k##name##Baseline \
+    }
 
 struct Band {
     unsigned long lowHz;
@@ -144,7 +150,8 @@ Outcome replay(const Fixture& fx, Band band, unsigned long skipMs = 0) {
         AudioSamplePacket packet;
         audioSignal.update(sample, us, packet, false);
         gBand.observeCenteredSample(packet.baselineCorrectedValue, packet.timeMs);
-        const detection::FrequencyBandMeasurementPacket evidence = detection::buildFrequencyMeasurementPacket(gBand, packet);
+        const detection::FrequencyBandMeasurementPacket evidence =
+            detection::buildFrequencyMeasurementPacket(gBand, packet);
         gRuntime.observeFrame(packet, evidence, packet.timeMs);
         detection::OccurrenceVerdict verdict;
         while (gRuntime.popOccurrenceVerdict(verdict)) {

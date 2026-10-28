@@ -103,8 +103,10 @@ public:
 
     // Raw registration. Rejects a null path or field, a duplicate path, a
     // duplicate id, and a full table.
-    bool addUInt16Raw(uint16_t id, uint8_t group, const char* path, uint16_t* field, uint16_t minValue, uint16_t maxValue);
-    bool addUInt32Raw(uint16_t id, uint8_t group, const char* path, uint32_t* field, uint32_t minValue, uint32_t maxValue);
+    bool addUInt16Raw(uint16_t id, uint8_t group, const char* path, uint16_t* field, uint16_t minValue,
+                      uint16_t maxValue);
+    bool addUInt32Raw(uint16_t id, uint8_t group, const char* path, uint32_t* field, uint32_t minValue,
+                      uint32_t maxValue);
     bool addFloatRaw(uint16_t id, uint8_t group, const char* path, float* field, float minValue, float maxValue);
     bool addBoolRaw(uint16_t id, uint8_t group, const char* path, bool* field);
 

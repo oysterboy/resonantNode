@@ -44,7 +44,9 @@ uint16_t le16(const unsigned char* p) {
 // exactly as on the board (it only reads samples through update()).
 class VectorAudioSource : public AudioSource {
 public:
-    VectorAudioSource(const std::vector<int32_t>& pcm, uint32_t rate) : _pcm(pcm), _rate(rate) {}
+    VectorAudioSource(const std::vector<int32_t>& pcm, uint32_t rate)
+        : _pcm(pcm),
+          _rate(rate) {}
     void begin() override {}
     bool available() override { return _index < _pcm.size(); }
     bool readSample(int& sample, uint64_t& sampleTimeUs64) override {
@@ -102,7 +104,8 @@ bool loadWav(const std::string& path, Capture& out) {
                 const unsigned char* s = body + i * frameBytes;  // first channel
                 int32_t v = 0;
                 if (bits == 16) {
-                    v = static_cast<int32_t>(static_cast<int16_t>(le16(s))) << 8;  // scale to the 24-bit canonical range
+                    v = static_cast<int32_t>(static_cast<int16_t>(le16(s)))
+                        << 8;  // scale to the 24-bit canonical range
                 } else if (bits == 24) {
                     v = static_cast<int32_t>(static_cast<uint32_t>(s[0] | (s[1] << 8) | (s[2] << 16)) << 8) >> 8;
                 } else if (bits == 32) {
@@ -253,15 +256,16 @@ bool loadCapture(const std::string& path, Capture& out) {
     return endsWith(path, ".csv") ? loadRawCsv(path, out) : loadWav(path, out);
 }
 
-const char* applyProfileSet(detection::DetectionProfile& profile, const std::string& path, const std::string& valueText) {
+const char* applyProfileSet(detection::DetectionProfile& profile, const std::string& path,
+                            const std::string& valueText) {
     param::ParamRegistry registry;
     registry.setGroupNamer(param::moduleNameForGroup);
     param::describeParams(registry, profile.scalarTransient);
     // The inspectors' medium limits, bound straight into the plan's module for
     // the target (the Node keeps its own copies, ResonantNodeParams.cpp).
     const size_t moduleCount = profile.inspectionPlan.count > detection::kMaxInspectionModules
-                                   ? detection::kMaxInspectionModules
-                                   : profile.inspectionPlan.count;
+        ? detection::kMaxInspectionModules
+        : profile.inspectionPlan.count;
     for (size_t i = 0; i < moduleCount; ++i) {
         detection::InspectionModuleConfig& module = profile.inspectionPlan.modules[i];
         float* medium = &module.magnitude.supportStrength.mediumPeakThreshold;
@@ -269,8 +273,8 @@ const char* applyProfileSet(detection::DetectionProfile& profile, const std::str
             registry.addFloat(param::ParamId::Detection_ContrastMedium, param::ModuleId::Detection,
                               "detection.contrast_medium", medium, 0.0f, 32767.0f);
         } else if (module.target == detection::InspectionTarget::Amp) {
-            registry.addFloat(param::ParamId::Detection_AmpMedium, param::ModuleId::Detection,
-                              "detection.amp_medium", medium, 0.0f, 32767.0f);
+            registry.addFloat(param::ParamId::Detection_AmpMedium, param::ModuleId::Detection, "detection.amp_medium",
+                              medium, 0.0f, 32767.0f);
         } else if (module.kind == detection::InspectionModuleKind::BinShape) {
             param::describeParams(registry, module.shape);
         }
@@ -285,10 +289,11 @@ const char* applyProfileSet(detection::DetectionProfile& profile, const std::str
 void printVerdict(const detection::OccurrenceVerdict& v) {
     printf("    verdict type=%s reason=%s reject=%s accepted=%d valid=%d start_ms=%lu dur_ms=%lu strength=%.0f",
            detection::verdictTypeName(v.type), detection::verdictReasonName(v.reasonCode),
-           detection::verdictRejectReasonName(v.rejectReason), v.accepted ? 1 : 0, v.valid ? 1 : 0,
-           v.primaryStartMs, v.primaryDurationMs, static_cast<double>(v.primaryStrength));
+           detection::verdictRejectReasonName(v.rejectReason), v.accepted ? 1 : 0, v.valid ? 1 : 0, v.primaryStartMs,
+           v.primaryDurationMs, static_cast<double>(v.primaryStrength));
     if (!v.accepted && v.firstFailedRequirementIndex != 255) {
-        printf(" failed_target=%s observed=%s required=%s", detection::inspectionTargetName(v.firstFailedRequirementTarget),
+        printf(" failed_target=%s observed=%s required=%s",
+               detection::inspectionTargetName(v.firstFailedRequirementTarget),
                detection::strengthClassName(v.firstFailedObservedStrength),
                detection::strengthClassName(v.firstFailedRequiredStrength));
     }
@@ -366,7 +371,8 @@ void printCaptureShape(const ReplayBinLog& t, float minLevel, const detection::S
         }
     }
     if (any) {
-        printShapeWindow("capture", static_cast<uint32_t>(first), static_cast<uint32_t>(last - first), t, minLevel, config);
+        printShapeWindow("capture", static_cast<uint32_t>(first), static_cast<uint32_t>(last - first), t, minLevel,
+                         config);
     }
 }
 
@@ -382,7 +388,8 @@ void printShapeWindow(const char* label, uint32_t start, uint32_t span, const Re
     for (size_t k = 1; k < m.runCount; ++k) {
         float peakA = 0.0f;
         float peakB = 0.0f;
-        for (unsigned long ms = kept[k - 1].startMs; ms < kept[k - 1].startMs + kept[k - 1].lengthMs && ms < t.value.size(); ++ms) {
+        for (unsigned long ms = kept[k - 1].startMs;
+             ms < kept[k - 1].startMs + kept[k - 1].lengthMs && ms < t.value.size(); ++ms) {
             peakA = std::max(peakA, t.value[ms]);
         }
         for (unsigned long ms = kept[k].startMs; ms < kept[k].startMs + kept[k].lengthMs && ms < t.value.size(); ++ms) {
@@ -399,10 +406,12 @@ void printShapeWindow(const char* label, uint32_t start, uint32_t span, const Re
         // the same on the broadband energy: a gap in the sound, not a bin change
         float eA = 0.0f;
         float eB = 0.0f;
-        for (unsigned long ms = kept[k - 1].startMs; ms < kept[k - 1].startMs + kept[k - 1].lengthMs && ms < t.energy.size(); ++ms) {
+        for (unsigned long ms = kept[k - 1].startMs;
+             ms < kept[k - 1].startMs + kept[k - 1].lengthMs && ms < t.energy.size(); ++ms) {
             eA = std::max(eA, t.energy[ms]);
         }
-        for (unsigned long ms = kept[k].startMs; ms < kept[k].startMs + kept[k].lengthMs && ms < t.energy.size(); ++ms) {
+        for (unsigned long ms = kept[k].startMs; ms < kept[k].startMs + kept[k].lengthMs && ms < t.energy.size();
+             ++ms) {
             eB = std::max(eB, t.energy[ms]);
         }
         float eLow = eA;
@@ -412,11 +421,12 @@ void printShapeWindow(const char* label, uint32_t start, uint32_t span, const Re
         const float eRef = std::min(eA, eB);
         edips.push_back(eRef > 0.0f ? static_cast<int>(100.0f * eLow / eRef + 0.5f) : -1);
     }
-    printf("    shape %s start_ms=%lu dur_ms=%lu active_ms=%lu runs=%zu distinct=%u up_steps=%u other_steps=%u class=%s dips_pct=",
-           label, static_cast<unsigned long>(start), static_cast<unsigned long>(span),
-           static_cast<unsigned long>(m.activeMs), m.runCount, static_cast<unsigned>(m.shape.distinctBins),
-           static_cast<unsigned>(m.shape.risingSteps), static_cast<unsigned>(m.shape.otherSteps),
-           detection::strengthClassName(m.shape.shapeClass));
+    printf(
+        "    shape %s start_ms=%lu dur_ms=%lu active_ms=%lu runs=%zu distinct=%u up_steps=%u other_steps=%u class=%s dips_pct=",
+        label, static_cast<unsigned long>(start), static_cast<unsigned long>(span),
+        static_cast<unsigned long>(m.activeMs), m.runCount, static_cast<unsigned>(m.shape.distinctBins),
+        static_cast<unsigned>(m.shape.risingSteps), static_cast<unsigned>(m.shape.otherSteps),
+        detection::strengthClassName(m.shape.shapeClass));
     for (size_t k = 0; k < dips.size(); ++k) {
         printf("%s%d", k > 0 ? "," : "", dips[k]);
     }
@@ -426,7 +436,8 @@ void printShapeWindow(const char* label, uint32_t start, uint32_t span, const Re
     }
     printf(" seq=");
     for (size_t k = 0; k < m.runCount; ++k) {
-        printf("%s%ux%lu", k > 0 ? "," : "", static_cast<unsigned>(kept[k].hz), static_cast<unsigned long>(kept[k].lengthMs));
+        printf("%s%ux%lu", k > 0 ? "," : "", static_cast<unsigned>(kept[k].hz),
+               static_cast<unsigned long>(kept[k].lengthMs));
         if (k + 1 < m.runCount) {
             printf("+%lu", static_cast<unsigned long>(kept[k + 1].startMs - (kept[k].startMs + kept[k].lengthMs)));
         }
@@ -505,13 +516,16 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
         AudioSamplePacket packet;
         audioSignal.update(sample, us, packet, false);
         band.observeCenteredSample(packet.baselineCorrectedValue, packet.timeMs);
-        const detection::FrequencyBandMeasurementPacket evidence = detection::buildFrequencyMeasurementPacket(band, packet);
+        const detection::FrequencyBandMeasurementPacket evidence =
+            detection::buildFrequencyMeasurementPacket(band, packet);
         runtime.observeFrame(packet, evidence, packet.timeMs);
         if (opt.shape && evidence.present) {
-            track.note(packet.timeMs, static_cast<uint32_t>(band.lastPeakBinHz()), evidence.targetBandValue, evidence.totalEnergyValue);
+            track.note(packet.timeMs, static_cast<uint32_t>(band.lastPeakBinHz()), evidence.targetBandValue,
+                       evidence.totalEnergyValue);
         }
         if (opt.compare && i < cap.boardAmp.size()) {
-            const double d = fabs(static_cast<double>(packet.audioMagnitudeValue) - static_cast<double>(cap.boardAmp[i]));
+            const double d =
+                fabs(static_cast<double>(packet.audioMagnitudeValue) - static_cast<double>(cap.boardAmp[i]));
             ampDiffSum += d;
             if (d > r.ampMaxAbsDiff) {
                 r.ampMaxAbsDiff = d;
@@ -519,13 +533,16 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
             ++r.ampCompared;
         }
         if (dump != nullptr && i < cap.pcm.size()) {
-            fprintf(dump, "%zu,%lu,%d,%d,%.1f,%.1f,%d,%d\n", i, static_cast<unsigned long>(packet.timeMs), static_cast<int>(evidence.targetBandValue),
-                    i < cap.boardFreq.size() ? cap.boardFreq[i] : -1, static_cast<double>(evidence.targetBandContrastValue),
-                    i < cap.boardContrast.size() ? static_cast<double>(cap.boardContrast[i]) : -1.0, evidence.fresh ? 1 : 0,
-                    i < cap.boardFresh.size() ? cap.boardFresh[i] : -1);
+            fprintf(dump, "%zu,%lu,%d,%d,%.1f,%.1f,%d,%d\n", i, static_cast<unsigned long>(packet.timeMs),
+                    static_cast<int>(evidence.targetBandValue), i < cap.boardFreq.size() ? cap.boardFreq[i] : -1,
+                    static_cast<double>(evidence.targetBandContrastValue),
+                    i < cap.boardContrast.size() ? static_cast<double>(cap.boardContrast[i]) : -1.0,
+                    evidence.fresh ? 1 : 0, i < cap.boardFresh.size() ? cap.boardFresh[i] : -1);
         }
-        if (opt.compare && i >= runtime::kFreqBandWindowSamples && i < cap.boardFreq.size() && cap.boardFresh[i] != 0 && evidence.present) {
-            const double fd = fabs(static_cast<double>(evidence.targetBandValue) - static_cast<double>(cap.boardFreq[i]));
+        if (opt.compare && i >= runtime::kFreqBandWindowSamples && i < cap.boardFreq.size() && cap.boardFresh[i] != 0 &&
+            evidence.present) {
+            const double fd =
+                fabs(static_cast<double>(evidence.targetBandValue) - static_cast<double>(cap.boardFreq[i]));
             const double boardC = static_cast<double>(cap.boardContrast[i]);
             freqDiffSum += fd;
             if (fd > r.freqMaxAbsDiff) {

@@ -16,9 +16,8 @@ PiezoToneOutputBTL::PiezoToneOutputBTL(int pin, int invertedPin, uint8_t channel
 // the LS signals left it on an unconfigured channel, so BTL drove one side
 // only (half swing plus DC across the piezo) (issue #31 R2-8).
 uint8_t PiezoToneOutputBTL::ledcSignalIndex() const {
-    return _channel < 8
-               ? static_cast<uint8_t>(LEDC_HS_SIG_OUT0_IDX + _channel)
-               : static_cast<uint8_t>(LEDC_LS_SIG_OUT0_IDX + (_channel - 8));
+    return _channel < 8 ? static_cast<uint8_t>(LEDC_HS_SIG_OUT0_IDX + _channel)
+                        : static_cast<uint8_t>(LEDC_LS_SIG_OUT0_IDX + (_channel - 8));
 }
 
 void PiezoToneOutputBTL::begin() {

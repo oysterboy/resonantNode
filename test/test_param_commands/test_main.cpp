@@ -92,12 +92,15 @@ void test_set_writes_the_field_and_names_the_group() {
 void test_refused_set_changes_nothing() {
     param::ParamRegistry r = makeRegistry();
     const uint32_t before = scalar.cooldownAfterOnsetMs;
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None),
-                          static_cast<int>(run(r, "PARAM SET detection.scalar_cooldown_ms 99999").effect));  // out of range
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None),
-                          static_cast<int>(run(r, "PARAM SET detection.scalar_cooldown_ms 12x").effect));  // parse error
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None),
-                          static_cast<int>(run(r, "PARAM SET detection.scalar_cooldown_ms 10 junk").effect));  // two values
+    TEST_ASSERT_EQUAL_INT(
+        static_cast<int>(param::ParamCommandEffect::None),
+        static_cast<int>(run(r, "PARAM SET detection.scalar_cooldown_ms 99999").effect));  // out of range
+    TEST_ASSERT_EQUAL_INT(
+        static_cast<int>(param::ParamCommandEffect::None),
+        static_cast<int>(run(r, "PARAM SET detection.scalar_cooldown_ms 12x").effect));  // parse error
+    TEST_ASSERT_EQUAL_INT(
+        static_cast<int>(param::ParamCommandEffect::None),
+        static_cast<int>(run(r, "PARAM SET detection.scalar_cooldown_ms 10 junk").effect));  // two values
     TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None),
                           static_cast<int>(run(r, "PARAM SET detection.nothing 1").effect));
     TEST_ASSERT_EQUAL_UINT32(before, scalar.cooldownAfterOnsetMs);
@@ -105,7 +108,8 @@ void test_refused_set_changes_nothing() {
     TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None),
                           static_cast<int>(run(r, "PARAM scalar_onset_threshold=2000").effect));
     TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None), static_cast<int>(run(r, "PARAM").effect));
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None), static_cast<int>(run(r, "PARAM STATUS").effect));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None),
+                          static_cast<int>(run(r, "PARAM STATUS").effect));
 }
 
 void test_reset_without_a_store_restores_the_defaults() {
@@ -120,8 +124,10 @@ void test_reset_without_a_store_restores_the_defaults() {
 
 void test_save_and_load_need_a_store() {
     param::ParamRegistry r = makeRegistry();
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None), static_cast<int>(run(r, "PARAM SAVE").effect));
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None), static_cast<int>(run(r, "PARAM LOAD").effect));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None),
+                          static_cast<int>(run(r, "PARAM SAVE").effect));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::None),
+                          static_cast<int>(run(r, "PARAM LOAD").effect));
 
     MemoryStore store;
     run(r, "PARAM SET detection.scalar_min_peak_strength 123", &store);
@@ -135,7 +141,8 @@ void test_save_and_load_need_a_store() {
     run(r, "PARAM RESET", &store);
     TEST_ASSERT_EQUAL_INT(1, store.clears);
     TEST_ASSERT_EQUAL_UINT32(0, store.entries.size());
-    TEST_ASSERT_EQUAL_FLOAT(detection::ScalarTransientConfig().minTransientPeakStrength, scalar.minTransientPeakStrength);
+    TEST_ASSERT_EQUAL_FLOAT(detection::ScalarTransientConfig().minTransientPeakStrength,
+                            scalar.minTransientPeakStrength);
 }
 
 int main(int, char**) {

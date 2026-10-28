@@ -113,7 +113,8 @@ static_assert(kBandBinSpacingHz * kFreqBandWindowSamples == kDefaultAudioI2SSamp
 static_assert(kDefaultNetworkBandLowHz < kDefaultNetworkBandHighHz, "network band is inverted");
 static_assert((kDefaultNetworkBandHighHz - kDefaultNetworkBandLowHz) % kBandBinSpacingHz == 0,
               "network band edges must both sit on the bin grid");
-static_assert(kDefaultChirpFrequencyHz >= kDefaultNetworkBandLowHz && kDefaultChirpFrequencyHz <= kDefaultNetworkBandHighHz,
+static_assert(kDefaultChirpFrequencyHz >= kDefaultNetworkBandLowHz &&
+                  kDefaultChirpFrequencyHz <= kDefaultNetworkBandHighHz,
               "the chirp tone must lie inside the network band");
 static_assert((kDefaultChirpFrequencyHz - kDefaultNetworkBandLowHz) % kBandBinSpacingHz == 0,
               "the chirp tone must sit on a band bin (bandLow + k * spacing)");

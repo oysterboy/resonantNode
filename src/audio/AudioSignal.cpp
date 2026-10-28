@@ -27,7 +27,7 @@ bool AudioSignal::rebase() {
     constexpr unsigned long kRebaseTimeoutMs = 500; // 200 samples take 12.5 ms at 16 kHz
     const unsigned long startMs = timebase::nowMs();
     long sum = 0;
-    for (int i = 0; i < 200; ) {
+    for (int i = 0; i < 200;) {
         int sample = 0;
         uint64_t sampleTimeUs64 = 0;
         if (_source.readSample(sample, sampleTimeUs64)) {
@@ -54,7 +54,8 @@ bool AudioSignal::rebase() {
 // Sample and block processing
 // -----------------------------------------------------------------------------
 
-bool IRAM_ATTR AudioSignal::update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame, bool overflowDuringBlock) {
+bool IRAM_ATTR AudioSignal::update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame,
+                                   bool overflowDuringBlock) {
     const uint64_t sampleIndex = _stats.samplesProcessed;
     processSample(sample, sampleTimeUs64);
     _stats.samplesProcessed++;
@@ -77,7 +78,8 @@ void IRAM_ATTR AudioSignal::processSample(int sample, uint64_t sampleTimeUs64) {
     }
 
     _signalMagnitude = magnitude;
-    _smoothedSignalMagnitude = _smoothedSignalMagnitude * (1.0f - _smoothingFactor) + _signalMagnitude * _smoothingFactor;
+    _smoothedSignalMagnitude =
+        _smoothedSignalMagnitude * (1.0f - _smoothingFactor) + _signalMagnitude * _smoothingFactor;
 }
 
 // -----------------------------------------------------------------------------
@@ -128,7 +130,8 @@ const AudioSamplePacket& AudioSignal::latestFrame() const {
     return _latestFrame;
 }
 
-void IRAM_ATTR AudioSignal::emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint64_t sampleTimeUs64, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow) {
+void IRAM_ATTR AudioSignal::emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint64_t sampleTimeUs64,
+                                      uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow) {
     outFrame = {};
     outFrame.sampleIndex = sampleIndex;
     outFrame.timeUs64 = sampleTimeUs64;

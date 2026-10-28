@@ -35,8 +35,7 @@ not install or configure the port.
 */
 class I2sToneOutput : public ToneOutput {
 public:
-    explicit I2sToneOutput(AudioSourceI2S& port,
-                           float amplitude = runtime::kDefaultI2sToneAmplitude,
+    explicit I2sToneOutput(AudioSourceI2S& port, float amplitude = runtime::kDefaultI2sToneAmplitude,
                            uint32_t rampMs = runtime::kDefaultI2sToneRampMs);
 
     // Starts the writer task (once). The port may be installed before or

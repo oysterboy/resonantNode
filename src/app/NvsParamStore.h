@@ -34,14 +34,10 @@ public:
         return _prefs.putBytes(key, &entry, sizeof(entry)) == sizeof(entry);
     }
 
-    bool clear() override {
-        return open() && _prefs.clear();
-    }
+    bool clear() override { return open() && _prefs.clear(); }
 
 private:
-    static void makeKey(uint16_t id, char (&key)[8]) {
-        snprintf(key, sizeof(key), "p%u", static_cast<unsigned>(id));
-    }
+    static void makeKey(uint16_t id, char (&key)[8]) { snprintf(key, sizeof(key), "p%u", static_cast<unsigned>(id)); }
 
     bool open() {
         if (!_open) {

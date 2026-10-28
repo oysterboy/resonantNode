@@ -5,15 +5,11 @@
 
 namespace detection::analyzer {
 
-inline bool sourceReportMatchesIdentity(unsigned long recordOccurrenceId,
-                                        unsigned long selectedOccurrenceId,
-                                        unsigned long recordStartMs,
-                                        unsigned long selectedStartMs,
-                                        unsigned long recordEndMs,
-                                        unsigned long selectedEndMs) {
-    return recordOccurrenceId == selectedOccurrenceId &&
-           recordStartMs == selectedStartMs &&
-           recordEndMs == selectedEndMs;
+inline bool sourceReportMatchesIdentity(unsigned long recordOccurrenceId, unsigned long selectedOccurrenceId,
+                                        unsigned long recordStartMs, unsigned long selectedStartMs,
+                                        unsigned long recordEndMs, unsigned long selectedEndMs) {
+    return recordOccurrenceId == selectedOccurrenceId && recordStartMs == selectedStartMs &&
+        recordEndMs == selectedEndMs;
 }
 
 inline const char* sourceReportReason(bool sourceReportMatched, bool hasDetectorReport) {
@@ -25,20 +21,14 @@ inline const char* sourceReportReason(bool sourceReportMatched, bool hasDetector
 using ::detection::nextOccurrenceId;
 
 inline unsigned int completedPrimaryTrialCount(const AnalyzerCleanSummary& summary) {
-    return summary.expectedTrials +
-           summary.earlyTrials +
-           summary.lateTrials +
-           summary.missTrials +
-           summary.duplicateTrials +
-           summary.unexpectedTrials +
-           summary.rejectedTrials +
-           summary.ambiguousTrials +
-           summary.tooDenseTrials;
+    return summary.expectedTrials + summary.earlyTrials + summary.lateTrials + summary.missTrials +
+        summary.duplicateTrials + summary.unexpectedTrials + summary.rejectedTrials + summary.ambiguousTrials +
+        summary.tooDenseTrials;
 }
 
 inline bool patternRejectedTrial(const AnalyzerReport& report) {
     return report.classification.result == AnalyzerResult::Rejected &&
-           report.classification.reason == AnalyzerReason::PatternRejected;
+        report.classification.reason == AnalyzerReason::PatternRejected;
 }
 
 } // namespace detection::analyzer

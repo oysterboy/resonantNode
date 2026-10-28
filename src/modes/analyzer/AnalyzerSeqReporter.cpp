@@ -67,7 +67,8 @@ void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, b
         serialOut().print(" inspection.label=");
         serialOut().print(detection::inspectionTargetName(report.inspection.moduleTarget));
         serialOut().print(" inspection.strength=");
-        serialOut().print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
+        serialOut().print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass
+                                                                           : "unknown");
         serialOut().print(" integrity.complete=");
         serialOut().print(report.integrity.correlationComplete ? 1 : 0);
         serialOut().print(" integrity.reason=");
@@ -92,10 +93,8 @@ void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
 
 void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     const char* trialRejectReason = analyzerReasonName(report.classification.reason);
-    if (report.classification.result == AnalyzerResult::Rejected &&
-        report.occurrences.rejectReason != nullptr &&
-        report.occurrences.rejectReason[0] != '\0' &&
-        strcmp(report.occurrences.rejectReason, "none") != 0 &&
+    if (report.classification.result == AnalyzerResult::Rejected && report.occurrences.rejectReason != nullptr &&
+        report.occurrences.rejectReason[0] != '\0' && strcmp(report.occurrences.rejectReason, "none") != 0 &&
         strcmp(report.occurrences.rejectReason, trialRejectReason) != 0) {
         trialRejectReason = report.occurrences.rejectReason;
     }
@@ -213,11 +212,15 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         serialOut().print(" inspect.status=");
         serialOut().print(available ? "observed" : "missing");
         serialOut().print(" inspect.reject_reason=");
-        serialOut().print(available ? "none" : detection::magnitudeInspectionNoteName(observation != nullptr ? observation->note : detection::MagnitudeInspectionNote::WindowInvalid));
+        serialOut().print(available ? "none"
+                                    : detection::magnitudeInspectionNoteName(
+                                          observation != nullptr ? observation->note
+                                                                 : detection::MagnitudeInspectionNote::WindowInvalid));
         serialOut().print(" inspect.stream=");
         serialOut().print(observation != nullptr ? scalarObservedStreamDisplayName(observation->stream) : "unknown");
         serialOut().print(" inspect.metric=");
-        serialOut().print(observation != nullptr ? detection::magnitudeInspectionModeName(observation->mode) : "unknown");
+        serialOut().print(observation != nullptr ? detection::magnitudeInspectionModeName(observation->mode)
+                                                 : "unknown");
         serialOut().print(" inspect.window_ms=");
         serialOut().print(observation != nullptr ? observation->windowMs : 0UL);
         serialOut().print(" inspect.expected_bin_count=");
@@ -315,16 +318,15 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     serialOut().print(report.sourceReportMatched ? 1 : 0);
     serialOut().print(" DETECTOR:");
     serialOut().print(" lifecycle=");
-    serialOut().print(report.detectorReport != nullptr && report.detectorReport->accepted.present ? "valid" : "invalid");
+    serialOut().print(report.detectorReport != nullptr && report.detectorReport->accepted.present ? "valid"
+                                                                                                  : "invalid");
     serialOut().print(" carrier_quality=");
     if (report.detectorReport != nullptr) {
         const auto& detector = *report.detectorReport;
-        const bool carrierQualityPass =
-            detector.scalar.inspect.carrierQualityRequired
-                ? (detector.scalar.inspect.carrierCoveragePassed &&
-                   detector.scalar.inspect.carrierIslandPassed &&
-                   detector.scalar.inspect.carrierGapPassed)
-                : true;
+        const bool carrierQualityPass = detector.scalar.inspect.carrierQualityRequired
+            ? (detector.scalar.inspect.carrierCoveragePassed && detector.scalar.inspect.carrierIslandPassed &&
+               detector.scalar.inspect.carrierGapPassed)
+            : true;
         serialOut().print(carrierQualityPass ? "valid" : "invalid");
         serialOut().print(" carrier_quality_required=");
         serialOut().print(detector.scalar.inspect.carrierQualityRequired ? 1 : 0);
@@ -360,17 +362,22 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     serialOut().print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
     serialOut().print(" PATTERN:");
     serialOut().print(" result=");
-    serialOut().print(report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late
-        ? "confirmed"
-        : "rejected");
+    serialOut().print(report.classification.result == AnalyzerResult::Expected ||
+                              report.classification.result == AnalyzerResult::Late
+                          ? "confirmed"
+                          : "rejected");
     serialOut().print(" verdict.first_failed_requirement_index=");
     serialOut().print(report.primaryPattern.firstFailedRequirementIndex);
     serialOut().print(" verdict.first_failed_label=");
     serialOut().print(detection::inspectionTargetName(report.primaryPattern.firstFailedTarget));
     serialOut().print(" verdict.observed_class=");
-    serialOut().print(report.primaryPattern.firstFailedObservedStrength != nullptr ? report.primaryPattern.firstFailedObservedStrength : "unknown");
+    serialOut().print(report.primaryPattern.firstFailedObservedStrength != nullptr
+                          ? report.primaryPattern.firstFailedObservedStrength
+                          : "unknown");
     serialOut().print(" verdict.required_class=");
-    serialOut().print(report.primaryPattern.firstFailedRequiredStrength != nullptr ? report.primaryPattern.firstFailedRequiredStrength : "unknown");
+    serialOut().print(report.primaryPattern.firstFailedRequiredStrength != nullptr
+                          ? report.primaryPattern.firstFailedRequiredStrength
+                          : "unknown");
     serialOut().println();
 }
 
@@ -379,9 +386,8 @@ void AnalyzerApp::printSequenceSummaryClean() const {
     const long avgDtRounded = summary.dtCount > 0
         ? static_cast<long>(static_cast<float>(summary.totalDtMs) / static_cast<float>(summary.dtCount) + 0.5f)
         : -1L;
-    const float avgStrength = summary.strengthCount > 0
-        ? summary.totalStrength / static_cast<float>(summary.strengthCount)
-        : 0.0f;
+    const float avgStrength =
+        summary.strengthCount > 0 ? summary.totalStrength / static_cast<float>(summary.strengthCount) : 0.0f;
 
     serialOut().print("SEQ_SUMMARY profile=");
     serialOut().print(summary.profileName != nullptr ? summary.profileName : "unknown");
@@ -454,7 +460,8 @@ void AnalyzerApp::printSequenceStatus() const {
     serialOut().print(" verbosity=");
     serialOut().print(config.verbosity);
     serialOut().print(" profile=");
-    serialOut().print(_sequenceTest.active ? activeAnalyzerProfileName() : detection::detectionProfileName(_seqOutputConfig.profileKind));
+    serialOut().print(_sequenceTest.active ? activeAnalyzerProfileName()
+                                           : detection::detectionProfileName(_seqOutputConfig.profileKind));
     serialOut().print(" tries=");
     serialOut().print(config.totalTrials);
     serialOut().print(" diagnostics=");

@@ -82,10 +82,10 @@ inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& 
     registry.addUInt32(ParamId::Output_HopPulseMs, ModuleId::Output, "output.hop_pulse_ms", &hop.hopPulseMs, 1U, 250U);
     registry.addUInt32(ParamId::Output_HopGapMs, ModuleId::Output, "output.hop_gap_ms", &hop.hopGapMs, 0U, 250U);
     registry.addUInt32(ParamId::Output_HopSteps, ModuleId::Output, "output.hop_steps", &hop.hopSteps, 1U, 8U);
-    registry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &hop.idleAnnounceHz, 0U,
-                       runtime::kMaxToneHz);
-    registry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &hop.idleAnnounceMs, 20U,
-                       2000U);
+    registry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &hop.idleAnnounceHz,
+                       0U, runtime::kMaxToneHz);
+    registry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &hop.idleAnnounceMs,
+                       20U, 2000U);
 }
 
 }  // namespace param

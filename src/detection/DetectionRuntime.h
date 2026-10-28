@@ -53,11 +53,8 @@ public:
     void setFieldStateConfig(const FieldStateConfig& config);
     void setVerdictQueueEnabled(bool enabled);
 
-    void observeFrame(
-        const AudioSamplePacket& audioSamplePacket,
-        const FrequencyBandMeasurementPacket& frequencyEvidence,
-        unsigned long nowMs
-    );
+    void observeFrame(const AudioSamplePacket& audioSamplePacket,
+                      const FrequencyBandMeasurementPacket& frequencyEvidence, unsigned long nowMs);
 
     bool popOccurrenceVerdict(OccurrenceVerdict& out);
     const FieldState& fieldState() const;

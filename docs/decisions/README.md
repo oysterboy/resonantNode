@@ -90,6 +90,7 @@ what replaced it.
 | 2026-10-26 | [Drop `RB debug off\|events` and the compile-time Node tracing (review D2.5)](2026-10-26-drop-rb-debug.md) (implemented 2026-10-27) |
 | 2026-10-26 | [Milestone "installation-ready node": gate = 11c soak, 11g batches, 11d OTA firmware; then the step sequence restarts at 12 in a fresh file](2026-10-26-milestone-installation-ready-node.md) (cut-over waits for the gate) |
 | 2026-10-28 | [The network band stays at 2950-3950 Hz after the 500-5000 Hz sweep (E004, step 11h)](2026-10-28-band-stays-after-the-sweep.md) |
+| 2026-10-28 | [OTA firmware: every board pulls the image over HTTP from WiFi on command (NET * OTA for the Nodes), rollback until confirmed (step 11d)](2026-10-28-ota-firmware-pull-over-http.md) (implemented; first update waits for the PC's firewall rule) |
 
 ## Open
 

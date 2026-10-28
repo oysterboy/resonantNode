@@ -121,10 +121,26 @@ the log) but it never sounds: no answer, no idle call, `RB CALL` ignored. With `
 silent (`RB silent=1` at boot) until `PARAM SET output.silent 0` plus SAVE, or `PARAM RESET`.
 `RB STATUS` shows `silent=`. SELFTEST still plays its tones, it is an explicit command.
 
+### Firmware over WiFi (OTA, step 11d)
+
+The boards pull a new image over WiFi (decisions/2026-10-28-ota-firmware-pull-over-http.md):
+
+1. Credentials: `include/wifi_secrets.h` (copy `include/wifi_secrets.example.h`; git ignores it). A build without it
+   answers `OTA result=no_credentials`.
+2. Build, then serve the images from the lab PC: `python tools/bench/otaserve.py` (prints the URLs). The PC's
+   firewall must allow inbound TCP 8070 on the private network (rule "resonantNode OTA (8070)").
+3. On a USB Node: `NET * OTA url=http://<pc>:8070/node.bin` (all other Nodes by radio), then
+   `OTA url=http://<pc>:8070/node.bin` (itself). On the Analyzer `.../analyzer.bin`, on the Emitter's USB
+   `.../emitter.bin`.
+4. Each board prints `OTA start`, `OTA wifi ip=`, `OTA progress pct=`, `OTA result=ok rebooting`, boots the new
+   image, and after 20 s `OTA confirmed partition=app0|app1`. A board that reboots before that falls back to its
+   previous image. `OTA result=download_failed|wifi_timeout` leaves the old image running and the radio on its
+   channel.
+
 ### Remote commands (radio, step 11a)
 
 Any Node on USB is the gateway: `NET <target> <command>`, target `*` (all) or a roster name
-(`E1`..`E5`). Every Node command goes (PARAM, RB, SELFTEST) plus `NET PING`; each node answers with
+(`E1`..`E5`). Every Node command goes (PARAM, RB, SELFTEST, OTA) plus `NET PING`; each node answers with
 what it would print on serial, shown as `NET reply from=E3 seq=N part=P <line>` and
 `NET reply from=E3 seq=N done parts=K`. `NET STATUS` shows the gateway's own radio counters. The
 radio is on by default; `PARAM SET node.radio_enabled 0`, `PARAM SAVE`, reboot turns it off.

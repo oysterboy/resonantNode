@@ -53,6 +53,8 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
 11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
+Status update 2026-10-28, evening: 11d implemented, its gate blocked on the lab PC's firewall rule until 11-01 (owner away);
+a 96 h soak on 40c92e3 meanwhile.
 Status update 2026-10-28, later: 11h done (band stays), 11g done (bench gates passed). Next: 11d (OTA firmware,
 needs the owner's WiFi credentials), the last item of the installation-ready milestone.
 Status update 2026-10-28: 11h's sweep accepted (19.1 h, E004). Next: hits under noise, then flash and 11g's
@@ -1134,10 +1136,19 @@ the previous gate open unless the step says it can run in parallel.
    0 noise-started of 14,671 answers, 0 resets, no drops after boot. E5 <- E1 drifts -17 % (E4 stands between
    them); no sign of the bells. Next: 11h.
 
-11d. [TODO, after 11h and 11g] OTA firmware (FWOTA). (issue #61)
+11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the
    repo) and a two-slot partition table (a first USB flash of every board). Gate: an image flashed over WiFi to
    every board, a failed or interrupted update falls back to the old image.
+   Progress 2026-10-28 (40c92e3; decisions/2026-10-28-ota-firmware-pull-over-http.md): `OTA url=...` on every mode,
+   `NET * OTA` by radio, otaserve.py on the lab PC, rollback until a new image has run 20 s. The default partition
+   table already has two 1,280 KB app slots (no repartition); images 929 KB (Node), 948 (Analyzer), 853 (Emitter).
+   All five boards USB-flashed with 40c92e3 (the one bootstrap flash). First attempt (E1): WiFi joined (Kosmos, -55
+   dBm), the download refused by the lab PC's firewall (inbound 8070 not allowed on the Private profile; adding the
+   rule needs an administrator, the UAC prompt went unanswered); E1 kept its image, answered 5/5 hop trains and its
+   radio pings afterwards: the failure path works. Left for the gate: allow port 8070 (owner, Sunday 11-01), then
+   NET * OTA to all Nodes, OTA on the Analyzer and the Emitter, and a rollback test with an image that crashes early.
+   Meanwhile a 96 h soak on 40c92e3 (bench/sessions/2026-10-28-soak96-40c92e3), the first long run of 11g's changes.
 
 11e. [DONE 2026-10-26] Review fixes 2026-10-25: boundaries, duplication, dead code. (issue #63, closed)
    Owner 2026-10-25. The fixes from the architecture and readability review

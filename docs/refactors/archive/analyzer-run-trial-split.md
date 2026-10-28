@@ -1,3 +1,11 @@
+Archived: 2026-10-28 - step 11g batch C closed. Landed: C1 SEQ start refused during a run, STOP cancels a queued
+start, STATUS from one config (0ba53d6); C2 printers to modes/analyzer/report, the compiled-out EVT line removed
+(be2e705); C3 / C3b write-only fields and output read by nobody pruned, SEQ_TIMING / bare SEQ_SOURCE / SEQ_HISTDBG
+dropped (7b92dd4, b207cd2, 3ed1803); C4 RunConfig / TrialState / RunTotals, mutables 6 -> 1 (48e32b6); C5 one
+classification site, host-tested (0bf20ce). Bench A/B (bench/sessions/2026-10-28-step11g-ab): identical trials,
+results and common values; key differences exactly the pruned keys plus dropped_dma_buffers in SEQ_SUMMARY; the
+edge cases as designed. Not re-verified on the board: SEQ_TIMING's and SEQ_HISTDBG's absence over a long run.
+
 # Step 11g batch C: the Analyzer's run / trial split (A8, D1.4, D2.6, D2.8)
 
 Status: active (opened 2026-10-27). Step 11g, batch C (roadmap-0-steps.md, issue #67). Owner order 2026-10-27:

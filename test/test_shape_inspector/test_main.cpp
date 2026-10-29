@@ -129,6 +129,39 @@ void test_rotation_that_wraps_counts_as_rising() {
     TEST_ASSERT_EQUAL(StrengthClass::Strong, in.occurrence.shape.shapeClass);
 }
 
+// Review 12.0 L3: the wrap is the drop from the band's top bin to its bottom one, from the band's bin count. In an
+// 8-bin band (2950-4700) that is 7 bins down; a drop of 4 bins is a jump, which the old rule (more than 3 bins
+// down) counted as rising.
+void test_wrap_rule_from_the_band_bin_count() {
+    BinTrack wrapped;
+    wrapped.setBandBins(8);
+    const uint32_t rotated[5] = {4200, 4450, 4700, 2950, 3200};
+    playSteps(wrapped, 100, rotated, 5, 25, 10);
+    InspectedOccurrence in = inspect(wrapped, shapePlan(), occurrence(100, 165));
+    TEST_ASSERT_EQUAL_UINT8(4, in.occurrence.shape.risingSteps);
+    TEST_ASSERT_EQUAL_UINT8(0, in.occurrence.shape.otherSteps);
+
+    BinTrack jump;
+    jump.setBandBins(8);
+    const uint32_t jumps[5] = {4200, 3200, 3450, 3700, 3950};  // 4 bins down, then up
+    playSteps(jump, 100, jumps, 5, 25, 10);
+    in = inspect(jump, shapePlan(), occurrence(100, 165));
+    TEST_ASSERT_EQUAL_UINT8(3, in.occurrence.shape.risingSteps);
+    TEST_ASSERT_EQUAL_UINT8(1, in.occurrence.shape.otherSteps);
+
+    // The rule itself: the shipped 5-bin band keeps what the old rule did (4 bins down is its only wrap), an
+    // unknown bin count (0) keeps the old rule.
+    const long bin = static_cast<long>(kBinShapeSpacingHz);
+    TEST_ASSERT_TRUE(binShapeStepRising(-4 * bin, 5, 1));
+    TEST_ASSERT_FALSE(binShapeStepRising(-3 * bin, 5, 1));
+    TEST_ASSERT_TRUE(binShapeStepRising(-7 * bin, 8, 1));
+    TEST_ASSERT_FALSE(binShapeStepRising(-4 * bin, 8, 1));
+    TEST_ASSERT_TRUE(binShapeStepRising(-4 * bin, 0, 1));
+    TEST_ASSERT_TRUE(binShapeStepRising(-1 * bin, 2, 1));  // two bins: down one is the wrap
+    TEST_ASSERT_TRUE(binShapeStepRising(2 * bin, 8, 2));
+    TEST_ASSERT_FALSE(binShapeStepRising(2 * bin, 8, 1));
+}
+
 void test_random_jumps_are_not_rising() {
     BinTrack track;
     const uint32_t jumps[5] = {3700, 2950, 3450, 3200, 3950};
@@ -270,6 +303,7 @@ int main(int, char**) {
     RUN_TEST(test_hop_train_is_strong_and_passes);
     RUN_TEST(test_train_cut_to_three_steps_is_medium);
     RUN_TEST(test_rotation_that_wraps_counts_as_rising);
+    RUN_TEST(test_wrap_rule_from_the_band_bin_count);
     RUN_TEST(test_random_jumps_are_not_rising);
     RUN_TEST(test_flicker_shorter_than_a_run_is_folded_away);
     RUN_TEST(test_single_target_mode_is_not_applicable_and_passes);

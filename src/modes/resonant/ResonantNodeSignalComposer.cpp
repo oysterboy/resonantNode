@@ -51,7 +51,10 @@ OutputRequest NodeSignalComposer::compose(const BandGrid& grid, ChirpPattern pat
         request.kind = OutputRequest::Kind::HopTrain;
     } else if (_values.idleAnnounceHz > 0 && pattern == ChirpPattern::Idle) {
         request.kind = OutputRequest::Kind::IdleCall;
-        request.announceHz = _values.idleAnnounceHz;
+        // 1..99 Hz is below what the output plays (OutputLimits.minHz): raised to it, so the idle call is not
+        // rejected into the fallback every time (review 12.0 M8; 0 still means no announcement).
+        const uint32_t minHz = OutputLimits().minHz;
+        request.announceHz = _values.idleAnnounceHz < minHz ? minHz : _values.idleAnnounceHz;
         request.announceMs = _values.idleAnnounceMs;
         request.announceGapMs = kIdleAnnounceGapMs;
         if (!_values.hopEnabled || !composeHopTrain(grid, request)) {

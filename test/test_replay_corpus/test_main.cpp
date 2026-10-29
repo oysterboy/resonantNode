@@ -379,6 +379,15 @@ void test_shipped_plan_fits_the_history_and_the_window() {
     TEST_ASSERT_TRUE(c.softOk());
     // A history of 400 ms would not hold the longest occurrence's window.
     TEST_ASSERT_FALSE(detection::checkInspectionPlan(profile.scalarTransient, profile.inspectionPlan, 400).hardOk());
+    // The shape rule's level is the release threshold, a FrequencyTarget score: above 32767, or on another stream,
+    // it is flagged (review 12.0 L4).
+    TEST_ASSERT_TRUE(c.shapeLevelInDomain);
+    detection::ScalarTransientConfig high = profile.scalarTransient;
+    high.onsetReleaseThreshold = 40000.0f;
+    TEST_ASSERT_FALSE(detection::checkInspectionPlan(high, profile.inspectionPlan).softOk());
+    detection::ScalarTransientConfig amp = profile.scalarTransient;
+    amp.observedStream = detection::FeatureStreamId::AmpEnvelope;
+    TEST_ASSERT_FALSE(detection::checkInspectionPlan(amp, profile.inspectionPlan).shapeLevelInDomain);
 }
 
 void test_hop_gap_check_flags_what_the_detector_cannot_read() {

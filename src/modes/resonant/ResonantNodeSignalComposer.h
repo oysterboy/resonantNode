@@ -76,6 +76,7 @@ namespace param {
 // output.hop_* and output.idle_announce_*. Bound so the longest emission fits OutputLimits.maxSpanMs (6000): 8 steps
 // of 250 + 7 gaps of 250 = 3750 ms, and the idle call adds announce (<= 2000) + its 200 ms gap = 5950 (review D1.2,
 // 2026-10-26: 1000 / 2000 let a legal SET turn every answer into a chirp; test/test_node_composer).
+// output.idle_announce_hz: 0 (no announcement) or a tone; 1..99 plays at OutputLimits.minHz (100), see compose.
 inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& hop) {
     registry.addBool(ParamId::Output_HopEnabled, ModuleId::Output, "output.hop_enabled", &hop.hopEnabled);
     registry.addUInt32(ParamId::Output_HopRotation, ModuleId::Output, "output.hop_rotation", &hop.hopRotation, 0U, 15U);

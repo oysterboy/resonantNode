@@ -94,6 +94,12 @@ output.*                  hop train, idle announce, silent (8 params)
 node.radio_enabled        ESP-NOW on or off
 ```
 
+Edge values (review 12.0, 2026-10-29): `detection.scalar_max_duration_ms 0` is no limit (the detector and RB
+hop_check). `output.idle_announce_hz` 1..99 plays at 100 Hz, the lowest tone the output plays (0 is no
+announcement). A band wider than the bank (8 bins) is clamped at its high edge, and `RB plan_check` prints
+`shape_level_out_of_domain` (status=warn) when the shape rule's level, the release threshold, is not a
+FrequencyTarget score (another stream, or above 32767).
+
 Where the defaults live: `detection.*` in `src/detection/DetectionProfile.h` (the profile
 structs), `behavior.*` in `src/behavior/BehaviorProfile.h` (`BehaviorGateConfig`), `output.*` in
 `src/app/RuntimeDefaults.h` and the roster. Retuning a default is its own pass, logged through
@@ -186,6 +192,7 @@ timeout and settle times sit beside it.
 
 ```text
 SEQ start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]
+                                                             tries >= 1, freq= and hop= entries 1..7900 (2026-10-29)
 SEQ start ... band=LOW-HIGH|off                              score the strongest bin in the band (default off)
 SEQ OBS start ...               passive observe mode for an external emitter already running
 SEQ start ... pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]      pulse train per trial (DET-011)
@@ -266,6 +273,9 @@ EMIT SWEEP start=HZ stop=HZ step=HZ dur=MS pause=MS
 EMIT MODE AUTO interval=MS freq=HZ dur=MS | EMIT MODE REMOTE
 SELFTEST
 ```
+
+From the Analyzer, an `EMIT ...` whose forwarded part is longer than 95 characters (the Emitter link's line) is
+refused with `ERR EMIT line_too_long max=95` (2026-10-29).
 
 The Emitter prints `EVT emitter_ready`, `EVT emitter_cmd` and the trial markers `EMIT_START`,
 `EMIT_DRIVE_ON`, `EMIT_DONE`, `EMIT_DRIVE_OFF` (each `trial=... t_ms=...`), so a log of an Emitter-driven run can be aligned with the Analyzer's trials.

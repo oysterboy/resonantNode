@@ -19,11 +19,15 @@ log, so the printed facts are the ones the verdict used (review D2.3,
 2026-10-26: the replay had its own copy and had drifted).
 
 A BinSource has `bool at(uint32_t ms, uint32_t& binHz, uint16_t& level) const`
-(false: no bin in that ms). A run is one bin held with gaps of at most
+(false: no bin in that ms) and `uint32_t bandBins() const`. A run is one bin held with gaps of at most
 kRunGapMs; runs shorter than minRunMs are folded away (bin boundaries flicker
 between neighbours for a few ms). A step up by a whole number of bins, up to
 maxRisingStepBins, or from the top of the band back to the bottom (a rotation
-that wraps) counts as rising. Times are 32-bit ms, wrap-safe: the window is a
+that wraps) counts as rising. The wrap is a drop of exactly bandBins - 1 bins,
+the band's bin count from the source's bandBins() (review 12.0 L3: before, any
+drop of more than 3 bins counted, which in an 8-bin band made random jumps
+rising); a source that does not know it (0) keeps that old rule, the same as
+the exact one in the shipped 5-bin band. Times are 32-bit ms, wrap-safe: the window is a
 start and a span, walked by count (review D1.1).
 */
 struct BinRun {
@@ -55,6 +59,19 @@ inline StrengthClass classifyBinShape(const OccurrenceShape& shape, const ShapeI
         return StrengthClass::Medium;
     }
     return shape.distinctBins >= 2 ? StrengthClass::Weak : StrengthClass::None;
+}
+
+// A step of d Hz between two kept runs counts as rising: up by a whole number of bins, up to maxRisingStepBins, or
+// the wrap from the top bin to the bottom one (bandBins - 1 bins down; more than 3 bins down when bandBins is 0).
+inline bool binShapeStepRising(long d, uint32_t bandBins, uint16_t maxRisingStepBins) {
+    const long spacing = static_cast<long>(kBinShapeSpacingHz);
+    if (d > 0) {
+        return d <= static_cast<long>(maxRisingStepBins) * spacing && d % spacing == 0;
+    }
+    if (bandBins == 0) {
+        return d < -3 * spacing;
+    }
+    return bandBins >= 2 && d == -static_cast<long>(bandBins - 1) * spacing;
 }
 
 // The bins over [startMs, startMs + spanMs] whose level reaches minLevel.
@@ -110,9 +127,7 @@ BinShapeMeasure measureBinShape(const BinSource& source, uint32_t startMs, uint3
         }
         if (i > 0) {
             const long d = static_cast<long>(kept[i].hz) - static_cast<long>(kept[i - 1].hz);
-            const bool up = d > 0 && d <= static_cast<long>(config.maxRisingStepBins * kBinShapeSpacingHz) &&
-                d % static_cast<long>(kBinShapeSpacingHz) == 0;
-            if (up || d < -static_cast<long>(3 * kBinShapeSpacingHz)) {
+            if (binShapeStepRising(d, source.bandBins(), config.maxRisingStepBins)) {
                 ++shape.risingSteps;
             } else {
                 ++shape.otherSteps;

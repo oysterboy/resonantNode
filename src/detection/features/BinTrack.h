@@ -71,6 +71,11 @@ public:
 
     uint32_t newestMs() const { return _newestMs; }
 
+    // The band's bin count, for BinShape's wrap rule (a step from the top bin to the bottom one; review 12.0 L3).
+    // 0: not known, the rule falls back to "a drop of more than 3 bins" (right for the shipped 5-bin band).
+    void setBandBins(uint32_t bins) { _bandBins = bins; }
+    uint32_t bandBins() const { return _bandBins; }
+
 private:
     void advanceTo(uint32_t nowMs) {
         if (!_started) {
@@ -97,6 +102,7 @@ private:
     uint8_t _code[kMs] = {};
     uint16_t _level[kMs] = {};
     uint32_t _newestMs = 0;
+    uint32_t _bandBins = 0;
     bool _started = false;
 };
 

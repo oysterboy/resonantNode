@@ -307,6 +307,12 @@ void Node::printInspectionPlanCheck() {
     if (!c.windowCompleteAtRelease) {
         serialOut().print(sep);
         serialOut().print("window_after_inspection");
+        sep = ",";
+    }
+    if (!c.shapeLevelInDomain) {
+        // The shape rule's level (the release threshold) is not a FrequencyTarget score (review 12.0 L4).
+        serialOut().print(sep);
+        serialOut().print("shape_level_out_of_domain");
     }
     serialOut().println();
 }

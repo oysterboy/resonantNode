@@ -53,6 +53,9 @@ public:
     // its high edge, so bandHighHz() always names the last bin that is
     // actually watched; the Node derives its hop grid from these getters.
     void setBand(unsigned long lowHz, unsigned long highHz);
+    // The high edge setBand(lowHz, highHz) would apply (highHz, or the last bin the bank holds); a caller that
+    // re-applies a band compares with this, not with its own highHz (review 12.0 M7).
+    unsigned long clampedBandHighHz(unsigned long lowHz, unsigned long highHz) const;
     unsigned long bandLowHz() const;
     unsigned long bandHighHz() const;
     // Band bins between bandLowHz() and bandHighHz() inclusive, one

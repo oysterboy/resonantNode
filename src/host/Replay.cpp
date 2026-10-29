@@ -333,6 +333,9 @@ struct ReplayBinLog {
         level = static_cast<uint16_t>(std::min(value[ms], 65535.0f));
         return true;
     }
+
+    uint32_t bins = 0;  // the band's bin count (BinShape's wrap rule, review 12.0 L3)
+    uint32_t bandBins() const { return bins; }
 };
 
 // The plan's shape settings (the BinShape module's), or the defaults when the plan has none.
@@ -481,6 +484,7 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     band.setSampleRateHz(cap.sampleRateHz);
     band.setTargetFrequencyHz(opt.targetHz);
     band.setBand(opt.bandLow, opt.bandHigh);
+    track.bins = static_cast<uint32_t>(band.bandBinCount());
     // Same band-update phase as the board (RAW band_lead=, step 7b). The pad
     // zeros sit in the 64-sample window for its first pass, so --compare
     // skips the first window of samples.

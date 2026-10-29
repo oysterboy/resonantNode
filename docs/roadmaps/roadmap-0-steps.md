@@ -48,9 +48,11 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         12.0 done 2026-10-29: four reviews, docs/research/code-review-2026-10-29.md (1 high, 9 medium, ~25 low). Owner:
         OTA gets a shared token, SEQ FREQBAND goes, a new image gets a reboot deadline before it confirms. Batches:
         OTA / WiFi, limits, Analyzer, low and dead code.
-        12.0.1 batch 1 (OTA / WiFi) 2026-10-29: H1, M1-M4, L-OTA1-4 fixed; OTA needs token= (OTA_TOKEN in the ignored
+        12.0.1 batch 1 (OTA / WiFi, af49504) 2026-10-29: H1, M1-M4, L-OTA1-4 fixed; OTA needs token= (OTA_TOKEN in the ignored
         secrets header), a new image reboots if unconfirmed at 60 s; host gate green, compile only: board check open
         (an OTA round trip with and without the token, a failed OTA while a Node sounds).
+        12.0.1 batch 2 (limits) 2026-10-29: M7, M8, L1, L3, L4, L5, L14, L15, L17 fixed; T2h byte-identical (the
+        L5 / L3 edges do not occur in the corpus); host tests for the 8-bin wrap, the clamp, plan_check, hop lists.
    12.1 Sanity check bench test (content TBD with the owner; candidates: tools/bench/nodecheck.py, analyzerab.py,
         one soakcycle room check, an OTA round trip). Remote.
    12.2 [DONE 2026-10-29, c0b002c, checked on E4 by OTA] SELFTEST's own_chirp_suppressed on a silent Node: SKIP, not FAIL (it only requests chirps with outputs on;

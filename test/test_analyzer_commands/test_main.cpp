@@ -97,6 +97,15 @@ void test_hop_list() {
     TEST_ASSERT_FALSE(analyzer_commands::validHopList("3000, 3250", 40));
     TEST_ASSERT_TRUE(analyzer_commands::validHopList("123456789", 10));  // 9 + terminator fits 10
     TEST_ASSERT_FALSE(analyzer_commands::validHopList("1234567890", 10));
+    // Each entry a playable tone (review 12.0 L14).
+    TEST_ASSERT_TRUE(analyzer_commands::hopListInRange("2950,3200,3450", 7900));
+    TEST_ASSERT_TRUE(analyzer_commands::hopListInRange("7900", 7900));
+    TEST_ASSERT_FALSE(analyzer_commands::hopListInRange("7901", 7900));
+    TEST_ASSERT_FALSE(analyzer_commands::hopListInRange("3000,0", 7900));
+    TEST_ASSERT_FALSE(analyzer_commands::hopListInRange("3000,,3200", 7900));
+    TEST_ASSERT_FALSE(analyzer_commands::hopListInRange("3000,", 7900));
+    TEST_ASSERT_FALSE(analyzer_commands::hopListInRange("", 7900));
+    TEST_ASSERT_FALSE(analyzer_commands::hopListInRange("99999999999999999999", 7900));
 }
 
 int main(int, char**) {

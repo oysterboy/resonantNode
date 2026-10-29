@@ -26,6 +26,11 @@ Soft (some occurrences are judged on a window that has not arrived):
     100, so occurrences of 85-89 ms are rejected as MissingSupport whatever the
     signal (audit 3.1). Since DET-017 (2026-10-23) the shipped values pass
     (92 + 10 >= 100), and the runtime also waits for an incomplete window.
+  - shape level (review 12.0 L4): the shape rule's level is the scalar release
+    threshold (DetectionRuntime), compared with the bin track's
+    FrequencyScore16 levels (0..32767). It means something only when the
+    detector watches FrequencyTarget and the threshold is in that range; a
+    threshold above 32767 silently turns the shape rule off.
 */
 namespace detection {
 
@@ -38,9 +43,10 @@ struct InspectionPlanCheck {
     bool historyFits = true;
     bool shapeFits = true;  // DET-015: the BinShape window fits BinTrack
     bool windowCompleteAtRelease = true;
+    bool shapeLevelInDomain = true;  // the shape level is a FrequencyTarget value in 0..32767 (L4)
 
     bool hardOk() const { return historyFits && shapeFits; }
-    bool softOk() const { return windowCompleteAtRelease; }
+    bool softOk() const { return windowCompleteAtRelease && shapeLevelInDomain; }
 };
 
 inline InspectionPlanCheck checkInspectionPlan(const ScalarTransientConfig& scalar, const InspectionPlan& plan,
@@ -60,6 +66,10 @@ inline InspectionPlanCheck checkInspectionPlan(const ScalarTransientConfig& scal
                 module.shape.preMs + scalar.maxTransientDurationMs + scalar.releaseDebounceMs + module.shape.tailMs + 1;
             if (shapeNeeded > BinTrack::kMs) {
                 c.shapeFits = false;
+            }
+            if (scalar.observedStream != FeatureStreamId::FrequencyTarget ||
+                scalar.onsetReleaseThreshold > static_cast<float>(audio::kStrength16Max)) {
+                c.shapeLevelInDomain = false;
             }
             continue;
         }

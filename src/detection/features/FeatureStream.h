@@ -63,6 +63,8 @@ struct FrequencyBandMeasurementPacket {
     // Band mode: the centre of the strongest band bin at the last update, 0 outside band mode (DET-015, the
     // ShapeInspector's bin track).
     unsigned long peakBinHz = 0;
+    // Band mode: the band's bin count (0 outside band mode); BinShape's wrap rule (review 12.0 L3).
+    unsigned long bandBins = 0;
 };
 
 } // namespace detection

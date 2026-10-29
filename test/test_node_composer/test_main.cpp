@@ -98,6 +98,11 @@ void test_idle_call_without_hop() {
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::IdleCall), static_cast<int>(r.kind));
     TEST_ASSERT_EQUAL_UINT32(0, r.hopSteps);  // the call is the plain chirp
     TEST_ASSERT_EQUAL_UINT32(300, r.announceHz);
+    // Below what the output plays (OutputLimits.minHz): raised to it, not rejected (review 12.0 M8).
+    c.values().idleAnnounceHz = 50;
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false);
+    TEST_ASSERT_EQUAL_UINT32(OutputLimits().minHz, r.announceHz);
+    TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
     // No announcement tone: the plain idle pattern.
     c.values().idleAnnounceHz = 0;
     r = c.compose(shippedGrid(), ChirpPattern::Idle, false);
@@ -130,6 +135,10 @@ void test_bins_from_a_moved_band() {
     g = NodeSignalComposer::gridOf(band);
     TEST_ASSERT_EQUAL_UINT32(FreqBandStream::kMaxBandBins, g.bins);
     TEST_ASSERT_EQUAL_UINT32(band.bandHighHz(), g.lowHz + (g.bins - 1) * g.spacingHz);
+    // What NetworkBand compares with when it re-applies the band (review 12.0 M7): the clamped edge, so an
+    // unchanged wide band matches and the bank is not rebuilt every loop.
+    TEST_ASSERT_EQUAL_UINT32(band.bandHighHz(), band.clampedBandHighHz(1000, 6000));
+    TEST_ASSERT_EQUAL_UINT32(2700, band.clampedBandHighHz(2200, 2700));
 
     // Single-target mode: no bins, no train.
     band.setBand(0, 0);

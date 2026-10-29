@@ -11,6 +11,7 @@
 
 #include "tools/AnalyzerEmitterControl.h"
 #include "../../app/EmitterLimits.h"
+#include "../../app/SerialLine.h"
 
 using text_parse::equalsIgnoreCase;
 using text_parse::startsWithIgnoreCase;
@@ -504,18 +505,34 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
     if (!seen.totalTrials && strchr(token, '=') == nullptr && strspn(token, "0123456789") == strlen(token)) {
         text_parse::parseUnsigned(token, request.totalTrials);  // digits only, checked above
         seen.totalTrials = true;
+        // 0 ran one trial and left a sticky tries=0 (review 12.0 L15): refused as SEQ TRIES 0 is.
+        if (request.totalTrials == 0) {
+            serialOut().println("ERR SEQ tries out of range use N>=1");
+            return false;
+        }
     } else if (startsWithIgnoreCase(token, "tries=")) {
         if (!parseTokenValue(token, request.totalTrials, kSeqBadValue)) {
             return false;
         }
         seen.totalTrials = true;
+        if (request.totalTrials == 0) {
+            serialOut().println("ERR SEQ tries out of range use N>=1");
+            return false;
+        }
     } else if (startsWithIgnoreCase(token, "period=")) {
         return parseTokenValue(token, request.periodMs, kSeqBadValue);
     } else if (startsWithIgnoreCase(token, "window=")) {
         seen.window = true;
         return parseTokenValue(token, request.windowEndOffsetMs, kSeqBadValue);
     } else if (startsWithIgnoreCase(token, "freq=")) {
-        return parseTokenValue(token, request.toneHz, kSeqBadValue);
+        // A tone the Emitter plays, 1..kMaxToneHz (review 12.0 L14).
+        if (!parseTokenValue(token, request.toneHz, kSeqBadValue)) {
+            return false;
+        }
+        if (request.toneHz == 0 || request.toneHz > runtime::kMaxToneHz) {
+            printBadValue(kSeqBadValue, token);
+            return false;
+        }
     } else if (startsWithIgnoreCase(token, "dur=")) {
         return parseTokenValue(token, request.durationMs, kSeqBadValue);
     } else if (startsWithIgnoreCase(token, "band=")) {
@@ -526,7 +543,8 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
         }
     } else if (startsWithIgnoreCase(token, "hop=")) {
         const char* list = text_parse::tokenValue(token);
-        if (!analyzer_commands::validHopList(list, sizeof(request.pulseHop))) {
+        if (!analyzer_commands::validHopList(list, sizeof(request.pulseHop)) ||
+            !analyzer_commands::hopListInRange(list, runtime::kMaxToneHz)) {
             printBadValue(kSeqBadValue, token);
             return false;
         }
@@ -648,6 +666,14 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
 
 // EMIT <command> to the Emitter. False for a command the Analyzer does not forward.
 bool AnalyzerApp::handleEmitCommand(const char* line) {
+    // The Emitter drops a line longer than its link buffer: refuse it here instead of printing OK (review 12.0 L17).
+    if ((startsWithIgnoreCase(line, "EMIT CHIRP") || startsWithIgnoreCase(line, "EMIT PULSES") ||
+         startsWithIgnoreCase(line, "EMIT MODE") || startsWithIgnoreCase(line, "EMIT SWEEP")) &&
+        strlen(text_parse::rest(line, "EMIT")) > serial_line::kEmitterLineMax) {
+        serialOut().print("ERR EMIT line_too_long max=");
+        serialOut().println(static_cast<unsigned>(serial_line::kEmitterLineMax));
+        return true;
+    }
     if (startsWithIgnoreCase(line, "EMIT CHIRP")) {
         sendClaimedEmitterCommand(line, "CHIRP");
         return true;

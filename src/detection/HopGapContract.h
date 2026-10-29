@@ -59,8 +59,11 @@ inline unsigned long hopTrainMs(const HopTrainShape& shape) {
 inline HopGapCheck checkHopGap(const HopTrainShape& shape, const ScalarTransientConfig& scalar) {
     HopGapCheck c;
     c.trainMs = hopTrainMs(shape);
-    c.durationFits = c.trainMs >= scalar.minTransientDurationMs && c.trainMs <= scalar.maxTransientDurationMs;
-    c.tailFits = c.trainMs + kHopRoomTailMarginMs <= scalar.maxTransientDurationMs;
+    // max duration 0 is no limit, as in the detector (review 12.0 L1).
+    const bool noMax = scalar.maxTransientDurationMs == 0;
+    c.durationFits =
+        c.trainMs >= scalar.minTransientDurationMs && (noMax || c.trainMs <= scalar.maxTransientDurationMs);
+    c.tailFits = noMax || c.trainMs + kHopRoomTailMarginMs <= scalar.maxTransientDurationMs;
     if (scalar.requireCarrierQuality) {
         c.coverageFits = shape.steps * shape.pulseMs >= scalar.minCoverageAboveReleaseMs;
         c.islandFits = shape.pulseMs >= scalar.minLongestIslandMs;

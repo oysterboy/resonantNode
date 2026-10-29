@@ -120,7 +120,8 @@ void IRAM_ATTR ScalarTransientDetector::updateCandidateFacts(uint64_t nowUs, flo
     }
     _candidateStrengthSum += static_cast<double>(strength);
     ++_candidateStrengthCount;
-    if (strength >= _config.onsetReleaseThreshold) {
+    // The same comparison as coverage and islands (strictly above release; review 12.0 L5).
+    if (aboveReleaseThreshold) {
         _candidateMatchedStrengthSum += static_cast<double>(strength);
         ++_candidateMatchedStrengthCount;
     }
@@ -261,8 +262,9 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
         const unsigned long peakDurationUs = static_cast<unsigned long>(releaseObservedUs - _peakStartedUs);
         const unsigned long minTransientDurationUs = _config.minTransientDurationMs * 1000UL;
         const unsigned long maxTransientDurationUs = _config.maxTransientDurationMs * 1000UL;
-        const bool durationAccepted =
-            peakDurationUs >= minTransientDurationUs && peakDurationUs <= maxTransientDurationUs;
+        // max duration 0 means no limit, here as in openPastMax (review 12.0 L1).
+        const bool durationAccepted = peakDurationUs >= minTransientDurationUs &&
+            (_config.maxTransientDurationMs == 0 || peakDurationUs <= maxTransientDurationUs);
         // Duration alone is not enough: weak ambient crossings can still last
         // long enough to look valid, so require a minimum peak strength too.
         const bool strengthAccepted = !_config.requireMinStrength || _peakStrength >= _config.minTransientPeakStrength;

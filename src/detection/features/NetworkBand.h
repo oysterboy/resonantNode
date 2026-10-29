@@ -21,11 +21,13 @@ struct NetworkBand {
     uint32_t lowHz = runtime::kDefaultNetworkBandLowHz;
     uint32_t highHz = runtime::kDefaultNetworkBandHighHz;
 
-    // Into the stream when it differs from what the stream has applied (two compares when unchanged).
+    // Into the stream when it differs from what the stream has applied (a few compares when unchanged). A band
+    // wider than the bank is compared at the edge the stream clamps it to, else it never matched and the bank was
+    // rebuilt every loop (review 12.0 M7).
     void applyTo(FreqBandStream& stream) const {
         const bool bandValid = lowHz != 0 && highHz >= lowHz;
         const unsigned long lo = bandValid ? lowHz : 0UL;
-        const unsigned long hi = bandValid ? highHz : 0UL;
+        const unsigned long hi = bandValid ? stream.clampedBandHighHz(lowHz, highHz) : 0UL;
         if (stream.bandLowHz() == lo && stream.bandHighHz() == hi) {
             return;
         }

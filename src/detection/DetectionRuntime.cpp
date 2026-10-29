@@ -141,6 +141,7 @@ void IRAM_ATTR DetectionRuntime::observeFrame(const AudioSamplePacket& audioSamp
     FeatureExtractor::observeFrequencyMeasurementPacket(frequencyEvidence, nowMs, _featureHistory);
     if (frequencyEvidence.present) {
         _binTrack.note(nowMs, frequencyEvidence.peakBinHz, frequencyEvidence.targetBandValue);
+        _binTrack.setBandBins(static_cast<uint32_t>(frequencyEvidence.bandBins));
     }
 
     bool detectorInputProcessed = false;

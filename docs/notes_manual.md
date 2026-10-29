@@ -234,6 +234,9 @@ SEQ_SUMMARY, and which output is neutral tooling rather than analyzer truth): `d
 Since 11g C3b (2026-10-27) the bare `SEQ_SOURCE` line (a subset of SEQ_SOURCE_CORE) and `SEQ_TIMING`
 (SEQ DIAG on) are gone, and keys that were constant over every committed bench run and read by no tool
 left the lines (the list: `docs/refactors/archive/analyzer-run-trial-split.md`, Progress, C3b).
+Since 13.0 (2026-10-29) SEQ_EXPLAIN carries the inspected occurrence's shape (DET-015): `shape.applicable`,
+`shape.distinct` (bins visited), `shape.up` (steps one bin up), `shape.other`, `shape.runs`, `shape.first_hz`,
+`shape.last_hz`, `shape.class`; a hop train reads 5 / 4 / strong, a plain chirp 1 / 0 / none.
 
 ### Sample dump (detector-input curve tooling)
 

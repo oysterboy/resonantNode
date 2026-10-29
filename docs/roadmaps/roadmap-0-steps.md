@@ -93,6 +93,9 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    docs/research/distance-range.md test 1 (level ladder: hop10 at 0.5 / 0.35 / 0.25 / 0.18 / 0.12 FS, 20 trials) and
    docs/research/room-comb-and-margin.md ("What would settle", 3: hops attenuated by 15 dB, count hop10); host: does
    Strength16 follow the weakest or the mean hop (the 132 sweep captures, sweepbins.py). Remote and PC.
+   13.0 [DONE 2026-10-29, a9b7e99] The Analyzer prints the shape facts: SEQ_EXPLAIN shape.applicable / distinct / up /
+        other / runs / first_hz / last_hz / class (the docs pass found no step carried it). Checked on E2 by OTA: hop10
+        5 bins, 4 up, strong; a 3450 Hz chirp 1 bin, class none, rejected by shape.
    13.1 Speaker or mic: the 3500-4500 Hz hump with the Emitter swapped (room-comb open questions). On site.
    Gate: the margin in dB and in hops at the operating point, in a lab note.
 

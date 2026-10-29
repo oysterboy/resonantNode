@@ -68,6 +68,15 @@ def check(name, ok, detail=""):
     print("%-34s %s  %s" % (name, "PASS" if ok else "FAIL", detail), flush=True)
 
 
+def wait_for(n, start, marker, seconds):
+    """Pump until `marker` appears in n's output after `start`, or `seconds` pass (a SELFTEST's length varies: it
+    waits for quiet and for its own chirps)."""
+    end = time.time() + seconds
+    while time.time() < end and marker not in buf[n][start:]:
+        pump(0.1)
+    return marker in buf[n][start:]
+
+
 def reset(n):
     m = len(buf[n])
     ports[n].rts = True
@@ -178,14 +187,20 @@ else:
     check("NET * PARAM SET round trip", False, "PARAM GET behavior.wait_after_heard_ms answered no value")
 
 # 7. self-tests
-r = cmd(A, "SELFTEST", 25.0)
+mA = len(buf[A])
+ports[A].write(b"SELFTEST\n")
+wait_for(A, mA, "SELFTEST_SUMMARY", 90)
+r = buf[A][mA:]
 checks = re.findall(r"SELFTEST check=(\w+) result=(\w+)", r)
 check("SELFTEST on " + A, bool(checks) and all(v in ("PASS", "SKIP") for _, v in checks), str(checks))
 cmd(B, "PARAM SET output.silent 0", 0.5)
 mA = len(buf[A])
 ports[A].write(b"SELFTEST external wait_ms=25000\n")
-pump(3)
-cmd(B, "SELFTEST chirp n=5", 35.0)
+wait_for(A, mA, "SELFTEST_EXTERNAL waiting", 60)  # the listener must be waiting before the chirps start
+mB = len(buf[B])
+ports[B].write(b"SELFTEST chirp n=5\n")
+wait_for(A, mA, "SELFTEST_SUMMARY", 60)
+wait_for(B, mB, "SELFTEST_CHIRP done", 30)
 ext = re.findall(r"SELFTEST check=external_chirp result=(\w+)", buf[A][mA:])
 check("SELFTEST external (%s hears %s)" % (A, B), ext[:1] == ["PASS"], str(ext))
 cmd(B, "PARAM SET output.silent 1", 0.5)

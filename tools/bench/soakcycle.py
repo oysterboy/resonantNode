@@ -121,7 +121,7 @@ def pump(seconds=0.0):
                 log.write("%.2f %s %s\n" % (time.time() - t0, n, line))
                 if node_sink is not None:
                     node_sink.append((time.time(), n, line))
-                if "BUILD role=" in line:
+                if line.startswith("BUILD role="):  # the boot banner; RB STATUS carries the text too
                     resetup(n, s)
         for line in lines_from("AN", analyzer):
             if analyzer_sink is not None:

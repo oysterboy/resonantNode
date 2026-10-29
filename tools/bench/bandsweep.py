@@ -310,7 +310,7 @@ class Bench:
             for n, s in self.nodes.items():
                 for line in self.lines_from(n, s):
                     self.log.write("%.2f %s %s\n" % (time.time() - self.t0, n, line))
-                    if "BUILD role=" in line:
+                    if line.startswith("BUILD role="):  # the boot banner; RB STATUS carries the text too
                         self.resetup(n, s)
                     if self.counting is not None and line.startswith("RB verdict="):
                         self.counting[n][0 if "valid=1" in line else 1] += 1

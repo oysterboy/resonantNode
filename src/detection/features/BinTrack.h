@@ -27,6 +27,8 @@ Times are 32-bit ms and compared wrap-safe (TimingUtils.h): with plain
 comparisons the track stopped at the 2^32 ms wrap (49.7 days up) and the shape
 rule went silent (critique D1.1, reproduced on the board 2026-10-26). 2^32 is a
 multiple of kMs, so the slots stay continuous across the wrap.
+Owns: the ring of the strongest bin per ms.
+Does not: measure the bins (FreqBandStream) or judge a shape (ShapeInspector).
 */
 class BinTrack {
 public:

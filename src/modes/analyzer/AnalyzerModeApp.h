@@ -30,7 +30,7 @@ Wires audio input, DetectionRuntime, diagnostic probes, emitter control,
 SEQ trials, RAW capture, and reporting.
 
 Analyzer measures DetectionRuntime output against expected events.
- It does not implement detection algorithms, pattern matching, Behavior, or output policy.
+Does not: implement detection algorithms, pattern matching, Behavior or output policy.
 */
 class AnalyzerApp {
 public:

@@ -10,6 +10,8 @@ The Node's ParamStore (PAR-010): one NVS blob per param id in the namespace
 "params", key "p<id>" (NVS keys are at most 15 characters, so the public paths
 cannot be keys; the ids are stable and never reused, app/ParamIds.h). Written
 only by PARAM SAVE (decisions/2026-10-23-param-persistence-save-only.md).
+Owns: the NVS namespace "params" and its key scheme.
+Does not: decide when to write (PARAM SAVE does) or what a param means (ParamRegistry).
 */
 class NvsParamStore : public param::ParamStore {
 public:

@@ -39,6 +39,8 @@ describes its own, `param::describeParams`, app/ParamBindings.h lists where) in 
 print. The PARAM command, the boot load and the profile switch's reset report go through here; what a command
 wrote comes back as the module to apply, and the Node applies it through the owners' setters
 (Node::applyParamModule).
+Owns: the registry, its order and the NVS store.
+Does not: own the params' values (each owner's config struct) or apply them (Node::applyParamModule).
 */
 class NodeParams {
 public:

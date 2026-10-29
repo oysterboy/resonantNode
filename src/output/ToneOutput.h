@@ -7,6 +7,7 @@ ToneOutput
 
 Minimal hardware output interface for tone-capable sound emitters.
 Behavior and ChirpOutput call this interface; implementations own GPIO/PWM/I2S details.
+Does not: decide what or when to play (SoundOutput and ChirpOutput do).
 */
 class ToneOutput {
 public:

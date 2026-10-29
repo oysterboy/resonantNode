@@ -18,6 +18,8 @@ the Node. The blocking hardware checks (mic, amp) need the Node's audio
 source and tone output: `update()` returns `Request::RunHardware`, the Node
 runs them (with `tally()` and `printQuietBoot()`) and hands the results back
 with `hardwareDone()`. Phase sequence: ResonantNodeSelfTest.cpp.
+Owns: SELFTEST's phases, checks and report lines.
+Does not: drive the hardware or reach into the Node; it asks through Request and Chirps.
 */
 class NodeSelfTest {
 public:

@@ -17,6 +17,8 @@ sends at most one per call, kTxSpacingMs apart (sending ~40 frames back to back
 dropped 9-20 audio DMA buffers per node, 2026-10-25). The receive callback runs
 in the WiFi task and only copies the frame into a queue; decoding, running the
 command and replying happen in the Node's loop through poll(). Node build only.
+Owns: the ESP-NOW link, the outbox and the receive queue.
+Does not: run commands (the Node's command path does, through poll()).
 */
 #ifndef NET_ID
 #define NET_ID 0x52

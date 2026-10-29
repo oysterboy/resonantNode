@@ -9,6 +9,8 @@ The Node's status LED (NODE-016): `count` flashes of kLedFlashOnMs, kLedFlashOff
 apart; a new call restarts the sequence. 1 = detection (accepted verdict), 2 = own
 emit. What was left of NodeDebug when its compile-time tracing and the RB debug
 command went (decisions/2026-10-26-drop-rb-debug.md).
+Owns: the LED pin and its flash sequence.
+Does not: decide when to flash (the Node calls flash()).
 */
 class NodeLed {
 public:

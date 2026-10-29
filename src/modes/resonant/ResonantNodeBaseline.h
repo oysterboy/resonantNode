@@ -19,6 +19,8 @@ rebase, Behavior quiesce, detection reset) and prints the RB lines. Two steps
 are requests the Node completes: `WarmupDone` (rebase the audio, then
 `startListening()`) and `QuietHeld` (the machine is in Settle already; the
 Node rebases, then `noteRebaseResult(Done, ...)`).
+Owns: the rebase state machine and its timing.
+Does not: touch audio, Behavior or detection, or print (the Node performs what update() returns).
 */
 class NodeBaseline {
 public:

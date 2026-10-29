@@ -30,6 +30,8 @@ build gets `DetectionDiagnostics`; every other build gets
 Node binary carries none of this (cleanup-analyzer-node-isolation.md) and the
 runtime's bodies carry no #ifdef. The Analyzer reaches the diagnostics
 through DetectionRuntime::diagnostics().
+Owns: the Analyzer's record of the run (counters, pipeline events, report capture, history snapshot).
+Does not: decide anything detection does; the Node build carries none of it.
 */
 
 // --- the Analyzer-facing records -------------------------------------------

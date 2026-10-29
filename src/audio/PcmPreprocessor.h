@@ -19,6 +19,9 @@ namespace audio {
 //                    is scaled by kDcBlockerOutputScale so existing amplitude
 //                    thresholds (tuned on First Difference at 3200 Hz) keep
 //                    their meaning at first
+//
+// Owns: the filter state of one stream.
+// Does not: read samples or choose the mode (runtime::kPcmPreprocessMode).
 class PcmPreprocessor {
 public:
     explicit PcmPreprocessor(runtime::PcmPreprocessMode mode = runtime::kPcmPreprocessMode,

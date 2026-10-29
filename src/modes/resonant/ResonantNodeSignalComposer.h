@@ -24,6 +24,8 @@ recomputes them, so the train is played on the bins the detector listens on. The
 
 Pure: no Arduino calls, no printing, no device; it builds on the host (test/test_node_composer). The output.hop_*
 and output.idle_announce_* params bind to `values()` (param::describeParams below, registered by NodeParams).
+Owns: the output.* hop / idle-call values and the composition of one OutputRequest.
+Does not: play it (SoundOutput), choose when (Behavior) or own the band (detection.band_*).
 */
 class NodeSignalComposer {
 public:

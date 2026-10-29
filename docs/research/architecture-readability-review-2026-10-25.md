@@ -2,7 +2,11 @@
 
 Status:  promoted (2026-10-25); re-read 2026-10-26 at main 4612ce9 (after steps 11b, 11e, 11f), Part D added
 Became:  step 11e, docs/refactors/archive/review-fixes-2026-10-25.md (items 1-9 of the suggested order; #63);
-         step 11f (2026-10-26, #65): the small parts of A9, A12, A13, B7, B12
+         step 11f (2026-10-26, #65): the small parts of A9, A12, A13, B7, B12;
+         step 11g (2026-10-28, #67): Part D, with A8's TrialState split; step 11i (2026-10-29, #71): A7, A9, A10;
+         2026-10-29: the suggested order is done (item 8 by 11g C and 11i); what is left is roadmap-0-steps.md
+         "Review leftovers" (A10's replay binding, namespaces, the contrast Strong 300000) and the findings below
+         still marked open
 Lab:     none; a code reading at main c0b75e9 (after 5ffab4a "Node: split by role"), host `sizeof` probe;
          re-read at 4612ce9 by three parallel readings (detection / audio / host; the mode layer; docs, tests,
          tools), every claim checked against the source before it was written down here
@@ -1000,6 +1004,9 @@ Cheap and safe first, each a compile-only change with `T2h` byte-identical repla
 
 Status 2026-10-26: 1-6 done (step 11e, one commit per item), 7 settled in the spec (11e item 1), 8 open (A7,
 A8). Part D has its own order above; its first item landed in 5fcd3fc, the rest is step 11g (four batches).
+Status 2026-10-29: 8 done (A8 in 11g C, docs/refactors/archive/analyzer-run-trial-split.md; A7 in 11i,
+docs/refactors/archive/node-split.md); Part D done in 11g (2026-10-28) but D1.9's small ones no batch touched and
+D4.3's ESP-only tests.
 
 Process notes: `docs/refactors/` has no active top-level doc while NODE-004 is open (CLAUDE.md says to flag
 this); since 2026-10-22 the step text in `roadmap-0-steps.md` carries the plan, so this is the convention, not

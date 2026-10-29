@@ -30,15 +30,15 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 
 ## Current code state
 
-As of 2026-10-26:
+As of 2026-10-29 (step 12.3; was 2026-10-26):
 
 ```text
 [LANDED] OutputRequest vocabulary (src/output/OutputRequest.h: ChirpPattern, OutputRequest,
           OutputLimits, OutputStatus), composed by the Node, executed by SoundOutput on
           ChirpOutput (OUT-003, step 10f).
 [LANDED] OutputStatus in RB STATUS output.* (OUT-002, step 10f).
-[PARTIAL] Behavior still keeps its own outputBusy mirror next to output.phase (review
-          D2.9, step 11g batch D).
+[LANDED] Behavior's outputBusy is read from its Chirping state, no separate mirror
+          (review D2.9, step 11g batch D, done 2026-10-28; SoundOutput's phase is output.phase).
 [LANDED] Hop train and in-chirp sweep (OUT-005); the Node sounds the hop train.
 [TODO] OutputProfile / ChirpProfile is not landed (OUT-004, deferred).
 [TODO] OutputDispatcher is not landed.
@@ -83,7 +83,7 @@ Output executes request and validates physical limits.
 ### OUT-004 - OutputProfile
 
 Status: DEFERRED
-Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
+Research: docs/research/node-structure.md (proposed Node classes and files; its A7 cut became step 11i, done 2026-10-29; the later seams are still proposals).
 
 ```text
 Add OutputProfile / ChirpProfile only after behavior variations prove needed.
@@ -92,7 +92,8 @@ Connect later to ResonantProgram.
 
 ### OUT-005 - chirp shapes: hopping pulses and in-chirp sweep
 
-Status: in code (step 5b), bench pending. Hop: Emitter `PULSES ... hop=` (2026-10-15, bench-checked),
+Status: DONE 2026-10-21 (step 5b's gate: the Node plays its hop train on every board; the sweep plays on the
+Emitter and is accepted by shape since DET-015, 11b). Was: in code (step 5b), bench pending. Hop: Emitter `PULSES ... hop=` (2026-10-15, bench-checked),
 Node hop train from Behavior's `SignalShape::NetworkSignal` (155211e, compile only). Sweep: `CHIRP sweep=END_HZ`
 on the Emitter and `SEQ start sweep=` (9664032, compile only; `I2sToneOutput::setSweep`, phase-continuous).
 Design rule from the 2026-10-16 battery: hop steps on the 250 Hz band-bank bins, gaps <= 10 ms, 25 ms x 5.
@@ -113,7 +114,8 @@ Source: docs/research/frequency-drift-detection.md (Sequence, step 2).
 
 ### OUT-006 - two-layer signal: aesthetic layer + detection layer
 
-Status: TODO (step 8a)
+Status: TODO (step 8a); 2026-10-29: carried over in roadmap-0-steps.md, after step 19's decision between it and
+BEH-009 part 3
 
 ```text
 Renderer sums two oscillators: an aesthetic layer free in frequency
@@ -133,6 +135,8 @@ Order: roadmap-0-steps.md. OUT-001 folds into NODE-001 (step 6);
 OUT-002/003 done in step 10f (2026-10-23); OUT-004 is deferred (step 11). OUT-005 is step 5b, OUT-006 step 8a. The D-AMP output (a sine ToneOutput
 over I2S) is NODE-009, step 2: hardware, not output architecture.
 Now (2026-10-26): no output step is sequenced; OUT-006 waits on step 8a, OUT-004 on step 11.
+Now (2026-10-29, 12.3): OUT-005 done (5b); OUT-004 and OUT-006 (8a, after step 19's decision) are in
+roadmap-0-steps.md "Carried over".
 ```
 
 ## Spec candidates

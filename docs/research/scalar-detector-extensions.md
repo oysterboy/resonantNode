@@ -1,9 +1,14 @@
 # TonalPulseScalar extensions: real chirps, lower frequencies, drift
 
-Status:  exploring (2026-10-14)
+Status:  promoted (2026-10-29); superseded in part, see Became
 Lab:     bench/sessions/2026-10-13-step5-*, 2026-10-14-step5-110cm-r2,
          2026-10-14-reviewfix-checks-r2
 Became:  roadmap-detection.md DET-011..DET-013, roadmap-0-steps.md step 5a/5b
+         2026-10-29: section 1 became the shipped hop train (25 ms x 5, gap 10; step 5b done 2026-10-21) and
+         DET-011's gap contract; section 2 became DET-012 (the band's lower edge), answered by the 11h sweep (the
+         band stays, decisions/2026-10-28-band-stays-after-the-sweep.md); section 3 became DET-013 (band bank) and
+         DET-015 (shape inspector, step 11b); the parked island count is carried over (roadmap-0-steps.md
+         "min_island_count", with OUT-006 or a lower band)
 
 ## Direction (owner, 2026-10-14)
 
@@ -182,6 +187,8 @@ Rescoped 2026-10-15: below 1 kHz goes to the aesthetic layer (OUT-006); DET-012 
   (Behavior/SoundOutput side); this note only covers detection.
 
 ## Parked idea (2026-10-15): island count as a train criterion
+
+-> carried over (roadmap-0-steps.md, "min_island_count"), 2026-10-29
 
 Not needed for the five-node trial (it runs on the 3,200 Hz band, where speech and music give 0 false answers); it serves
 lower chirp frequencies (DET-012, aesthetic layer, step 8a). The Scalar detector already counts islands per event

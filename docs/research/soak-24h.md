@@ -11,6 +11,10 @@ Result:  2026-10-12, accepted short at 7.3 h (owner):
          2026-10-12
 Next:    step 11c (roadmap-0-steps.md, 2026-10-26): repeated unattended runs with
          a room check each cycle, tools/bench/soakcycle.py
+Done:    2026-10-27, step 11c accepted at 23.45 h (bench:sessions/2026-10-26-
+         soak24-shape-b: 70 room checks, hop 710/710, 0 noise-started answers,
+         0 resets); a 27 h soak on 40c92e3 followed (2026-10-28-soak96-40c92e3,
+         stopped for 11d, clean). Day-to-day room shifts recorded, not attributed
 ```
 
 ## Question

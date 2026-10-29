@@ -32,16 +32,19 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 ## Current code state
 
 ```text
-As of 2026-10-26:
-[PARTIAL] Node still owns serial command dispatch (ResonantNodeCommands.cpp); the
-          Node is split by role into five files (step 10 item 9), next cut with A7.
+As of 2026-10-29 (step 12.3; was 2026-10-26):
+[LANDED] Node split (step 11i, NODE-004): parts that own their state (NodeCounters,
+          NodeBaseline, NetGateway, NodeSelfTest, NodeSignalComposer, NodeParams) and one
+          command table; a CommandRouter that serial, NET and VEKTOR feed is NODE-005.
+[LANDED] OTA firmware (step 11d): OTA url= token=, NET * OTA, rollback until a new image
+         confirms at 20 s, reboot deadline at 60 s (12.0.1).
 [LANDED] ParamRegistry (lib/ParamRegistry/) with PARAM LIST / GET / SET / DUMP and
          SAVE / LOAD / RESET to NVS; RB PARAM / RB BEHAV removed (step 10).
 [LANDED] NET <target|*> <command> over ESP-NOW (PAR-013, step 11a, src/net/).
 [LANDED] Host test envs and replay harness (NODE-006): native-replay(-diag),
          native-test, native-test-behavior, native-test-diag (platformio.ini).
 [LANDED] CI (NODE-007): every env, the host suites and the Null-vs-diag replay
-         diff on every push; include direction strict.
+         diff on every push; include direction strict; clang-format check (step 11j).
 [LANDED] OutputStatus / OutputRequest (OUT-002/003, step 10f).
 [TODO] ConfigStore is not landed.
 [TODO] CommandRouter is not landed.
@@ -94,9 +97,9 @@ Upload the same firmware to all test nodes.
 
 ### NODE-004 - node glue cleanup
 
-Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
+Research: docs/research/node-structure.md (proposed Node classes and files; its A7 cut became step 11i, done 2026-10-29; the later seams are still proposals).
 
-Status: PARTIAL 2026-10-22 (step 10 item 9): RB STATUS and the status prints are in ResonantNodeStatus.cpp;
+Status: DONE 2026-10-29 (step 11i, last paragraph). Was PARTIAL 2026-10-22 (step 10 item 9): RB STATUS and the status prints are in ResonantNodeStatus.cpp;
 the emission logic is out of update() (startEmission / updateEmissions); SelfTest uses the one detection reset.
 Open: update() and handleSerialLine() are still long; split further when an owner module has a home for it.
 2026-10-25 (owner: split by role): ResonantNodeApp.cpp is the core (boot, loop, pipeline, baseline; 1,881 -> 956
@@ -106,6 +109,10 @@ separate classes: a CommandRouter that serial, NET and VEKTOR feed is NODE-005, 
 Review 2026-10-25 (docs/research/architecture-readability-review-2026-10-25.md A7): the next cut is state per
 file (NodeParams owning the registry, NetGateway owning reply / join state, the baseline machine as a struct);
 not in step 11e, which only shares helpers (LineReader, ParamCommands) with the Node.
+DONE 2026-10-29 (step 11i, issue #71 closed; docs/refactors/archive/node-split.md): N1-N8 gave the Node parts that
+own their state (NodeCounters, NodeBaseline, NetGateway, NodeSelfTest, NodeSignalComposer, NodeParams), a
+BehaviorStatus snapshot and one command table; bench gate on f2330b1 (bench/sessions/2026-10-29-step11i-nodecheck).
+Still open: the replay binds the medium limits itself (A10; "Review leftovers"); CommandRouter stays NODE-005.
 
 ```text
 Move incidental command parsing and status formatting out of Node only when
@@ -116,7 +123,7 @@ Do not build a registry before the ownership map is clear.
 ### NODE-005 - later infrastructure
 
 Status: DEFERRED
-Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
+Research: docs/research/node-structure.md (proposed Node classes and files; its A7 cut became step 11i, done 2026-10-29; the later seams are still proposals).
 
 ```text
 PARAM SAVE / LOAD / verify (LIST / GET / SET landed, see roadmap-param-config.md).
@@ -282,7 +289,8 @@ Gate: on a D-AMP node, 1 flash on an external chirp, 2 when it emits.
 
 ### NODE-012 - acoustic test suite: spaces x speaker types x distance
 
-Status: TODO (noted 2026-10-09, owner request); sequenced 2026-10-17 through step 5h of roadmap-0-steps.md (#47): the step 6 room is the first cell, then the installation site at the trial spacing, a dry cell and a height-offset cell, each with RAW captures into the corpus.
+Status: TODO (noted 2026-10-09, owner request); sequenced 2026-10-17 through step 5h of roadmap-0-steps.md (#47): the step 6 room is the first cell, then the installation site at the trial spacing, a dry cell and a height-offset cell, each with RAW captures into the corpus. 2026-10-29: 5h was not run as a step; its open cells and this item's next
+cell are step 15 (the tryout room, 5 x 6 m, 1 m spacing; issue #77).
 
 ```text
 Research: docs/research/acoustic-test-suite.md (test design, matrix).
@@ -347,9 +355,12 @@ Gate: passes on every board going into NODE-011, logged on bench.
 
 ### NODE-017 - detection goes deaf 71.6 min after boot (32-bit micros wrap)
 
-Status: DONE 2026-10-12 (step 3c, issue #30 closed). Offset wrap on hardware: Analyzer and Node (bench 85dd0a9); real uptime past 4,295 s: Analyzer in the 2026-10-12 soak (10/10 in every block after the wrap, to ~26,000 s). Node real uptime not run (offset test only).
+Status: DONE 2026-10-12 (step 3c, issue #30 closed). Offset wrap on hardware: Analyzer and Node (bench 85dd0a9); real uptime past 4,295 s: Analyzer in the 2026-10-12 soak (10/10 in every block after the wrap, to ~26,000 s). Node real uptime: done since, see the next lines (was: not run, offset test only).
 Real-uptime check done 2026-10-23: five Nodes ran 9.6 h (eight 71.6 min micros wraps) with no reset, no
 deaf node and no audio loss (bench/sessions/2026-10-22-step10c-overnight).
+Longer since (2026-10-29): 24.00 h (10c block 2, bench/sessions/2026-10-23-installation-run), 23.45 h in the 11c
+soak (bench/sessions/2026-10-26-soak24-shape-b), 27 h on 40c92e3 (bench/sessions/2026-10-28-soak96-40c92e3, stopped
+for 11d): no resets, no deaf node.
 Pass doc: docs/refactors/archive/micros-wrap.md (audit, design, wraptest envs, bench plan).
 2026-10-11: fix written, compile-verified only: one 64-bit time base
 (src/app/TimeBase.h) for the sample clock and every millis()/micros() read,
@@ -491,6 +502,8 @@ next loop-timing pass.
 Steps 2-10 are done. Order (2026-10-27, owner): 11c unattended bench runs (running),
 then 11h the frequency sweep, then 11g batch D (the Node: boot baseline, RB debug
 dropped, with A7's next NODE-004 cut), then 11d OTA firmware.
+Now (2026-10-29, 12.3): steps 11a-11j are done (NODE-004 by 11i; OTA firmware 11d); the order is
+roadmap-0-steps.md from step 12; NODE-012's next cell is step 15; NODE-005 and NODE-019 are carried over.
 ```
 
 ## Spec candidates

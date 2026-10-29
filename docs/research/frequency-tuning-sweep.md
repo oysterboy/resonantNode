@@ -1,9 +1,12 @@
 # Frequency tuning sweep: where in the spectrum does the network signal work, and what does noise do there
 
 ```text
-Status:  exploring (2026-10-27)
+Status:  promoted (2026-10-29): done, answered by docs/lab/experiments/E004_band_sweep.md and
+         docs/decisions/2026-10-28-band-stays-after-the-sweep.md (step 11h, closed 2026-10-28)
 Became:  step 11h (owner 2026-10-27; roadmap-0-steps.md), after 11c and before 11g and 11d; first queued
-         as step 12 the same morning
+         as step 12 the same morning. 2026-10-29: the band question goes on as margin (room-comb-and-margin.md,
+         step 13) and as BEH-009's wider band (decisions/2026-10-29-wider-band-base-bin-per-node.md); the open
+         questions below were not answered by the sweep
 Lab:     bench/sessions/2026-10-27-step11h-sweep24 and E004 (the sweep, 2026-10-28); 2026-10-26-soak24-shape-b;
          E002 (shape over the corpus)
 Related: room-comb-and-margin.md (2026-10-29: the sweep re-read per round and per bin; the weak zone is a

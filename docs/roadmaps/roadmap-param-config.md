@@ -134,14 +134,16 @@ PARAM DUMP
 
 ## Current code state
 
-As of 2026-10-26 (step 11e):
+As of 2026-10-29 (step 12.3; was 2026-10-26, step 11e):
 
 ```text
 [LANDED] Bound Field ParamRegistry in lib/ParamRegistry/ (in-repo library, PAR-016;
          includes nothing from src/, CI checks it).
 [LANDED] The Node registers detection.* (scalar thresholds, band, inspector medium
-         limits), behavior.*, output.*, node.radio_enabled (src/modes/resonant/
-         ResonantNodeParams.cpp, src/app/ParamBindings.h); PARAM DUMP lists them.
+         limits, the shape_* knobs since step 11g B2), behavior.*, output.*,
+         node.radio_enabled; each config describes its own params, NodeParams owns the
+         registry and the order (step 11i N7; src/modes/resonant/ResonantNodeParams.cpp,
+         src/app/ParamBindings.h); PARAM DUMP lists them.
 [LANDED] Serial PARAM LIST / GET / SET / DUMP with range checks; live SET applies its
          module in place (Node::applyParamModule). One command handler for both
          boards: src/app/ParamCommands.
@@ -472,7 +474,8 @@ Without visibility, live tuning will create hidden drift between nodes.
 
 Status: DONE 2026-10-26 (step 11a): ESP-NOW transport through the serial command path, on all five boards; 12 h
 with the radio on at every pass mark (decisions/2026-10-25-remote-params-espnow.md). Interim: VEKTOR replaces it
-(decisions/2026-10-25-vektor-replaces-net.md). The original note:
+(decisions/2026-10-25-vektor-replaces-net.md). Firmware OTA landed separately, as the note asks: step 11d
+(2026-10-29, decisions/2026-10-28-ota-firmware-pull-over-http.md; a shared token since 12.0.1). The original note:
 
 ```text
 Add remote transports only after Serial and persistence are stable.
@@ -489,7 +492,7 @@ Keep these separate.
 ### PAR-014 - Config stays separate
 
 Status: DEFERRED
-Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
+Research: docs/research/node-structure.md (proposed Node classes and files; its A7 cut became step 11i, done 2026-10-29; the later seams are still proposals).
 
 ```text
 Do not merge Config and Params too early.
@@ -586,6 +589,8 @@ of it.
 Order: roadmap-0-steps.md. Done: PAR-015 (step 10), PAR-010 / PAR-011 (10d),
 PAR-013 (11a), PAR-003 (11e). Next on the steps file: the nine shape knobs as
 registered params (review D2.7, step 11g batch B2). The rest waits in step 11.
+Now (2026-10-29, 12.3): D2.7 done (8 detection.shape_* params, 11g B2); PAR-008, PAR-009, PAR-014, PAR-017
+are in roadmap-0-steps.md "Carried over".
 ```
 
 (2026-10-26: SAVE / LOAD / RESET and the ESP-NOW transport below "Non-goals now"

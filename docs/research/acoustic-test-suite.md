@@ -4,7 +4,8 @@
 Status:  promoted (2026-10-09)
 Became:  NODE-012 (docs/roadmaps/roadmap-node.md, 2026-10-09); sequenced
          2026-10-17 as the bench cells of step 5h (roadmap-0-steps.md, #47):
-         installation site, dry cell, height-offset cell, after step 6
+         installation site, dry cell, height-offset cell, after step 6;
+         2026-10-29: 5h's open cells and NODE-012's next cell are step 15 (the tryout room, 5 x 6 m, 1 m spacing)
 Lab:     docs/lab/experiments/E001_spatialdistance.md (phases 1-2 behind
          it; phase 3 results go there)
 ```
@@ -63,6 +64,11 @@ Output per space x speaker: the longest distance with reliable pickup
 (e.g. >= 45/50 T3), the self-echo tail, the floor.
 
 ## Still open (not promoted)
+
+-> answered or covered 2026-10-29: the room and spacing are the tryout room (5 x 6 m, 1 m spacing; step 15); the
+frequency sweep ran as step 11h (docs/lab/experiments/E004_band_sweep.md); the production profile is decided
+(DET-007; the Node hears the hop train only, decisions/2026-10-23-node-hears-the-hop-train-only.md), so a cell runs
+the hop train. Other speakers are not named yet.
 
 - Which rooms and speakers are actually available (owner).
 - Installation spacing for the field trial -> the top rung (owner).

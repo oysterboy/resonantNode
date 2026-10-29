@@ -1,9 +1,15 @@
 # FreeRTOS tasks: where they help in this firmware, and where they don't
 
 ```text
-Status:  exploring (2026-10-10)
+Status:  promoted (2026-10-29); candidate 2 conditional, carried over
 Became:  ANA-004 fix direction: Analyzer report task (roadmap-detection.md,
-         2026-10-10)
+         2026-10-10); ANA-004 closed 2026-10-22 (step 7a) without the task:
+         whole-line serial output and the per-sample path in IRAM, 0 drops
+         on detail + diagnostics trials (decisions/2026-10-22-serial-lines-
+         and-iram-hot-path.md). Candidate 3: the radio (11a, ESP-NOW) keeps
+         the rule, its receive callback feeds a queue the loop drains.
+         Candidate 2: roadmap-0-steps.md "Carried over" (FreeRTOS audio
+         task), only if the loop budget runs out (2026-10-29)
 Lab:     docs/lab/notes_lab.md 2026-10-09 (D-AMP bring-up);
          bench:sessions/2026-10-09-issue20-damp-110cm-b (g_drops_*: drops
          only with diagnostics + mode=detail on detected trials)
@@ -51,6 +57,7 @@ FreeRTOS task); step 2 added the first task of our own.
 ## Candidate 1: Analyzer report task
 
 -> promoted to ANA-004 (roadmap-detection.md), 2026-10-10
+-> ANA-004 done 2026-10-22 (step 7a) by whole-line output and the IRAM hot path; no report task was needed
 
 Today a detected trial's report (~6.9 KB with diagnostics + mode=detail)
 is formatted and printed inside the loop at trial end, and the driver
@@ -84,6 +91,8 @@ the cost but keeps it on the audio core); formatting on the PC from a
 compact record stream (also needs the record; could follow the task).
 
 ## Candidate 2: audio path as its own task (later, conditional)
+
+-> carried over (roadmap-0-steps.md, "FreeRTOS audio task": BEH-009's bins, VEKTOR's radio), 2026-10-29
 
 A high-priority task on core 1 reads I2S, runs feature streams and the
 detector, and pushes detected occurrences into a queue; the loop takes

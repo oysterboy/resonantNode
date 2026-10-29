@@ -2,7 +2,9 @@
 
 ```text
 Status:  promoted (2026-10-28)
-Became:  step 11j (owner 2026-10-28: line limit 120, go now; issue #73)
+Became:  step 11j (owner 2026-10-28: line limit 120, go now; issue #73);
+         done 2026-10-28: items 1-6 of section 3 landed (c907048..51d88d6, the
+         "->" lines there), clang-format check in CI; 11j closed, issue #73 closed
 Lab:     none; a code reading at main 2def60f (after the 11i N1-N5 Node
          splits), from a cloud container: grep / awk counts over src/ and
          lib/, no build and no hardware. Every file:line below was read

@@ -1,8 +1,12 @@
 # TonalPulseScalar – Zielbild und Implementationsplan
 
 ```text
-Status:  promoted, partly (2026-10-09: moved from docs/roadmaps/
-         DET_refactor_roadmap, last edited there 2026-09-21)
+Status:  superseded (2026-10-29); was promoted, partly (2026-10-09: moved from
+         docs/roadmaps/DET_refactor_roadmap, last edited there 2026-09-21).
+         Piezo-era target: the shipped profile replaced it (contrast, amp and
+         shape on the band bank, DET-013 / DET-015, makeTonalPulseScalarProfile()
+         in DetectionProfile.h; PatternMatcher is makeVerdict() since step 8).
+         Read as history, not as a plan
 Became:  partly landed in the TonalPulseScalar profile and the detection
          cleanup (DET-008 -> docs/refactors/archive/cleanup-0-plan.md); which of
          passes 1-8 below landed has not been reviewed section by section

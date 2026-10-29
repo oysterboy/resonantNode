@@ -31,7 +31,7 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 
 ## Current code state
 
-As of 2026-10-26:
+As of 2026-10-29 (step 12.3; was 2026-10-26):
 
 ```text
 [LANDED] Behavior decides; the Node composes an OutputRequest and SoundOutput executes
@@ -39,8 +39,9 @@ As of 2026-10-26:
 [LANDED] The 13 behavior.* params on ParamRegistry, persistent with PARAM SAVE (steps
           10 / 10d); RB BEHAV removed. Contract and session-header rule:
           decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md.
-[PARTIAL] OutputStatus: the Node forwards the output's span and finish time; Behavior
-          keeps its own busy mirror next to output.phase (review D2.9, step 11g batch D).
+[LANDED] OutputStatus: the Node forwards the output's span and finish time; Behavior's
+          busy flag is read from its Chirping state (review D2.9, step 11g batch D, done
+          2026-10-28). Behavior's status is one BehaviorStatus snapshot (step 11i N6).
 [TODO] BehaviorHost is not landed.
 [TODO] BehaviorInput is not landed.
 [TODO] BehaviorRuntime is not landed.
@@ -79,7 +80,7 @@ profile and a session's values are in its log header
 ### BEH-003 - behavior input extraction
 
 Status: DEFERRED
-Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
+Research: docs/research/node-structure.md (proposed Node classes and files; its A7 cut became step 11i, done 2026-10-29; the later seams are still proposals).
 
 ```text
 Introduce BehaviorInput / BehaviorContext.
@@ -90,7 +91,7 @@ Preserve current behavior decisions exactly.
 ### BEH-004 - later behavior architecture
 
 Status: DEFERRED
-Research: docs/research/node-structure.md (proposed Node classes and files; exploring, not promoted).
+Research: docs/research/node-structure.md (proposed Node classes and files; its A7 cut became step 11i, done 2026-10-29; the later seams are still proposals).
 
 ```text
 BehaviorDecision object.
@@ -103,7 +104,9 @@ OutputRequest / BehaviorAction.
 
 ### BEH-005 - per-node signal variation
 
-Status: in code (step 5b, 155211e), Node battery pending. Behavior reports `SignalShape` (NetworkSignal for a
+Status: DONE 2026-10-21 (step 5b's gate: per-node rotation on every board; five distinct rotations from the
+roster, step 5g; BEH-009 moves the start to a base bin per Node, step 17). Was: in code (step 5b, 155211e),
+Node battery pending. Behavior reports `SignalShape` (NetworkSignal for a
 heard-pattern response, Chirp for idle/self-test); the Node plays the hop train over the band bins starting
 on `output.hop_rotation`, from the MAC at boot. Shape and order are static per node; variation over time is BEH-006.
 
@@ -116,7 +119,8 @@ signals that differ from their own.
 
 ### BEH-006 - signal variation over time
 
-Status: TODO (step 8a; the "behavior modulation / intended drift" line of BEH-004)
+Status: TODO (step 8a; the "behavior modulation / intended drift" line of BEH-004). 2026-10-29: 8a is carried over
+(roadmap-0-steps.md, after step 19's decision); BEH-009's glide (step 17) is the first variation over time.
 
 ```text
 Behavior varies centre, span, shape, pulse count and the aesthetic
@@ -125,7 +129,7 @@ layer across reactions (myspec 6.2). Detection layer stays in the band.
 
 ### BEH-007 - respond to signal shape
 
-Status: DEFERRED (after DET-015)
+Status: DEFERRED (after DET-015; DET-015 done 2026-10-26, step 11b; carried over in roadmap-0-steps.md, 2026-10-29)
 
 ```text
 Behavior reads shape facts (steady / sweep / hop) from the verdict and
@@ -189,6 +193,8 @@ busy mirror (D2.9) goes with step 11g batch D.
 2026-10-29: BEH-008 (the level automaton) is decided and is the first candidate for step 12 at the
 cut-over; BEH-009 (the base frequency per node: the band widens to 8 bins, a base bin per node, then the
 range experiments) is decided after it. Both move the field baseline and get their own field sessions.
+Now (2026-10-29, 12.3): D2.9 done (11g D); BEH-008 is step 16, BEH-009 parts 1-2 step 17, part 3 step 19;
+BEH-003 / BEH-004 / BEH-007 are in roadmap-0-steps.md "Carried over".
 ```
 
 ## Spec candidates

@@ -49,34 +49,43 @@ A note whose ideas were all promoted or abandoned gets `promoted` or
 
 ```text
 acoustic-test-suite.md         rooms x speakers x distance test design
-                               (promoted: NODE-012; observations in lab E001)
+                               (promoted: NODE-012; observations in lab E001;
+                               its open points answered or in step 15, 2026-10-29)
 distance-range.md              how far a node hears another: what the bench
                                data says (a level bracket, no distance law),
                                the urgent tests for the 5 x 6 m / 1 m tryout
 soak-24h.md                    24 h unattended soak: room vs signal
-                               (promoted: NODE-013 / step 3a, on D-AMP; the
-                               repeated runs are step 11c, tools/bench/soakcycle.py)
+                               (promoted: NODE-013 / step 3a, on D-AMP; done:
+                               step 11c accepted at 23.45 h, 2026-10-27)
 freertos-tasks.md              where FreeRTOS tasks help (report task,
                                audio task later, wireless); rules
-                               (promoted: report task -> ANA-004)
+                               (promoted: ANA-004, closed without the task;
+                               the audio task carried over, 2026-10-29)
 scalar-detector-extensions.md  TonalPulseScalar extensions: real chirps,
                                lower frequencies, drift (promoted: DET-011..013,
-                               steps 5a / 5b)
+                               steps 5a / 5b; superseded by the hop train,
+                               DET-013, DET-015; min_island_count carried over)
 frequency-drift-detection.md   drift: Goertzel bank vs sliding DFT vs FFT
                                vs band-pass/dechirp; cost (promoted:
                                decisions/2026-10-15-signal-variation-inside-a-
-                               shared-band.md, DET-013..015, OUT-005/006)
+                               shared-band.md, DET-013..015, OUT-005/006; the
+                               bank built, DET-014 carried over)
 code-review-2026-10-29.md      step 12.0's review: 1 high, 9 medium, ~25 low
                                (promoted: 12.0.1)
-frequency-tuning-sweep.md      the network band swept from 1000 Hz: hits vs
-                               noise acceptance per position (promoted: step 11h)
+frequency-tuning-sweep.md      the network band swept over 500-5000 Hz: hits vs
+                               noise acceptance per position (promoted: step 11h;
+                               done: E004, decisions/2026-10-28-band-stays-after-
+                               the-sweep.md)
 room-comb-and-margin.md        the sweep re-read per round and per bin: a reflection
                                comb that drifts and jumped once, not a weak zone; the
                                band question is margin per dipped hop (2026-10-29)
 tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
-                               (German; partly landed, not reviewed)
+                               (German; piezo-era; superseded by the shipped
+                               profile, 2026-10-29)
 unproven-assumptions-audit.md  where code and roadmap rest on unmeasured
                                assumptions (2026-10-16 audit); check order
+                               (promoted: every item done, carried or
+                               superseded, 2026-10-29)
 platform-arduino-vs-esp-idf.md stay on Arduino 2.0.17 or move (Arduino 3.x,
                                Arduino as IDF component, pure IDF); decide
                                after step 14
@@ -88,7 +97,8 @@ vektor-lessons-from-11a.md     what the 11a radio taught VEKTOR (real-time
 architecture-readability-review-2026-10-25.md
                                spec vs code boundaries, readability and
                                maintainability findings at c0b75e9, ranked,
-                               with a suggested order
+                               with a suggested order (promoted: steps 11e,
+                               11f, 11g, 11i, done; leftovers carried over)
 node-structure.md              Node classes and files against the spec and the
                                later roadmap: the A7 cut (step 11g D), then where
                                CommandRouter, BehaviorInput, OutputProfile /
@@ -105,4 +115,5 @@ code-standards-read-2026-10-28.md
                                list (readability, KISS, DRY, YAGNI, naming,
                                formatting, comments): what holds, what slips,
                                measured; cites the 2026-10-25 review's items
+                               (promoted: step 11j, done 2026-10-28)
 ```

@@ -31,7 +31,7 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 
 ## Current code state
 
-As of 2026-10-26:
+As of 2026-10-29 (step 12.3; was 2026-10-26):
 
 ```text
 [REMOVED] The old analyzer legacy compatibility (the 2026-05 DetectionDiagnostics) left src.
@@ -41,6 +41,9 @@ As of 2026-10-26:
 [LANDED] Inspection: OccurrenceInspector with two module kinds (MagnitudeFeatureStrength,
           BinShape); the shipped TonalPulseScalar plan runs three modules (contrast, amp,
           shape; shape required since a33f293, step 11b / DET-015).
+[LANDED] Band bank in FreqBandStream, 2950-3950 Hz (DET-013, step 5b; the band stays after
+          the 11h sweep) and BinTrack for the shape inspector (DET-015, step 11b); the
+          shape knobs are detection.shape_* params (step 11g B2).
 [LANDED] One detector family, ScalarTransientDetector (step 7d); family-as-build-flag is
           step 9, not built.
 [LANDED] OccurrenceEvaluator folded into inspection 2026-10-22 (step 8, cleanup-0-plan.md
@@ -64,7 +67,8 @@ but not in Analyzer core report assembly.
 
 ### DET-001 - detector / report consistency
 
-Status: PARTIAL
+Status: CLOSED as moot 2026-10-22 (step 8b, docs/refactors/archive/step8b-detection-followups.md): FrequencyMatch removed in 7d;
+ScalarTransientDetector freezes its report on accept and on reject. Was: PARTIAL.
 
 ```text
 Keep detector and clean-summary truth aligned.
@@ -99,7 +103,7 @@ and whether 5d's RAM argument (production = frequency family) holds.
 
 ### DET-011 - pulse trains read as one signal (Scalar)
 
-Status: IDEA, source ready (step 5b, research note scalar-detector-extensions.md section 1; also carries hop trains and sweeps through room nulls, see DET-013). Emitter `PULSES` landed 2026-10-14, compile not run (PlatformIO registry blocked in the cloud session), bench run pending.
+Status: DONE 2026-10-21 as the hop train (step 5b): 25 ms x 5, gap 10, read as one occurrence and shipped as the network signal (bench-run 2026-10-15/16 and on a second day, 2026-10-21; decisions/2026-10-23-node-hears-the-hop-train-only.md; DET-013, DET-015 carry the band and the shape). Open: the gap contract below, the dry cell in step 15 (audit 2.3). Was (2026-10-14): IDEA, source ready, bench run pending (research note scalar-detector-extensions.md section 1).
 
 10-15 ms pulses with 5-115 ms pauses accepted as one occurrence via maxGapMs / maxTransientDurationMs. Measure the smallest resolvable gap and the false-alarm cost.
 
@@ -109,7 +113,9 @@ Source: Emitter `PULSES n pulse_ms gap_ms [freq=] [ramp=] [trial=]`, from the An
 
 ### DET-012 - lower edge of the network band
 
-Status: RESCOPED 2026-10-15 (was "lower chirp frequencies"; step 5b)
+Status: RESCOPED 2026-10-15 (was "lower chirp frequencies"; step 5b). 2026-10-29: measured with the band stream in
+the 11h sweep (E004): the band stays at 2950-3950 (decisions/2026-10-28-band-stays-after-the-sweep.md); a wider band
+2950-4700 is BEH-009 (step 17).
 
 Below 1 kHz is wanted for aesthetics, not detection: it moves to the aesthetic layer of a two-layer signal (OUT-006, `docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md`). What stays here: where the network band's lower edge can sit. 2026-10-14 single tones: speech/music valid 0/0 at 3200, 4/1 at 2800, 3/4 at 2600, 3/4 at 2000, 1/30 at 1500 Hz (50 windows each, `bench/sessions/2026-10-14-lowfreq-90cm-noise`, `-midfreq-90cm-noise`). So 2500-3000 needs DET-014 first; otherwise the band sits around 3000-3600. Re-measure with the band stream of DET-013, not a single bin.
 
@@ -117,7 +123,9 @@ Depends on step 5a item 2b (DC blocker, landed bfbe0c8).
 
 ### DET-013 - band stream: the detector watches the network band
 
-Status: in progress (step 5b). Done: 1 (14.7 us/sample, 2026-10-15), 3 (bank in `FreqBandStream`, Analyzer
+Status: DONE 2026-10-21 (step 5b's gate met: hop >= 9/10 at 60-110 cm on two days, the 3200 Hz chirp unchanged
+at 90 cm, speech / music OBS on the Node build, no dropped buffers; the Node runs the 5-bin bank since). Not built,
+not sequenced: 2 (single pass) and 5 (Hann, with OUT-006). Was: in progress (step 5b). Done: 1 (14.7 us/sample, 2026-10-15), 3 (bank in `FreqBandStream`, Analyzer
 `SEQ band=`, Node `detection.band_low_hz/high_hz` default 2950-3950 since 155211e/next commit, bins 2950/3200/3450/3700/3950 so the 3,200 Hz chirp is on a bin), 4 (contrast = peak against
 the mean of its neighbours, guards included; limit 30,500 in `docs/decisions/2026-10-16-hop-acceptance-contrast-
 gate-not-amp.md`). Open: 2 (cheap single pass), 5 (Hann, with OUT-006), Node timing with the 5-bin bank on
@@ -137,7 +145,7 @@ Research: docs/research/frequency-drift-detection.md
 
 ### DET-014 - tonality inspector
 
-Status: TODO (step 5b if DET-013's OBS gets worse, else step 8a)
+Status: TODO, carried over (roadmap-0-steps.md "Carried over", 2026-10-29; not needed in 5b: OBS did not get worse)
 
 Peak-bin power vs total window energy over the occurrence. Pays for the noise a wider band admits; the first candidate before a lower band edge (DET-012) is tried. Data path: per-occurrence accumulation in the detector first, a `FeatureHistory` slot only if needed (3 slots, ~5 KB each).
 
@@ -175,7 +183,8 @@ hop train, speech/music OBS, and the replay corpus.
 
 ### DET-018 - "valid pattern" vocabulary and vestigial verdict enum values
 
-Status: DEFERRED (from the archived cleanup plan's Phase 7a / 7b, 2026-10-25). 7b lands in step 11e item 3
+Status: DEFERRED (from the archived cleanup plan's Phase 7a / 7b, 2026-10-25); 7b done 2026-10-26 (step 11e item 3,
+PR #64), 7a open. 7b landed in step 11e item 3
 (docs/refactors/archive/review-fixes-2026-10-25.md; enumerators assigned nowhere, Behavior's dead Ambiguous branch);
 7a (the SEQ labels, a tools update) stays here.
 
@@ -202,7 +211,7 @@ trial strength, the replay lines, the behavior suites). Open before it starts:
 what `confidence` means, the `EventClass` vocabulary (it may grow with
 DET-015's shape facts), and whether it waits for a second detector family. The
 mismatch it was written against (one slot holding Freq and Scalar quantities)
-is gone since step 7d. Sequenced in roadmap-0-steps.md step 11.
+is gone since step 7d. Sequenced in roadmap-0-steps.md step 11; since 2026-10-29 in its "Carried over" list.
 
 ### DET-008 - detection-layer cleanup pass
 
@@ -462,6 +471,8 @@ DET-007 is step 5 (decided on D-AMP); ANA-003 is step 10. The rest is
 unsequenced.
 Now (2026-10-26): DET-015 done (11b); step 11g batches B (detection: Occurrence.band,
 RawSampleHistory, the shape knobs as params) and C (Analyzer, with A8's TrialState split).
+Now (2026-10-29, 12.3): 11g done (2026-10-28), the band stays after the 11h sweep; detection work next is
+measurement (steps 13-15); DET-014, DET-016, DET-018 7a, DET-003..006 are in roadmap-0-steps.md "Carried over".
 ```
 
 ## Spec candidates

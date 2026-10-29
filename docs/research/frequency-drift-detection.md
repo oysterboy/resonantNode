@@ -1,8 +1,12 @@
 # Detecting a drifting chirp: more Goertzels, sliding DFT, FFT, or something else
 
-Status:  exploring (2026-10-15); direction set, see below
+Status:  promoted (2026-10-29); was exploring with the direction set (2026-10-15)
 Became:  docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md;
          DET-013..015, OUT-005/006, BEH-005..007; steps 5b, 8a (2026-10-15)
+         2026-10-29: option A built (DET-013: the Goertzel bank in FreqBandStream, 2950-3950 Hz, step 5b done
+         2026-10-21); DET-015's shape inspector built (step 11b); the hop train is the network signal. Not built:
+         the single-pass bank and the Hann window (DET-013 items 2 and 5); DET-014 (tonality inspector) carried
+         over in roadmap-0-steps.md; variation over time and the aesthetic layer wait with OUT-006 (8a)
 Lab:     bench/sessions/2026-10-14-up-spacing-map (comb nulls a few hundred
          Hz apart, 10-20x deep), freertos-tasks.md (~39 of 62.5 us/sample)
 

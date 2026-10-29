@@ -1,7 +1,7 @@
 # Where code and roadmap rest on unproven assumptions (audit, 2026-10-16)
 
 ```text
-Status:  exploring (2026-10-16)
+Status:  promoted (2026-10-29): every item done, carried or superseded (the "->" lines under each heading)
 Became:  section 1.1 -> step 5d of roadmap-0-steps.md (2026-10-16);
          the host-addressable items of sections 2.1, 2.5, 3.4, 3.6, 4.2, 4.4
          landed the same day (see "Addressed 2026-10-16" at the end);
@@ -12,6 +12,9 @@ Became:  section 1.1 -> step 5d of roadmap-0-steps.md (2026-10-16);
          2.4 -> step 8a, 3.1 / 3.2 / 3.7 -> step 8b, 4.1 / 4.3 -> step 7b;
          2026-10-17: 2.3 (gap contract), 2.2 and 1.5 as conditions -> step 5h
          (robustness against other physical conditions, #47)
+         2026-10-29 (step 12.3 triage): done 1.1, 1.2, 1.4, 3.3, 4.1, 4.3, 4.4; superseded 1.3 (BEH-009);
+         open and placed: 2.3 and 3.5 -> step 15 (the tryout room), 2.4 -> OUT-006, 3.7's rest -> "Review
+         leftovers", 1.5 -> "Per-board threshold offset" (both in roadmap-0-steps.md "Carried over")
 Lab:     docs/lab/2026-10-15-bench-day.md, docs/lab/2026-10-16-bench-day.md,
          docs/lab/notes_lab.md (2026-05-26 slow circle, 2026-10-12 soak),
          docs/refactors/archive/code-review-fixes.md (P4, R2-1, tier C)
@@ -39,6 +42,8 @@ measurements that the docs flag but the code does not enforce.
 ### 1.1 The two-node exchange is blocked by the refractory default (verified)
 
 -> promoted to roadmap-0-steps.md step 5d, 2026-10-16
+-> done 2026-10-22 (step 5d: chains sustain on the shipped values, ended by the rest rule;
+decisions/2026-10-17-two-node-exchange-chain-length.md, 2026-10-22-network-pacing.md), 2026-10-29
 
 `refractoryAfterEmitMs = 400` and `waitAfterHeardMs = 100`
 (`src/behavior/BehaviorProfile.h`). A verdict that arrives while Behavior
@@ -72,6 +77,9 @@ function of the emission span, or a queued verdict.
 
 ### 1.2 "Settle or run away" has no mechanism behind it (verified)
 
+-> done 2026-10-22 (steps 5f, 7c: FieldState is the rest gate, decisions/2026-10-22-fieldstate-is-the-rest-gate.md;
+pass mark decisions/2026-10-17-trial-third-question-pass-mark.md, met in step 6), 2026-10-29
+
 Became: decisions/2026-10-22-fieldstate-is-the-rest-gate.md. Since 2ddf2b4 (2026-10-17) Behavior rests on
 `recentPatternCount`, so the "never reads it" below no longer holds. The rest gate ended the step 6 chains.
 
@@ -94,6 +102,9 @@ pass/fail.
 
 ### 1.3 Per-node variation is thinner than step 5b states
 
+-> superseded by BEH-009 (a base bin per Node, decisions/2026-10-29-wider-band-base-bin-per-node.md); five distinct
+rotations from the roster since step 5g, 2026-10-29
+
 Every node plays the same five bins in the same grid order;
 `output.hop_rotation` only shifts the start bin
 (`ResonantNodeApp.cpp`, `hopFrequencies`). The rotation comes from the
@@ -104,6 +115,9 @@ signals unlike their own" is not something this design can test: the
 listener sees a tonal signal in the band either way.
 
 ### 1.4 The shipped Node level was never measured with the network signal
+
+-> done 2026-10-21 (step 5e: hearing matrix at 0.3 and 0.5 FS; the Node ships 0.5 FS,
+decisions/2026-10-21-damp-tone-level-0p5.md), 2026-10-29
 
 `I2S_TONE_AMPLITUDE` defaults to 0.3 FS (`src/app/RuntimeDefaults.h`),
 with no override for `env:esp32dev`. Every 5b battery ran the Emitter at
@@ -116,6 +130,9 @@ at one spacing (70 cm, E3 -> E2, nodepair). Either the Node ships 0.5 FS
 or the battery is rerun at 0.3.
 
 ### 1.5 Boards are assumed interchangeable
+
+-> the hearing matrix ran (5e, step 6); the per-board threshold offset is carried over in roadmap-0-steps.md, read
+from step 15's matrix first, 2026-10-29
 
 Steps 5c and 6 assume five boards behave like E2. E2 and E3 already differ
 (E3 forms no candidate for E2's trains; E3's mic was never the listener in
@@ -147,6 +164,8 @@ decision file names the confirmation battery as its own condition.
 
 ### 2.3 Hop detectability depends on the room tail bridging the gaps (audit)
 
+-> open: the dry room goes to step 15 (the tryout room; it takes over 5h's open cells), 2026-10-29
+
 The train is 25 ms pulses with 10 ms gaps; `releaseDebounceMs = 10`,
 `maxGapMs = 20`, `minTransientDurationMs = 85` (longer than any pulse).
 The train is one occurrence because the tail fills the gaps (the 10-15 lab
@@ -158,6 +177,8 @@ of max duration 300 alone" is still marked unmeasured in
 `DetectionProfile.h`.
 
 ### 2.4 The two-layer signal rests on unmeasured leak
+
+-> open, with OUT-006 (carried over in roadmap-0-steps.md as 8a), 2026-10-29
 
 OUT-006 lists sidelobe leak from an 800 Hz layer, speaker harmonics at
 4 x 800 Hz, and a Hann window as "fix if measured". `notes_lab.md`
@@ -195,6 +216,10 @@ slow-circle config was therefore never a gate either.
 
 ### 3.3 The Node quiet gate was derived from an artefact (verified)
 
+-> done 2026-10-29 (step 12.1.1, 053e00b): measured on the DC blocker (median 108, p90 ~300, bursts to ~490); the
+400 threshold stays, the gate gives up after 20 s instead of 8; a missed gate has no functional effect (the warmup
+rebase), bench/sessions/2026-10-29-step12-sanity
+
 `kRbStartupQuietThreshold = 400` (`ResonantNodeApp.cpp`) because "the
 D-AMP floor sits at ~230-250"; R2-1 showed that reading was the old 2000
 baseline offset, and after the fix the floor reads 12-62. The gate failed
@@ -211,6 +236,8 @@ is now 2950-3950 Hz, where the old filter's gain ran 0.55-0.70. The comment
 says "revisit in the 5a retune"; 5a did not.
 
 ### 3.5 Own-emit tail (audit)
+
+-> open: step 15 (the room's floor and self-echo against the suppression windows), 2026-10-29
 
 60 ms against a 33-54 ms echo measured once, plain 100 ms tone, one room,
 before hop trains existed. For device-timed trains `finished()` fires when
@@ -233,6 +260,9 @@ the first Goertzel window after suppression mixes old and new samples.
 
 ### 3.7 Smaller items (audit)
 
+-> mostly done 2026-10-22 (step 8b: max-duration close, plan_check, getWindow off the stack, overflow counters in RB
+STATUS); the unreachable Strong 300000 is in roadmap-0-steps.md "Review leftovers", 2026-10-29
+
 - A continuous tone holds the scalar detector open forever;
   `PeakStillActive` is never produced.
 - `strongPeakThreshold = 300000` on a domain capped at 32,767: Strong is
@@ -251,6 +281,9 @@ the first Goertzel window after suppression mixes old and new samples.
 
 ### 4.1 The host replay proves host == board for the amp path only (audit)
 
+-> done 2026-10-22 (step 7b: frequency columns in the captures, target and contrast compared host vs board);
+AudioSourceI2S's missing regression test is carried over (P2b, D21), 2026-10-29
+
 `test_replay_corpus` compares `audioMagnitudeValue` (integer arithmetic)
 against the board column; `FrequencyTarget` and `FrequencyContrast`, which
 decide, go through float Goertzel and are never compared. The contrast gate
@@ -268,6 +301,9 @@ hop train, a sweep or an idle chirp. The CSV header does not record
 
 ### 4.3 The on-device tests disable every shipped gate
 
+-> done 2026-10-22 (step 7b: test_shipped_profile runs the shipped plan, every gate on, on the board and the host;
+ResonantBehavior has host suites: test_behavior_refractory, _rest, _status), 2026-10-29
+
 `test_analyzer_pass_rules` and `test_timebase` drive the scalar detector
 with carrier quality off, min strength off, duration 0-1000 ms and
 debounce 1. Coverage, island, gap and the 85-300 ms window are never
@@ -275,6 +311,9 @@ exercised. `ResonantBehavior` has zero tests and is excluded from the
 native env. `FrequencyMatchDetector` has no wrap test.
 
 ### 4.4 Hardware verification is thinner than the status lines read
+
+-> done: Node real uptime past the wrap (10c 33.6 h, 11c 23.45 h, the 27 h soak on 40c92e3), 24 h five-node runs with
+room notes (10c, 11c), NODE-014 pinned (espressif32@6.13.0), 2026-10-29
 
 - NODE-017: the Node real-uptime run past the 72 min wrap was not done
   (offset test only).

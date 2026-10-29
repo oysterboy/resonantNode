@@ -78,6 +78,15 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    12.3 Docs pass: research notes and roadmap items whose status lags (freertos-tasks, scalar-detector-extensions,
         frequency-drift-detection, frequency-tuning-sweep, unproven-assumptions-audit, acoustic-test-suite,
         tonalpulse-scalar-target; NODE-017, DET-011). PC.
+        12.3 done 2026-10-29: research statuses checked against the repo and brought up to date (freertos-tasks,
+        scalar-detector-extensions, frequency-drift-detection, frequency-tuning-sweep promoted / done; the audit's
+        items marked done, carried or superseded; acoustic-test-suite's open points answered or step 15;
+        tonalpulse-scalar-target superseded; done lines on soak-24h, code-standards-read, the 2026-10-25 review;
+        the README index); roadmap items: DET-011, DET-013, OUT-005, BEH-005 done (5b), DET-001 closed (8b),
+        NODE-004 done (11i), NODE-017 the long Node runs, NODE-012 -> step 15, DET-012 / DET-014 / DET-016 /
+        DET-018 / BEH-006 / BEH-007 / OUT-006 / PAR-013 pointers, the "As of" and "Current focus" blocks;
+        implementation-status.md rows (47 params, 132 + 22 + 9 host tests, OTA with token, the mode layer,
+        clang-format CI, D2.7 / D2.9 done). Docs only.
    Gate: the review's findings fixed or carried with a reason; the sanity check green on the boards.
 
 13. [TODO] Understand the margin: how much headroom the hop train has on the desk. (issue #75)

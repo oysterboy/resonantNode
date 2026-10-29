@@ -42,7 +42,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 
 ## Order
 
-12. [NEXT] Check: does everything still work after the refactors? (issue #74)
+12. [DONE 2026-10-29] Check: does everything still work after the refactors? (issue #74, closed)
    12.0 Code review of the tree after 11g, 11i, 11j and the OTA work (owner 2026-10-29). PC.
    12.0.1 Its fixes. PC; board-relevant ones confirmed remotely.
         12.0 done 2026-10-29: four reviews, docs/research/code-review-2026-10-29.md (1 high, 9 medium, ~25 low). Owner:
@@ -89,7 +89,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         clang-format CI, D2.7 / D2.9 done). Docs only.
    Gate: the review's findings fixed or carried with a reason; the sanity check green on the boards.
 
-13. [TODO] Understand the margin: how much headroom the hop train has on the desk. (issue #75)
+13. [NEXT] Understand the margin: how much headroom the hop train has on the desk. (issue #75)
    docs/research/distance-range.md test 1 (level ladder: hop10 at 0.5 / 0.35 / 0.25 / 0.18 / 0.12 FS, 20 trials) and
    docs/research/room-comb-and-margin.md ("What would settle", 3: hops attenuated by 15 dB, count hop10); host: does
    Strength16 follow the weakest or the mean hop (the 132 sweep captures, sweepbins.py). Remote and PC.
@@ -172,6 +172,8 @@ parallel.
 
 ## Status log
 
+Status update 2026-10-29, evening: 12 done (review 1 high / 9 medium / ~25 low fixed and checked on the boards, sanity
+check green, quiet gate 20 s, docs statuses current). Next: 13, the margin, remote.
 Status update 2026-10-29, later: order 12-19 set with the owner (whole numbers, dot substeps; check, understand,
 build, room); remote-only bench until 11-01, then 11-03. Next: 12.0, the code review.
 Status update 2026-10-29: phase opened at the cut-over (the previous file archived).

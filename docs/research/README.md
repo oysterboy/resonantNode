@@ -77,6 +77,9 @@ tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; partly landed, not reviewed)
 unproven-assumptions-audit.md  where code and roadmap rest on unmeasured
                                assumptions (2026-10-16 audit); check order
+platform-arduino-vs-esp-idf.md stay on Arduino 2.0.17 or move (Arduino 3.x,
+                               Arduino as IDF component, pure IDF); decide
+                               after step 14
 polyphony.md                   several nodes at once (lab E003) and chords
                                inside one chirp (OUT-006); test design
 vektor-lessons-from-11a.md     what the 11a radio taught VEKTOR (real-time

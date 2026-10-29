@@ -120,6 +120,8 @@ min_island_count                          scalar-detector-extensions.md's parked
 FreeRTOS audio task                       only if the loop budget runs out (BEH-009's bins, VEKTOR's radio);
                                           docs/research/freertos-tasks.md.
 Per-board threshold offset                read it from 15's matrix first (unproven-assumptions-audit.md).
+Platform: Arduino or ESP-IDF             docs/research/platform-arduino-vs-esp-idf.md; decide after step 14 with the
+                                          owner on site (a USB flash of every board); if adopted, a step before 16.
 Review leftovers                          the replay binds the medium limits itself (A10); FreqBandStream and
                                           ScalarTransientDetector outside namespace detection (with step 9); the
                                           300000 "never fires" Strong threshold (no disabled class).

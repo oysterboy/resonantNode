@@ -601,15 +601,10 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         _audioSource.stats().overflowCount != _sequenceTest.trial.overflowCountAtStart;
     const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
     const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
-    const bool rejectedInWindow = _sequenceTest.trial.rejectedInWindowCount > 0;
-    long dtMs = selectedTrial.dtMs;
-    long durMs = static_cast<long>(selectedTrial.durationMs);
-    float strength = selectedTrial.strength;
 
     // The trial result is decided once, by classifySequenceTrial inside the report builder (11g C5).
     AnalyzerReport* finalizedReport = sequenceReportScratch();
-    buildSequenceAnalyzerReport(*finalizedReport, selectedTrial, _sequenceTest.trial.number, rejectedInWindow, dtMs,
-                                durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
+    buildSequenceAnalyzerReport(*finalizedReport, selectedTrial, bufferOverrunTrial, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.totals.completedTrials++;
     flushSequenceSampleHistory(now + 1UL);

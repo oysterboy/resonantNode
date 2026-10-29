@@ -19,6 +19,7 @@
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/SerialLine.h"
 #include "../../detection/analyzer/AnalyzerReportTypes.h"
+#include "../../detection/analyzer/AnalyzerTrialClassifier.h"
 #include "AnalyzerSequenceTypes.h"
 
 /*
@@ -211,9 +212,34 @@ private:
     };
 
     void buildSequenceAnalyzerReport(AnalyzerReport& report, const SequenceTrialSelection& selectedTrial,
-                                     unsigned long trialNumber, bool rejectedInWindow, long dtMs, long durMs,
-                                     float strength, bool bufferOverrun, unsigned long duplicateCount,
-                                     const TrialDiagnostics& diagnostics) const;
+                                     bool bufferOverrun, const TrialDiagnostics& diagnostics) const;
+    // What every section of the report reads from the selection, derived once.
+    struct SequenceReportInputs {
+        const SequenceTrialSelection& selection;
+        const detection::OccurrenceVerdict* verdict;
+        const detection::InspectedOccurrence* inspected;
+        const detection::DetectorReport* detectorReport;
+        bool hasVerdict;
+        bool hasInspected;
+        bool pipelineEvidence;  // a verdict, an inspection or a captured reject, and a source candidate in the trial
+        unsigned long pipelineOverflowDelta;
+        const char* artifactReason;
+        bool bufferOverrun;
+        const detection::DetectionProfile& profile;
+    };
+    SequenceReportInputs sequenceReportInputs(const SequenceTrialSelection& selectedTrial, bool bufferOverrun) const;
+    void fillSequenceReportContext(AnalyzerReport& report) const;
+    void fillSequenceReportSource(AnalyzerReport& report, const SequenceReportInputs& in) const;
+    AnalyzerSequenceClassificationInput sequenceClassificationInput(const SequenceReportInputs& in,
+                                                                    bool rejectedInWindow) const;
+    void fillSequenceReportPattern(AnalyzerReport& report, const SequenceReportInputs& in) const;
+    void fillSequenceReportOccurrences(AnalyzerReport& report, const SequenceReportInputs& in) const;
+    void fillSequenceReportInspection(AnalyzerReport& report, const SequenceReportInputs& in) const;
+    void fillSequenceReportField(AnalyzerReport& report) const;
+    void fillSequenceReportProfileDetail(AnalyzerReport& report, const SequenceReportInputs& in,
+                                         const TrialDiagnostics& diagnostics) const;
+    void fillSequenceReportDebug(AnalyzerReport& report, const SequenceReportInputs& in, bool unexpected,
+                                 bool startupArtifact, unsigned long duplicateCount) const;
     unsigned long sequenceTrialOnsetAnchorMs() const;
     SequenceTrialSelection selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const;
     void handleSequencePending(const detection::DetectionPipelineEvent& event);

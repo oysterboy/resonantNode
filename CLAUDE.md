@@ -52,7 +52,20 @@ Which surface you're on decides what you can verify:
   (PowerShell) or the same path under `~/.platformio/penv/Scripts/` (Bash),
   or use the PlatformIO IDE terminal. Flashing or opening a serial port
   touches the owner's bench — ask before uploading, and confirm which board
-  build (D-AMP vs piezo) and mode goes on which port.
+  build (D-AMP vs piezo) and mode goes on which port. An OTA update counts as
+  uploading; the owner's go for a step that names board checks covers that
+  step's OTA updates.
+
+Over the air (since step 11d, the bench's normal path when the owner is away):
+`tools/bench/otaserve.py` serves the built images on this PC and prints the
+commands; `NET * OTA url=... token=...` on a USB Node updates every Node, the
+Analyzer and the Emitter take `OTA url=... token=...` on their own port. The
+token and WiFi credentials are in the git-ignored `include/wifi_secrets.h`
+(never print or commit them); a new image rolls back unless it runs 20 s
+(decisions/2026-10-28-ota-firmware-pull-over-http.md). Stop otaserve once the
+boards are updated: the image holds the WiFi password. The standing board
+check after a change is `tools/bench/nodecheck.py` (Nodes, 26-27 checks) and,
+for Analyzer output, `tools/bench/analyzerab.py` against the last A/B set.
 
 CI (`.github/workflows/build.yml`, NODE-007) builds every env and runs the host suites on every push; check
 `gh run list` after pushing. A green run is compile plus host tests, not hardware.
@@ -272,7 +285,9 @@ from the phone; nothing is written *only* there. Three rules:
 
 Titles carry `[Step N]`; retitle when the steps file is reordered. Don't
 open issues below step granularity (7a/7b, DET-003..006 live in the
-roadmaps), and don't add Projects boards or milestones.
+roadmaps; a dot substep such as 12.4 belongs to its step's issue, and one
+opened anyway is folded in and closed), and don't add Projects boards or
+milestones.
 
 ### Other docs
 
@@ -332,6 +347,8 @@ reader who does not know the roadmap. For a deliberate choice, point at the `doc
 roadmap ID (`DET-015`, `OUT-005`) rather than a step. Classes open with an owns / does-not block
 (`docs/specs/myspec.md` vocabulary); plain data structs need none. `tools/ci/readability.py` prints the tracked
 counts (step 12.4); read them when closing a pass, never gate on them.
+The same holds for the guide (`notes_manual.md`): say what changed and when
+(a date), not only "since step N".
 
 ## Commit style
 

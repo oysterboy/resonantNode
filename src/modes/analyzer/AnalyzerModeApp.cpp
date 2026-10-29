@@ -984,6 +984,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report, const Sequ
         report.occurrences.primaryDurationMs = selectedTrial.durationMs;
         report.occurrences.primaryStrength = selectedTrial.strength;
         report.occurrences.strength = selectedTrial.strength;
+        report.occurrences.shape = occurrence.shape;  // step 13.0: SEQ_EXPLAIN shape.*
         report.occurrences.mainRejectReason =
             reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
             ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason)

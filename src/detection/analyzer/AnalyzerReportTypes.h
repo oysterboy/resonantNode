@@ -6,6 +6,7 @@
 
 #include "../../detection/detectors/DetectorReport.h"
 #include "../../detection/inspection/InspectorTypes.h"
+#include "../../detection/occurrences/Occurrence.h"
 
 /*
 AnalyzerReportingTypes
@@ -260,6 +261,9 @@ struct AnalyzerOccurrenceObservation {
     detection::InspectionTarget moduleTarget = detection::InspectionTarget::None;
     const char* mainRejectReason = "none";
     const char* rejectReason = "none";
+    // The inspected occurrence's shape facts (DET-015; printed in SEQ_EXPLAIN since step 13.0): which band bins the
+    // occurrence visited and how it stepped. Not applicable without band bins or without an inspected occurrence.
+    detection::OccurrenceShape shape = {};
 };
 
 struct AnalyzerInspectionObservation {

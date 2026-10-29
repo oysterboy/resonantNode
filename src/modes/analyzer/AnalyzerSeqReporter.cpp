@@ -378,6 +378,25 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     serialOut().print(report.primaryPattern.firstFailedRequiredStrength != nullptr
                           ? report.primaryPattern.firstFailedRequiredStrength
                           : "unknown");
+    // The inspected occurrence's shape (DET-015, step 13.0): bins visited, steps up, other steps, runs, the first and
+    // last bin, the class; applicable=0 without band bins or an inspected occurrence.
+    const detection::OccurrenceShape& shape = report.occurrences.shape;
+    serialOut().print(" shape.applicable=");
+    serialOut().print(shape.applicable ? 1 : 0);
+    serialOut().print(" shape.distinct=");
+    serialOut().print(static_cast<unsigned>(shape.distinctBins));
+    serialOut().print(" shape.up=");
+    serialOut().print(static_cast<unsigned>(shape.risingSteps));
+    serialOut().print(" shape.other=");
+    serialOut().print(static_cast<unsigned>(shape.otherSteps));
+    serialOut().print(" shape.runs=");
+    serialOut().print(static_cast<unsigned>(shape.runs));
+    serialOut().print(" shape.first_hz=");
+    serialOut().print(static_cast<unsigned>(shape.firstBinHz));
+    serialOut().print(" shape.last_hz=");
+    serialOut().print(static_cast<unsigned>(shape.lastBinHz));
+    serialOut().print(" shape.class=");
+    serialOut().print(detection::strengthClassName(shape.shapeClass));
     serialOut().println();
 }
 

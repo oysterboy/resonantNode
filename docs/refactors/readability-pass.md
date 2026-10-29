@@ -55,3 +55,9 @@ Thresholds, detection behaviour, Behavior's decisions, line formats, the NET for
   AnalyzerApp is fourth-ish, the Node's 36 did not spread as far as the note assumed), E 21 of 61, F 6.3 / 3.7, G 12.
   The note's counts reproduce exactly (A-C, E-G); the tail starts runRawTrigger 620 / 171, buildSequenceAnalyzerReport
   302 / 103.
+- 2026-10-29: 12.4.2 done. ScalarTransientDetector's 68 members are 16: _config, GateState _gate, PeakState _peak,
+  CandidateFacts _facts (with mean / matchedMean / rms, the three copies of each folded), OccurrenceTrack _track, the
+  two id counters, Emission _emission, AcceptedState _accepted, RejectState _reject, the report detail / frozen report
+  / two generations, LastReject _lastReject, Counts _counts. Every reset is `= {}` except the two that clear only part
+  of a group (captureAcceptedOccurrence keeps the reject's occurrence id, the update's per-call flags). Gate green, T2h
+  byte-identical.

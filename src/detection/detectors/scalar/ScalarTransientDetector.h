@@ -1,5 +1,6 @@
 #pragma once
 
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -86,90 +87,130 @@ private:
     // Thresholds and gates (ScalarTransientConfig.h documents the fields).
     detection::ScalarTransientConfig _config = {};
 
-    // Live gate state.
-    bool _onsetDetected = false;
-    float _onsetStrength = 0.0f;
-    uint64_t _lastOnsetUs = 0;
-    bool _transientDetected = false;
-    float _transientStrength = 0.0f;
-    unsigned long _transientDurationMs = 0;
-    bool _peakActive = false;
-    // Set when a candidate was closed for running past max duration while the
-    // signal was still above release; no new candidate opens until it drops
-    // below release (step 8b item 3).
-    bool _awaitReleaseBeforeOnset = false;
-    uint64_t _peakStartedUs = 0;
-    uint64_t _peakStrengthObservedUs = 0;
-    uint64_t _releaseCandidateStartedUs = 0;
-    uint64_t _releaseObservedUs = 0;
-    float _peakStrength = 0.0f;
-    float _candidatePeak = 0.0f;
-    double _candidateStrengthSum = 0.0;
-    uint32_t _candidateStrengthCount = 0;
-    double _candidateMatchedStrengthSum = 0.0;
-    uint32_t _candidateMatchedStrengthCount = 0;
-    float _candidateSumSquares = 0.0f;
-    uint64_t _candidateCoverageAboveAttackUs = 0;
-    uint64_t _candidateCoverageAboveReleaseUs = 0;
-    uint64_t _candidateSustainedUs = 0;
-    unsigned int _candidateIslandCount = 0;
-    unsigned int _candidateGapCount = 0;
-    unsigned long _candidateIslandMaxMs = 0;
-    unsigned long _candidateGapMaxMs = 0;
-    bool _candidateWasAboveRelease = false;
-    uint64_t _candidateCurrentIslandStartUs = 0;
-    uint64_t _candidateCurrentGapStartUs = 0;
-    uint64_t _candidateLastUpdateUs = 0;
+    // Live gate state: this update's onset / transient flags and the onset cooldown.
+    struct GateState {
+        bool onsetDetected = false;
+        float onsetStrength = 0.0f;
+        uint64_t lastOnsetUs = 0;
+        bool transientDetected = false;
+        float transientStrength = 0.0f;
+        unsigned long transientDurationMs = 0;
+        // Set when a candidate was closed for running past max duration while the
+        // signal was still above release; no new candidate opens until it drops
+        // below release, so one continuous tone gives one reject (step 8b item 3).
+        bool awaitReleaseBeforeOnset = false;
+    };
+    GateState _gate = {};
 
-    // Candidate lifecycle state.
-    bool _acceptedOccurrencePendingActive = false;
-    uint64_t _acceptedOccurrenceStartSample = 0;
-    uint64_t _acceptedOccurrencePeakSample = 0;
-    unsigned long _acceptedOccurrenceStartMs = 0;
-    unsigned long _acceptedOccurrencePeakMs = 0;
-    unsigned long _acceptedOccurrenceHoldWindows = 0;
-    unsigned long _acceptedOccurrenceId = 0;
-    unsigned long _selectedRejectOccurrenceId = 0;
+    // The open peak: from onset until the release debounce (or max duration) closes it.
+    struct PeakState {
+        bool active = false;
+        uint64_t startedUs = 0;
+        uint64_t strengthObservedUs = 0;
+        uint64_t releaseCandidateStartedUs = 0;
+        uint64_t releaseObservedUs = 0;
+        float strength = 0.0f;
+    };
+    PeakState _peak = {};
+
+    // What the open peak measured so far (strength sums, coverage, islands and gaps); the summaries copy it.
+    struct CandidateFacts {
+        float peak = 0.0f;
+        double strengthSum = 0.0;
+        uint32_t strengthCount = 0;
+        double matchedStrengthSum = 0.0;
+        uint32_t matchedStrengthCount = 0;
+        float sumSquares = 0.0f;
+        uint64_t coverageAboveAttackUs = 0;
+        uint64_t coverageAboveReleaseUs = 0;
+        uint64_t sustainedUs = 0;
+        unsigned int islandCount = 0;
+        unsigned int gapCount = 0;
+        unsigned long islandMaxMs = 0;
+        unsigned long gapMaxMs = 0;
+        bool wasAboveRelease = false;
+        uint64_t currentIslandStartUs = 0;
+        uint64_t currentGapStartUs = 0;
+        uint64_t lastUpdateUs = 0;
+
+        float mean() const {
+            return strengthCount > 0 ? static_cast<float>(strengthSum / static_cast<double>(strengthCount)) : 0.0f;
+        }
+        float matchedMean() const {
+            return matchedStrengthCount > 0
+                ? static_cast<float>(matchedStrengthSum / static_cast<double>(matchedStrengthCount))
+                : 0.0f;
+        }
+        float rms() const { return strengthCount > 0 ? sqrtf(sumSquares / static_cast<float>(strengthCount)) : 0.0f; }
+    };
+    CandidateFacts _facts = {};
+
+    // Candidate lifecycle: the occurrence followed sample by sample from onset, emitted when the peak is accepted.
+    struct OccurrenceTrack {
+        bool active = false;
+        uint64_t startSample = 0;
+        uint64_t peakSample = 0;
+        unsigned long startMs = 0;
+        unsigned long peakMs = 0;
+        unsigned long holdWindows = 0;
+        float onsetStrength = 0.0f;
+        float peakStrength = 0.0f;
+        float currentStrength = 0.0f;
+        bool audioOverflow = false;
+    };
+    OccurrenceTrack _track = {};
     unsigned long _nextOccurrenceId = 0;
     unsigned long _currentOccurrenceId = 0;
-    float _acceptedOccurrenceOnsetStrength = 0.0f;
-    float _acceptedOccurrencePeakStrength = 0.0f;
-    float _acceptedOccurrenceCurrentStrength = 0.0f;
-    bool _acceptedOccurrenceAudioOverflow = false;
-    unsigned long _lastObservedAcceptedOccurrenceRejectedCount = 0;
 
-    // Occurrence emission state.
-    bool _pendingOccurrencePresent = false;
-    detection::Occurrence _pendingOccurrence = {};
+    // Occurrence emission state: the one occurrence waiting for popOccurrence().
+    struct Emission {
+        bool present = false;
+        detection::Occurrence occurrence = {};
+    };
+    Emission _emission = {};
 
-    // Detector report state.
-    bool _acceptedOccurrencePresent = false;
-    detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
-    unsigned long _acceptedOccurrenceReleaseMs = 0;
+    // Detector report state: the accepted summary, the selected (best) reject, the frozen report.
+    struct AcceptedState {
+        bool present = false;
+        detection::AcceptedOccurrenceSummary summary = {};
+        unsigned long releaseMs = 0;
+        unsigned long occurrenceId = 0;
+    };
+    AcceptedState _accepted = {};
+    struct RejectState {
+        bool present = false;
+        detection::SelectedRejectSummary summary = {};
+        unsigned long occurrenceId = 0;
+    };
+    RejectState _reject = {};
     detection::ScalarDetectorReportDetail _reportDetail = {};
-
-    // Reject summary state.
-    OnsetRejectReason _lastOnsetRejectReason = OnsetRejectReason::None;
-    TransientRejectReason _lastTransientRejectReason = TransientRejectReason::None;
-    unsigned long _lastTransientRejectedDurationMs = 0;
-    float _lastTransientRejectedStrength = 0.0f;
-    unsigned long _transientRejectedDurationTooShortCount = 0;
-    unsigned long _transientRejectedDurationTooLongCount = 0;
-    unsigned long _transientRejectedStrengthTooLowCount = 0;
-    unsigned long _transientRejectedCount = 0;
-    bool _selectedRejectPresent = false;
-    detection::SelectedRejectSummary _selectedReject = {};
     detection::DetectorReport _latestReport = {};
     uint32_t _reportGeneration = 0;
     uint32_t _selectedRejectGeneration = 0;
-    // Run-long counts at the last per-trial reset: the report's aggregates
-    // are per trial, while the counts themselves stay
-    // run-long for the success-rate printout (issue #31 R2-14).
-    unsigned long _trialAcceptedCountBase = 0;
-    unsigned long _trialRejectedCountBase = 0;
 
-    // Diagnostics state.
-    unsigned long _peakAcceptedCount = 0;
+    // Reject summary state: why the last onset / transient was refused.
+    struct LastReject {
+        OnsetRejectReason onset = OnsetRejectReason::None;
+        TransientRejectReason transient = TransientRejectReason::None;
+        unsigned long durationMs = 0;
+        float strength = 0.0f;
+    };
+    LastReject _lastReject = {};
+
+    // Run-long counts. The report's aggregates are per trial (count minus the base taken at the last per-trial
+    // reset), while the counts themselves stay run-long for the success-rate printout (issue #31 R2-14).
+    struct Counts {
+        unsigned long accepted = 0;
+        unsigned long rejected = 0;
+        unsigned long tooShort = 0;
+        unsigned long tooLong = 0;
+        unsigned long strengthTooLow = 0;
+        unsigned long trialAcceptedBase = 0;
+        unsigned long trialRejectedBase = 0;
+        // The rejected count the open track last saw: a reject since then drops the track.
+        unsigned long rejectedSeenByTrack = 0;
+    };
+    Counts _counts = {};
 
     // Private helpers.
     const char* lastOnsetRejectReasonName() const;

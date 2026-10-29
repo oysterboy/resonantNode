@@ -11,17 +11,17 @@ void ScalarTransientDetector::refreshReportDetail() {
     const char* scalarRejectReason = !detection::scalar_transient_detail::detectorReasonIsNone(transientRejectReason)
         ? transientRejectReason
         : onsetRejectReason;
-    const bool hasAcceptedSummary = _acceptedOccurrencePresent && _acceptedOccurrence.present;
-    const bool hasSelectedRejectSummary = _selectedRejectPresent && _selectedReject.present;
+    const bool hasAcceptedSummary = _accepted.present && _accepted.summary.present;
+    const bool hasSelectedRejectSummary = _reject.present && _reject.summary.present;
     const bool hasSummary = hasAcceptedSummary || hasSelectedRejectSummary;
     const bool useAcceptedSummary = hasAcceptedSummary || !hasSelectedRejectSummary;
     const float summaryMatchedMeanStrength =
-        useAcceptedSummary ? _acceptedOccurrence.matchedMeanStrength : _selectedReject.matchedMeanStrength;
+        useAcceptedSummary ? _accepted.summary.matchedMeanStrength : _reject.summary.matchedMeanStrength;
     const char* summaryRejectReason = hasAcceptedSummary
         ? "none"
-        : (hasSelectedRejectSummary && _selectedReject.detectorReason != nullptr &&
-                   _selectedReject.detectorReason[0] != '\0'
-               ? _selectedReject.detectorReason
+        : (hasSelectedRejectSummary && _reject.summary.detectorReason != nullptr &&
+                   _reject.summary.detectorReason[0] != '\0'
+               ? _reject.summary.detectorReason
                : scalarRejectReason);
     _reportDetail.inspect.rejectReason = summaryRejectReason;
     _reportDetail.inspect.noEmitReason = summaryRejectReason;
@@ -30,46 +30,46 @@ void ScalarTransientDetector::refreshReportDetail() {
         (hasSummary ? summaryMatchedMeanStrength >= _config.minMatchedMeanStrength : false);
     _reportDetail.inspect.carrierQualityRequired = _config.requireCarrierQuality;
     _reportDetail.inspect.carrierCoveragePassed = !_config.requireCarrierQuality || !hasSummary ||
-        (hasAcceptedSummary ? _acceptedOccurrence.coverageAboveReleaseMs >= _config.minCoverageAboveReleaseMs
-                            : _selectedReject.coverageAboveReleaseMs >= _config.minCoverageAboveReleaseMs);
+        (hasAcceptedSummary ? _accepted.summary.coverageAboveReleaseMs >= _config.minCoverageAboveReleaseMs
+                            : _reject.summary.coverageAboveReleaseMs >= _config.minCoverageAboveReleaseMs);
     _reportDetail.inspect.carrierIslandPassed = !_config.requireCarrierQuality || !hasSummary ||
-        (hasAcceptedSummary ? _acceptedOccurrence.islandMaxMs >= _config.minLongestIslandMs
-                            : _selectedReject.islandMaxMs >= _config.minLongestIslandMs);
+        (hasAcceptedSummary ? _accepted.summary.islandMaxMs >= _config.minLongestIslandMs
+                            : _reject.summary.islandMaxMs >= _config.minLongestIslandMs);
     _reportDetail.inspect.carrierGapPassed = !_config.requireCarrierQuality || !hasSummary ||
-        (hasAcceptedSummary ? _acceptedOccurrence.gapMaxMs <= _config.maxGapMs
-                            : _selectedReject.gapMaxMs <= _config.maxGapMs);
+        (hasAcceptedSummary ? _accepted.summary.gapMaxMs <= _config.maxGapMs
+                            : _reject.summary.gapMaxMs <= _config.maxGapMs);
     _reportDetail.inspect.opened = hasAcceptedSummary
         ? true
-        : (hasSelectedRejectSummary ? true : (_peakActive || _releaseObservedUs != 0 || _peakStartedUs != 0));
+        : (hasSelectedRejectSummary ? true : (_peak.active || _peak.releaseObservedUs != 0 || _peak.startedUs != 0));
     _reportDetail.inspect.released =
-        hasAcceptedSummary ? true : (hasSelectedRejectSummary ? true : (_releaseObservedUs != 0));
+        hasAcceptedSummary ? true : (hasSelectedRejectSummary ? true : (_peak.releaseObservedUs != 0));
     _reportDetail.inspect.validRelease =
         _reportDetail.inspect.released && detection::scalar_transient_detail::detectorReasonIsNone(summaryRejectReason);
     _reportDetail.inspect.emitAllowed = _reportDetail.inspect.validRelease;
     _reportDetail.inspect.openMs = hasAcceptedSummary
-        ? _acceptedOccurrence.startMs
-        : (hasSelectedRejectSummary ? _selectedReject.startMs : timebase::msFromUs64(_peakStartedUs));
+        ? _accepted.summary.startMs
+        : (hasSelectedRejectSummary ? _reject.summary.startMs : timebase::msFromUs64(_peak.startedUs));
     _reportDetail.inspect.peakMs = hasAcceptedSummary
-        ? _acceptedOccurrence.peakMs
-        : (hasSelectedRejectSummary ? _selectedReject.peakMs : timebase::msFromUs64(_peakStrengthObservedUs));
+        ? _accepted.summary.peakMs
+        : (hasSelectedRejectSummary ? _reject.summary.peakMs : timebase::msFromUs64(_peak.strengthObservedUs));
     _reportDetail.inspect.releaseMs = hasAcceptedSummary
-        ? _acceptedOccurrence.endMs
-        : (hasSelectedRejectSummary ? _selectedReject.endMs : timebase::msFromUs64(_releaseObservedUs));
+        ? _accepted.summary.endMs
+        : (hasSelectedRejectSummary ? _reject.summary.endMs : timebase::msFromUs64(_peak.releaseObservedUs));
     _reportDetail.inspect.durationMs = _reportDetail.inspect.released &&
             timing::atOrAfter(_reportDetail.inspect.releaseMs, _reportDetail.inspect.openMs)
         ? _reportDetail.inspect.releaseMs - _reportDetail.inspect.openMs
         : 0UL;
     _reportDetail.inspect.peakStrength = hasAcceptedSummary
-        ? _acceptedOccurrence.peak
-        : (hasSelectedRejectSummary ? _selectedReject.peak : _peakStrength);
+        ? _accepted.summary.peak
+        : (hasSelectedRejectSummary ? _reject.summary.peak : _peak.strength);
     _reportDetail.inspect.rejectReason = summaryRejectReason;
     _reportDetail.thresholds.onsetThreshold = _config.onsetDetectionThreshold;
     _reportDetail.thresholds.releaseThreshold = _config.onsetReleaseThreshold;
     _reportDetail.thresholds.minStrength = _config.minTransientPeakStrength;
-    _reportDetail.aggregates.tooShortCount = _transientRejectedDurationTooShortCount;
-    _reportDetail.aggregates.tooLongCount = _transientRejectedDurationTooLongCount;
-    _reportDetail.aggregates.strengthTooLowCount = _transientRejectedStrengthTooLowCount;
-    _reportDetail.aggregates.bestRejectedValue = _selectedRejectPresent ? _selectedReject.strength : 0.0f;
+    _reportDetail.aggregates.tooShortCount = _counts.tooShort;
+    _reportDetail.aggregates.tooLongCount = _counts.tooLong;
+    _reportDetail.aggregates.strengthTooLowCount = _counts.strengthTooLow;
+    _reportDetail.aggregates.bestRejectedValue = _reject.present ? _reject.summary.strength : 0.0f;
 }
 
 void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
@@ -77,23 +77,23 @@ void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsign
     // DetectionRuntime only coordinates report snapshots.
     out = {};
     out.detectorId = detection::DetectorId::ScalarTransient;
-    out.accepted = _acceptedOccurrence;
-    out.accepted.occurrenceId = _acceptedOccurrenceId;
+    out.accepted = _accepted.summary;
+    out.accepted.occurrenceId = _accepted.occurrenceId;
     out.thresholds.minDurationMs = _config.minTransientDurationMs;
     out.thresholds.maxDurationMs = _config.maxTransientDurationMs;
-    out.aggregates.acceptedCount = _peakAcceptedCount - _trialAcceptedCountBase;
-    out.aggregates.rejectedCount = _transientRejectedCount - _trialRejectedCountBase;
+    out.aggregates.acceptedCount = _counts.accepted - _counts.trialAcceptedBase;
+    out.aggregates.rejectedCount = _counts.rejected - _counts.trialRejectedBase;
     out.scalar = _reportDetail;
 
-    const bool selectedRejectPresent = !out.accepted.present && _selectedRejectPresent;
+    const bool selectedRejectPresent = !out.accepted.present && _reject.present;
     if (out.accepted.present) {
         out.scalar.inspect.rejectReason = "none";
         out.scalar.inspect.noEmitReason = "none";
         out.scalar.inspect.gateReason = "none";
     }
     if (selectedRejectPresent) {
-        out.selectedReject = _selectedReject;
-        out.selectedReject.occurrenceId = _selectedRejectOccurrenceId;
+        out.selectedReject = _reject.summary;
+        out.selectedReject.occurrenceId = _reject.occurrenceId;
         out.scalar.inspect.rejectReason = out.selectedReject.detectorReason;
         out.scalar.inspect.noEmitReason = out.selectedReject.detectorReason;
         out.scalar.inspect.gateReason = out.selectedReject.detectorReason;

@@ -341,6 +341,147 @@
         "avg_dt_ms": "-1",
         "avg_strength": "10990.5"
       }
+    },
+    {
+      "name": "hop10_att_end45_20",
+      "file": "hop10_att_end45_20.0e8b3bdd.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=0,0,0,20,20 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-29T21:22:27",
+      "duration_s": 68,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 20
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 20,
+          "SEQ_INSPECT": 40,
+          "SEQ_SOURCE_CORE": 20,
+          "SEQ_SOURCE_SPEC": 20,
+          "SEQ_EXPLAIN": 20,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "20",
+        "completed": "20",
+        "expected_trials": "20",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "20",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "20",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "51",
+        "avg_strength": "5519.5"
+      }
+    },
+    {
+      "name": "hop10_att_start12_20",
+      "file": "hop10_att_start12_20.0e8b3bdd.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=20,20,0,0,0 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-29T21:23:37",
+      "duration_s": 68,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 20
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 20,
+          "SEQ_INSPECT": 40,
+          "SEQ_SOURCE_CORE": 20,
+          "SEQ_SOURCE_SPEC": 20,
+          "SEQ_EXPLAIN": 20,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "20",
+        "completed": "20",
+        "expected_trials": "20",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "20",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "20",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "132",
+        "avg_strength": "14494.7"
+      }
+    },
+    {
+      "name": "hop10_att_mid23_20",
+      "file": "hop10_att_mid23_20.0e8b3bdd.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=0,20,20,0,0 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-29T21:24:47",
+      "duration_s": 68,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 20
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 20,
+          "SEQ_INSPECT": 40,
+          "SEQ_SOURCE_CORE": 20,
+          "SEQ_SOURCE_SPEC": 20,
+          "SEQ_EXPLAIN": 20,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "20",
+        "completed": "20",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "20",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "20",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "20",
+        "avg_dt_ms": "-1",
+        "avg_strength": "14520.3"
+      }
     }
   ]
 }

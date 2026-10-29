@@ -14,3 +14,6 @@ hop order 2950, 3200, 3450, 3700, 3950), 20 trials each.
 | two20   | 0,20,0,20,0 |  0 / 20 | 10988 |  69 | none: duration_too_short |
 
 Lab: docs/lab/experiments/E005_margin.md.
+
+Added 21:26 (which two hops, all 20 dB): end45 0,0,0,20,20 20 / 20 (strength 5521); start12 20,20,0,0,0 20 / 20;
+mid23 0,20,20,0,0 0 / 20, rejected by the shape rule (2950 -> 3700 too large a step: 3 bins, 1 up).

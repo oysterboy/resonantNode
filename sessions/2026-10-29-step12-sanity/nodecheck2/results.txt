@@ -1,0 +1,27 @@
+boot: BUILD, warmup, active        PASS  build=['ba345618'] {'BUILD role=': 0.6, 'RB warmup done': 2.75, 'RB baseline active': 10.06}
+boot: params loaded                PASS  PARAM load stored=39 applied=39 stale=0 invalid=0
+RB STATUS key set vs reference     PASS  only new: [] only ref: []
+RB STATUS printed                  PASS  75 keys
+cmd: RB help                       PASS  RB CMD: PARAM SET behavior.<key> <value> (Behavior timing, rest and id
+cmd: RB summary                    PASS  RB summary: pending=0 accepted=0 validPatterns=0 chirpStarted=0 overfl
+cmd: RB log full                   PASS  RB log mode=full
+cmd: RB PARAM x                    PASS  RB PARAM ERR removed (FrequencyMatch removed); use PARAM SET detection
+cmd: RB BEHAV x                    PASS  RB BEHAV ERR removed; use PARAM SET behavior.<key> <value> (PARAM LIST
+cmd: PARAM GET output.silent       PASS  PARAM GET path=output.silent module=output value=1
+cmd: PARAM DUMP                    PASS  PARAM path=detection.scalar_onset_threshold module=detection type=floa
+cmd: NET STATUS                    PASS  NET node=E1 started=1 build=ba345618 silent=1 uptime_s=23 rx=0 rejecte
+cmd: XYZ_not_a_command             PASS  RB ERR unknown_command
+cmd: OTA                           PASS  OTA result=bad_command (use OTA url=http://<host>:<port>/<file>.bin to
+cmd: RB rebase                     PASS  RB rebase requested quiet-gated
+cmd: RB rebase force               PASS  RB rebase forced
+PARAM DUMP: 47 params              PASS  47
+cmd: RB PROFILE (reset lines)      PASS  RB PROFILE reset_count=0
+silent: heard, outputs_off, no answer PASS  verdicts 3 outputs_off 3 emits 0
+10 hop trains: valid, answered     PASS  valid 10 answers 10 order {'2950,3200,3450,3700,3950'}
+PARAM SAVE / reboot / load         PASS  set 61234, after reboot ['61234']
+param restored                     PASS  ['60000']
+NET * NET PING                     PASS  replies from ['E4', 'E5']
+NET * PARAM SET round trip         PASS  ok from ['E4', 'E5']
+SELFTEST on E4                     PASS  [('board', 'PASS'), ('mic', 'PASS'), ('quiet_boot', 'PASS'), ('amp', 'PASS'), ('own_chirp_suppressed', 'SKIP'), ('external_chirp', 'SKIP')]
+SELFTEST external (E4 hears E5)    PASS  ['PASS']
+SELFTEST by radio (NET E5)         PASS  [('board', 'PASS'), ('mic', 'PASS'), ('quiet_boot', 'PASS'), ('amp', 'PASS'), ('own_chirp_suppressed', 'SKIP')]

@@ -1,0 +1,16 @@
+>> SEQ start profile=TonalPulseScalar tries=3 band=2950-3950 mode=detail when=all verbose=1\nSEQ MODE quiet
+OK SEQ
+OK SEQ MODE quiet
+SEQ band: low_hz=2950 high_hz=3950 bin_spacing_hz=250.0
+
+#1 ----------------
+>> SEQ STATUS
+SEQ_STATUS mode=quiet when=off verbosity=0 profile=TonalPulseScalar tries=3 diagnostics=on freqUpdateEverySamples=4
+
+#2 ----------------
+
+#3 ----------------
+SEQ_SUMMARY profile=TonalPulseScalar detector=scalar_transient trials=3 completed=3 expected_trials=0 early_trials=0 late_trials=0 miss_trials=0 duplicate_trials=0 unexpected_trials=0 rejected_trials=3 buffer_overrun_trials=0 detector_accepted_trials=3 detector_reject_trials=0 pattern_valid_trials=0 pattern_rejected_trials=3 avg_dt_ms=-1 avg_strength=9982.3 dropped_dma_buffers=0
+>> SEQ STOP (cleanup)
+SEQ_SUMMARY profile=TonalPulseScalar detector=scalar_transient trials=3 completed=3 expected_trials=0 early_trials=0 late_trials=0 miss_trials=0 duplicate_trials=0 unexpected_trials=0 rejected_trials=3 buffer_overrun_trials=0 detector_accepted_trials=3 detector_reject_trials=0 pattern_valid_trials=0 pattern_rejected_trials=3 avg_dt_ms=-1 avg_strength=9982.3 dropped_dma_buffers=0
+OK SEQ STOP

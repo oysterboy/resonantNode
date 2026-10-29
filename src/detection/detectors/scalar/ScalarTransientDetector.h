@@ -222,6 +222,7 @@ private:
     void updateTransientStage(uint64_t nowUs, float signalMagnitude, bool aboveReleaseThreshold);
     void captureAcceptedOccurrence(uint64_t releaseObservedUs, unsigned long peakDurationUs);
     void captureSelectedReject(uint64_t releaseObservedUs);
+    void fillMeasuredSummary(detection::OccurrenceSummary& out) const;
     void updateAcceptedOccurrencePending(const AudioSamplePacket& audioSamplePacket, float signalMagnitude);
     void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
     void resetAcceptedOccurrencePending();

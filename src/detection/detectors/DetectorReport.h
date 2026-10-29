@@ -6,19 +6,19 @@
 namespace detection {
 
 /*
-AcceptedOccurrenceSummary
+OccurrenceSummary
 
-Generic accepted-occurrence shell frozen into DetectorReport.
-Only keep fields another detector could plausibly expose with the same meaning.
+What a detector measured over one closed occurrence, accepted or rejected, frozen into DetectorReport. Only keep
+fields another detector could plausibly expose with the same meaning.
 */
-struct AcceptedOccurrenceSummary {
+struct OccurrenceSummary {
     bool present = false;
     unsigned long occurrenceId = 0;
     unsigned long startMs = 0;
     unsigned long peakMs = 0;
     unsigned long endMs = 0;
     unsigned long durationMs = 0;
-    float strength = 0.0f; // Compatibility alias for peak in this pass.
+    float strength = 0.0f;  // the occurrence's strength; the scalar detector's is its peak (the same value as peak)
     float confidence = 0.0f;
     float peak = 0.0f;
     float mean = 0.0f;
@@ -36,37 +36,18 @@ struct AcceptedOccurrenceSummary {
     unsigned long gapMaxMs = 0;
 };
 
+// The accepted occurrence: the summary alone.
+using AcceptedOccurrenceSummary = OccurrenceSummary;
+
 /*
 SelectedRejectSummary
 
-Generic selected-reject shell frozen into DetectorReport.
-`detectorReason` stays string-based until detector reason enums are unified.
+The selected (best) reject: the summary plus why it was rejected. `detectorReason` stays string-based until detector
+reason enums are unified.
 */
-struct SelectedRejectSummary {
-    bool present = false;
+struct SelectedRejectSummary : OccurrenceSummary {
     DetectorRejectClass rejectClass = DetectorRejectClass::None;
     const char* detectorReason = "none";
-    unsigned long occurrenceId = 0;
-    unsigned long startMs = 0;
-    unsigned long peakMs = 0;
-    unsigned long endMs = 0;
-    unsigned long durationMs = 0;
-    float strength = 0.0f; // Compatibility alias for peak in this pass.
-    float confidence = 0.0f;
-    float peak = 0.0f;
-    float mean = 0.0f;
-    float rms = 0.0f;
-    float meanStrength = 0.0f;
-    float matchedMeanStrength = 0.0f;
-    unsigned int strengthCount = 0;
-    unsigned int matchedStrengthCount = 0;
-    unsigned long coverageAboveAttackMs = 0;
-    unsigned long coverageAboveReleaseMs = 0;
-    unsigned long sustainedMs = 0;
-    unsigned int islandCount = 0;
-    unsigned int gapCount = 0;
-    unsigned long islandMaxMs = 0;
-    unsigned long gapMaxMs = 0;
 };
 
 /*

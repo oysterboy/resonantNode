@@ -88,8 +88,9 @@ node-structure.md              Node classes and files against the spec and the
 field-activity-response.md     answers that follow the field (tentative -> quicker ->
                                saturated -> silent) and frequencies that align: the
                                mechanisms (ramp, two time constants, excitability,
-                               probability only, turn taking), the lenient activity,
-                               the owner's answers; desk model tools/sim/fieldramp.py
+                               probability only, turn taking, the level automaton),
+                               the lenient activity, the owner's answers; desk model
+                               tools/sim/fieldramp.py (shipped / ramp / level)
 code-standards-read-2026-10-28.md
                                the tree at 2def60f against a generic standards
                                list (readability, KISS, DRY, YAGNI, naming,

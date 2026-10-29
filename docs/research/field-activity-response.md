@@ -186,7 +186,7 @@ falls by a factor of four to six over a chain. A typical ramp chain, seconds aft
 4.11, 4.16, 4.54, 5.02, 5.47, 5.64, 5.80, 5.84, then silence. The model is for shaping the parameters before the
 C++ exists; the numbers above say the mechanism produces the owner's arc, not what the room will do.
 
-## Part 2: frequencies that align
+## Part 2: frequencies that align (later, owner 2026-10-29)
 
 What a node can vary today: the hop train plays all five band bins in grid order, starting at the node's rotation
 (`output.hop_rotation`, from the roster at boot, E1 = 0 ... E5 = 4; `NodeSignalComposer`). So the start bin is the
@@ -223,8 +223,8 @@ then       scatter: r := random, or fall silent; owner's call
   reading of "align"; the owner's note says frequencies, so it is only named here.
 - Alignment by radio consensus would be cheap and exact, and not acoustic; yardstick only, as above.
 
-Coupling the two parts, as one arc (proposal, owner's call): the saturation rest of part 1 is where part 2
-scatters. Random start, tentative answers, alignment and acceleration along the swell, saturation, silence and a
+Coupling the two parts, as one arc (proposal, owner's call, when part 2 comes): the saturation rest of part 1 is
+where part 2 scatters. Random start, tentative answers, alignment and acceleration along the swell, saturation, silence and a
 new random spread, again. One activity drives both; nothing in part 2 needs its own saturation.
 
 ## How to choose, then how to test
@@ -297,8 +297,66 @@ align      on each answer: move r one bin toward the heard start bin with probab
 saturation f >= F_sat (or a >= A_sat): rest R, a := 0, r := random; f decays through the rest
 ```
 
+## The automaton variant (owner's lean, 2026-10-29: probability only, yielding, few values, close to a cellular automaton)
+
+One integer per node and one probability derived from it; rules fire on events, nothing is a curve:
+
+```text
+state   level, an integer 0..L (L = 6 first guess)
+hear    a valid pattern: level += 1 (accepted-but-invalid: += 1 every second time, the leniency; raw: nothing)
+own     an emission: level += 1 (so a node with one loud neighbour still saturates)
+decay   one step down per decay_ms of hearing nothing (2 s first guess)
+p       = (level + 1) / L, capped at 1
+answer  on a heard pattern, answer with probability p after the fixed wait plus a random draw from a fixed
+        jitter window (2 s first guess); no delay function
+yield   a verdict while an answer is pending: drop the answer with probability 1 - p (same number)
+saturation  level reaches L: rest for rest_ms, level := 0 (fast release, slow attack)
+```
+
+Four values (L, the decay step, the jitter window, the rest) plus the existing wait, against the ramp's seven and
+the two-time-constant model's ten. It is a probabilistic cellular automaton in all but the clock: local rules on
+what the cell hears, an integer state, a refractory state after saturation, and with neighbour-only hearing the
+same travelling swell. The excitability model is its continuous cousin (level as a charge, p as a threshold
+crossing, the rest as adaptation) and needs a second variable for the fatigue; the two-time-constant model is the
+ramp with the fatigue made explicit. The automaton drops the fatigue: if the bench shows swells re-igniting too
+soon after a rest, the first fix is a longer rest, not a second variable.
+
+What it gives and what it does not, in the desk model (five nodes, 30 min, same channel as the table above; the
+`level` variant of tools/sim/fieldramp.py, `--levels 6 --p-offset 1`):
+
+| Setting | Chains that ignite (4+ emissions) | Chain length median / max | Emissions per chain | Interval first third -> last third | Chord rounds |
+|---|---|---|---|---|---|
+| L 6, jitter 2 s | 41 of 49 | 4.1 s / 10.5 s | 7 | 0.83 -> 0.62 s | 12 % |
+| L 6, jitter 1 s | 40 of 50 | 2.7 s / 5.5 s | 7 | 0.56 -> 0.16 s | 25 % |
+| L 6, hearing 0.7 | 32 of 51 | 4.3 s / 11.3 s | 8 | 0.97 -> 0.65 s | 12 % |
+| L 6, three nodes | 18 of 55 | 0.8 s / 9.4 s | 2 | 1.06 -> 0.55 s | 5 % |
+| L 8, p = level / L (no offset) | 20 of 79 | 0.3 s / 11.7 s | 2 | 1.20 -> 0.52 s | 6 % |
+
+- Tentative comes out stronger than in the ramp: without the offset most idle calls get one answer and die
+  (20 of 79 ignite); with p = (level + 1) / L most ignite. Which is wanted is a question for the owner (the
+  "tentative" of the direction includes calls that go unanswered).
+- Conversation at the bottom holds: chords are 5-12 % of rounds (38-65 % today) because yielding is strong while
+  p is small. The chorus at the top is short, since p reaches 1 only one or two levels before saturation; a longer
+  chorus needs the answer probability to saturate earlier than the rest does (p = 2 x level / L, one more value).
+- Quicker is weaker than in the ramp: a node's own delay does not change, the group gets quicker only because more
+  nodes join each round. With a 2 s jitter the interval falls 0.83 -> 0.62 s; with 1 s, 0.56 -> 0.16 s. If the
+  ear wants each answer to come sooner, the one extra rule is a jitter window that shrinks with the level, and
+  then it is the ramp's delay in integer steps.
+- Every chain ends; chains are 4-10 s on these values.
+
+Where it would live: Behavior sees every verdict with its `accepted` and `valid` flags
+(`handleOccurrenceVerdict`), so the level can be counted there from the verdicts alone, and FieldState's pattern
+count is no longer read (an amendment to decisions/2026-10-22-fieldstate-is-the-rest-gate.md at that point). To
+check before relying on it: that a released occurrence the inspector rejects reaches Behavior as a verdict with
+`accepted` false (the `ignored_invalid_pattern` path suggests so).
+
+Part 2 (frequencies that align) is later (owner 2026-10-29); the automaton above does not touch the rotation.
+
 ## Open questions for the owner
 
+- Ignition: should most idle calls start a swell (p = (level + 1) / L) or only some (p = level / L)?
+- A longer chorus at the top: the answer probability saturating before the rest (one more value), or not?
+- Each answer sooner as well (a jitter window shrinking with the level), or group density alone?
 - The ramp's top: silence (today's rest, proposed) or a soft ceiling (answer probability falls back toward p_min
   at high activity, no hard pause)? The hard pause is what every field gate so far passed on.
 - The first guesses: tau 6 s, saturation 6, delay 2.5 s -> 150 ms, p_min 0.4, rest 8 s. The desk model gives

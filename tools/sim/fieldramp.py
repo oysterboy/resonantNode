@@ -8,9 +8,9 @@ Model only: no detection, no audio. Every emission is the 165 ms hop train; a li
 that is not emitting or in its own-emit tail hears it with probability --hear and gets
 the verdict 20 ms after the train ends (bench 2026-10-16: verdict to answer start
 117-127 ms with the 100 ms wait). Idle calls every 60 s +- 20 s as shipped. The ramp is
-the proposal in docs/research/field-activity-response.md; nothing here is measured.
+the options in docs/research/field-activity-response.md; nothing here is measured.
 
-    python tools/sim/fieldramp.py                 # both variants, 5 nodes, 20 min
+    python tools/sim/fieldramp.py                 # shipped, ramp and level, 5 nodes, 20 min
     python tools/sim/fieldramp.py --variant ramp --nodes 5 --minutes 30 --trace
 
 Prints per variant: chains (a 3 s silence ends one, as nodegroup.py), chain length and
@@ -49,6 +49,10 @@ class Node:
         self.activity = 0.0
         self.activity_at = 0
         self.emissions = []
+        # level automaton: an integer level, decayed one step per decay_ms without hearing
+        self.level = 0
+        self.level_at = 0
+        self.yields = 0
 
     def idle_delay(self, now):
         return now + self.rng.uniform(40_000, 80_000)
@@ -72,6 +76,9 @@ class Node:
         if self.rng.random() > self.cfg.hear:
             return
         self.last_heard = now
+        if self.variant == "level":
+            self.hear_level(now)
+            return
         if now < self.rest_until:
             return
         if self.variant == "shipped":
@@ -98,6 +105,27 @@ class Node:
             if self.answer_at is None and self.emit_until <= now:
                 self.answer_at = now + delay
 
+    def hear_level(self, now):
+        """Level automaton: one integer, one probability from it (p = level / L) for both answering and not
+        yielding; a fixed jitter window; saturation at L."""
+        if now < self.rest_until:
+            return
+        self.level += 1
+        self.level_at = now
+        if self.level >= self.cfg.levels:
+            self.rest_until = now + self.cfg.rest_ms
+            self.level = 0
+            self.answer_at = None
+            return
+        p = min(1.0, (self.level + self.cfg.p_offset) / self.cfg.levels)
+        if self.answer_at is not None:
+            if self.rng.random() > p:      # yield: someone else answered first
+                self.answer_at = None
+                self.yields += 1
+            return
+        if self.rng.random() <= p and self.emit_until <= now:
+            self.answer_at = now + 100 + self.rng.uniform(0, self.cfg.jitter_ms)
+
     def refractory_until(self):
         return self.last_emit + TRAIN_MS + self.cfg.refractory_ms
 
@@ -112,6 +140,12 @@ class Node:
             self.emit_times = [t for t in self.emit_times if now - t < 10_000] + [now]
             if len(self.emit_times) >= 6:
                 self.rest_until = now + TRAIN_MS + 5000
+        elif self.variant == "level":
+            self.level += 1
+            self.level_at = now
+            if self.level >= self.cfg.levels:
+                self.rest_until = now + TRAIN_MS + self.cfg.rest_ms
+                self.level = 0
         else:
             self.bump(now, self.cfg.w_own)
             if self.activity >= self.cfg.sat:
@@ -120,6 +154,9 @@ class Node:
         field.schedule(now + TRAIN_MS + VERDICT_LAG_MS, self.idx)
 
     def tick(self, now, field):
+        if self.variant == "level" and self.level > 0 and now - self.level_at >= self.cfg.decay_ms:
+            self.level -= 1
+            self.level_at = now
         if self.answer_at is not None and now >= self.answer_at and self.emit_until <= now:
             if now >= self.rest_until:
                 self.start_emit(now, field)
@@ -199,20 +236,20 @@ def analyse(events, cfg, trace):
           "emissions per chain median %d max %d" % (
               len(times), cfg.minutes, len(chains), sum(1 for l in lengths if l <= 30),
               statistics.median(lengths), max(lengths), statistics.median(counts), max(counts)))
-    print("  per minute max %d, median %d; chord rounds %d of %d (%.0f %%)" % (
+    print("  per minute max %d, median %d; chord rounds %d of %d (%.0f %%); chains of 4+ emissions: %d of %d" % (
         max(per_min.values()), statistics.median(per_min.values()), chords, len(rounds),
-        100.0 * chords / len(rounds)))
+        100.0 * chords / len(rounds), sum(1 for c in counts if c >= 4), len(chains)))
     if early:
         print("  answer interval, chains of 6+: first third median %.2f s, last third median %.2f s" % (
             statistics.median(early), statistics.median(late)))
     if trace:
-        for c in chains[:6]:
+        for c in [c for c in chains if len(c) >= 4][:6]:
             print("  chain at %7.1f s: %s" % (c[0] / 1000, " ".join("%.2f" % ((t - c[0]) / 1000) for t in c)))
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--variant", choices=["shipped", "ramp", "both"], default="both")
+    ap.add_argument("--variant", choices=["shipped", "ramp", "level", "all"], default="all")
     ap.add_argument("--nodes", type=int, default=5)
     ap.add_argument("--minutes", type=float, default=20)
     ap.add_argument("--hear", type=float, default=0.95, help="probability a listener hears a train")
@@ -229,8 +266,13 @@ def main():
     ap.add_argument("--d-min", type=float, default=150, help="answer delay ms at saturation")
     ap.add_argument("--p-min", type=float, default=0.4, help="answer probability at zero activity")
     ap.add_argument("--rest-ms", type=float, default=8000)
+    # level automaton parameters (the owner's lean 2026-10-29: probability only, yielding, few values)
+    ap.add_argument("--levels", type=int, default=8, help="L: saturation level; p = level / L")
+    ap.add_argument("--decay-ms", type=float, default=2000, help="one level step down per this much silence")
+    ap.add_argument("--jitter-ms", type=float, default=2000, help="fixed random window on the answer delay")
+    ap.add_argument("--p-offset", type=float, default=0, help="p = (level + offset) / L; 1 lets a first call ignite more often")
     cfg = ap.parse_args()
-    for variant in (["shipped", "ramp"] if cfg.variant == "both" else [cfg.variant]):
+    for variant in (["shipped", "ramp", "level"] if cfg.variant == "all" else [cfg.variant]):
         print("%s (nodes %d, hear %.2f, seed %d)" % (variant, cfg.nodes, cfg.hear, cfg.seed))
         analyse(run(variant, cfg, cfg.seed), cfg, cfg.trace)
 

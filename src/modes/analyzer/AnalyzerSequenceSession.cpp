@@ -11,6 +11,7 @@
 #include "../../detection/analyzer/AnalyzerPassRules.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
+#include "../../app/PrintKeyValue.h"
 
 #include "tools/AnalyzerEmitterControl.h"
 
@@ -319,6 +320,13 @@ void AnalyzerApp::startSequenceTest(const RunConfig& requested) {
             } else {
                 serialOut().print("default");
             }
+            // Step 13: only when set, so a run at the Emitter's level keeps its old header.
+            if (_sequenceTest.config.pulseLevel[0] != '\0') {
+                printKeyValue("level", _sequenceTest.config.pulseLevel);
+            }
+            if (_sequenceTest.config.pulseAtt[0] != '\0') {
+                printKeyValue("att_db", _sequenceTest.config.pulseAtt);
+            }
         } else if (_sequenceTest.config.sweepToHz != 0) {
             // Sweep inside the chirp (OUT-005): freq_hz glides to this over dur_ms.
             serialOut().print(" sweep_hz=");
@@ -400,6 +408,18 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
             const size_t used = strlen(command);
             if (_sequenceTest.config.pulseHop[0] != '\0' && used < sizeof(command)) {
                 snprintf(command + used, sizeof(command) - used, " hop=%s", _sequenceTest.config.pulseHop);
+            }
+            if (_sequenceTest.config.pulseLevel[0] != '\0') {
+                const size_t n = strlen(command);
+                snprintf(command + n, sizeof(command) - n, " level=%s", _sequenceTest.config.pulseLevel);
+            }
+            if (_sequenceTest.config.pulseAtt[0] != '\0') {
+                const size_t n = strlen(command);
+                snprintf(command + n, sizeof(command) - n, " att=%s", _sequenceTest.config.pulseAtt);
+            }
+            if (strlen(command) > serial_line::kEmitterLineMax) {
+                // The Emitter would refuse it as too long; say so here, where the run is read.
+                serialOut().println("SEQ_ERR emitter_line_too_long (shorten hop= / att=)");
             }
         } else if (_sequenceTest.config.sweepToHz != 0) {
             snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu sweep=%lu", trialNumber,

@@ -62,7 +62,8 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println(
         "SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
     serialOut().println(
-        "SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]");
+        "SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]"
+        " [level=FS] [att=DB1,DB2,...]");
     serialOut().println("SEQ IN: sweep inside the chirp (OUT-005): start ... freq=START_HZ dur=MS sweep=END_HZ");
     serialOut().println("SEQ IN: TRIES N");
     serialOut().println("SEQ IN: [profile=TonalPulseScalar|AmpExperimental]");
@@ -538,6 +539,24 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
         }
         strncpy(request.pulseHop, list, sizeof(request.pulseHop) - 1);
         request.pulseHop[sizeof(request.pulseHop) - 1] = '\0';
+    } else if (startsWithIgnoreCase(token, "level=")) {
+        // The Emitter's train level in full scale (step 13); the Emitter checks the range.
+        const char* value = text_parse::tokenValue(token);
+        float level = 0.0f;
+        if (!text_parse::parseFiniteFloat(value, level) || level <= 0.0f || level > 0.999f ||
+            strlen(value) >= sizeof(request.pulseLevel)) {
+            printBadValue(kSeqBadValue, token);
+            return false;
+        }
+        strcpy(request.pulseLevel, value);
+    } else if (startsWithIgnoreCase(token, "att=")) {
+        // dB per pulse below the level, cycled (step 13): digits and commas, as hop=.
+        const char* list = text_parse::tokenValue(token);
+        if (!analyzer_commands::validHopList(list, sizeof(request.pulseAtt))) {
+            printBadValue(kSeqBadValue, token);
+            return false;
+        }
+        strcpy(request.pulseAtt, list);
     } else if (startsWithIgnoreCase(token, "sweep=")) {
         if (!text_parse::parseUnsigned(text_parse::tokenValue(token), request.sweepToHz) ||
             request.sweepToHz > runtime::kMaxToneHz) {

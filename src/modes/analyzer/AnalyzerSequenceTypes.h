@@ -88,6 +88,8 @@ struct RunConfig {
     bool pulseRampSet = false;
     unsigned long pulseRampMs = 0;
     char pulseHop[40] = {};  // hop=F1,F2,... forwarded to PULSES; empty = none
+    char pulseLevel[8] = {};  // level=FS forwarded to PULSES (step 13); empty = the Emitter's level
+    char pulseAtt[24] = {};   // att=DB1,DB2,... forwarded to PULSES (step 13); empty = none
     unsigned long sweepToHz = 0;  // sweep=HZ forwarded to CHIRP (glide from toneHz over durationMs); 0 = steady
     unsigned long bandLowHz = 0;   // band=LOW-HIGH: FrequencyTarget = strongest bin in the band; 0 = off
     unsigned long bandHighHz = 0;

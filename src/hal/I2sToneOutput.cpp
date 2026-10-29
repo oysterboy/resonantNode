@@ -83,6 +83,15 @@ void I2sToneOutput::setPulseHop(const uint32_t* hz, size_t n) {
     portEXIT_CRITICAL(&_trainMux);
 }
 
+void I2sToneOutput::setPulseGains(const float* gain, size_t n) {
+    portENTER_CRITICAL(&_trainMux);
+    _reqGainCount = (gain == nullptr || n > kMaxHop) ? 0 : n;
+    for (size_t i = 0; i < _reqGainCount; ++i) {
+        _reqGain[i] = gain[i];
+    }
+    portEXIT_CRITICAL(&_trainMux);
+}
+
 bool I2sToneOutput::startPulseTrain(uint32_t count, uint32_t onMs, uint32_t gapMs, uint32_t rampMs) {
     if (_task == nullptr || count == 0 || onMs == 0) {
         return false;
@@ -131,6 +140,12 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
         if (_hopCount > 0) {
             _trainStep = hopStep(sampleRateHz);
         }
+        _gainCount = _reqGainCount;
+        for (size_t i = 0; i < _gainCount; ++i) {
+            _gain[i] = _reqGain[i];
+        }
+        _gainIndex = 0;
+        _trainGain = nextGain();
         // onMs/gapMs are what is heard: sound (envelope > 0) and silence.
         // The off-ramp runs past the "on" target, so the target is onMs -
         // ramp and the gap target gapMs + ramp; a ramp over half the pulse
@@ -154,6 +169,16 @@ uint32_t I2sToneOutput::hopStep(uint32_t sampleRateHz) {
     const uint32_t hz = _hopHz[_hopIndex % _hopCount];
     ++_hopIndex;
     return static_cast<uint32_t>((static_cast<uint64_t>(hz) << 32) / static_cast<uint64_t>(sampleRateHz));
+}
+
+// Gain of the next pulse (cycled), advancing the index; 1.0 without a gain list.
+float I2sToneOutput::nextGain() {
+    if (_gainCount == 0) {
+        return 1.0f;
+    }
+    const float gain = _gain[_gainIndex % _gainCount];
+    ++_gainIndex;
+    return gain;
 }
 
 void I2sToneOutput::taskEntry(void* self) {
@@ -226,6 +251,7 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
                     if (_hopCount > 0) {
                         _trainStep = hopStep(sampleRateHz);
                     }
+                    _trainGain = nextGain();
                 }
             }
             if (_trainRunning && _trainSegmentLeft > 0) {
@@ -237,6 +263,8 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
             if (_envelope <= 0.0f) {
                 _trainDraining = false;
                 _trainStep = 0;
+                _gainCount = 0;  // a plain tone after the train plays at _amplitude
+                _trainGain = 1.0f;
                 portENTER_CRITICAL(&_trainMux);
                 if (!_trainRequested) {
                     _trainActive = false;
@@ -255,7 +283,9 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
         int32_t value = 0;
         if (_envelope > 0.0f) {
             const float s = sinf(static_cast<float>(_phase) * kPhaseToRadians);
-            value = static_cast<int32_t>(s * _amplitude * _envelope * kFullScale);
+            // Without a gain list the product is _amplitude itself, so a Node's output is bit for bit as before.
+            const float amplitude = _gainCount > 0 ? _amplitude * _trainGain : _amplitude;
+            value = static_cast<int32_t>(s * amplitude * _envelope * kFullScale);
             uint32_t step = phaseStep;
             if (trainShape && _trainStep != 0) {
                 step = _trainStep;

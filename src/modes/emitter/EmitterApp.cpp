@@ -319,6 +319,11 @@ void EmitterApp::handlePulsesCommand(const char* line) {
     unsigned long positional = 0;
     bool hopBad = false;
     _pulseHopCount = 0;
+    float level = 0.0f;  // 0 = the board's level
+    unsigned long attDb[kPulseHopMax] = {};
+    size_t attCount = 0;
+    _pulseLevelText[0] = '\0';
+    _pulseAttText[0] = '\0';
     char* savePtr = nullptr;
     char* token = strtok_r(buffer, " ", &savePtr);
     token = nextToken(savePtr);
@@ -338,6 +343,32 @@ void EmitterApp::handlePulsesCommand(const char* line) {
                     hopBad = true;
                     break;
                 }
+            }
+        } else if (startsWith(token, "level=")) {
+            // The train's peak in full scale (step 13's level ladder), in place of the board's built level.
+            if (!text_parse::parseFiniteFloat(findValue(token), level) || level <= 0.0f || level > 0.999f ||
+                strlen(findValue(token)) >= sizeof(_pulseLevelText)) {
+                printBadValue("PULSES", token);
+                return;
+            }
+            strcpy(_pulseLevelText, findValue(token));
+        } else if (startsWith(token, "att=")) {
+            // dB below the train's level per pulse, cycled like hop= (step 13's margin test).
+            const char* list = findValue(token);
+            if (strlen(list) >= sizeof(_pulseAttText)) {
+                printBadValue("PULSES", token);
+                return;
+            }
+            strcpy(_pulseAttText, list);
+            while (*list != '\0') {
+                char* end = nullptr;
+                const unsigned long db = strtoul(list, &end, 10);
+                if (end == list || attCount >= kPulseHopMax || db > 60 || (*end != ',' && *end != '\0')) {
+                    printBadValue("PULSES", token);
+                    return;
+                }
+                attDb[attCount++] = db;
+                list = (*end == ',') ? end + 1 : end;
             }
         } else if (startsWith(token, "trial=")) {
             if (!text_parse::parseUnsigned(findValue(token), trialId)) {
@@ -405,7 +436,7 @@ void EmitterApp::handlePulsesCommand(const char* line) {
         serialOut().print(kPulsesMaxGapMs);
         serialOut().print(") [freq=HZ] [ramp=0-");
         serialOut().print(kPulsesMaxRampMs);
-        serialOut().println("] [trial=N]");
+        serialOut().println("] [trial=N] [hop=F1,...] [level=FS] [att=DB1,...]");
         return;
     }
     if (hopBad) {
@@ -416,6 +447,18 @@ void EmitterApp::handlePulsesCommand(const char* line) {
     if (!emitterToneHzPlayable(toneHz)) {
         printToneHzRejected("PULSES", toneHz);
         return;
+    }
+#if defined(BOARD_PIEZO)
+    if (level > 0.0f || attCount > 0) {
+        serialOut().println("ERR PULSES level= / att= need the D-AMP tone output");
+        return;
+    }
+#endif
+    // gain = level / the board's level, times the pulse's attenuation; 1.0 is the board's level exactly.
+    const float levelGain = level > 0.0f ? level / runtime::kDefaultI2sToneAmplitude : 1.0f;
+    _pulseGainCount = attCount > 0 ? attCount : (level > 0.0f ? 1 : 0);
+    for (size_t i = 0; i < _pulseGainCount; ++i) {
+        _pulseGain[i] = levelGain * (attCount > 0 ? powf(10.0f, -static_cast<float>(attDb[i]) / 20.0f) : 1.0f);
     }
     startPulses(toneHz, count, pulseMs, gapMs, rampMs, trialId);
 }
@@ -583,6 +626,7 @@ void EmitterApp::startPulses(unsigned long toneHz, unsigned long count, unsigned
     _activeTrialId = trialId;
     _chirpOutput.setToneHz(static_cast<uint32_t>(toneHz));
     _chirpOutput.setPulseHop(_pulseHopHz, _pulseHopCount);
+    _chirpOutput.setPulseGains(_pulseGain, _pulseGainCount);
     _chirpOutput.startPulseTrain(static_cast<uint32_t>(count), pulseMs, gapMs, static_cast<uint32_t>(rampMs));
     sendStartMarkers();
 
@@ -599,6 +643,15 @@ void EmitterApp::startPulses(unsigned long toneHz, unsigned long count, unsigned
     char ackLine[128];
     snprintf(ackLine, sizeof(ackLine), "OK PULSES n=%lu pulse=%lu gap=%lu freq=%lu ramp=%lu span=%lu hop=%u", count,
              pulseMs, gapMs, toneHz, rampMs, spanMs, static_cast<unsigned>(_pulseHopCount));
+    // level= / att= only when asked for, so the plain ack stays as it was.
+    if (_pulseLevelText[0] != '\0') {
+        const size_t used = strlen(ackLine);
+        snprintf(ackLine + used, sizeof(ackLine) - used, " level=%s", _pulseLevelText);
+    }
+    if (_pulseAttText[0] != '\0') {
+        const size_t used = strlen(ackLine);
+        snprintf(ackLine + used, sizeof(ackLine) - used, " att=%s", _pulseAttText);
+    }
     sendControlAck(ackLine);
 }
 

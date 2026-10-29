@@ -199,6 +199,8 @@ SEQ start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [rep
 SEQ start ... band=LOW-HIGH|off                              score the strongest bin in the band (default off)
 SEQ OBS start ...               passive observe mode for an external emitter already running
 SEQ start ... pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]      pulse train per trial (DET-011)
+SEQ start ... pulses=N ... [level=FS] [att=DB1,DB2,...]       the train at FS (0-0.999) and each pulse
+                                                             DB below it, cycled (step 13; D-AMP only)
 SEQ start ... freq=START_HZ dur=MS sweep=END_HZ              sweep inside the chirp (OUT-005)
 SEQ stop | SEQ STATUS | SEQ SUMMARY | SEQ REPORT | SEQ TRIES N
 SEQ REPORT                                                   the detection values the current (or last) run
@@ -278,6 +280,7 @@ Commands over USB, as of 2026-10-26:
 ```text
 EMIT CHIRP freq=HZ dur=MS
 EMIT PULSES n pulse_ms gap_ms [freq=HZ] [ramp=MS] [hop=F1,F2,...]    up to 8 playable frequencies
+EMIT PULSES ... [level=FS] [att=DB1,...]    train level and per-pulse dB (0-60), up to 8 entries
 EMIT SWEEP start=HZ stop=HZ step=HZ dur=MS pause=MS
 EMIT MODE AUTO interval=MS freq=HZ dur=MS | EMIT MODE REMOTE
 SELFTEST

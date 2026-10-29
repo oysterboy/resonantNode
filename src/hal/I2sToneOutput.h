@@ -46,6 +46,7 @@ public:
     void toneOff() override;
     bool startPulseTrain(uint32_t count, uint32_t onMs, uint32_t gapMs, uint32_t rampMs) override;
     void setPulseHop(const uint32_t* hz, size_t n) override;
+    void setPulseGains(const float* gain, size_t n) override;
     bool pulseTrainActive() const override;
     void setSweep(uint32_t endHz, uint32_t durationMs) override;
 
@@ -61,6 +62,7 @@ private:
     void renderBlock(int32_t* frames, size_t frameCount);
     void takePulseTrainRequest(uint32_t sampleRateHz);
     uint32_t hopStep(uint32_t sampleRateHz);
+    float nextGain();
 
     AudioSourceI2S& _port;
     float _amplitude;
@@ -87,6 +89,8 @@ private:
     static constexpr size_t kMaxHop = runtime::kMaxHopSteps;
     uint32_t _reqHopHz[kMaxHop] = {};
     size_t _reqHopCount = 0;
+    float _reqGain[kMaxHop] = {};
+    size_t _reqGainCount = 0;
 
     // Task-only render state.
     uint32_t _phase = 0;
@@ -103,6 +107,11 @@ private:
     size_t _hopCount = 0;
     size_t _hopIndex = 0;           // next hop entry
     uint32_t _trainStep = 0;        // phase step of the current pulse; 0 = use _toneHz
+    // Gain per pulse, cycled; none = every pulse at _amplitude. Changes between pulses only (the envelope is 0).
+    float _gain[kMaxHop] = {};
+    size_t _gainCount = 0;
+    size_t _gainIndex = 0;
+    float _trainGain = 1.0f;
     // Sweep render state: samples since the tone started and the current
     // phase step as a float accumulator (one add per sample).
     uint32_t _sweepPos = 0;

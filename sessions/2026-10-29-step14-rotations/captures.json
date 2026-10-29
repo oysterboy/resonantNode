@@ -1,0 +1,850 @@
+{
+  "purpose": "",
+  "setup": {
+    "distance_cm": 79.0,
+    "orientation": "layout of 2026-10-26-soak24-shape-b, E3 -> E2",
+    "notes": "step 14.1: rotations for the chord mix"
+  },
+  "captures": [
+    {
+      "label": "hop5_rot0",
+      "rep": 0,
+      "file": "hop5_rot0_r0.csv",
+      "wav": "hop5_rot0_r0.wav",
+      "started": "2026-10-29T21:34:25",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2950,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "2950,3200,3450,3700,3950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3300,
+        "emit_done_ms": 3457,
+        "pre_samples": 269,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5069,
+        "unused_capacity": 531,
+        "max_pcm_abs": 124407,
+        "max_amp": 15470,
+        "raw_mean": -63.9,
+        "raw_abs_mean": 18084.7,
+        "raw_min": -123002,
+        "raw_max": 124407,
+        "baseline": 760.9
+      },
+      "check": {
+        "samples": 5069,
+        "tone_amp": 5859,
+        "peak_abs": 124407,
+        "env_len_ms": 45
+      }
+    },
+    {
+      "label": "hop5_rot0",
+      "rep": 1,
+      "file": "hop5_rot0_r1.csv",
+      "wav": "hop5_rot0_r1.wav",
+      "started": "2026-10-29T21:34:39",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2950,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "2950,3200,3450,3700,3950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 17869,
+        "emit_done_ms": 18033,
+        "pre_samples": 292,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5092,
+        "unused_capacity": 508,
+        "max_pcm_abs": 126245,
+        "max_amp": 15867,
+        "raw_mean": 339.8,
+        "raw_abs_mean": 17788.1,
+        "raw_min": -126245,
+        "raw_max": 124417,
+        "baseline": 699.8
+      },
+      "check": {
+        "samples": 5092,
+        "tone_amp": 5559,
+        "peak_abs": 126245,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "hop5_rot0",
+      "rep": 2,
+      "file": "hop5_rot0_r2.csv",
+      "wav": "hop5_rot0_r2.wav",
+      "started": "2026-10-29T21:34:55",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2950,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "2950,3200,3450,3700,3950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 32914,
+        "emit_done_ms": 33073,
+        "pre_samples": 364,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5164,
+        "unused_capacity": 436,
+        "max_pcm_abs": 125387,
+        "max_amp": 15737,
+        "raw_mean": 131.5,
+        "raw_abs_mean": 17482.2,
+        "raw_min": -125387,
+        "raw_max": 118940,
+        "baseline": 522.8
+      },
+      "check": {
+        "samples": 5164,
+        "tone_amp": 5818,
+        "peak_abs": 125387,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "hop5_rot1",
+      "rep": 0,
+      "file": "hop5_rot1_r0.csv",
+      "wav": "hop5_rot1_r0.wav",
+      "started": "2026-10-29T21:35:13",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3200,3450,3700,3950,2950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3456,
+        "emit_done_ms": 3616,
+        "pre_samples": 374,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5174,
+        "unused_capacity": 426,
+        "max_pcm_abs": 123849,
+        "max_amp": 15496,
+        "raw_mean": 121.3,
+        "raw_abs_mean": 16760.6,
+        "raw_min": -123849,
+        "raw_max": 119679,
+        "baseline": 126.2
+      },
+      "check": {
+        "samples": 5174,
+        "tone_amp": 5443,
+        "peak_abs": 123849,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "hop5_rot1",
+      "rep": 1,
+      "file": "hop5_rot1_r1.csv",
+      "wav": "hop5_rot1_r1.wav",
+      "started": "2026-10-29T21:35:28",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3200,3450,3700,3950,2950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 18068,
+        "emit_done_ms": 18231,
+        "pre_samples": 268,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5068,
+        "unused_capacity": 532,
+        "max_pcm_abs": 125850,
+        "max_amp": 15727,
+        "raw_mean": 78.9,
+        "raw_abs_mean": 16966.4,
+        "raw_min": -123879,
+        "raw_max": 125850,
+        "baseline": 21.8
+      },
+      "check": {
+        "samples": 5068,
+        "tone_amp": 5449,
+        "peak_abs": 125850,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "hop5_rot1",
+      "rep": 2,
+      "file": "hop5_rot1_r2.csv",
+      "wav": "hop5_rot1_r2.wav",
+      "started": "2026-10-29T21:35:43",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3200,3450,3700,3950,2950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 32802,
+        "emit_done_ms": 32959,
+        "pre_samples": 364,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5164,
+        "unused_capacity": 436,
+        "max_pcm_abs": 124664,
+        "max_amp": 15578,
+        "raw_mean": 21.5,
+        "raw_abs_mean": 16698.1,
+        "raw_min": -122648,
+        "raw_max": 124664,
+        "baseline": 36.1
+      },
+      "check": {
+        "samples": 5164,
+        "tone_amp": 5753,
+        "peak_abs": 124664,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "hop5_rot2",
+      "rep": 0,
+      "file": "hop5_rot2_r0.csv",
+      "wav": "hop5_rot2_r0.wav",
+      "started": "2026-10-29T21:36:02",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3450,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3450,3700,3950,2950,3200",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3468,
+        "emit_done_ms": 3630,
+        "pre_samples": 278,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5078,
+        "unused_capacity": 522,
+        "max_pcm_abs": 119000,
+        "max_amp": 14899,
+        "raw_mean": 85.3,
+        "raw_abs_mean": 17194.7,
+        "raw_min": -119000,
+        "raw_max": 116695,
+        "baseline": 204.1
+      },
+      "check": {
+        "samples": 5078,
+        "tone_amp": 4741,
+        "peak_abs": 119000,
+        "env_len_ms": 40
+      }
+    },
+    {
+      "label": "hop5_rot2",
+      "rep": 1,
+      "file": "hop5_rot2_r1.csv",
+      "wav": "hop5_rot2_r1.wav",
+      "started": "2026-10-29T21:36:16",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3450,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3450,3700,3950,2950,3200",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 17851,
+        "emit_done_ms": 18014,
+        "pre_samples": 378,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5178,
+        "unused_capacity": 422,
+        "max_pcm_abs": 117889,
+        "max_amp": 14740,
+        "raw_mean": 31.4,
+        "raw_abs_mean": 16910.8,
+        "raw_min": -117889,
+        "raw_max": 115868,
+        "baseline": 36.2
+      },
+      "check": {
+        "samples": 5178,
+        "tone_amp": 4807,
+        "peak_abs": 117889,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "hop5_rot2",
+      "rep": 2,
+      "file": "hop5_rot2_r2.csv",
+      "wav": "hop5_rot2_r2.wav",
+      "started": "2026-10-29T21:36:31",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3450,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3450,3700,3950,2950,3200",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 32899,
+        "emit_done_ms": 33062,
+        "pre_samples": 372,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5172,
+        "unused_capacity": 428,
+        "max_pcm_abs": 118795,
+        "max_amp": 14848,
+        "raw_mean": 84.7,
+        "raw_abs_mean": 16931.1,
+        "raw_min": -115774,
+        "raw_max": 118795,
+        "baseline": -0.5
+      },
+      "check": {
+        "samples": 5172,
+        "tone_amp": 4661,
+        "peak_abs": 118795,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "hop5_rot3",
+      "rep": 0,
+      "file": "hop5_rot3_r0.csv",
+      "wav": "hop5_rot3_r0.wav",
+      "started": "2026-10-29T21:36:50",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3700,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3700,3950,2950,3200,3450",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3497,
+        "emit_done_ms": 3654,
+        "pre_samples": 366,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5166,
+        "unused_capacity": 434,
+        "max_pcm_abs": 116004,
+        "max_amp": 14526,
+        "raw_mean": 116.1,
+        "raw_abs_mean": 17148.5,
+        "raw_min": -116004,
+        "raw_max": 113251,
+        "baseline": 209.1
+      },
+      "check": {
+        "samples": 5166,
+        "tone_amp": 14999,
+        "peak_abs": 116004,
+        "env_len_ms": 40
+      }
+    },
+    {
+      "label": "hop5_rot3",
+      "rep": 1,
+      "file": "hop5_rot3_r1.csv",
+      "wav": "hop5_rot3_r1.wav",
+      "started": "2026-10-29T21:37:05",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3700,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3700,3950,2950,3200,3450",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 18234,
+        "emit_done_ms": 18398,
+        "pre_samples": 364,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5164,
+        "unused_capacity": 436,
+        "max_pcm_abs": 114841,
+        "max_amp": 14373,
+        "raw_mean": 50.0,
+        "raw_abs_mean": 17048.6,
+        "raw_min": -114841,
+        "raw_max": 114344,
+        "baseline": 153.4
+      },
+      "check": {
+        "samples": 5164,
+        "tone_amp": 14468,
+        "peak_abs": 114841,
+        "env_len_ms": 45
+      }
+    },
+    {
+      "label": "hop5_rot3",
+      "rep": 2,
+      "file": "hop5_rot3_r2.csv",
+      "wav": "hop5_rot3_r2.wav",
+      "started": "2026-10-29T21:37:20",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3700,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3700,3950,2950,3200,3450",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 33309,
+        "emit_done_ms": 33470,
+        "pre_samples": 308,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5108,
+        "unused_capacity": 492,
+        "max_pcm_abs": 115945,
+        "max_amp": 14508,
+        "raw_mean": -5.2,
+        "raw_abs_mean": 17243.2,
+        "raw_min": -115945,
+        "raw_max": 113111,
+        "baseline": 126.5
+      },
+      "check": {
+        "samples": 5108,
+        "tone_amp": 14564,
+        "peak_abs": 115945,
+        "env_len_ms": 40
+      }
+    },
+    {
+      "label": "hop5_rot4",
+      "rep": 0,
+      "file": "hop5_rot4_r0.csv",
+      "wav": "hop5_rot4_r0.wav",
+      "started": "2026-10-29T21:37:38",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3950,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3950,2950,3200,3450,3700",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3475,
+        "emit_done_ms": 3632,
+        "pre_samples": 376,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5176,
+        "unused_capacity": 424,
+        "max_pcm_abs": 122125,
+        "max_amp": 15306,
+        "raw_mean": 118.6,
+        "raw_abs_mean": 17142.6,
+        "raw_min": -122125,
+        "raw_max": 121306,
+        "baseline": 329.9
+      },
+      "check": {
+        "samples": 5176,
+        "tone_amp": 4911,
+        "peak_abs": 122125,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "hop5_rot4",
+      "rep": 1,
+      "file": "hop5_rot4_r1.csv",
+      "wav": "hop5_rot4_r1.wav",
+      "started": "2026-10-29T21:37:53",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3950,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3950,2950,3200,3450,3700",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 18175,
+        "emit_done_ms": 18336,
+        "pre_samples": 352,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5152,
+        "unused_capacity": 448,
+        "max_pcm_abs": 122235,
+        "max_amp": 15268,
+        "raw_mean": 124.1,
+        "raw_abs_mean": 17251.0,
+        "raw_min": -121022,
+        "raw_max": 122235,
+        "baseline": 83.0
+      },
+      "check": {
+        "samples": 5152,
+        "tone_amp": 4625,
+        "peak_abs": 122235,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "hop5_rot4",
+      "rep": 2,
+      "file": "hop5_rot4_r2.csv",
+      "wav": "hop5_rot4_r2.wav",
+      "started": "2026-10-29T21:38:08",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0e8b3bdd",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3950,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "3950,2950,3200,3450,3700",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 33215,
+        "emit_done_ms": 33375,
+        "pre_samples": 347,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5147,
+        "unused_capacity": 453,
+        "max_pcm_abs": 122910,
+        "max_amp": 15373,
+        "raw_mean": 6.3,
+        "raw_abs_mean": 17285.5,
+        "raw_min": -122910,
+        "raw_max": 120973,
+        "baseline": 81.3
+      },
+      "check": {
+        "samples": 5147,
+        "tone_amp": 4588,
+        "peak_abs": 122910,
+        "env_len_ms": 45
+      }
+    }
+  ]
+}

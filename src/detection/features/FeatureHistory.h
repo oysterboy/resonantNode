@@ -22,7 +22,9 @@ dropped at the door, costing neither RAM nor accumulation work. Producers
 which ones are worth keeping, based on what will actually be read back.
 */
 #ifndef FEATURE_HISTORY_BINS
-#define FEATURE_HISTORY_BINS 512
+// 640 ms: the inspection windows of the longest occurrence (max duration 450 + debounce + the 100 ms windows;
+// decisions/2026-10-29-max-duration-450-for-chords.md) with margin.
+#define FEATURE_HISTORY_BINS 640
 #endif
 
 class FeatureHistory {

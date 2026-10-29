@@ -14,8 +14,8 @@ BinTrack (DET-015, step 11b; decisions/2026-10-26-det015-bin-track-inspector.md)
 The strongest band bin per millisecond, with its level, for the ShapeInspector:
 which bins an occurrence visited and in what order. FreqBandStream knows the
 strongest bin on every update (band mode); DetectionRuntime notes it here per
-frame. A ring of kMs one-ms entries (1.5 KB), enough for the longest occurrence
-(max duration 300 ms) plus a margin; when time moves on, the skipped entries are
+frame. A ring of kMs one-ms entries (3 KB), enough for the longest occurrence
+(max duration 450 ms, decisions/2026-10-29-max-duration-450-for-chords.md) and the 120 ms look-back plus a margin; when time moves on, the skipped entries are
 cleared, so an entry is always the newest kMs ms.
 
 An entry holds the bin with the largest target value in that ms, as a code
@@ -32,7 +32,7 @@ Does not: measure the bins (FreqBandStream) or judge a shape (ShapeInspector).
 */
 class BinTrack {
 public:
-    static constexpr size_t kMs = 512;
+    static constexpr size_t kMs = 1024;
     static constexpr uint32_t kHzPerCode = 50;
 
     void reset() {

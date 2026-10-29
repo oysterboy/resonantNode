@@ -363,8 +363,9 @@ void test_shipped_hop_train_fits_the_scalar_detector() {
 // The check names what the replay shows: a 30 ms gap is over max gap (the wet_g30
 // fixture is not heard), and a short train is under the minimum duration.
 // Step 8b item 2: the shipped profile's durations against its inspection plan and
-// the 512 ms history (detection/InspectionPlanContract.h; the Node prints RB
-// plan_check). The history fits (300 + 10 + 0 + 100 = 410 ms). Since DET-017
+// the 640 ms history (detection/InspectionPlanContract.h; the Node prints RB
+// plan_check). The history fits (450 + 10 + 0 + 100 = 560 ms; max duration 450 since
+// decisions/2026-10-29-max-duration-450-for-chords.md, the history 640 with it). Since DET-017
 // (2026-10-23, min 92 ms) the window is complete at release too: a
 // minimum-duration occurrence is inspected at 92 + 10 = 102 ms, after its
 // 0..+100 ms window ends. Before, at 85 ms, it was inspected 5 ms early (audit 3.1).
@@ -372,8 +373,8 @@ void test_shipped_plan_fits_the_history_and_the_window() {
     const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
     const detection::InspectionPlanCheck c =
         detection::checkInspectionPlan(profile.scalarTransient, profile.inspectionPlan);
-    TEST_ASSERT_EQUAL_UINT32(410, c.historyNeededMs);
-    TEST_ASSERT_EQUAL_UINT32(512, c.historySpanMs);
+    TEST_ASSERT_EQUAL_UINT32(560, c.historyNeededMs);
+    TEST_ASSERT_EQUAL_UINT32(640, c.historySpanMs);
     TEST_ASSERT_TRUE(c.hardOk());
     TEST_ASSERT_EQUAL_UINT32(0, c.earlyWindowMs);
     TEST_ASSERT_TRUE(c.softOk());

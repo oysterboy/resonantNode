@@ -223,7 +223,7 @@ void test_radio_speech_is_not_accepted() {
 }
 
 // Step 8b item 3 (audit 3.7): a continuous in-band tone is closed as too long once it passes
-// max duration + debounce (310 ms on the shipped profile), not when it ends, and no new
+// max duration + debounce (460 ms on the shipped profile since 2026-10-29), not when it ends, and no new
 // candidate opens until the signal drops below release. A normal pulse afterwards is accepted.
 namespace {
 ScalarTransientDetector gScalar;
@@ -251,7 +251,7 @@ void test_continuous_tone_is_closed_at_max_duration() {
     configureShippedScalar();
     unsigned long ms = 1000;
     feedScalar(ms, 100, 0.0f);
-    feedScalar(ms, 330, 5000.0f);  // 330 ms into a tone that goes on
+    feedScalar(ms, 480, 5000.0f);  // 480 ms into a tone that goes on
     TEST_ASSERT_EQUAL_UINT32(1, gScalar.latestReport().scalar.aggregates.tooLongCount);
     const uint32_t rejectsAfterClose = gScalar.selectedRejectGeneration();
     feedScalar(ms, 600, 5000.0f);  // the tone continues: no new candidate, no new reject

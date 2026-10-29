@@ -141,9 +141,10 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.onsetDetectionThreshold = 2000.0f;
     profile.scalarTransient.onsetReleaseThreshold = 1500.0f;
     profile.scalarTransient.minTransientDurationMs = 92;  // decisions/2026-10-23-node-hears-the-hop-train-only.md
-    // decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md (a hop train reads up to 214 ms); the noise
-    // cost of 300 alone is not measured.
-    profile.scalarTransient.maxTransientDurationMs = 300;
+    // 450, not 300: two answers 120-220 ms apart merge into one sound past 300 and both were lost; at 450 they count
+    // as one train (decisions/2026-10-29-max-duration-450-for-chords.md, lab E003). A single train reads up to
+    // ~220 ms (decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md).
+    profile.scalarTransient.maxTransientDurationMs = 450;
     profile.scalarTransient.releaseDebounceMs = 10;
     profile.scalarTransient.cooldownAfterOnsetMs = 50;
     profile.scalarTransient.requireMinStrength = true;

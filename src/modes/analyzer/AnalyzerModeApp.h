@@ -166,6 +166,17 @@ private:
     void refreshCapturedDetectorReportAggregates();
     bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs,
                        unsigned long decim, RawCaptureMode mode, const RawTriggerShape& shape);
+    // runRawTrigger's stages (step 12.4.5); RawCaptureRun is defined in AnalyzerRawCapture.cpp.
+    struct RawCaptureRun;
+    void planRawCapture(RawCaptureRun& run) const;
+    void captureRawWindow(RawCaptureRun& run);
+    void pumpRawEmitterSerial(RawCaptureRun& run);
+    void noteRawEmitterLine(RawCaptureRun& run, const char* line);
+    bool captureRawSample(RawCaptureRun& run);
+    void printRawCapture(const RawCaptureRun& run) const;
+    void printRawBegin(const RawCaptureRun& run) const;
+    void printRawRows(const RawCaptureRun& run, unsigned long capturedSamples) const;
+    void printRawSummary(const RawCaptureRun& run, unsigned long capturedSamples) const;
     void printAudioSourceSummary() const;
     void printAudioRunSummary() const;
     void printFeatureHistoryRecordCounts() const;

@@ -22,9 +22,10 @@ dropped at the door, costing neither RAM nor accumulation work. Producers
 which ones are worth keeping, based on what will actually be read back.
 */
 #ifndef FEATURE_HISTORY_BINS
-// 640 ms: the inspection windows of the longest occurrence (max duration 450 + debounce + the 100 ms windows;
-// decisions/2026-10-29-max-duration-450-for-chords.md) with margin.
-#define FEATURE_HISTORY_BINS 640
+// 576 ms: the inspection windows of the longest occurrence (max duration 450 + debounce 10 + the 100 ms windows =
+// 560; decisions/2026-10-29-max-duration-450-for-chords.md) and 16 ms; RB plan_check flags a plan that outgrows it.
+// Each ms costs 72 bytes (three streams), taken from the Analyzer's RAW block.
+#define FEATURE_HISTORY_BINS 576
 #endif
 
 class FeatureHistory {

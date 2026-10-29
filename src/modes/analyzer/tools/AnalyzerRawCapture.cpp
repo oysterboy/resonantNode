@@ -360,6 +360,15 @@ void AnalyzerApp::planRawCapture(RawCaptureRun& run) const {
         _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     run.i2sKeepEvery = (run.mode == RawCaptureMode::I2s && run.decim > 1) ? run.decim : 1UL;
     run.storedRateHz = sampleRateHz / run.i2sKeepEvery;
+    // At most 6,000 rows, and no more than the largest free block holds (less 4 KB for the rest of the run): the
+    // static RAM grew with the 450 ms max duration and mode=both's 96 KB no longer fit (2026-10-29). max_rows= says
+    // what this capture could have.
+    const size_t largestBlock = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    const size_t usable = largestBlock > 4096U ? largestBlock - 4096U : 0U;
+    const unsigned long fitRows = static_cast<unsigned long>(usable / run.buffers.rowSize());
+    if (fitRows < run.maxSamples) {
+        run.maxSamples = fitRows > 0 ? fitRows : 1UL;
+    }
     const unsigned long maxSamples = run.maxSamples;
     unsigned long preWanted = static_cast<unsigned long>(
         (static_cast<uint64_t>(run.preMs) * static_cast<uint64_t>(run.storedRateHz)) / 1000ULL);

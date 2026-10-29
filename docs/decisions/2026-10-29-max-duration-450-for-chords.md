@@ -6,7 +6,7 @@ Date: 2026-10-29.
 ## Decision
 
 `detection.scalar_max_duration_ms` on the shipped profile goes from 300 to 450 ms. The two buffers that must hold
-the longest occurrence grow with it: the feature history from 512 to 640 ms (`FEATURE_HISTORY_BINS`) and the
+the longest occurrence grow with it: the feature history from 512 to 576 ms (`FEATURE_HISTORY_BINS`; 560 needed) and the
 shape inspector's bin track from 512 to 1024 ms (`BinTrack::kMs`, a power of two for the 2^32 wrap).
 
 ## Why
@@ -28,8 +28,9 @@ The limit was the filter against long sounds; the shape rule (DET-015) now does 
 
 ## Cost
 
-About 11 KB more static RAM on every board (Node 97 -> 108 KB, Analyzer 112 -> 124 KB of 327 KB). The Analyzer's
-RAW capture needs one 96 KB block; checked after the change (see the step 14 entry).
+About 6.5 KB more static RAM on every board (history +4.6 KB, bin track +1.5 KB). A first cut with a 640 ms
+history (+11 KB) left the Analyzer's largest free block at 94 KB, under the 96 KB a mode=both RAW capture of 6,000
+rows needs; the history went to 576 and RAW now sizes its rows by the largest free block (max_rows= reports it).
 
 ## Rules out
 

@@ -113,8 +113,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    13.1 Speaker or mic: the 3500-4500 Hz hump with the Emitter swapped (room-comb open questions). On site.
    13.2 [DONE 2026-10-29, 0e8b3bd] Level ladder at 79 cm (one spot): 20/20 to -3 dB, 11/20 at -6, 0 at -7.5; the amp
         class fails first. Emitter PULSES level= / att= added for it (forwarded by SEQ start).
-   13.3 [DONE 2026-10-29] Per-hop attenuation at 0.5 FS: one hop lost costs nothing, two lost fail every train
-        (duration_too_short).
+   13.3 [DONE 2026-10-29] Per-hop attenuation at 0.5 FS: any one hop lost costs nothing; two lost pass only at an
+        end of the train (1 + 2, 4 + 5), in the middle they fail (2 + 3 shape step rule, 2 + 4 duration).
    13.4 [DONE 2026-10-29] Strength16 follows the loudest hop (the strongest bin's peak), by the code and 13.3.
         All three: docs/lab/experiments/E005_margin.md; bench/sessions/2026-10-29-step13-levelladder, -hopatt.
         Still to do on site: 70 / 110 cm and a second spot for the ladder.

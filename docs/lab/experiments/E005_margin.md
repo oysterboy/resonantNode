@@ -46,6 +46,16 @@ down 20, two hops (2 and 4) down 15 and 20. One spot, one distance.
 - Strength does not move when one hop is attenuated (14507-14524 against 14455); with hops 2 and 4 down it falls to
   ~11000, the loudest of the remaining hops.
 
+2026-10-29, which two hops (owner: "I thought two lost ones still check out"; same session, three more runs, all
+20 dB down):
+
+- Hops 1 + 2 lost: 20 / 20 (3450-3700, 3 bins, 2 up). Hops 4 + 5 lost: 20 / 20 (strength 5521: 3700 / 3950 were
+  the loudest hops at this spot). Three good hops in a row clear both the 92 ms duration and the shape rule's
+  "3 distinct bins, 2 steps up" (decisions/2026-10-26-det015-bin-track-inspector.md).
+- Hops 2 + 3 lost: 0 / 20, rejected by the shape rule: 2950 then 3700 is a jump larger than
+  detection.shape_max_rising_step_bins, so it counts no step up (3 bins, 1 up, class weak).
+- Hops 2 + 4 lost (above): 0 / 20 by duration, before the shape rule is reached.
+
 2026-10-29, Strength16 (13.4): from the code, in band mode the scalar detector's stream is the strongest band bin's
 value (DetectionRuntime, FrequencyTarget) and the occurrence's strength is that stream's peak (ScalarTransient
 `_facts.peak`). So Strength16 follows the loudest hop, neither the weakest nor the mean; the attenuation runs above
@@ -55,8 +65,9 @@ show it. A dipped hop bites through duration and coverage, not strength.
 
 - Margin in dB at 79 cm: 100 % holds to -3 dB, about half at -6 dB, nothing at -7.5 dB. Call it 3-6 dB at this
   distance; the first gate to fail is the amp class (medium), then coverage, then duration.
-- Margin in hops at 0.5 FS: one hop of five may be lost entirely; two lost hops fail every train (the pieces are
-  shorter than min_duration_ms 92).
+- Margin in hops at 0.5 FS: any one hop of five may be lost entirely. Two lost hops pass only at an end of the
+  train (1 + 2 or 4 + 5: three good hops in a row); two in the middle fail, by the step rule when adjacent (2 + 3)
+  and by duration when apart (2 + 4).
 - Strength16 is the loudest hop's level; it says nothing about a dipped hop. A site check that wants the weakest
   bin has to read the RAW capture per bin (sweepbins.py), as room-comb-and-margin.md recommends.
 - Caveats: one spot at one distance; the comb can make the next spot 5 cm away different. The level ladder only

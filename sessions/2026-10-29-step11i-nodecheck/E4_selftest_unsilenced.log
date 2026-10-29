@@ -1,0 +1,21 @@
+PARAM SET path=output.silent module=output old=1 new=0 status=ok
+RB silent=0
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=f2330b11 built=Oct_29_2026 built_time=13:14:55 uptime_ms=185526
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=159433 floor_mean=1753 floor_peak=5546 bit8_pct=50.3 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=3290 smooth_at_rebase=157.0 quiet_rebases=1 forced_rebases=0 baseline=32.6
+SELFTEST_AMP n=1 floor=4112 tone=481307 snr_db=41.4 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=4287 tone=480095 snr_db=41.0 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=5225 tone=478749 snr_db=39.2 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=2972 tone=478533 snr_db=44.1 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=2564 tone=477649 snr_db=45.4 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=478749 floor=4112 snr_db=41.4 snr_min_db=39.2 snr_max_db=45.4 tone_spread=1.01 pass_db=30.0 max_spread=1.30
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+RB baseline active
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=0 other_valid=0 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node
+PARAM SET path=output.silent module=output old=0 new=1 status=ok
+RB silent=1
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce

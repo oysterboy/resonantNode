@@ -379,6 +379,14 @@ only the detector's refused ones, so nothing is lost by counting in Behavior.
   after one answer (22 of 76 ignite); the emission counts per node fall off at the ends of the line (44 / 57 / 64
   / 58 / 44), which is the travelling swell seen from the other side.
 
+Strict or lenient, in the model (2026-10-29, `--weak-reach 2`: nodes two positions away hear a train weak, released
+but failing a requirement; the level counts every second one and never answers it): three seeds, strict against
+lenient, 5 nodes in a line, 30 min. Lenient: chains that ignite 23 -> 25 of about 80, chords 6 -> 4 %, longest
+chain 11-17 s -> 12-15 s, emissions unchanged. Small, in the direction expected (the field fills a little from
+further away, so the swell saturates a little sooner and spreads a little wider), and it never lengthened a chain.
+The model cannot say what a real weak train does, since it has no level, no room and no detector; the leniency
+cell in the test design is the measurement.
+
 The one claim this supports: on neighbour-only hearing, a mechanism needs something that stops a rested node from
 being re-excited at once (the automaton's level starting at zero with p small does it; the ramp's A = 0 does
 not, because its delay is already short at low A once neighbours are busy). That is a design constraint, not a

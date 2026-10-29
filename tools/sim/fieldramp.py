@@ -54,6 +54,7 @@ class Node:
         self.level_at = 0
         self.yields = 0
         self.next_idle_fired = False
+        self.weak_heard = 0
 
     def idle_delay(self, now):
         return now + self.rng.uniform(40_000, 80_000)
@@ -135,6 +136,25 @@ class Node:
         else:
             field.note(now, self.idx, "hears, stays quiet (p %.2f)" % p)
 
+    def hear_weak(self, now, field):
+        """Lenient field activity: a train released but failing a requirement (too weak for contrast or shape)
+        raises the level every second time and is never answered. Level variant only."""
+        if self.variant != "level" or now < self.deaf_until or self.emit_until > now or now < self.rest_until:
+            return
+        self.weak_heard += 1
+        if self.weak_heard % 2:
+            field.note(now, self.idx, "hears weak, no count")
+            return
+        self.level += 1
+        self.level_at = now
+        if self.level >= self.cfg.levels:
+            self.rest_until = now + self.cfg.rest_ms
+            self.level = 0
+            self.answer_at = None
+            field.note(now, self.idx, "hears weak -> SATURATED, rests %.0f s" % (self.cfg.rest_ms / 1000))
+            return
+        field.note(now, self.idx, "hears weak, level up")
+
     def refractory_until(self):
         return self.last_emit + TRAIN_MS + self.cfg.refractory_ms
 
@@ -192,7 +212,7 @@ class Field:
     def schedule(self, t, src):
         self.pending.append((t, src))
 
-    def deliver(self, now, nodes, reach):
+    def deliver(self, now, nodes, reach, weak_reach=0):
         due = [p for p in self.pending if p[0] <= now]
         self.pending = [p for p in self.pending if p[0] > now]
         # Trains that end together are one verdict at a listener (E003: a chord reads as one valid pattern).
@@ -200,6 +220,8 @@ class Field:
         for n in nodes:
             if any(src != n.idx and (reach == 0 or abs(src - n.idx) <= reach) for _, src in due):
                 n.hear(now, self)
+            elif weak_reach and any(src != n.idx and abs(src - n.idx) <= weak_reach for _, src in due):
+                n.hear_weak(now, self)
 
 
 def run(variant, cfg, seed):
@@ -208,7 +230,7 @@ def run(variant, cfg, seed):
     field = Field()
     end = int(cfg.minutes * 60_000)
     for now in range(0, end, STEP_MS):
-        field.deliver(now, nodes, cfg.reach)
+        field.deliver(now, nodes, cfg.reach, cfg.weak_reach)
         for n in nodes:
             n.tick(now, field)
     events = sorted((t, n.idx) for n in nodes for t in n.emissions)
@@ -229,8 +251,9 @@ def print_log(log, nodes, cfg):
             levels[i] = int(what.split()[-1])
         elif "SATURATED" in what:
             levels[i] = 0
-        elif what.startswith("EMITS") or what.startswith("hears") and "resting" not in what:
-            levels[i] += 1 if (what.startswith("EMITS") or what.startswith("hears")) else 0
+        elif what.startswith("EMITS") or (what.startswith("hears") and "resting" not in what
+                                          and "no count" not in what):
+            levels[i] += 1
         if what.startswith("decays"):
             continue
         print("  %7.2f  %-4s  %-40s  %s" % (t / 1000, names[i], what, " ".join("%d" % l for l in levels)))
@@ -303,6 +326,9 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--reach", type=int, default=0,
                     help="nodes in a line hear only sources within this many positions (0: everyone hears everyone)")
+    ap.add_argument("--weak-reach", type=int, default=0,
+                    help="level variant: sources beyond --reach but within this many positions are heard weak "
+                         "(released, failing a requirement): the lenient activity, counted every second time, never answered")
     ap.add_argument("--trace", action="store_true", help="print the first chains")
     ap.add_argument("--log", type=float, default=0, help="level variant: print every event of the first N seconds")
     ap.add_argument("--refractory-ms", type=float, default=250,

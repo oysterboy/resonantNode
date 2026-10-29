@@ -6,7 +6,7 @@ Purpose: keep the short-term plan visible without repeating the detailed roadmap
 domain-specific files.
 
 The previous phase (steps 1-11, 2026-09 to 2026-10-29) is archived as it stood:
-`docs/roadmaps/roadmap archive/roadmap-0-steps-2026-10-29-installation-ready.md`. Step numbers continue from 12, so
+`docs/roadmaps/roadmap archive/roadmap-0-steps-1.md`. Step numbers continue from 12, so
 `[Step N]` issue titles stay unique.
 
 ## Goal of the current phase

@@ -1,7 +1,7 @@
 # Milestone "installation-ready node": its gate, and a new step sequence after it
 
 Status: decided (owner 2026-10-26); gate met 2026-10-29 (11c, 11h, 11g, 11d); cut-over done 2026-10-29 (the steps file
-archived as `docs/roadmaps/roadmap archive/roadmap-0-steps-2026-10-29-installation-ready.md`, a fresh one from 12).
+archived as `docs/roadmaps/roadmap archive/roadmap-0-steps-1.md`, a fresh one from 12).
 Date: 2026-10-26.
 
 ## Decision

@@ -14,3 +14,8 @@ reboot of all five, then E5's rollback tests). Median smooth 108, p90 ~300, so t
 noise burst within the second resets the hold. Measured afterwards in a quiet moment: 15 / 15 quiet rebases ok (5 per
 Node, smooth max 182-249). A Node that misses the gate still runs on the warmup rebase (state FAILED_NO_QUIET,
 outputs allowed); only SELFTEST's quiet_boot reports FAIL. Decision pending (owner).
+
+12.1.1 after the owner's (b), 053e00b (the quiet gate gives up after 20 s, not 8): `NET * OTA` rebooted E1, E4, E5
+together onto 053e00b; all three passed the quiet-gated rebase and went active (`RB rebase done quietMs=1000-1004`).
+The offset moved a lot between the 2 s warmup rebase and the quiet one: E1 -474 -> -1,614, E4 1,270 -> 611, E5
+1,384 -> -44 (PCM counts): the second rebase is what catches the settled mic.

@@ -79,6 +79,8 @@ frequency-tuning-sweep.md      the network band swept over 500-5000 Hz: hits vs
 room-comb-and-margin.md        the sweep re-read per round and per bin: a reflection
                                comb that drifts and jumped once, not a weak zone; the
                                band question is margin per dipped hop (2026-10-29)
+second-mic-diversity.md        a second mic in the free I2S slot: diversity against
+                               room nulls, not a chord fix; test design (2026-10-29)
 tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; piezo-era; superseded by the shipped
                                profile, 2026-10-29)

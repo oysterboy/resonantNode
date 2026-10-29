@@ -85,6 +85,11 @@ node-structure.md              Node classes and files against the spec and the
                                later roadmap: the A7 cut (step 11g D), then where
                                CommandRouter, BehaviorInput, OutputProfile /
                                ResonantProgram, ConfigStore, OTA, VEKTOR land
+field-activity-response.md     answers that follow the field (tentative -> quicker ->
+                               saturated -> silent) and frequencies that align: the
+                               mechanisms (ramp, two time constants, excitability,
+                               probability only, turn taking), the lenient activity,
+                               the owner's answers; desk model tools/sim/fieldramp.py
 code-standards-read-2026-10-28.md
                                the tree at 2def60f against a generic standards
                                list (readability, KISS, DRY, YAGNI, naming,

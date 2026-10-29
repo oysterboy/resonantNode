@@ -20,3 +20,11 @@ the failure path itself prints the same lines before and after (free_heap 4 byte
 | analyzerab.py | ab_after_20f2304 and ab_after_5f1aa75 vs ab_before_a9b7e99: ordered keys identical per SEQ line type, the same trial results |
 | rawset.py | raw_after_20f2304: the same keys and row counts, except pcm 3502 rows (before 3456): pre_samples 302 vs 256, samples read before the Emitter's start line, i.e. timing; post_samples 3200 in every run |
 | tools/bench/nodecheck.py | nodecheck_20f2304 and nodecheck_5f1aa75: 26 / 26 PASS each (no --ref-log; the RB STATUS key order was compared by printset instead) |
+
+## 12.4.10 (b9f19f6): RAW mode=both with a pre window
+
+fb58e8f (rows allocated before the ring) only moved the failure: raw_after_fb58e8f, both_hop `RAW_ERR
+memory=pre_ring_alloc_failed` (after the 96 KB of rows no block held the 25 KB ring). b9f19f6 keeps the pre ring in
+the front rows of the one capture buffer and rotates it at the Emitter's start. raw_after_12410: both_hop captures
+(324 pre + 4400 post rows, bytes=96000); every case's rows in time order. rawwrap.py: pre=5 in feat / both / pcm, the
+ring full and wrapped (80 rows), rows in time order, no gap into the post rows.

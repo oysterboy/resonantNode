@@ -29,6 +29,10 @@ Behavior answers heard network patterns by one rule set, the level automaton
   counts every second time; one that failed amp never) is decided after the hearing matrix of the tryout room,
   strict and lenient side by side from the same logs.
 
+Chords (owner 2026-10-29, at the step 12-19 ordering): several Nodes answering at once count as several heard
+trains for the level, not one. Step 14 measures what the detector makes of a chord (one verdict, several, or none);
+step 16 implements the count from whatever 14 finds a chord yields.
+
 ## Why
 
 - Today both of Behavior's knobs are steps: every listener answers after the same 100 ms with probability 1

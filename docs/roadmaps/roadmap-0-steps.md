@@ -64,7 +64,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 14. [TODO] Understand chords: what several Nodes sounding at once does to detection. (issue #76)
    docs/research/polyphony.md Part A checks 1-3 (host mix of 2-3 trains at 0 / 3 / 6 / 10 dB and 0 / 10 / 30 ms; RAW
    captures at rotations 1-4; one bench cell with two triggered Nodes), E003's open threads, E002's other rotations.
-   PC and remote. Owner question it raises for 16: does a chord count as one heard train or several?
+   PC and remote. Owner 2026-10-29: a chord counts as several heard trains (for 16); 14 finds what the detector
+   reports for one.
 
 15. [TODO] Understand the room: the tryout room (5 x 6 m, 1 m spacing). (issue #77) On site.
    Hearing matrix strict and lenient (tools/bench/hearmatrix.py; field-activity-response.md "Measure first"), reach
@@ -76,12 +77,12 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    roadmap-behavior.md BEH-008, decisions/2026-10-29-answers-follow-the-field-level-automaton.md,
    field-activity-response.md. PC first (test_behavior_level; native-fieldsim with the matrix from 15), then the desk
    (step 6's protocol against 2026-10-22-step6-trial and 2026-10-26-soak24-shape-b). Changes what the nodes do: the
-   baseline moves with it. Open owner question: the chord count (from 14).
+   baseline moves with it. A chord counts as several heard trains (owner 2026-10-29).
 
 17. [TODO] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
    roadmap-behavior.md BEH-009, decisions/2026-10-29-wider-band-base-bin-per-node.md. PC first, then the desk.
-   Before it starts: the glide rule (the decision text says one bin per own answer; the owner's words and the desk
-   model say one bin per hearing; the per-answer form does not converge in the model). Includes the node-structure
+   Glide: one bin per own answer (owner 2026-10-29, as the decision says); the desk model converged slowly with it,
+   so 18 watches whether the field settles on a shared base. Includes the node-structure
    question whether the composer applies the band.
 
 18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.

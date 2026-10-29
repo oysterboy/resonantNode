@@ -22,6 +22,11 @@ Date: 2026-10-29.
    they hear something and then converge (docs/research/field-activity-response.md, Part 2), and a second,
    musical tone below 1 kHz (OUT-006). Which one ships is a later decision.
 
+Glide rule confirmed (owner 2026-10-29, at the step 12-19 ordering): the base moves one bin toward the base last
+heard on each own answer, as written above. The desk model (field-activity-response.md, "The glide and the scatter")
+found that form slow to converge to unison and a per-hearing glide faster; the owner chose per answer. Step 18
+watches for it: if the field does not settle on a shared base, revisit.
+
 ## Why
 
 - The owner wants the base frequency per node to align over time (the note's Part 2). The start bin in a wider

@@ -1,7 +1,8 @@
 # Answers that follow the field: tentative, then quicker, then saturated and silent
 
 ```text
-Status:  promoted (2026-10-29): the automaton is decided and is BEH-008; the frequency part is still exploring
+Status:  promoted (2026-10-29): the automaton is decided and is BEH-008; the frequency part (Part 2, bands per
+         node) is exploring
 Became:  docs/decisions/2026-10-29-answers-follow-the-field-level-automaton.md; BEH-008 (roadmap-behavior.md),
          2026-10-29
 Lab:     bench/sessions/2026-10-22-step6-trial and 2026-10-22-group5-pacing (chains end in 2.9-7.7 s, max 48 per
@@ -237,17 +238,76 @@ cut-over.
 - Whether the idle call itself should be tentative (today it is always the full train).
 - Strict or lenient: after the hearing matrix, as above.
 
-## Part 2, later: frequencies that align
+## Part 2: frequencies that align (in discussion, 2026-10-29)
 
-Kept short (owner 2026-10-29: later). What a node can vary today is the start bin of its hop train
-(`output.hop_rotation`, from the roster at boot). A listener can measure it from the bin track (DET-015), once
-the verdict carries the shape facts (BEH-007's precondition, myspec 6.1 "promoted into OccurrenceVerdict").
-Candidate: the rotation seeded at random, moved one bin toward the heard start bin per answer with a probability
-that can follow p, scattered at the rest; Behavior naming the rotation is the OUT-004 point of myspec 6.2. Every
-rotation is a rising train for the shape rule (rotations 0 and 2 accepted 10/10, step 11b). Audible alignment may
-want three steps instead of five, so the bin subset differs and not only the order. The aesthetic layer (OUT-006)
-would be the richer place, but nothing measures a tone outside the band. Alignment in time (fireflies) and
-alignment by radio are other readings, named only. The automaton does not touch the rotation.
+The owner's clarification: not the hop order, the **base frequency per node**, the note a listener would call that
+node's own. And the question under it: how can nodes align if they do not hear each other?
+
+### Three places the base frequency could live
+
+1. **The start bin in a wider band** (first thought). The band widened upward to 8 bins (the bank's limit without
+   a constant change; E004: 2250-5000 Hz hears 100 % with no noise detections, 1500-3000 is a weak zone in that
+   room), each node's 5-step train starting on its own bin, the listener reading the lowest bin from the bin track.
+   Cheap in CPU and risk, measurable today, but only 4 base bins (6 with 3-step trains): a major third in
+   quarter-tone steps at the top of the spectrum. Alignment would be heard as a faint shift, not as a note.
+2. **A low tone, the aesthetic layer** (OUT-006). The train stays the shared password, a second tone below 1 kHz
+   is the voice, continuous in Hz, octaves of range. Needs a new measurement (the low tone's pitch inside a valid
+   verdict's window, so noise cannot trigger it) and the unmeasured leak of a loud low layer into the band.
+3. **Very different bands per node** (owner 2026-10-29): each node listens and calls on its own band; alone, it
+   wanders at random until it hears something; then it converges on what it heard. The band is the note, and the
+   whole arpeggio moves with it, so alignment is heard as real pitch. This is the leading candidate; worked out
+   below.
+
+### Bands per node: how it would work
+
+What exists: the band is a live param (`detection.band_low_hz` / `band_high_hz`); the Node's train follows it
+(the composer reads the detector's grid), and the sweep tool changed bands on running Nodes and they followed
+(bench 2026-10-27-step11h-checks). A node hears only inside its own band; two nodes on bands that do not overlap
+are deaf to each other whatever their distance. That is the point, not a defect: hearing gets a second dimension,
+frequency, next to distance.
+
+```text
+state     band position b (the low edge, on the 250 Hz grid, inside the usable range)
+alone     hearing nothing: at each idle call, move b at random (a new position, or a step) and call
+hearing   a train heard at the band's edge (its bins at the top or bottom of mine, from the bin track):
+          move b toward it, so that the heard train is centred; then call and answer on the automaton's rules
+converged two nodes on one band hear each other fully; others wander in; a cluster forms and swells
+scatter   the automaton's rest: b := random. The cluster dissolves into wanderers; some land near another
+          cluster and merge it.
+```
+
+- **Partial overlap is the rendezvous.** A train whose bins fall partly in my band is heard partly: 3 of its 5
+  steps inside and rising pass the shape rule, 2 do not (the lenient grade counts them: a wanderer needs the weak
+  signal to know where to go, which is an argument for leniency this design makes on its own). The bin track says
+  at which edge the train sat, so the direction is known. The frequency "hearing radius" (which offsets in bins a
+  listener accepts, and which it sees but rejects) is one Analyzer session: the Emitter's train shifted by
+  0..5 bins against a fixed listener band.
+- **Usable range.** 2250-5000 Hz in that room (E004); below 1250 the train is strong but music reaches the detector
+  and 40-60 % of trains are lost under noise; 1500-3000 is weak there (room-specific, self-healing: a node that
+  hears nothing on a weak position wanders out). So about 12 bins, 8 band positions, a little over an octave.
+  "Very different" means up to an octave apart.
+- **How far alignment reaches.** As before: through chains of neighbours in acoustic range, now also in frequency.
+  Clusters on different bands in acoustic range do not hear each other until a wanderer or a scatter bridges them.
+  The scatter at saturation is what keeps reconnecting them, so the field cycles: clusters form, swell, saturate,
+  scatter, re-form elsewhere. Nodes out of acoustic range never align, as it should be.
+- **Fits the automaton.** The level counts heard trains; a wanderer hears nothing and stays tentative; a cluster
+  swells; the rest scatters the band. One rule set, one more state (b), two or three values (the wander step, the
+  usable range, how fast to converge: snap to the heard band, or one bin per hearing).
+- **Costs.** No new detection feature; the band moves live. The idle call's 300 Hz announcement stays shared (a
+  presence sound people hear whether or not nodes are aligned). The bench tooling assumes one band: hearmatrix,
+  nodegroup and the Analyzer need the band per node per time in the logs (the RB emit line prints the hop
+  frequencies, so it is there). The noise acceptance over the whole wander range is measured (E004) for 5-bin
+  windows at every position above 1250; a band at the top needs its guard bins under `kMaxToneHz`. A train from a
+  cluster and one from a wanderer on a half-overlapping band is a chord case E003 did not measure.
+
+### What to measure, in order
+
+1. Frequency hearing radius: Analyzer at one band, Emitter's train shifted 0..5 bins; accepted / rejected-by-shape
+   per offset (one session, the tools exist).
+2. The desk model with a band dimension per node (hearing = acoustic reach and bin overlap): rendezvous time
+   against the wander rule (random position per idle call vs a step), cluster formation, the scatter's effect.
+3. The hearing matrix in the tryout room (planned anyway), once per band position of interest, to see whether the
+   room's weak zones move with position.
 
 ## Considered and set aside
 

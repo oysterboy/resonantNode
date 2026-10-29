@@ -62,7 +62,6 @@ struct SeqOutputConfig {
     unsigned long totalTrials = 100;
     detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
     bool diagnosticsEnabled = true;
-    bool frequencyBandEnabled = true;
     unsigned long frequencyUpdateEverySamples = 4;
 };
 
@@ -184,10 +183,16 @@ struct TrialState {
     detection::OccurrenceVerdict primaryValidPattern = {};
     detection::InspectedOccurrence primaryValidInspectedOccurrence = {};
     detection::DetectorReport primaryValidDetectorReport = {};
+    // The valid verdict's own source record (review 12.0 L12: it was the first accepted event's).
+    bool primaryValidSourceRecordCaptured = false;
+    detection::SourceDiagnosticRecord primaryValidSourceRecord = {};
     bool primaryAcceptedOccurrenceCaptured = false;
     detection::InspectedOccurrence primaryAcceptedInspectedOccurrence = {};
     detection::DetectorReport primaryAcceptedDetectorReport = {};
     detection::SourceDiagnosticRecord primaryAcceptedSourceRecord = {};
+    // The accepted occurrence's own verdict (review 12.0 M5: it was looked up through bestRejectedInWindow).
+    bool primaryAcceptedVerdictCaptured = false;
+    detection::OccurrenceVerdict primaryAcceptedVerdict = {};
     unsigned long rejectedInWindowCount = 0;
     bool bestRejectedPatternCaptured = false;
     detection::OccurrenceVerdict bestRejectedInWindow = {};

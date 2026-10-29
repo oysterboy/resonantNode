@@ -466,8 +466,6 @@ void AnalyzerApp::printSequenceStatus() const {
     serialOut().print(config.totalTrials);
     serialOut().print(" diagnostics=");
     serialOut().print(config.diagnosticsEnabled ? "on" : "off");
-    serialOut().print(" freqband=");
-    serialOut().print(config.frequencyBandEnabled ? "on" : "off");
     serialOut().print(" freqUpdateEverySamples=");
     serialOut().print(config.frequencyUpdateEverySamples);
     serialOut().println();

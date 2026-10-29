@@ -42,7 +42,7 @@ bool parseTokenValue(const char* token, T& out, const char* badValuePrefix) {
 
 }  // namespace
 
-// SEQ DIAG / FREQBAND / FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE: one rule (step 11g C4).
+// SEQ DIAG / FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE: one rule (step 11g C4).
 // The change goes to the next start's output settings and, while a run is active, to the running
 // run's copy as well. TRIES and PROFILE change the next start only.
 template <typename Change>
@@ -75,7 +75,6 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println("SEQ IN: MODE detail = canonical trial/source/inspect report");
     serialOut().println("SEQ IN: PROFILE TonalPulseScalar|AmpExperimental");
     serialOut().println("SEQ IN: DIAG on|off");
-    serialOut().println("SEQ IN: FREQBAND on|off");
     serialOut().println("SEQ IN: FREQUPDATEEVERYSAMPLES 1|4|8|16");
     serialOut().println("SEQ IN: WHEN off|miss|all");
     serialOut().println("SEQ IN: VERBOSE 0|1|2 (0=compact, 1=summary, 2=deep debug)");
@@ -164,6 +163,11 @@ void AnalyzerApp::printUsbHelp() {
 }
 
 void AnalyzerApp::handleRawCommand(const char* line) {
+    // A capture stopped a SEQ run without its summary (review 12.0 M6): refused while a run is active or queued.
+    if (_sequenceTest.active || _pendingSequenceStart.active) {
+        serialOut().println("RAW_ERR busy reason=seq_active (SEQ STOP first)");
+        return;
+    }
     strncpy(_commandScratch, line, sizeof(_commandScratch));
     _commandScratch[sizeof(_commandScratch) - 1] = '\0';
 
@@ -258,7 +262,8 @@ bool AnalyzerApp::handleSeqCommand(const char* line) {
     return handleSeqOutputSetting(token, savePtr) || handleSeqRunCommand(token, savePtr);
 }
 
-// SEQ DIAG / FREQBAND / FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE (changeSeqOutputConfig's rule).
+// SEQ DIAG / FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE (changeSeqOutputConfig's rule). SEQ FREQBAND, a no-op,
+// was removed with its freqband= key (owner 2026-10-29, review 12.0 L13).
 bool AnalyzerApp::handleSeqOutputSetting(const char* verb, char*& savePtr) {
     if (equalsIgnoreCase(verb, "DIAG") || equalsIgnoreCase(verb, "DIAGNOSTICS")) {
         const char* enabledToken = strtok_r(nullptr, " ", &savePtr);
@@ -270,20 +275,6 @@ bool AnalyzerApp::handleSeqOutputSetting(const char* verb, char*& savePtr) {
         }
         changeSeqOutputConfig([enabled](SeqOutputConfig& config) { config.diagnosticsEnabled = enabled; });
         serialOut().print("OK SEQ DIAG ");
-        serialOut().println(onOffName(enabled));
-        return true;
-    }
-
-    if (equalsIgnoreCase(verb, "FREQBAND")) {
-        const char* enabledToken = strtok_r(nullptr, " ", &savePtr);
-        bool valid = false;
-        const bool enabled = analyzer_commands::parseOnOff(enabledToken, &valid);
-        if (!valid) {
-            serialOut().println("ERR SEQ unknown freqband use FREQBAND on|off");
-            return true;
-        }
-        changeSeqOutputConfig([enabled](SeqOutputConfig& config) { config.frequencyBandEnabled = enabled; });
-        serialOut().print("OK SEQ FREQBAND ");
         serialOut().println(onOffName(enabled));
         return true;
     }

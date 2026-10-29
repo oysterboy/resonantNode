@@ -538,12 +538,14 @@ AnalyzerApp::AnalyzerApp()
 
 // The selected profile with the registry's detection.scalar_* values on top
 // (TonalPulseScalar only; AmpExperimental runs as defined). The observed
-// stream stays the profile's: it is not a param (owner 2026-10-25).
+// stream stays the profile's: it is not a param (owner 2026-10-25). The values
+// are the ones the current (or last) run started with (review 12.0 L16); before
+// any run, the live ones.
 detection::DetectionProfile const& AnalyzerApp::effectiveSequenceProfile() const {
     _sequenceProfileScratch = detection::detectionProfileForKind(_sequenceTest.config.profileKind);
     if (_sequenceTest.config.profileKind == detection::DetectionProfileKind::TonalPulseScalar) {
         const detection::FeatureStreamId stream = _sequenceProfileScratch.scalarTransient.observedStream;
-        _sequenceProfileScratch.scalarTransient = _scalarTuning;
+        _sequenceProfileScratch.scalarTransient = _runScalarTuningCaptured ? _runScalarTuning : _scalarTuning;
         _sequenceProfileScratch.scalarTransient.observedStream = stream;
     }
     return _sequenceProfileScratch;

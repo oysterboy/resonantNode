@@ -118,6 +118,8 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
             _sequenceTest.trial.primaryAcceptedSourceRecord = event.sourceRecord;
             _sequenceTest.trial.primaryAcceptedSourceRecord.eventTrialAttribution = _sequenceTest.trial.number;
         }
+        _sequenceTest.trial.primaryAcceptedVerdictCaptured = true;
+        _sequenceTest.trial.primaryAcceptedVerdict = *verdict;
         if (_sequenceTest.trial.diagnostics.firstOnsetMs == 0) {
             _sequenceTest.trial.diagnostics.firstOnsetMs = onsetMs;
         }
@@ -163,6 +165,11 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
             if (selectedDetectorReportAvailable) {
                 _sequenceTest.trial.primaryValidDetectorReport = *selectedDetectorReport;
             }
+        }
+        if (event.hasSourceRecord) {
+            _sequenceTest.trial.primaryValidSourceRecordCaptured = true;
+            _sequenceTest.trial.primaryValidSourceRecord = event.sourceRecord;
+            _sequenceTest.trial.primaryValidSourceRecord.eventTrialAttribution = _sequenceTest.trial.number;
         }
     }
 

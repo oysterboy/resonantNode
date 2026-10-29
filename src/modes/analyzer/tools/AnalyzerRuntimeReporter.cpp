@@ -137,8 +137,6 @@ void AnalyzerApp::printAudioRunSummary() const {
     serialOut().println(_sequenceTest.totals.maxProcessingLagMs);
 
     serialOut().print("FREQBAND config:");
-    serialOut().print(" freqband=");
-    serialOut().print(_seqOutputConfig.frequencyBandEnabled ? "on" : "off");
     serialOut().print(" updateEverySamples=");
     serialOut().println(_seqOutputConfig.frequencyUpdateEverySamples);
 

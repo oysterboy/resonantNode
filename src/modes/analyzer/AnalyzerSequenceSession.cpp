@@ -112,6 +112,10 @@ void AnalyzerApp::initializeSequenceTest(const RunConfig& requested) {
 }
 
 void AnalyzerApp::configureSequenceDetection() {
+    // The run's detection.scalar_* values: a PARAM SET during the run changes the next start, and SEQ REPORT /
+    // SEQ start print what this run uses (review 12.0 L16).
+    _runScalarTuning = _scalarTuning;
+    _runScalarTuningCaptured = true;
     const detection::DetectionProfile& selectedProfile = effectiveSequenceProfile();
     _detection.resetState();
     _detection.setVerdictQueueEnabled(false);
@@ -451,9 +455,13 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
             _sequenceTest.trial.primaryValidDetectorReport.detectorId != detection::DetectorId::Unknown
             ? &_sequenceTest.trial.primaryValidDetectorReport
             : nullptr;
-        selection.sourceEventId = _sequenceTest.trial.primaryAcceptedSourceRecord.eventId;
-        selection.sourceReportGeneration = _sequenceTest.trial.primaryAcceptedSourceRecord.reportGeneration;
-        selection.sourceEventTrialAttribution = _sequenceTest.trial.primaryAcceptedSourceRecord.eventTrialAttribution;
+        // The valid verdict's own event (review 12.0 L12); the first accepted one only when it carried no record.
+        const detection::SourceDiagnosticRecord& source = _sequenceTest.trial.primaryValidSourceRecordCaptured
+            ? _sequenceTest.trial.primaryValidSourceRecord
+            : _sequenceTest.trial.primaryAcceptedSourceRecord;
+        selection.sourceEventId = source.eventId;
+        selection.sourceReportGeneration = source.reportGeneration;
+        selection.sourceEventTrialAttribution = source.eventTrialAttribution;
         selection.occurrenceId =
             selection.inspectedOccurrence != nullptr ? selection.inspectedOccurrence->occurrence.occurrenceId : 0UL;
         selection.candidateId = 0;
@@ -486,13 +494,14 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
             _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.startMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
         selection.strength = _sequenceTest.trial.primaryAcceptedInspectedOccurrence.occurrence.strength;
-        if (_sequenceTest.trial.bestRejectedPatternCaptured &&
-            _sequenceTest.trial.bestRejectedInWindow.occurrenceId == selection.occurrenceId) {
-            selection.verdict = &_sequenceTest.trial.bestRejectedInWindow;
-            selection.dtMs = static_cast<long>(
-                timing::delta(_sequenceTest.trial.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
-            selection.durationMs = _sequenceTest.trial.bestRejectedInWindow.primaryDurationMs;
-            selection.strength = _sequenceTest.trial.bestRejectedInWindow.primaryStrength;
+        // The accepted occurrence's own verdict (review 12.0 M5): with two invalid verdicts in the window the
+        // strongest rejected one may be the other, and the trial read missing_evaluator_report.
+        if (_sequenceTest.trial.primaryAcceptedVerdictCaptured) {
+            const detection::OccurrenceVerdict& own = _sequenceTest.trial.primaryAcceptedVerdict;
+            selection.verdict = &own;
+            selection.dtMs = static_cast<long>(timing::delta(own.primaryStartMs, trialOnsetAnchorMs));
+            selection.durationMs = own.primaryDurationMs;
+            selection.strength = own.primaryStrength;
         }
         selection.result = selection.dtMs >= kAnalyzerLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
         return selection;

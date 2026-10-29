@@ -257,6 +257,9 @@ private:
     // detection.scalar_* values on the registry with the Node's paths; a SEQ
     // start copies them into the profile (effectiveSequenceProfile).
     detection::ScalarTransientConfig _scalarTuning = {};
+    // The values the current (or last) run started with (configureSequenceDetection; review 12.0 L16).
+    detection::ScalarTransientConfig _runScalarTuning = {};
+    bool _runScalarTuningCaptured = false;
     param::ParamRegistry _paramRegistry;
     // The next start's output settings; a run copies them once at activation into
     // _sequenceTest.config.outputConfig (SEQ sub-commands: changeSeqOutputConfig).

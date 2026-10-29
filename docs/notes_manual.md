@@ -198,16 +198,19 @@ SEQ OBS start ...               passive observe mode for an external emitter alr
 SEQ start ... pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]      pulse train per trial (DET-011)
 SEQ start ... freq=START_HZ dur=MS sweep=END_HZ              sweep inside the chirp (OUT-005)
 SEQ stop | SEQ STATUS | SEQ SUMMARY | SEQ REPORT | SEQ TRIES N
+SEQ REPORT                                                   the detection values the current (or last) run
+                                                             started with, not a PARAM SET since (2026-10-29)
 SEQ start while a run is active                              refused: ERR SEQ start refused reason=run_active
                                                              (SEQ STOP first; STOP also cancels a start queued
                                                              with it; since 11g C1, 2026-10-27)
 SEQ MODE quiet|trial|inspect|source|system|detail            which report lines print
 SEQ PROFILE TonalPulseScalar|AmpExperimental
-SEQ DIAG on|off | SEQ FREQBAND on|off | SEQ WHEN off|miss|all | SEQ VERBOSE 0|1|2
+SEQ DIAG on|off | SEQ WHEN off|miss|all | SEQ VERBOSE 0|1|2   (SEQ FREQBAND, a no-op, removed 2026-10-29)
 PARAM LIST|GET|SET|DUMP|RESET   the detection.scalar_* knobs, same paths and grammar as the Node
 PARAM SAVE|LOAD                 answered with status=no_store (no store on the Analyzer)
 RAW trigger f=HZ dur=MS post=MS [pre=MS] [decim=N] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=...]
 RAW trigger ... [sweep=END_HZ] [band=LOW-HIGH|off]          sweep the chirp; band for this capture only
+RAW ... during a SEQ run (active or queued)                 refused: RAW_ERR busy reason=seq_active (2026-10-29)
 EMIT CHIRP|MODE AUTO|MODE REMOTE|SWEEP|PULSES ...            the Analyzer drives its own output too
 SELFTEST [external | chirp n=N gap_ms=MS dur_ms=MS | help]   external: board only, external_chirp SKIP
 ```

@@ -168,9 +168,8 @@ Research: docs/research/field-activity-response.md, Part 2
    starting on the node's base bin (0..3), random at boot, the roster's rotation as the override.
    Behavior owns the base bin, the Node composes from it (OUT-004's point), the verdict carries the
    heard train's lowest bin (DET-015's bin track promoted into OccurrenceVerdict; BEH-007's precondition).
-2. Alignment: on each own answer, move the base toward the base last heard (snap, or one bin per
-   hearing: owner's choice after the model); at the automaton's rest, scatter. Values: the step, the
-   scatter range.
+2. Alignment: on each own answer, move the base one bin toward the base last heard (the glide, owner
+   2026-10-29); at the automaton's rest, scatter. Value: the scatter range.
 3. Experiments for more range, on the wider band: bands per node that wander until they hear something
    and converge (Part 2 of the note; first the frequency hearing radius on the Analyzer, then the desk
    model with a band per node); the second musical tone below 1 kHz (OUT-006). A later decision picks.

@@ -14,8 +14,10 @@ Date: 2026-10-29.
    rotation: the base is the node's note. Behavior owns it (random at boot; the roster's rotation becomes the
    override), the Node composes the request from it (the OUT-004 point of myspec 6.2), and the verdict carries the
    heard train's lowest bin (the bin track of DET-015, promoted into `OccurrenceVerdict` as myspec 6.1 asks;
-   BEH-007's precondition). The alignment rule, its step (snap, or one bin per hearing) and the scatter at the
-   automaton's rest are BEH-009's design, after BEH-008.
+   BEH-007's precondition). The alignment glides: on each own answer the base moves one bin toward the base last
+   heard (owner 2026-10-29, "glide one bin per hearing", not a snap), so a node's pitch is heard moving toward its
+   neighbour over several calls; at the automaton's rest the base scatters. The scatter range is BEH-009's design,
+   after BEH-008.
 3. **Then test the two ways to more range**, as experiments on the wider band: bands per node that wander until
    they hear something and then converge (docs/research/field-activity-response.md, Part 2), and a second,
    musical tone below 1 kHz (OUT-006). Which one ships is a later decision.
@@ -39,6 +41,8 @@ Date: 2026-10-29.
   under noise).
 - More than 8 bins without re-measuring the per-sample budget (the bank constant).
 - Keeping the rotation's wrap-around as the per-node variation once the base bin exists.
+- Snapping onto the heard base in one call (the glide is the owner's choice; a snap is the fallback if the glide
+  never converges inside a swell).
 
 ## Gate (for the item that lands it)
 

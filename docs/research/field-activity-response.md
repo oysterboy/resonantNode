@@ -241,8 +241,8 @@ cut-over.
 ## Part 2: frequencies that align (in discussion, 2026-10-29)
 
 -> option 1 below promoted to docs/decisions/2026-10-29-wider-band-base-bin-per-node.md and BEH-009, 2026-10-29
-(owner: "wider band now; then we test with shifting the band or a second musical tone"); options 2 and 3 are the
-experiments that follow it.
+(owner: "wider band now; then we test with shifting the band or a second musical tone"; alignment glides one bin
+per hearing, not a snap); options 2 and 3 are the experiments that follow it.
 
 The owner's clarification: not the hop order, the **base frequency per node**, the note a listener would call that
 node's own. And the question under it: how can nodes align if they do not hear each other?

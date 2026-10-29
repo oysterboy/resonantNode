@@ -1,3 +1,35 @@
+# 2026-10-29 - Installation-ready node milestone closed (11c, 11h, 11g, 11d; 11i, 11j beside it); new phase from step 12
+
+### Context
+
+The phase that opened with step 10b closed as the "installation-ready node" milestone
+(decisions/2026-10-26-milestone-installation-ready-node.md). Its gate: the unattended soak (11c), the band decision
+(11h), the review's Part D fixes (11g) and OTA firmware (11d). The Node split (11i) and a code standards pass (11j)
+ran beside it while the owner was away from the bench. The steps file was archived as it stood and a fresh one opened
+the next phase from step 12.
+
+### Changed
+
+- 11c: 24 h soak with room checks every 20 min (accepted at 23.45 h): hop trains 710 / 710, chirps 0 / 1,400, every
+  chain ended, no answer started by noise, no reset (bench/sessions/2026-10-26-soak24-shape-b). A later 27 h run on
+  40c92e3 repeated it (2026-10-28-soak96-40c92e3).
+- 11h: the network band swept over 500-5000 Hz for 19 h plus hops under noise (E004): no band accepted noise; below
+  1250 Hz music and speech cost 40-60 % of the hop trains; the band stays at 2950-3950
+  (decisions/2026-10-28-band-stays-after-the-sweep.md).
+- 11g: the review's Part D: BinTrack wrap fix, shape params as live params, the Analyzer's run / trial split and one
+  classification site, output read by nobody pruned, the Node's boot warmup back, RB debug dropped.
+- 11d: OTA firmware over WiFi: `OTA url=`, `NET * OTA` updates every Node at once, rollback until a new image has
+  run 20 s (decisions/2026-10-28-ota-firmware-pull-over-http.md); all five boards updated this way, a crashing image
+  rolled back (bench/sessions/2026-10-29-step11d-ota).
+- 11i: the Node split into owners (baseline, net gateway, self-test, signal composer, params, command table) with a
+  Behavior status snapshot; bench gate met on the OTA-delivered build (2026-10-29-step11i-nodecheck).
+- 11j: clang-format at 120 columns with a CI check, duplicated helpers merged, the Analyzer's command handler split.
+
+### Next
+
+Step 12a: a sanity check bench test (content to be defined); 12b BEH-008, answers that follow the field level; 12c
+the network in the tryout room; 12d the hop margin.
+
 # 2026-10-25 - Refactor phase closed (8, 8b, 10, 10a-10c); installation build run 24 h; radio remote commands (11a)
 
 ### Context

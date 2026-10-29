@@ -103,7 +103,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         captures, ring wrap in time order (bench/sessions/2026-10-29-step12.4-readability, raw_after_12410).
    Gate: the review's findings fixed or carried with a reason; the sanity check green on the boards.
 
-13. [NEXT] Understand the margin: how much headroom the hop train has on the desk. (issue #75)
+13. [RUNNING 2026-10-29: 13.2-13.4 done, 13.1 on site] Understand the margin: how much headroom the hop train has on the desk. (issue #75)
    docs/research/distance-range.md test 1 (level ladder: hop10 at 0.5 / 0.35 / 0.25 / 0.18 / 0.12 FS, 20 trials) and
    docs/research/room-comb-and-margin.md ("What would settle", 3: hops attenuated by 15 dB, count hop10); host: does
    Strength16 follow the weakest or the mean hop (the 132 sweep captures, sweepbins.py). Remote and PC.
@@ -111,6 +111,13 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         other / runs / first_hz / last_hz / class (the docs pass found no step carried it). Checked on E2 by OTA: hop10
         5 bins, 4 up, strong; a 3450 Hz chirp 1 bin, class none, rejected by shape.
    13.1 Speaker or mic: the 3500-4500 Hz hump with the Emitter swapped (room-comb open questions). On site.
+   13.2 [DONE 2026-10-29, 0e8b3bd] Level ladder at 79 cm (one spot): 20/20 to -3 dB, 11/20 at -6, 0 at -7.5; the amp
+        class fails first. Emitter PULSES level= / att= added for it (forwarded by SEQ start).
+   13.3 [DONE 2026-10-29] Per-hop attenuation at 0.5 FS: one hop lost costs nothing, two lost fail every train
+        (duration_too_short).
+   13.4 [DONE 2026-10-29] Strength16 follows the loudest hop (the strongest bin's peak), by the code and 13.3.
+        All three: docs/lab/experiments/E005_margin.md; bench/sessions/2026-10-29-step13-levelladder, -hopatt.
+        Still to do on site: 70 / 110 cm and a second spot for the ladder.
    Gate: the margin in dB and in hops at the operating point, in a lab note.
 
 14. [TODO] Understand chords: what several Nodes sounding at once does to detection. (issue #76)

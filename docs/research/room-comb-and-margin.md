@@ -2,6 +2,7 @@
 
 ```text
 Status:  exploring (2026-10-29)
+Became:  "What would settle" 3 and the Strength16 question, steps 13.3 / 13.4 (lab E005)
 Lab:     bench/sessions/2026-10-27-step11h-sweep24 (positions.csv per round; the 132 RAW hop captures through
          tools/bench/sweepbins.py); E004 (docs/lab/experiments/E004_band_sweep.md)
 Related: frequency-tuning-sweep.md (the sweep's design); decisions/2026-10-28-band-stays-after-the-sweep.md (stands);
@@ -102,7 +103,8 @@ So: half of "the room" holds, and the half that holds is the stronger finding.
 
 ## Open questions
 
-- Is Strength16 itself comb-shaped, that is, does the Analyzer's strength follow the weakest or the mean hop? If the
+- Answered 2026-10-29 (step 13.4, lab E005): it follows the loudest hop (the strongest bin's peak); a dipped
+  hop bites through duration and coverage. Was: is Strength16 itself comb-shaped, that is, does the Analyzer's strength follow the weakest or the mean hop? If the
   weakest, the margin test above is the right knob; if the mean, the gates' duration rule is where a dipped hop
   bites first (the round-1 rejects were 56 ms occurrences, two hops of five).
 - Does the 3500-4500 hump belong to the speaker or the mic? A swap of the emitter board would say; it decides whether

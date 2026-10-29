@@ -69,6 +69,8 @@ experiments/E003_simultaneous_answers.md  several Nodes sounding at once:
                                       research/polyphony.md)
 experiments/E004_band_sweep.md        the band swept 500-5000 Hz: hits and
                                       noise acceptance per position (11h)
+experiments/E005_margin.md            headroom of the hop train: level
+                                      ladder, hops lost, Strength16 (13)
 2026-09-03-exp001-notes.md            raw notes, E001 phase 1 + stack crash
 2026-09-memory-stack-analysis.md      analyzer/reset stack frame sizes
 current-state-2026-06-24.md           checkpoint snapshot

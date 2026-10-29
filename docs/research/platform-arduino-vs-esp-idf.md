@@ -1,8 +1,9 @@
 # Platform: stay on Arduino-ESP32 2.0.17, or move (Arduino 3.x, Arduino as an ESP-IDF component, pure ESP-IDF)
 
 ```text
-Status:  parked (2026-10-30)
-Became:  roadmap-0-steps.md "Carried over", at the end, no step yet (owner 2026-10-30)
+Status:  promoted (2026-10-30)
+Became:  decisions/2026-10-30-platform-off-arduino.md (option 4, pure ESP-IDF; owner "off arduino"); not
+         scheduled, roadmap-0-steps.md "Carried over" at the end
 Lab:     none; a reading of platformio.ini, src/ (main 2405b9e5 + 12.0.1) and the 12.0 review
          (docs/research/code-review-2026-10-29.md)
 ```

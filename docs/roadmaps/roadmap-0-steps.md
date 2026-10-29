@@ -197,8 +197,9 @@ Per-board threshold offset                read it from 15's matrix first (unprov
 Review leftovers                          the replay binds the medium limits itself (A10); FreqBandStream and
                                           ScalarTransientDetector outside namespace detection (with step 9); the
                                           300000 "never fires" Strong threshold (no disabled class).
-Platform: Arduino or ESP-IDF             docs/research/platform-arduino-vs-esp-idf.md. Owner 2026-10-30: at the end,
-                                          no step yet (a USB flash of every board when it comes).
+Platform: off Arduino, onto ESP-IDF      decisions/2026-10-30-platform-off-arduino.md (owner 2026-10-30). At the
+                                          end, no step yet (a USB flash of every board when it comes); until then
+                                          new code stays off Arduino where that costs nothing.
 Second mic per Node                       docs/research/second-mic-diversity.md. Owner 2026-10-30: at the end, no step
                                           yet (diversity against room nulls; a desk test first when it comes).
 ```

@@ -1,7 +1,8 @@
 # A second mic per Node: diversity against the room comb
 
 ```text
-Status:  exploring (2026-10-29)
+Status:  parked (2026-10-30)
+Became:  roadmap-0-steps.md "Carried over", at the end, no step yet (owner 2026-10-30)
 Lab:     none yet; motivated by E005 (docs/lab/experiments/E005_margin.md) and the step 14 chord mix
          (bench/sessions/2026-10-29-step14-rotations)
 Related: room-comb-and-margin.md (the comb, one spot vs the next), distance-range.md, polyphony.md (chords)

@@ -703,9 +703,6 @@ void AnalyzerApp::update() {
             _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
             detection::DetectionPipelineEvent& runtimePipelineEvent = _runtimePipelineEventScratch;
             while (_detection.diagnostics().popPipelineEvent(runtimePipelineEvent)) {
-                if (_sequenceTest.active && _sequenceTest.trial.number > 0 && runtimePipelineEvent.hasVerdict) {
-                    _sequenceTest.trial.diagnostics.runtimePatternCaptured = true;
-                }
                 if (_sequenceTest.active && _sequenceTest.trial.number > 0) {
                     handleSequencePending(runtimePipelineEvent);
                 }
@@ -816,9 +813,10 @@ AnalyzerReport* AnalyzerApp::sequenceReportScratch() {
     return &_sequenceReportScratch;
 }
 
-void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, bool rejectedInWindow,
-                                              long dtMs, long durMs, float strength, bool bufferOverrun,
-                                              unsigned long duplicateCount, const TrialDiagnostics& diagnostics) const {
+void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report, const SequenceTrialSelection& selectedTrial,
+                                              unsigned long trialNumber, bool rejectedInWindow, long dtMs, long durMs,
+                                              float strength, bool bufferOverrun, unsigned long duplicateCount,
+                                              const TrialDiagnostics& diagnostics) const {
     report = makeEmptyAnalyzerReport();
 
     report.context.profile = activeAnalyzerProfileName();
@@ -835,8 +833,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned l
     report.expected.verdictType = "sequence_trial";
     report.expected.expectedSource = _sequenceTest.config.externalEmitter ? "external" : "local";
 
-    const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
-    const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
+    // The selection finalizeSequenceTrial made (review 12.0 L18: it was selected twice per trial).
     const detection::OccurrenceVerdict* reportVerdict = selectedTrial.verdict;
     const detection::InspectedOccurrence* reportInspectedOccurrence = selectedTrial.inspectedOccurrence;
     const detection::DetectorReport* selectedDetectorReport = selectedTrial.detectorReport;

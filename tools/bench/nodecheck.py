@@ -5,7 +5,9 @@ PING and PARAM SET, SELFTEST, SELFTEST external, SELFTEST by radio. Writes one t
   python tools/bench/nodecheck.py --gw E1=COM8 --a E4=COM10 --b E5=COM11 --emitter COM4 --out bench/sessions/<folder>
       [--ref-log bench/sessions/<soak>/soak.log]
 
-Leaves every Node as found: output.silent 1 (stored), the changed param restored and saved, RB log as it was.
+Leaves every Node as found: output.silent 1 (stored), the changed param restored and saved, RB log as it was; the
+gateway gets PARAM LOAD at the end (idle_enabled and the RB PROFILE reset undone) and its RB log mode back (review
+12.0 L21). A PARAM GET that answers no value is a FAIL, not a skipped check (M9).
 """
 import argparse
 import os
@@ -92,6 +94,7 @@ check("boot: BUILD, warmup, active", all(k in seen for k in ("BUILD role=", "RB 
       "build=%s %s" % (build[:1], seen))
 check("boot: params loaded", "PARAM load stored=" in boot,
       (re.findall(r"PARAM load stored=\d+ applied=\d+ stale=\d+ invalid=\d+", boot) or ["-"])[0])
+gw_log = re.findall(r"RB log mode=(\w+)", cmd(GW, "RB log", 0.8))  # put back at the end (L21)
 
 # 2. RB STATUS keys vs the reference build
 st = cmd(GW, "RB STATUS", 1.5)
@@ -159,6 +162,8 @@ if cur:
     cmd(A, "PARAM SAVE", 2.0)
     back = re.findall(r"value=(\d+)", cmd(A, "PARAM GET behavior.idle_timeout_ms", 1.0))
     check("param restored", back[:1] == [cur], "%s" % back[:1])
+else:
+    check("PARAM SAVE / reboot / load", False, "PARAM GET behavior.idle_timeout_ms answered no value")
 
 # 6. radio
 r = cmd(GW, "NET * NET PING", 4.0)
@@ -169,6 +174,8 @@ if w:
     r = cmd(GW, "NET * PARAM SET behavior.wait_after_heard_ms " + w[0], 4.0)
     oks = sorted(set(re.findall(r"NET reply from=(\w+) .*PARAM SET path=behavior.wait_after_heard_ms.*status=ok", r)))
     check("NET * PARAM SET round trip", A in oks and B in oks, "ok from %s" % oks)
+else:
+    check("NET * PARAM SET round trip", False, "PARAM GET behavior.wait_after_heard_ms answered no value")
 
 # 7. self-tests
 r = cmd(A, "SELFTEST", 25.0)
@@ -185,6 +192,11 @@ cmd(B, "PARAM SET output.silent 1", 0.5)
 r = cmd(GW, "NET %s SELFTEST" % B, 30.0)
 radio = re.findall(r"NET reply from=%s .*SELFTEST check=(\w+) result=(\w+)" % B, r)
 check("SELFTEST by radio (NET %s)" % B, len(radio) >= 3, str(radio[:5]))
+
+# the gateway as found (L21): its stored params (idle_enabled, the profile reset), its RB log mode
+cmd(GW, "PARAM LOAD", 1.5)
+if gw_log:
+    cmd(GW, "RB log " + gw_log[0], 0.5)
 
 for n in ports:
     open(os.path.join(a.out, "%s.log" % n), "w", encoding="utf-8").write(buf[n])

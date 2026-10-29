@@ -163,10 +163,11 @@ uint16_t NodeNet::sendCommand(const char* target, const char* text) {
     if (!_started) {
         return frame.seq;
     }
+    int queued = 0;
     for (int i = 0; i < kCommandRepeats; ++i) {
-        enqueue(kBroadcast, frame);
+        queued += enqueue(kBroadcast, frame) ? 1 : 0;
     }
-    return frame.seq;
+    return queued > 0 ? frame.seq : 0;  // 0: the outbox was full, nothing went (review 12.0 L19)
 }
 
 bool NodeNet::sendReply(const uint8_t mac[6], uint16_t seq, uint8_t part, bool last, const char* myName,

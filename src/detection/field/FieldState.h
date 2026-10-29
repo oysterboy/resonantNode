@@ -17,9 +17,6 @@ struct FieldStateConfig {
     unsigned long busyOccurrenceCountThreshold = 4;
     unsigned long denseOccurrenceCountThreshold = 8;
     unsigned long quietOccurrenceCountThreshold = 0;
-
-    float quietActivityThreshold = 0.0f;
-    float busyActivityThreshold = 0.5f;
 };
 
 // noiseFloor, avgAmbientLevel and chatter were removed 2026-10-22: two copies of

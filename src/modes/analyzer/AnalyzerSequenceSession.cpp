@@ -608,8 +608,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     // The trial result is decided once, by classifySequenceTrial inside the report builder (11g C5).
     AnalyzerReport* finalizedReport = sequenceReportScratch();
-    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.trial.number, rejectedInWindow, dtMs, durMs, strength,
-                                bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
+    buildSequenceAnalyzerReport(*finalizedReport, selectedTrial, _sequenceTest.trial.number, rejectedInWindow, dtMs,
+                                durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.totals.completedTrials++;
     flushSequenceSampleHistory(now + 1UL);
@@ -658,9 +658,7 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
     AnalyzerCleanSummary& summary = _sequenceTest.totals.cleanSummary;
     summary.profileName = activeAnalyzerProfileName();
     if (summary.detectorId == detection::DetectorId::Unknown) {
-        const detection::DetectionProfile& selectedProfile =
-            detection::detectionProfileForKind(_sequenceTest.config.profileKind);
-        (void)selectedProfile;  // one family: the scalar detector
+        // One family: the scalar detector.
         summary.detectorId = detection::DetectorId::ScalarTransient;
         if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
             summary.detectorId = report.detectorReport->detectorId;
@@ -742,7 +740,10 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
 
 // dt anchor (ANA-007, step 7a): the time the trial's command was sent when
 // this Analyzer drives the Emitter (SEQ); otherwise (OBS, external emitter)
-// the EMIT_START marker as polled, else the scheduled trigger. dt from the
+// the EMIT_START marker as polled, else the scheduled trigger. The marker
+// branch only fires when an Emitter on the link prints markers for this
+// trial's number during OBS, which no current setup does (review 12.0 L18):
+// in practice OBS anchors on the scheduled trigger. dt from the
 // command contains the Emitter's command handling and the D-AMP TX queue, a
 // constant (59 ms on 2026-10-22, E2/E3, against 22-38 ms of marker jitter).
 unsigned long AnalyzerApp::sequenceTrialOnsetAnchorMs() const {

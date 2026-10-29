@@ -16,7 +16,9 @@ reasons, avg strength). Then the Nodes run again.
 steps in the drift are suspicious, and church bells ring in the distance on the hour and the quarters; a 20 min
 grid off the quarters samples the drift three times as densely and never measures while a bell rings).
 
-All ports are opened with DTR/RTS low (no reset) and held for the whole run.
+All ports are opened with DTR/RTS low (no reset) and held for the whole run. A Node that resets mid-run (its
+`BUILD role=` line) comes back silent, log minimal, on its stored band: the run logs `-- node reset <NAME>` and
+sends it the run's setup again (output.silent as the run has it now, RB log full; review 12.0 L20).
 
   python tools/bench/soakcycle.py --nodes E1=COM8,E4=COM10,E5=COM11 --analyzer COM3 --hours 24 --cycle-min 60 \\
       --out bench/sessions/<folder> --name soak [--at-min 7,27,47]
@@ -75,6 +77,7 @@ log = open(os.path.join(a.out, a.name + ".log"), "w", encoding="utf-8")
 log.write("# soakcycle nodes=%s analyzer=%s hours=%.2f cycle_min=%.1f started_unix=%.3f started=%s\n" % (
     a.nodes, a.analyzer, a.hours, a.cycle_min, t0, datetime.datetime.now().isoformat(timespec="seconds")))
 analyzer_sink = None  # a list while a room check runs
+silent_now = 1  # what the run last set output.silent to (a reset Node gets it again)
 
 
 def lines_from(name, s):
@@ -95,6 +98,8 @@ def pump(seconds=0.0):
         for n, s in ports.items():
             for line in lines_from(n, s):
                 log.write("%.2f %s %s\n" % (time.time() - t0, n, line))
+                if "BUILD role=" in line:
+                    resetup(n, s)
         for line in lines_from("AN", analyzer):
             if analyzer_sink is not None:
                 analyzer_sink.append(line)
@@ -103,7 +108,18 @@ def pump(seconds=0.0):
         time.sleep(0.005)
 
 
+def resetup(n, s):
+    """A Node rebooted mid-run: mark it in the log and send it the run's setup again."""
+    log.write("%.2f -- node reset %s\n" % (time.time() - t0, n))
+    for c in ("PARAM SET output.silent %d" % silent_now, "RB log full"):
+        s.write((c + "\n").encode())
+        log.write("%.2f %s >> %s\n" % (time.time() - t0, n, c))
+
+
 def to_nodes(cmd):
+    global silent_now
+    if cmd.startswith("PARAM SET output.silent "):
+        silent_now = int(cmd.split()[-1])
     for n, s in ports.items():
         s.write((cmd + "\n").encode())
         log.write("%.2f %s >> %s\n" % (time.time() - t0, n, cmd))

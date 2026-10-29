@@ -157,10 +157,6 @@ static void printDetectionProfileDetails(const detection::DetectionProfile& prof
     serialOut().println(profile.fieldStateConfig.denseOccurrenceCountThreshold);
     serialOut().print("  fieldState.quietOccurrenceCountThreshold=");
     serialOut().println(profile.fieldStateConfig.quietOccurrenceCountThreshold);
-    serialOut().print("  fieldState.quietActivityThreshold=");
-    serialOut().println(profile.fieldStateConfig.quietActivityThreshold, 2);
-    serialOut().print("  fieldState.busyActivityThreshold=");
-    serialOut().println(profile.fieldStateConfig.busyActivityThreshold, 2);
 }
 
 static void printBehaviorRuntimeDetails(const BehaviorStatus& behavior) {
@@ -193,23 +189,6 @@ static void printNodeBuildIdentity() {
     printBuildIdentity(serialOut(), "node");
     serialOut().print("RB node_id=");
     serialOut().println(nodeIdBuffer);
-}
-
-// The gate an accepted emission passed, from Behavior's snapshot (taken at the loop's now).
-static const char* behaviorGateName(const BehaviorStatus& behavior, bool patternDetected, bool selfChirpSuppressed) {
-    if (selfChirpSuppressed) {
-        return "self_ignore";
-    }
-    if (behavior.refractoryRemainingMs > 0) {
-        return "refractory";
-    }
-    if (behavior.waitRemainingMs > 0) {
-        return "wait";
-    }
-    if (patternDetected) {
-        return "pattern";
-    }
-    return behavior.idle ? "idle" : behavior.stateName;
 }
 
 // --- constructors ---
@@ -365,7 +344,7 @@ void Node::performRbRebase() {
     if (!_audioSignal.rebase()) {
         serialOut().println("RB WARN rebase_timeout no_audio baseline_unchanged");
     }
-    _behavior.resetState();
+    // quiesceBehaviorForOutputsOff already reset Behavior (review 12.0 L11: a second reset here).
     resetDetectionState();
     _audioSignal.resetStats();
     _audioSource.resetStats();
@@ -629,8 +608,10 @@ void Node::update() {
 
     _behavior.update(now);
     if (_behavior.restsEntered() != _rbLastRestsEntered) {
+        // A Behavior reset puts the count back to 0: resync without a line (review 12.0 L7).
+        const bool newRest = _behavior.restsEntered() > _rbLastRestsEntered;
         _rbLastRestsEntered = _behavior.restsEntered();
-        if (rbShouldLogDetail()) {
+        if (newRest && rbShouldLogDetail()) {
             const BehaviorStatus b = _behavior.status(now);
             serialOut().print("RB rest start reason=");
             serialOut().print(b.lastRestReasonName);
@@ -679,7 +660,7 @@ void Node::update() {
     }
 
     if (_behavior.shouldStartChirp()) {
-        startEmission(now, sawPatternThisLoop, selfChirpSuppressed);
+        startEmission(now);
     }
     updateEmissions(now);
 
@@ -693,7 +674,7 @@ void Node::update() {
 // Behavior asked for a chirp: start the emission it asked for (step 10 item 9:
 // out of update(), unchanged). A heard pattern is answered with the network
 // signal (the hop train); the idle call is an announcement tone, then the call.
-void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfChirpSuppressed) {
+void Node::startEmission(unsigned long now) {
     const auto chirpPattern = _behavior.chirpPattern();
     const char* sourceName = _behavior.chirpRequestSourceName();
     if (rbShouldLogDetail()) {
@@ -710,8 +691,6 @@ void Node::startEmission(unsigned long now, bool sawPatternThisLoop, bool selfCh
         serialOut().print(sourceName);
         serialOut().print(" state=");
         serialOut().print(b.stateName);
-        serialOut().print(" gate=");
-        serialOut().print(behaviorGateName(b, sawPatternThisLoop, selfChirpSuppressed));
         serialOut().print(" pattern=");
         serialOut().println(chirpPatternName(chirpPattern));
     }
@@ -773,7 +752,7 @@ void Node::updateEmissions(unsigned long now) {
         const unsigned long finishedMs = _soundOutput.finishedAtMs();
         _lastOwnChirpEndMs = finishedMs;
         _behavior.notifyChirpFinished(finishedMs);
-        _selfTest.noteChirpFinished(now);
+        _selfTest.noteChirpFinished(finishedMs);  // review 12.0 L9: was the loop-start now
     }
 }
 

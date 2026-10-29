@@ -29,6 +29,21 @@ void printMac(const uint8_t mac[6]) {
     }
 }
 
+// A command line as it went or came by radio, with an OTA token's value hidden (review 12.0 M4: the transcripts
+// are bench evidence; the token stays in the secrets header).
+void printCommandText(const char* text) {
+    const char* token = strstr(text, " token=");
+    if (token == nullptr) {
+        serialOut().println(text);
+        return;
+    }
+    token += 7;
+    serialOut().write(reinterpret_cast<const uint8_t*>(text), static_cast<size_t>(token - text));
+    serialOut().print("<hidden>");
+    const char* after = strchr(token, ' ');
+    serialOut().println(after != nullptr ? after : "");
+}
+
 }  // namespace
 
 // NET STATUS, or NET <target> <command line>: this node is the gateway. The
@@ -66,12 +81,16 @@ void Node::handleNetCommand(const char* line) {
         return;
     }
     const uint16_t seq = _net.sendCommand(target, text);
+    if (seq == 0) {
+        serialOut().println("NET ERR outbox_full (nothing sent)");
+        return;
+    }
     serialOut().print("NET sent seq=");
     serialOut().print(seq);
     serialOut().print(" target=");
     serialOut().print(target);
     serialOut().print(" text=");
-    serialOut().println(text);
+    printCommandText(text);
     if (net::targetMatches(target, _nodeName)) {
         if (equalsIgnoreCase(text, "NET PING")) {
             printNetStatus();
@@ -113,7 +132,7 @@ void Node::runRemoteCommand(const NodeNet::Received& received) {
     serialOut().print(" target=");
     serialOut().print(f.target);
     serialOut().print(" text=");
-    serialOut().println(f.text);
+    printCommandText(f.text);
 
     // Everything printed from here goes back as the reply (a reply still open
     // is closed first); the scope's end sends the last frame.

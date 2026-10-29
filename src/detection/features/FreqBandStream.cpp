@@ -94,18 +94,6 @@ void FreqBandStream::setSampleRateHz(unsigned long value) {
     updateCachedGoertzelCoefficients();
 }
 
-void FreqBandStream::setWindowSizeSamples(unsigned long value) {
-    if (value == 0) {
-        value = 1;
-    }
-    if (value > kMaxWindowSizeSamples) {
-        value = kMaxWindowSizeSamples;
-    }
-    _windowSizeSamples = value;
-    _samplesUntilNextFrequencyUpdate = 0;
-    updateCachedGoertzelCoefficients();
-}
-
 void FreqBandStream::setFrequencyUpdateEverySamples(unsigned long value) {
     if (value == 0) {
         value = 1;

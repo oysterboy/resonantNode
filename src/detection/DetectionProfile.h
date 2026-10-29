@@ -176,7 +176,6 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.fieldStateConfig.patternWindowMs = 4000;
     profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
     profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
-    profile.fieldStateConfig.busyActivityThreshold = 0.45f;
     return profile;
 }
 
@@ -213,7 +212,6 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.fieldStateConfig.patternWindowMs = 4000;
     profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
     profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
-    profile.fieldStateConfig.busyActivityThreshold = 0.45f;
     return profile;
 }
 

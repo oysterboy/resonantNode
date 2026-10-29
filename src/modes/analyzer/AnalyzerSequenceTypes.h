@@ -110,13 +110,7 @@ struct RunConfig {
 
 // Live per-trial diagnostics (audio health, raw block checks, ambient stats).
 struct TrialDiagnostics {
-    bool accepted = false;
-
-    unsigned long firstOnsetMs = 0;
-    unsigned long acceptedPatternMs = 0;
-    unsigned long acceptedPatternDurationMs = 0;
     float acceptedAmbientBaseline = 0.0f;
-    bool runtimePatternCaptured = false;
 
     bool emitStartSeen = false;
     unsigned long emitStartDtMs = 0;
@@ -170,8 +164,6 @@ struct TrialState {
     bool commandSent = false;
     unsigned long startMs = 0;
     unsigned long endMs = 0;
-    unsigned long onsetDetectedMs = 0;
-    unsigned long patternDetectedMs = 0;
     bool finalized = false;
 
     unsigned long sourceCandidateCount = 0;
@@ -201,7 +193,6 @@ struct TrialState {
     bool selectedSourceRejectCaptured = false;
     detection::SourceDiagnosticRecord selectedSourceReject = {};
     unsigned long unexpected = 0;
-    unsigned long rejected = 0;
     bool bufferOverrun = false;
     unsigned long overflowCountAtStart = 0;
     unsigned long pipelineOverflowCountAtStart = 0;

@@ -18,7 +18,9 @@ bench  The boards (one Analyzer with its Emitter, optionally Nodes). Per positio
        output.silent 1), the Analyzer's hop10 and chirp SEQ on that band (the chirp on the band's second bin, must be
        rejected), --raw-reps RAW hop captures (per-bin levels, hopbins.py), and with --noise-wav the Nodes listening
        for --noise-s while the lab PC plays the file (SoundPlayer, the default output device): their valid / rejected
-       verdicts. At the end the Nodes get the shipped band back (unsaved; a reboot restores it too). Writes
+       verdicts. A Node that resets mid-run (its `BUILD role=` line) is logged as `-- node reset <NAME>` in
+       nodes.log and gets the sweep's setup lines again (silent, log, band; review 12.0 L20). At the end the Nodes
+       get the shipped band back (unsaved; a reboot restores it too). Writes
        positions.csv (one row per SEQ step), noise.csv (one row per node and position), pos<low>_<step>.log,
        pos<low>_hop5_r<k>.csv, and nodes.log ("<t> <NAME> <line>", nodegroup_interim.py reads it).
 
@@ -279,6 +281,7 @@ class Bench:
         self.partial = {n: b"" for n in list(self.nodes) + ["AN"]}
         self.sink = None
         self.counting = None  # {node: [valid, rejected]} while a noise window runs
+        self.setup = {}  # the setup lines sent to the Nodes, by param path / "RB log" (re-sent to a Node that resets)
         self.log = open(os.path.join(a.out, "nodes.log"), "w", encoding="utf-8")
         self.log.write("# bandsweep nodes=%s analyzer=%s started_unix=%.3f started=%s\n" % (
             a.nodes, a.analyzer, self.t0, datetime.datetime.now().isoformat(timespec="seconds")))
@@ -307,6 +310,8 @@ class Bench:
             for n, s in self.nodes.items():
                 for line in self.lines_from(n, s):
                     self.log.write("%.2f %s %s\n" % (time.time() - self.t0, n, line))
+                    if "BUILD role=" in line:
+                        self.resetup(n, s)
                     if self.counting is not None and line.startswith("RB verdict="):
                         self.counting[n][0 if "valid=1" in line else 1] += 1
             for line in self.lines_from("AN", self.analyzer):
@@ -316,7 +321,18 @@ class Bench:
                 break
             time.sleep(0.005)
 
+    def resetup(self, n, s):
+        """A Node rebooted mid-run (silent, log minimal, its stored band): mark it and send the setup again."""
+        self.log.write("%.2f -- node reset %s\n" % (time.time() - self.t0, n))
+        for c in self.setup.values():
+            s.write((c + "\n").encode())
+            self.log.write("%.2f %s >> %s\n" % (time.time() - self.t0, n, c))
+
     def to_nodes(self, cmd):
+        if cmd.startswith("PARAM SET "):
+            self.setup[cmd.split()[2]] = cmd
+        elif cmd.startswith("RB log "):
+            self.setup["RB log"] = cmd
         for n, s in self.nodes.items():
             s.write((cmd + "\n").encode())
             self.log.write("%.2f %s >> %s\n" % (time.time() - self.t0, n, cmd))

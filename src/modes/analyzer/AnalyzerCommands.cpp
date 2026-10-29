@@ -476,9 +476,6 @@ void AnalyzerApp::handleSeqStart(const char* verb, char*& savePtr) {
         request.windowEndOffsetMs = request.periodMs - request.reportSettleMs;
     }
 
-    if (!seen.profile) {
-        request.profileKind = outputConfig.profileKind;
-    }
     outputConfig.totalTrials = request.totalTrials;
     if (request.setupLabel[0] == '\0') {
         strncpy(request.setupLabel, TEST_SETUP_LABEL, sizeof(request.setupLabel));

@@ -217,7 +217,9 @@ void OccurrenceInspector::annotateMagnitudeFeatureStrength(InspectedOccurrence& 
                                                            const MagnitudeFeatureInspectionConfig& config,
                                                            InspectionTarget target) const {
     const unsigned long anchorMs = anchorMsForOccurrence(occurrence, config.anchor);
-    const unsigned long startMs = anchorMs > config.windowPreMs ? anchorMs - config.windowPreMs : 0UL;
+    // Wraps like every ms here (FeatureHistory compares wrap-safe), so the anchor recomputed from the start stays
+    // the anchor (review 12.0 L2: it clamped at 0; the shipped pre of 0 never reached it).
+    const unsigned long startMs = anchorMs - config.windowPreMs;
     const unsigned long endMs = anchorMs + config.windowPostMs;
     MagnitudeInspectionObservation observation = {};
     observation.stream = config.stream;

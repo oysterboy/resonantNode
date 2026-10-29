@@ -163,6 +163,9 @@ Any Node on USB is the gateway: `NET <target> <command>`, target `*` (all) or a 
 what it would print on serial, shown as `NET reply from=E3 seq=N part=P <line>` and
 `NET reply from=E3 seq=N done parts=K`. `NET STATUS` shows the gateway's own radio counters. The
 radio is on by default; `PARAM SET node.radio_enabled 0`, `PARAM SAVE`, reboot turns it off.
+The gateway prints `NET sent seq=N target=T text=<command>`, or `NET ERR outbox_full (nothing sent)` when the
+radio's outbox is full; in `NET sent` and in the receiver's `NET cmd from=` an OTA `token=` value prints as
+`<hidden>` (2026-10-29, review 12.0).
 
 Operator rules (the firmware does not check these, except where noted):
 

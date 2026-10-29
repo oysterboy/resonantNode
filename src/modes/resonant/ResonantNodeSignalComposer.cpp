@@ -43,7 +43,8 @@ bool NodeSignalComposer::composeHopTrain(const BandGrid& grid, OutputRequest& re
 
 // A response to a heard pattern is the network signal: the node's hop train inside the band (BEH-005). The idle
 // call is an announcement tone outside the band (not detected), a gap, then the node's own call (owner
-// 2026-10-17): the hop train, or the plain chirp when the hop is off. Idle voice and self-test stay plain chirps.
+// 2026-10-17): the hop train, or the plain chirp when the hop is off. The self-test's chirps are the network signal
+// too (ResonantBehavior::signalShape); the idle voice stays the plain pattern.
 OutputRequest NodeSignalComposer::compose(const BandGrid& grid, ChirpPattern pattern, bool networkSignal) const {
     OutputRequest request;
     request.pattern = pattern;

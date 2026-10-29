@@ -43,7 +43,6 @@ public:
 
     void setTargetFrequencyHz(unsigned long value);
     void setSampleRateHz(unsigned long value);
-    void setWindowSizeSamples(unsigned long value);
     void setFrequencyUpdateEverySamples(unsigned long value);
     // Band mode (DET-013): FrequencyTarget becomes the strongest bin between
     // lowHz and highHz (bins one bandSpacingHz() apart, plus a guard bin

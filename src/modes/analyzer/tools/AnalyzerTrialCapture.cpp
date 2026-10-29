@@ -72,9 +72,7 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
         const bool inWindow = sourceOnsetMs > 0 && !preWindow && !postWindow;
         if (inWindow) {
             _sequenceTest.trial.rejectedInWindowCount++;
-            _sequenceTest.trial.rejected++;
         }
-        diagnostics.runtimePatternCaptured = diagnostics.runtimePatternCaptured || event.hasVerdict;
         return;
     }
 
@@ -120,17 +118,7 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
         }
         _sequenceTest.trial.primaryAcceptedVerdictCaptured = true;
         _sequenceTest.trial.primaryAcceptedVerdict = *verdict;
-        if (_sequenceTest.trial.diagnostics.firstOnsetMs == 0) {
-            _sequenceTest.trial.diagnostics.firstOnsetMs = onsetMs;
-        }
-        if (_sequenceTest.trial.onsetDetectedMs == 0) {
-            _sequenceTest.trial.onsetDetectedMs = onsetMs;
-        }
-        _sequenceTest.trial.diagnostics.accepted = true;
-        _sequenceTest.trial.diagnostics.acceptedPatternMs = onsetMs;
-        _sequenceTest.trial.diagnostics.acceptedPatternDurationMs = verdict->primaryDurationMs;
         _sequenceTest.trial.diagnostics.acceptedAmbientBaseline = verdict->primaryAmbientBaseline;
-        _sequenceTest.trial.patternDetectedMs = onsetMs;
     }
 
     if (!verdict->valid) {
@@ -148,10 +136,7 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
                 }
             }
         }
-        if (!verdict->valid) {
-            _sequenceTest.trial.rejectedInWindowCount++;
-            _sequenceTest.trial.rejected++;
-        }
+        _sequenceTest.trial.rejectedInWindowCount++;
         return;
     }
 
@@ -173,21 +158,10 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
         }
     }
 
-    if (_sequenceTest.trial.diagnostics.firstOnsetMs == 0) {
-        _sequenceTest.trial.diagnostics.firstOnsetMs = onsetMs;
-    }
-    if (_sequenceTest.trial.onsetDetectedMs == 0) {
-        _sequenceTest.trial.onsetDetectedMs = onsetMs;
-    }
-
     if (hadPrimaryBeforePending) {
         _sequenceTest.trial.diagnostics.duplicateCount++;
         return;
     }
 
-    _sequenceTest.trial.diagnostics.accepted = true;
-    _sequenceTest.trial.diagnostics.acceptedPatternMs = onsetMs;
-    _sequenceTest.trial.diagnostics.acceptedPatternDurationMs = verdict->primaryDurationMs;
     _sequenceTest.trial.diagnostics.acceptedAmbientBaseline = verdict->primaryAmbientBaseline;
-    _sequenceTest.trial.patternDetectedMs = onsetMs;
 }

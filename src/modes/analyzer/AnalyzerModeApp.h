@@ -183,9 +183,6 @@ private:
     const char* activeAnalyzerProfileName() const;
     const detection::DetectionProfile& effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
-    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, bool rejectedInWindow,
-                                     long dtMs, long durMs, float strength, bool bufferOverrun,
-                                     unsigned long duplicateCount, const TrialDiagnostics& diagnostics) const;
     struct SequenceTrialSelection {
         enum class Kind {
             None,
@@ -213,6 +210,10 @@ private:
         float strength = 0.0f;
     };
 
+    void buildSequenceAnalyzerReport(AnalyzerReport& report, const SequenceTrialSelection& selectedTrial,
+                                     unsigned long trialNumber, bool rejectedInWindow, long dtMs, long durMs,
+                                     float strength, bool bufferOverrun, unsigned long duplicateCount,
+                                     const TrialDiagnostics& diagnostics) const;
     unsigned long sequenceTrialOnsetAnchorMs() const;
     SequenceTrialSelection selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const;
     void handleSequencePending(const detection::DetectionPipelineEvent& event);

@@ -84,7 +84,7 @@ def reset(n):
     ports[n].rts = False
     t0 = time.time()
     seen = {}
-    while time.time() - t0 < 12:
+    while time.time() - t0 < 30:  # warmup 2 s + the quiet gate's 20 s timeout + margin
         pump(0.05)
         t = buf[n][m:]
         for key in ("BUILD role=", "RB warmup done", "RB baseline active"):

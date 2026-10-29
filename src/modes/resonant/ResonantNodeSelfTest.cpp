@@ -34,7 +34,7 @@ The hardware checks (mic, amp) and the restore after them are Node glue
 */
 
 namespace {
-constexpr unsigned long kQuietBootWaitMs = 15000;   // boot warmup 2 s + quiet timeout 8 s + margin
+constexpr unsigned long kQuietBootWaitMs = 27000;  // boot warmup 2 s + quiet timeout 20 s + margin
 constexpr unsigned long kOutputsWaitMs = 15000;
 constexpr unsigned long kEchoWindowMs = 300;       // after an own chirp's finish
 constexpr unsigned long kOpenChirpSpanMs = 2000;   // own chirp still sounding: assumed length

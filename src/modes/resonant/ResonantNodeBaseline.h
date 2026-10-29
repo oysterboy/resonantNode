@@ -47,7 +47,9 @@ public:
 #endif
         unsigned long micWarmupMs = runtime::kDefaultAudioSignalStartupWarmupMs;
         unsigned long quietHoldMs = 1000;
-        unsigned long timeoutMs = 8000;
+        // 20 s, not 8 (owner 2026-10-29, step 12.1.1): boots in a noisy moment (all boards rebooting together after an
+        // OTA) missed 1 s below the threshold within 8 s; the threshold itself stays.
+        unsigned long timeoutMs = 20000;
         // Settle after a rebase before outputs come back (quiet-gated and forced).
         unsigned long settleMs = 500;
         unsigned long logEveryMs = 1000;
@@ -56,11 +58,11 @@ public:
     enum class Step : uint8_t {
         None,
         WarmupWaiting,  // log line due: elapsedMs of the warmup
-        WarmupDone,     // warmup over: rebase the audio, then startListening()
+        WarmupDone,  // warmup over: rebase the audio, then startListening()
         RebaseWaiting,  // log line due: smooth, elapsedMs = quiet so far
-        QuietHeld,      // quiet hold reached, now in Settle: rebase, then noteRebaseResult(Done)
-        NoQuiet,        // timeout without a quiet hold, now FailedNoQuiet: noteRebaseResult(NoQuiet)
-        Activated,      // Settle over, now Active
+        QuietHeld,  // quiet hold reached, now in Settle: rebase, then noteRebaseResult(Done)
+        NoQuiet,  // timeout without a quiet hold, now FailedNoQuiet: noteRebaseResult(NoQuiet)
+        Activated,  // Settle over, now Active
     };
 
     struct Tick {

@@ -68,7 +68,9 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         SELFTEST's end instead of fixed times), the Analyzer set identical to 184c72c's, an OTA round trip with token.
    12.1.1 The quiet gate's thin margin: boots in a noisy moment (all boards rebooting together after an OTA) miss
         "smooth < 400 for 1 s within 8 s"; median 108, p90 ~300, bursts to ~490; 15 / 15 in a quiet moment. No
-        functional effect (the Node runs on the warmup rebase), SELFTEST's quiet_boot reports FAIL. Owner decision.
+        functional effect (the Node runs on the warmup rebase), SELFTEST's quiet_boot reports FAIL. Owner 2026-10-29: (b),
+        the gate gives up after 20 s instead of 8 (the threshold stays): the second rebase is the one that catches the
+        settled mic offset (E1: -260 at the 2 s warmup, +596 one second later).
    12.2 [DONE 2026-10-29, c0b002c, checked on E4 by OTA] SELFTEST's own_chirp_suppressed on a silent Node: SKIP, not FAIL (it only requests chirps with outputs on;
         bench/sessions/2026-10-29-step11i-nodecheck). Remote.
    12.3 Docs pass: research notes and roadmap items whose status lags (freertos-tasks, scalar-detector-extensions,

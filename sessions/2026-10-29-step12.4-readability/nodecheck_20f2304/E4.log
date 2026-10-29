@@ -1,0 +1,96 @@
+PARAM GET path=behavior.idle_timeout_ms module=behavior value=60000
+PARAM SET path=behavior.idle_timeout_ms module=behavior old=60000 new=61234 status=ok
+PARAM SAVE written=1 unchanged=46 failed=0 status=ok
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=node git=20f23047 date=Oct 29 2026 time=18:59:49 version=0.4.0 board=damp
+E (63) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+RB node_id=0xECEF4AC3DC24
+
+RB node name=E4 rotation_source=roster
+PARAM load path=output.silent value=1 default=0
+PARAM load path=behavior.idle_timeout_ms value=61234 default=60000
+PARAM load stored=47 applied=47 stale=0 invalid=0
+RB net started=1 channel=1 net_id=82
+RB signal band=2950-3950 bins=5 hop=on rotation=3 steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+RB silent=1 (output.silent: listening, never sounding)
+RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape fieldStateConfig=4000/4000
+RB PROFILE detail
+  kind=TonalPulseScalar
+  detectorSelection=ScalarTransient
+  inspectionPlan=contrast+amp+shape
+  scalarTransient.observedStream=FrequencyTarget
+  scalarTransient.onsetDetectionThreshold=2000.0
+  scalarTransient.onsetReleaseThreshold=1500.0
+  scalarTransient.cooldownAfterOnsetMs=50
+  scalarTransient.minTransientDurationMs=92
+  scalarTransient.maxTransientDurationMs=300
+  scalarTransient.releaseDebounceMs=10
+  scalarTransient.minTransientPeakStrength=3000.0
+  inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+  inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+  inspectionPlan.module[2].kind=BinShape label=shape
+  verdict.has_requirement=1
+  verdict.required_label=contrast
+  fieldState.occurrenceWindowMs=4000
+  fieldState.patternWindowMs=4000
+  fieldState.busyOccurrenceCountThreshold=3
+  fieldState.denseOccurrenceCountThreshold=6
+  fieldState.quietOccurrenceCountThreshold=0
+
+RB behavior
+  idleEnabled=1
+  waitAfterHeardMs=100
+  refractoryAfterEmitMs=400
+  behaviorSuppressSelfChirpMs=100
+  detectionSuppressTailMsOwnEmit=60
+  idleTimeoutMs=61234
+  idleTimeVariationMs=20000
+  idleBlockedAfterHeardMs=1000
+  idleBlockedAfterOwnEmitMs=500
+
+RB startup baseline=BOOT
+RB warmup waiting ms=2 of 2000
+RB warmup waiting ms=1002 of 2000
+RB warmup done ms=2000 rebase=ok baseline=212.6
+RB rebase waiting smooth=36.0 quietMs=0
+RB rebase done quietMs=1004 baseline=573.9 smooth=0
+RB baseline active
+PARAM GET path=behavior.idle_timeout_ms module=behavior value=61234
+PARAM SET path=behavior.idle_timeout_ms module=behavior old=61234 new=60000 status=ok
+PARAM SAVE written=1 unchanged=46 failed=0 status=ok
+PARAM GET path=behavior.idle_timeout_ms module=behavior value=60000
+NET cmd from=24:DC:C3:4A:B0:50 seq=32745 target=* text=NET PING
+NET node=E4 started=1 build=20f23047 silent=1 uptime_s=8 rx=1 rejected=0 queue_full=0 tx=0 tx_failed=0 outbox_full=0 commands=0
+NET cmd from=24:DC:C3:4A:B0:50 seq=32746 target=* text=PARAM SET behavior.wait_after_heard_ms 100
+PARAM SET path=behavior.wait_after_heard_ms module=behavior old=100 new=100 status=ok
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=20f23047 built=Oct_29_2026 built_time=18:59:53 uptime_ms=18170
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=37379 floor_mean=750 floor_peak=3155 bit8_pct=50.8 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=3292 smooth_at_rebase=106.0 quiet_rebases=1 forced_rebases=0 baseline=10.0
+SELFTEST_AMP n=1 floor=1453 tone=523633 snr_db=51.1 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=1534 tone=523597 snr_db=50.7 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=1380 tone=523913 snr_db=51.6 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=2400 tone=522702 snr_db=46.8 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=2182 tone=522408 snr_db=47.6 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=523597 floor=1534 snr_db=50.7 snr_min_db=46.8 snr_max_db=51.6 tone_spread=1.00 pass_db=30.0 max_spread=1.30
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=SKIP reason=silent
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=4 fail=0 skip=2 role=node
+RB baseline active
+SELFTEST_BEGIN role=node mode=external board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=20f23047 built=Oct_29_2026 built_time=18:59:53 uptime_ms=25890
+SELFTEST_EXTERNAL waiting wait_ms=25000
+SELFTEST check=external_chirp result=PASS wait_ms=25000 latency_ms=386 valid=1 verdicts=1 own_verdicts=0 responded=0 baseline=ACTIVE
+SELFTEST_SUMMARY result=PASS pass=2 fail=0 skip=0 role=node

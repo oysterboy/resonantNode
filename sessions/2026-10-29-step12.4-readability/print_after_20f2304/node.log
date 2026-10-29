@@ -1,0 +1,80 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=node git=20f23047 date=Oct 29 2026 time=18:59:49 version=0.4.0 board=damp
+E (54) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+RB node_id=0x38FE4AC3DC24
+
+RB node name=E5 rotation_source=roster
+PARAM load path=output.silent value=1 default=0
+PARAM load stored=39 applied=39 stale=0 invalid=0
+RB net started=1 channel=1 net_id=82
+RB signal band=2950-3950 bins=5 hop=on rotation=4 steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+RB silent=1 (output.silent: listening, never sounding)
+RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape fieldStateConfig=4000/4000
+RB PROFILE detail
+  kind=TonalPulseScalar
+  detectorSelection=ScalarTransient
+  inspectionPlan=contrast+amp+shape
+  scalarTransient.observedStream=FrequencyTarget
+  scalarTransient.onsetDetectionThreshold=2000.0
+  scalarTransient.onsetReleaseThreshold=1500.0
+  scalarTransient.cooldownAfterOnsetMs=50
+  scalarTransient.minTransientDurationMs=92
+  scalarTransient.maxTransientDurationMs=300
+  scalarTransient.releaseDebounceMs=10
+  scalarTransient.minTransientPeakStrength=3000.0
+  inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+  inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+  inspectionPlan.module[2].kind=BinShape label=shape
+  verdict.has_requirement=1
+  verdict.required_label=contrast
+  fieldState.occurrenceWindowMs=4000
+  fieldState.patternWindowMs=4000
+  fieldState.busyOccurrenceCountThreshold=3
+  fieldState.denseOccurrenceCountThreshold=6
+  fieldState.quietOccurrenceCountThreshold=0
+
+RB behavior
+  idleEnabled=1
+  waitAfterHeardMs=100
+  refractoryAfterEmitMs=400
+  behaviorSuppressSelfChirpMs=100
+  detectionSuppressTailMsOwnEmit=60
+  idleTimeoutMs=60000
+  idleTimeVariationMs=20000
+  idleBlockedAfterHeardMs=1000
+  idleBlockedAfterOwnEmitMs=500
+
+RB startup baseline=BOOT
+RB warmup waiting ms=2 of 2000
+RB warmup waiting ms=1002 of 2000
+RB warmup done ms=2001 rebase=ok baseline=-213.6
+RB rebase waiting smooth=44.0 quietMs=0
+RB rebase waiting smooth=235.0 quietMs=429
+RB rebase done quietMs=1000 baseline=1410.1 smooth=0
+RB baseline active
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=413440 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=2 i2s.max_backstep_us=7 i2s.clock_corrections=51 i2s.max_clock_correction_us=8 i2s.read_errors=0 audio.uptime_ms=29711 audio.deficit_s=3.9 audio.level=51 audio.level_max=4452 audio.baseline=17.8 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=90972 heap.free_min=90720 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13948 clock.now_ms=29711 audio.last_sample_ms=29705 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=20f23047 date=Oct 29 2026 time=18:59:53 version=0.4.0 board=damp
+
+RB summary: pending=0 accepted=0 validPatterns=0 chirpStarted=0 overflowPending=0 avg_strength=0.0 avg_duration=0.0ms profile=TonalPulseScalarBUILD role=node git=20f23047 date=Oct 29 2026 time=18:59:53 version=0.4.0 board=damp
+
+RB baseline state=ACTIVE
+RB log mode=minimal
+RB behavior idle=1 wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=60000 idleTimeoutVariation=20000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=1 lastDecision=none lastBlock=none lastPattern=none lastHeardMs=0 lastEmitMs=0 waitUntilMs=0 refractoryUntilMs=0 ownEmitDetectionSuppressUntilMs=0 outputBusy=0 patternsReceived=0 ignoredInvalid=0 blockedOutputBusy=0 blockedWaiting=0 blockedRefractory=0 blockedSelfSuppressed=0 wouldEmit=0 emitted=0
+RB occurrence baseline=5.9 mag=81 smooth=44
+PARAM GET path=detection.shape_tail_ms module=detection value=0
+PARAM SET path=detection.shape_tail_ms module=detection old=0 new=0 status=ok
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+PARAM GET path=output.silent module=output value=1
+PARAM SET path=output.silent module=output old=1 new=1 status=ok
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce

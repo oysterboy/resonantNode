@@ -1,0 +1,5 @@
+>> SEQ STATUS
+SEQ_STATUS mode=detail when=all verbosity=1 profile=TonalPulseScalar tries=10 diagnostics=on freqUpdateEverySamples=4
+>> SEQ STOP (cleanup)
+SEQ_SUMMARY profile=TonalPulseScalar detector=scalar_transient trials=10 completed=10 expected_trials=0 early_trials=0 late_trials=0 miss_trials=0 duplicate_trials=0 unexpected_trials=0 rejected_trials=10 buffer_overrun_trials=0 detector_accepted_trials=10 detector_reject_trials=0 pattern_valid_trials=0 pattern_rejected_trials=10 avg_dt_ms=-1 avg_strength=6404.7 dropped_dma_buffers=0
+OK SEQ STOP

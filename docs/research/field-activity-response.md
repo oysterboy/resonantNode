@@ -313,25 +313,29 @@ nodes, 30 min, three seeds, L 6. "Spread" is the distance in bins between the hi
 | Hearing | Scatter | Spread at a swell's start | Smallest spread inside the swell | Swells that reach unison | Spread after the swell | Time in unison |
 |---|---|---|---|---|---|---|
 | room | none (reference) | 0.1 | 0.0 | 36-39 of 36-41 | 0.0 | 93-97 % |
-| room | random | 1.6-1.9 | 0.1-0.2 | 29-35 of 36-40 | 2.1 | 8-17 % |
-| room | 1 bin | 1.0-1.3 | 0.1-0.2 | 31-34 of 36-40 | 1.1-1.4 | 11-24 % |
-| line | random | 0.7-1.0 | 0.2-0.4 | 14-17 of 19-25 | 1.2-1.4 | 25-39 % |
-| line | 1 bin | 0.6-1.0 | 0.2-0.5 | 15-18 of 19-25 | 0.9-1.3 | 26-47 % |
+| room | random | 2.0-2.1 | 0.0-0.1 | 34-39 of 36-40 | 2.3-2.6 | 9-13 % |
+| room | 1 bin | 1.2-1.4 | 0.0 | 36-40 of 36-40 | 1.4-1.7 | 16-20 % |
+| line | random | 0.9-1.2 | 0.2-0.4 | 13-18 of 19-25 | 1.2-1.6 | 20-37 % |
+| line | 1 bin | 0.6-0.7 | 0.2-0.4 | 12-21 of 19-25 | 0.9-1.1 | 33-45 % |
 
 - The glide per hearing converges inside one swell: a node hears five or six trains per swell, which is more than
   the three bins it can be away. Without any scatter the field is in unison nearly all the time (the reference).
   A glide per own answer (two steps per swell) was tried first and does not converge against either scatter:
   swells reached unison in 2-11 of about 38; the per-hearing glide is the one that works.
-- **Random scatter** gives the full arc every swell: start spread about two bins, unison inside the swell in about
-  nine of ten, then a jump back to about two bins. Chaos, convergence, chaos.
-- **Scatter by one bin** gives a field that hovers near unison: start spread about one bin, unison inside, one bin
-  out again. The departures are audible but small; the arc is gentler and the contrast lower.
+- **Random scatter** gives the full arc every swell: start spread about two bins, unison inside the swell in
+  nearly every one, then a jump back to about two and a half bins. Chaos, convergence, chaos.
+- **Scatter by one bin** gives a field that hovers near unison: start spread about one bin, unison inside every
+  swell, one and a half bins out again. The departures are audible but small; the arc is gentler, the contrast
+  lower, and the field spends about twice as much time in unison.
 - On the line the swell rarely covers the whole field, so unison is reached in about seven of ten swells either
   way, and the two scatters differ less: with partial hearing the scatter matters less than who got woken.
 
 Which of the two is wanted is a question of contrast, not of mechanism, and it is one value (the scatter range).
-A trace of one room swell with random scatter: bases 1 / 2 / 3 / 3 / 1 at the call, all five on 2 after nine
-hearings, then the rest scatters them to 0 / 3 / 1 / 2 / 1.
+A trace of one room swell with random scatter (seed 1, 70 s): bases E1 2, E2 0, E3 2, E4 3, E5 1 when E3 calls on
+2; E4 glides 3 -> 2 and E2 0 -> 1 on that call, E5 1 -> 2 on E4's answer, E2 1 -> 2 on E1's answer: all five on 2
+after three hearings, four seconds in; five more answers in unison; then the rests scatter them to 2 / 3 / 2 / 2 /
+0. (An earlier run of the model read a train's base after the player had scattered; fixed, the numbers above are
+from the fixed model.)
 
 ### What to measure, in order
 

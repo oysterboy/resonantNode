@@ -190,6 +190,7 @@ class Node:
         self.emissions.append(now)
         self.answer_at = None
         self.next_idle = self.idle_delay(now)
+        played_base = self.base   # the base this train is played on (a scatter below must not change it)
         if self.variant == "shipped":
             self.emit_times = [t for t in self.emit_times if now - t < 10_000] + [now]
             if len(self.emit_times) >= 6:
@@ -213,7 +214,7 @@ class Node:
             if self.activity >= self.cfg.sat:
                 self.rest_until = now + TRAIN_MS + self.cfg.rest_ms
                 self.activity = 0.0
-        field.schedule(now + TRAIN_MS + VERDICT_LAG_MS, self.idx)
+        field.schedule(now + TRAIN_MS + VERDICT_LAG_MS, self.idx, played_base)
 
     def tick(self, now, field):
         if self.variant == "level" and self.level > 0 and now - self.level_at >= self.cfg.decay_ms:
@@ -240,8 +241,8 @@ class Field:
     def note(self, now, node, what):
         self.log.append((now, node, what))
 
-    def schedule(self, t, src):
-        self.pending.append((t, src))
+    def schedule(self, t, src, base=0):
+        self.pending.append((t, src, base))
 
     def deliver(self, now, nodes, reach, weak_reach=0):
         due = [p for p in self.pending if p[0] <= now]
@@ -249,11 +250,12 @@ class Field:
         # Trains that end together are one verdict at a listener (E003: a chord reads as one valid pattern).
         # With --reach the nodes stand in a line and hear only sources within that many positions.
         for n in nodes:
-            heard = [src for _, src in due if src != n.idx and (reach == 0 or abs(src - n.idx) <= reach)]
+            heard = [(src, base) for _, src, base in due
+                     if src != n.idx and (reach == 0 or abs(src - n.idx) <= reach)]
             if heard:
-                n.heard_base = nodes[heard[0]].base   # a chord: the listener reads one of them
+                n.heard_base = heard[0][1]   # a chord: the listener reads one of them
                 n.hear(now, self)
-            elif weak_reach and any(src != n.idx and abs(src - n.idx) <= weak_reach for _, src in due):
+            elif weak_reach and any(src != n.idx and abs(src - n.idx) <= weak_reach for _, src, _ in due):
                 n.hear_weak(now, self)
 
 

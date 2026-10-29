@@ -1,0 +1,23 @@
+1793307893.127 RB log mode=minimal (use off|minimal|full)
+1793307893.750 RB log mode=full
+1793307894.374 PARAM SET path=behavior.idle_enabled module=behavior old=1 new=0 status=ok
+1793307895.015 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+1793307895.015 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+1793307895.511 PARAM SET path=detection.scalar_max_duration_ms module=detection old=300 new=450 status=ok
+1793307895.511 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793307895.511 RB plan_check status=fail history_needed_ms=560 history_ms=512 early_window_ms=0 issues=history_too_short,shape_window_too_long
+1793307901.407 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7742 duration_ms=156 profile=TonalPulseScalar
+1793307905.307 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7758 duration_ms=157 profile=TonalPulseScalar
+1793307909.400 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7816 duration_ms=157 profile=TonalPulseScalar
+1793307913.433 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7703 duration_ms=223 profile=TonalPulseScalar
+1793307917.659 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7676 duration_ms=157 profile=TonalPulseScalar
+1793307921.573 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7747 duration_ms=157 profile=TonalPulseScalar
+1793307925.718 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7768 duration_ms=157 profile=TonalPulseScalar
+1793307929.637 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7756 duration_ms=223 profile=TonalPulseScalar
+1793307933.651 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7621 duration_ms=223 profile=TonalPulseScalar
+1793307937.664 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7635 duration_ms=223 profile=TonalPulseScalar
+1793308817.981 PARAM load path=output.silent value=1 default=0
+1793308818.108 PARAM load stored=47 applied=47 stale=0 invalid=0
+1793308818.108 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..300 issues=gap_not_below_debounce
+1793308818.108 RB plan_check status=ok history_needed_ms=410 history_ms=512 early_window_ms=0 issues=none
+1793308819.282 RB log mode=minimal

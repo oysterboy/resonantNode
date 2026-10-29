@@ -1,0 +1,354 @@
+## test/fixtures
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+chirp3200_90cm_2026-10-16.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=129 strength=9711 failed_target=shape observed=none required=medium
+chirp3200_90cm_2026-10-16.csv        samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=129 strength=9711
+chirp3200_band_freqcols_110cm_2026-10-22.csv samples=4182 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=142 strength=5520 failed_target=shape observed=none required=medium
+chirp3200_band_freqcols_110cm_2026-10-22.csv samples=  4182 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=142 strength=5520
+hop5_25x5g10_70cm_2026-10-16.csv samples=5157 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=201 strength=9083
+hop5_25x5g10_70cm_2026-10-16.csv     samples=  5157 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=201 strength=9083
+hop5_25x5g10_70cm_2026-10-16_dry_g10.csv samples=5157 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=109 dur_ms=115 strength=9083
+hop5_25x5g10_70cm_2026-10-16_dry_g10.csv samples=  5157 accepted=1 rejected=0 first: accepted start_ms=109 dur_ms=115 strength=9083
+hop5_25x5g10_70cm_2026-10-16_dry_g15.csv samples=5477 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=15 hop=2950,3200,3450,3700,3950
+hop5_25x5g10_70cm_2026-10-16_dry_g15.csv samples=  5477 accepted=0 rejected=0
+hop5_25x5g10_70cm_2026-10-16_dry_g20.csv samples=5797 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=20 hop=2950,3200,3450,3700,3950
+hop5_25x5g10_70cm_2026-10-16_dry_g20.csv samples=  5797 accepted=0 rejected=0
+hop5_25x5g10_70cm_2026-10-16_dry_g30.csv samples=6437 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=30 hop=2950,3200,3450,3700,3950
+hop5_25x5g10_70cm_2026-10-16_dry_g30.csv samples=  6437 accepted=0 rejected=0
+hop5_25x5g10_70cm_2026-10-16_wet_g15.csv samples=5477 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=15 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=221 strength=9083
+hop5_25x5g10_70cm_2026-10-16_wet_g15.csv samples=  5477 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=221 strength=9083
+hop5_25x5g10_70cm_2026-10-16_wet_g20.csv samples=5797 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=20 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=109 dur_ms=191 strength=9083
+hop5_25x5g10_70cm_2026-10-16_wet_g20.csv samples=  5797 accepted=1 rejected=0 first: accepted start_ms=109 dur_ms=191 strength=9083
+hop5_25x5g10_70cm_2026-10-16_wet_g30.csv samples=6437 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=30 hop=2950,3200,3450,3700,3950
+hop5_25x5g10_70cm_2026-10-16_wet_g30.csv samples=  6437 accepted=0 rejected=0
+hop5_band_freqcols_110cm_2026-10-22.csv samples=5105 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=196 strength=9832
+hop5_band_freqcols_110cm_2026-10-22.csv samples=  5105 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=196 strength=9832
+tone3300_90cm_2026-10-16.csv samples=4295 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=163 strength=7959 failed_target=contrast observed=weak required=medium
+tone3300_90cm_2026-10-16.csv         samples=  4295 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=163 strength=7959
+summary captures=12 accepted=5 rejected=3
+## bench/sessions/2026-10-16-corpus-100cm
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+tone2800_pos0_r0.csv samples=4332 sr=16000 mode=both f=2800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=58 dur_ms=96 strength=4237 failed_target=contrast observed=weak required=medium
+tone2800_pos0_r0.csv                 samples=  4332 accepted=0 rejected=1 first: support_too_low start_ms=58 dur_ms=96 strength=4237
+tone2800_pos0_r1.csv samples=4224 sr=16000 mode=both f=2800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=104 strength=4217 failed_target=contrast observed=weak required=medium
+tone2800_pos0_r1.csv                 samples=  4224 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=104 strength=4217
+tone3200_pos0_r0.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=56 dur_ms=106 strength=4028 failed_target=shape observed=none required=medium
+tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=56 dur_ms=106 strength=4028
+tone3200_pos0_r1.csv samples=4188 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=112 strength=3962 failed_target=shape observed=none required=medium
+tone3200_pos0_r1.csv                 samples=  4188 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=112 strength=3962
+tone3300_pos0_r0.csv samples=4256 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=100 strength=4908 failed_target=contrast observed=weak required=medium
+tone3300_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=100 strength=4908
+tone3300_pos0_r1.csv samples=4256 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=101 strength=5028 failed_target=contrast observed=weak required=medium
+tone3300_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=101 strength=5028
+tone3800_pos0_r0.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=61 dur_ms=165 strength=7549 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=61 dur_ms=165 strength=7549
+tone3800_pos0_r1.csv samples=4273 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=61 dur_ms=173 strength=7518 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r1.csv                 samples=  4273 accepted=0 rejected=1 first: support_too_low start_ms=61 dur_ms=173 strength=7518
+summary captures=8 accepted=0 rejected=8
+## bench/sessions/2026-10-16-corpus-110cm
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+tone2800_pos0_r0.csv samples=4256 sr=16000 mode=both f=2800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=111 strength=4461 failed_target=contrast observed=weak required=medium
+tone2800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=111 strength=4461
+tone2800_pos0_r1.csv samples=4256 sr=16000 mode=both f=2800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=119 strength=4417 failed_target=contrast observed=weak required=medium
+tone2800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=119 strength=4417
+tone3200_pos0_r0.csv samples=4264 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=54 dur_ms=137 strength=5593 failed_target=shape observed=none required=medium
+tone3200_pos0_r0.csv                 samples=  4264 accepted=0 rejected=1 first: support_too_low start_ms=54 dur_ms=137 strength=5593
+tone3200_pos0_r1.csv samples=4298 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=54 dur_ms=131 strength=5347 failed_target=shape observed=none required=medium
+tone3200_pos0_r1.csv                 samples=  4298 accepted=0 rejected=1 first: support_too_low start_ms=54 dur_ms=131 strength=5347
+tone3300_pos0_r0.csv samples=4215 sr=16000 mode=both f=3300 dur=100
+tone3300_pos0_r0.csv                 samples=  4215 accepted=0 rejected=0
+tone3300_pos0_r1.csv samples=4256 sr=16000 mode=both f=3300 dur=100
+tone3300_pos0_r1.csv                 samples=  4256 accepted=0 rejected=0
+tone3800_pos0_r0.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=131 strength=5722 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=131 strength=5722
+tone3800_pos0_r1.csv samples=4238 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=123 strength=5774 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r1.csv                 samples=  4238 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=123 strength=5774
+summary captures=8 accepted=0 rejected=6
+## bench/sessions/2026-10-16-corpus-60cm
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+tone2800_pos0_r0.csv samples=4288 sr=16000 mode=both f=2800 dur=100
+tone2800_pos0_r0.csv                 samples=  4288 accepted=0 rejected=0
+tone2800_pos0_r1.csv samples=4287 sr=16000 mode=both f=2800 dur=100
+tone2800_pos0_r1.csv                 samples=  4287 accepted=0 rejected=0
+tone2800_pos1_r0.csv samples=4256 sr=16000 mode=both f=2800 dur=100
+tone2800_pos1_r0.csv                 samples=  4256 accepted=0 rejected=0
+tone2800_pos1_r1.csv samples=4256 sr=16000 mode=both f=2800 dur=100
+tone2800_pos1_r1.csv                 samples=  4256 accepted=0 rejected=0
+tone3200_pos0_r0.csv samples=4212 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=172 strength=5571 failed_target=shape observed=none required=medium
+tone3200_pos0_r0.csv                 samples=  4212 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=172 strength=5571
+tone3200_pos0_r1.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=54 dur_ms=128 strength=4809 failed_target=shape observed=none required=medium
+tone3200_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=54 dur_ms=128 strength=4809
+tone3200_pos1_r0.csv samples=4180 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=149 strength=9290 failed_target=shape observed=none required=medium
+tone3200_pos1_r0.csv                 samples=  4180 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=149 strength=9290
+tone3200_pos1_r1.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=134 strength=9196 failed_target=shape observed=none required=medium
+tone3200_pos1_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=134 strength=9196
+tone3300_pos0_r0.csv samples=4226 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=68 dur_ms=107 strength=4301 failed_target=contrast observed=weak required=medium
+tone3300_pos0_r0.csv                 samples=  4226 accepted=0 rejected=1 first: support_too_low start_ms=68 dur_ms=107 strength=4301
+tone3300_pos0_r1.csv samples=4256 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=68 dur_ms=114 strength=4109 failed_target=contrast observed=weak required=medium
+tone3300_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=68 dur_ms=114 strength=4109
+tone3300_pos1_r0.csv samples=4256 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=77 dur_ms=159 strength=5105 failed_target=contrast observed=weak required=medium
+tone3300_pos1_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=77 dur_ms=159 strength=5105
+tone3300_pos1_r1.csv samples=4256 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=77 dur_ms=161 strength=5461 failed_target=contrast observed=weak required=medium
+tone3300_pos1_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=77 dur_ms=161 strength=5461
+tone3800_pos0_r0.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=137 dur_ms=93 strength=4778 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=137 dur_ms=93 strength=4778
+tone3800_pos0_r1.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=134 dur_ms=96 strength=5358 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=134 dur_ms=96 strength=5358
+tone3800_pos1_r0.csv samples=4180 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=180 strength=7194 failed_target=contrast observed=weak required=medium
+tone3800_pos1_r0.csv                 samples=  4180 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=180 strength=7194
+tone3800_pos1_r1.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=53 dur_ms=178 strength=7277 failed_target=contrast observed=weak required=medium
+tone3800_pos1_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=53 dur_ms=178 strength=7277
+summary captures=16 accepted=0 rejected=12
+## bench/sessions/2026-10-16-corpus-70cm
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+hop5_p25g10_pos1_r0.csv samples=5157 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=201 strength=9083
+hop5_p25g10_pos1_r0.csv              samples=  5157 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=201 strength=9083
+hop5_p25g10_pos1_r1.csv samples=5157 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=200 strength=9153
+hop5_p25g10_pos1_r1.csv              samples=  5157 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=200 strength=9153
+hop5_p25g10_pos1_r2.csv samples=5156 sr=16000 mode=both f=3200 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=201 strength=9072
+hop5_p25g10_pos1_r2.csv              samples=  5156 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=201 strength=9072
+sweep2950to3950_100ms_pos1_r0.csv samples=4256 sr=16000 mode=both f=2950 dur=100 sweep=3950
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=57 dur_ms=111 strength=6892 failed_target=contrast observed=weak required=medium
+sweep2950to3950_100ms_pos1_r0.csv    samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=57 dur_ms=111 strength=6892
+sweep2950to3950_100ms_pos1_r1.csv samples=4296 sr=16000 mode=both f=2950 dur=100 sweep=3950
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=59 dur_ms=124 strength=7106 failed_target=contrast observed=weak required=medium
+sweep2950to3950_100ms_pos1_r1.csv    samples=  4296 accepted=0 rejected=1 first: support_too_low start_ms=59 dur_ms=124 strength=7106
+sweep2950to3950_100ms_pos1_r2.csv samples=4256 sr=16000 mode=both f=2950 dur=100 sweep=3950
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=59 dur_ms=123 strength=6963 failed_target=contrast observed=weak required=medium
+sweep2950to3950_100ms_pos1_r2.csv    samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=59 dur_ms=123 strength=6963
+sweep2950to3950_150ms_pos1_r0.csv samples=5052 sr=16000 mode=both f=2950 dur=150 sweep=3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=54 dur_ms=185 strength=7971
+sweep2950to3950_150ms_pos1_r0.csv    samples=  5052 accepted=1 rejected=0 first: accepted start_ms=54 dur_ms=185 strength=7971
+sweep2950to3950_150ms_pos1_r1.csv samples=5056 sr=16000 mode=both f=2950 dur=150 sweep=3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=54 dur_ms=170 strength=7936
+sweep2950to3950_150ms_pos1_r1.csv    samples=  5056 accepted=1 rejected=0 first: accepted start_ms=54 dur_ms=170 strength=7936
+tone2800_pos0_r0.csv samples=4256 sr=16000 mode=both f=2800 dur=100
+tone2800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=0
+tone2800_pos0_r1.csv samples=4275 sr=16000 mode=both f=2800 dur=100
+tone2800_pos0_r1.csv                 samples=  4275 accepted=0 rejected=0
+tone3200_pos0_r0.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=53 dur_ms=125 strength=8663 failed_target=shape observed=none required=medium
+tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=53 dur_ms=125 strength=8663
+tone3200_pos0_r1.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=53 dur_ms=125 strength=8648 failed_target=shape observed=none required=medium
+tone3200_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=53 dur_ms=125 strength=8648
+tone3200_pos1_r0.csv samples=4252 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=137 strength=5922 failed_target=shape observed=none required=medium
+tone3200_pos1_r0.csv                 samples=  4252 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=137 strength=5922
+tone3200_pos1_r1.csv samples=4195 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=137 strength=5781 failed_target=shape observed=none required=medium
+tone3200_pos1_r1.csv                 samples=  4195 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=137 strength=5781
+tone3300_pos0_r0.csv samples=4296 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=61 dur_ms=105 strength=5883 failed_target=contrast observed=weak required=medium
+tone3300_pos0_r0.csv                 samples=  4296 accepted=0 rejected=1 first: support_too_low start_ms=61 dur_ms=105 strength=5883
+tone3300_pos0_r1.csv samples=4256 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=53 dur_ms=113 strength=5718 failed_target=contrast observed=weak required=medium
+tone3300_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=53 dur_ms=113 strength=5718
+tone3800_pos0_r0.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=129 strength=5772 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=129 strength=5772
+tone3800_pos0_r1.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=129 strength=5861 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=129 strength=5861
+summary captures=18 accepted=5 rejected=11
+## bench/sessions/2026-10-16-corpus-80cm
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+tone2800_pos0_r0.csv samples=4256 sr=16000 mode=both f=2800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=101 strength=3184 failed_target=contrast observed=weak required=medium
+tone2800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=101 strength=3184
+tone2800_pos0_r1.csv samples=4256 sr=16000 mode=both f=2800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=56 dur_ms=95 strength=3076 failed_target=contrast observed=weak required=medium
+tone2800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=56 dur_ms=95 strength=3076
+tone3200_pos0_r0.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=120 strength=9489 failed_target=shape observed=none required=medium
+tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=120 strength=9489
+tone3200_pos0_r1.csv samples=4227 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=128 strength=9307 failed_target=shape observed=none required=medium
+tone3200_pos0_r1.csv                 samples=  4227 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=128 strength=9307
+tone3300_pos0_r0.csv samples=4256 sr=16000 mode=both f=3300 dur=100
+tone3300_pos0_r0.csv                 samples=  4256 accepted=0 rejected=0
+tone3300_pos0_r1.csv samples=4240 sr=16000 mode=both f=3300 dur=100
+tone3300_pos0_r1.csv                 samples=  4240 accepted=0 rejected=0
+tone3800_pos0_r0.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=57 dur_ms=150 strength=5211 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=57 dur_ms=150 strength=5211
+tone3800_pos0_r1.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=56 dur_ms=152 strength=5168 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=56 dur_ms=152 strength=5168
+summary captures=8 accepted=0 rejected=6
+## bench/sessions/2026-10-16-corpus-90cm
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+tone2800_pos0_r0.csv samples=4286 sr=16000 mode=both f=2800 dur=100
+tone2800_pos0_r0.csv                 samples=  4286 accepted=0 rejected=0
+tone2800_pos0_r1.csv samples=4339 sr=16000 mode=both f=2800 dur=100
+tone2800_pos0_r1.csv                 samples=  4339 accepted=0 rejected=0
+tone3200_pos0_r0.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=129 strength=9711 failed_target=shape observed=none required=medium
+tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=129 strength=9711
+tone3200_pos0_r1.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=130 strength=9898 failed_target=shape observed=none required=medium
+tone3200_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=130 strength=9898
+tone3300_pos0_r0.csv samples=4295 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=163 strength=7959 failed_target=contrast observed=weak required=medium
+tone3300_pos0_r0.csv                 samples=  4295 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=163 strength=7959
+tone3300_pos0_r1.csv samples=4257 sr=16000 mode=both f=3300 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=65 dur_ms=162 strength=7745 failed_target=contrast observed=weak required=medium
+tone3300_pos0_r1.csv                 samples=  4257 accepted=0 rejected=1 first: support_too_low start_ms=65 dur_ms=162 strength=7745
+tone3800_pos0_r0.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=57 dur_ms=135 strength=8881 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=57 dur_ms=135 strength=8881
+tone3800_pos0_r1.csv samples=4256 sr=16000 mode=both f=3800 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=57 dur_ms=135 strength=8822 failed_target=contrast observed=weak required=medium
+tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=57 dur_ms=135 strength=8822
+summary captures=8 accepted=0 rejected=6
+## bench/sessions/2026-10-16-corpus-noise
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+radio_music_r0.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r0.csv                   samples=  5600 accepted=0 rejected=0
+radio_music_r1.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r1.csv                   samples=  5600 accepted=0 rejected=0
+radio_music_r10.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r10.csv                  samples=  5600 accepted=0 rejected=0
+radio_music_r11.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r11.csv                  samples=  5600 accepted=0 rejected=0
+radio_music_r2.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r2.csv                   samples=  5600 accepted=0 rejected=0
+radio_music_r3.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r3.csv                   samples=  5600 accepted=0 rejected=0
+radio_music_r4.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=301 strength=4607 failed_target=shape observed=weak required=medium
+radio_music_r4.csv                   samples=  5600 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=301 strength=4607
+radio_music_r5.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r5.csv                   samples=  5600 accepted=0 rejected=0
+radio_music_r6.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r6.csv                   samples=  5600 accepted=0 rejected=0
+radio_music_r7.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r7.csv                   samples=  5600 accepted=0 rejected=0
+radio_music_r8.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r8.csv                   samples=  5600 accepted=0 rejected=0
+radio_music_r9.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_music_r9.csv                   samples=  5600 accepted=0 rejected=0
+radio_speech_r0.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r0.csv                  samples=  5600 accepted=0 rejected=0
+radio_speech_r1.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r1.csv                  samples=  5600 accepted=0 rejected=0
+radio_speech_r10.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r10.csv                 samples=  5600 accepted=0 rejected=0
+radio_speech_r11.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r11.csv                 samples=  5600 accepted=0 rejected=0
+radio_speech_r2.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r2.csv                  samples=  5600 accepted=0 rejected=0
+radio_speech_r3.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r3.csv                  samples=  5600 accepted=0 rejected=0
+radio_speech_r4.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r4.csv                  samples=  5600 accepted=0 rejected=0
+radio_speech_r5.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r5.csv                  samples=  5600 accepted=0 rejected=0
+radio_speech_r6.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r6.csv                  samples=  5600 accepted=0 rejected=0
+radio_speech_r7.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r7.csv                  samples=  5600 accepted=0 rejected=0
+radio_speech_r8.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r8.csv                  samples=  5600 accepted=0 rejected=0
+radio_speech_r9.csv samples=5600 sr=16000 mode=both f=3200 dur=20
+radio_speech_r9.csv                  samples=  5600 accepted=0 rejected=0
+summary captures=24 accepted=0 rejected=1
+## bench/sessions/2026-10-22-corpus-freqcols-110cm
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+chirp3200_110cm_r0.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=121 strength=5397 failed_target=shape observed=none required=medium
+chirp3200_110cm_r0.csv               samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=121 strength=5397
+chirp3200_110cm_r1.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=121 strength=5728 failed_target=shape observed=none required=medium
+chirp3200_110cm_r1.csv               samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=121 strength=5728
+chirp3200_110cm_r2.csv samples=4170 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=56 dur_ms=127 strength=5643 failed_target=shape observed=none required=medium
+chirp3200_110cm_r2.csv               samples=  4170 accepted=0 rejected=1 first: support_too_low start_ms=56 dur_ms=127 strength=5643
+hop5_p25g10_110cm_r0.csv samples=5076 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=184 strength=10043
+hop5_p25g10_110cm_r0.csv             samples=  5076 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=184 strength=10043
+hop5_p25g10_110cm_r1.csv samples=5184 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=184 strength=9831
+hop5_p25g10_110cm_r1.csv             samples=  5184 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=184 strength=9831
+hop5_p25g10_110cm_r2.csv samples=5108 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=214 strength=9694
+hop5_p25g10_110cm_r2.csv             samples=  5108 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=214 strength=9694
+summary captures=6 accepted=3 rejected=3
+## bench/sessions/2026-10-22-corpus-freqcols-aligned-110cm
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+chirp3200_band_110cm_r0.csv samples=4182 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=142 strength=5520 failed_target=shape observed=none required=medium
+chirp3200_band_110cm_r0.csv          samples=  4182 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=142 strength=5520
+chirp3200_band_110cm_r1.csv samples=4180 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=141 strength=5599 failed_target=shape observed=none required=medium
+chirp3200_band_110cm_r1.csv          samples=  4180 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=141 strength=5599
+chirp3200_band_110cm_r2.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=149 strength=5456 failed_target=shape observed=none required=medium
+chirp3200_band_110cm_r2.csv          samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=149 strength=5456
+hop5_band_110cm_r0.csv samples=5105 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=196 strength=9832
+hop5_band_110cm_r0.csv               samples=  5105 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=196 strength=9832
+hop5_band_110cm_r1.csv samples=5132 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=196 strength=9860
+hop5_band_110cm_r1.csv               samples=  5132 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=196 strength=9860
+hop5_band_110cm_r2.csv samples=5128 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=196 strength=9787
+hop5_band_110cm_r2.csv               samples=  5128 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=196 strength=9787
+summary captures=6 accepted=3 rejected=3
+## bench/sessions/2026-10-22-corpus-freqcols-band-110cm
+replay profile=TonalPulseScalar band=2950-3950 target=3200 contrast_medium=30500 amp_medium=1500 max_duration_ms=450
+chirp3200_band_110cm_r0.csv samples=4213 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=118 strength=5458 failed_target=shape observed=none required=medium
+chirp3200_band_110cm_r0.csv          samples=  4213 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=118 strength=5458
+chirp3200_band_110cm_r1.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=141 strength=5540 failed_target=shape observed=none required=medium
+chirp3200_band_110cm_r1.csv          samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=141 strength=5540
+chirp3200_band_110cm_r2.csv samples=4256 sr=16000 mode=both f=3200 dur=100
+    verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=127 strength=5563 failed_target=shape observed=none required=medium
+chirp3200_band_110cm_r2.csv          samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=127 strength=5563
+hop5_band_110cm_r0.csv samples=5123 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=212 strength=9742
+hop5_band_110cm_r0.csv               samples=  5123 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=212 strength=9742
+hop5_band_110cm_r1.csv samples=5159 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=197 strength=9870
+hop5_band_110cm_r1.csv               samples=  5159 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=197 strength=9870
+hop5_band_110cm_r2.csv samples=5089 sr=16000 mode=both f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950
+    verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=51 dur_ms=196 strength=9674
+hop5_band_110cm_r2.csv               samples=  5089 accepted=1 rejected=0 first: accepted start_ms=51 dur_ms=196 strength=9674
+summary captures=6 accepted=3 rejected=3

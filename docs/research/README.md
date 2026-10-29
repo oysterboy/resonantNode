@@ -116,4 +116,9 @@ code-standards-read-2026-10-28.md
                                formatting, comments): what holds, what slips,
                                measured; cites the 2026-10-25 review's items
                                (promoted: step 11j, done 2026-10-28)
+readability-measures.md        what can be counted (lizard CCN / NLOC / params,
+                               members per class, contract headers) at 26475ce7,
+                               per directory; where the counts disagree with the
+                               human read; a seven-row tracked set and the
+                               measures to take, ranked (2026-10-29)
 ```

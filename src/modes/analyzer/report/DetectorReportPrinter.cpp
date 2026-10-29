@@ -6,7 +6,7 @@
 #include "ScalarTransientPrinter.h"
 #include "../../../app/SerialOut.h"
 
-#include "../../../app/PrintKv.h"
+#include "../../../app/PrintKeyValue.h"
 // Shared detector report rendering. Dispatches to detector-owned detail printers.
 namespace detection {
 
@@ -17,42 +17,43 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     const auto& selectedReject = detectorReport.selectedReject;
 
     serialOut().print(prefix);
-    printKv("trial", trial);
-    printKv("detector", detectorIdName(detectorReport.detectorId));
-    printKv("source.selection", detectorReport.sourceSelection != nullptr ? detectorReport.sourceSelection : "none");
-    printKv("source.occurrence_id", detectorReport.sourceOccurrenceId);
-    printKv("source.candidate_id", detectorReport.sourceCandidateId);
-    printKv("source.report_matched", detectorReport.sourceReportMatched ? 1 : 0);
-    printKv("window.start_ms", detectorReport.reportStartMs);
-    printKv("window.end_ms", detectorReport.reportEndMs);
-    printKv("accepted.present", accepted.present ? 1 : 0);
-    printKv("accepted.start_ms", accepted.startMs);
-    printKv("accepted.peak_ms", accepted.peakMs);
-    printKv("accepted.end_ms", accepted.endMs);
-    printKv("accepted.duration_ms", accepted.durationMs);
-    printKv("accepted.strength", accepted.strength, 1);
-    printKv("accepted.peak", accepted.peak, 1);
-    printKv("accepted.mean", accepted.mean, 1);
-    printKv("accepted.rms", accepted.rms, 1);
-    printKv("accepted.coverage_attack_ms", accepted.coverageAboveAttackMs);
-    printKv("accepted.coverage_release_ms", accepted.coverageAboveReleaseMs);
-    printKv("accepted.sustained_ms", accepted.sustainedMs);
-    printKv("accepted.island_count", accepted.islandCount);
-    printKv("accepted.gap_count", accepted.gapCount);
-    printKv("accepted.island_max_ms", accepted.islandMaxMs);
-    printKv("accepted.gap_max_ms", accepted.gapMaxMs);
-    printKv("reject.present", selectedReject.present ? 1 : 0);
-    printKv("reject.class", detectorRejectClassName(selectedReject.rejectClass));
-    printKv("reject.detector_reason",
-            selectedReject.detectorReason != nullptr ? selectedReject.detectorReason : "none");
-    printKv("reject.start_ms", selectedReject.startMs);
-    printKv("reject.peak_ms", selectedReject.peakMs);
-    printKv("reject.end_ms", selectedReject.endMs);
-    printKv("reject.duration_ms", selectedReject.durationMs);
-    printKv("reject.strength", selectedReject.strength, 1);
-    printKv("reject.peak", selectedReject.peak, 1);
-    printKv("reject.mean", selectedReject.mean, 1);
-    printKv("reject.rms", selectedReject.rms, 1);
+    printKeyValue("trial", trial);
+    printKeyValue("detector", detectorIdName(detectorReport.detectorId));
+    printKeyValue("source.selection",
+                  detectorReport.sourceSelection != nullptr ? detectorReport.sourceSelection : "none");
+    printKeyValue("source.occurrence_id", detectorReport.sourceOccurrenceId);
+    printKeyValue("source.candidate_id", detectorReport.sourceCandidateId);
+    printKeyValue("source.report_matched", detectorReport.sourceReportMatched ? 1 : 0);
+    printKeyValue("window.start_ms", detectorReport.reportStartMs);
+    printKeyValue("window.end_ms", detectorReport.reportEndMs);
+    printKeyValue("accepted.present", accepted.present ? 1 : 0);
+    printKeyValue("accepted.start_ms", accepted.startMs);
+    printKeyValue("accepted.peak_ms", accepted.peakMs);
+    printKeyValue("accepted.end_ms", accepted.endMs);
+    printKeyValue("accepted.duration_ms", accepted.durationMs);
+    printKeyValue("accepted.strength", accepted.strength, 1);
+    printKeyValue("accepted.peak", accepted.peak, 1);
+    printKeyValue("accepted.mean", accepted.mean, 1);
+    printKeyValue("accepted.rms", accepted.rms, 1);
+    printKeyValue("accepted.coverage_attack_ms", accepted.coverageAboveAttackMs);
+    printKeyValue("accepted.coverage_release_ms", accepted.coverageAboveReleaseMs);
+    printKeyValue("accepted.sustained_ms", accepted.sustainedMs);
+    printKeyValue("accepted.island_count", accepted.islandCount);
+    printKeyValue("accepted.gap_count", accepted.gapCount);
+    printKeyValue("accepted.island_max_ms", accepted.islandMaxMs);
+    printKeyValue("accepted.gap_max_ms", accepted.gapMaxMs);
+    printKeyValue("reject.present", selectedReject.present ? 1 : 0);
+    printKeyValue("reject.class", detectorRejectClassName(selectedReject.rejectClass));
+    printKeyValue("reject.detector_reason",
+                  selectedReject.detectorReason != nullptr ? selectedReject.detectorReason : "none");
+    printKeyValue("reject.start_ms", selectedReject.startMs);
+    printKeyValue("reject.peak_ms", selectedReject.peakMs);
+    printKeyValue("reject.end_ms", selectedReject.endMs);
+    printKeyValue("reject.duration_ms", selectedReject.durationMs);
+    printKeyValue("reject.strength", selectedReject.strength, 1);
+    printKeyValue("reject.peak", selectedReject.peak, 1);
+    printKeyValue("reject.mean", selectedReject.mean, 1);
+    printKeyValue("reject.rms", selectedReject.rms, 1);
     const bool useAcceptedCandidate = accepted.present || !selectedReject.present;
     const float candidateMeanStrength = useAcceptedCandidate ? accepted.meanStrength : selectedReject.meanStrength;
     const float candidateMatchedMeanStrength =
@@ -61,17 +62,17 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
         useAcceptedCandidate ? accepted.strengthCount : selectedReject.strengthCount;
     const unsigned int candidateMatchedStrengthCount =
         useAcceptedCandidate ? accepted.matchedStrengthCount : selectedReject.matchedStrengthCount;
-    printKv("candidate.mean_strength", candidateMeanStrength, 1);
-    printKv("candidate.min_strength", candidateMatchedMeanStrength, 1);
-    printKv("candidate.strength_count", candidateStrengthCount);
-    printKv("candidate.matched_strength_count", candidateMatchedStrengthCount);
-    printKv("reject.coverage_attack_ms", selectedReject.coverageAboveAttackMs);
-    printKv("reject.coverage_release_ms", selectedReject.coverageAboveReleaseMs);
-    printKv("reject.sustained_ms", selectedReject.sustainedMs);
-    printKv("reject.island_count", selectedReject.islandCount);
-    printKv("reject.gap_count", selectedReject.gapCount);
-    printKv("reject.island_max_ms", selectedReject.islandMaxMs);
-    printKv("reject.gap_max_ms", selectedReject.gapMaxMs);
+    printKeyValue("candidate.mean_strength", candidateMeanStrength, 1);
+    printKeyValue("candidate.min_strength", candidateMatchedMeanStrength, 1);
+    printKeyValue("candidate.strength_count", candidateStrengthCount);
+    printKeyValue("candidate.matched_strength_count", candidateMatchedStrengthCount);
+    printKeyValue("reject.coverage_attack_ms", selectedReject.coverageAboveAttackMs);
+    printKeyValue("reject.coverage_release_ms", selectedReject.coverageAboveReleaseMs);
+    printKeyValue("reject.sustained_ms", selectedReject.sustainedMs);
+    printKeyValue("reject.island_count", selectedReject.islandCount);
+    printKeyValue("reject.gap_count", selectedReject.gapCount);
+    printKeyValue("reject.island_max_ms", selectedReject.islandMaxMs);
+    printKeyValue("reject.gap_max_ms", selectedReject.gapMaxMs);
     serialOut().print(" carrier.quality_pass=");
     if (detectorReport.detectorId == DetectorId::ScalarTransient) {
         const bool carrierQualityPass = detectorReport.scalar.inspect.carrierQualityRequired
@@ -84,14 +85,15 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     } else {
         serialOut().print(0);
     }
-    printKv("candidate.min_strength_pass",
-            detectorReport.detectorId == DetectorId::ScalarTransient && detectorReport.scalar.inspect.matchedMeanPassed
-                ? 1
-                : 0);
-    printKv("threshold.min_duration_ms", detectorReport.thresholds.minDurationMs);
-    printKv("threshold.max_duration_ms", detectorReport.thresholds.maxDurationMs);
-    printKv("aggregate.accepted_count", detectorReport.aggregates.acceptedCount);
-    printKv("aggregate.rejected_count", detectorReport.aggregates.rejectedCount);
+    printKeyValue("candidate.min_strength_pass",
+                  detectorReport.detectorId == DetectorId::ScalarTransient &&
+                          detectorReport.scalar.inspect.matchedMeanPassed
+                      ? 1
+                      : 0);
+    printKeyValue("threshold.min_duration_ms", detectorReport.thresholds.minDurationMs);
+    printKeyValue("threshold.max_duration_ms", detectorReport.thresholds.maxDurationMs);
+    printKeyValue("aggregate.accepted_count", detectorReport.aggregates.acceptedCount);
+    printKeyValue("aggregate.rejected_count", detectorReport.aggregates.rejectedCount);
     serialOut().println();
 }
 

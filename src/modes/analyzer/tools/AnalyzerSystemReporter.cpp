@@ -10,7 +10,7 @@
 #include "../../../app/TimingUtils.h"
 #include "../../../app/SerialOut.h"
 
-#include "../../../app/PrintKv.h"
+#include "../../../app/PrintKeyValue.h"
 void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) {
     const AudioSourceStats& sourceStats = _audioSource.stats();
     const AudioSignalStats& signalStats = _audioSignal.stats();
@@ -37,63 +37,63 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) {
         : 0UL;
 
     serialOut().print("SYSTEM_HEALTH");
-    printKv("loop_avg_us", loopAvgUs);
-    printKv("update_loop_avg_us", updateLoopAvgUs);
+    printKeyValue("loop_avg_us", loopAvgUs);
+    printKeyValue("update_loop_avg_us", updateLoopAvgUs);
     if (!compactHealth) {
-        printKv("trial", report.context.trial);
-        printKv("t_ms", report.context.timestampMs);
-        printKv("uptime_ms", timebase::nowMs());
-        printKv("boot_count", analyzerBootCount());
-        printKv("reset_reason", currentResetReasonName());
-        printKv("window_start_ms", windowStartMs);
-        printKv("window_end_ms", windowEndMs);
-        printKv("window_elapsed_ms", windowElapsedMs);
-        printKv("free_heap", esp_get_free_heap_size());
-        printKv("loop_stack_free_min_bytes", static_cast<unsigned long>(uxTaskGetStackHighWaterMark(nullptr)));
-        printKv("loop_stats_window_ms", windowElapsedMs);
-        printKv("loop_stats_scope",
-                _sequenceTest.active && _sequenceTest.trial.startMs > 0 ? "trial_window" : "run_window");
-        printKv("loop_count", _loopHealth.count);
-        printKv("loop_max_window_us", _loopHealth.maxUs);
-        printKv("loop_over_5ms", _loopHealth.over5ms);
-        printKv("loop_over_20ms", _loopHealth.over20ms);
-        printKv("loop_max_since_boot_us", _loopMaxSinceBootUs);
-        printKv("update_loop_count", _sequenceTest.trial.updateLoopCount);
-        printKv("update_loop_max_us", _sequenceTest.trial.updateLoopMaxUs);
-        printKv("sample_work_max_us", _sequenceTest.totals.maxSampleWorkUs);
-        printKv("trial_finalize_max_us", _sequenceTest.totals.maxFinalizeTrialUs);
-        printKv("detector_observe_count", _detection.diagnostics().observeFrameCount());
-        printKv("detector_fresh_input_count", _detection.diagnostics().freshDetectorInputCount());
-        printKv("detector_drain_count", _detection.diagnostics().detectorDrainCount());
-        printKv("detector_report_refresh_count", _detection.diagnostics().detectorReportRefreshCount());
-        printKv("detector_report_mismatch_count", _detection.diagnostics().detectorReportMismatchCount());
-        printKv("no_fresh_frequency_skip_count", _detection.diagnostics().noFreshFrequencySkipCount());
-        printKv("detector_occurrence_popped_count", _detection.diagnostics().detectorOccurrencePoppedCount());
-        printKv("detector_valid_occurrence_popped_count",
-                _detection.diagnostics().detectorValidOccurrencePoppedCount());
-        printKv("verdict_produced_count", _detection.diagnostics().verdictProducedCount());
-        printKv("verdict_event_pushed_count", _detection.diagnostics().verdictEventPushedCount());
-        printKv("verdict_event_dropped_count", _detection.diagnostics().verdictEventDroppedCount());
+        printKeyValue("trial", report.context.trial);
+        printKeyValue("t_ms", report.context.timestampMs);
+        printKeyValue("uptime_ms", timebase::nowMs());
+        printKeyValue("boot_count", analyzerBootCount());
+        printKeyValue("reset_reason", currentResetReasonName());
+        printKeyValue("window_start_ms", windowStartMs);
+        printKeyValue("window_end_ms", windowEndMs);
+        printKeyValue("window_elapsed_ms", windowElapsedMs);
+        printKeyValue("free_heap", esp_get_free_heap_size());
+        printKeyValue("loop_stack_free_min_bytes", static_cast<unsigned long>(uxTaskGetStackHighWaterMark(nullptr)));
+        printKeyValue("loop_stats_window_ms", windowElapsedMs);
+        printKeyValue("loop_stats_scope",
+                      _sequenceTest.active && _sequenceTest.trial.startMs > 0 ? "trial_window" : "run_window");
+        printKeyValue("loop_count", _loopHealth.count);
+        printKeyValue("loop_max_window_us", _loopHealth.maxUs);
+        printKeyValue("loop_over_5ms", _loopHealth.over5ms);
+        printKeyValue("loop_over_20ms", _loopHealth.over20ms);
+        printKeyValue("loop_max_since_boot_us", _loopMaxSinceBootUs);
+        printKeyValue("update_loop_count", _sequenceTest.trial.updateLoopCount);
+        printKeyValue("update_loop_max_us", _sequenceTest.trial.updateLoopMaxUs);
+        printKeyValue("sample_work_max_us", _sequenceTest.totals.maxSampleWorkUs);
+        printKeyValue("trial_finalize_max_us", _sequenceTest.totals.maxFinalizeTrialUs);
+        printKeyValue("detector_observe_count", _detection.diagnostics().observeFrameCount());
+        printKeyValue("detector_fresh_input_count", _detection.diagnostics().freshDetectorInputCount());
+        printKeyValue("detector_drain_count", _detection.diagnostics().detectorDrainCount());
+        printKeyValue("detector_report_refresh_count", _detection.diagnostics().detectorReportRefreshCount());
+        printKeyValue("detector_report_mismatch_count", _detection.diagnostics().detectorReportMismatchCount());
+        printKeyValue("no_fresh_frequency_skip_count", _detection.diagnostics().noFreshFrequencySkipCount());
+        printKeyValue("detector_occurrence_popped_count", _detection.diagnostics().detectorOccurrencePoppedCount());
+        printKeyValue("detector_valid_occurrence_popped_count",
+                      _detection.diagnostics().detectorValidOccurrencePoppedCount());
+        printKeyValue("verdict_produced_count", _detection.diagnostics().verdictProducedCount());
+        printKeyValue("verdict_event_pushed_count", _detection.diagnostics().verdictEventPushedCount());
+        printKeyValue("verdict_event_dropped_count", _detection.diagnostics().verdictEventDroppedCount());
     }
     serialOut().println();
     _loopHealth.reset();
 
     serialOut().print("AUDIO_IO_HEALTH");
-    printKv("processed_ratio", processedRatio, 3);
+    printKeyValue("processed_ratio", processedRatio, 3);
     if (!compactHealth) {
-        printKv("t_ms", report.context.timestampMs);
-        printKv("i2s_reads", sourceStats.reads);
-        printKv("i2s_bytes_read", sourceStats.readBytes);
-        printKv("processed_samples", processedSamples);
-        printKv("expected_samples", expectedSamples);
+        printKeyValue("t_ms", report.context.timestampMs);
+        printKeyValue("i2s_reads", sourceStats.reads);
+        printKeyValue("i2s_bytes_read", sourceStats.readBytes);
+        printKeyValue("processed_samples", processedSamples);
+        printKeyValue("expected_samples", expectedSamples);
         serialOut().print(" frames_emitted=");
         serialOut().print(static_cast<unsigned long long>(signalStats.samplesProcessed));  // one frame per sample
-        printKv("partial_frames", sourceStats.shortReads);
+        printKeyValue("partial_frames", sourceStats.shortReads);
         serialOut().print(" duplicate_frames=0");
         serialOut().print(" gap_samples=0");
         serialOut().print(" overlap_samples=0");
-        printKv("max_block_age_ms", _sequenceTest.active ? _sequenceTest.totals.maxBlockAgeMs : 0UL);
-        printKv("max_processing_lag_ms", _sequenceTest.active ? _sequenceTest.totals.maxProcessingLagMs : 0UL);
+        printKeyValue("max_block_age_ms", _sequenceTest.active ? _sequenceTest.totals.maxBlockAgeMs : 0UL);
+        printKeyValue("max_processing_lag_ms", _sequenceTest.active ? _sequenceTest.totals.maxProcessingLagMs : 0UL);
         serialOut().println();
     } else {
         serialOut().println();
@@ -123,19 +123,19 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) {
         _sequenceTest.trial.diagnostics.audioRmsTooLowFrames, _sequenceTest.trial.diagnostics.audioRmsTooHighFrames);
     if (_sequenceTest.config.outputConfig.verbosity >= 1U) {
         serialOut().print("RAW_AUDIO_HEALTH");
-        printKv("verdict", rawHealth != nullptr ? rawHealth : "unknown");
+        printKeyValue("verdict", rawHealth != nullptr ? rawHealth : "unknown");
     }
     if (_sequenceTest.config.outputConfig.verbosity >= 2U) {
-        printKv("t_ms", report.context.timestampMs);
-        printKv("frames", rawDiagnostics.rawFrames);
-        printKv("min_sample", rawDiagnostics.rawFrames > 0 ? rawDiagnostics.rawMin : 0);
-        printKv("max_sample", rawDiagnostics.rawFrames > 0 ? rawDiagnostics.rawMax : 0);
-        printKv("dc_mean", rawDcMean, 1);
-        printKv("mean_abs", rawMeanAbs, 1);
-        printKv("max_abs", rawMaxAbs);
-        printKv("zero_ratio", rawZeroRatio, 3);
-        printKv("clip_count", _sequenceTest.trial.diagnostics.audioRmsTooHighFrames);
-        printKv("flatline", rawHealth != nullptr && strcmp(rawHealth, "flatline") == 0 ? 1 : 0);
+        printKeyValue("t_ms", report.context.timestampMs);
+        printKeyValue("frames", rawDiagnostics.rawFrames);
+        printKeyValue("min_sample", rawDiagnostics.rawFrames > 0 ? rawDiagnostics.rawMin : 0);
+        printKeyValue("max_sample", rawDiagnostics.rawFrames > 0 ? rawDiagnostics.rawMax : 0);
+        printKeyValue("dc_mean", rawDcMean, 1);
+        printKeyValue("mean_abs", rawMeanAbs, 1);
+        printKeyValue("max_abs", rawMaxAbs);
+        printKeyValue("zero_ratio", rawZeroRatio, 3);
+        printKeyValue("clip_count", _sequenceTest.trial.diagnostics.audioRmsTooHighFrames);
+        printKeyValue("flatline", rawHealth != nullptr && strcmp(rawHealth, "flatline") == 0 ? 1 : 0);
         serialOut().println();
     } else if (_sequenceTest.config.outputConfig.verbosity >= 1U) {
         serialOut().println();
@@ -146,13 +146,13 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) {
     }
 
     serialOut().print("I2S_IO_HEALTH");
-    printKv("reads", sourceStats.reads);
-    printKv("bytes", sourceStats.readBytes);
-    printKv("zero_reads", sourceStats.zeroReads);
-    printKv("short_reads", sourceStats.shortReads);
-    printKv("max_read_bytes", sourceStats.maxReadBytes);
-    printKv("read_errors", sourceStats.readErrors);
-    printKv("overflow", sourceStats.overflowCount);
-    printKv("total_samples", static_cast<unsigned long long>(sourceStats.totalSamplesRead));
+    printKeyValue("reads", sourceStats.reads);
+    printKeyValue("bytes", sourceStats.readBytes);
+    printKeyValue("zero_reads", sourceStats.zeroReads);
+    printKeyValue("short_reads", sourceStats.shortReads);
+    printKeyValue("max_read_bytes", sourceStats.maxReadBytes);
+    printKeyValue("read_errors", sourceStats.readErrors);
+    printKeyValue("overflow", sourceStats.overflowCount);
+    printKeyValue("total_samples", static_cast<unsigned long long>(sourceStats.totalSamplesRead));
     serialOut().println();
 }

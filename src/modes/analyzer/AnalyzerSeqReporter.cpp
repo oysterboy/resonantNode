@@ -9,7 +9,7 @@
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
 
-#include "../../app/PrintKv.h"
+#include "../../app/PrintKeyValue.h"
 namespace {
 
 const char* strengthClassForObservationTarget(const AnalyzerReport& report, detection::InspectionTarget target) {
@@ -42,24 +42,25 @@ const char* pipelineIntegrityReasonName(detection::PipelineIntegrityReason reaso
 
 void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, bool extended) {
     serialOut().print(prefix);
-    printKv("expected.start_ms", report.expected.windowStartMs);
-    printKv("expected.end_ms", report.expected.windowEndMs);
-    printKv("verdict.type", report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
-    printKv("verdict.valid", report.primaryPattern.valid ? 1 : 0);
-    printKv("verdict.reason", report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
-    printKv("analyzer.result", analyzerResultName(report.classification.result));
-    printKv("analyzer.stage", analyzerStageName(report.classification.primaryStage));
-    printKv("analyzer.reason", analyzerReasonName(report.classification.reason));
-    printKv("analyzer.dt_ms", report.classification.dtMs);
+    printKeyValue("expected.start_ms", report.expected.windowStartMs);
+    printKeyValue("expected.end_ms", report.expected.windowEndMs);
+    printKeyValue("verdict.type", report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
+    printKeyValue("verdict.valid", report.primaryPattern.valid ? 1 : 0);
+    printKeyValue("verdict.reason", report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
+    printKeyValue("analyzer.result", analyzerResultName(report.classification.result));
+    printKeyValue("analyzer.stage", analyzerStageName(report.classification.primaryStage));
+    printKeyValue("analyzer.reason", analyzerReasonName(report.classification.reason));
+    printKeyValue("analyzer.dt_ms", report.classification.dtMs);
     if (extended) {
-        printKv("occurrence.present", report.occurrences.present ? 1 : 0);
-        printKv("occurrence.source",
-                report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
-        printKv("inspection.label", detection::inspectionTargetName(report.inspection.moduleTarget));
-        printKv("inspection.strength",
-                report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
-        printKv("integrity.complete", report.integrity.correlationComplete ? 1 : 0);
-        printKv("integrity.reason", report.integrity.reason != nullptr ? report.integrity.reason : "none");
+        printKeyValue("occurrence.present", report.occurrences.present ? 1 : 0);
+        printKeyValue("occurrence.source",
+                      report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
+        printKeyValue("inspection.label", detection::inspectionTargetName(report.inspection.moduleTarget));
+        printKeyValue("inspection.strength",
+                      report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass
+                                                                       : "unknown");
+        printKeyValue("integrity.complete", report.integrity.correlationComplete ? 1 : 0);
+        printKeyValue("integrity.reason", report.integrity.reason != nullptr ? report.integrity.reason : "none");
     }
     serialOut().println();
 }
@@ -88,13 +89,13 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
 
     serialOut().print("SEQ_TRIAL trial=");
     serialOut().print(report.context.trial);
-    printKv("result", analyzerResultName(report.classification.result));
-    printKv("stage", analyzerStageName(report.classification.primaryStage));
-    printKv("reject_reason", trialRejectReason);
+    printKeyValue("result", analyzerResultName(report.classification.result));
+    printKeyValue("stage", analyzerStageName(report.classification.primaryStage));
+    printKeyValue("reject_reason", trialRejectReason);
     serialOut().print(" emit_marker_seen=");  // moved from SEQ_HISTDBG (11g C3b)
     serialOut().print(_sequenceTest.trial.diagnostics.emitStartSeen ? 1 : 0);
-    printKv("source_selection", report.sourceSelection != nullptr ? report.sourceSelection : "none");
-    printKv("source_reason", report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
+    printKeyValue("source_selection", report.sourceSelection != nullptr ? report.sourceSelection : "none");
+    printKeyValue("source_reason", report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
     serialOut().print(" dt=");
     if (report.classification.result == AnalyzerResult::Rejected) {
         serialOut().print("na");
@@ -106,12 +107,12 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         serialOut().print("ms");
     }
     if (report.occurrences.primaryDurationMs > 0) {
-        printKv("duration_ms", report.occurrences.primaryDurationMs);
+        printKeyValue("duration_ms", report.occurrences.primaryDurationMs);
     } else if (report.detectorReport != nullptr && report.detectorReport->accepted.present) {
-        printKv("duration_ms", report.detectorReport->accepted.durationMs);
+        printKeyValue("duration_ms", report.detectorReport->accepted.durationMs);
     }
-    printKv("contrast_class", strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
-    printKv("amp_class", strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
+    printKeyValue("contrast_class", strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
+    printKeyValue("amp_class", strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
     if (report.detectorReport != nullptr) {
         const auto& accepted = report.detectorReport->accepted;
         const auto& selectedReject = report.detectorReport->selectedReject;
@@ -119,17 +120,17 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         const auto coverageMs = useAccepted ? accepted.coverageAboveReleaseMs : selectedReject.coverageAboveReleaseMs;
         const auto islandMaxMs = useAccepted ? accepted.islandMaxMs : selectedReject.islandMaxMs;
         const auto gapMaxMs = useAccepted ? accepted.gapMaxMs : selectedReject.gapMaxMs;
-        printKv("coverage_ms", coverageMs);
-        printKv("island_max_ms", islandMaxMs);
-        printKv("gap_max_ms", gapMaxMs);
+        printKeyValue("coverage_ms", coverageMs);
+        printKeyValue("island_max_ms", islandMaxMs);
+        printKeyValue("gap_max_ms", gapMaxMs);
     }
-    printKv("source_strength", report.occurrences.primaryStrength, 1);
-    printKv("dup", report.debug.duplicates);
-    printKv("src_total", report.occurrences.total);
-    printKv("src_acc", report.occurrences.accepted);
-    printKv("src_rej", report.occurrences.rejected);
-    printKv("buffer_overrun", report.debug.bufferOverrun ? 1 : 0);
-    printKv("profile", report.context.profile != nullptr ? report.context.profile : "unknown");
+    printKeyValue("source_strength", report.occurrences.primaryStrength, 1);
+    printKeyValue("dup", report.debug.duplicates);
+    printKeyValue("src_total", report.occurrences.total);
+    printKeyValue("src_acc", report.occurrences.accepted);
+    printKeyValue("src_rej", report.occurrences.rejected);
+    printKeyValue("buffer_overrun", report.debug.bufferOverrun ? 1 : 0);
+    printKeyValue("profile", report.context.profile != nullptr ? report.context.profile : "unknown");
     serialOut().println();
 }
 
@@ -144,11 +145,11 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
                                       detection::InspectionTarget target) {
         const bool available = observation != nullptr && observation->available;
         serialOut().print("SEQ_INSPECT");
-        printKv("inspect.label", detection::inspectionTargetName(target));
-        printKv("inspect.anchor_ms", observation != nullptr ? observation->anchorMs : 0UL);
-        printKv("inspect.requested_start_ms", observation != nullptr ? observation->requestedStartMs : 0UL);
-        printKv("inspect.requested_end_ms", observation != nullptr ? observation->requestedEndMs : 0UL);
-        printKv("inspect.inspection_now_ms", observation != nullptr ? observation->inspectionNowMs : 0UL);
+        printKeyValue("inspect.label", detection::inspectionTargetName(target));
+        printKeyValue("inspect.anchor_ms", observation != nullptr ? observation->anchorMs : 0UL);
+        printKeyValue("inspect.requested_start_ms", observation != nullptr ? observation->requestedStartMs : 0UL);
+        printKeyValue("inspect.requested_end_ms", observation != nullptr ? observation->requestedEndMs : 0UL);
+        printKeyValue("inspect.inspection_now_ms", observation != nullptr ? observation->inspectionNowMs : 0UL);
         // ANA-009 (step 7a): the history fills the available range only from
         // values inside the requested window; with none (future window,
         // missing stream, empty edge) it stayed 0/0 and read as "empty
@@ -166,40 +167,42 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         } else {
             serialOut().print("na");
         }
-        printKv("inspect.value", available ? observation->classificationValue : 0.0f, 3);
-        printKv("inspect.strength_class", available ? detection::strengthClassName(observation->strength) : "unknown");
-        printKv("inspect.valid", available ? 1 : 0);
-        printKv("inspect.status", available ? "observed" : "missing");
-        printKv("inspect.reject_reason",
-                available ? "none"
-                          : detection::magnitudeInspectionNoteName(
-                                observation != nullptr ? observation->note
-                                                       : detection::MagnitudeInspectionNote::WindowInvalid));
-        printKv("inspect.stream",
-                observation != nullptr ? scalarObservedStreamDisplayName(observation->stream) : "unknown");
-        printKv("inspect.metric",
-                observation != nullptr ? detection::magnitudeInspectionModeName(observation->mode) : "unknown");
-        printKv("inspect.window_ms", observation != nullptr ? observation->windowMs : 0UL);
-        printKv("inspect.expected_bin_count", observation != nullptr ? observation->windowMs : 0UL);
-        printKv("inspect.sample_count",
-                observation != nullptr ? static_cast<unsigned long>(observation->sampleCount) : 0UL);
-        printKv("inspect.coverage", observation != nullptr ? observation->coverageRatio : 0.0f, 3);
-        printKv("inspect.covered_ms", observation != nullptr ? observation->coveredDurationMs : 0UL);
-        printKv("inspect.coverage_complete", observation != nullptr && observation->coverageComplete ? 1 : 0);
-        printKv("inspect.future_unavailable",
-                observation != nullptr && observation->requestedFutureAtInspection ? 1 : 0);
-        printKv("inspect.peak", observation != nullptr ? observation->peak : 0.0f, 3);
-        printKv("inspect.mean", observation != nullptr ? observation->mean : 0.0f, 3);
-        printKv("inspect.rms", observation != nullptr ? observation->rms : 0.0f, 3);
-        printKv("inspect.median", observation != nullptr ? observation->median : 0.0f, 3);
-        printKv("inspect.p75", observation != nullptr ? observation->p75 : 0.0f, 3);
-        printKv("inspect.p90", observation != nullptr ? observation->p90 : 0.0f, 3);
-        printKv("inspect.trimmed_mean", observation != nullptr ? observation->trimmedMean : 0.0f, 3);
-        printKv("inspect.input_value_count",
-                observation != nullptr ? static_cast<unsigned long>(observation->freshValueCount) : 0UL);
-        printKv("inspect.occurrence_id", report.sourceOccurrenceId);
-        printKv("inspect.integrity_complete", report.integrity.correlationComplete ? 1 : 0);
-        printKv("inspect.integrity_reason", report.integrity.reason != nullptr ? report.integrity.reason : "none");
+        printKeyValue("inspect.value", available ? observation->classificationValue : 0.0f, 3);
+        printKeyValue("inspect.strength_class",
+                      available ? detection::strengthClassName(observation->strength) : "unknown");
+        printKeyValue("inspect.valid", available ? 1 : 0);
+        printKeyValue("inspect.status", available ? "observed" : "missing");
+        printKeyValue("inspect.reject_reason",
+                      available ? "none"
+                                : detection::magnitudeInspectionNoteName(
+                                      observation != nullptr ? observation->note
+                                                             : detection::MagnitudeInspectionNote::WindowInvalid));
+        printKeyValue("inspect.stream",
+                      observation != nullptr ? scalarObservedStreamDisplayName(observation->stream) : "unknown");
+        printKeyValue("inspect.metric",
+                      observation != nullptr ? detection::magnitudeInspectionModeName(observation->mode) : "unknown");
+        printKeyValue("inspect.window_ms", observation != nullptr ? observation->windowMs : 0UL);
+        printKeyValue("inspect.expected_bin_count", observation != nullptr ? observation->windowMs : 0UL);
+        printKeyValue("inspect.sample_count",
+                      observation != nullptr ? static_cast<unsigned long>(observation->sampleCount) : 0UL);
+        printKeyValue("inspect.coverage", observation != nullptr ? observation->coverageRatio : 0.0f, 3);
+        printKeyValue("inspect.covered_ms", observation != nullptr ? observation->coveredDurationMs : 0UL);
+        printKeyValue("inspect.coverage_complete", observation != nullptr && observation->coverageComplete ? 1 : 0);
+        printKeyValue("inspect.future_unavailable",
+                      observation != nullptr && observation->requestedFutureAtInspection ? 1 : 0);
+        printKeyValue("inspect.peak", observation != nullptr ? observation->peak : 0.0f, 3);
+        printKeyValue("inspect.mean", observation != nullptr ? observation->mean : 0.0f, 3);
+        printKeyValue("inspect.rms", observation != nullptr ? observation->rms : 0.0f, 3);
+        printKeyValue("inspect.median", observation != nullptr ? observation->median : 0.0f, 3);
+        printKeyValue("inspect.p75", observation != nullptr ? observation->p75 : 0.0f, 3);
+        printKeyValue("inspect.p90", observation != nullptr ? observation->p90 : 0.0f, 3);
+        printKeyValue("inspect.trimmed_mean", observation != nullptr ? observation->trimmedMean : 0.0f, 3);
+        printKeyValue("inspect.input_value_count",
+                      observation != nullptr ? static_cast<unsigned long>(observation->freshValueCount) : 0UL);
+        printKeyValue("inspect.occurrence_id", report.sourceOccurrenceId);
+        printKeyValue("inspect.integrity_complete", report.integrity.correlationComplete ? 1 : 0);
+        printKeyValue("inspect.integrity_reason",
+                      report.integrity.reason != nullptr ? report.integrity.reason : "none");
         serialOut().println();
     };
 
@@ -243,17 +246,17 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     }
 
     serialOut().print("SEQ_EXPLAIN");
-    printKv("trial", report.context.trial);
-    printKv("profile", report.context.profile != nullptr ? report.context.profile : "unknown");
-    printKv("source.selection", report.sourceSelection != nullptr ? report.sourceSelection : "none");
-    printKv("source.occurrence_id", report.sourceOccurrenceId);
-    printKv("source.event_id", report.sourceEventId);
-    printKv("source.report_generation", report.sourceReportGeneration);
-    printKv("source.event_trial_attribution", report.sourceEventTrialAttribution);
-    printKv("source.report_matched", report.sourceReportMatched ? 1 : 0);
+    printKeyValue("trial", report.context.trial);
+    printKeyValue("profile", report.context.profile != nullptr ? report.context.profile : "unknown");
+    printKeyValue("source.selection", report.sourceSelection != nullptr ? report.sourceSelection : "none");
+    printKeyValue("source.occurrence_id", report.sourceOccurrenceId);
+    printKeyValue("source.event_id", report.sourceEventId);
+    printKeyValue("source.report_generation", report.sourceReportGeneration);
+    printKeyValue("source.event_trial_attribution", report.sourceEventTrialAttribution);
+    printKeyValue("source.report_matched", report.sourceReportMatched ? 1 : 0);
     serialOut().print(" DETECTOR:");
-    printKv("lifecycle",
-            report.detectorReport != nullptr && report.detectorReport->accepted.present ? "valid" : "invalid");
+    printKeyValue("lifecycle",
+                  report.detectorReport != nullptr && report.detectorReport->accepted.present ? "valid" : "invalid");
     serialOut().print(" carrier_quality=");
     if (report.detectorReport != nullptr) {
         const auto& detector = *report.detectorReport;
@@ -262,51 +265,52 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
                detector.scalar.inspect.carrierGapPassed)
             : true;
         serialOut().print(carrierQualityPass ? "valid" : "invalid");
-        printKv("carrier_quality_required", detector.scalar.inspect.carrierQualityRequired ? 1 : 0);
-        printKv("carrier_coverage_passed", detector.scalar.inspect.carrierCoveragePassed ? 1 : 0);
-        printKv("carrier_island_passed", detector.scalar.inspect.carrierIslandPassed ? 1 : 0);
-        printKv("carrier_gap_passed", detector.scalar.inspect.carrierGapPassed ? 1 : 0);
+        printKeyValue("carrier_quality_required", detector.scalar.inspect.carrierQualityRequired ? 1 : 0);
+        printKeyValue("carrier_coverage_passed", detector.scalar.inspect.carrierCoveragePassed ? 1 : 0);
+        printKeyValue("carrier_island_passed", detector.scalar.inspect.carrierIslandPassed ? 1 : 0);
+        printKeyValue("carrier_gap_passed", detector.scalar.inspect.carrierGapPassed ? 1 : 0);
     } else {
         serialOut().print("unknown");
     }
     serialOut().print(" INSPECT:");
-    printKv("contrast.class", strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
-    printKv("amp.class", strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
-    printKv("coverage.complete", report.profileDetail.magnitudeObservation.coverageComplete ? 1 : 0);
-    printKv("coverage.covered_ms", report.profileDetail.magnitudeObservation.coveredDurationMs);
-    printKv("integrity.detector_present", report.integrity.detectorReportPresent ? 1 : 0);
-    printKv("integrity.occurrence_matched", report.integrity.occurrenceMatched ? 1 : 0);
-    printKv("integrity.inspection_present", report.integrity.inspectionPresent ? 1 : 0);
-    printKv("integrity.verdict_present", report.integrity.verdictPresent ? 1 : 0);
-    printKv("integrity.complete", report.integrity.correlationComplete ? 1 : 0);
-    printKv("integrity.reason", report.integrity.reason != nullptr ? report.integrity.reason : "none");
+    printKeyValue("contrast.class", strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
+    printKeyValue("amp.class", strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
+    printKeyValue("coverage.complete", report.profileDetail.magnitudeObservation.coverageComplete ? 1 : 0);
+    printKeyValue("coverage.covered_ms", report.profileDetail.magnitudeObservation.coveredDurationMs);
+    printKeyValue("integrity.detector_present", report.integrity.detectorReportPresent ? 1 : 0);
+    printKeyValue("integrity.occurrence_matched", report.integrity.occurrenceMatched ? 1 : 0);
+    printKeyValue("integrity.inspection_present", report.integrity.inspectionPresent ? 1 : 0);
+    printKeyValue("integrity.verdict_present", report.integrity.verdictPresent ? 1 : 0);
+    printKeyValue("integrity.complete", report.integrity.correlationComplete ? 1 : 0);
+    printKeyValue("integrity.reason", report.integrity.reason != nullptr ? report.integrity.reason : "none");
     serialOut().print(" PATTERN:");
-    printKv("result",
-            report.classification.result == AnalyzerResult::Expected ||
-                    report.classification.result == AnalyzerResult::Late
-                ? "confirmed"
-                : "rejected");
-    printKv("verdict.first_failed_requirement_index", report.primaryPattern.firstFailedRequirementIndex);
-    printKv("verdict.first_failed_label", detection::inspectionTargetName(report.primaryPattern.firstFailedTarget));
-    printKv("verdict.observed_class",
-            report.primaryPattern.firstFailedObservedStrength != nullptr
-                ? report.primaryPattern.firstFailedObservedStrength
-                : "unknown");
-    printKv("verdict.required_class",
-            report.primaryPattern.firstFailedRequiredStrength != nullptr
-                ? report.primaryPattern.firstFailedRequiredStrength
-                : "unknown");
+    printKeyValue("result",
+                  report.classification.result == AnalyzerResult::Expected ||
+                          report.classification.result == AnalyzerResult::Late
+                      ? "confirmed"
+                      : "rejected");
+    printKeyValue("verdict.first_failed_requirement_index", report.primaryPattern.firstFailedRequirementIndex);
+    printKeyValue("verdict.first_failed_label",
+                  detection::inspectionTargetName(report.primaryPattern.firstFailedTarget));
+    printKeyValue("verdict.observed_class",
+                  report.primaryPattern.firstFailedObservedStrength != nullptr
+                      ? report.primaryPattern.firstFailedObservedStrength
+                      : "unknown");
+    printKeyValue("verdict.required_class",
+                  report.primaryPattern.firstFailedRequiredStrength != nullptr
+                      ? report.primaryPattern.firstFailedRequiredStrength
+                      : "unknown");
     // The inspected occurrence's shape (DET-015, step 13.0): bins visited, steps up, other steps, runs, the first and
     // last bin, the class; applicable=0 without band bins or an inspected occurrence.
     const detection::OccurrenceShape& shape = report.occurrences.shape;
-    printKv("shape.applicable", shape.applicable ? 1 : 0);
-    printKv("shape.distinct", static_cast<unsigned>(shape.distinctBins));
-    printKv("shape.up", static_cast<unsigned>(shape.risingSteps));
-    printKv("shape.other", static_cast<unsigned>(shape.otherSteps));
-    printKv("shape.runs", static_cast<unsigned>(shape.runs));
-    printKv("shape.first_hz", static_cast<unsigned>(shape.firstBinHz));
-    printKv("shape.last_hz", static_cast<unsigned>(shape.lastBinHz));
-    printKv("shape.class", detection::strengthClassName(shape.shapeClass));
+    printKeyValue("shape.applicable", shape.applicable ? 1 : 0);
+    printKeyValue("shape.distinct", static_cast<unsigned>(shape.distinctBins));
+    printKeyValue("shape.up", static_cast<unsigned>(shape.risingSteps));
+    printKeyValue("shape.other", static_cast<unsigned>(shape.otherSteps));
+    printKeyValue("shape.runs", static_cast<unsigned>(shape.runs));
+    printKeyValue("shape.first_hz", static_cast<unsigned>(shape.firstBinHz));
+    printKeyValue("shape.last_hz", static_cast<unsigned>(shape.lastBinHz));
+    printKeyValue("shape.class", detection::strengthClassName(shape.shapeClass));
     serialOut().println();
 }
 
@@ -320,30 +324,30 @@ void AnalyzerApp::printSequenceSummaryClean() const {
 
     serialOut().print("SEQ_SUMMARY profile=");
     serialOut().print(summary.profileName != nullptr ? summary.profileName : "unknown");
-    printKv("detector", detection::detectorIdName(summary.detectorId));
-    printKv("trials", summary.trials);
-    printKv("completed", summary.completed);
-    printKv("expected_trials", summary.expectedTrials);
-    printKv("early_trials", summary.earlyTrials);
-    printKv("late_trials", summary.lateTrials);
-    printKv("miss_trials", summary.missTrials);
-    printKv("duplicate_trials", summary.duplicateTrials);
-    printKv("unexpected_trials", summary.unexpectedTrials);
-    printKv("rejected_trials", summary.rejectedTrials);
-    printKv("buffer_overrun_trials", summary.bufferOverrunTrials);
-    printKv("detector_accepted_trials", summary.detectorAcceptedTrials);
-    printKv("detector_reject_trials", summary.detectorSelectedRejectTrials);
-    printKv("pattern_valid_trials", summary.patternValidTrials);
-    printKv("pattern_rejected_trials", summary.patternRejectedTrials);
+    printKeyValue("detector", detection::detectorIdName(summary.detectorId));
+    printKeyValue("trials", summary.trials);
+    printKeyValue("completed", summary.completed);
+    printKeyValue("expected_trials", summary.expectedTrials);
+    printKeyValue("early_trials", summary.earlyTrials);
+    printKeyValue("late_trials", summary.lateTrials);
+    printKeyValue("miss_trials", summary.missTrials);
+    printKeyValue("duplicate_trials", summary.duplicateTrials);
+    printKeyValue("unexpected_trials", summary.unexpectedTrials);
+    printKeyValue("rejected_trials", summary.rejectedTrials);
+    printKeyValue("buffer_overrun_trials", summary.bufferOverrunTrials);
+    printKeyValue("detector_accepted_trials", summary.detectorAcceptedTrials);
+    printKeyValue("detector_reject_trials", summary.detectorSelectedRejectTrials);
+    printKeyValue("pattern_valid_trials", summary.patternValidTrials);
+    printKeyValue("pattern_rejected_trials", summary.patternRejectedTrials);
     serialOut().print(" avg_dt_ms=");
     if (avgDtRounded >= 0L) {
         serialOut().print(avgDtRounded);
     } else {
         serialOut().print(-1);
     }
-    printKv("avg_strength", avgStrength, 1);
+    printKeyValue("avg_strength", avgStrength, 1);
     // The run's dropped DMA buffers (cumulative since SEQ start; soak.py reads the last value), moved from SEQ_HISTDBG.
-    printKv("dropped_dma_buffers", _audioSource.stats().droppedDmaBuffers);
+    printKeyValue("dropped_dma_buffers", _audioSource.stats().droppedDmaBuffers);
     serialOut().println();
 }
 
@@ -368,13 +372,13 @@ void AnalyzerApp::printSequenceStatus() const {
     const SeqOutputConfig& config = _sequenceTest.active ? _sequenceTest.config.outputConfig : _seqOutputConfig;
     serialOut().print("SEQ_STATUS mode=");
     serialOut().print(sequenceOutputModeName(config.mode));
-    printKv("when", sequenceOutputWhenName(config.when));
-    printKv("verbosity", config.verbosity);
-    printKv("profile",
-            _sequenceTest.active ? activeAnalyzerProfileName()
-                                 : detection::detectionProfileName(_seqOutputConfig.profileKind));
-    printKv("tries", config.totalTrials);
-    printKv("diagnostics", config.diagnosticsEnabled ? "on" : "off");
-    printKv("freqUpdateEverySamples", config.frequencyUpdateEverySamples);
+    printKeyValue("when", sequenceOutputWhenName(config.when));
+    printKeyValue("verbosity", config.verbosity);
+    printKeyValue("profile",
+                  _sequenceTest.active ? activeAnalyzerProfileName()
+                                       : detection::detectionProfileName(_seqOutputConfig.profileKind));
+    printKeyValue("tries", config.totalTrials);
+    printKeyValue("diagnostics", config.diagnosticsEnabled ? "on" : "off");
+    printKeyValue("freqUpdateEverySamples", config.frequencyUpdateEverySamples);
     serialOut().println();
 }

@@ -12,7 +12,7 @@
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
-#include "../../app/PrintKv.h"
+#include "../../app/PrintKeyValue.h"
 #include "../../app/FreqStatusFields.h"
 
 void Node::printSignalConfig() {
@@ -24,12 +24,12 @@ void Node::printSignalConfig() {
     serialOut().print(_band.lowHz);
     serialOut().print('-');
     serialOut().print(_band.highHz);
-    printKv("bins", static_cast<unsigned long>(grid.bins));
-    printKv("hop", hop.hopEnabled ? "on" : "off");
-    printKv("rotation", hop.hopRotation);
-    printKv("steps", hop.hopSteps);
-    printKv("pulse_ms", hop.hopPulseMs);
-    printKv("gap_ms", hop.hopGapMs);
+    printKeyValue("bins", static_cast<unsigned long>(grid.bins));
+    printKeyValue("hop", hop.hopEnabled ? "on" : "off");
+    printKeyValue("rotation", hop.hopRotation);
+    printKeyValue("steps", hop.hopSteps);
+    printKeyValue("pulse_ms", hop.hopPulseMs);
+    printKeyValue("gap_ms", hop.hopGapMs);
     serialOut().print(" order=");
     for (size_t k = 0; k < n; ++k) {
         if (k > 0) {
@@ -45,52 +45,53 @@ void Node::printRbStatus(const char* line) {
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
     serialOut().print("RB STATUS profile=");
     serialOut().print(detection::detectionProfileName(detectionProfile.kind));
-    printKv("emitters", detection::detectorSelectionName(detectionProfile.detectorSelection));
-    printKv("inspectionPlan", detection::inspectionPlanName(detectionProfile.inspectionPlan));
+    printKeyValue("emitters", detection::detectorSelectionName(detectionProfile.detectorSelection));
+    printKeyValue("inspectionPlan", detection::inspectionPlanName(detectionProfile.inspectionPlan));
     const detection::InspectionModuleConfig* supportRequirement =
         detection::firstEnabledRequirement(detectionProfile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
-    printKv("has_requirement", supportRequired ? 1 : 0);
-    printKv("required_label", supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
+    printKeyValue("has_requirement", supportRequired ? 1 : 0);
+    printKeyValue("required_label",
+                  supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
     // Behavior's snapshot (step 11i N6, review A9); its time fields are taken at uptimeMs.
     const unsigned long uptimeMs = timebase::nowMs();
     const BehaviorStatus b = _behavior.status(uptimeMs);
-    printKv("behavior_state", b.stateName);
-    printKv("behavior_idle", b.config.idleEnabled ? 1 : 0);
-    printKv("behavior_suppressSelfChirpMs", b.config.behaviorSuppressSelfChirpMs);
-    printKv("behavior_detectionSuppressTailMsOwnEmit", b.config.detectionSuppressTailMsOwnEmit);
-    printKv("output_busy", b.outputBusy ? 1 : 0);
-    printKv("silent", _switches.silent ? 1 : 0);
+    printKeyValue("behavior_state", b.stateName);
+    printKeyValue("behavior_idle", b.config.idleEnabled ? 1 : 0);
+    printKeyValue("behavior_suppressSelfChirpMs", b.config.behaviorSuppressSelfChirpMs);
+    printKeyValue("behavior_detectionSuppressTailMsOwnEmit", b.config.detectionSuppressTailMsOwnEmit);
+    printKeyValue("output_busy", b.outputBusy ? 1 : 0);
+    printKeyValue("silent", _switches.silent ? 1 : 0);
     // OutputStatus (OUT-002, step 10f): what SoundOutput is doing and has done.
     {
         const OutputStatus& out = _soundOutput.status();
-        printKv("output.phase", outputPhaseName(out.phase));
-        printKv("output.started", static_cast<unsigned long>(out.started));
-        printKv("output.done", static_cast<unsigned long>(out.done));
-        printKv("output.rejected", static_cast<unsigned long>(out.rejected));
-        printKv("output.last_reject", outputRejectName(out.lastReject));
-        printKv("output.last_start_ms", out.lastStartMs);
-        printKv("output.last_done_ms", out.lastDoneMs);
-        printKv("output.span_ms", out.spanMs);
+        printKeyValue("output.phase", outputPhaseName(out.phase));
+        printKeyValue("output.started", static_cast<unsigned long>(out.started));
+        printKeyValue("output.done", static_cast<unsigned long>(out.done));
+        printKeyValue("output.rejected", static_cast<unsigned long>(out.rejected));
+        printKeyValue("output.last_reject", outputRejectName(out.lastReject));
+        printKeyValue("output.last_start_ms", out.lastStartMs);
+        printKeyValue("output.last_done_ms", out.lastDoneMs);
+        printKeyValue("output.span_ms", out.spanMs);
     }
-    printKv("band", _freqBandStream.bandLowHz());
+    printKeyValue("band", _freqBandStream.bandLowHz());
     serialOut().print('-');
     serialOut().print(_freqBandStream.bandHighHz());
     {
         const NodeSignalComposer::Values& hop = _composer.values();
-        printKv("hop_enabled", hop.hopEnabled ? 1 : 0);
-        printKv("hop_rotation", hop.hopRotation);
-        printKv("hop_steps", hop.hopSteps);
-        printKv("hop_pulse_ms", hop.hopPulseMs);
-        printKv("hop_gap_ms", hop.hopGapMs);
+        printKeyValue("hop_enabled", hop.hopEnabled ? 1 : 0);
+        printKeyValue("hop_rotation", hop.hopRotation);
+        printKeyValue("hop_steps", hop.hopSteps);
+        printKeyValue("hop_pulse_ms", hop.hopPulseMs);
+        printKeyValue("hop_gap_ms", hop.hopGapMs);
     }
     const unsigned long sampleRateHz =
         _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     printFreqStatusFields(serialOut(), _freqBandStream, sampleRateHz);
     const AudioSourceStats& audioStats = _audioSource.stats();
-    printKv("i2s.samples_read", static_cast<unsigned long>(audioStats.totalSamplesRead));
-    printKv("i2s.dropped_dma_buffers", audioStats.droppedDmaBuffers);
-    printKv("i2s.clock_rate_mhz", audioStats.sampleClockRateMilliHz);
+    printKeyValue("i2s.samples_read", static_cast<unsigned long>(audioStats.totalSamplesRead));
+    printKeyValue("i2s.dropped_dma_buffers", audioStats.droppedDmaBuffers);
+    printKeyValue("i2s.clock_rate_mhz", audioStats.sampleClockRateMilliHz);
     // Audio-source health without the Analyzer (2026-10-16: a Node that
     // heard nothing had no field saying why). overflows: DMA overflow
     // events; backsteps: blocks whose time went backwards; clock
@@ -101,14 +102,14 @@ void Node::printRbStatus(const char* line) {
     const double deficitS = expectedSamples > audioStats.totalSamplesRead
         ? static_cast<double>(expectedSamples - audioStats.totalSamplesRead) / static_cast<double>(sampleRateHz)
         : 0.0;
-    printKv("i2s.overflows", audioStats.overflowCount);
-    printKv("i2s.backsteps", audioStats.timestampBacksteps);
-    printKv("i2s.max_backstep_us", audioStats.maxTimestampBackstepUs);
-    printKv("i2s.clock_corrections", audioStats.sampleClockCorrections);
-    printKv("i2s.max_clock_correction_us", audioStats.maxSampleClockCorrectionUs);
-    printKv("i2s.read_errors", audioStats.readErrors);
-    printKv("audio.uptime_ms", uptimeMs);
-    printKv("audio.deficit_s", deficitS, 1);
+    printKeyValue("i2s.overflows", audioStats.overflowCount);
+    printKeyValue("i2s.backsteps", audioStats.timestampBacksteps);
+    printKeyValue("i2s.max_backstep_us", audioStats.maxTimestampBackstepUs);
+    printKeyValue("i2s.clock_corrections", audioStats.sampleClockCorrections);
+    printKeyValue("i2s.max_clock_correction_us", audioStats.maxSampleClockCorrectionUs);
+    printKeyValue("i2s.read_errors", audioStats.readErrors);
+    printKeyValue("audio.uptime_ms", uptimeMs);
+    printKeyValue("audio.deficit_s", deficitS, 1);
     // Step 8b: verdicts the 4-slot queue dropped (was Analyzer-only), and the
     // loop task's lowest free stack since boot (bytes; getWindow() puts 2 KB
     // on it per inspection module, audit 3.7).
@@ -117,39 +118,39 @@ void Node::printRbStatus(const char* line) {
     // The room as the mic hears it (smoothed magnitude, the same value the
     // quiet baseline watches): now, the loudest since the last STATUS, and the
     // baseline. Shows whether a run had noise at all (2026-10-23 drilling log).
-    printKv("audio.level", _audioSignal.smoothedSignalMagnitude());
-    printKv("audio.level_max", _rbLevelMaxSinceStatus);
+    printKeyValue("audio.level", _audioSignal.smoothedSignalMagnitude());
+    printKeyValue("audio.level_max", _rbLevelMaxSinceStatus);
     _rbLevelMaxSinceStatus = 0;
-    printKv("audio.baseline", _audioSignal.baseline(), 1);
-    printKv("heard.valid", _counters.validPatterns);
-    printKv("heard.strength_sum", static_cast<unsigned long long>(_counters.validStrengthSum));
+    printKeyValue("audio.baseline", _audioSignal.baseline(), 1);
+    printKeyValue("heard.valid", _counters.validPatterns);
+    printKeyValue("heard.strength_sum", static_cast<unsigned long long>(_counters.validStrengthSum));
     // The radio's cost (step 11a): frames, and the heap it took.
-    printKv("net.started", _net.started() ? 1 : 0);
-    printKv("net.rx", _net.stats().rxFrames);
-    printKv("net.tx_failed", _net.stats().txFailed);
-    printKv("heap.free", static_cast<unsigned long>(esp_get_free_heap_size()));
-    printKv("heap.free_min", static_cast<unsigned long>(esp_get_minimum_free_heap_size()));
-    printKv("detection.verdict_queue_overflows", _detection.verdictQueueOverflowCount());
-    printKv("loop.stack_free_min_bytes", static_cast<unsigned long>(uxTaskGetStackHighWaterMark(nullptr)));
+    printKeyValue("net.started", _net.started() ? 1 : 0);
+    printKeyValue("net.rx", _net.stats().rxFrames);
+    printKeyValue("net.tx_failed", _net.stats().txFailed);
+    printKeyValue("heap.free", static_cast<unsigned long>(esp_get_free_heap_size()));
+    printKeyValue("heap.free_min", static_cast<unsigned long>(esp_get_minimum_free_heap_size()));
+    printKeyValue("detection.verdict_queue_overflows", _detection.verdictQueueOverflowCount());
+    printKeyValue("loop.stack_free_min_bytes", static_cast<unsigned long>(uxTaskGetStackHighWaterMark(nullptr)));
     // Why a Node might not hear (2026-10-17): the sample clock against the
     // system clock, the own-emit suppression deadline on that axis, whether
     // the newest sample would be suppressed right now, how many samples the
     // suppression has swallowed since boot, and whether the chirp output
     // still counts as active (a train that never "finishes" keeps Behavior
     // in Chirping, which suppresses every sample).
-    printKv("clock.now_ms", uptimeMs);
-    printKv("audio.last_sample_ms", _lastSampleTimeMs);
-    printKv("behavior.suppress_armed", b.ownEmitSuppressArmed ? 1 : 0);
-    printKv("behavior.suppress_until_ms", b.ownEmitSuppressUntilMs);
-    printKv("behavior.suppressed_now", _behavior.ownEmitDetectionSuppressed(_lastSampleTimeMs) ? 1 : 0);
-    printKv("behavior.suppressed_samples", _suppressedSampleCount);
-    printKv("chirp_active", _chirpOutput.isActive() ? 1 : 0);
-    printKv("field.patterns", _detection.fieldState().recentPatternCount);
-    printKv("behavior.resting", b.resting ? 1 : 0);
-    printKv("behavior.rest_until_ms", b.restUntilMs);
-    printKv("behavior.rests", b.restsEntered);
-    printKv("behavior.last_rest", b.lastRestReasonName);
-    printKv("behavior.blocked_resting", b.blockedResting);
+    printKeyValue("clock.now_ms", uptimeMs);
+    printKeyValue("audio.last_sample_ms", _lastSampleTimeMs);
+    printKeyValue("behavior.suppress_armed", b.ownEmitSuppressArmed ? 1 : 0);
+    printKeyValue("behavior.suppress_until_ms", b.ownEmitSuppressUntilMs);
+    printKeyValue("behavior.suppressed_now", _behavior.ownEmitDetectionSuppressed(_lastSampleTimeMs) ? 1 : 0);
+    printKeyValue("behavior.suppressed_samples", _suppressedSampleCount);
+    printKeyValue("chirp_active", _chirpOutput.isActive() ? 1 : 0);
+    printKeyValue("field.patterns", _detection.fieldState().recentPatternCount);
+    printKeyValue("behavior.resting", b.resting ? 1 : 0);
+    printKeyValue("behavior.rest_until_ms", b.restUntilMs);
+    printKeyValue("behavior.rests", b.restsEntered);
+    printKeyValue("behavior.last_rest", b.lastRestReasonName);
+    printKeyValue("behavior.blocked_resting", b.blockedResting);
     serialOut().print(" ");
     printBuildIdentity(serialOut(), "node");
     serialOut().println();
@@ -173,11 +174,11 @@ void Node::printHopGapCheck() {
     const detection::HopGapCheck c = detection::checkHopGap(shape, sc);
     serialOut().print("RB hop_check status=");
     serialOut().print(!c.hardOk() ? "fail" : (!c.softOk() ? "warn" : "ok"));
-    printKv("train_ms", c.trainMs);
-    printKv("gap_ms", shape.gapMs);
-    printKv("release_debounce_ms", sc.releaseDebounceMs);
-    printKv("max_gap_ms", sc.maxGapMs);
-    printKv("duration_ms", sc.minTransientDurationMs);
+    printKeyValue("train_ms", c.trainMs);
+    printKeyValue("gap_ms", shape.gapMs);
+    printKeyValue("release_debounce_ms", sc.releaseDebounceMs);
+    printKeyValue("max_gap_ms", sc.maxGapMs);
+    printKeyValue("duration_ms", sc.minTransientDurationMs);
     serialOut().print("..");
     serialOut().print(sc.maxTransientDurationMs);
     serialOut().print(" issues=");
@@ -213,9 +214,9 @@ void Node::printInspectionPlanCheck() {
         detection::checkInspectionPlan(_activeDetectionProfile.scalarTransient, _activeDetectionProfile.inspectionPlan);
     serialOut().print("RB plan_check status=");
     serialOut().print(!c.hardOk() ? "fail" : (!c.softOk() ? "warn" : "ok"));
-    printKv("history_needed_ms", c.historyNeededMs);
-    printKv("history_ms", c.historySpanMs);
-    printKv("early_window_ms", c.earlyWindowMs);
+    printKeyValue("history_needed_ms", c.historyNeededMs);
+    printKeyValue("history_ms", c.historySpanMs);
+    printKeyValue("early_window_ms", c.earlyWindowMs);
     serialOut().print(" issues=");
     if (c.hardOk() && c.softOk()) {
         serialOut().println("none");
@@ -255,14 +256,14 @@ void Node::printRbSummary() const {
 
     serialOut().print("RB summary: pending=");
     serialOut().print(_counters.pending);
-    printKv("accepted", _counters.patternAccepted);
-    printKv("validPatterns", _counters.validPatterns);
-    printKv("chirpStarted", _counters.chirpStarted);
-    printKv("overflowPending", _counters.overflowPending);
-    printKv("avg_strength", avgStrength, 1);
-    printKv("avg_duration", avgDuration, 1);
+    printKeyValue("accepted", _counters.patternAccepted);
+    printKeyValue("validPatterns", _counters.validPatterns);
+    printKeyValue("chirpStarted", _counters.chirpStarted);
+    printKeyValue("overflowPending", _counters.overflowPending);
+    printKeyValue("avg_strength", avgStrength, 1);
+    printKeyValue("avg_duration", avgDuration, 1);
     serialOut().print("ms");
-    printKv("profile", profileName());
+    printKeyValue("profile", profileName());
     printBuildIdentity(serialOut(), "node");
     serialOut().println();
     serialOut().print("RB baseline state=");
@@ -278,39 +279,39 @@ void Node::printRbBehaviorSummary() const {
     const BehaviorStatus b = _behavior.status(timebase::nowMs());  // step 11i N6
     serialOut().print("RB behavior idle=");
     serialOut().print(b.config.idleEnabled ? 1 : 0);
-    printKv("wait", b.config.waitAfterHeardMs);
-    printKv("refractory", b.config.refractoryAfterEmitMs);
-    printKv("suppressSelfChirp", b.config.behaviorSuppressSelfChirpMs);
-    printKv("detectionSuppressTail", b.config.detectionSuppressTailMsOwnEmit);
-    printKv("idleTimeout", b.config.idleTimeoutMs);
-    printKv("idleTimeoutVariation", b.config.idleTimeVariationMs);
-    printKv("idleBlockedHeard", b.config.idleBlockedAfterHeardMs);
-    printKv("idleBlockedOwnEmit", b.config.idleBlockedAfterOwnEmitMs);
-    printKv("idleEnabled", b.config.idleEnabled ? 1 : 0);
-    printKv("lastDecision", b.lastDecisionName);
-    printKv("lastBlock", b.lastBlockReasonName);
-    printKv("lastPattern", b.lastVerdictTypeName);
-    printKv("lastHeardMs", b.lastHeardMs);
-    printKv("lastEmitMs", b.lastEmitMs);
-    printKv("waitUntilMs", b.waitUntilMs);
-    printKv("refractoryUntilMs", b.refractoryUntilMs);
-    printKv("ownEmitDetectionSuppressUntilMs", b.ownEmitSuppressUntilMs);
-    printKv("outputBusy", b.outputBusy ? 1 : 0);
-    printKv("patternsReceived", b.patternsReceived);
-    printKv("ignoredInvalid", b.patternsIgnoredInvalid);
-    printKv("blockedOutputBusy", b.blockedOutputBusy);
-    printKv("blockedWaiting", b.blockedWaiting);
-    printKv("blockedRefractory", b.blockedRefractory);
-    printKv("blockedSelfSuppressed", b.blockedSelfSuppressed);
-    printKv("wouldEmit", b.wouldEmitCount);
-    printKv("emitted", b.emittedCount);
+    printKeyValue("wait", b.config.waitAfterHeardMs);
+    printKeyValue("refractory", b.config.refractoryAfterEmitMs);
+    printKeyValue("suppressSelfChirp", b.config.behaviorSuppressSelfChirpMs);
+    printKeyValue("detectionSuppressTail", b.config.detectionSuppressTailMsOwnEmit);
+    printKeyValue("idleTimeout", b.config.idleTimeoutMs);
+    printKeyValue("idleTimeoutVariation", b.config.idleTimeVariationMs);
+    printKeyValue("idleBlockedHeard", b.config.idleBlockedAfterHeardMs);
+    printKeyValue("idleBlockedOwnEmit", b.config.idleBlockedAfterOwnEmitMs);
+    printKeyValue("idleEnabled", b.config.idleEnabled ? 1 : 0);
+    printKeyValue("lastDecision", b.lastDecisionName);
+    printKeyValue("lastBlock", b.lastBlockReasonName);
+    printKeyValue("lastPattern", b.lastVerdictTypeName);
+    printKeyValue("lastHeardMs", b.lastHeardMs);
+    printKeyValue("lastEmitMs", b.lastEmitMs);
+    printKeyValue("waitUntilMs", b.waitUntilMs);
+    printKeyValue("refractoryUntilMs", b.refractoryUntilMs);
+    printKeyValue("ownEmitDetectionSuppressUntilMs", b.ownEmitSuppressUntilMs);
+    printKeyValue("outputBusy", b.outputBusy ? 1 : 0);
+    printKeyValue("patternsReceived", b.patternsReceived);
+    printKeyValue("ignoredInvalid", b.patternsIgnoredInvalid);
+    printKeyValue("blockedOutputBusy", b.blockedOutputBusy);
+    printKeyValue("blockedWaiting", b.blockedWaiting);
+    printKeyValue("blockedRefractory", b.blockedRefractory);
+    printKeyValue("blockedSelfSuppressed", b.blockedSelfSuppressed);
+    printKeyValue("wouldEmit", b.wouldEmitCount);
+    printKeyValue("emitted", b.emittedCount);
     serialOut().println();
 }
 
 void Node::printRbSignalSummary() const {
     serialOut().print("RB occurrence baseline=");
     serialOut().print(_audioSignal.baseline(), 1);
-    printKv("mag", _audioSignal.signalMagnitude());
-    printKv("smooth", _audioSignal.smoothedSignalMagnitude());
+    printKeyValue("mag", _audioSignal.signalMagnitude());
+    printKeyValue("smooth", _audioSignal.smoothedSignalMagnitude());
     serialOut().println();
 }

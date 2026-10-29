@@ -12,7 +12,7 @@
 #include "../../../app/TimingUtils.h"
 #include "../../../app/SerialOut.h"
 
-#include "../../../app/PrintKv.h"
+#include "../../../app/PrintKeyValue.h"
 #include "AnalyzerEmitterControl.h"
 
 using text_parse::startsWithIgnoreCase;
@@ -84,10 +84,10 @@ uint16_t rawCaptureOffsetMs(unsigned long sampleMs, unsigned long baseMs) {
 void printRawMemoryState(const char* label) {
     serialOut().print("RAW_MEM label=");
     serialOut().print(label);
-    printKv("free_heap", ESP.getFreeHeap());
-    printKv("min_heap", ESP.getMinFreeHeap());
-    printKv("largest_8bit", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-    printKv("free_8bit", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    printKeyValue("free_heap", ESP.getFreeHeap());
+    printKeyValue("min_heap", ESP.getMinFreeHeap());
+    printKeyValue("largest_8bit", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+    printKeyValue("free_8bit", heap_caps_get_free_size(MALLOC_CAP_8BIT));
     serialOut().println();
 }
 
@@ -331,11 +331,12 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, 
     }
     serialOut().print("RAW_ALLOC capture_rows=");
     serialOut().print(run.captureRows);
-    printKv("pre_ring_rows", run.progress.preWanted);
-    printKv("row_size", static_cast<unsigned long>(run.buffers.rowSize()));
-    printKv("bytes", static_cast<unsigned long>((run.captureRows + run.progress.preWanted) * run.buffers.rowSize()));
-    printKv("max_rows", run.maxSamples);
-    printKv("largest_free_after", static_cast<unsigned long>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT)));
+    printKeyValue("pre_ring_rows", run.progress.preWanted);
+    printKeyValue("row_size", static_cast<unsigned long>(run.buffers.rowSize()));
+    printKeyValue("bytes",
+                  static_cast<unsigned long>((run.captureRows + run.progress.preWanted) * run.buffers.rowSize()));
+    printKeyValue("max_rows", run.maxSamples);
+    printKeyValue("largest_free_after", static_cast<unsigned long>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT)));
     serialOut().println();
 
     unsigned long flushedSamples = 0;
@@ -467,8 +468,8 @@ void AnalyzerApp::noteRawEmitterLine(RawCaptureRun& run, const char* line) {
     if (label != nullptr && !rawCaptureUsesPcmRows(run.mode)) {
         serialOut().print(label);
         serialOut().print(run.captureId);
-        printKv("t_ms", atMs);
-        printKv("line", line);
+        printKeyValue("t_ms", atMs);
+        printKeyValue("line", line);
         serialOut().println();
     }
 }
@@ -545,25 +546,25 @@ void AnalyzerApp::printRawBegin(const RawCaptureRun& run) const {
     const RawTriggerShape& shape = *run.shape;
     serialOut().print("RAW_BEGIN id=");
     serialOut().print(run.captureId);
-    printKv("sr", run.storedRateHz);
-    printKv("trigger_ms", progress.emitStarted ? progress.emitStartMs : run.commandMs);
-    printKv("command_ms", run.commandMs);
-    printKv("emit_seen", progress.emitStarted ? 1 : 0);
-    printKv("emit_start_ms", progress.emitStartMs);
-    printKv("emit_done_ms", progress.emitDoneMs);
-    printKv("f", run.toneHz);
-    printKv("dur", run.durationMs);
+    printKeyValue("sr", run.storedRateHz);
+    printKeyValue("trigger_ms", progress.emitStarted ? progress.emitStartMs : run.commandMs);
+    printKeyValue("command_ms", run.commandMs);
+    printKeyValue("emit_seen", progress.emitStarted ? 1 : 0);
+    printKeyValue("emit_start_ms", progress.emitStartMs);
+    printKeyValue("emit_done_ms", progress.emitDoneMs);
+    printKeyValue("f", run.toneHz);
+    printKeyValue("dur", run.durationMs);
     if (shape.pulseCount > 0) {
-        printKv("pulses", shape.pulseCount);
-        printKv("gap", shape.pulseGapMs);
+        printKeyValue("pulses", shape.pulseCount);
+        printKeyValue("gap", shape.pulseGapMs);
         if (shape.hop[0] != '\0') {
-            printKv("hop", shape.hop);
+            printKeyValue("hop", shape.hop);
         }
     } else if (shape.sweepToHz != 0) {
-        printKv("sweep", shape.sweepToHz);
+        printKeyValue("sweep", shape.sweepToHz);
     }
-    printKv("pre_ms", run.preMs);
-    printKv("post_ms", run.postMs);
+    printKeyValue("pre_ms", run.preMs);
+    printKeyValue("post_ms", run.postMs);
     serialOut().print(" band=");
     if (_freqBandStream.bandLowHz() == 0) {
         serialOut().print("off");
@@ -575,22 +576,22 @@ void AnalyzerApp::printRawBegin(const RawCaptureRun& run) const {
     // How many samples the band stream saw (since its reset at the start of
     // this capture) before the first stored row; a replay that feeds that
     // many mod frequencyUpdateEverySamples first runs in the same update phase.
-    printKv("band_lead",
-            progress.preCapturedTotal > progress.preWindowSamples
-                ? progress.preCapturedTotal - progress.preWindowSamples
-                : 0UL);
-    printKv("band_update_every", _freqBandStream.frequencyUpdateEverySamples());
+    printKeyValue("band_lead",
+                  progress.preCapturedTotal > progress.preWindowSamples
+                      ? progress.preCapturedTotal - progress.preWindowSamples
+                      : 0UL);
+    printKeyValue("band_update_every", _freqBandStream.frequencyUpdateEverySamples());
     // Which PCM conditioning produced the stored stream (mode=i2s stores the
     // raw PCM, every other mode what AudioSignal received), so a transcript
     // used as a host fixture says which chain it represents.
-    printKv("preprocess",
-            runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::DcBlocker             ? "dc"
-                : runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::FirstDifference ? "fd"
-                                                                                             : "none");
-    printKv("decim", run.decim);
-    printKv("pre_samples", progress.preWindowSamples);
-    printKv("post_samples", progress.postCaptured);
-    printKv("mode", rawCaptureModeName(run.mode));
+    printKeyValue("preprocess",
+                  runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::DcBlocker             ? "dc"
+                      : runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::FirstDifference ? "fd"
+                                                                                                   : "none");
+    printKeyValue("decim", run.decim);
+    printKeyValue("pre_samples", progress.preWindowSamples);
+    printKeyValue("post_samples", progress.postCaptured);
+    printKeyValue("mode", rawCaptureModeName(run.mode));
     serialOut().print(" output=csv");
     if (run.mode == RawCaptureMode::Pcm) {
         serialOut().print(" fields=ms,pcm,baseline,centered");
@@ -685,18 +686,19 @@ void AnalyzerApp::printRawSummary(const RawCaptureRun& run, unsigned long captur
     const unsigned long requestedSamples = run.progress.preWanted + run.progress.postWanted;
     serialOut().print("RAW_SUMMARY id=");
     serialOut().print(run.captureId);
-    printKv("requested", requestedSamples);
-    printKv("captured", capturedSamples);
-    printKv("unused_capacity", run.captureRows > capturedSamples ? run.captureRows - capturedSamples : 0);
-    printKv("max_pcm_abs", maxPcmAbs);
+    printKeyValue("requested", requestedSamples);
+    printKeyValue("captured", capturedSamples);
+    printKeyValue("unused_capacity", run.captureRows > capturedSamples ? run.captureRows - capturedSamples : 0);
+    printKeyValue("max_pcm_abs", maxPcmAbs);
     if (rawCaptureUsesFeatureStream(run.mode)) {
-        printKv("max_amp", maxAmp);
+        printKeyValue("max_amp", maxAmp);
     }
-    printKv("raw_mean", stats.count > 0 ? static_cast<float>(stats.sum) / static_cast<float>(stats.count) : 0.0f, 1);
-    printKv("raw_abs_mean", stats.count > 0 ? static_cast<float>(stats.absSum) / static_cast<float>(stats.count) : 0.0f,
-            1);
-    printKv("raw_min", stats.count > 0 ? stats.min : 0);
-    printKv("raw_max", stats.count > 0 ? stats.max : 0);
-    printKv("baseline", _audioSignal.baseline(), 1);
+    printKeyValue("raw_mean", stats.count > 0 ? static_cast<float>(stats.sum) / static_cast<float>(stats.count) : 0.0f,
+                  1);
+    printKeyValue("raw_abs_mean",
+                  stats.count > 0 ? static_cast<float>(stats.absSum) / static_cast<float>(stats.count) : 0.0f, 1);
+    printKeyValue("raw_min", stats.count > 0 ? stats.min : 0);
+    printKeyValue("raw_max", stats.count > 0 ? stats.max : 0);
+    printKeyValue("baseline", _audioSignal.baseline(), 1);
     serialOut().println();
 }

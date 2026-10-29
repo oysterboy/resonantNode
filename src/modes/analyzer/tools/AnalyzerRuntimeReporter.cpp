@@ -10,7 +10,7 @@
 #include "../../../app/TimingUtils.h"
 #include "../../../app/SerialOut.h"
 
-#include "../../../app/PrintKv.h"
+#include "../../../app/PrintKeyValue.h"
 // History is recorded only for the streams the active inspection plan names,
 // so report exactly those rather than a fixed pair: a stream the plan doesn't
 // use has no buffer and would read as 0, which says nothing about the run.
@@ -38,20 +38,20 @@ void AnalyzerApp::printDetectionParameters() const {
 
     const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
     serialOut().print("SEQ scalar:");
-    printKv("observed_stream", scalarObservedStreamDisplayName(scalar.observedStream));
-    printKv("onset_threshold", scalar.onsetDetectionThreshold, 1);
-    printKv("release_threshold", scalar.onsetReleaseThreshold, 1);
-    printKv("cooldown_ms", scalar.cooldownAfterOnsetMs);
-    printKv("min_duration_ms", scalar.minTransientDurationMs);
-    printKv("max_duration_ms", scalar.maxTransientDurationMs);
-    printKv("min_peak_strength", scalar.minTransientPeakStrength, 1);
-    printKv("release_debounce_ms", scalar.releaseDebounceMs);
-    printKv("carrier_quality_required", scalar.requireCarrierQuality ? 1 : 0);
-    printKv("min_strength_required", scalar.requireMinStrength ? 1 : 0);
-    printKv("min_strength", scalar.minMatchedMeanStrength, 1);
-    printKv("min_release_coverage_ms", scalar.minCoverageAboveReleaseMs);
-    printKv("min_longest_island_ms", scalar.minLongestIslandMs);
-    printKv("max_gap_ms", scalar.maxGapMs);
+    printKeyValue("observed_stream", scalarObservedStreamDisplayName(scalar.observedStream));
+    printKeyValue("onset_threshold", scalar.onsetDetectionThreshold, 1);
+    printKeyValue("release_threshold", scalar.onsetReleaseThreshold, 1);
+    printKeyValue("cooldown_ms", scalar.cooldownAfterOnsetMs);
+    printKeyValue("min_duration_ms", scalar.minTransientDurationMs);
+    printKeyValue("max_duration_ms", scalar.maxTransientDurationMs);
+    printKeyValue("min_peak_strength", scalar.minTransientPeakStrength, 1);
+    printKeyValue("release_debounce_ms", scalar.releaseDebounceMs);
+    printKeyValue("carrier_quality_required", scalar.requireCarrierQuality ? 1 : 0);
+    printKeyValue("min_strength_required", scalar.requireMinStrength ? 1 : 0);
+    printKeyValue("min_strength", scalar.minMatchedMeanStrength, 1);
+    printKeyValue("min_release_coverage_ms", scalar.minCoverageAboveReleaseMs);
+    printKeyValue("min_longest_island_ms", scalar.minLongestIslandMs);
+    printKeyValue("max_gap_ms", scalar.maxGapMs);
     serialOut().println();
 
     const unsigned long sampleRateHz =
@@ -66,14 +66,14 @@ void AnalyzerApp::printAudioSourceSummary() const {
     serialOut().println("AUDIO summary:");
     serialOut().print("reads=");
     serialOut().print(stats.reads);
-    printKv("readBytes", stats.readBytes);
-    printKv("zeroReads", stats.zeroReads);
-    printKv("shortReads", stats.shortReads);
-    printKv("maxReadBytes", stats.maxReadBytes);
-    printKv("noSampleLoops", stats.noSampleLoops);
-    printKv("readErrors", stats.readErrors);
-    printKv("overflow", stats.overflowCount);
-    printKv("totalSamples", static_cast<unsigned long long>(stats.totalSamplesRead));
+    printKeyValue("readBytes", stats.readBytes);
+    printKeyValue("zeroReads", stats.zeroReads);
+    printKeyValue("shortReads", stats.shortReads);
+    printKeyValue("maxReadBytes", stats.maxReadBytes);
+    printKeyValue("noSampleLoops", stats.noSampleLoops);
+    printKeyValue("readErrors", stats.readErrors);
+    printKeyValue("overflow", stats.overflowCount);
+    printKeyValue("totalSamples", static_cast<unsigned long long>(stats.totalSamplesRead));
     serialOut().println();
 }
 
@@ -100,18 +100,18 @@ void AnalyzerApp::printAudioRunSummary() const {
     serialOut().println("AUDIO run:");
     serialOut().print("run_elapsed_ms=");
     serialOut().print(runElapsedMs);
-    printKv("expected_samples", expectedSamples);
-    printKv("processed_samples", processedSamples);
-    printKv("processed_ratio", processedRatio, 3);
-    printKv("max_available_bytes", _sequenceTest.totals.maxAvailableBytes);
-    printKv("avg_available_bytes", avgAvailableBytes);
-    printKv("max_block_age_ms", _sequenceTest.totals.maxBlockAgeMs);
-    printKv("max_update_loop_us", _sequenceTest.totals.maxUpdateLoopUs);
-    printKv("max_processing_lag_ms", _sequenceTest.totals.maxProcessingLagMs);
+    printKeyValue("expected_samples", expectedSamples);
+    printKeyValue("processed_samples", processedSamples);
+    printKeyValue("processed_ratio", processedRatio, 3);
+    printKeyValue("max_available_bytes", _sequenceTest.totals.maxAvailableBytes);
+    printKeyValue("avg_available_bytes", avgAvailableBytes);
+    printKeyValue("max_block_age_ms", _sequenceTest.totals.maxBlockAgeMs);
+    printKeyValue("max_update_loop_us", _sequenceTest.totals.maxUpdateLoopUs);
+    printKeyValue("max_processing_lag_ms", _sequenceTest.totals.maxProcessingLagMs);
     serialOut().println();
 
     serialOut().print("FREQBAND config:");
-    printKv("updateEverySamples", _seqOutputConfig.frequencyUpdateEverySamples);
+    printKeyValue("updateEverySamples", _seqOutputConfig.frequencyUpdateEverySamples);
     serialOut().println();
 
     const unsigned long freqAgeSamples = _freqBandStream.lastPacketAgeSamples();
@@ -135,12 +135,12 @@ void AnalyzerApp::printAudioRunSummary() const {
         ? static_cast<float>(_freqBandStream.profileGoertzelTotalUs()) / static_cast<float>(freqComputeCalls)
         : 0.0f;
 
-    printKv("observe_calls", freqObserveCalls);
-    printKv("avg_observe_us", avgObserveUs, 2);
-    printKv("compute_calls", freqComputeCalls);
-    printKv("avg_compute_us", avgComputeUs, 2);
-    printKv("avg_energy_us", avgEnergyUs, 2);
-    printKv("avg_goertzel_us", avgGoertzelUs, 2);
+    printKeyValue("observe_calls", freqObserveCalls);
+    printKeyValue("avg_observe_us", avgObserveUs, 2);
+    printKeyValue("compute_calls", freqComputeCalls);
+    printKeyValue("avg_compute_us", avgComputeUs, 2);
+    printKeyValue("avg_energy_us", avgEnergyUs, 2);
+    printKeyValue("avg_goertzel_us", avgGoertzelUs, 2);
     serialOut().println();
 #else
     serialOut().println(" profiling=disabled");
@@ -153,16 +153,16 @@ void AnalyzerApp::printAudioRunSummary() const {
         _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
         ? _freqBandStream.profileObserveCalls() - _freqBandStream.profileComputeCalls()
         : 0UL;
-    printKv("fresh_frames", freqFreshObserveCalls);
-    printKv("held_frames", freqHeldObserveCalls);
-    printKv("age_samples", freqAgeSamples);
-    printKv("computed_at_sample", freqComputedAtSample);
+    printKeyValue("fresh_frames", freqFreshObserveCalls);
+    printKeyValue("held_frames", freqHeldObserveCalls);
+    printKeyValue("age_samples", freqAgeSamples);
+    printKeyValue("computed_at_sample", freqComputedAtSample);
     printFeatureHistoryRecordCounts();
     serialOut().println();
 #else
     serialOut().print(" profiling=disabled");
-    printKv("age_samples", freqAgeSamples);
-    printKv("computed_at_sample", freqComputedAtSample);
+    printKeyValue("age_samples", freqAgeSamples);
+    printKeyValue("computed_at_sample", freqComputedAtSample);
     printFeatureHistoryRecordCounts();
     serialOut().println();
 #endif
@@ -176,8 +176,8 @@ void AnalyzerApp::printOccurrenceSummary() const {
     // The signal layer runs per sample (one-sample "blocks"): the last block is
     // the latest frame. Labels kept for the log readers.
     const AudioSamplePacket& latest = _audioSignal.latestFrame();
-    printKv("lastBlockStart", static_cast<unsigned long long>(latest.sampleIndex));
-    printKv("lastBlockCount", latest.valid ? 1 : 0);
-    printKv("lastBlockMicros", static_cast<unsigned long>(latest.timeUs64));
+    printKeyValue("lastBlockStart", static_cast<unsigned long long>(latest.sampleIndex));
+    printKeyValue("lastBlockCount", latest.valid ? 1 : 0);
+    printKeyValue("lastBlockMicros", static_cast<unsigned long>(latest.timeUs64));
     serialOut().println();
 }

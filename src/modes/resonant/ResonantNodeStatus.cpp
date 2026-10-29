@@ -12,6 +12,7 @@
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
+#include "../../app/PrintKv.h"
 #include "../../app/FreqStatusFields.h"
 
 void Node::printSignalConfig() {
@@ -23,18 +24,12 @@ void Node::printSignalConfig() {
     serialOut().print(_band.lowHz);
     serialOut().print('-');
     serialOut().print(_band.highHz);
-    serialOut().print(" bins=");
-    serialOut().print(static_cast<unsigned long>(grid.bins));
-    serialOut().print(" hop=");
-    serialOut().print(hop.hopEnabled ? "on" : "off");
-    serialOut().print(" rotation=");
-    serialOut().print(hop.hopRotation);
-    serialOut().print(" steps=");
-    serialOut().print(hop.hopSteps);
-    serialOut().print(" pulse_ms=");
-    serialOut().print(hop.hopPulseMs);
-    serialOut().print(" gap_ms=");
-    serialOut().print(hop.hopGapMs);
+    printKv("bins", static_cast<unsigned long>(grid.bins));
+    printKv("hop", hop.hopEnabled ? "on" : "off");
+    printKv("rotation", hop.hopRotation);
+    printKv("steps", hop.hopSteps);
+    printKv("pulse_ms", hop.hopPulseMs);
+    printKv("gap_ms", hop.hopGapMs);
     serialOut().print(" order=");
     for (size_t k = 0; k < n; ++k) {
         if (k > 0) {
@@ -50,79 +45,52 @@ void Node::printRbStatus(const char* line) {
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
     serialOut().print("RB STATUS profile=");
     serialOut().print(detection::detectionProfileName(detectionProfile.kind));
-    serialOut().print(" emitters=");
-    serialOut().print(detection::detectorSelectionName(detectionProfile.detectorSelection));
-    serialOut().print(" inspectionPlan=");
-    serialOut().print(detection::inspectionPlanName(detectionProfile.inspectionPlan));
+    printKv("emitters", detection::detectorSelectionName(detectionProfile.detectorSelection));
+    printKv("inspectionPlan", detection::inspectionPlanName(detectionProfile.inspectionPlan));
     const detection::InspectionModuleConfig* supportRequirement =
         detection::firstEnabledRequirement(detectionProfile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
-    serialOut().print(" has_requirement=");
-    serialOut().print(supportRequired ? 1 : 0);
-    serialOut().print(" required_label=");
-    serialOut().print(supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
+    printKv("has_requirement", supportRequired ? 1 : 0);
+    printKv("required_label", supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
     // Behavior's snapshot (step 11i N6, review A9); its time fields are taken at uptimeMs.
     const unsigned long uptimeMs = timebase::nowMs();
     const BehaviorStatus b = _behavior.status(uptimeMs);
-    serialOut().print(" behavior_state=");
-    serialOut().print(b.stateName);
-    serialOut().print(" behavior_idle=");
-    serialOut().print(b.config.idleEnabled ? 1 : 0);
-    serialOut().print(" behavior_suppressSelfChirpMs=");
-    serialOut().print(b.config.behaviorSuppressSelfChirpMs);
-    serialOut().print(" behavior_detectionSuppressTailMsOwnEmit=");
-    serialOut().print(b.config.detectionSuppressTailMsOwnEmit);
-    serialOut().print(" output_busy=");
-    serialOut().print(b.outputBusy ? 1 : 0);
-    serialOut().print(" silent=");
-    serialOut().print(_switches.silent ? 1 : 0);
+    printKv("behavior_state", b.stateName);
+    printKv("behavior_idle", b.config.idleEnabled ? 1 : 0);
+    printKv("behavior_suppressSelfChirpMs", b.config.behaviorSuppressSelfChirpMs);
+    printKv("behavior_detectionSuppressTailMsOwnEmit", b.config.detectionSuppressTailMsOwnEmit);
+    printKv("output_busy", b.outputBusy ? 1 : 0);
+    printKv("silent", _switches.silent ? 1 : 0);
     // OutputStatus (OUT-002, step 10f): what SoundOutput is doing and has done.
     {
         const OutputStatus& out = _soundOutput.status();
-        serialOut().print(" output.phase=");
-        serialOut().print(outputPhaseName(out.phase));
-        serialOut().print(" output.started=");
-        serialOut().print(static_cast<unsigned long>(out.started));
-        serialOut().print(" output.done=");
-        serialOut().print(static_cast<unsigned long>(out.done));
-        serialOut().print(" output.rejected=");
-        serialOut().print(static_cast<unsigned long>(out.rejected));
-        serialOut().print(" output.last_reject=");
-        serialOut().print(outputRejectName(out.lastReject));
-        serialOut().print(" output.last_start_ms=");
-        serialOut().print(out.lastStartMs);
-        serialOut().print(" output.last_done_ms=");
-        serialOut().print(out.lastDoneMs);
-        serialOut().print(" output.span_ms=");
-        serialOut().print(out.spanMs);
+        printKv("output.phase", outputPhaseName(out.phase));
+        printKv("output.started", static_cast<unsigned long>(out.started));
+        printKv("output.done", static_cast<unsigned long>(out.done));
+        printKv("output.rejected", static_cast<unsigned long>(out.rejected));
+        printKv("output.last_reject", outputRejectName(out.lastReject));
+        printKv("output.last_start_ms", out.lastStartMs);
+        printKv("output.last_done_ms", out.lastDoneMs);
+        printKv("output.span_ms", out.spanMs);
     }
-    serialOut().print(" band=");
-    serialOut().print(_freqBandStream.bandLowHz());
+    printKv("band", _freqBandStream.bandLowHz());
     serialOut().print('-');
     serialOut().print(_freqBandStream.bandHighHz());
     {
         const NodeSignalComposer::Values& hop = _composer.values();
-        serialOut().print(" hop_enabled=");
-        serialOut().print(hop.hopEnabled ? 1 : 0);
-        serialOut().print(" hop_rotation=");
-        serialOut().print(hop.hopRotation);
-        serialOut().print(" hop_steps=");
-        serialOut().print(hop.hopSteps);
-        serialOut().print(" hop_pulse_ms=");
-        serialOut().print(hop.hopPulseMs);
-        serialOut().print(" hop_gap_ms=");
-        serialOut().print(hop.hopGapMs);
+        printKv("hop_enabled", hop.hopEnabled ? 1 : 0);
+        printKv("hop_rotation", hop.hopRotation);
+        printKv("hop_steps", hop.hopSteps);
+        printKv("hop_pulse_ms", hop.hopPulseMs);
+        printKv("hop_gap_ms", hop.hopGapMs);
     }
     const unsigned long sampleRateHz =
         _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
     printFreqStatusFields(serialOut(), _freqBandStream, sampleRateHz);
     const AudioSourceStats& audioStats = _audioSource.stats();
-    serialOut().print(" i2s.samples_read=");
-    serialOut().print(static_cast<unsigned long>(audioStats.totalSamplesRead));
-    serialOut().print(" i2s.dropped_dma_buffers=");
-    serialOut().print(audioStats.droppedDmaBuffers);
-    serialOut().print(" i2s.clock_rate_mhz=");
-    serialOut().print(audioStats.sampleClockRateMilliHz);
+    printKv("i2s.samples_read", static_cast<unsigned long>(audioStats.totalSamplesRead));
+    printKv("i2s.dropped_dma_buffers", audioStats.droppedDmaBuffers);
+    printKv("i2s.clock_rate_mhz", audioStats.sampleClockRateMilliHz);
     // Audio-source health without the Analyzer (2026-10-16: a Node that
     // heard nothing had no field saying why). overflows: DMA overflow
     // events; backsteps: blocks whose time went backwards; clock
@@ -133,22 +101,14 @@ void Node::printRbStatus(const char* line) {
     const double deficitS = expectedSamples > audioStats.totalSamplesRead
         ? static_cast<double>(expectedSamples - audioStats.totalSamplesRead) / static_cast<double>(sampleRateHz)
         : 0.0;
-    serialOut().print(" i2s.overflows=");
-    serialOut().print(audioStats.overflowCount);
-    serialOut().print(" i2s.backsteps=");
-    serialOut().print(audioStats.timestampBacksteps);
-    serialOut().print(" i2s.max_backstep_us=");
-    serialOut().print(audioStats.maxTimestampBackstepUs);
-    serialOut().print(" i2s.clock_corrections=");
-    serialOut().print(audioStats.sampleClockCorrections);
-    serialOut().print(" i2s.max_clock_correction_us=");
-    serialOut().print(audioStats.maxSampleClockCorrectionUs);
-    serialOut().print(" i2s.read_errors=");
-    serialOut().print(audioStats.readErrors);
-    serialOut().print(" audio.uptime_ms=");
-    serialOut().print(uptimeMs);
-    serialOut().print(" audio.deficit_s=");
-    serialOut().print(deficitS, 1);
+    printKv("i2s.overflows", audioStats.overflowCount);
+    printKv("i2s.backsteps", audioStats.timestampBacksteps);
+    printKv("i2s.max_backstep_us", audioStats.maxTimestampBackstepUs);
+    printKv("i2s.clock_corrections", audioStats.sampleClockCorrections);
+    printKv("i2s.max_clock_correction_us", audioStats.maxSampleClockCorrectionUs);
+    printKv("i2s.read_errors", audioStats.readErrors);
+    printKv("audio.uptime_ms", uptimeMs);
+    printKv("audio.deficit_s", deficitS, 1);
     // Step 8b: verdicts the 4-slot queue dropped (was Analyzer-only), and the
     // loop task's lowest free stack since boot (bytes; getWindow() puts 2 KB
     // on it per inspection module, audit 3.7).
@@ -157,64 +117,39 @@ void Node::printRbStatus(const char* line) {
     // The room as the mic hears it (smoothed magnitude, the same value the
     // quiet baseline watches): now, the loudest since the last STATUS, and the
     // baseline. Shows whether a run had noise at all (2026-10-23 drilling log).
-    serialOut().print(" audio.level=");
-    serialOut().print(_audioSignal.smoothedSignalMagnitude());
-    serialOut().print(" audio.level_max=");
-    serialOut().print(_rbLevelMaxSinceStatus);
+    printKv("audio.level", _audioSignal.smoothedSignalMagnitude());
+    printKv("audio.level_max", _rbLevelMaxSinceStatus);
     _rbLevelMaxSinceStatus = 0;
-    serialOut().print(" audio.baseline=");
-    serialOut().print(_audioSignal.baseline(), 1);
-    serialOut().print(" heard.valid=");
-    serialOut().print(_counters.validPatterns);
-    serialOut().print(" heard.strength_sum=");
-    serialOut().print(static_cast<unsigned long long>(_counters.validStrengthSum));
+    printKv("audio.baseline", _audioSignal.baseline(), 1);
+    printKv("heard.valid", _counters.validPatterns);
+    printKv("heard.strength_sum", static_cast<unsigned long long>(_counters.validStrengthSum));
     // The radio's cost (step 11a): frames, and the heap it took.
-    serialOut().print(" net.started=");
-    serialOut().print(_net.started() ? 1 : 0);
-    serialOut().print(" net.rx=");
-    serialOut().print(_net.stats().rxFrames);
-    serialOut().print(" net.tx_failed=");
-    serialOut().print(_net.stats().txFailed);
-    serialOut().print(" heap.free=");
-    serialOut().print(static_cast<unsigned long>(esp_get_free_heap_size()));
-    serialOut().print(" heap.free_min=");
-    serialOut().print(static_cast<unsigned long>(esp_get_minimum_free_heap_size()));
-    serialOut().print(" detection.verdict_queue_overflows=");
-    serialOut().print(_detection.verdictQueueOverflowCount());
-    serialOut().print(" loop.stack_free_min_bytes=");
-    serialOut().print(static_cast<unsigned long>(uxTaskGetStackHighWaterMark(nullptr)));
+    printKv("net.started", _net.started() ? 1 : 0);
+    printKv("net.rx", _net.stats().rxFrames);
+    printKv("net.tx_failed", _net.stats().txFailed);
+    printKv("heap.free", static_cast<unsigned long>(esp_get_free_heap_size()));
+    printKv("heap.free_min", static_cast<unsigned long>(esp_get_minimum_free_heap_size()));
+    printKv("detection.verdict_queue_overflows", _detection.verdictQueueOverflowCount());
+    printKv("loop.stack_free_min_bytes", static_cast<unsigned long>(uxTaskGetStackHighWaterMark(nullptr)));
     // Why a Node might not hear (2026-10-17): the sample clock against the
     // system clock, the own-emit suppression deadline on that axis, whether
     // the newest sample would be suppressed right now, how many samples the
     // suppression has swallowed since boot, and whether the chirp output
     // still counts as active (a train that never "finishes" keeps Behavior
     // in Chirping, which suppresses every sample).
-    serialOut().print(" clock.now_ms=");
-    serialOut().print(uptimeMs);
-    serialOut().print(" audio.last_sample_ms=");
-    serialOut().print(_lastSampleTimeMs);
-    serialOut().print(" behavior.suppress_armed=");
-    serialOut().print(b.ownEmitSuppressArmed ? 1 : 0);
-    serialOut().print(" behavior.suppress_until_ms=");
-    serialOut().print(b.ownEmitSuppressUntilMs);
-    serialOut().print(" behavior.suppressed_now=");
-    serialOut().print(_behavior.ownEmitDetectionSuppressed(_lastSampleTimeMs) ? 1 : 0);
-    serialOut().print(" behavior.suppressed_samples=");
-    serialOut().print(_suppressedSampleCount);
-    serialOut().print(" chirp_active=");
-    serialOut().print(_chirpOutput.isActive() ? 1 : 0);
-    serialOut().print(" field.patterns=");
-    serialOut().print(_detection.fieldState().recentPatternCount);
-    serialOut().print(" behavior.resting=");
-    serialOut().print(b.resting ? 1 : 0);
-    serialOut().print(" behavior.rest_until_ms=");
-    serialOut().print(b.restUntilMs);
-    serialOut().print(" behavior.rests=");
-    serialOut().print(b.restsEntered);
-    serialOut().print(" behavior.last_rest=");
-    serialOut().print(b.lastRestReasonName);
-    serialOut().print(" behavior.blocked_resting=");
-    serialOut().print(b.blockedResting);
+    printKv("clock.now_ms", uptimeMs);
+    printKv("audio.last_sample_ms", _lastSampleTimeMs);
+    printKv("behavior.suppress_armed", b.ownEmitSuppressArmed ? 1 : 0);
+    printKv("behavior.suppress_until_ms", b.ownEmitSuppressUntilMs);
+    printKv("behavior.suppressed_now", _behavior.ownEmitDetectionSuppressed(_lastSampleTimeMs) ? 1 : 0);
+    printKv("behavior.suppressed_samples", _suppressedSampleCount);
+    printKv("chirp_active", _chirpOutput.isActive() ? 1 : 0);
+    printKv("field.patterns", _detection.fieldState().recentPatternCount);
+    printKv("behavior.resting", b.resting ? 1 : 0);
+    printKv("behavior.rest_until_ms", b.restUntilMs);
+    printKv("behavior.rests", b.restsEntered);
+    printKv("behavior.last_rest", b.lastRestReasonName);
+    printKv("behavior.blocked_resting", b.blockedResting);
     serialOut().print(" ");
     printBuildIdentity(serialOut(), "node");
     serialOut().println();
@@ -238,16 +173,11 @@ void Node::printHopGapCheck() {
     const detection::HopGapCheck c = detection::checkHopGap(shape, sc);
     serialOut().print("RB hop_check status=");
     serialOut().print(!c.hardOk() ? "fail" : (!c.softOk() ? "warn" : "ok"));
-    serialOut().print(" train_ms=");
-    serialOut().print(c.trainMs);
-    serialOut().print(" gap_ms=");
-    serialOut().print(shape.gapMs);
-    serialOut().print(" release_debounce_ms=");
-    serialOut().print(sc.releaseDebounceMs);
-    serialOut().print(" max_gap_ms=");
-    serialOut().print(sc.maxGapMs);
-    serialOut().print(" duration_ms=");
-    serialOut().print(sc.minTransientDurationMs);
+    printKv("train_ms", c.trainMs);
+    printKv("gap_ms", shape.gapMs);
+    printKv("release_debounce_ms", sc.releaseDebounceMs);
+    printKv("max_gap_ms", sc.maxGapMs);
+    printKv("duration_ms", sc.minTransientDurationMs);
     serialOut().print("..");
     serialOut().print(sc.maxTransientDurationMs);
     serialOut().print(" issues=");
@@ -283,12 +213,9 @@ void Node::printInspectionPlanCheck() {
         detection::checkInspectionPlan(_activeDetectionProfile.scalarTransient, _activeDetectionProfile.inspectionPlan);
     serialOut().print("RB plan_check status=");
     serialOut().print(!c.hardOk() ? "fail" : (!c.softOk() ? "warn" : "ok"));
-    serialOut().print(" history_needed_ms=");
-    serialOut().print(c.historyNeededMs);
-    serialOut().print(" history_ms=");
-    serialOut().print(c.historySpanMs);
-    serialOut().print(" early_window_ms=");
-    serialOut().print(c.earlyWindowMs);
+    printKv("history_needed_ms", c.historyNeededMs);
+    printKv("history_ms", c.historySpanMs);
+    printKv("early_window_ms", c.earlyWindowMs);
     serialOut().print(" issues=");
     if (c.hardOk() && c.softOk()) {
         serialOut().println("none");
@@ -328,21 +255,14 @@ void Node::printRbSummary() const {
 
     serialOut().print("RB summary: pending=");
     serialOut().print(_counters.pending);
-    serialOut().print(" accepted=");
-    serialOut().print(_counters.patternAccepted);
-    serialOut().print(" validPatterns=");
-    serialOut().print(_counters.validPatterns);
-    serialOut().print(" chirpStarted=");
-    serialOut().print(_counters.chirpStarted);
-    serialOut().print(" overflowPending=");
-    serialOut().print(_counters.overflowPending);
-    serialOut().print(" avg_strength=");
-    serialOut().print(avgStrength, 1);
-    serialOut().print(" avg_duration=");
-    serialOut().print(avgDuration, 1);
+    printKv("accepted", _counters.patternAccepted);
+    printKv("validPatterns", _counters.validPatterns);
+    printKv("chirpStarted", _counters.chirpStarted);
+    printKv("overflowPending", _counters.overflowPending);
+    printKv("avg_strength", avgStrength, 1);
+    printKv("avg_duration", avgDuration, 1);
     serialOut().print("ms");
-    serialOut().print(" profile=");
-    serialOut().print(profileName());
+    printKv("profile", profileName());
     printBuildIdentity(serialOut(), "node");
     serialOut().println();
     serialOut().print("RB baseline state=");
@@ -358,65 +278,39 @@ void Node::printRbBehaviorSummary() const {
     const BehaviorStatus b = _behavior.status(timebase::nowMs());  // step 11i N6
     serialOut().print("RB behavior idle=");
     serialOut().print(b.config.idleEnabled ? 1 : 0);
-    serialOut().print(" wait=");
-    serialOut().print(b.config.waitAfterHeardMs);
-    serialOut().print(" refractory=");
-    serialOut().print(b.config.refractoryAfterEmitMs);
-    serialOut().print(" suppressSelfChirp=");
-    serialOut().print(b.config.behaviorSuppressSelfChirpMs);
-    serialOut().print(" detectionSuppressTail=");
-    serialOut().print(b.config.detectionSuppressTailMsOwnEmit);
-    serialOut().print(" idleTimeout=");
-    serialOut().print(b.config.idleTimeoutMs);
-    serialOut().print(" idleTimeoutVariation=");
-    serialOut().print(b.config.idleTimeVariationMs);
-    serialOut().print(" idleBlockedHeard=");
-    serialOut().print(b.config.idleBlockedAfterHeardMs);
-    serialOut().print(" idleBlockedOwnEmit=");
-    serialOut().print(b.config.idleBlockedAfterOwnEmitMs);
-    serialOut().print(" idleEnabled=");
-    serialOut().print(b.config.idleEnabled ? 1 : 0);
-    serialOut().print(" lastDecision=");
-    serialOut().print(b.lastDecisionName);
-    serialOut().print(" lastBlock=");
-    serialOut().print(b.lastBlockReasonName);
-    serialOut().print(" lastPattern=");
-    serialOut().print(b.lastVerdictTypeName);
-    serialOut().print(" lastHeardMs=");
-    serialOut().print(b.lastHeardMs);
-    serialOut().print(" lastEmitMs=");
-    serialOut().print(b.lastEmitMs);
-    serialOut().print(" waitUntilMs=");
-    serialOut().print(b.waitUntilMs);
-    serialOut().print(" refractoryUntilMs=");
-    serialOut().print(b.refractoryUntilMs);
-    serialOut().print(" ownEmitDetectionSuppressUntilMs=");
-    serialOut().print(b.ownEmitSuppressUntilMs);
-    serialOut().print(" outputBusy=");
-    serialOut().print(b.outputBusy ? 1 : 0);
-    serialOut().print(" patternsReceived=");
-    serialOut().print(b.patternsReceived);
-    serialOut().print(" ignoredInvalid=");
-    serialOut().print(b.patternsIgnoredInvalid);
-    serialOut().print(" blockedOutputBusy=");
-    serialOut().print(b.blockedOutputBusy);
-    serialOut().print(" blockedWaiting=");
-    serialOut().print(b.blockedWaiting);
-    serialOut().print(" blockedRefractory=");
-    serialOut().print(b.blockedRefractory);
-    serialOut().print(" blockedSelfSuppressed=");
-    serialOut().print(b.blockedSelfSuppressed);
-    serialOut().print(" wouldEmit=");
-    serialOut().print(b.wouldEmitCount);
-    serialOut().print(" emitted=");
-    serialOut().println(b.emittedCount);
+    printKv("wait", b.config.waitAfterHeardMs);
+    printKv("refractory", b.config.refractoryAfterEmitMs);
+    printKv("suppressSelfChirp", b.config.behaviorSuppressSelfChirpMs);
+    printKv("detectionSuppressTail", b.config.detectionSuppressTailMsOwnEmit);
+    printKv("idleTimeout", b.config.idleTimeoutMs);
+    printKv("idleTimeoutVariation", b.config.idleTimeVariationMs);
+    printKv("idleBlockedHeard", b.config.idleBlockedAfterHeardMs);
+    printKv("idleBlockedOwnEmit", b.config.idleBlockedAfterOwnEmitMs);
+    printKv("idleEnabled", b.config.idleEnabled ? 1 : 0);
+    printKv("lastDecision", b.lastDecisionName);
+    printKv("lastBlock", b.lastBlockReasonName);
+    printKv("lastPattern", b.lastVerdictTypeName);
+    printKv("lastHeardMs", b.lastHeardMs);
+    printKv("lastEmitMs", b.lastEmitMs);
+    printKv("waitUntilMs", b.waitUntilMs);
+    printKv("refractoryUntilMs", b.refractoryUntilMs);
+    printKv("ownEmitDetectionSuppressUntilMs", b.ownEmitSuppressUntilMs);
+    printKv("outputBusy", b.outputBusy ? 1 : 0);
+    printKv("patternsReceived", b.patternsReceived);
+    printKv("ignoredInvalid", b.patternsIgnoredInvalid);
+    printKv("blockedOutputBusy", b.blockedOutputBusy);
+    printKv("blockedWaiting", b.blockedWaiting);
+    printKv("blockedRefractory", b.blockedRefractory);
+    printKv("blockedSelfSuppressed", b.blockedSelfSuppressed);
+    printKv("wouldEmit", b.wouldEmitCount);
+    printKv("emitted", b.emittedCount);
+    serialOut().println();
 }
 
 void Node::printRbSignalSummary() const {
     serialOut().print("RB occurrence baseline=");
     serialOut().print(_audioSignal.baseline(), 1);
-    serialOut().print(" mag=");
-    serialOut().print(_audioSignal.signalMagnitude());
-    serialOut().print(" smooth=");
-    serialOut().println(_audioSignal.smoothedSignalMagnitude());
+    printKv("mag", _audioSignal.signalMagnitude());
+    printKv("smooth", _audioSignal.smoothedSignalMagnitude());
+    serialOut().println();
 }

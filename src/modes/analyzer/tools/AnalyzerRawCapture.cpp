@@ -12,6 +12,7 @@
 #include "../../../app/TimingUtils.h"
 #include "../../../app/SerialOut.h"
 
+#include "../../../app/PrintKv.h"
 #include "AnalyzerEmitterControl.h"
 
 using text_parse::startsWithIgnoreCase;
@@ -83,14 +84,10 @@ uint16_t rawCaptureOffsetMs(unsigned long sampleMs, unsigned long baseMs) {
 void printRawMemoryState(const char* label) {
     serialOut().print("RAW_MEM label=");
     serialOut().print(label);
-    serialOut().print(" free_heap=");
-    serialOut().print(ESP.getFreeHeap());
-    serialOut().print(" min_heap=");
-    serialOut().print(ESP.getMinFreeHeap());
-    serialOut().print(" largest_8bit=");
-    serialOut().print(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-    serialOut().print(" free_8bit=");
-    serialOut().print(heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    printKv("free_heap", ESP.getFreeHeap());
+    printKv("min_heap", ESP.getMinFreeHeap());
+    printKv("largest_8bit", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+    printKv("free_8bit", heap_caps_get_free_size(MALLOC_CAP_8BIT));
     serialOut().println();
 }
 
@@ -334,16 +331,12 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, 
     }
     serialOut().print("RAW_ALLOC capture_rows=");
     serialOut().print(run.captureRows);
-    serialOut().print(" pre_ring_rows=");
-    serialOut().print(run.progress.preWanted);
-    serialOut().print(" row_size=");
-    serialOut().print(static_cast<unsigned long>(run.buffers.rowSize()));
-    serialOut().print(" bytes=");
-    serialOut().print(static_cast<unsigned long>((run.captureRows + run.progress.preWanted) * run.buffers.rowSize()));
-    serialOut().print(" max_rows=");
-    serialOut().print(run.maxSamples);
-    serialOut().print(" largest_free_after=");
-    serialOut().println(static_cast<unsigned long>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT)));
+    printKv("pre_ring_rows", run.progress.preWanted);
+    printKv("row_size", static_cast<unsigned long>(run.buffers.rowSize()));
+    printKv("bytes", static_cast<unsigned long>((run.captureRows + run.progress.preWanted) * run.buffers.rowSize()));
+    printKv("max_rows", run.maxSamples);
+    printKv("largest_free_after", static_cast<unsigned long>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT)));
+    serialOut().println();
 
     unsigned long flushedSamples = 0;
     int discardedSample = 0;
@@ -474,10 +467,9 @@ void AnalyzerApp::noteRawEmitterLine(RawCaptureRun& run, const char* line) {
     if (label != nullptr && !rawCaptureUsesPcmRows(run.mode)) {
         serialOut().print(label);
         serialOut().print(run.captureId);
-        serialOut().print(" t_ms=");
-        serialOut().print(atMs);
-        serialOut().print(" line=");
-        serialOut().println(line);
+        printKv("t_ms", atMs);
+        printKv("line", line);
+        serialOut().println();
     }
 }
 
@@ -553,39 +545,25 @@ void AnalyzerApp::printRawBegin(const RawCaptureRun& run) const {
     const RawTriggerShape& shape = *run.shape;
     serialOut().print("RAW_BEGIN id=");
     serialOut().print(run.captureId);
-    serialOut().print(" sr=");
-    serialOut().print(run.storedRateHz);
-    serialOut().print(" trigger_ms=");
-    serialOut().print(progress.emitStarted ? progress.emitStartMs : run.commandMs);
-    serialOut().print(" command_ms=");
-    serialOut().print(run.commandMs);
-    serialOut().print(" emit_seen=");
-    serialOut().print(progress.emitStarted ? 1 : 0);
-    serialOut().print(" emit_start_ms=");
-    serialOut().print(progress.emitStartMs);
-    serialOut().print(" emit_done_ms=");
-    serialOut().print(progress.emitDoneMs);
-    serialOut().print(" f=");
-    serialOut().print(run.toneHz);
-    serialOut().print(" dur=");
-    serialOut().print(run.durationMs);
+    printKv("sr", run.storedRateHz);
+    printKv("trigger_ms", progress.emitStarted ? progress.emitStartMs : run.commandMs);
+    printKv("command_ms", run.commandMs);
+    printKv("emit_seen", progress.emitStarted ? 1 : 0);
+    printKv("emit_start_ms", progress.emitStartMs);
+    printKv("emit_done_ms", progress.emitDoneMs);
+    printKv("f", run.toneHz);
+    printKv("dur", run.durationMs);
     if (shape.pulseCount > 0) {
-        serialOut().print(" pulses=");
-        serialOut().print(shape.pulseCount);
-        serialOut().print(" gap=");
-        serialOut().print(shape.pulseGapMs);
+        printKv("pulses", shape.pulseCount);
+        printKv("gap", shape.pulseGapMs);
         if (shape.hop[0] != '\0') {
-            serialOut().print(" hop=");
-            serialOut().print(shape.hop);
+            printKv("hop", shape.hop);
         }
     } else if (shape.sweepToHz != 0) {
-        serialOut().print(" sweep=");
-        serialOut().print(shape.sweepToHz);
+        printKv("sweep", shape.sweepToHz);
     }
-    serialOut().print(" pre_ms=");
-    serialOut().print(run.preMs);
-    serialOut().print(" post_ms=");
-    serialOut().print(run.postMs);
+    printKv("pre_ms", run.preMs);
+    printKv("post_ms", run.postMs);
     serialOut().print(" band=");
     if (_freqBandStream.bandLowHz() == 0) {
         serialOut().print("off");
@@ -597,27 +575,22 @@ void AnalyzerApp::printRawBegin(const RawCaptureRun& run) const {
     // How many samples the band stream saw (since its reset at the start of
     // this capture) before the first stored row; a replay that feeds that
     // many mod frequencyUpdateEverySamples first runs in the same update phase.
-    serialOut().print(" band_lead=");
-    serialOut().print(progress.preCapturedTotal > progress.preWindowSamples
-                          ? progress.preCapturedTotal - progress.preWindowSamples
-                          : 0UL);
-    serialOut().print(" band_update_every=");
-    serialOut().print(_freqBandStream.frequencyUpdateEverySamples());
+    printKv("band_lead",
+            progress.preCapturedTotal > progress.preWindowSamples
+                ? progress.preCapturedTotal - progress.preWindowSamples
+                : 0UL);
+    printKv("band_update_every", _freqBandStream.frequencyUpdateEverySamples());
     // Which PCM conditioning produced the stored stream (mode=i2s stores the
     // raw PCM, every other mode what AudioSignal received), so a transcript
     // used as a host fixture says which chain it represents.
-    serialOut().print(" preprocess=");
-    serialOut().print(runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::DcBlocker             ? "dc"
-                          : runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::FirstDifference ? "fd"
-                                                                                                       : "none");
-    serialOut().print(" decim=");
-    serialOut().print(run.decim);
-    serialOut().print(" pre_samples=");
-    serialOut().print(progress.preWindowSamples);
-    serialOut().print(" post_samples=");
-    serialOut().print(progress.postCaptured);
-    serialOut().print(" mode=");
-    serialOut().print(rawCaptureModeName(run.mode));
+    printKv("preprocess",
+            runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::DcBlocker             ? "dc"
+                : runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::FirstDifference ? "fd"
+                                                                                             : "none");
+    printKv("decim", run.decim);
+    printKv("pre_samples", progress.preWindowSamples);
+    printKv("post_samples", progress.postCaptured);
+    printKv("mode", rawCaptureModeName(run.mode));
     serialOut().print(" output=csv");
     if (run.mode == RawCaptureMode::Pcm) {
         serialOut().print(" fields=ms,pcm,baseline,centered");
@@ -712,27 +685,18 @@ void AnalyzerApp::printRawSummary(const RawCaptureRun& run, unsigned long captur
     const unsigned long requestedSamples = run.progress.preWanted + run.progress.postWanted;
     serialOut().print("RAW_SUMMARY id=");
     serialOut().print(run.captureId);
-    serialOut().print(" requested=");
-    serialOut().print(requestedSamples);
-    serialOut().print(" captured=");
-    serialOut().print(capturedSamples);
-    serialOut().print(" unused_capacity=");
-    serialOut().print(run.captureRows > capturedSamples ? run.captureRows - capturedSamples : 0);
-    serialOut().print(" max_pcm_abs=");
-    serialOut().print(maxPcmAbs);
+    printKv("requested", requestedSamples);
+    printKv("captured", capturedSamples);
+    printKv("unused_capacity", run.captureRows > capturedSamples ? run.captureRows - capturedSamples : 0);
+    printKv("max_pcm_abs", maxPcmAbs);
     if (rawCaptureUsesFeatureStream(run.mode)) {
-        serialOut().print(" max_amp=");
-        serialOut().print(maxAmp);
+        printKv("max_amp", maxAmp);
     }
-    serialOut().print(" raw_mean=");
-    serialOut().print(stats.count > 0 ? static_cast<float>(stats.sum) / static_cast<float>(stats.count) : 0.0f, 1);
-    serialOut().print(" raw_abs_mean=");
-    serialOut().print(stats.count > 0 ? static_cast<float>(stats.absSum) / static_cast<float>(stats.count) : 0.0f, 1);
-    serialOut().print(" raw_min=");
-    serialOut().print(stats.count > 0 ? stats.min : 0);
-    serialOut().print(" raw_max=");
-    serialOut().print(stats.count > 0 ? stats.max : 0);
-    serialOut().print(" baseline=");
-    serialOut().print(_audioSignal.baseline(), 1);
+    printKv("raw_mean", stats.count > 0 ? static_cast<float>(stats.sum) / static_cast<float>(stats.count) : 0.0f, 1);
+    printKv("raw_abs_mean", stats.count > 0 ? static_cast<float>(stats.absSum) / static_cast<float>(stats.count) : 0.0f,
+            1);
+    printKv("raw_min", stats.count > 0 ? stats.min : 0);
+    printKv("raw_max", stats.count > 0 ? stats.max : 0);
+    printKv("baseline", _audioSignal.baseline(), 1);
     serialOut().println();
 }

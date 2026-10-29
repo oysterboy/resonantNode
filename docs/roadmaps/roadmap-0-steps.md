@@ -93,6 +93,12 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Issue #83 (opened by another session as "12.5"; integrated here, closed). PC, with remote output checks.
         Gate: every item host-gated (T2h byte-identical); on the boards (OTA) the same keys, results and RAW rows,
         nodecheck 26 / 26 (bench/sessions/2026-10-29-step12.4-readability). Pass doc archived.
+        Leftovers (owner 2026-10-29, judged): 12.4.10 RAW mode=both with a pre window fails its allocation (do now);
+        handleSequencePending (CCN 54, trial attribution, M5's area) only together with step 13's Analyzer work; not
+        worth it: applySeqStartToken (a flat token ladder), the host replay functions, I2sToneOutput::renderBlock
+        (sound path; only with an output change), building 09e747e alone, an Emitter recheck (no Emitter code changed).
+   12.4.10 [NEXT] RAW mode=both with pre: the pre ring was allocated first and split the largest block, so the 6,000
+        capture rows no longer fit (RAW_ERR memory=raw_buffer_alloc_failed). PC + Analyzer remote.
    Gate: the review's findings fixed or carried with a reason; the sanity check green on the boards.
 
 13. [NEXT] Understand the margin: how much headroom the hop train has on the desk. (issue #75)

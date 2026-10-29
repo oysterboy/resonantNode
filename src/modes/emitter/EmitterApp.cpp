@@ -81,7 +81,7 @@ void EmitterApp::begin() {
 }
 
 void EmitterApp::update() {
-    ota::confirmRunningImage(timebase::nowMs(), serialOut());
+    ota::confirmRunningImage(serialOut());
     pollControlSerial();
     pollUsbSerial();
     _chirpOutput.update();
@@ -120,7 +120,15 @@ void EmitterApp::pollUsbSerial() {
         if (strncmp(line, "SELFTEST", 8) == 0 || strncmp(line, "selftest", 8) == 0) {
             handleSelfTestCommand(line);
         } else if (strncmp(line, "OTA", 3) == 0 || strncmp(line, "ota", 3) == 0) {
-            ota::runCommand(line, serialOut());  // firmware over WiFi (step 11d); reboots on success
+            // Firmware over WiFi (step 11d); reboots on success. No tone through the join and the download
+            // (review 12.0 M2); after a failure AUTO resumes one interval from now.
+            if (_chirpOutput.isActive()) {
+                _chirpOutput.stop();
+                _activeTrialId = 0;
+            }
+            ota::runCommand(line, serialOut());
+            _nextAutoChirpAtMs = timebase::nowMs() + _autoIntervalMs;
+            _nextSweepStepAtMs = timebase::nowMs() + _sweepPauseMs;
         } else if (strncmp(line, "EMIT ", 5) == 0) {
             handleLine(text_parse::rest(line, "EMIT"));
         }

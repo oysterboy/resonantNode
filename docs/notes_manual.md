@@ -131,17 +131,24 @@ goes through Behavior and is skipped on a silent node (`own_chirp_suppressed res
 
 The boards pull a new image over WiFi (decisions/2026-10-28-ota-firmware-pull-over-http.md):
 
-1. Credentials: `include/wifi_secrets.h` (copy `include/wifi_secrets.example.h`; git ignores it). A build without it
-   answers `OTA result=no_credentials`.
-2. Build, then serve the images from the lab PC: `python tools/bench/otaserve.py` (prints the URLs). The PC's
-   firewall must allow inbound TCP 8070 on the private network (rule "resonantNode OTA (8070)").
-3. On a USB Node: `NET * OTA url=http://<pc>:8070/node.bin` (all other Nodes by radio), then
-   `OTA url=http://<pc>:8070/node.bin` (itself). On the Analyzer `.../analyzer.bin`, on the Emitter's USB
-   `.../emitter.bin`.
+1. Credentials and token: `include/wifi_secrets.h` (copy `include/wifi_secrets.example.h`; git ignores it) holds
+   `WIFI_SSID`, `WIFI_PASSWORD` and `OTA_TOKEN`, the shared token every OTA command must carry (owner 2026-10-29). A
+   build without the file or without `OTA_TOKEN` answers every OTA with `OTA result=no_credentials`; a command with a
+   missing or wrong `token=` answers `OTA result=bad_token` and changes nothing. A url longer than 159 characters is
+   refused (`bad_command`), not cut.
+2. Build, then serve the images from the lab PC: `python tools/bench/otaserve.py` (prints the full command lines,
+   token included, and binds to the LAN address it prints). The PC's firewall must allow inbound TCP 8070 on the
+   private network (rule "resonantNode OTA (8070)"). The images hold the WiFi password in plain text: stop the
+   server (Ctrl+C) once the boards have updated.
+3. On a USB Node: `NET * OTA url=http://<pc>:8070/node.bin token=<t>` (all other Nodes by radio), then
+   `OTA url=http://<pc>:8070/node.bin token=<t>` (itself). On the Analyzer `.../analyzer.bin token=<t>`, on the
+   Emitter's USB `.../emitter.bin token=<t>`. The Node closes a sounding emission first, the Emitter stops its tone.
 4. Each board prints `OTA start`, `OTA wifi ip=`, `OTA progress pct=`, `OTA result=ok rebooting`, boots the new
-   image, and after 20 s `OTA confirmed partition=app0|app1`. A board that reboots before that falls back to its
-   previous image. `OTA result=download_failed|wifi_timeout` leaves the old image running and the radio on its
-   channel.
+   image (`OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000` at boot), and after 20 s of uptime,
+   from its mode's loop, `OTA confirmed partition=app0|app1`. A new image that crashes, resets, or has not confirmed
+   by 60 s of uptime (a hang: the deadline restarts it) falls back to its previous image (`src/app/FirmwareOta.h`).
+   `OTA result=download_failed|wifi_timeout` leaves the old image running and the radio on its channel (WiFi joins
+   without auto-reconnect and without storing the credentials in NVS).
 
 ### Remote commands (radio, step 11a)
 

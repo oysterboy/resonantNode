@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "app/BoardConfig.h"
+#include "app/FirmwareOta.h"
 #include "app/SerialOut.h"
 
 // Select exactly one runtime mode at compile time:
@@ -36,6 +37,8 @@ void setup() {
     // all output goes through serialOut() in whole lines (SerialOut.h).
     Serial.setTxBufferSize(16384);
     Serial.begin(115200);
+    // A just-updated image that has not confirmed by the deadline reboots into the previous one (FirmwareOta.h).
+    ota::armRebootDeadline(serialOut());
     app.begin();
 }
 

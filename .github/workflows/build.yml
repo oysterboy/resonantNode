@@ -36,6 +36,9 @@ jobs:
             ~/.cache/pip
           key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
       - run: pip install platformio
+      # The placeholder secrets header, so the real OTA code (WiFi join, token check) compiles, not the
+      # no_credentials stub (review 12.0 M3). include/wifi_secrets.h is git-ignored; CI never has the real one.
+      - run: cp include/wifi_secrets.example.h include/wifi_secrets.h
       - run: pio run -e ${{ matrix.env }}
 
   host:

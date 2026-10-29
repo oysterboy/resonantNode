@@ -16,19 +16,24 @@ a new image gets a reboot deadline before it confirms.
   notifyChirpFinished, no `_lastOwnChirpEndMs`, no self-test finish). An OTA that fails (bad_command, no_credentials,
   wifi_timeout, download_failed) while the Node sounds leaves Behavior in Chirping: deaf and silent until a rebase.
   Fix: stop and close the emission as runSelfTestHardware does (quiesce).
+  -> done (12.0.1 batch 1, commit "Review fixes (12.0.1 batch 1)")
 
 ## Medium
 
 - M1 `FirmwareOta.cpp`: Arduino WiFi auto-reconnect stays on; after a failed OTA a NO_AP_FOUND event restarts the
   scan and the STA hops channels, ESP-NOW deaf on and off. Fix: `WiFi.setAutoReconnect(false)` (and
   `WiFi.persistent(false)`, L-OTA3) before `WiFi.begin`.
+  -> done (12.0.1 batch 1, commit "Review fixes (12.0.1 batch 1)")
 - M2 `EmitterApp.cpp` OTA does not stop output: a running tone plays through the join and download. Fix:
   `_chirpOutput.stop()` first.
+  -> done (12.0.1 batch 1, commit "Review fixes (12.0.1 batch 1)")
 - M3 `.github/workflows/build.yml`: CI has no `include/wifi_secrets.h`, so it compiles only the no_credentials stub.
   Fix: copy the example header in CI before building.
+  -> done (12.0.1 batch 1, commit "Review fixes (12.0.1 batch 1)")
 - M4 Security: OTA by radio is unauthenticated (ESP-NOW, NET_ID only) and the image is plain HTTP; any ESP32 in range
   can reflash every Node. Owner: (a) a shared token in the command (`OTA url=... token=...`), kept in the git-ignored
   secrets header; a command without the right token is refused (`OTA result=bad_token`).
+  -> done (12.0.1 batch 1, commit "Review fixes (12.0.1 batch 1)")
 - M5 `AnalyzerSequenceSession.cpp:489-496` / `AnalyzerTrialCapture.cpp`: an AcceptedOccurrence selection looks up its
   verdict only through `bestRejectedInWindow`; with two invalid verdicts in one window the trial reads
   `missing_evaluator_report` / stage source instead of `pattern_rejected` / evaluator (tools count it). Fix: keep the
@@ -83,11 +88,15 @@ Analyzer, Emitter:
 Net, OTA, app, tools:
 - L-OTA1 `FirmwareOta.cpp:135`: the 20 s confirm (and the test crash) count `timebase::nowMs()`, which includes the
   wrap-test offset: an OTA'd wraptest image confirms at once. Fix: uptime from esp_timer.
+  -> done (12.0.1 batch 1, commit "Review fixes (12.0.1 batch 1)")
 - L-OTA2 an image that hangs without crashing never confirms and never reboots. Owner: a reboot deadline before
   the confirm (and confirm only once the mode's loop has run, the radio up where it should be).
+  -> done (12.0.1 batch 1, commit "Review fixes (12.0.1 batch 1)")
 - L-OTA3 `FirmwareOta.cpp:39-44`: a url of 160+ characters is cut silently. Fix: refuse.
+  -> done (12.0.1 batch 1, commit "Review fixes (12.0.1 batch 1)")
 - L-OTA4 secrets: `WiFi.persistent` defaults true (credentials written to each board's NVS); the image served on the
   LAN holds the password in plain text. Fix: persistent(false); otaserve binds the LAN address and is stopped after.
+  -> done (12.0.1 batch 1, commit "Review fixes (12.0.1 batch 1)")
 - L19 `NodeNet.cpp:166` / `ResonantNodeNet.cpp:68`: `sendCommand` ignores enqueue's result; "NET sent" printed for
   a full outbox.
 - L20 `soakcycle.py`, `bandsweep.py`: a Node reset mid-run is not noticed (it comes back silent, log minimal, on its

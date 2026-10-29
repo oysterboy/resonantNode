@@ -57,8 +57,16 @@ void Node::handleSerialLine(const char* line) {
 
 void Node::handleOtaCommand(const char* line) {
     // Firmware over WiFi (step 11d): silence, pull, reboot; on failure the old image runs on and the radio goes
-    // back to its channel.
-    _soundOutput.stop();
+    // back to its channel. A sounding emission is closed as runSelfTestHardware closes it (review 12.0 H1): Behavior
+    // leaves Chirping, the own-chirp time and the self-test see the end, so a failed OTA does not leave the Node deaf.
+    if (_soundOutput.busy() || _chirpOutput.isActive()) {
+        _soundOutput.stop();
+        const unsigned long now = timebase::nowMs();
+        _lastOwnChirpEndMs = now;
+        _behavior.notifyChirpFinished(now);
+        _selfTest.noteChirpFinished(now);
+    }
+    _soundOutput.stop();  // also an idle call waiting in its gap
     if (_net.started()) {
         // A NET * OTA from this node is still in the outbox (and a remote OTA's reply): send it before the WiFi join
         // takes the radio off its channel (found on the bench 2026-10-29: E4 / E5 never got the broadcast).

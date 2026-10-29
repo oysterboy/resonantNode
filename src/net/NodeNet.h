@@ -53,6 +53,9 @@ public:
     bool begin();
     // Back on NET_CHANNEL after WiFi joined an access point (a failed OTA firmware update, step 11d).
     void restoreChannel();
+    // Sends what is queued now, paced as service() does, for up to maxMs: before the radio leaves its channel (OTA's
+    // WiFi join), so a NET * OTA reaches the other nodes and their replies reach the gateway (step 11d).
+    void flush(unsigned long maxMs);
     bool started() const { return _started; }
 
     // Queues a command line to `target` ("*" or a node name), kCommandRepeats

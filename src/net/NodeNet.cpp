@@ -84,6 +84,16 @@ bool NodeNet::begin() {
     return true;
 }
 
+void NodeNet::flush(unsigned long maxMs) {
+    const unsigned long startMs = timebase::nowMs();
+    while (_started && _outbox != nullptr && !_outbox->empty() &&
+           !timing::elapsedSince(timebase::nowMs(), startMs, maxMs)) {
+        service(timebase::nowMs());
+        delay(2);
+    }
+    delay(20);  // the last frame's transmission
+}
+
 void NodeNet::restoreChannel() {
     WiFi.disconnect();
     esp_wifi_set_promiscuous(true);

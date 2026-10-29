@@ -92,7 +92,7 @@ what replaced it.
 | 2026-10-28 | [The network band stays at 2950-3950 Hz after the 500-5000 Hz sweep (E004, step 11h)](2026-10-28-band-stays-after-the-sweep.md) |
 | 2026-10-29 | [Answers follow the field: the level automaton (one integer level, p = (level + 1) / L for answering and for not yielding, rest at L); FieldState no longer the rest gate](2026-10-29-answers-follow-the-field-level-automaton.md) (BEH-008, not implemented) |
 | 2026-10-29 | [The network band widens to 8 bins (2950-4700 Hz) for a base bin per node; band shifting and a musical tone are tested after](2026-10-29-wider-band-base-bin-per-node.md) (BEH-009, not implemented; amends the 2026-10-28 band decision) |
-| 2026-10-28 | [OTA firmware: every board pulls the image over HTTP from WiFi on command (NET * OTA for the Nodes), rollback until confirmed (step 11d)](2026-10-28-ota-firmware-pull-over-http.md) (implemented; first update waits for the PC's firewall rule) |
+| 2026-10-28 | [OTA firmware: every board pulls the image over HTTP from WiFi on command (NET * OTA for the Nodes), rollback until confirmed (step 11d)](2026-10-28-ota-firmware-pull-over-http.md) |
 
 ## Open
 

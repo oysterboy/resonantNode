@@ -123,6 +123,15 @@ Result runCommand(const char* line, Print& out) {
 }
 
 void confirmRunningImage(unsigned long nowMs, Print& out) {
+#if defined(OTA_TEST_CRASH)
+    // Rollback test build only (-D OTA_TEST_CRASH): crash 5 s after boot, before the image confirms itself, so the
+    // bootloader must fall back to the previous image on the next boot (step 11d's gate).
+    if (nowMs > 5000UL) {
+        out.println("OTA test_crash aborting before confirm");
+        out.flush();
+        abort();
+    }
+#endif
     if (gConfirmChecked || nowMs < kConfirmAfterMs) {
         return;
     }

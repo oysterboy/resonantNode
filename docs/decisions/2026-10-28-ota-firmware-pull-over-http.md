@@ -1,7 +1,7 @@
 # OTA firmware: every board pulls the image over HTTP from WiFi, on command, with rollback until confirmed
 
-Status: decided (owner 2026-10-28); implemented 2026-10-28 (40c92e3, step 11d); the first successful update waits for
-the lab PC's firewall rule (port 8070, Private profile).
+Status: decided (owner 2026-10-28); implemented 2026-10-28 (40c92e3), bench-checked 2026-10-29 (f2330b1: all five
+boards over WiFi, NET * OTA for the Nodes, the rollback of a crashing image; bench/sessions/2026-10-29-step11d-ota).
 Date: 2026-10-28.
 
 ## Decision

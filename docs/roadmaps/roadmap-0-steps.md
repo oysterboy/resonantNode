@@ -53,6 +53,9 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
 11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
+Status update 2026-10-29: 11d done (all five boards updated over WiFi, rollback proven). The installation-ready
+milestone's gate (11c, 11h, 11g, 11d) is met; the cut-over (archive this file, a fresh sequence from 12) waits for
+the owner. 11i's bench gate is open (not in the milestone's gate).
 Status update 2026-10-28, later still: 11j done (c907048..51d88d6; host only, no behaviour change; its board check rides
 with 11i's on Sunday's OTA build).
 Status update 2026-10-28, late: 11i host part done; 11j opened (code standards pass, line limit 120).
@@ -1186,7 +1189,7 @@ the previous gate open unless the step says it can run in parallel.
    literal and reply as before. The handlers need the board, so the new host suite test_analyzer_commands (6
    cases) tests the routing and the shared on/off, band and hop checks, not the handlers.
 
-11d. [RUNNING 2026-10-28, blocked until the owner is back 11-01: firewall rule] OTA firmware (FWOTA). (issue #61)
+11d. [DONE 2026-10-29] OTA firmware (FWOTA). (issue #61, closed)
    Owner 2026-10-25. Separate from params on purpose (PAR-013). Needs the owner's WiFi credentials (never in the
    repo) and a two-slot partition table (a first USB flash of every board). Gate: an image flashed over WiFi to
    every board, a failed or interrupted update falls back to the old image.
@@ -1199,6 +1202,13 @@ the previous gate open unless the step says it can run in parallel.
    radio pings afterwards: the failure path works. Left for the gate: allow port 8070 (owner, Sunday 11-01), then
    NET * OTA to all Nodes, OTA on the Analyzer and the Emitter, and a rollback test with an image that crashes early.
    Meanwhile a 96 h soak on 40c92e3 (bench/sessions/2026-10-28-soak96-40c92e3), the first long run of 11g's changes.
+   Done 2026-10-29 (bench/sessions/2026-10-29-step11d-ota): the firewall rule went in by remote desktop (owner); E1
+   pulled 4208e72 over WiFi and confirmed itself; NET * OTA first reached only the gateway (the broadcast left after
+   its own WiFi join; fixed in f2330b1, NodeNet::flush before the join), then updated E1, E4, E5 at once in 32 s; the
+   Analyzer and the Emitter by USB command; all five on f2330b1 over WiFi. Rollback: an image built with
+   -D OTA_TEST_CRASH (aborts before the 20 s confirm) sent to E5 booted, aborted, and the bootloader fell back to
+   f2330b1 by itself. The soak was stopped at 27 h for this (clean: 820/820 hop, 0 / 1,630 chirps, 1,484 chains, 0
+   noise-started, 0 resets).
 
 11e. [DONE 2026-10-26] Review fixes 2026-10-25: boundaries, duplication, dead code. (issue #63, closed)
    Owner 2026-10-25. The fixes from the architecture and readability review

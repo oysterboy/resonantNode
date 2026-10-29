@@ -116,22 +116,24 @@ struct RawRows {
         free(rows);
     }
 
+    // The capture rows first: the larger block, taken while the largest free block is whole. The pre ring first
+    // split it, and mode=both with pre= could not get its 6,000 rows (step 12.4.10).
     bool allocate(unsigned long preRows, unsigned long captureRows) {
+        rows = static_cast<Row*>(malloc(captureRows * sizeof(Row)));
+        if (rows == nullptr) {
+            serialOut().println("RAW_ERR memory=raw_buffer_alloc_failed");
+            printRawMemoryState("raw_buffer");
+            return false;
+        }
         if (preRows > 0) {
             preRing = static_cast<Row*>(malloc(preRows * sizeof(Row)));
             if (preRing == nullptr) {
+                free(rows);  // before the memory report
+                rows = nullptr;
                 serialOut().println("RAW_ERR memory=pre_ring_alloc_failed");
                 printRawMemoryState("pre_ring");
                 return false;
             }
-        }
-        rows = static_cast<Row*>(malloc(captureRows * sizeof(Row)));
-        if (rows == nullptr) {
-            free(preRing);  // before the memory report, as always
-            preRing = nullptr;
-            serialOut().println("RAW_ERR memory=raw_buffer_alloc_failed");
-            printRawMemoryState("raw_buffer");
-            return false;
         }
         return true;
     }

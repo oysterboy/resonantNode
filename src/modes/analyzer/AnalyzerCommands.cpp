@@ -468,6 +468,21 @@ void AnalyzerApp::handleSeqStart(const char* verb, char*& savePtr) {
         serialOut().println("]");
         return;
     }
+    // The longest trial line (the highest trial number) must fit the Emitter's line reader, or every trial would
+    // be dropped there in silence (review 14.1).
+    if (!request.externalEmitter) {
+        char longest[128];
+        AnalyzerApp::formatSequenceTrialCommand(request, request.totalTrials > 0 ? request.totalTrials : 99999UL,
+                                                longest, sizeof(longest));
+        if (strlen(longest) > serial_line::kEmitterLineMax) {
+            serialOut().print("ERR SEQ emitter_line_too_long len=");
+            serialOut().print(static_cast<unsigned long>(strlen(longest)));
+            serialOut().print(" max=");
+            serialOut().print(static_cast<unsigned long>(serial_line::kEmitterLineMax));
+            serialOut().println(" (shorten hop= / att= / level=)");
+            return;
+        }
+    }
 
     // OBS default window leaves room for the settle before the next
     // trigger: 2200 + 500 > 2500 credited early chirps of trial N+1
@@ -552,7 +567,8 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
     } else if (startsWithIgnoreCase(token, "att=")) {
         // dB per pulse below the level, cycled (step 13): digits and commas, as hop=.
         const char* list = text_parse::tokenValue(token);
-        if (!analyzer_commands::validHopList(list, sizeof(request.pulseAtt))) {
+        if (!analyzer_commands::validHopList(list, sizeof(request.pulseAtt)) ||
+            !analyzer_commands::attListInRange(list, 8, 60)) {
             printBadValue(kSeqBadValue, token);
             return false;
         }

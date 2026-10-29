@@ -44,6 +44,10 @@ void DetectionRuntime::resetDetectors() {
     _pendingInspections.clear();
 }
 
+void DetectionRuntime::restartAfterInputGap() {
+    _scalarDetector.restartAfterInputGap();
+}
+
 void DetectionRuntime::resetDetectionState() {
     resetDetectors();
     _fieldStateTracker.reset();

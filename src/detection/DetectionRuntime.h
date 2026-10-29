@@ -46,6 +46,9 @@ public:
     void resetState();
     void resetDetectors();
     void resetDetectionState();
+    // The caller skipped input (own-emit suppression on the Node): the detector restarts clean (see
+    // ScalarTransientDetector::restartAfterInputGap). Occurrences already closed are still inspected.
+    void restartAfterInputGap();
 
     void setScalarTransientConfig(const ScalarTransientConfig& config);
     void setDetectorSelection(DetectorSelection selection);

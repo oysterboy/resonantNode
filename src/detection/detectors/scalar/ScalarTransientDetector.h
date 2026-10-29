@@ -67,6 +67,11 @@ public:
     void resetAcceptedOccurrenceSummary();
     void resetSelectedRejectSummary();
     void update(const AudioSamplePacket& audioSamplePacket, float signalLevel);
+    // The input had a gap (the Node starves detection while it sounds): drop the open candidate without a reject,
+    // and open the next one only after the signal has been below release. Summaries, counts and the frozen report
+    // stay. Review 14.1: with max duration 450 the own ring-down, still above release when detection resumed, opened
+    // an occurrence that absorbed a neighbour's reply and was accepted after refractory.
+    void restartAfterInputGap();
 
     // The thresholds and gates, as one value (step 11e item 5): applied in
     // place, no state reset (a live PARAM SET keeps the occurrence in flight).

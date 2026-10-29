@@ -33,9 +33,8 @@ public:
     // The bin count follows the longest occurrence a profile accepts plus
     // the inspection look-back: 256 bins x kBinDurationMs covered the old
     // 240 ms maximum (AmpExperimental) plus windowPreMs = 10. Since
-    // 2026-10-16 TonalPulseScalar accepts 300 ms (5-step hop trains), so
-    // 512 is the default; it was the build override of the 5b gate
-    // battery (Analyzer RAM +18.6 KB). Shrinking this silently degrades
+    // 2026-10-16 TonalPulseScalar accepts 300 ms (5-step hop trains), 450 since
+    // 2026-10-29 (chords), so 576 is the default (FEATURE_HISTORY_BINS above). Shrinking this silently degrades
     // long occurrences to HistoryWindowIncomplete. Still a build override
     // (-D FEATURE_HISTORY_BINS=...) for experiments.
     static constexpr size_t kBinsPerStream = FEATURE_HISTORY_BINS;
@@ -78,7 +77,7 @@ private:
 
     // Only the fields representativeValueForStream() reads are stored per
     // bin. This struct is allocated kBinsPerStream * kMaxActiveStreams times
-    // (768 today), so an unread float here costs 3 KB of RAM. Window-level
+    // (768 then), so an unread float here costs 3 KB of RAM. Window-level
     // rms/peak in MagnitudeWindow are computed across bins from each bin's
     // representative value, not from per-bin aggregates, so per-bin rms and
     // peak were write-only and are not kept.

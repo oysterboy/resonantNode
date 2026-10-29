@@ -124,6 +124,8 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
         _trainRunning = false;
         _trainDraining = false;
         _trainStep = 0;
+        _gainCount = 0;  // a train cut short must not leave its gain on the next plain tone (review 14.1)
+        _trainGain = 1.0f;
     }
     if (_trainRequested) {
         _trainRequested = false;

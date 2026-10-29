@@ -105,6 +105,33 @@ inline bool validHopList(const char* list, size_t capacity) {
     return ok;
 }
 
+// att=DB1,DB2,...: 1..maxEntries entries of 0..maxDb, none empty (the Emitter's own rule; review 14.1).
+inline bool attListInRange(const char* list, size_t maxEntries, unsigned long maxDb) {
+    size_t entries = 0;
+    unsigned long value = 0;
+    size_t digits = 0;
+    for (const char* p = list;; ++p) {
+        if (*p >= '0' && *p <= '9') {
+            value = value * 10UL + static_cast<unsigned long>(*p - '0');
+            if (++digits > 3 || value > maxDb) {
+                return false;
+            }
+            continue;
+        }
+        if (digits == 0 || ++entries > maxEntries) {
+            return false;
+        }
+        if (*p == '\0') {
+            return true;
+        }
+        if (*p != ',') {
+            return false;
+        }
+        value = 0;
+        digits = 0;
+    }
+}
+
 // Every entry of a hop list (validHopList's shape) is a tone in 1..maxHz, none empty (review 12.0 L14).
 inline bool hopListInRange(const char* list, unsigned long maxHz) {
     unsigned long value = 0;

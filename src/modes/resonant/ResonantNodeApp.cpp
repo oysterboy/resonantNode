@@ -587,6 +587,12 @@ void Node::update() {
             if (ownEmitSuppressed) {
                 ++_suppressedSampleCount;
             }
+            if (_detectionWasSuppressed && !ownEmitSuppressed) {
+                // Detection resumes after the Node's own emission: no occurrence carries over the gap, and the own
+                // ring-down cannot open one (review 14.1).
+                _detection.restartAfterInputGap();
+            }
+            _detectionWasSuppressed = ownEmitSuppressed;
             if (!ownEmitSuppressed) {
                 _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue,
                                                       audioSamplePacket.timeMs);

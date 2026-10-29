@@ -186,6 +186,7 @@ private:
     // axis and how many samples the own-emit suppression has dropped.
     unsigned long _lastSampleTimeMs = 0;
     unsigned long _suppressedSampleCount = 0;
+    bool _detectionWasSuppressed = false;  // own-emit suppression on the previous sample (restart edge)
     unsigned long _rbLastRestsEntered = 0;  // logs "RB rest start" once per rest
 
     // Debug / logging support.

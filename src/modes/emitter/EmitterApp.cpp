@@ -355,7 +355,9 @@ void EmitterApp::handlePulsesCommand(const char* line) {
         } else if (startsWith(token, "att=")) {
             // dB below the train's level per pulse, cycled like hop= (step 13's margin test).
             const char* list = findValue(token);
-            if (strlen(list) >= sizeof(_pulseAttText)) {
+            const size_t listLen = strlen(list);
+            // Not empty, no empty entry at the end (review 14.1: "att=" and "att=0," were taken).
+            if (listLen == 0 || listLen >= sizeof(_pulseAttText) || list[listLen - 1] == ',') {
                 printBadValue("PULSES", token);
                 return;
             }
@@ -651,6 +653,10 @@ void EmitterApp::startPulses(unsigned long toneHz, unsigned long count, unsigned
     if (_pulseAttText[0] != '\0') {
         const size_t used = strlen(ackLine);
         snprintf(ackLine + used, sizeof(ackLine) - used, " att=%s", _pulseAttText);
+        if (strlen(ackLine) > serial_line::kEmitterLineMax) {
+            // The Analyzer's reader takes 95 characters: the count, not the list (review 14.1).
+            snprintf(ackLine + used, sizeof(ackLine) - used, " att_n=%u", static_cast<unsigned>(_pulseGainCount));
+        }
     }
     sendControlAck(ackLine);
 }

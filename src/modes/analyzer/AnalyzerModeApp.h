@@ -222,6 +222,7 @@ private:
         float strength = 0.0f;
     };
 
+    static void formatSequenceTrialCommand(const RunConfig& config, unsigned long trialNumber, char* out, size_t size);
     void buildSequenceAnalyzerReport(AnalyzerReport& report, const SequenceTrialSelection& selectedTrial,
                                      bool bufferOverrun, const TrialDiagnostics& diagnostics) const;
     // What every section of the report reads from the selection, derived once.

@@ -83,6 +83,7 @@ for n in nodes:
     modes[n] = next((m.group(1) for m in found if m), "minimal")
     cmd(n, "RB log full", 0.4)
     cmd(n, "PARAM SET behavior.idle_enabled 0", 0.4)
+cmd(L, "PARAM SET output.silent 1", 0.4)  # the listener never answers (review 14.1)
 cmd(A, "PARAM GET behavior.wait_after_heard_ms", 0.6)
 wait0 = int(re.findall(r"value=(\d+)", " ".join(l for _, l in log[A][-5:]))[-1])
 
@@ -90,33 +91,42 @@ cells = [("A_alone", (A,), 0), ("B_alone", (B,), 0), ("both_same", (A, B), 0)]
 cells += [("both_plus%d" % int(o), (A, B), int(o)) for o in a.offsets.split(",")]
 results = []
 trial = 0
-for name, answering, extra in cells:
-    for n in (A, B):
-        cmd(n, "PARAM SET output.silent %d" % (0 if n in answering else 1), 0.4)
-    cmd(A, "PARAM SET behavior.wait_after_heard_ms %d" % wait0, 0.4)
-    cmd(B, "PARAM SET behavior.wait_after_heard_ms %d" % (wait0 + extra), 0.4)
-    pump(2.0)
-    counts = []
-    for _ in range(a.trains):
-        trial += 1
-        t0 = time.time()
-        em.write((HOP % trial + "\n").encode())
-        pump(a.period)
-        verdicts = lines_since(L, t0, t0 + a.period, r"^RB verdict=.*valid=1")
-        emits = {n: len(lines_since(n, t0, t0 + a.period, r"BEH emit start .*source=heard_pattern")) for n in (A, B)}
-        offs = [round((t - t0) * 1000) for t, _ in verdicts]
-        counts.append((len(verdicts), emits[A], emits[B], offs))
-    results.append((name, extra, counts))
-    hist = {}
-    for c in counts:
-        hist[c[0]] = hist.get(c[0], 0) + 1
-    print("%-14s +%3d ms  listener valid verdicts per train %s  answers %s=%d %s=%d" % (
-        name, extra, dict(sorted(hist.items())), A, sum(c[1] for c in counts), B, sum(c[2] for c in counts)),
-        flush=True)
 
-for n in nodes:
-    cmd(n, "PARAM LOAD", 1.2)
-    cmd(n, "RB log " + modes[n], 0.4)
+
+def restore():
+    for n in nodes:
+        cmd(n, "PARAM LOAD", 1.2)
+        cmd(n, "RB log " + modes[n], 0.4)
+
+
+try:
+    for name, answering, extra in cells:
+        for n in (A, B):
+            cmd(n, "PARAM SET output.silent %d" % (0 if n in answering else 1), 0.4)
+        cmd(A, "PARAM SET behavior.wait_after_heard_ms %d" % wait0, 0.4)
+        cmd(B, "PARAM SET behavior.wait_after_heard_ms %d" % (wait0 + extra), 0.4)
+        pump(2.0)
+        counts = []
+        for _ in range(a.trains):
+            trial += 1
+            t0 = time.time()
+            em.write((HOP % trial + "\n").encode())
+            pump(a.period)
+            verdicts = lines_since(L, t0, t0 + a.period, r"^RB verdict=.*valid=1")
+            emits = {n: len(lines_since(n, t0, t0 + a.period, r"BEH emit start .*source=heard_pattern")) for n in (A, B)}
+            offs = [round((t - t0) * 1000) for t, _ in verdicts]
+            counts.append((len(verdicts), emits[A], emits[B], offs))
+        results.append((name, extra, counts))
+        hist = {}
+        for c in counts:
+            hist[c[0]] = hist.get(c[0], 0) + 1
+        print("%-14s +%3d ms  listener valid verdicts per train %s  answers %s=%d %s=%d" % (
+            name, extra, dict(sorted(hist.items())), A, sum(c[1] for c in counts), B, sum(c[2] for c in counts)),
+            flush=True)
+finally:
+    # PARAM LOAD puts back what is stored; a value that was never PARAM SAVEd stays live until a reboot.
+    restore()
+
 for n in nodes:
     with open(os.path.join(a.out, "%s.log" % n), "w", encoding="utf-8") as f:
         for t, l in log[n]:

@@ -247,6 +247,25 @@ void configureShippedScalar() {
     gScalar.setConfig(c);
 }
 
+// Review 14.1: after an input gap the open candidate is dropped (no reject, no occurrence), a signal still above
+// release cannot open a new one, and a normal pulse after a quiet moment is accepted.
+void test_restart_after_input_gap_drops_the_open_candidate() {
+    configureShippedScalar();
+    unsigned long ms = 1000;
+    feedScalar(ms, 100, 0.0f);
+    feedScalar(ms, 60, 5000.0f);  // a candidate is open
+    const uint32_t rejectsBefore = gScalar.selectedRejectGeneration();
+    gScalar.restartAfterInputGap();
+    feedScalar(ms, 400, 5000.0f);  // the ring-down goes on above release: no new candidate
+    feedScalar(ms, 100, 0.0f);
+    detection::Occurrence occurrence;
+    TEST_ASSERT_FALSE(gScalar.popOccurrence(occurrence));
+    TEST_ASSERT_EQUAL_UINT32(rejectsBefore, gScalar.selectedRejectGeneration());
+    feedScalar(ms, 150, 5000.0f);  // a pulse after silence
+    feedScalar(ms, 100, 0.0f);
+    TEST_ASSERT_TRUE(gScalar.popOccurrence(occurrence));
+}
+
 void test_continuous_tone_is_closed_at_max_duration() {
     configureShippedScalar();
     unsigned long ms = 1000;
@@ -294,6 +313,7 @@ int runTests() {
     RUN_TEST(test_hop_train_is_accepted_once_in_band_mode);
     RUN_TEST(test_hop_train_is_not_heard_on_the_single_target);
     RUN_TEST(test_radio_speech_is_not_accepted);
+    RUN_TEST(test_restart_after_input_gap_drops_the_open_candidate);
     RUN_TEST(test_continuous_tone_is_closed_at_max_duration);
     RUN_TEST(test_every_reject_counts_only_a_new_best_makes_an_event);
     return UNITY_END();

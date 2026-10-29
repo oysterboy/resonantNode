@@ -147,6 +147,37 @@ void AnalyzerApp::resetSequenceTestRunState() {
     analyzer_seq::resetToDefaults(_sequenceTest.totals);
 }
 
+// The trial's command to the Emitter: a PULSES train (with hop= / level= / att= when set) or a CHIRP. One
+// formatter, so SEQ start can refuse a run whose line the Emitter's 95-character reader would drop (review 14.1).
+void AnalyzerApp::formatSequenceTrialCommand(const RunConfig& config, unsigned long trialNumber, char* out,
+                                             size_t size) {
+    if (config.pulseCount > 0) {
+        snprintf(out, size, "PULSES %lu %lu %lu trial=%lu freq=%lu", config.pulseCount, config.durationMs,
+                 config.pulseGapMs, trialNumber, config.toneHz);
+        if (config.pulseRampSet) {
+            const size_t n = strlen(out);
+            snprintf(out + n, size - n, " ramp=%lu", config.pulseRampMs);
+        }
+        if (config.pulseHop[0] != '\0') {
+            const size_t n = strlen(out);
+            snprintf(out + n, size - n, " hop=%s", config.pulseHop);
+        }
+        if (config.pulseLevel[0] != '\0') {
+            const size_t n = strlen(out);
+            snprintf(out + n, size - n, " level=%s", config.pulseLevel);
+        }
+        if (config.pulseAtt[0] != '\0') {
+            const size_t n = strlen(out);
+            snprintf(out + n, size - n, " att=%s", config.pulseAtt);
+        }
+    } else if (config.sweepToHz != 0) {
+        snprintf(out, size, "CHIRP trial=%lu freq=%lu dur=%lu sweep=%lu", trialNumber, config.toneHz, config.durationMs,
+                 config.sweepToHz);
+    } else {
+        snprintf(out, size, "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber, config.toneHz, config.durationMs);
+    }
+}
+
 void AnalyzerApp::startSequenceTest(const RunConfig& requested) {
     initializeSequenceTest(requested);
     configureSequenceDetection();
@@ -398,36 +429,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
 
     if (!_sequenceTest.config.externalEmitter) {
         char command[128];
-        if (_sequenceTest.config.pulseCount > 0) {
-            int written = snprintf(command, sizeof(command), "PULSES %lu %lu %lu trial=%lu freq=%lu",
-                                   _sequenceTest.config.pulseCount, _sequenceTest.config.durationMs,
-                                   _sequenceTest.config.pulseGapMs, trialNumber, _sequenceTest.config.toneHz);
-            if (_sequenceTest.config.pulseRampSet && written > 0 && static_cast<size_t>(written) < sizeof(command)) {
-                snprintf(command + written, sizeof(command) - written, " ramp=%lu", _sequenceTest.config.pulseRampMs);
-            }
-            const size_t used = strlen(command);
-            if (_sequenceTest.config.pulseHop[0] != '\0' && used < sizeof(command)) {
-                snprintf(command + used, sizeof(command) - used, " hop=%s", _sequenceTest.config.pulseHop);
-            }
-            if (_sequenceTest.config.pulseLevel[0] != '\0') {
-                const size_t n = strlen(command);
-                snprintf(command + n, sizeof(command) - n, " level=%s", _sequenceTest.config.pulseLevel);
-            }
-            if (_sequenceTest.config.pulseAtt[0] != '\0') {
-                const size_t n = strlen(command);
-                snprintf(command + n, sizeof(command) - n, " att=%s", _sequenceTest.config.pulseAtt);
-            }
-            if (strlen(command) > serial_line::kEmitterLineMax) {
-                // The Emitter would refuse it as too long; say so here, where the run is read.
-                serialOut().println("SEQ_ERR emitter_line_too_long (shorten hop= / att=)");
-            }
-        } else if (_sequenceTest.config.sweepToHz != 0) {
-            snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu sweep=%lu", trialNumber,
-                     _sequenceTest.config.toneHz, _sequenceTest.config.durationMs, _sequenceTest.config.sweepToHz);
-        } else {
-            snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber,
-                     _sequenceTest.config.toneHz, _sequenceTest.config.durationMs);
-        }
+        formatSequenceTrialCommand(_sequenceTest.config, trialNumber, command, sizeof(command));
         _sequenceTest.trial.commandSentMs = timebase::nowMs();
         _sequenceTest.trial.commandSent = true;
         sendEmitterCommand(command);

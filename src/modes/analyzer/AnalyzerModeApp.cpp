@@ -1028,9 +1028,7 @@ void AnalyzerApp::fillSequenceReportOccurrences(AnalyzerReport& report, const Se
             report.occurrences.primarySource = detection::occurrenceSourceName(in.detectorReport->detectorId);
             report.occurrences.detectorKind = detection::detectorIdName(in.detectorReport->detectorId);
         }
-        report.occurrences.strength = in.selection.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
-            ? in.selection.strength
-            : in.selection.strength;
+        report.occurrences.strength = in.selection.strength;
         if (in.selection.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate &&
             in.detectorReport != nullptr && in.detectorReport->selectedReject.present &&
             in.detectorReport->selectedReject.detectorReason != nullptr &&

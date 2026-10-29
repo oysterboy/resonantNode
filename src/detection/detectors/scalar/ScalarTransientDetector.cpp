@@ -29,6 +29,16 @@ void ScalarTransientDetector::resetState() {
     clearFrozenReport();
 }
 
+void ScalarTransientDetector::restartAfterInputGap() {
+    _peak = {};
+    resetCandidateFacts();
+    _track = {};
+    _currentOccurrenceId = 0;
+    _gate.onsetDetected = false;
+    _gate.transientDetected = false;
+    _gate.awaitReleaseBeforeOnset = true;
+}
+
 void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
     clearAcceptedSummary();
     clearFrozenReport();

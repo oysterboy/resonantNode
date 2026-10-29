@@ -66,3 +66,16 @@ Thresholds, detection behaviour, Behavior's decisions, line formats, the NET for
   IdleSchedule _idle, ChirpRequest _request, _outputsEnabled, Counters _counts. resetState is ten lines; it keeps
   _idle.scheduledFromMs, _outputsEnabled and _config as before. Gate green (test_behavior_* among the 132), T2h
   byte-identical.
+- 2026-10-29: 12.4.4 done (09e747e). buildSequenceAnalyzerReport is a 24-line list of section fills over one
+  SequenceReportInputs (selection, verdict / inspection / detector report, pipeline evidence, overflow delta, artifact
+  reason, buffer overrun, profile); 10 parameters to 4 (the dropped six were fields it already held). The field
+  section's never-taken null branch is gone (the field state is a reference).
+- 2026-10-29: 12.4.5 done (3e5c757). runRawTrigger: plan, allocate, claim the Emitter, capture, print, over one
+  AnalyzerApp::RawCaptureRun (defined in the .cpp); RawRows<Row> frees on every way out; storeRawRow /
+  copyRawPreWindow templates replace five copies. No function in the file over CCN 15. B is 46 (the new printRawBegin
+  and printRawRows are long print sequences; 12.4.6's ground).
+- 2026-10-29: board check for 12.4.4 + 12.4.5 together on the Analyzer (OTA, remote):
+  bench/sessions/2026-10-29-step12.4-readability. SEQ A/B a9b7e99 vs 3e5c757: the same trial results, line counts and
+  key sets per line type; RAW set (six cases, every mode): the same keys, headers and row counts. 09e747e alone was not
+  built separately (its tree differs from 3e5c757 only by the RAW file and the header's RAW block).
+

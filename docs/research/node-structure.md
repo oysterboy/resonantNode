@@ -1,7 +1,7 @@
 # Node structure: classes and files, against the spec and the later roadmap
 
 Status:  promoted (2026-10-28)
-Became:  step 11i, docs/refactors/node-split.md (the A7 cut, with A9 and A10; owner 2026-10-28)
+Became:  step 11i, docs/refactors/archive/node-split.md (the A7 cut, with A9 and A10; owner 2026-10-28)
 Lab:     none; a code reading at main 709e20b (src/modes/resonant/, src/behavior/, src/output/, src/net/) against
          docs/specs/myspec.md (2-4, 6, 7), roadmap-node.md, roadmap-behavior.md, roadmap-output.md,
          roadmap-param-config.md, roadmap-vektor-later.md and the review's A7 / A9 / A10

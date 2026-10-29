@@ -167,7 +167,7 @@ them so); delete the detector/behavior member defaults by holding the config str
 
 ### A7. The Node split is a file split, not a decomposition (medium; NODE-004 says so)
 
--> done on the host 2026-10-28 (11i N1-N8, docs/refactors/node-split.md): the Node owns parts that hold their own state (NodeCounters, NodeBaseline with its own update(), NetGateway with the tee as a scoped guard and reset by begin(), NodeSelfTest, NodeSignalComposer, NodeParams) and dispatches text through one command table; the bench gate (boot lines, RB STATUS keys, hop trains, SELFTEST, NET round trips, PARAM DUMP) is still open
+-> done on the host 2026-10-28 (11i N1-N8, docs/refactors/archive/node-split.md): the Node owns parts that hold their own state (NodeCounters, NodeBaseline with its own update(), NetGateway with the tee as a scoped guard and reset by begin(), NodeSelfTest, NodeSignalComposer, NodeParams) and dispatches text through one command table; the bench gate (boot lines, RB STATUS keys, hop trains, SELFTEST, NET round trips, PARAM DUMP) is still open
 -> worked out further in docs/research/node-structure.md (classes, files, the later roadmap's seams), 2026-10-27
 -> open (NODE-004). As described: 35 members plus `SelfTestState` in the header, the baseline machine run by hand in `ResonantNodeCommands.cpp:92-94`, reply / join state in file-scope globals `ResonantNodeNet.cpp:59-70` never reset by `begin()`, `setTee` paired by hand in four places, `makeTonalPulseBehaviorProfile()` still `return BehaviorGateConfig{}`. New on top: the `Boot` state is unreachable (D2.4), 2026-10-26
 

@@ -1,3 +1,9 @@
+Archived: 2026-10-29 - step 11i closed. Landed N1-N8 (95830ae, 82740b5, 653c08d, fdc6e1b, 2def60f, d74f1e6,
+b929ba7, ede0e1a): counters, baseline, net gateway, self-test, signal composer, BehaviorStatus + setOutputsEnabled,
+params described by their configs, the command table. Bench gate met on f2330b1 (bench/sessions/2026-10-29-step11i-
+nodecheck). Open: the replay still binds the medium limits itself; SELFTEST's own-chirp check on a silent Node
+reports FAIL instead of SKIP (old behaviour).
+
 # Step 11i: the Node split (review A7, with A9 and A10)
 
 Status: active (opened 2026-10-28). Step 11i (roadmap-0-steps.md, issue #71). Owner 2026-10-28: "leftovers, then

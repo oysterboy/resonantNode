@@ -53,6 +53,7 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
 11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
+Status update 2026-10-29, later: 11i done (bench gate met on f2330b1, delivered by OTA); 11j's board check rode with it.
 Status update 2026-10-29: 11d done (all five boards updated over WiFi, rollback proven). The installation-ready
 milestone's gate (11c, 11h, 11g, 11d) is met; the cut-over (archive this file, a fresh sequence from 12) waits for
 the owner. 11i's bench gate is open (not in the milestone's gate).
@@ -1143,15 +1144,19 @@ the previous gate open unless the step says it can run in parallel.
    0 noise-started of 14,671 answers, 0 resets, no drops after boot. E5 <- E1 drifts -17 % (E4 stands between
    them); no sign of the bells. Next: 11h.
 
-11i. [RUNNING 2026-10-28] Node split: review A7, with A9 and A10. (issue #71)
+11i. [DONE 2026-10-29] Node split: review A7, with A9 and A10. (issue #71, closed)
    Owner 2026-10-28: "leftovers, then node split", while 11d waits for the lab PC's firewall rule (owner back 11-01)
-   and a 96 h soak holds the boards. Pass doc: docs/refactors/node-split.md (N1 counters, N2 baseline, N3 net
+   and a 96 h soak holds the boards. Pass doc: docs/refactors/archive/node-split.md (N1 counters, N2 baseline, N3 net
    gateway, N4 self-test, N5 signal composer, N6 Behavior snapshot, N7 params described by their configs, N8 command
    table); design input docs/research/node-structure.md. Host gate per item; bench gate after the soak. Not in the
    installation-ready milestone's gate.
    Host part done 2026-10-28 (N1 95830ae, N2 82740b5, N3 653c08d, N4 fdc6e1b, N5 2def60f, N6 d74f1e6, N7 b929ba7, N8
    ede0e1a): gate green after each, param paths / order / ranges identical, 125 host tests; esp32dev flash +1.2 KB.
    Bench gate pending (targets in the pass doc). Left: the replay binds the medium limits itself (A10 note).
+   Bench gate met 2026-10-29 (bench/sessions/2026-10-29-step11i-nodecheck, f2330b1 by OTA, tools/bench/nodecheck.py):
+   boot timing, RB STATUS keys identical to 40c92e3, every command, outputs-off, 10/10 answered, PARAM save/reboot/load,
+   radio PING / PARAM SET / SELFTEST, SELFTEST incl. external. Found: SELFTEST's own_chirp_suppressed reports FAIL on a
+   silent Node (it only requests chirps with outputs on; old behaviour, not 11i). Pass doc archived.
 
 11j. [DONE 2026-10-28] Code standards pass. (issue #73, closed)
    Owner 2026-10-28 ("120, go now"): items 1-6 of docs/research/code-standards-read-2026-10-28.md, in its order:

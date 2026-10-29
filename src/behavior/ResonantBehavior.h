@@ -173,54 +173,66 @@ private:
     BehaviorGateConfig _config = {};
 
     // --- rest (busy network) ---
-    bool _restArmed = false;
-    unsigned long _restUntilMs = 0;
-    unsigned long _restsEntered = 0;
-    unsigned long _blockedResting = 0;
-    BehaviorDecision _lastRestReason = BehaviorDecision::None;
+    struct RestState {
+        bool armed = false;
+        unsigned long untilMs = 0;
+        unsigned long entered = 0;
+        BehaviorDecision lastReason = BehaviorDecision::None;
+    };
+    RestState _rest = {};
     static constexpr size_t kEmitHistory = 16;
     RingQueue<unsigned long, kEmitHistory> _emitTimes;  // the last own emissions, oldest dropped
 
     // --- state machine ---
     State _state = State::Idle;
-
-    // --- behavior state ---
     float _activityLevel = 0.0f;
     detection::FieldState _lastFieldState = {};
-    // Cached inputs from the last heard pattern event.
-    bool _pendingHeardPatternDetected = false;
-    float _pendingHeardPatternStrength = 0.0f;
-    unsigned long _pendingHeardPatternMs = 0;
 
-    // --- timing state ---
-    unsigned long _lastEmitMs = 0;
-    unsigned long _lastHeardPatternMs = 0;
-    unsigned long _heardPatternStartedMs = 0;
-    unsigned long _refractoryStartedMs = 0;
-    unsigned long _behaviorSuppressUntilMs = 0;
-    unsigned long _waitUntilMs = 0;
-    unsigned long _refractoryUntilMs = 0;
-    unsigned long _ownEmitDetectionSuppressUntilMs = 0;
-    // True once the deadline above / _behaviorSuppressUntilMs has been set
-    // (wrap-safe compare; see behaviorSuppressed() in the .cpp).
-    bool _ownEmitDetectionSuppressArmed = false;
-    bool _behaviorSuppressArmed = false;
-    detection::VerdictType _lastVerdictType = detection::VerdictType::None;
-    unsigned long _lastPatternHeardAtMs = 0;
-    unsigned long _lastDecisionMs = 0;
-    BehaviorDecision _lastDecision = BehaviorDecision::None;
-    BehaviorDecision _lastBlockReason = BehaviorDecision::None;
-    bool _behaviorEligible = false;
-    bool _wouldEmit = false;
+    // The last heard pattern event, waiting for the wait-after-heard deadline.
+    struct HeardInput {
+        bool detected = false;
+        float strength = 0.0f;
+        unsigned long ms = 0;
+    };
+    HeardInput _heard = {};
+
+    // --- timing: the moments and the deadlines the gates compare against ---
+    struct Timing {
+        unsigned long lastEmitMs = 0;
+        unsigned long lastHeardPatternMs = 0;
+        unsigned long heardPatternStartedMs = 0;
+        unsigned long refractoryStartedMs = 0;
+        unsigned long behaviorSuppressUntilMs = 0;
+        unsigned long waitUntilMs = 0;
+        unsigned long refractoryUntilMs = 0;
+        unsigned long ownEmitDetectionSuppressUntilMs = 0;
+        // True once the deadline above / behaviorSuppressUntilMs has been set
+        // (wrap-safe compare; see behaviorSuppressed() in the .cpp).
+        bool ownEmitDetectionSuppressArmed = false;
+        bool behaviorSuppressArmed = false;
+    };
+    Timing _timing = {};
+
+    // --- the last verdict and decision, for status and the analyzer ---
+    struct LastDecision {
+        detection::VerdictType verdictType = detection::VerdictType::None;
+        unsigned long patternHeardAtMs = 0;
+        unsigned long decisionMs = 0;
+        BehaviorDecision decision = BehaviorDecision::None;
+        BehaviorDecision blockReason = BehaviorDecision::None;
+        bool behaviorEligible = false;
+        bool wouldEmit = false;
+    };
+    LastDecision _last = {};
 
     // --- idle schedule ---
-    unsigned long _nextIdleAtMs = 0;
-    unsigned long _idleScheduledFromMs = 0;  // when the current idle wait started (step 10e)
+    struct IdleSchedule {
+        unsigned long nextAtMs = 0;
+        unsigned long scheduledFromMs = 0;  // when the current idle wait started (step 10e); kept by resetState()
+    };
+    IdleSchedule _idle = {};
 
-    // --- action latch ---
-    bool _chirpRequested = false;
-    bool _outputsEnabled = true;  // setOutputsEnabled(); not reset by resetState()
-
+    // --- action latch: the chirp asked for, until the Node takes it ---
     enum class ChirpRequestSource {
         None,
         HeardPattern,
@@ -228,22 +240,29 @@ private:
         SelfTest,
         Call
     };
-
-    bool _testChirpPending = false;
-    bool _networkCallPending = false;
-
-    ChirpRequestSource _chirpRequestSource = ChirpRequestSource::None;
-    ChirpPattern _chirpPattern = ChirpPattern::Single;
+    struct ChirpRequest {
+        bool requested = false;
+        bool testPending = false;
+        bool callPending = false;
+        ChirpRequestSource source = ChirpRequestSource::None;
+        ChirpPattern pattern = ChirpPattern::Single;
+    };
+    ChirpRequest _request = {};
+    bool _outputsEnabled = true;  // setOutputsEnabled(); not reset by resetState()
 
     // --- counters ---
-    unsigned long _patternsReceived = 0;
-    unsigned long _patternsIgnoredInvalid = 0;
-    unsigned long _blockedOutputBusy = 0;
-    unsigned long _blockedRefractory = 0;
-    unsigned long _blockedWaiting = 0;
-    unsigned long _blockedSelfSuppressed = 0;
-    unsigned long _wouldEmitCount = 0;
-    unsigned long _emittedCount = 0;
+    struct Counters {
+        unsigned long patternsReceived = 0;
+        unsigned long patternsIgnoredInvalid = 0;
+        unsigned long blockedOutputBusy = 0;
+        unsigned long blockedRefractory = 0;
+        unsigned long blockedWaiting = 0;
+        unsigned long blockedSelfSuppressed = 0;
+        unsigned long blockedResting = 0;
+        unsigned long wouldEmit = 0;
+        unsigned long emitted = 0;
+    };
+    Counters _counts = {};
 
     void scheduleNextIdle(unsigned long now);
     void rescheduleIdleFromWaitStart();

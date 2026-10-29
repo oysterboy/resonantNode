@@ -61,3 +61,8 @@ Thresholds, detection behaviour, Behavior's decisions, line formats, the NET for
   / two generations, LastReject _lastReject, Counts _counts. Every reset is `= {}` except the two that clear only part
   of a group (captureAcceptedOccurrence keeps the reject's occurrence id, the update's per-call flags). Gate green, T2h
   byte-identical.
+- 2026-10-29: 12.4.3 done. ResonantBehavior's 46 members are 13: _config, RestState _rest, _emitTimes, _state,
+  _activityLevel, _lastFieldState, HeardInput _heard, Timing _timing (moments and deadlines), LastDecision _last,
+  IdleSchedule _idle, ChirpRequest _request, _outputsEnabled, Counters _counts. resetState is ten lines; it keeps
+  _idle.scheduledFromMs, _outputsEnabled and _config as before. Gate green (test_behavior_* among the 132), T2h
+  byte-identical.

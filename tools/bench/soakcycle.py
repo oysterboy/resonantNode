@@ -22,12 +22,22 @@ sends it the run's setup again (output.silent as the run has it now, RB log full
 
   python tools/bench/soakcycle.py --nodes E1=COM8,E4=COM10,E5=COM11 --analyzer COM3 --hours 24 --cycle-min 60 \\
       --out bench/sessions/<folder> --name soak [--at-min 7,27,47]
+
+Step 14 additions (owner 2026-10-29: the 47 h soak), each opt-in, each per check:
+  --steps margin      the room check runs E005's margin set instead of the default three: hop10 at 0.5 / 0.35 /
+                      0.25 / 0.21 FS (level=) and hops 2+3 and 4+5 down 20 dB (att=), 10 trials each
+  --chord L,A,B       A and B answer the Emitter's hop10 (sent through the Analyzer's EMIT) at 0 / +150 / +250 ms
+                      (B's behavior.wait_after_heard_ms raised, unsaved) while L listens silent; 5 trains each;
+                      L's valid verdicts per train into chord.csv (E003 phase 2)
+  --noise-play        bench_audio.wav played once from this PC while every Node listens silent; verdicts per Node
+                      into noise.csv (the max duration 450 noise cost, decisions/2026-10-29-max-duration-450...)
 """
 import argparse
 import csv
 import datetime
 import os
 import re
+import subprocess
 import time
 
 import serial
@@ -38,6 +48,12 @@ DEFAULT_STEPS = [
     ("chirp3200_100", "SEQ start profile=TonalPulseScalar tries=10 dur=100 band=2950-3950 mode=detail when=all verbose=1"),
     ("chirp3450_150", "SEQ start profile=TonalPulseScalar tries=10 freq=3450 dur=150 band=2950-3950 mode=detail when=all verbose=1"),
 ]
+HOP450 = "freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950"
+MARGIN_STEPS = [("hop10_L%s" % lv, "SEQ start profile=TonalPulseScalar tries=10 %s level=%s mode=detail when=all "
+                 "verbose=1" % (HOP450, lv)) for lv in ("0.5", "0.35", "0.25", "0.21")]
+MARGIN_STEPS += [("hop10_att_%s" % n, "SEQ start profile=TonalPulseScalar tries=10 %s att=%s mode=detail when=all "
+                  "verbose=1" % (HOP450, at)) for n, at in (("mid23", "0,20,20,0,0"), ("end45", "0,0,0,20,20"))]
+AUDIO = r"C:\Users\admin\Downloads\bench_audio.wav"
 RAW_HOP = ("RAW trigger f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 pre=50 post=250 mode=both "
            "band=2950-3950")
 
@@ -54,6 +70,10 @@ ap.add_argument("--settle-s", type=float, default=8.0, help="after silencing the
 ap.add_argument("--raw-reps", type=int, default=2)
 ap.add_argument("--out", required=True)
 ap.add_argument("--name", default="soak")
+ap.add_argument("--steps", default="default", choices=("default", "margin"))
+ap.add_argument("--chord", default="", help="LISTENER,A,B (node names) for the chord check")
+ap.add_argument("--chord-trains", type=int, default=5)
+ap.add_argument("--noise-play", action="store_true")
 a = ap.parse_args()
 os.makedirs(a.out, exist_ok=True)
 
@@ -77,6 +97,7 @@ log = open(os.path.join(a.out, a.name + ".log"), "w", encoding="utf-8")
 log.write("# soakcycle nodes=%s analyzer=%s hours=%.2f cycle_min=%.1f started_unix=%.3f started=%s\n" % (
     a.nodes, a.analyzer, a.hours, a.cycle_min, t0, datetime.datetime.now().isoformat(timespec="seconds")))
 analyzer_sink = None  # a list while a room check runs
+node_sink = None  # a list of (time, node, line) while a chord or noise check counts verdicts
 silent_now = 1  # what the run last set output.silent to (a reset Node gets it again)
 
 
@@ -98,6 +119,8 @@ def pump(seconds=0.0):
         for n, s in ports.items():
             for line in lines_from(n, s):
                 log.write("%.2f %s %s\n" % (time.time() - t0, n, line))
+                if node_sink is not None:
+                    node_sink.append((time.time(), n, line))
                 if "BUILD role=" in line:
                     resetup(n, s)
         for line in lines_from("AN", analyzer):
@@ -114,6 +137,67 @@ def resetup(n, s):
     for c in ("PARAM SET output.silent %d" % silent_now, "RB log full"):
         s.write((c + "\n").encode())
         log.write("%.2f %s >> %s\n" % (time.time() - t0, n, c))
+
+
+def to_node(n, cmd):
+    ports[n].write((cmd + "\n").encode())
+    log.write("%.2f %s >> %s\n" % (time.time() - t0, n, cmd))
+    pump(0.3)
+
+
+def valid_verdicts(sink, n, t_from, t_to):
+    return sum(1 for t, m, l in sink if m == n and t_from <= t < t_to and l.startswith("RB verdict=") and "valid=1" in l)
+
+
+def chord_check(cycle, stamp):
+    """A and B answer at 0 / +150 / +250 ms, L listens; L's valid verdicts per train (train + answers)."""
+    global node_sink
+    L, A, B = a.chord.split(",")
+    to_nodes("PARAM SET behavior.idle_enabled 0")
+    to_node(L, "PARAM SET output.silent 1")
+    to_node(A, "PARAM SET output.silent 0")
+    to_node(B, "PARAM SET output.silent 0")
+    pump(2)
+    rows = []
+    for extra in (0, 150, 250):
+        to_node(B, "PARAM SET behavior.wait_after_heard_ms %d" % (WAIT0 + extra))
+        pump(2)
+        counts = []
+        for k in range(a.chord_trains):
+            node_sink = []
+            t_from = time.time()
+            analyzer.write(b"EMIT PULSES 5 25 10 trial=%d freq=3450 hop=2950,3200,3450,3700,3950\n" % (k + 1))
+            pump(6)
+            counts.append(valid_verdicts(node_sink, L, t_from, time.time()))
+            node_sink = None
+        rows.append((extra, counts))
+        chord_w.writerow([cycle, stamp, "%.2f" % ((time.time() - t0) / 3600.0), extra,
+                          " ".join(str(c) for c in counts)])
+    chord_file.flush()
+    to_node(B, "PARAM SET behavior.wait_after_heard_ms %d" % WAIT0)
+    to_nodes("PARAM SET behavior.idle_enabled 1")
+    to_nodes("PARAM SET output.silent 1")
+    return rows
+
+
+def noise_check(cycle, stamp):
+    """bench_audio.wav once while every Node listens silent; verdicts per Node."""
+    global node_sink
+    to_nodes("PARAM SET output.silent 1")
+    pump(2)
+    node_sink = []
+    t_from = time.time()
+    player = subprocess.Popen(["powershell", "-NoProfile", "-Command",
+                               "(New-Object System.Media.SoundPlayer '%s').PlaySync()" % AUDIO])
+    while player.poll() is None:
+        pump(1)
+    pump(3)
+    sink, node_sink = node_sink, None
+    for n in ports:
+        verdicts = sum(1 for t, m, l in sink if m == n and l.startswith("RB verdict="))
+        noise_w.writerow([cycle, stamp, "%.2f" % ((time.time() - t0) / 3600.0), n, verdicts,
+                          valid_verdicts(sink, n, t_from, time.time())])
+    noise_file.flush()
 
 
 def to_nodes(cmd):
@@ -189,6 +273,32 @@ cyc = csv.writer(cycles_file)
 if cycles_new:
     cyc.writerow(["cycle", "local_time", "elapsed_h", "step", "expected", "rejected", "miss", "unexpected",
                   "avg_strength", "reasons"])
+STEPS = MARGIN_STEPS if a.steps == "margin" else DEFAULT_STEPS
+
+
+def csv_writer(name, header):
+    path = os.path.join(a.out, name)
+    new = not os.path.exists(path)
+    f = open(path, "a", newline="", encoding="utf-8")
+    w = csv.writer(f)
+    if new:
+        w.writerow(header)
+    return f, w
+
+
+chord_file, chord_w = csv_writer("chord.csv", ["cycle", "local_time", "elapsed_h", "offset_ms", "listener_valid"])
+noise_file, noise_w = csv_writer("noise.csv", ["cycle", "local_time", "elapsed_h", "node", "verdicts", "valid"])
+WAIT0 = 100
+if a.chord:
+    # B's answer delay as stored, so the chord check's offsets are added to it and it is put back
+    b_name = a.chord.split(",")[2]
+    ports[b_name].write(b"PARAM GET behavior.wait_after_heard_ms\n")
+    got = b""
+    end = time.time() + 1.5
+    while time.time() < end:
+        got += ports[b_name].read(4096)
+    found = re.findall(rb"value=(\d+)", got)
+    WAIT0 = int(found[-1]) if found else 100
 
 # start: the Nodes run free (unsaved), full log
 for c in ("PARAM SET output.silent 0", "RB log full"):
@@ -209,7 +319,7 @@ while time.time() - t0 < a.hours * 3600.0:
         to_nodes("PARAM SET output.silent 1")
         pump(a.settle_s)
         stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        for name, command in DEFAULT_STEPS:
+        for name, command in STEPS:
             lines = analyzer_run(command, "SEQ_SUMMARY", 150)
             with open(os.path.join(a.out, "cycle%02d_%s.log" % (cycle, name)), "w", encoding="utf-8") as f:
                 f.write("\n".join(lines) + "\n")
@@ -222,6 +332,10 @@ while time.time() - t0 < a.hours * 3600.0:
             lines = analyzer_run(RAW_HOP, "RAW_SUMMARY", 30)
             with open(os.path.join(a.out, "cycle%02d_hop5_r%d.csv" % (cycle, k)), "w", encoding="utf-8") as f:
                 f.write("\n".join(l for l in lines if not l.startswith(">> ")) + "\n")
+        if a.chord:
+            chord_check(cycle, stamp)
+        if a.noise_play:
+            noise_check(cycle, stamp)
         to_nodes("PARAM SET output.silent 0")
         log.write("%.2f -- room check %d end\n" % (time.time() - t0, cycle))
         log.flush()
@@ -231,4 +345,6 @@ to_nodes("PARAM SET output.silent 1")  # leave them quiet; a reboot also boots t
 pump(1)
 log.close()
 cycles_file.close()
+chord_file.close()
+noise_file.close()
 print("done: %d room checks, %.2f h; %s" % (cycle, (time.time() - t0) / 3600.0, cycles_path))

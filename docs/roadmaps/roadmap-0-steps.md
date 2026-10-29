@@ -132,9 +132,16 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    bench cell answered the same question.
    14.0 [DONE 2026-10-29, 8c8cdf5 / 915f564] Max duration 450 (owner: "Maxduration"): the blind window closes;
         history 576 ms, bin track 1024; decisions/2026-10-29-max-duration-450-for-chords.md.
-   14.1 [RUNNING 2026-10-29] Review of the changes since 12.0.1 (max duration 450, the tone gain and Emitter level=
-        / att=, the RAW ring, the 12.4 refactors, the new bench tools), fixes, then a nodecheck. Before the 47 h
-        soak (owner: review and fix first).
+   14.1 [DONE 2026-10-29, b006c00] Review of the changes since 12.0.1 (three reviewers: max duration 450; tone gain,
+        Emitter level= / att=, RAW ring; the 12.4 refactors and bench tools). Fixed: detection restarts clean after
+        the Node's own emission (the own ring-down could open an occurrence that absorbed a reply and was answered
+        after refractory, possible since 450); a cancelled train's gain left on later tones; SEQ refuses a PULSES
+        line over 95 characters; att= checks; chordcheck silences the listener; the scripts restore the boards on
+        any exit. The 12.4 refactors: no behaviour change (428 printKeyValue pairs replayed byte for byte). Noted,
+        not fixed: an occurrence spanning the own-emit gap inflates its duration (now dropped by the restart);
+        BinShape's run diagnostics can truncate on a chord; the SEQ settle margin for a 450 ms occurrence is 40 ms.
+        Boards: chord +150 / +200 ms now one train (was lost), nodecheck 26 / 26
+        (bench/sessions/2026-10-29-step14-review). The Nodes had 300 stored: 450 PARAM SAVEd on E1 / E4 / E5.
 
 15. [TODO] Understand the room: the tryout room (5 x 6 m, 1 m spacing). (issue #77) On site.
    Hearing matrix strict and lenient (tools/bench/hearmatrix.py; field-activity-response.md "Measure first"), reach

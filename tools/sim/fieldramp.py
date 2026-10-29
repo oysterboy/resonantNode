@@ -53,6 +53,7 @@ class Node:
         self.level = 0
         self.level_at = 0
         self.yields = 0
+        self.next_idle_fired = False
 
     def idle_delay(self, now):
         return now + self.rng.uniform(40_000, 80_000)
@@ -69,7 +70,7 @@ class Node:
         self.activity += w
 
     # --- events ---
-    def hear(self, now):
+    def hear(self, now, field=None):
         """A valid network pattern arrives at `now`."""
         if now < self.deaf_until or self.emit_until > now:
             return
@@ -77,7 +78,7 @@ class Node:
             return
         self.last_heard = now
         if self.variant == "level":
-            self.hear_level(now)
+            self.hear_level(now, field)
             return
         if now < self.rest_until:
             return
@@ -105,10 +106,11 @@ class Node:
             if self.answer_at is None and self.emit_until <= now:
                 self.answer_at = now + delay
 
-    def hear_level(self, now):
-        """Level automaton: one integer, one probability from it (p = level / L) for both answering and not
-        yielding; a fixed jitter window; saturation at L."""
+    def hear_level(self, now, field):
+        """Level automaton: one integer, one probability from it (p = (level + offset) / L) for both answering
+        and not yielding; a fixed jitter window; saturation at L."""
         if now < self.rest_until:
+            field.note(now, self.idx, "hears, resting")
             return
         self.level += 1
         self.level_at = now
@@ -116,15 +118,22 @@ class Node:
             self.rest_until = now + self.cfg.rest_ms
             self.level = 0
             self.answer_at = None
+            field.note(now, self.idx, "hears -> SATURATED, rests %.0f s" % (self.cfg.rest_ms / 1000))
             return
         p = min(1.0, (self.level + self.cfg.p_offset) / self.cfg.levels)
         if self.answer_at is not None:
             if self.rng.random() > p:      # yield: someone else answered first
                 self.answer_at = None
                 self.yields += 1
+                field.note(now, self.idx, "hears, YIELDS (p %.2f)" % p)
+            else:
+                field.note(now, self.idx, "hears, keeps its answer (p %.2f)" % p)
             return
         if self.rng.random() <= p and self.emit_until <= now:
             self.answer_at = now + 100 + self.rng.uniform(0, self.cfg.jitter_ms)
+            field.note(now, self.idx, "hears, will answer in %.2f s (p %.2f)" % ((self.answer_at - now) / 1000, p))
+        else:
+            field.note(now, self.idx, "hears, stays quiet (p %.2f)" % p)
 
     def refractory_until(self):
         return self.last_emit + TRAIN_MS + self.cfg.refractory_ms
@@ -143,9 +152,11 @@ class Node:
         elif self.variant == "level":
             self.level += 1
             self.level_at = now
+            field.note(now, self.idx, "EMITS (idle call)" if self.next_idle_fired else "EMITS (answer)")
             if self.level >= self.cfg.levels:
                 self.rest_until = now + TRAIN_MS + self.cfg.rest_ms
                 self.level = 0
+                field.note(now, self.idx, "own emission -> SATURATED, rests %.0f s" % (self.cfg.rest_ms / 1000))
         else:
             self.bump(now, self.cfg.w_own)
             if self.activity >= self.cfg.sat:
@@ -157,6 +168,8 @@ class Node:
         if self.variant == "level" and self.level > 0 and now - self.level_at >= self.cfg.decay_ms:
             self.level -= 1
             self.level_at = now
+            field.note(now, self.idx, "decays to %d" % self.level)
+        self.next_idle_fired = False
         if self.answer_at is not None and now >= self.answer_at and self.emit_until <= now:
             if now >= self.rest_until:
                 self.start_emit(now, field)
@@ -164,12 +177,17 @@ class Node:
                 self.answer_at = None
         elif self.emit_until <= now and now >= self.next_idle and now >= self.rest_until \
                 and now - self.last_heard > 1000 and now - self.last_emit > 500:
+            self.next_idle_fired = True
             self.start_emit(now, field)
 
 
 class Field:
     def __init__(self):
         self.pending = []   # (time, source)
+        self.log = []       # (time, node, what) for --log
+
+    def note(self, now, node, what):
+        self.log.append((now, node, what))
 
     def schedule(self, t, src):
         self.pending.append((t, src))
@@ -181,7 +199,7 @@ class Field:
         # With --reach the nodes stand in a line and hear only sources within that many positions.
         for n in nodes:
             if any(src != n.idx and (reach == 0 or abs(src - n.idx) <= reach) for _, src in due):
-                n.hear(now)
+                n.hear(now, self)
 
 
 def run(variant, cfg, seed):
@@ -193,7 +211,29 @@ def run(variant, cfg, seed):
         field.deliver(now, nodes, cfg.reach)
         for n in nodes:
             n.tick(now, field)
-    return sorted((t, n.idx) for n in nodes for t in n.emissions)
+    events = sorted((t, n.idx) for n in nodes for t in n.emissions)
+    if cfg.log:
+        print_log(field.log, nodes, cfg)
+    return events
+
+
+def print_log(log, nodes, cfg):
+    """The first --log seconds of the level automaton, one line per event, with every node's level after it."""
+    names = ["E%d" % (i + 1) for i in range(cfg.nodes)]
+    levels = [0] * cfg.nodes
+    print("  time     node  event                                     levels " + " ".join(names))
+    for t, i, what in log:
+        if t > cfg.log * 1000:
+            break
+        if what.startswith("decays to"):
+            levels[i] = int(what.split()[-1])
+        elif "SATURATED" in what:
+            levels[i] = 0
+        elif what.startswith("EMITS") or what.startswith("hears") and "resting" not in what:
+            levels[i] += 1 if (what.startswith("EMITS") or what.startswith("hears")) else 0
+        if what.startswith("decays"):
+            continue
+        print("  %7.2f  %-4s  %-40s  %s" % (t / 1000, names[i], what, " ".join("%d" % l for l in levels)))
 
 
 def analyse(events, cfg, trace):
@@ -264,6 +304,7 @@ def main():
     ap.add_argument("--reach", type=int, default=0,
                     help="nodes in a line hear only sources within this many positions (0: everyone hears everyone)")
     ap.add_argument("--trace", action="store_true", help="print the first chains")
+    ap.add_argument("--log", type=float, default=0, help="level variant: print every event of the first N seconds")
     ap.add_argument("--refractory-ms", type=float, default=250,
                     help="shipped variant: holdoff after the train. 400 as shipped drops the reply in this model; "
                          "on the bench a pair chained 7 turns (2026-10-21-pair-state-header), so 250 is the stand-in")

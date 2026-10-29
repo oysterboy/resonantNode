@@ -42,7 +42,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 
 ## Order
 
-12. [RUNNING 2026-10-29: 12.4 reopened it] Check: does everything still work after the refactors? (issue #74, closed)
+12. [DONE 2026-10-29, 12.4 included] Check: does everything still work after the refactors? (issue #74, closed)
    12.0 Code review of the tree after 11g, 11i, 11j and the OTA work (owner 2026-10-29). PC.
    12.0.1 Its fixes. PC; board-relevant ones confirmed remotely.
         12.0 done 2026-10-29: four reviews, docs/research/code-review-2026-10-29.md (1 high, 9 medium, ~25 low). Owner:
@@ -87,13 +87,15 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         DET-018 / BEH-006 / BEH-007 / OUT-006 / PAR-013 pointers, the "As of" and "Current focus" blocks;
         implementation-status.md rows (47 params, 132 + 22 + 9 host tests, OTA with token, the mode layer,
         clang-format CI, D2.7 / D2.9 done). Docs only.
-   12.4 [NEXT] The readability pass: docs/research/readability-measures.md, all of it (owner 2026-10-29). Pass doc
-        docs/refactors/readability-pass.md (12.4.1 the tracked set, 12.4.2-3 detector and Behavior state, 12.4.4-5 the
+   12.4 [DONE 2026-10-29, 5f1aa75] The readability pass: docs/research/readability-measures.md, all of it (owner 2026-10-29). Pass doc
+        docs/refactors/archive/readability-pass.md (12.4.1 the tracked set, 12.4.2-3 detector and Behavior state, 12.4.4-5 the
         two Analyzer giants, 12.4.6 the reporters, 12.4.7 the report twins, 12.4.8 citations, 12.4.9 owns blocks).
-        Issue #83 (opened by another session as "12.5"; integrated here). PC, with remote output checks.
+        Issue #83 (opened by another session as "12.5"; integrated here, closed). PC, with remote output checks.
+        Gate: every item host-gated (T2h byte-identical); on the boards (OTA) the same keys, results and RAW rows,
+        nodecheck 26 / 26 (bench/sessions/2026-10-29-step12.4-readability). Pass doc archived.
    Gate: the review's findings fixed or carried with a reason; the sanity check green on the boards.
 
-13. [TODO, after 12.4] Understand the margin: how much headroom the hop train has on the desk. (issue #75)
+13. [NEXT] Understand the margin: how much headroom the hop train has on the desk. (issue #75)
    docs/research/distance-range.md test 1 (level ladder: hop10 at 0.5 / 0.35 / 0.25 / 0.18 / 0.12 FS, 20 trials) and
    docs/research/room-comb-and-margin.md ("What would settle", 3: hops attenuated by 15 dB, count hop10); host: does
    Strength16 follow the weakest or the mean hop (the 132 sweep captures, sweepbins.py). Remote and PC.
@@ -179,6 +181,7 @@ parallel.
 
 ## Status log
 
+Status update 2026-10-29, late: 12.4 done (5f1aa75, readability pass archived); 13 next (13.1 on site Sunday).
 Status update 2026-10-29, night: 12.4 the readability pass (owner), before 13; the other session's 12.5 folded in.
 Status update 2026-10-29, evening: 12 done (review 1 high / 9 medium / ~25 low fixed and checked on the boards, sanity
 check green, quiet gate 20 s, docs statuses current). Next: 13, the margin, remote.

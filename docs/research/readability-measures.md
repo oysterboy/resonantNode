@@ -2,7 +2,7 @@
 
 ```text
 Status:  promoted (2026-10-29)
-Became:  step 12.4, docs/refactors/readability-pass.md (owner: all of it)
+Became:  step 12.4, docs/refactors/archive/readability-pass.md (owner: all of it)
 Lab:     none; a code reading at main 6b9d3d0 and counts re-run at main
          26475ce7 (after step 12's review fixes), from a cloud container
          (no build, no hardware). Counts: lizard 1.24.3 over src/

@@ -1,6 +1,12 @@
+Archived: 2026-10-29 - 12.4.1-12.4.9 landed (c4a56bd..5f1aa75): readability.py in CI, detector and Behavior state in
+groups, the two Analyzer giants split, printKv in six reporters, one OccurrenceSummary, two bare citations and a
+CLAUDE.md comment rule, twelve owns blocks. Host gate green on every item, boards checked on 3e5c757, 20f2304,
+5f1aa75. Not done: 09e747e (12.4.4 alone) never built on its own; the Emitter was not updated or rechecked (no
+Emitter code changed); still open in the tail: applySeqStartToken, handleSequencePending, the host replay.
+
 # Step 12.4: the readability pass (docs/research/readability-measures.md, all of it)
 
-Status: active (opened 2026-10-29). Step 12.4 (roadmap-0-steps.md, issue #83). Owner 2026-10-29: "12.4. Address the
+Status: closed 2026-10-29. Step 12.4 (roadmap-0-steps.md, issue #83). Owner 2026-10-29: "12.4. Address the
 whole readability findings." Integrates the other session's "12.5" (branch ccr-3cb2449c-sp2ed1, not merged; its issue
 #83 is this step's issue).
 
@@ -78,4 +84,28 @@ Thresholds, detection behaviour, Behavior's decisions, line formats, the NET for
   bench/sessions/2026-10-29-step12.4-readability. SEQ A/B a9b7e99 vs 3e5c757: the same trial results, line counts and
   key sets per line type; RAW set (six cases, every mode): the same keys, headers and row counts. 09e747e alone was not
   built separately (its tree differs from 3e5c757 only by the RAW file and the header's RAW block).
+- 2026-10-29: 12.4.6 done (20f2304). Not a LineWriter object: a free printKv(key, value[, digits]) in
+  src/app/PrintKv.h, since every reporter prints to serialOut() and has nothing to thread an object through; 433
+  pairs rewritten by script. printSystemHealth 197 -> 140 NLOC, printRbStatus out of the tail. What is left in
+  printSequenceInspectCanonical / printSystemHealth is ternary logic, not printing.
+- 2026-10-29: 12.4.7 done (756abc5). OccurrenceSummary; AcceptedOccurrenceSummary an alias, SelectedRejectSummary
+  derives and adds class and reason; fillMeasuredSummary fills both captures.
+- 2026-10-29: 12.4.8 done (9c13bc0). Of the note's 11 lines only two were bare (startEmission / updateEmissions);
+  the rest already give the reason with the citation trailing. CLAUDE.md "Comments in code".
+- 2026-10-29: 12.4.9 done (5f1aa75). Owns / does-not lines for twelve module classes; the six small utilities left.
+- 2026-10-29: boards on 20f2304 and 5f1aa75 (OTA, all four): printers' ordered keys identical (20 / 20 Analyzer, 42 /
+  44 Node line types, the two others the quiet gate's different path), A/B the same, RAW the same, nodecheck 26 / 26
+  twice. bench/sessions/2026-10-29-step12.4-readability.
+
+## After (5f1aa75) beside before (c4a56bd)
+
+```text
+A  CCN > 20          34 -> 33   (runRawTrigger, buildSequenceAnalyzerReport gone; tail now starts at applySeqStartToken 58)
+B  NLOC > 60         46 -> 44
+C  > 5 params        13 -> 12
+D  largest classes   68 / 46 / 36  ->  36 Node / 35 FreqBandStream / 35 I2sToneOutput (detector 16, Behavior 13)
+E  owns blocks       21 -> 33 of 61
+F  mean CCN          6.3 / 3.7 -> 5.6 / 3.7
+G  lines > 120       12 -> 12
+```
 

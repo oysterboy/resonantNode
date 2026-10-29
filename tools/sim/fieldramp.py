@@ -346,7 +346,8 @@ def main():
     ap.add_argument("--levels", type=int, default=8, help="L: saturation level; p = level / L")
     ap.add_argument("--decay-ms", type=float, default=2000, help="one level step down per this much silence")
     ap.add_argument("--jitter-ms", type=float, default=2000, help="fixed random window on the answer delay")
-    ap.add_argument("--p-offset", type=float, default=0, help="p = (level + offset) / L; 1 lets a first call ignite more often")
+    ap.add_argument("--p-offset", type=float, default=1,
+                    help="p = (level + offset) / L; 1 (owner 2026-10-29) lets a first call ignite in about half the cases")
     cfg = ap.parse_args()
     for variant in (["shipped", "ramp", "level"] if cfg.variant == "all" else [cfg.variant]):
         print("%s (nodes %d, hear %.2f, reach %d, seed %d)" % (variant, cfg.nodes, cfg.hear, cfg.reach, cfg.seed))

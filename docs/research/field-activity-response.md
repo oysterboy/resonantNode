@@ -1,8 +1,8 @@
 # Answers that follow the field: tentative, then quicker, then saturated and silent
 
 ```text
-Status:  exploring (2026-10-29); direction set by the owner the same day (below), mechanism leaning to the
-         level automaton, nothing promoted
+Status:  exploring (2026-10-29); direction and mechanism set by the owner the same day (the level automaton,
+         with its three choices below), nothing promoted yet
 Lab:     bench/sessions/2026-10-22-step6-trial and 2026-10-22-group5-pacing (chains end in 2.9-7.7 s, max 48 per
          minute); 2026-10-21-pair-state-header (a pair chains 7 turns, then rests); 2026-10-26-soak24-shape-b
          (1,378 chains, all ended); docs/lab/experiments/E003_simultaneous_answers.md (38-65 % of rounds are
@@ -216,14 +216,23 @@ Host first, then bench, then the field check:
 5. Field check: this changes what the nodes do, so it moves the baseline the 10b / 11c sessions hold; it gets its
    own field session as the step's gate, as 8a was told to.
 
-## Open questions for the owner
+## Owner's choices (2026-10-29, later)
 
-- Ignition: most idle calls start a swell (offset 1) or only some (offset 0)?
-- A longer chorus at the top: p saturating before L (p = 2 x level / L, one more value), or not?
-- Each answer sooner as well (a jitter window shrinking with the level), or group density alone?
-- The first guesses: L 6, decay 2 s, jitter 2 s, rest 8 s. The model gives 4-10 s swells of 7-8 emissions in a
-  room where everyone hears everyone; is that the length wanted?
+- **Offset 1**: `p = (level + 1) / L`; most idle calls start a swell.
+- **Group density alone**: the jitter window stays fixed; no node answers sooner on its own.
+- **No longer chorus for now**: p reaches 1 at level L - 1, no second value.
+
+With these the automaton is fully specified at the research level: the rules above, four values (L, decay,
+jitter, rest), the fixed wait and refractory unchanged. The desk model's `level` variant defaults match
+(`--p-offset 1`). What it becomes (a decision file and a BEH item, sequenced as a step 12 item) waits for the
+cut-over and the owner's word, as the status line says.
+
+## Still open
+
+- The values themselves: L 6, decay 2 s, jitter 2 s, rest 8 s are first guesses; L follows the hearing matrix,
+  the rest are shaped on the host and confirmed on the bench.
 - Whether the idle call itself should be tentative (today it is always the full train).
+- Strict or lenient: after the hearing matrix, as above.
 
 ## Part 2, later: frequencies that align
 

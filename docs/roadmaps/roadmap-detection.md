@@ -198,6 +198,20 @@ Detail and the audit tables: docs/refactors/archive/cleanup-0-plan.md, "Phase 7"
 Pick up with DET-016 (the verdict boundary rule touches the same names).
 ```
 
+### DET-019 - the amp class is the first gate to fail as the level drops
+
+Status: PLANNED (2026-10-30, from lab E005; a tuning pass, not a side change)
+
+```text
+E005 (level ladder at 79 cm): 20 / 20 down to -3 dB, 11 / 20 at -6 dB, and every reject at -6 dB is the amp
+inspection (observed weak, medium required) while the shape is still strong. Then coverage, then duration.
+The amp medium limit (detection.amp_medium, SCALAR_AMP_MEDIUM_THRESHOLD) therefore sets the level margin.
+Lowering it once (2026-10-15, to 1500) let music through (18 / 50); since then the shape rule (DET-015) rejects
+steady and non-rising sound, so the trade may have moved. Question: with shape in place, does a lower amp medium
+buy margin without noise acceptance? Inputs: the 47 h soak's margin distribution
+(bench/sessions/2026-10-29-step14-soak47, cycles.csv) and its noise plays. Its own pass, logged like LOG-001.
+```
+
 ### DET-016 - verdict boundary rule: normalized confidence, event class, no unit-bearing fields
 
 Status: DEFERRED (owner, 2026-10-22: a later roadmap item, not part of step 8)
@@ -449,6 +463,17 @@ a valid window. It reads as "empty history" and misled two analyses (#26,
 and the first DET-010 write-up). Fix: print the range the history did
 hold (or "na") and keep inspect.reject_reason as the cause.
 Source: docs/refactors/archive/i2s-sample-clock.md "Symptom".
+```
+
+### ANA-010 - SEQ report settle against the longest occurrence
+
+Status: PLANNED (2026-10-30, review 14.1; low)
+
+```text
+With max duration 450 an occurrence that starts at the trial window's end gives its verdict at end + 460 ms,
+inside the 500 ms report settle by 40 ms (it was 190 at 300). A user settle= under 460 now loses such verdicts.
+Fix when it bites, or with the next Analyzer change: settle default 600, or a check at SEQ start that warns when
+settle < max duration + release debounce.
 ```
 
 ### ANA-002 - multi-occurrence pattern proposals

@@ -583,6 +583,20 @@ ACTION/ACK/EVENT, transports) would more likely depend on it than grow out
 of it.
 ```
 
+### PAR-018 - PARAM SAVE pins defaults it never changed
+
+Status: PLANNED (2026-10-30, found in step 14)
+
+```text
+PARAM SAVE writes every registered param, so a param the board never had changed is stored at today's
+firmware default and overrides any later default. Step 14: the Nodes had detection.scalar_max_duration_ms = 300
+stored, so the new 450 default never applied (boot: "PARAM stale ... using=stored") and the first chord check
+ran at 300. Saving 450 then pinned 8 more params on E1 / E5. Options: save only params whose value differs from
+the firmware default (and drop a stored entry that equals it), or store a "set by the user" flag per entry;
+the stale warning at boot stays either way. Touches PAR-010's store format (NvsParamStore) and the persistence
+test in test_param_registry.
+```
+
 ## Current focus
 
 ```text

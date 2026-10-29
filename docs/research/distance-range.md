@@ -2,7 +2,7 @@
 
 ```text
 Status:  exploring (2026-10-28)
-Became:  test 1 in part, step 13.2 (one spot at 79 cm; lab E005); the other rungs on site
+Became:  test 1 in part, step 13.2 (one spot at 79 cm; lab E005); the other rungs on site; tests 2-4 in step 15
 Lab:     E001 (docs/lab/experiments/E001_spatialdistance.md), bench/index.csv as of 2026-10-28
          (775 runs, setup fields backfilled the same day, tools/bench/backfill_setup.py)
 Related: acoustic-test-suite.md (NODE-012, the full matrix); this note is the distance slice of it,

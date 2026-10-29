@@ -145,7 +145,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 
 15. [TODO] Understand the room: the tryout room (5 x 6 m, 1 m spacing). (issue #77) On site.
    Hearing matrix strict and lenient (tools/bench/hearmatrix.py; field-activity-response.md "Measure first"), reach
-   (distance-range.md test 2), the room's floor and self-echo against the suppression windows (test 3), the
+   (distance-range.md test 2), the near end at 10 / 20 / 30 cm (test 4, a quick check), the room's floor and
+   self-echo against the suppression windows (test 3), the
    per-pair acceptance check (room-comb-and-margin.md "Consequences"). Takes over step 5h's open cells and
    NODE-012's next cell. On today's band; the band of 17 is measured again in 18.
 

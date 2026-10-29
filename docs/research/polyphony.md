@@ -2,6 +2,8 @@
 
 ```text
 Status:  exploring (2026-10-27)
+Became:  Part A -> step 14 (lab E003 phase 2; decisions/2026-10-29-max-duration-450-for-chords.md);
+         Part B waits on the owner question below and goes with 8a (OUT-006, carried over)
 Lab:     docs/lab/experiments/E003_simultaneous_answers.md (several nodes at once, phase 1);
          E002 (shape on single trains only)
 ```

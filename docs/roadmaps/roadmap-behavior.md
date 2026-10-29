@@ -157,6 +157,29 @@ starts, no minute over M = 100); chords under 25 % of rounds in a chain's first 
 the first answer to a call later than 1 s in most chains; speech and music neither start nor lengthen chains.
 Moves the field baseline: its own field session is the gate, as 8a was told to.
 
+### BEH-009 - the base frequency per node: a wider band and a base bin, then the range experiments
+
+Status: TODO (decided 2026-10-29, owner; after BEH-008, sequenced at the milestone cut-over)
+Decision: docs/decisions/2026-10-29-wider-band-base-bin-per-node.md
+Research: docs/research/field-activity-response.md, Part 2
+
+```text
+1. The network band 2950-4700 Hz (8 bins, the bank's limit); the hop train 5 consecutive rising bins
+   starting on the node's base bin (0..3), random at boot, the roster's rotation as the override.
+   Behavior owns the base bin, the Node composes from it (OUT-004's point), the verdict carries the
+   heard train's lowest bin (DET-015's bin track promoted into OccurrenceVerdict; BEH-007's precondition).
+2. Alignment: on each own answer, move the base toward the base last heard (snap, or one bin per
+   hearing: owner's choice after the model); at the automaton's rest, scatter. Values: the step, the
+   scatter range.
+3. Experiments for more range, on the wider band: bands per node that wander until they hear something
+   and converge (Part 2 of the note; first the frequency hearing radius on the Analyzer, then the desk
+   model with a band per node); the second musical tone below 1 kHz (OUT-006). A later decision picks.
+```
+
+Gate for 1: the decision's gate (Analyzer hop10 per base bin, chirp rejected, noise 0 accepted, the Node
+battery, T2h re-recorded). Gate for 2: on the bench the spread of heard base bins falls within a chain and
+jumps at the rest (nodegroup.py reads the base from the emit line's frequencies).
+
 ## Current focus
 
 ```text
@@ -165,8 +188,8 @@ BEH-003 / BEH-004 are deferred (step 11). BEH-005 is step 5b, BEH-006 step 8a, B
 Now (2026-10-26): DET-015 is done (11b), so BEH-007 is unblocked but not sequenced; the
 busy mirror (D2.9) goes with step 11g batch D.
 2026-10-29: BEH-008 (the level automaton) is decided and is the first candidate for step 12 at the
-cut-over; frequency alignment (the base frequency per node, not the hop order) is in discussion
-(docs/research/field-activity-response.md, Part 2).
+cut-over; BEH-009 (the base frequency per node: the band widens to 8 bins, a base bin per node, then the
+range experiments) is decided after it. Both move the field baseline and get their own field sessions.
 ```
 
 ## Spec candidates

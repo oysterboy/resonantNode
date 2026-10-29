@@ -1,10 +1,10 @@
 # Answers that follow the field: tentative, then quicker, then saturated and silent
 
 ```text
-Status:  promoted (2026-10-29): the automaton is decided and is BEH-008; the frequency part (Part 2, bands per
-         node) is exploring
+Status:  promoted (2026-10-29): the automaton is BEH-008; Part 2's first step (the wider band, a base bin per
+         node) is BEH-009; the two range experiments (bands per node, the musical tone) stay exploring
 Became:  docs/decisions/2026-10-29-answers-follow-the-field-level-automaton.md; BEH-008 (roadmap-behavior.md),
-         2026-10-29
+         2026-10-29; docs/decisions/2026-10-29-wider-band-base-bin-per-node.md; BEH-009, 2026-10-29
 Lab:     bench/sessions/2026-10-22-step6-trial and 2026-10-22-group5-pacing (chains end in 2.9-7.7 s, max 48 per
          minute); 2026-10-21-pair-state-header (a pair chains 7 turns, then rests); 2026-10-26-soak24-shape-b
          (1,378 chains, all ended); docs/lab/experiments/E003_simultaneous_answers.md (38-65 % of rounds are
@@ -239,6 +239,10 @@ cut-over.
 - Strict or lenient: after the hearing matrix, as above.
 
 ## Part 2: frequencies that align (in discussion, 2026-10-29)
+
+-> option 1 below promoted to docs/decisions/2026-10-29-wider-band-base-bin-per-node.md and BEH-009, 2026-10-29
+(owner: "wider band now; then we test with shifting the band or a second musical tone"); options 2 and 3 are the
+experiments that follow it.
 
 The owner's clarification: not the hop order, the **base frequency per node**, the note a listener would call that
 node's own. And the question under it: how can nodes align if they do not hear each other?

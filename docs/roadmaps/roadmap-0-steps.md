@@ -56,7 +56,8 @@ Status update 2026-10-26, milestone declared (owner): the phase closes as "insta
 Status update 2026-10-29 (owner, from the phone, then a web session): the next phase's behavior change is decided
 (decisions/2026-10-29-answers-follow-the-field-level-automaton.md, BEH-008: tentative answers that quicken with
 the field until saturation, by a level automaton); it is the first candidate for step 12 at the cut-over, not
-sequenced before it. Frequency alignment per node is in discussion (docs/research/field-activity-response.md).
+sequenced before it. Then BEH-009 (decisions/2026-10-29-wider-band-base-bin-per-node.md): the band widens to 8 bins
+for a base bin per node, then the range experiments (bands per node, a musical tone).
 Status update 2026-10-28, later still: 11j done (c907048..51d88d6; host only, no behaviour change; its board check rides
 with 11i's on Sunday's OTA build).
 Status update 2026-10-28, late: 11i host part done; 11j opened (code standards pass, line limit 120).

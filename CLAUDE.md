@@ -322,6 +322,16 @@ one branch's transcript or working tree:
 - Keep this file updated if project-wide conventions change; it's what
   every new session reads first, regardless of which surface started it.
 
+## Comments in code
+
+A comment says why (the reason, the trap, the unit), and a citation may follow it as a pointer: "close the
+candidate now, not at the sound's end, so one continuous tone gives one reject (step 8b item 3)". Never a bare
+citation: a step number ages out when `roadmap-0-steps.md` is archived and renumbered, and means nothing to a
+reader who does not know the roadmap. For a deliberate choice, point at the `docs/decisions/` file or the stable
+roadmap ID (`DET-015`, `OUT-005`) rather than a step. Classes open with an owns / does-not block
+(`docs/specs/myspec.md` vocabulary); plain data structs need none. `tools/ci/readability.py` prints the tracked
+counts (step 12.4); read them when closing a pass, never gate on them.
+
 ## Commit style
 
 Short, imperative subject lines, often prefixed with the affected area

@@ -251,6 +251,19 @@ Host first, then bench, then the field check:
    - fewer chords: rounds with two or more trains under 25 % (38-65 % today);
    - speech and music neither start nor lengthen chains (the weights' guard);
    - part 2: the start bins converge within a chain (the spread of heard start bins falls), then scatter.
+Order of the knobs (owner 2026-10-29): first the setup, who hears whom, measured strict; then the leniency, only
+if needed. Whether hearing is a clean cut by distance or laxer in reality is the first thing to know, and the record
+says laxer: on the desk every node hears every other (hearing matrix 19 of 20 cells at 0.5 FS, step 6), the
+received strength shows no distance law inside 40-200 cm because the room comb sets the level per pair and per
+day (docs/research/distance-range.md), and the 24 h soak had one pair drift 17 % with another node standing
+between them. So the installation topology is a matrix of pair probabilities, not a line with a reach. The
+measurement is the hearing matrix at the tryout layout (tools/bench/hearmatrix.py, listener x caller cells of valid
+verdicts within the window); the same logs hold the listeners' invalid verdicts, so one added count per cell
+(verdicts that failed contrast or shape) gives the lenient matrix for free, and the two matrices say what
+leniency would change before any rule exists. The desk model then takes the matrix as per-pair hearing
+probabilities in place of `--reach`, which also sets L: the more listeners a call reaches, the sooner the field
+saturates, so L should follow the typical number of nodes heard.
+
 4. Leniency cell: two nodes at the installation spacing (docs/research/distance-range.md) where trains arrive
    weak: time to saturation against distance with `w_accepted` 0 / 0.5 / 1, and how many of the heard events were
    accepted-but-invalid.

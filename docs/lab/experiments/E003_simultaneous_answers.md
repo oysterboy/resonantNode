@@ -7,8 +7,8 @@ verdict? How often does that happen in the field?
 
 ## Status
 
-open (2026-10-27). Phase 1 (offline, from the committed field logs) logged below. The test design for the
-deliberate checks is in docs/research/polyphony.md.
+answered for one placement (2026-10-29, step 14): phase 1 (field logs), phase 2 (host chord mix and one bench cell)
+logged below. The test design is in docs/research/polyphony.md Part A.
 
 ## Setup
 
@@ -50,13 +50,41 @@ verdict from that Node within 0.3 s of the round's end.
 - Single-train rounds read lower (38-64 % valid), but the script does not exclude resting or refractory listeners
   there. That is not evidence that chords are heard better.
 
+2026-10-29, phase 2 (step 14), host chord mix (bench/sessions/2026-10-29-step14-rotations; tools/bench/chordmix.py):
+hop captures at rotations 0-4 (3 each, 79 cm), summed in pairs and trios and replayed through native-replay.
+
+- Every rotation alone passes (5 bins, 4 up, class strong, 15 / 15): E002's single-train result holds at all five
+  rotations.
+- Offsets 0-30 ms: valid 228 / 240 pairs, 98 / 108 trios. All pairs with 6 dB or more between the voices pass.
+  Fails only at 0-3 dB: rotations 0+1 by contrast (5 / 60), 0+3 by shape (7 / 60); the trio 0+1+2 by contrast
+  (8 / 36). One occurrence per chord in every mix.
+- Offsets 100-260 ms (equal level): one occurrence up to ~100-110 ms, none at 120-220 ms, two from ~230 ms. In the
+  blind window the overlapping trains merge into one sound longer than max_duration_ms (300) and the detector drops
+  it (duration_too_long, no verdict): both trains are lost. At 6 dB the window narrows (about 140-220 ms, partly);
+  at 10 dB the weaker train is never counted on its own (it is under the level margin, E005).
+
+2026-10-29, phase 2, bench cell (bench/sessions/2026-10-29-step14-chordcell; tools/bench/chordcheck.py): E4
+(rotation 3) and E5 (rotation 4) answer the Emitter's hop10 while E1 listens silent; 15 trains per cell. E1's
+valid verdicts per train: each answerer alone 2 (train + answer); both at the same wait 2; E5 +50 ms 2; E5 +150 ms
+1 (the chord lost, 15 / 15); E5 +250 ms 3 (two answers). Both answerers answered every train in every cell. The
+board matches the host mix.
+
 ## Findings
 
 Several trains at once is the normal network state, not an edge case. Between 38 % and 65 % of rounds in every
 field log have two or more Nodes sounding together. The fixed answer delay is the cause. In these layouts,
 listeners read those rounds as valid about as often as anything else.
 
-Not known (Claude inference, unmeasured): why they pass. Two trains of equal level in adjacent bins would put the
+Why they pass (phase 2, 2026-10-29): real voices are rarely equal at a listener; with 6 dB between them every
+mix passes, and even equal adjacent rotations pass 55 / 60 (the P75 contrast and the room's per-bin levels keep
+one voice ahead most of the time). The phase 1 inference below is kept for the record.
+
+A listener counts a chord as one train, never several (one occurrence per chord at every offset under ~100 ms).
+And there is a blind window: answers 120-220 ms apart are both lost. Today's fixed answer delay keeps answers within
+a few ms of each other, so the window is not hit now; any answer jitter or per-node offset (BEH-006, BEH-008) must
+keep Nodes under ~100 ms apart or over ~230 ms, or the detector's max duration must change with it.
+
+Phase 1 (unmeasured then): why they pass. Two trains of equal level in adjacent bins would put the
 contrast near 21,800, against the 30,500 gate. Four would put it near 16,400. Likely reasons, none checked:
 
 - One voice usually arrives much louder at each listener, because of distance and the 1.7x amp spread between boards.

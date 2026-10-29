@@ -120,11 +120,16 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Still to do on site: 70 / 110 cm and a second spot for the ladder.
    Gate: the margin in dB and in hops at the operating point, in a lab note.
 
-14. [TODO] Understand chords: what several Nodes sounding at once does to detection. (issue #76)
+14. [DONE 2026-10-29] Understand chords: what several Nodes sounding at once does to detection. (issue #76)
    docs/research/polyphony.md Part A checks 1-3 (host mix of 2-3 trains at 0 / 3 / 6 / 10 dB and 0 / 10 / 30 ms; RAW
    captures at rotations 1-4; one bench cell with two triggered Nodes), E003's open threads, E002's other rotations.
    PC and remote. Owner 2026-10-29: a chord counts as several heard trains (for 16); 14 finds what the detector
    reports for one.
+   Done (lab E003 phase 2; bench 2026-10-29-step14-rotations, -chordcell; tools chordmix.py, chordcheck.py): chords
+   within ~100 ms count as ONE train (valid 95 %, 100 % with 6 dB between voices); answers 120-220 ms apart are both
+   lost (merged past max_duration_ms 300); from ~230 ms two. For 16: the detector cannot supply "several trains" for
+   a chord, and any answer jitter must avoid 120-220 ms. Check 2 (a free-run field readout) was not run: the
+   bench cell answered the same question.
 
 15. [TODO] Understand the room: the tryout room (5 x 6 m, 1 m spacing). (issue #77) On site.
    Hearing matrix strict and lenient (tools/bench/hearmatrix.py; field-activity-response.md "Measure first"), reach

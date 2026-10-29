@@ -44,6 +44,10 @@ per-node variation by owner choice 2026-10-17). Every Node that hears a call ans
 
 ### Proposed checks, cheapest first
 
+-> checks 1 and 3 done 2026-10-29 (step 14, lab E003 phase 2): chords pass mostly; one count per chord;
+   both trains lost when 120-220 ms apart.
+
+
 1. Host mix: sum two (then three) recorded hop captures in `native-replay` at level differences of 0 / 3 / 6 /
    10 dB and start offsets of 0 / 10 / 30 ms, adjacent and non-adjacent rotations. Log contrast P75, the shape
    facts and the verdict per mix. Needs captures at rotations 1-4 (`tools/bench/rawcorpus.py` with

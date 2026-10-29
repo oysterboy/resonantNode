@@ -55,6 +55,12 @@ class Node:
         self.yields = 0
         self.next_idle_fired = False
         self.weak_heard = 0
+        # BEH-009 (level variant): the base bin of the node's train, random at boot; glides one bin toward the
+        # base last heard on each own answer; scatters at the rest (--scatter random | 1)
+        self.base = rng.randrange(cfg.bases) if cfg.bases else 0
+        self._boot_base = self.base
+        self.heard_base = None
+        self.base_history = []   # (time, base)
 
     def idle_delay(self, now):
         return now + self.rng.uniform(40_000, 80_000)
@@ -107,12 +113,30 @@ class Node:
             if self.answer_at is None and self.emit_until <= now:
                 self.answer_at = now + delay
 
+    def scatter_base(self, now, field):
+        if not self.cfg.bases:
+            return
+        if self.cfg.scatter == "none":
+            return
+        if self.cfg.scatter == "random":
+            self.base = self.rng.randrange(self.cfg.bases)
+        else:
+            step = self.rng.choice((-1, 1))
+            self.base = min(self.cfg.bases - 1, max(0, self.base + step))
+        self.base_history.append((now, self.base))
+        field.note(now, self.idx, "scatters to base %d" % self.base)
+
     def hear_level(self, now, field):
         """Level automaton: one integer, one probability from it (p = (level + offset) / L) for both answering
         and not yielding; a fixed jitter window; saturation at L."""
         if now < self.rest_until:
             field.note(now, self.idx, "hears, resting")
             return
+        if self.cfg.glide == "hearing" and self.cfg.bases and self.heard_base is not None \
+                and self.heard_base != self.base:
+            self.base += 1 if self.heard_base > self.base else -1   # the glide, one bin per hearing
+            self.base_history.append((now, self.base))
+            field.note(now, self.idx, "glides to base %d" % self.base)
         self.level += 1
         self.level_at = now
         if self.level >= self.cfg.levels:
@@ -120,6 +144,7 @@ class Node:
             self.level = 0
             self.answer_at = None
             field.note(now, self.idx, "hears -> SATURATED, rests %.0f s" % (self.cfg.rest_ms / 1000))
+            self.scatter_base(now, field)
             return
         p = min(1.0, (self.level + self.cfg.p_offset) / self.cfg.levels)
         if self.answer_at is not None:
@@ -172,11 +197,17 @@ class Node:
         elif self.variant == "level":
             self.level += 1
             self.level_at = now
-            field.note(now, self.idx, "EMITS (idle call)" if self.next_idle_fired else "EMITS (answer)")
+            if self.cfg.glide == "answer" and not self.next_idle_fired and self.cfg.bases \
+                    and self.heard_base is not None and self.heard_base != self.base:
+                self.base += 1 if self.heard_base > self.base else -1   # the glide, one bin per answer
+                self.base_history.append((now, self.base))
+            field.note(now, self.idx, ("EMITS (idle call)" if self.next_idle_fired else "EMITS (answer)") +
+                       (" base %d" % self.base if self.cfg.bases else ""))
             if self.level >= self.cfg.levels:
                 self.rest_until = now + TRAIN_MS + self.cfg.rest_ms
                 self.level = 0
                 field.note(now, self.idx, "own emission -> SATURATED, rests %.0f s" % (self.cfg.rest_ms / 1000))
+                self.scatter_base(now, field)
         else:
             self.bump(now, self.cfg.w_own)
             if self.activity >= self.cfg.sat:
@@ -218,7 +249,9 @@ class Field:
         # Trains that end together are one verdict at a listener (E003: a chord reads as one valid pattern).
         # With --reach the nodes stand in a line and hear only sources within that many positions.
         for n in nodes:
-            if any(src != n.idx and (reach == 0 or abs(src - n.idx) <= reach) for _, src in due):
+            heard = [src for _, src in due if src != n.idx and (reach == 0 or abs(src - n.idx) <= reach)]
+            if heard:
+                n.heard_base = nodes[heard[0]].base   # a chord: the listener reads one of them
                 n.hear(now, self)
             elif weak_reach and any(src != n.idx and abs(src - n.idx) <= weak_reach for _, src in due):
                 n.hear_weak(now, self)
@@ -233,10 +266,67 @@ def run(variant, cfg, seed):
         field.deliver(now, nodes, cfg.reach, cfg.weak_reach)
         for n in nodes:
             n.tick(now, field)
+    if cfg.bases:
+        base_stats(nodes, cfg, end)
     events = sorted((t, n.idx) for n in nodes for t in n.emissions)
     if cfg.log:
         print_log(field.log, nodes, cfg)
     return events
+
+
+def base_stats(nodes, cfg, end_ms):
+    """BEH-009: how aligned the base bins are over time (sampled once a second) and across each node's changes."""
+    hist = [sorted(n.base_history) for n in nodes]
+    start = [n.base_history[0][1] if False else None for n in nodes]
+    # reconstruct each node's base per second
+    cur = [None] * len(nodes)
+    idx = [0] * len(nodes)
+    # initial base: the first history entry is the first change; the boot base is base minus the moves, so keep
+    # a per-node timeline from the recorded changes, starting from the boot value kept in _boot
+    per_sec = []
+    for n in nodes:
+        n._timeline = {}
+    for i, n in enumerate(nodes):
+        b = n._boot_base
+        t_next = 0
+        changes = list(hist[i])
+        series = []
+        for sec in range(end_ms // 1000):
+            while changes and changes[0][0] <= sec * 1000:
+                b = changes.pop(0)[1]
+            series.append(b)
+        n._series = series
+    secs = end_ms // 1000
+    distinct = [len(set(n._series[t] for n in nodes)) for t in range(secs)]
+    spread = [max(n._series[t] for n in nodes) - min(n._series[t] for n in nodes) for t in range(secs)]
+    aligned = sum(1 for d in distinct if d == 1)
+    glides = sum(1 for n in nodes for t, _ in n.base_history) - sum(
+        1 for n in nodes for t, _ in n.base_history if False)
+    print("  bases (%d bins, scatter %s): distinct bases mean %.2f, spread mean %.2f bins, all equal %.0f %% of the "
+          "time, base changes %d" % (cfg.bases, cfg.scatter, statistics.mean(distinct), statistics.mean(spread),
+                                    100.0 * aligned / secs, glides))
+    # inside each chain of 4+ emissions: the spread at its start and the smallest spread it reaches
+    times = sorted(t for n in nodes for t in n.emissions)
+    chains, cur = [], [times[0]]
+    for t in times[1:]:
+        if t - cur[-1] >= 3000:
+            chains.append(cur)
+            cur = [t]
+        else:
+            cur.append(t)
+    chains.append(cur)
+    starts, mins, ends = [], [], []
+    for c in chains:
+        if len(c) < 4:
+            continue
+        s0, s1 = c[0] // 1000, min(secs - 1, c[-1] // 1000 + 1)
+        starts.append(spread[s0])
+        mins.append(min(spread[s0:s1 + 1]))
+        ends.append(spread[s1])
+    if starts:
+        print("  per chain of 4+ (%d): spread at start mean %.2f, smallest inside mean %.2f (reaches 0 in %d), after "
+              "the chain %.2f" % (len(starts), statistics.mean(starts), statistics.mean(mins), mins.count(0),
+                                  statistics.mean(ends)))
 
 
 def print_log(log, nodes, cfg):
@@ -331,6 +421,12 @@ def main():
                          "(released, failing a requirement): the lenient activity, counted every second time, never answered")
     ap.add_argument("--trace", action="store_true", help="print the first chains")
     ap.add_argument("--log", type=float, default=0, help="level variant: print every event of the first N seconds")
+    ap.add_argument("--bases", type=int, default=0,
+                    help="BEH-009, level variant: base bins per node (4 on the 8-bin band); 0 = off")
+    ap.add_argument("--glide", choices=["hearing", "answer"], default="hearing",
+                    help="BEH-009: the base moves one bin toward the heard base on every hearing (owner), or only on own answers")
+    ap.add_argument("--scatter", choices=["random", "1", "none"], default="random",
+                    help="BEH-009: at the rest the base jumps to a random bin, or one bin up or down")
     ap.add_argument("--refractory-ms", type=float, default=250,
                     help="shipped variant: holdoff after the train. 400 as shipped drops the reply in this model; "
                          "on the bench a pair chained 7 turns (2026-10-21-pair-state-header), so 250 is the stand-in")

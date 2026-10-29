@@ -304,6 +304,35 @@ scatter   the automaton's rest: b := random. The cluster dissolves into wanderer
   windows at every position above 1250; a band at the top needs its guard bins under `kMaxToneHz`. A train from a
   cluster and one from a wanderer on a half-overlapping band is a chord case E003 did not measure.
 
+### The glide and the scatter, in the desk model (2026-10-29)
+
+`--bases 4 --glide hearing --scatter random|1|none`: each node a base bin 0..3 at random; on every valid train heard
+it moves one bin toward the heard base (the owner's "glide one bin per hearing"); at its rest it scatters. Five
+nodes, 30 min, three seeds, L 6. "Spread" is the distance in bins between the highest and the lowest base.
+
+| Hearing | Scatter | Spread at a swell's start | Smallest spread inside the swell | Swells that reach unison | Spread after the swell | Time in unison |
+|---|---|---|---|---|---|---|
+| room | none (reference) | 0.1 | 0.0 | 36-39 of 36-41 | 0.0 | 93-97 % |
+| room | random | 1.6-1.9 | 0.1-0.2 | 29-35 of 36-40 | 2.1 | 8-17 % |
+| room | 1 bin | 1.0-1.3 | 0.1-0.2 | 31-34 of 36-40 | 1.1-1.4 | 11-24 % |
+| line | random | 0.7-1.0 | 0.2-0.4 | 14-17 of 19-25 | 1.2-1.4 | 25-39 % |
+| line | 1 bin | 0.6-1.0 | 0.2-0.5 | 15-18 of 19-25 | 0.9-1.3 | 26-47 % |
+
+- The glide per hearing converges inside one swell: a node hears five or six trains per swell, which is more than
+  the three bins it can be away. Without any scatter the field is in unison nearly all the time (the reference).
+  A glide per own answer (two steps per swell) was tried first and does not converge against either scatter:
+  swells reached unison in 2-11 of about 38; the per-hearing glide is the one that works.
+- **Random scatter** gives the full arc every swell: start spread about two bins, unison inside the swell in about
+  nine of ten, then a jump back to about two bins. Chaos, convergence, chaos.
+- **Scatter by one bin** gives a field that hovers near unison: start spread about one bin, unison inside, one bin
+  out again. The departures are audible but small; the arc is gentler and the contrast lower.
+- On the line the swell rarely covers the whole field, so unison is reached in about seven of ten swells either
+  way, and the two scatters differ less: with partial hearing the scatter matters less than who got woken.
+
+Which of the two is wanted is a question of contrast, not of mechanism, and it is one value (the scatter range).
+A trace of one room swell with random scatter: bases 1 / 2 / 3 / 3 / 1 at the call, all five on 2 after nine
+hearings, then the rest scatters them to 0 / 3 / 1 / 2 / 1.
+
 ### What to measure, in order
 
 1. Frequency hearing radius: Analyzer at one band, Emitter's train shifted 0..5 bins; accepted / rejected-by-shape

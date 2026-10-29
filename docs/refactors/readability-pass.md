@@ -50,3 +50,8 @@ Thresholds, detection behaviour, Behavior's decisions, line formats, the NET for
 ## Progress
 
 - 2026-10-29: opened.
+- 2026-10-29: 12.4.1 done. tools/ci/readability.py (lizard 1.24.3, CI format job, prints only). Before, at c4a56bd:
+  A 34, B 46, C 13, D 68 ScalarTransientDetector / 46 ResonantBehavior / 36 Node (classes only; the note's 30 for
+  AnalyzerApp is fourth-ish, the Node's 36 did not spread as far as the note assumed), E 21 of 61, F 6.3 / 3.7, G 12.
+  The note's counts reproduce exactly (A-C, E-G); the tail starts runRawTrigger 620 / 171, buildSequenceAnalyzerReport
+  302 / 103.

@@ -93,3 +93,6 @@ jobs:
       # fails on drift over src/, lib/ and test/ (fixtures and generated headers excluded).
       - run: pip install clang-format==18.1.8
       - run: python3 tools/ci/clang_format.py --check
+      # Step 12.4: the readability tracked set (docs/research/readability-measures.md section 3), printed, never failing.
+      - run: pip install lizard==1.24.3
+      - run: python3 tools/ci/readability.py

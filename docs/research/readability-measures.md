@@ -1,7 +1,9 @@
 # Readability measures: what to count, what the counts say, what to do
 
 ```text
-Status:  exploring (2026-10-29)
+Status:  promoted (2026-10-29)
+Became:  step 12.5 (roadmap-0-steps.md, issue #83, 2026-10-29): sections 3
+         and 4 in the order of section 5
 Lab:     none; a code reading at main 6b9d3d0 and counts re-run at main
          26475ce7 (after step 12's review fixes), from a cloud container
          (no build, no hardware). Counts: lizard 1.24.3 over src/
@@ -194,6 +196,8 @@ are where they were (the Analyzer's grew by the 12.0.1 fixes).
 
 ## 3. A tracked set
 
+-> promoted to step 12.5 item 1, 2026-10-29
+
 If any of this is kept, keep it small enough to print in one screen and
 rerun on every pass, so a "did the pass help" question has a before and
 after. Proposed: `tools/ci/readability.py` (lizard plus two greps), one
@@ -230,6 +234,8 @@ fight. Print the table in CI, fail on nothing, and read it when closing
 a pass.
 
 ## 4. Measures to take, ranked by what the counts say
+
+-> promoted to step 12.5 items 2-5, 2026-10-29
 
 Nothing here is a commitment. Items that are picked up go into a step
 of `roadmap-0-steps.md` per `docs/research/README.md`.

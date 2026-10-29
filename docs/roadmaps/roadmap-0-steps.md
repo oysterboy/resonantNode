@@ -42,7 +42,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 
 ## Order
 
-12. [DONE 2026-10-29] Check: does everything still work after the refactors? (issue #74, closed)
+12. [DONE 2026-10-29, 12.5 added after] Check: does everything still work after the refactors? (issue #74, closed)
    12.0 Code review of the tree after 11g, 11i, 11j and the OTA work (owner 2026-10-29). PC.
    12.0.1 Its fixes. PC; board-relevant ones confirmed remotely.
         12.0 done 2026-10-29: four reviews, docs/research/code-review-2026-10-29.md (1 high, 9 medium, ~25 low). Owner:
@@ -87,9 +87,18 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         DET-018 / BEH-006 / BEH-007 / OUT-006 / PAR-013 pointers, the "As of" and "Current focus" blocks;
         implementation-status.md rows (47 params, 132 + 22 + 9 host tests, OTA with token, the mode layer,
         clang-format CI, D2.7 / D2.9 done). Docs only.
+   12.5 [NEXT] Readability measures (issue #83; owner 2026-10-29: the note's measures, done as a step). PC.
+        docs/research/readability-measures.md section 5's order: (1) tools/ci/readability.py, the seven-row tracked set
+        printed in CI, fails on nothing, so the rest has a before; (2) ScalarTransientDetector's 68 members and
+        ResonantBehavior's 46 grouped into the state structs their comment groups name, reset by `= {}`, no behavior
+        change; (3) buildSequenceAnalyzerReport (301 NLOC, CCN 103, 10 params) and runRawTrigger (620 NLOC, CCN 171)
+        split, Analyzer only; (4) the reporters, with a line writer, only if test_report_printers keeps the lines
+        byte-identical; (5) the report twins with DET-018, the 11 bare citation comments.
+        Gate: the script's table before and after here; host gate green; the replay output unchanged; board check
+        (a SEQ run, a RAW capture, RB STATUS) remote.
    Gate: the review's findings fixed or carried with a reason; the sanity check green on the boards.
 
-13. [NEXT] Understand the margin: how much headroom the hop train has on the desk. (issue #75)
+13. [TODO] Understand the margin: how much headroom the hop train has on the desk. (issue #75)
    docs/research/distance-range.md test 1 (level ladder: hop10 at 0.5 / 0.35 / 0.25 / 0.18 / 0.12 FS, 20 trials) and
    docs/research/room-comb-and-margin.md ("What would settle", 3: hops attenuated by 15 dB, count hop10); host: does
    Strength16 follow the weakest or the mean hop (the 132 sweep captures, sweepbins.py). Remote and PC.
@@ -172,6 +181,7 @@ parallel.
 
 ## Status log
 
+Status update 2026-10-29, night: 12.5 added (readability measures as a step, from the note merged in #82); 13 after it.
 Status update 2026-10-29, evening: 12 done (review 1 high / 9 medium / ~25 low fixed and checked on the boards, sanity
 check green, quiet gate 20 s, docs statuses current). Next: 13, the margin, remote.
 Status update 2026-10-29, later: order 12-19 set with the owner (whole numbers, dot substeps; check, understand,

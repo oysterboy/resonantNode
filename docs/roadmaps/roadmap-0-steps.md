@@ -45,9 +45,12 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 12. [NEXT] Check: does everything still work after the refactors? (issue #74)
    12.0 Code review of the tree after 11g, 11i, 11j and the OTA work (owner 2026-10-29). PC.
    12.0.1 Its fixes. PC; board-relevant ones confirmed remotely.
+        12.0 done 2026-10-29: four reviews, docs/research/code-review-2026-10-29.md (1 high, 9 medium, ~25 low). Owner:
+        OTA gets a shared token, SEQ FREQBAND goes, a new image gets a reboot deadline before it confirms. Batches:
+        OTA / WiFi, limits, Analyzer, low and dead code.
    12.1 Sanity check bench test (content TBD with the owner; candidates: tools/bench/nodecheck.py, analyzerab.py,
         one soakcycle room check, an OTA round trip). Remote.
-   12.2 SELFTEST's own_chirp_suppressed on a silent Node: SKIP, not FAIL (it only requests chirps with outputs on;
+   12.2 [DONE 2026-10-29, c0b002c, checked on E4 by OTA] SELFTEST's own_chirp_suppressed on a silent Node: SKIP, not FAIL (it only requests chirps with outputs on;
         bench/sessions/2026-10-29-step11i-nodecheck). Remote.
    12.3 Docs pass: research notes and roadmap items whose status lags (freertos-tasks, scalar-detector-extensions,
         frequency-drift-detection, frequency-tuning-sweep, unproven-assumptions-audit, acoustic-test-suite,

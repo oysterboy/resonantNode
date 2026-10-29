@@ -45,6 +45,15 @@ strength as in quiet. The silent Nodes agree (valid verdicts during the noise at
 shipped band 120 each). Losses at the low bands: duration_too_long (the noise lengthens the occurrence),
 failed_contrast, occurrence_seen_but_rejected.
 
+2026-10-29, re-read per round and per bin (docs/research/room-comb-and-margin.md; tools/bench/sweepbins.py over the
+RAW captures): 1500-2500 and 1750-2750 lost only in round 1 (0/10 each, then 70/70 and 80/80); between round 1 and
+round 2 the per-bin level pattern shifted wholesale (2750 Hz a 15-35 dB notch in round 1, the strongest bin after;
+the shipped band's strength 9,600 then 13,000-14,600), so round 1 was another room geometry. From round 2 on the
+levels form a comb with dips at 1000, 1750, 2500, 3250, 4750 Hz (10-17 dB) that drift monotonically through the
+night (2250 Hz from 48 to 97 dB). 2000-3000 keeps losing because two of its hops sit in the 2250/2500 dip at the
+sweep's lowest strength; the neighbours carry dipped hops too and pass. The broad 3500-4500 hump is stable across
+rounds and positions (the transducers, not the room).
+
 ## Reading
 
 Noise acceptance is not the problem in this room with this material: nothing passed anywhere. Noise masking is: at
@@ -53,3 +62,8 @@ at 500-1250 the shape rule alone stands between music or speech and an answer; a
 reach the detector. Detection has one zone to avoid, 1500-3000 here. The shipped band sits in the zone where both
 are best. Limits: one room, one distance, one noise file at one level, no birds (2-8 kHz, tonal glides: the
 untested case for an outdoor site).
+
+2026-10-29: "one zone to avoid, 1500-3000" is withdrawn by the re-read above: the zone is a round-1 event plus one
+position at its margin on this table, and the dips will sit elsewhere at the site. What the sweep supports is the
+margin the shipped band carries over its gates and the hardware hump at 3500-4500 Hz
+(docs/research/room-comb-and-margin.md).

@@ -6,6 +6,8 @@ Became:  step 11h (owner 2026-10-27; roadmap-0-steps.md), after 11c and before 1
          as step 12 the same morning
 Lab:     bench/sessions/2026-10-27-step11h-sweep24 and E004 (the sweep, 2026-10-28); 2026-10-26-soak24-shape-b;
          E002 (shape over the corpus)
+Related: room-comb-and-margin.md (2026-10-29: the sweep re-read per round and per bin; the weak zone is a
+         round-1 event plus one position at its margin, the band question is margin, not slice)
 ```
 
 ## Question (owner, 2026-10-27)

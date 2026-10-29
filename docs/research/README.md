@@ -68,6 +68,9 @@ frequency-drift-detection.md   drift: Goertzel bank vs sliding DFT vs FFT
                                shared-band.md, DET-013..015, OUT-005/006)
 frequency-tuning-sweep.md      the network band swept from 1000 Hz: hits vs
                                noise acceptance per position (promoted: step 11h)
+room-comb-and-margin.md        the sweep re-read per round and per bin: a reflection
+                               comb that drifts and jumped once, not a weak zone; the
+                               band question is margin per dipped hop (2026-10-29)
 tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; partly landed, not reviewed)
 unproven-assumptions-audit.md  where code and roadmap rest on unmeasured

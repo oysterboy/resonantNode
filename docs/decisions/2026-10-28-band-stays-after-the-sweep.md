@@ -18,6 +18,10 @@ E004 (bench/sessions/2026-10-27-step11h-sweep24, 2026-10-28-step11h-undernoise):
   stopped by the shape rule alone), and a train sent during the noise is lost 40-60 % of the time (500-1500: 46 / 120,
   750-1750: 76 / 120).
 - 1500-3000 is weak for the hop train in this room (65-89 %, varying).
+  (2026-10-29: re-read per round, docs/research/room-comb-and-margin.md: two of the three positions lost only in
+  round 1, before the room's reflection pattern shifted; the third has two hops in a stationary dip at the sweep's
+  lowest margin. The decision stands, on the shipped band's margin and the 3500-4500 Hz hardware hump rather than
+  on a weak zone.)
 - 2950-3950: 90 / 90 in quiet, 120 / 120 during the noise at unchanged strength, no noise detections.
 
 ## Rules out

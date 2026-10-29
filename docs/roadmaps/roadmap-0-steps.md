@@ -59,6 +59,9 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         boot profile print lost the two unused fieldState activity thresholds, NET ERR outbox_full, OTA token hidden
         in NET echoes; soakcycle / bandsweep re-send setup to a Node that resets). All 12.0 findings done; host gate
         green each batch, T2h byte-identical; board checks open (12.1).
+        12.0.1 done 2026-10-29 (af49504, 99210dc, b6a5360, ba34561 + the OTA_TEST_HANG switch): checked on the boards
+        over WiFi (bench/sessions/2026-10-29-step12-reviewfixes): token refusals, H1 (a failed OTA while sounding
+        leaves the Node working), RAW / tries refusals, the 60 s reboot deadline rolls back a hanging image.
    12.1 Sanity check bench test (content TBD with the owner; candidates: tools/bench/nodecheck.py, analyzerab.py,
         one soakcycle room check, an OTA round trip). Remote.
    12.2 [DONE 2026-10-29, c0b002c, checked on E4 by OTA] SELFTEST's own_chirp_suppressed on a silent Node: SKIP, not FAIL (it only requests chirps with outputs on;

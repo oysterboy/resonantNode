@@ -234,6 +234,17 @@ void confirmRunningImage(Print& out) {
         abort();
     }
 #endif
+#if defined(OTA_TEST_HANG)
+    // Reboot-deadline test build only (-D OTA_TEST_HANG): the loop hangs 5 s after boot without crashing, so the
+    // image never confirms; the deadline timer must reboot it and the bootloader roll back (review 12.0 L-OTA2).
+    if (nowMs > 5000UL) {
+        out.println("OTA test_hang blocking the loop before confirm");
+        out.flush();
+        for (;;) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
+#endif
     if (gConfirmChecked || nowMs < kConfirmAfterMs) {
         return;
     }

@@ -1,0 +1,17 @@
+[20:47:47] boot banner: {'role': 'analyzer', 'git': '0e8b3bdd', 'version': '0.4.0', 'board': 'damp'}
+[20:47:49] warmup: OK EMIT CHIRP
+[20:47:49] start hop10_att_mid10: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=0,0,10,0,0 mode=detail when=all verbose=1
+[20:48:57] done hop10_att_mid10 (68s): complete=True results={'expected': 20}
+[20:48:59] start hop10_att_mid15: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=0,0,15,0,0 mode=detail when=all verbose=1
+[20:50:09] done hop10_att_mid15 (69s): complete=True results={'expected': 20}
+[20:50:11] start hop10_att_mid20: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=0,0,20,0,0 mode=detail when=all verbose=1
+[20:51:20] done hop10_att_mid20 (69s): complete=True results={'expected': 20}
+[20:51:22] start hop10_att_mid30: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=0,0,30,0,0 mode=detail when=all verbose=1
+[20:52:30] done hop10_att_mid30 (68s): complete=True results={'expected': 20}
+[20:52:32] start hop10_att_first20: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=20,0,0,0,0 mode=detail when=all verbose=1
+[20:53:40] done hop10_att_first20 (68s): complete=True results={'expected': 20}
+[20:53:42] start hop10_att_two15: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=0,15,0,15,0 mode=detail when=all verbose=1
+[20:54:50] done hop10_att_two15 (68s): complete=True results={'rejected': 20}
+[20:54:53] start hop10_att_two20: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 att=0,20,0,20,0 mode=detail when=all verbose=1
+[20:56:01] done hop10_att_two20 (68s): complete=True results={'rejected': 20}
+[20:56:06] session updated, index rebuilt

@@ -1,0 +1,17 @@
+[20:38:36] boot banner: {'role': 'analyzer', 'git': '0e8b3bdd', 'version': '0.4.0', 'board': 'damp'}
+[20:38:38] warmup: OK EMIT CHIRP
+[20:38:38] start hop10_L0.5: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 level=0.5 mode=detail when=all verbose=1
+[20:39:46] done hop10_L0.5 (68s): complete=True results={'expected': 20}
+[20:39:48] start hop10_L0.35: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 level=0.35 mode=detail when=all verbose=1
+[20:40:57] done hop10_L0.35 (68s): complete=True results={'expected': 20}
+[20:40:59] start hop10_L0.25: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 level=0.25 mode=detail when=all verbose=1
+[20:42:07] done hop10_L0.25 (68s): complete=True results={'rejected': 9, 'expected': 11}
+[20:42:09] start hop10_L0.21: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 level=0.21 mode=detail when=all verbose=1
+[20:43:18] done hop10_L0.21 (68s): complete=True results={'rejected': 20}
+[20:43:20] start hop10_L0.18: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 level=0.18 mode=detail when=all verbose=1
+[20:44:28] done hop10_L0.18 (68s): complete=True results={'rejected': 20}
+[20:44:30] start hop10_L0.15: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 level=0.15 mode=detail when=all verbose=1
+[20:45:38] done hop10_L0.15 (68s): complete=True results={'rejected': 20}
+[20:45:41] start hop10_L0.12: SEQ start profile=TonalPulseScalar tries=20 freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 level=0.12 mode=detail when=all verbose=1
+[20:46:49] done hop10_L0.12 (68s): complete=True results={'rejected': 20}
+[20:46:59] session updated, index rebuilt

@@ -53,6 +53,10 @@ Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone 
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-26, milestone declared (owner): the phase closes as "installation-ready node" on 11c + 11g +
 11d (OTA firmware in); then the sequence restarts at 12 in a fresh file (decisions/2026-10-26-milestone-installation-ready-node.md).
+Status update 2026-10-29 (owner, from the phone, then a web session): the next phase's behavior change is decided
+(decisions/2026-10-29-answers-follow-the-field-level-automaton.md, BEH-008: tentative answers that quicken with
+the field until saturation, by a level automaton); it is the first candidate for step 12 at the cut-over, not
+sequenced before it. Frequency alignment per node is in discussion (docs/research/field-activity-response.md).
 Status update 2026-10-28, later still: 11j done (c907048..51d88d6; host only, no behaviour change; its board check rides
 with 11i's on Sunday's OTA build).
 Status update 2026-10-28, late: 11i host part done; 11j opened (code standards pass, line limit 120).

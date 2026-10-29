@@ -132,6 +132,31 @@ Behavior reads shape facts (steady / sweep / hop) from the verdict and
 answers artistically: imitate, contrast, hand on.
 ```
 
+### BEH-008 - answers that follow the field: the level automaton
+
+Status: TODO (decided 2026-10-29, owner; sequenced at the milestone cut-over as a step 12 candidate)
+Decision: docs/decisions/2026-10-29-answers-follow-the-field-level-automaton.md
+Research: docs/research/field-activity-response.md (the automaton, its values, the set-aside mechanisms,
+the desk model tools/sim/fieldramp.py)
+
+```text
+One integer level per node (+1 heard valid pattern, +1 own emission, -1 per decay_ms of silence);
+p = (level + 1) / L; a heard pattern is answered with probability p after the fixed wait plus a
+fixed random jitter; a verdict while an answer is pending drops it with probability 1 - p (yield);
+at L the node rests and the level returns to zero. Four behavior.* params: L, decay, jitter, rest.
+Behavior counts the level from the verdicts; FieldState is no longer the rest gate.
+```
+
+Order inside (host first): `test_behavior_level` (the rules, the yield, the rest, the shipped timing reproduced
+with jitter 0 and p forced to 1); `native-fieldsim` (N real Behaviors through a fake channel with the measured
+hearing matrix, nodegroup.py's metrics plus the interval and chord profile along each chain); the hearing matrix
+in the tryout room at 1 m spacing (tools/bench/hearmatrix.py, strict and lenient cells from the same logs) to set
+L and decide the lenient grade; five nodes free on the bench, step 6's protocol, compared against
+2026-10-22-step6-trial and 2026-10-26-soak24-shape-b. Gate: every chain ends (3 s silence within 30 s in 80 % of
+starts, no minute over M = 100); chords under 25 % of rounds in a chain's first half and above it in its last;
+the first answer to a call later than 1 s in most chains; speech and music neither start nor lengthen chains.
+Moves the field baseline: its own field session is the gate, as 8a was told to.
+
 ## Current focus
 
 ```text
@@ -139,6 +164,9 @@ Order: roadmap-0-steps.md. BEH-001 / BEH-002 fold into NODE-001 (step 6);
 BEH-003 / BEH-004 are deferred (step 11). BEH-005 is step 5b, BEH-006 step 8a, BEH-007 after DET-015.
 Now (2026-10-26): DET-015 is done (11b), so BEH-007 is unblocked but not sequenced; the
 busy mirror (D2.9) goes with step 11g batch D.
+2026-10-29: BEH-008 (the level automaton) is decided and is the first candidate for step 12 at the
+cut-over; frequency alignment (the base frequency per node, not the hop order) is in discussion
+(docs/research/field-activity-response.md, Part 2).
 ```
 
 ## Spec candidates

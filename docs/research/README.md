@@ -90,6 +90,8 @@ field-activity-response.md     answers that follow the field (tentative -> quick
                                probability, yielding), strict vs lenient activity, the
                                hearing matrix first; the mechanisms set aside (ramp, two
                                time constants, excitability); desk model tools/sim/fieldramp.py
+                               (promoted: decisions/2026-10-29-answers-follow-the-field-level-
+                               automaton.md, BEH-008; the frequency part still exploring)
 code-standards-read-2026-10-28.md
                                the tree at 2def60f against a generic standards
                                list (readability, KISS, DRY, YAGNI, naming,

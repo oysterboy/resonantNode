@@ -1,8 +1,9 @@
 # Answers that follow the field: tentative, then quicker, then saturated and silent
 
 ```text
-Status:  exploring (2026-10-29); direction and mechanism set by the owner the same day (the level automaton,
-         with its three choices below), nothing promoted yet
+Status:  promoted (2026-10-29): the automaton is decided and is BEH-008; the frequency part is still exploring
+Became:  docs/decisions/2026-10-29-answers-follow-the-field-level-automaton.md; BEH-008 (roadmap-behavior.md),
+         2026-10-29
 Lab:     bench/sessions/2026-10-22-step6-trial and 2026-10-22-group5-pacing (chains end in 2.9-7.7 s, max 48 per
          minute); 2026-10-21-pair-state-header (a pair chains 7 turns, then rests); 2026-10-26-soak24-shape-b
          (1,378 chains, all ended); docs/lab/experiments/E003_simultaneous_answers.md (38-65 % of rounds are
@@ -54,6 +55,8 @@ occurrences accepted by inspection, and the valid verdicts; Behavior reads only 
 divided by a threshold.
 
 ## The level automaton
+
+-> promoted to docs/decisions/2026-10-29-answers-follow-the-field-level-automaton.md and BEH-008, 2026-10-29
 
 One integer per node and one probability derived from it; rules fire on events, nothing is a curve:
 
@@ -222,10 +225,10 @@ Host first, then bench, then the field check:
 - **Group density alone**: the jitter window stays fixed; no node answers sooner on its own.
 - **No longer chorus for now**: p reaches 1 at level L - 1, no second value.
 
-With these the automaton is fully specified at the research level: the rules above, four values (L, decay,
-jitter, rest), the fixed wait and refractory unchanged. The desk model's `level` variant defaults match
-(`--p-offset 1`). What it becomes (a decision file and a BEH item, sequenced as a step 12 item) waits for the
-cut-over and the owner's word, as the status line says.
+With these the automaton is fully specified: the rules above, four values (L, decay, jitter, rest), the fixed
+wait and refractory unchanged. The desk model's `level` variant defaults match (`--p-offset 1`). Promoted the same
+day (owner: "move to decision + roadmap item"): the decision file and BEH-008; the step number comes at the
+cut-over.
 
 ## Still open
 

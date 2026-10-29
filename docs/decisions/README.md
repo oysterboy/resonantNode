@@ -90,6 +90,7 @@ what replaced it.
 | 2026-10-26 | [Drop `RB debug off\|events` and the compile-time Node tracing (review D2.5)](2026-10-26-drop-rb-debug.md) (implemented 2026-10-27) |
 | 2026-10-26 | [Milestone "installation-ready node": gate = 11c soak, 11g batches, 11d OTA firmware; then the step sequence restarts at 12 in a fresh file](2026-10-26-milestone-installation-ready-node.md) (cut-over waits for the gate) |
 | 2026-10-28 | [The network band stays at 2950-3950 Hz after the 500-5000 Hz sweep (E004, step 11h)](2026-10-28-band-stays-after-the-sweep.md) |
+| 2026-10-29 | [Answers follow the field: the level automaton (one integer level, p = (level + 1) / L for answering and for not yielding, rest at L); FieldState no longer the rest gate](2026-10-29-answers-follow-the-field-level-automaton.md) (BEH-008, not implemented) |
 | 2026-10-28 | [OTA firmware: every board pulls the image over HTTP from WiFi on command (NET * OTA for the Nodes), rollback until confirmed (step 11d)](2026-10-28-ota-firmware-pull-over-http.md) (implemented; first update waits for the PC's firewall rule) |
 
 ## Open
@@ -103,7 +104,7 @@ Resolved and taken off this table 2026-10-26: the Node's profile
 
 | Question | Tracked in |
 |---|---|
-| The goal of the phase after the installation-ready milestone (8a, signal variation part 2, is the candidate) | `2026-10-26-milestone-installation-ready-node.md`; decided at the cut-over, in the new roadmap-0-steps.md |
+| The goal of the phase after the installation-ready milestone (8a, signal variation part 2, was the candidate; since 2026-10-29 the behavior change BEH-008 is decided and frequency alignment is in discussion) | `2026-10-26-milestone-installation-ready-node.md`; `2026-10-29-answers-follow-the-field-level-automaton.md`; sequenced at the cut-over, in the new roadmap-0-steps.md |
 | Which metrics belong in the generic `Occurrence` core vs detector-specific detail | `docs/specs/myspec.md` §5 ("temporary typed accepted-event detail"); DET-003..006 |
 | How much `FeatureHistory` to retain on-device | `docs/refactors/archive/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/archive/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut, `DetectionDiagnostics` (step 11e item 7) the runtime side; Analyzer printers still in `src/detection/` (review D2.8, step 11g batch C) |

@@ -66,7 +66,8 @@ experiments/E002_shape_separation.md  does shape separate the hop train
                                       (DET-015 verification, step 11b)
 experiments/E003_simultaneous_answers.md  several Nodes sounding at once:
                                       how often, still heard? (design:
-                                      research/polyphony.md)
+                                      research/polyphony.md; phase 2 =
+                                      step 14: chord mix and bench cell)
 experiments/E004_band_sweep.md        the band swept 500-5000 Hz: hits and
                                       noise acceptance per position (11h)
 experiments/E005_margin.md            headroom of the hop train: level

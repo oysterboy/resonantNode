@@ -2,6 +2,7 @@
 
 ```text
 Status:  promoted (2026-10-29): the fixes are step 12.0.1 (roadmap-0-steps.md)
+Became:  step 12.0.1 (af49504..f6da8c7)
 Lab:     none; four read-only reviews at main 2405b9e5 (after 11g, 11i, 11j, 11d), every finding confirmed in the
          code it cites
 ```

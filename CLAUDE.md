@@ -181,7 +181,7 @@ pass-level summary, not a per-commit log: worth a dated entry when a
 multi-item pass or plan doc closes out, not for every commit — `git log
 --oneline -- <path>` is the reliable per-commit record. Check whether the
 active pass/plan doc you're closing out is the kind of unit that's gotten a
-changelog entry before (look at the two 2026 entries for the shape) before
+changelog entry before (look at the latest entries for the shape) before
 deciding to add one.
 
 ### Active work: pass / plan docs (`docs/refactors/`)
@@ -217,9 +217,10 @@ to follow). Then move the whole file or file set into
 happened on that unit of work — write it honestly, including caveats, every
 time.
 
-If `docs/refactors/` has no active file at the top level, either nothing is
-currently in flight or a pass was archived without a fresh one started for
-the next unit of work — worth flagging rather than assuming silently.
+If `docs/refactors/` has no active file at the top level, that is normal while
+a step runs from the steps file. Flag it only when `roadmap-0-steps.md` also
+has no step marked RUNNING or NEXT: then nothing is in flight, or a pass was
+archived without the next unit of work being started.
 
 ### Roadmaps (`docs/roadmaps/`)
 

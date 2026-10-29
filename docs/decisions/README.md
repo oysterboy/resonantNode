@@ -66,7 +66,7 @@ what replaced it.
 | 2026-10-14 | [The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector](2026-10-14-node-ships-tonalpulsescalar.md) (demo half superseded 2026-10-22: Freq removed) |
 | 2026-10-14 | [Replace First Difference with a DC blocker inside step 5a, before the new-geometry baseline](2026-10-14-dc-blocker-before-5a-baseline.md) |
 | 2026-10-15 | [Signals vary per node and over time inside a shared band; the detector is shape-agnostic](2026-10-15-signal-variation-inside-a-shared-band.md) |
-| 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise (30,500), the amp limit drops to 1,500; long gaps leave the acceptance set, max duration 300, history 512](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (shipped in the profile; confirmed 2026-10-21, step 5b gate: second-day battery and speech / music OBS on the Node build) |
+| 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise (30,500), the amp limit drops to 1,500; long gaps leave the acceptance set, max duration 300, history 512](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (max duration and history superseded 2026-10-29 by 450 / 576) (shipped in the profile; confirmed 2026-10-21, step 5b gate: second-day battery and speech / music OBS on the Node build) |
 | 2026-10-16 | [The network band is 2950-3950 Hz: bins 2950/3200/3450/3700/3950, the 3,200 Hz chirp on a bin](2026-10-16-network-band-2950-3950.md) |
 | 2026-10-17 | [Step 6's third question: after a kick or idle call the group is quiet (15 s silence) within 30 s in 80 % of cases](2026-10-17-trial-third-question-pass-mark.md) (M = 100 set 2026-10-22, 2026-10-22-network-pacing.md) |
 | 2026-10-17 | [The idle call wakes the network: 300 Hz announcement, then the node's hop train](2026-10-17-idle-call-wakes-the-network.md) (bench-checked 2026-10-21, step 5g: 27 idle calls, all answered) |
@@ -90,11 +90,11 @@ what replaced it.
 | 2026-10-26 | [Drop `RB debug off\|events` and the compile-time Node tracing (review D2.5)](2026-10-26-drop-rb-debug.md) (implemented 2026-10-27) |
 | 2026-10-26 | [Milestone "installation-ready node": gate = 11c soak, 11g batches, 11d OTA firmware; then the step sequence restarts at 12 in a fresh file](2026-10-26-milestone-installation-ready-node.md) (cut-over waits for the gate) |
 | 2026-10-28 | [The network band stays at 2950-3950 Hz after the 500-5000 Hz sweep (E004, step 11h)](2026-10-28-band-stays-after-the-sweep.md) |
+| 2026-10-28 | [OTA firmware: every board pulls the image over HTTP from WiFi on command (NET * OTA for the Nodes), rollback until confirmed (step 11d)](2026-10-28-ota-firmware-pull-over-http.md) |
 | 2026-10-29 | [Answers follow the field: the level automaton (one integer level, p = (level + 1) / L for answering and for not yielding, rest at L); FieldState no longer the rest gate](2026-10-29-answers-follow-the-field-level-automaton.md) (BEH-008, not implemented) |
 | 2026-10-29 | [The network band widens to 8 bins (2950-4700 Hz) for a base bin per node; band shifting and a musical tone are tested after](2026-10-29-wider-band-base-bin-per-node.md) (BEH-009, not implemented; amends the 2026-10-28 band decision) |
-| 2026-10-29 | [Max duration 450 ms (history 640, bin track 1024), so answers 120-220 ms apart are not lost as one too-long sound](2026-10-29-max-duration-450-for-chords.md) (step 14) |
+| 2026-10-29 | [Max duration 450 ms (history 576, bin track 1024), so answers 120-220 ms apart are not lost as one too-long sound](2026-10-29-max-duration-450-for-chords.md) (step 14) |
 | 2026-10-30 | [Platform: off Arduino, onto ESP-IDF; not scheduled, new code stays off Arduino meanwhile](2026-10-30-platform-off-arduino.md) |
-| 2026-10-28 | [OTA firmware: every board pulls the image over HTTP from WiFi on command (NET * OTA for the Nodes), rollback until confirmed (step 11d)](2026-10-28-ota-firmware-pull-over-http.md) |
 
 ## Open
 
@@ -110,4 +110,4 @@ Resolved and taken off this table 2026-10-26: the Node's profile
 | The goal of the phase after the installation-ready milestone (8a, signal variation part 2, was the candidate; since 2026-10-29 BEH-008 and BEH-009 are decided) | `2026-10-26-milestone-installation-ready-node.md`; `2026-10-29-answers-follow-the-field-level-automaton.md`; `2026-10-29-wider-band-base-bin-per-node.md`; sequenced at the cut-over, in the new roadmap-0-steps.md |
 | Which metrics belong in the generic `Occurrence` core vs detector-specific detail | `docs/specs/myspec.md` §5 ("temporary typed accepted-event detail"); DET-003..006 |
 | How much `FeatureHistory` to retain on-device | `docs/refactors/archive/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
-| Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/archive/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut, `DetectionDiagnostics` (step 11e item 7) the runtime side; Analyzer printers still in `src/detection/` (review D2.8, step 11g batch C) |
+| Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/archive/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut, `DetectionDiagnostics` (step 11e item 7) the runtime side; the Analyzer printers moved to `src/modes/analyzer/` in 11g C2 |

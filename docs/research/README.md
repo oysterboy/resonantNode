@@ -18,7 +18,7 @@ docs/decisions/    which fork was taken, and why
 One file per topic, `<topic-slug>.md`. Start with a status block:
 
 ```text
-Status:  idea | exploring | promoted | dropped   (date of last change)
+Status:  idea | exploring | promoted | parked | dropped   (date of last change; parked = carried over, no step)
 Became:  <what it turned into, with date>        (omit while nothing has)
 Lab:     observations it rests on or produced    (docs/lab/..., bench/...)
 ```
@@ -78,9 +78,11 @@ frequency-tuning-sweep.md      the network band swept over 500-5000 Hz: hits vs
                                the-sweep.md)
 room-comb-and-margin.md        the sweep re-read per round and per bin: a reflection
                                comb that drifts and jumped once, not a weak zone; the
-                               band question is margin per dipped hop (2026-10-29)
+                               band question is margin per dipped hop (steps 13.3 / 13.4,
+                               lab E005)
 second-mic-diversity.md        a second mic in the free I2S slot: diversity against
-                               room nulls, not a chord fix; test design (2026-10-29)
+                               room nulls, not a chord fix; test design (parked:
+                               carried over, no step, 2026-10-30)
 tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; piezo-era; superseded by the shipped
                                profile, 2026-10-29)
@@ -89,10 +91,11 @@ unproven-assumptions-audit.md  where code and roadmap rest on unmeasured
                                (promoted: every item done, carried or
                                superseded, 2026-10-29)
 platform-arduino-vs-esp-idf.md stay on Arduino 2.0.17 or move (Arduino 3.x,
-                               Arduino as IDF component, pure IDF); decide
-                               after step 14
+                               Arduino as IDF component, pure IDF) (promoted:
+                               decisions/2026-10-30-platform-off-arduino.md)
 polyphony.md                   several nodes at once (lab E003) and chords
-                               inside one chirp (OUT-006); test design
+                               inside one chirp (OUT-006); test design (Part A:
+                               step 14)
 vektor-lessons-from-11a.md     what the 11a radio taught VEKTOR (real-time
                                budget, replies, persistence) (cited by
                                decisions/2026-10-25-vektor-replaces-net.md)
@@ -122,5 +125,5 @@ readability-measures.md        what can be counted (lizard CCN / NLOC / params,
                                members per class, contract headers) at 26475ce7,
                                per directory; where the counts disagree with the
                                human read; a seven-row tracked set and the
-                               measures to take, ranked (2026-10-29)
+                               measures to take, ranked (promoted: step 12.4)
 ```

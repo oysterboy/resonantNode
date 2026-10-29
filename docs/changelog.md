@@ -1,3 +1,41 @@
+# 2026-10-30 - Steps 12 and 14 closed (check, readability, chords, max duration 450); 13 partly; 47 h soak running
+
+### Context
+
+The new phase's first steps, all run remotely (the owner away from the bench until 2026-11-01): a check of the
+whole build after the milestone (12), the margin of the hop train (13, the on-site parts open) and chords, several
+Nodes sounding at once (14). Every board was updated over WiFi (OTA) throughout.
+
+### Changed
+
+- 12.0 / 12.0.1: a four-reviewer code review (1 high, 9 medium, ~25 low; docs/research/code-review-2026-10-29.md),
+  all fixed in four batches (af49504..f6da8c7): OTA token and reboot deadline, SEQ FREQBAND removed, review fixes in
+  detection, Analyzer and tools. 12.1-12.3: the sanity bench set (nodecheck.py, analyzerab.py), the quiet gate's
+  timeout 8 -> 20 s, SELFTEST on a silent Node (bench/sessions/2026-10-29-step12-sanity).
+- 12.4: the readability pass (c4a56bd..5f1aa75, archive/readability-pass.md): tools/ci/readability.py, detector and
+  Behavior state in groups, the two Analyzer giants split, printKeyValue, one OccurrenceSummary, owns blocks, a
+  CLAUDE.md comment rule; no behaviour change (bench/sessions/2026-10-29-step12.4-readability). 12.4.10: RAW keeps
+  the pre ring inside the capture buffer (b9f19f6).
+- 13.0, 13.2-13.4: SEQ_EXPLAIN prints the shape facts; Emitter PULSES level= / att=; margin at 79 cm 3-6 dB, one
+  lost hop costs nothing, two pass only at an end of the train, Strength16 follows the loudest hop (lab E005).
+- 14: a chord within ~100 ms counts as one train; answers 120-220 ms apart were both lost (lab E003 phase 2). 14.0:
+  max duration 450, history 576, bin track 1024 (decisions/2026-10-29-max-duration-450-for-chords.md); on the
+  boards the blind window is closed. 14.1: review of the changes since 12.0.1 (b006c00): detection restarts clean
+  after the Node's own emission, tone gain cleared on a cancelled train, SEQ refuses an overlong Emitter line.
+- Decided: platform off Arduino onto ESP-IDF, not scheduled (decisions/2026-10-30-platform-off-arduino.md). New
+  roadmap items DET-019, ANA-010, PAR-018; second mic parked.
+
+### Verification
+
+Host gate on every commit (every env, host suites, T2h byte-identical or a reviewed new baseline:
+bench/sessions/2026-10-29-step14-maxdur450/t2h_replay.8c8cdf5.txt). Boards: nodecheck 26 / 26 on b006c00, Analyzer
+A/B and RAW sets equal across the refactors, music / speech 0 verdicts at 450 (bench/sessions/2026-10-29-step14-*).
+
+### Next
+
+The 47 h soak on b006c00 until 2026-11-01 (bench/sessions/2026-10-29-step14-soak47); on site: 13.1 and the other
+distances, then 15 (the tryout room); 16 BEH-008 from the PC.
+
 # 2026-10-29 - Installation-ready node milestone closed (11c, 11h, 11g, 11d; 11i, 11j beside it); new phase from step 12
 
 ### Context

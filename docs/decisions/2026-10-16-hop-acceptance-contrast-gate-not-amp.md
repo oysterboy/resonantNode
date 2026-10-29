@@ -1,5 +1,7 @@
 # Hop acceptance: the contrast inspector guards against noise, the amp limit drops to 1,500
 
+Superseded in part 2026-10-29: max duration 450 and history 576 (decisions/2026-10-29-max-duration-450-for-chords.md).
+
 Status: decided 2026-10-16 (evening, after the afternoon battery; written into `DetectionProfile.h`
 and `FeatureHistory.h` the same day), to be confirmed by the next-session battery and a speech/music
 OBS with the shipped values. Before that it was provisional and tested as build overrides.

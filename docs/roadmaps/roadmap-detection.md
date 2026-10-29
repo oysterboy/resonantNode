@@ -107,7 +107,7 @@ Status: DONE 2026-10-21 as the hop train (step 5b): 25 ms x 5, gap 10, read as o
 
 10-15 ms pulses with 5-115 ms pauses accepted as one occurrence via maxGapMs / maxTransientDurationMs. Measure the smallest resolvable gap and the false-alarm cost.
 
-Gap contract (step 5h, #47, from audit 2.3): the shipped hop train (25 ms x 5, gap 10) is one occurrence only because the room tail fills the gaps (min duration 85, release debounce 10, max gap 20); `output.hop_gap_ms` and the Scalar gap / debounce / min-duration params are independent with no consistency check. 5h adds the check and a dry hop fixture; whether the room tail is part of the signal contract is decided on that fixture and a dry bench cell.
+Gap contract (step 5h, #47 closed, from audit 2.3): the shipped hop train (25 ms x 5, gap 10) is one occurrence only because the room tail fills the gaps (min duration 85, release debounce 10, max gap 20); `output.hop_gap_ms` and the Scalar gap / debounce / min-duration params are independent with no consistency check. 5h adds the check and a dry hop fixture; whether the room tail is part of the signal contract is decided on that fixture and a dry bench cell.
 
 Source: Emitter `PULSES n pulse_ms gap_ms [freq=] [ramp=] [trial=]`, from the Analyzer as `EMIT PULSES ...` or per SEQ trial as `SEQ start dur=PULSE_MS pulses=N gap=MS [ramp=MS]`. On D-AMP the train is timed per sample in I2sToneOutput (loop edges land on 8 ms blocks); pulse_ms is sound with the ramps inside, gap_ms is silence. Piezo builds time it from the loop.
 
@@ -438,7 +438,7 @@ Source: docs/refactors/archive/i2s-sample-clock.md "Side findings".
 
 ### ANA-008 - RAW capture memory limits
 
-Status: DONE 2026-10-22 (step 7a; found 2026-10-09, #24): the capture buffer is sized to pre + post rows, and `RAW_ALLOC` reports the rows, the bytes and the largest free block. Still open: the pre-trigger audio is held twice (ring plus capture buffer), so pre=500 fails for memory, now with a clear RAW_ERR/RAW_MEM.
+Status: DONE 2026-10-22 (step 7a; found 2026-10-09, #24): the capture buffer is sized to pre + post rows, and `RAW_ALLOC` reports the rows, the bytes and the largest free block. The pre ring is held once since 2026-10-29 (12.4.10, b9f19f6: the front rows of the one capture buffer, rotated at the start), and the rows are sized by the largest free block (915f564, `max_rows=`).
 
 ```text
 RAW allocates a fixed 72 KB capture buffer plus the pre-trigger ring

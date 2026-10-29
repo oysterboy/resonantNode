@@ -120,15 +120,15 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Still to do on site: 70 / 110 cm and a second spot for the ladder.
    Gate: the margin in dB and in hops at the operating point, in a lab note.
 
-14. [DONE 2026-10-29] Understand chords: what several Nodes sounding at once does to detection. (issue #76)
+14. [DONE 2026-10-29] Understand chords: what several Nodes sounding at once does to detection. (issue #76, closed)
    docs/research/polyphony.md Part A checks 1-3 (host mix of 2-3 trains at 0 / 3 / 6 / 10 dB and 0 / 10 / 30 ms; RAW
    captures at rotations 1-4; one bench cell with two triggered Nodes), E003's open threads, E002's other rotations.
    PC and remote. Owner 2026-10-29: a chord counts as several heard trains (for 16); 14 finds what the detector
    reports for one.
    Done (lab E003 phase 2; bench 2026-10-29-step14-rotations, -chordcell; tools chordmix.py, chordcheck.py): chords
    within ~100 ms count as ONE train (valid 95 %, 100 % with 6 dB between voices); answers 120-220 ms apart are both
-   lost (merged past max_duration_ms 300); from ~230 ms two. For 16: the detector cannot supply "several trains" for
-   a chord, and any answer jitter must avoid 120-220 ms. Check 2 (a free-run field readout) was not run: the
+   lost (merged past max_duration_ms 300; since 14.0 at 450 they count as one train); from ~230 ms two. For 16: the
+   detector cannot supply "several trains" for a chord. Check 2 (a free-run field readout) was not run: the
    bench cell answered the same question.
    14.0 [DONE 2026-10-29, 8c8cdf5 / 915f564] Max duration 450 (owner: "Maxduration"): the blind window closes;
         history 576 ms, bin track 1024; decisions/2026-10-29-max-duration-450-for-chords.md.
@@ -172,7 +172,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 ## Carried over, not sequenced
 
 ```text
-Signal variation, part 2: aesthetics      8a (OUT-006, #38): after 19's decision; a signal change moves the baseline.
+Signal variation, part 2: aesthetics      8a (OUT-006): after 19's decision; a signal change moves the baseline.
   and polyphony                             docs/research/polyphony.md, E003 phase 1.
 Detector family as a build flag           step 9 (Phases 5d, 6): waits for a second detector family.
 DET-016                                   the verdict boundary rule (step 8's Part B).
@@ -185,7 +185,7 @@ Params                                    PAR-008 output params, PAR-009 drift p
 ANA-002                                   multi-occurrence patterns.
 DET-003..006, ANA-001                     detection / analyzer follow-ups, when 9 touches the code.
 BEH-001, BEH-002, OUT-001                 small visibility items; fold into NODE-001.
-P2b, D21 (#32)                            audio source stall vs overflow counters; AudioSourceI2S has no
+P2b, D21                                  audio source stall vs overflow counters; AudioSourceI2S has no
                                           regression test.
 NODE-019                                  sample-clock backsteps; known, no effect seen.
 DET-014                                   the tonality inspector (roadmap-detection.md).
@@ -197,6 +197,8 @@ Per-board threshold offset                read it from 15's matrix first (unprov
 Review leftovers                          the replay binds the medium limits itself (A10); FreqBandStream and
                                           ScalarTransientDetector outside namespace detection (with step 9); the
                                           300000 "never fires" Strong threshold (no disabled class).
+DET-019, ANA-010, PAR-018                 the amp class sets the margin (a tuning pass after the soak); SEQ settle
+                                          against a 450 ms occurrence; PARAM SAVE pins defaults (2026-10-30).
 Platform: off Arduino, onto ESP-IDF      decisions/2026-10-30-platform-off-arduino.md (owner 2026-10-30). At the
                                           end, no step yet (a USB flash of every board when it comes); until then
                                           new code stays off Arduino where that costs nothing.
@@ -217,6 +219,10 @@ parallel.
 
 ## Status log
 
+Status update 2026-10-30: 14 done (14.0 max duration 450, 14.1 review fixes b006c00); 13 running (13.2-13.4 done,
+13.1 and the other distances on site); the 47 h soak on b006c00 runs until 2026-11-01 ~23:00
+(bench/sessions/2026-10-29-step14-soak47, soakcycle --steps margin --chord --noise-play: margin, chords and music
+every hour). New items DET-019, ANA-010, PAR-018 (carried over); platform decided off Arduino, not scheduled.
 Status update 2026-10-29, late: 12.4 done (5f1aa75, readability pass archived); 13 next (13.1 on site Sunday).
 Status update 2026-10-29, night: 12.4 the readability pass (owner), before 13; the other session's 12.5 folded in.
 Status update 2026-10-29, evening: 12 done (review 1 high / 9 medium / ~25 low fixed and checked on the boards, sanity

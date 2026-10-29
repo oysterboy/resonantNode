@@ -215,6 +215,8 @@ PARAM LIST|GET|SET|DUMP|RESET   the detection.scalar_* knobs, same paths and gra
 PARAM SAVE|LOAD                 answered with status=no_store (no store on the Analyzer)
 RAW trigger f=HZ dur=MS post=MS [pre=MS] [decim=N] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=...]
 RAW trigger ... [sweep=END_HZ] [band=LOW-HIGH|off]          sweep the chirp; band for this capture only
+                                  pre + post: at most 6,000 rows, fewer when the largest free block is smaller
+                                  (RAW_ALLOC max_rows= says how many; AnalyzerRawCapture.cpp planRawCapture, 2026-10-29)
 RAW ... during a SEQ run (active or queued)                 refused: RAW_ERR busy reason=seq_active (2026-10-29)
 EMIT CHIRP|MODE AUTO|MODE REMOTE|SWEEP|PULSES ...            the Analyzer drives its own output too
 SELFTEST [external | chirp n=N gap_ms=MS dur_ms=MS | help]   external: board only, external_chirp SKIP
@@ -275,7 +277,7 @@ names the same columns (for `mode=pcm` since 2026-10-28; before, it said `ms,pcm
 
 ## Emitter
 
-Commands over USB, as of 2026-10-26:
+Commands over USB, as of 2026-10-29 (level= / att= on the D-AMP build only):
 
 ```text
 EMIT CHIRP freq=HZ dur=MS

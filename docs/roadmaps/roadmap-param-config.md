@@ -197,7 +197,8 @@ Do not add persistence metadata yet.
 Do not add storageKey yet.
 Do not add ParamStore yet.
 
-Landed in src/param/ParamTypes.h and src/param/ParamRegistry.h/.cpp as a
+(2026-10-30: the code now lives in lib/ParamRegistry/ (PAR-016, 89e723e2), the ids in src/app/ParamIds.h, and
+duplicate ids are rejected.) Landed in src/param/ParamTypes.h and src/param/ParamRegistry.h/.cpp as a
 fixed-capacity (kMaxParams), no-dynamic-allocation table. addUInt16 /
 addUInt32 / addFloat / addBool reject a null field pointer and a duplicate
 path; capacity overflow is rejected once kMaxParams bindings are registered.

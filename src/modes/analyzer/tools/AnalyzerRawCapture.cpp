@@ -4,6 +4,7 @@
 #include "../../../app/SerialLine.h"
 
 #include <Arduino.h>
+#include <algorithm>
 #include <math.h>
 #include <esp_heap_caps.h>
 #include <stdlib.h>
@@ -101,39 +102,25 @@ bool rawCaptureUsesPcmRows(AnalyzerApp::RawCaptureMode mode) {
     return mode == AnalyzerApp::RawCaptureMode::Pcm || mode == AnalyzerApp::RawCaptureMode::I2s;
 }
 
-// The rows of one row type: the pre-emit ring and the stored window (the pre window is copied in front of the post
-// rows). Freed on every way out of runRawTrigger (step 12.4.5; it was six manual malloc / free pairs).
+// The capture rows of one row type, one block: before the emitter starts, the first preWanted rows are the pre
+// ring; at the start it is rotated in place, oldest first, and the post rows follow it. One allocation, not a ring
+// beside the rows: with both in mode=both, pre= split the heap and the 6,000 rows did not fit (step 12.4.10).
+// Freed on every way out of runRawTrigger (step 12.4.5; it was six manual malloc / free pairs).
 template <typename Row>
 struct RawRows {
-    Row* preRing = nullptr;
     Row* rows = nullptr;
 
     RawRows() = default;
     RawRows(const RawRows&) = delete;
     RawRows& operator=(const RawRows&) = delete;
-    ~RawRows() {
-        free(preRing);
-        free(rows);
-    }
+    ~RawRows() { free(rows); }
 
-    // The capture rows first: the larger block, taken while the largest free block is whole. The pre ring first
-    // split it, and mode=both with pre= could not get its 6,000 rows (step 12.4.10).
-    bool allocate(unsigned long preRows, unsigned long captureRows) {
+    bool allocate(unsigned long captureRows) {
         rows = static_cast<Row*>(malloc(captureRows * sizeof(Row)));
         if (rows == nullptr) {
             serialOut().println("RAW_ERR memory=raw_buffer_alloc_failed");
             printRawMemoryState("raw_buffer");
             return false;
-        }
-        if (preRows > 0) {
-            preRing = static_cast<Row*>(malloc(preRows * sizeof(Row)));
-            if (preRing == nullptr) {
-                free(rows);  // before the memory report
-                rows = nullptr;
-                serialOut().println("RAW_ERR memory=pre_ring_alloc_failed");
-                printRawMemoryState("pre_ring");
-                return false;
-            }
         }
         return true;
     }
@@ -157,21 +144,23 @@ struct RawCaptureProgress {
 // One sample: into the pre ring until the emitter starts, then into the post rows until they are full.
 template <typename Row>
 void storeRawRow(RawRows<Row>& buffers, RawCaptureProgress& progress, const Row& row) {
+    if (buffers.rows == nullptr) {
+        return;
+    }
     if (!progress.emitStarted) {
-        if (buffers.preRing != nullptr) {
-            buffers.preRing[progress.preWriteIndex] = row;
+        if (progress.preWanted > 0) {
+            buffers.rows[progress.preWriteIndex] = row;
             progress.preWriteIndex = (progress.preWriteIndex + 1UL) % progress.preWanted;
         }
         ++progress.preCapturedTotal;
     } else if (progress.postCaptured < progress.postWanted) {
-        if (buffers.rows != nullptr) {
-            buffers.rows[progress.preWindowSamples + progress.postCaptured] = row;
-        }
+        buffers.rows[progress.preWindowSamples + progress.postCaptured] = row;
         ++progress.postCaptured;
     }
 }
 
-// The pre ring, oldest first, in front of the post rows; once, when the emitter starts or the capture ends.
+// The pre ring, oldest first, at the front of the rows; once, when the emitter starts or the capture ends. A ring
+// that never filled is in order already.
 template <typename Row>
 void copyRawPreWindow(RawRows<Row>& buffers, RawCaptureProgress& progress) {
     if (progress.preWindowCopied || progress.preWanted == 0) {
@@ -180,11 +169,8 @@ void copyRawPreWindow(RawRows<Row>& buffers, RawCaptureProgress& progress) {
     }
     const bool ringFull = progress.preCapturedTotal >= progress.preWanted;
     progress.preWindowSamples = ringFull ? progress.preWanted : progress.preCapturedTotal;
-    const unsigned long startIndex = ringFull ? progress.preWriteIndex : 0UL;
-    if (buffers.preRing != nullptr && buffers.rows != nullptr) {
-        for (unsigned long i = 0; i < progress.preWindowSamples; ++i) {
-            buffers.rows[i] = buffers.preRing[(startIndex + i) % progress.preWanted];
-        }
+    if (ringFull && buffers.rows != nullptr) {
+        std::rotate(buffers.rows, buffers.rows + progress.preWriteIndex, buffers.rows + progress.preWanted);
     }
     progress.preWindowCopied = true;
 }
@@ -203,12 +189,12 @@ struct RawCaptureBuffers {
         return mode == AnalyzerApp::RawCaptureMode::Features ? sizeof(RawCaptureFeatureSample)
                                                              : sizeof(RawCaptureBothSample);
     }
-    bool allocate(unsigned long preRows, unsigned long captureRows) {
+    bool allocate(unsigned long captureRows) {
         if (rawCaptureUsesPcmRows(mode)) {
-            return pcm.allocate(preRows, captureRows);
+            return pcm.allocate(captureRows);
         }
-        return mode == AnalyzerApp::RawCaptureMode::Features ? features.allocate(preRows, captureRows)
-                                                             : both.allocate(preRows, captureRows);
+        return mode == AnalyzerApp::RawCaptureMode::Features ? features.allocate(captureRows)
+                                                             : both.allocate(captureRows);
     }
     void copyPreWindow(RawCaptureProgress& progress) {
         if (rawCaptureUsesPcmRows(mode)) {
@@ -328,15 +314,14 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, 
     serialOut().println();
 
     planRawCapture(run);
-    if (!run.buffers.allocate(run.progress.preWanted, run.captureRows)) {
+    if (!run.buffers.allocate(run.captureRows)) {
         return false;
     }
     serialOut().print("RAW_ALLOC capture_rows=");
     serialOut().print(run.captureRows);
     printKeyValue("pre_ring_rows", run.progress.preWanted);
     printKeyValue("row_size", static_cast<unsigned long>(run.buffers.rowSize()));
-    printKeyValue("bytes",
-                  static_cast<unsigned long>((run.captureRows + run.progress.preWanted) * run.buffers.rowSize()));
+    printKeyValue("bytes", static_cast<unsigned long>(run.captureRows * run.buffers.rowSize()));
     printKeyValue("max_rows", run.maxSamples);
     printKeyValue("largest_free_after", static_cast<unsigned long>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT)));
     serialOut().println();

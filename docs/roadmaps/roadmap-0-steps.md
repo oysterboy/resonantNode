@@ -130,6 +130,11 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    lost (merged past max_duration_ms 300); from ~230 ms two. For 16: the detector cannot supply "several trains" for
    a chord, and any answer jitter must avoid 120-220 ms. Check 2 (a free-run field readout) was not run: the
    bench cell answered the same question.
+   14.0 [DONE 2026-10-29, 8c8cdf5 / 915f564] Max duration 450 (owner: "Maxduration"): the blind window closes;
+        history 576 ms, bin track 1024; decisions/2026-10-29-max-duration-450-for-chords.md.
+   14.1 [RUNNING 2026-10-29] Review of the changes since 12.0.1 (max duration 450, the tone gain and Emitter level=
+        / att=, the RAW ring, the 12.4 refactors, the new bench tools), fixes, then a nodecheck. Before the 47 h
+        soak (owner: review and fix first).
 
 15. [TODO] Understand the room: the tryout room (5 x 6 m, 1 m spacing). (issue #77) On site.
    Hearing matrix strict and lenient (tools/bench/hearmatrix.py; field-activity-response.md "Measure first"), reach

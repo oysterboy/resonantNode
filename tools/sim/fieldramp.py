@@ -174,12 +174,13 @@ class Field:
     def schedule(self, t, src):
         self.pending.append((t, src))
 
-    def deliver(self, now, nodes):
+    def deliver(self, now, nodes, reach):
         due = [p for p in self.pending if p[0] <= now]
         self.pending = [p for p in self.pending if p[0] > now]
         # Trains that end together are one verdict at a listener (E003: a chord reads as one valid pattern).
+        # With --reach the nodes stand in a line and hear only sources within that many positions.
         for n in nodes:
-            if any(src != n.idx for _, src in due):
+            if any(src != n.idx and (reach == 0 or abs(src - n.idx) <= reach) for _, src in due):
                 n.hear(now)
 
 
@@ -189,7 +190,7 @@ def run(variant, cfg, seed):
     field = Field()
     end = int(cfg.minutes * 60_000)
     for now in range(0, end, STEP_MS):
-        field.deliver(now, nodes)
+        field.deliver(now, nodes, cfg.reach)
         for n in nodes:
             n.tick(now, field)
     return sorted((t, n.idx) for n in nodes for t in n.emissions)
@@ -242,9 +243,15 @@ def analyse(events, cfg, trace):
     if early:
         print("  answer interval, chains of 6+: first third median %.2f s, last third median %.2f s" % (
             statistics.median(early), statistics.median(late)))
+    per_node = {}
+    for _, i in events:
+        per_node[i] = per_node.get(i, 0) + 1
+    print("  emissions per node: %s" % " ".join("%d" % per_node.get(i, 0) for i in range(cfg.nodes)))
     if trace:
+        by_time = dict(events)
         for c in [c for c in chains if len(c) >= 4][:6]:
-            print("  chain at %7.1f s: %s" % (c[0] / 1000, " ".join("%.2f" % ((t - c[0]) / 1000) for t in c)))
+            print("  chain at %7.1f s: %s" % (c[0] / 1000, " ".join(
+                "%.2f/%d" % ((t - c[0]) / 1000, by_time[t]) for t in c)))
 
 
 def main():
@@ -254,6 +261,8 @@ def main():
     ap.add_argument("--minutes", type=float, default=20)
     ap.add_argument("--hear", type=float, default=0.95, help="probability a listener hears a train")
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--reach", type=int, default=0,
+                    help="nodes in a line hear only sources within this many positions (0: everyone hears everyone)")
     ap.add_argument("--trace", action="store_true", help="print the first chains")
     ap.add_argument("--refractory-ms", type=float, default=250,
                     help="shipped variant: holdoff after the train. 400 as shipped drops the reply in this model; "
@@ -273,7 +282,7 @@ def main():
     ap.add_argument("--p-offset", type=float, default=0, help="p = (level + offset) / L; 1 lets a first call ignite more often")
     cfg = ap.parse_args()
     for variant in (["shipped", "ramp", "level"] if cfg.variant == "all" else [cfg.variant]):
-        print("%s (nodes %d, hear %.2f, seed %d)" % (variant, cfg.nodes, cfg.hear, cfg.seed))
+        print("%s (nodes %d, hear %.2f, reach %d, seed %d)" % (variant, cfg.nodes, cfg.hear, cfg.reach, cfg.seed))
         analyse(run(variant, cfg, cfg.seed), cfg, cfg.trace)
 
 

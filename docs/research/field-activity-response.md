@@ -346,9 +346,44 @@ What it gives and what it does not, in the desk model (five nodes, 30 min, same 
 
 Where it would live: Behavior sees every verdict with its `accepted` and `valid` flags
 (`handleOccurrenceVerdict`), so the level can be counted there from the verdicts alone, and FieldState's pattern
-count is no longer read (an amendment to decisions/2026-10-22-fieldstate-is-the-rest-gate.md at that point). To
-check before relying on it: that a released occurrence the inspector rejects reaches Behavior as a verdict with
-`accepted` false (the `ignored_invalid_pattern` path suggests so).
+count is no longer read (an amendment to decisions/2026-10-22-fieldstate-is-the-rest-gate.md at that point).
+Checked in the code (2026-10-29, `VerdictProjection.cpp`, `DetectionRuntime::inspectAndRender`): `makeVerdict`
+drops only occurrences the inspector refused before inspecting (absent, or marked invalid by the detector), so
+nearly every released occurrence reaches Behavior as a verdict; `accepted` and `valid` are the same flag,
+"every plan requirement met". The unconfirmed activity a weak train leaves is therefore a verdict with `valid`
+false and `firstFailedRequirementTarget` naming what failed (contrast, amp or shape), which Behavior already
+sorts into `ignored_support_too_low` / `ignored_missing_support`. The leniency rule can read that target: a train
+that fails shape or contrast at low level is unconfirmed traffic, a verdict that fails amp is a loud non-signal.
+FieldState's accepted-occurrence count is the same set; its raw occurrence count (which Behavior never sees) is
+only the detector's refused ones, so nothing is lost by counting in Behavior.
+
+### Neighbour-only hearing (the installation case), in the desk model
+
+`--reach 1`: the nodes stand in a line and hear only their direct neighbours (five nodes, 30 min, seed 1):
+
+| Variant | Chains | Ended within 30 s | Length median / max | Emissions per chain | Chord rounds | Interval first -> last third |
+|---|---|---|---|---|---|---|
+| shipped (model) | 38 | 38 | 2.0 s / 3.5 s | 16 | 63 % | 0.29 -> 0.29 s |
+| ramp | 52 | 51 | 6.1 s / 35.1 s | 4 (max 37) | 12 % | 1.42 -> 0.54 s |
+| level automaton, L 6 with offset | 76 | 76 | 0.5 s / 17.0 s | 2 (max 15) | 6 % | 1.18 -> 0.82 s |
+
+- The shipped rules are the same dense, short chain on a line as in a room: each node's window fills from its two
+  neighbours and its own answers just as fast.
+- The ramp fails the "every chain ends" gate on a line: one chain ran 35 s. A node that comes out of its rest with
+  activity zero is re-excited by neighbours still in their swell, and the swell walks up and down the line. The
+  fatigue of the two-time-constant model is exactly the missing piece there (a rested node should be hard to
+  re-excite), or the rest has to be long against the swell.
+- The automaton ends every chain, and the trace shows the owner's installation picture: a swell that starts at one
+  end and travels (seven nodes in a line, emissions by node 0, 1, 0, 2, 1, 3, 0, 2, 4, 3, 2 over nine seconds),
+  conversation along the way, local saturation, then silence. The cost is the same as in the room: most calls die
+  after one answer (22 of 76 ignite); the emission counts per node fall off at the ends of the line (44 / 57 / 64
+  / 58 / 44), which is the travelling swell seen from the other side.
+
+The one claim this supports: on neighbour-only hearing, a mechanism needs something that stops a rested node from
+being re-excited at once (the automaton's level starting at zero with p small does it; the ramp's A = 0 does
+not, because its delay is already short at low A once neighbours are busy). That is a design constraint, not a
+tuning question.
+
 
 Part 2 (frequencies that align) is later (owner 2026-10-29); the automaton above does not touch the rotation.
 

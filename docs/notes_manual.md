@@ -123,7 +123,9 @@ structs), `behavior.*` in `src/behavior/BehaviorProfile.h` (`BehaviorGateConfig`
 `PARAM SET output.silent 1` keeps the node listening (verdicts counted, `decision=outputs_off` in
 the log) but it never sounds: no answer, no idle call, `RB CALL` ignored. With `PARAM SAVE` it boots
 silent (`RB silent=1` at boot) until `PARAM SET output.silent 0` plus SAVE, or `PARAM RESET`.
-`RB STATUS` shows `silent=`. SELFTEST still plays its tones, it is an explicit command.
+`RB STATUS` shows `silent=`. SELFTEST's amp check still plays its tones (an explicit command); the own-chirp check
+goes through Behavior and is skipped on a silent node (`own_chirp_suppressed result=SKIP reason=silent`), and
+`SELFTEST chirp` answers `SELFTEST_CHIRP skip reason=silent`: set `output.silent 0` first to run them.
 
 ### Firmware over WiFi (OTA, step 11d)
 

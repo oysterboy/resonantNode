@@ -465,6 +465,7 @@ void Node::selfTestCancelChirp(void* ctx) {
 void Node::updateSelfTest(unsigned long now) {
     NodeSelfTest::Inputs in;
     in.outputsEnabled = rbOutputsEnabled();
+    in.silent = _switches.silent;
     in.chirpActive = _chirpOutput.isActive();
     in.lastOwnChirpEndMs = _lastOwnChirpEndMs;
     in.toneHz = _chirpOutput.toneHz();

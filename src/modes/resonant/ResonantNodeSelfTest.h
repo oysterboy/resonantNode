@@ -31,6 +31,7 @@ public:
     // What the Node hands in on every tick.
     struct Inputs {
         bool outputsEnabled = false;          // the Node's outputs gate (baseline and output.silent)
+        bool silent = false;                  // output.silent: the node never sounds, so no own chirp can be checked
         bool chirpActive = false;             // ChirpOutput sounding
         unsigned long lastOwnChirpEndMs = 0;  // when the last own chirp stopped
         uint32_t toneHz = 0;                  // the chirp tone (SELFTEST_CHIRP line)

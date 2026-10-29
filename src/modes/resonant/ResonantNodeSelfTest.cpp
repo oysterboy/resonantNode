@@ -136,6 +136,18 @@ NodeSelfTest::Request NodeSelfTest::update(unsigned long now, const Inputs& in) 
             // its echo would count as external (issue #31 R2-16). Wait for
             // it to stop and for kEchoWindowMs after.
             const bool ownChirpEcho = in.chirpActive || !timing::elapsedSince(now, in.lastOwnChirpEndMs, kEchoWindowMs);
+            if (in.silent && st.command.kind != selftest::Command::Kind::External) {
+                // A silent node never sounds: the own-chirp check cannot run, which is not a failure (step 12.2;
+                // it used to wait for outputs and report FAIL chirp_not_started).
+                if (st.command.kind == selftest::Command::Kind::Chirp) {
+                    serialOut().println("SELFTEST_CHIRP skip reason=silent (PARAM SET output.silent 0 to sound)");
+                } else {
+                    selftest::skip(serialOut(), st.tally, "own_chirp_suppressed", "silent");
+                    selftest::skip(serialOut(), st.tally, "external_chirp", "not_requested");
+                }
+                finish();
+                return Request::None;
+            }
             if ((!in.outputsEnabled || ownChirpEcho) && !deadlinePassed(now, st.deadlineMs)) {
                 return Request::None;
             }

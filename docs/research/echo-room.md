@@ -9,6 +9,10 @@ Lab:     the echoSpace repo (oysterboy/echoSpace, 48f74a5): a continuous 500 ms 
 
 Research only. The code as it stands is 195438a. Nothing here is a step, a roadmap item or a decision.
 
+A second piece grew out of this discussion the same day: Whispernet (`whispernet.md`), a room that whispers back
+through a gated delay line on a whisper detector. It is a different version, not a re-think of this one; the two
+share most of the tree (`whispernet.md`, "Shared with the echo room", with a side-by-side table).
+
 ## The idea (owner, 2026-10-30)
 
 An EchoRoom build that uses the Node's features: an audio buffer of 200 ms or as much as fits, triggered by
@@ -66,7 +70,8 @@ B is the one that maps onto the Node, and it answers both failures:
   tone (a steady tone gives one reject and then silence). What the room answers is tuned there; everything else is
   ignored instead of fed around.
 
--> the proposal below assumes B.
+-> the proposal below assumes B. For a phrase of unknown length (a whisper) A wins instead, with the gate stored
+   and delayed with the audio: `whispernet.md`, "Why a gated delay line, not a frozen clip".
 
 ## Buffer size
 

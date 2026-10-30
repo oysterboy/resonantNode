@@ -168,6 +168,8 @@ def chord_check(cycle, stamp):
     to_node(B, "PARAM SET output.silent 0")
     pump(2)
     rows = []
+    # A's wait too: with only B's set, a different stored wait on A mislabelled the offsets (deep review L-A).
+    to_node(A, "PARAM SET behavior.wait_after_heard_ms %d" % WAIT0)
     for extra in (0, 150, 250):
         to_node(B, "PARAM SET behavior.wait_after_heard_ms %d" % (WAIT0 + extra))
         pump(2)

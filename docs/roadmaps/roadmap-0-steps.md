@@ -153,6 +153,12 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Soak stopped 2026-10-30 20:55 after 11 cycles (owner: "bestehe nicht auf den 48h"): no reset, 0.5 / 0.35 FS
         and hops 4 + 5 lost 110 / 110, the edge steps (0.21 FS, hops 2 + 3) all or nothing per hour, music 0
         verdicts (bench/sessions/2026-10-30-step14-soak47b, lab E005).
+        2026-10-30 board check on a5193220 (bench/sessions/2026-10-30-step14.2-boards): all five by OTA; the Nodes'
+        stored old triggers (rest_after 4, budget 6, rest_ms 5000) set to the new defaults and saved; nodecheck
+        27 / 27 with its answer check split for the level automaton (level on: every train decided; level_max 0:
+        10 / 10 answered); Analyzer A/B and RAW unchanged against 12.4's set; chord cell as 14.1 (chordcheck and
+        soakcycle's chord check now run the answerers with level_max 0). Short soak running, 10 h from 21:29
+        (bench/sessions/2026-10-30-step14.2-soak10).
 
 15. [TODO] Understand the room: the tryout room (5 x 6 m, 1 m spacing). (issue #77) On site.
    Hearing matrix strict and lenient (tools/bench/hearmatrix.py; field-activity-response.md "Measure first"), reach

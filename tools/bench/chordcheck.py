@@ -83,6 +83,9 @@ for n in nodes:
     modes[n] = next((m.group(1) for m in found if m), "minimal")
     cmd(n, "RB log full", 0.4)
     cmd(n, "PARAM SET behavior.idle_enabled 0", 0.4)
+    # The level automaton (BEH-008) off: A and B answer every train, so the cell measures what a chord does to
+    # detection, not how often the automaton answers.
+    cmd(n, "PARAM SET behavior.level_max 0", 0.4)
 cmd(L, "PARAM SET output.silent 1", 0.4)  # the listener never answers (review 14.1)
 cmd(A, "PARAM GET behavior.wait_after_heard_ms", 0.6)
 wait0 = int(re.findall(r"value=(\d+)", " ".join(l for _, l in log[A][-5:]))[-1])

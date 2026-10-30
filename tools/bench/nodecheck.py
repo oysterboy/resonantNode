@@ -6,7 +6,7 @@ PING and PARAM SET, SELFTEST, SELFTEST external, SELFTEST by radio. Writes one t
       [--ref-log bench/sessions/<soak>/soak.log]
 
 Leaves every Node as found: output.silent 1 (stored), the changed param restored and saved, RB log as it was; the
-gateway gets PARAM LOAD at the end (idle_enabled and the RB PROFILE reset undone) and its RB log mode back (review
+gateway gets PARAM LOAD at the end (idle_enabled, level_max and the RB PROFILE reset undone) and its RB log mode back (review
 12.0 L21). A PARAM GET that answers no value is a FAIL, not a skipped check (M9).
 """
 import argparse
@@ -171,15 +171,32 @@ check("silent: heard, outputs_off, no answer",
       "verdicts %d outputs_off %d emits %d" % (len(re.findall(r"^RB verdict=", t, re.M)), t.count("outputs_off"),
                                               t.count("BEH emit start")))
 cmd(GW, "PARAM SET output.silent 0", 0.5)
-m = len(buf[GW])
-for i in range(10):
-    ports["EM"].write(b"EMIT PULSES 5 25 10 trial=%d freq=3300 hop=2950,3200,3450,3700,3950\n" % (i + 10))
-    pump(7)
-t = buf[GW][m:]
+
+
+def ten_trains(first_trial):
+    m = len(buf[GW])
+    for i in range(10):
+        ports["EM"].write(b"EMIT PULSES 5 25 10 trial=%d freq=3300 hop=2950,3200,3450,3700,3950\n" % (first_trial + i))
+        pump(7)
+    return buf[GW][m:]
+
+
+# The level automaton (BEH-008) answers a lone train with (level + offset) / L, so with it on every valid train is
+# decided (answered, or declined / yielded / a rest by the level) rather than answered; with level_max 0 (live, put
+# back by the gateway's PARAM LOAD) the answer path itself is checked, every train answered.
+t = ten_trains(10)
+valid = len(re.findall(r"^RB verdict=.*valid=1", t, re.M))
+emits = len(re.findall(r"BEH emit start .*source=heard_pattern", t))
+by_level = len(re.findall(r"decision=(?:declined_by_level|yielded|rest_level)", t))
+check("10 hop trains, level on: decided", valid == 10 and emits + by_level == 10,
+      "valid %d answers %d by_level %d" % (valid, emits, by_level))
+cmd(GW, "PARAM SET behavior.level_max 0", 0.5)
+t = ten_trains(20)
 valid = len(re.findall(r"^RB verdict=.*valid=1", t, re.M))
 emits = len(re.findall(r"BEH emit start .*source=heard_pattern", t))
 shapes = set(re.findall(r"RB emit shape=hop .*order=([\d,]+)", t))
-check("10 hop trains: valid, answered", valid == 10 and emits == 10, "valid %d answers %d order %s" % (valid, emits, shapes))
+check("10 hop trains, level off: answered", valid == 10 and emits == 10,
+      "valid %d answers %d order %s" % (valid, emits, shapes))
 cmd(GW, "PARAM SET output.silent 1", 0.5)
 
 # 5. PARAM SAVE / reboot / load on A

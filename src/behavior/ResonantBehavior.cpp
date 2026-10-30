@@ -34,14 +34,18 @@ Timing roles:
 */
 
 namespace {
-unsigned long randomIdleDelayMs(unsigned long minMs, unsigned long maxMs) {
+unsigned long randomIdleDelayMs(ResonantBehavior::RandomFn draw, unsigned long minMs, unsigned long maxMs) {
     if (maxMs <= minMs) {
         return minMs;
     }
 
     const unsigned long spanMs = maxMs - minMs + 1;
-    return minMs + static_cast<unsigned long>(random(static_cast<long>(spanMs)));
+    return minMs + static_cast<unsigned long>(draw(static_cast<uint32_t>(spanMs)));
 }
+
+// One hop train as a verdict reads it (~210-220 ms, step 14's captures at 79 cm): the unit a merged chord's
+// duration is counted in.
+constexpr unsigned long kSingleTrainMs = 215;
 }
 
 // The decision and, for a decision that blocks, the same value as the block reason; a go-ahead (ConsumedPattern,
@@ -51,6 +55,64 @@ void ResonantBehavior::setDecision(BehaviorDecision decision) {
     const bool goAhead = decision == BehaviorDecision::None || decision == BehaviorDecision::ConsumedPattern ||
         decision == BehaviorDecision::WouldEmit || decision == BehaviorDecision::Emitted;
     _last.blockReason = goAhead ? BehaviorDecision::None : decision;
+}
+
+uint32_t ResonantBehavior::defaultRandom(uint32_t bound) {
+    return bound == 0 ? 0U : static_cast<uint32_t>(random(static_cast<long>(bound)));
+}
+
+void ResonantBehavior::setRandomSource(RandomFn fn) {
+    _random = fn != nullptr ? fn : &ResonantBehavior::defaultRandom;
+}
+
+uint32_t ResonantBehavior::trainsInVerdict(const detection::OccurrenceVerdict& verdict) {
+    const unsigned long n = (verdict.primaryDurationMs + kSingleTrainMs / 2) / kSingleTrainMs;
+    return n < 1 ? 1U : (n > 3 ? 3U : static_cast<uint32_t>(n));
+}
+
+void ResonantBehavior::decayLevel(unsigned long now) {
+    if (_config.levelDecayMs == 0) {
+        return;
+    }
+    while (_level.count > 0 && timing::elapsedSince(now, _level.atMs, _config.levelDecayMs)) {
+        _level.count--;
+        _level.atMs += _config.levelDecayMs;
+    }
+}
+
+bool ResonantBehavior::raiseLevel(unsigned long now, uint32_t events) {
+    decayLevel(now);
+    _level.count += events;
+    _level.atMs = now;
+    if (_level.count >= _config.levelMax) {
+        _level.count = 0;
+        return true;
+    }
+    return false;
+}
+
+bool ResonantBehavior::drawUnderP() {
+    // p = (level + 1) / levelMax, as an exact integer draw: a uniform r in [0, levelMax) below level + 1.
+    return _random(_config.levelMax) < _level.count + 1U;
+}
+
+uint32_t ResonantBehavior::level(unsigned long now) const {
+    if (_config.levelMax == 0) {
+        return 0;
+    }
+    if (_config.levelDecayMs == 0 || _level.count == 0) {
+        return _level.count;
+    }
+    const unsigned long steps = static_cast<unsigned long>(now - _level.atMs) / _config.levelDecayMs;
+    return steps >= _level.count ? 0U : _level.count - static_cast<uint32_t>(steps);
+}
+
+unsigned long ResonantBehavior::declinedByLevel() const {
+    return _counts.declinedByLevel;
+}
+
+unsigned long ResonantBehavior::yielded() const {
+    return _counts.yielded;
 }
 
 void ResonantBehavior::resetState() {
@@ -64,6 +126,7 @@ void ResonantBehavior::resetState() {
     _idle.nextAtMs = 0;
     _lastFieldState = {};
     _rest = {};
+    _level = {};
     _emitTimes.clear();
 }
 
@@ -134,6 +197,16 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
 
     _last.behaviorEligible = false;
 
+    // The level automaton (BEH-008): every valid train heard outside a rest raises the level, whatever the gates
+    // below decide; at the top the node rests and the level returns to 0.
+    const bool automaton = _config.levelMax > 0;
+    if (automaton && !resting(now) && raiseLevel(now, trainsInVerdict(result))) {
+        enterRest(now + _config.restMs, BehaviorDecision::RestLevel);
+        setDecision(BehaviorDecision::RestLevel);
+        _counts.blockedResting++;
+        return _last.decision;
+    }
+
     if (resting(now)) {
         // Hard pause: a busy network is not answered (rest decision, 2026-10-17).
         setDecision(BehaviorDecision::Resting);
@@ -150,12 +223,22 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
     } else if (_state == State::Refractory) {
         setDecision(BehaviorDecision::RefractoryAfterEmit);
         _counts.blockedRefractory++;
+    } else if (_state == State::HeardPattern && automaton && !drawUnderP()) {
+        // The yield: another train came while this node's answer waits; it keeps the answer with p.
+        _state = State::Idle;
+        _heard = {};
+        setDecision(BehaviorDecision::Yielded);
+        _counts.yielded++;
     } else if (_state == State::HeardPattern) {
         setDecision(BehaviorDecision::AlreadyScheduled);
         _counts.blockedWaiting++;
     } else if (behaviorSuppressed(now)) {
         setDecision(BehaviorDecision::SelfSuppressed);
         _counts.blockedSelfSuppressed++;
+    } else if (automaton && !drawUnderP()) {
+        // Tentative at a low level: the train is heard (and counted) but not answered.
+        setDecision(BehaviorDecision::DeclinedByLevel);
+        _counts.declinedByLevel++;
     } else {
         _last.behaviorEligible = true;
         setDecision(BehaviorDecision::ConsumedPattern);
@@ -167,7 +250,10 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         _last.patternHeardAtMs = _heard.ms;
         _timing.heardPatternStartedMs = now;
         _state = State::HeardPattern;
-        _timing.waitUntilMs = now + _config.waitAfterHeardMs;
+        // The fixed wait plus the automaton's random window (0 when off or set to 0).
+        const unsigned long jitterMs =
+            automaton && _config.answerJitterMs > 0 ? _random(_config.answerJitterMs + 1U) : 0UL;
+        _timing.waitUntilMs = now + _config.waitAfterHeardMs + jitterMs;
         scheduleNextIdle(now);
     }
 
@@ -375,6 +461,10 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitS
         // The emissions that caused this rest are paid for: without the clear the first answer after it found them
         // still in the window and rested again, ~10 s with one answer inside (deep review B-M2).
         _emitTimes.clear();
+    }
+    // The level automaton: an own emission is one event; at the top the node rests from the end of this emission.
+    if (_config.levelMax > 0 && raiseLevel(now, 1)) {
+        enterRest(now + emitSpanMs + _config.restMs, BehaviorDecision::RestLevel);
     }
 }
 
@@ -619,6 +709,12 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
             return "rest_own_budget";
         case BehaviorDecision::Resting:
             return "resting";
+        case BehaviorDecision::DeclinedByLevel:
+            return "declined_by_level";
+        case BehaviorDecision::Yielded:
+            return "yielded";
+        case BehaviorDecision::RestLevel:
+            return "rest_level";
     }
 
     return "unknown";
@@ -626,7 +722,7 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
 
 void ResonantBehavior::scheduleNextIdle(unsigned long now) {
     _idle.scheduledFromMs = now;
-    _idle.nextAtMs = now + randomIdleDelayMs(idleMinMs(), idleMaxMs());
+    _idle.nextAtMs = now + randomIdleDelayMs(_random, idleMinMs(), idleMaxMs());
 }
 
 bool ResonantBehavior::canIdle(unsigned long now) const {
@@ -689,6 +785,9 @@ BehaviorStatus ResonantBehavior::status(unsigned long now) const {
     st.resting = resting(now);
     st.restUntilMs = _rest.untilMs;
     st.restsEntered = _rest.entered;
+    st.level = level(now);
+    st.declinedByLevel = _counts.declinedByLevel;
+    st.yielded = _counts.yielded;
     st.lastRestReasonName = behaviorDecisionName(_rest.lastReason);
     st.blockedResting = _counts.blockedResting;
     st.patternsReceived = _counts.patternsReceived;

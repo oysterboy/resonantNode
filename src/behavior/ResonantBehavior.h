@@ -40,7 +40,19 @@ public:
         RestFieldDense,
         RestOwnBudget,
         Resting,
+        // The level automaton (BEH-008): a heard train not answered (the draw against p), a pending answer dropped
+        // because another verdict came first (the yield), the train that took the level to the top.
+        DeclinedByLevel,
+        Yielded,
+        RestLevel,
     };
+    // A uniform draw in [0, bound); the Arduino random() on the board, a scripted source in the host tests.
+    using RandomFn = uint32_t (*)(uint32_t bound);
+    void setRandomSource(RandomFn fn);
+    // The automaton's level at `now` (decay applied), 0 when it is off.
+    uint32_t level(unsigned long now) const;
+    // Heard trains in one verdict: a chord's answers that merged into one occurrence count by its duration (1..3).
+    static uint32_t trainsInVerdict(const detection::OccurrenceVerdict& verdict);
 
     void resetState();
     void configure(const BehaviorGateConfig& profile);
@@ -76,6 +88,8 @@ public:
     unsigned long restsEntered() const;
     BehaviorDecision lastRestReason() const;
     unsigned long blockedResting() const;
+    unsigned long declinedByLevel() const;
+    unsigned long yielded() const;
     static const char* behaviorDecisionName(BehaviorDecision decision);
     bool behaviorEligible() const;
 
@@ -261,8 +275,22 @@ private:
         unsigned long blockedResting = 0;
         unsigned long wouldEmit = 0;
         unsigned long emitted = 0;
+        unsigned long declinedByLevel = 0;
+        unsigned long yielded = 0;
     };
     Counters _counts = {};
+
+    // --- the level automaton (BEH-008) ---
+    struct Level {
+        uint32_t count = 0;
+        unsigned long atMs = 0;  // the last event, the decay counts from here
+    };
+    Level _level = {};
+    static uint32_t defaultRandom(uint32_t bound);  // random() on the board
+    RandomFn _random = &ResonantBehavior::defaultRandom;
+    void decayLevel(unsigned long now);
+    bool raiseLevel(unsigned long now, uint32_t events);  // true: the level reached the top (and is back at 0)
+    bool drawUnderP();  // true with p = (level + 1) / levelMax
 
     void scheduleNextIdle(unsigned long now);
     void rescheduleIdleFromWaitStart();

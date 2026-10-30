@@ -149,6 +149,9 @@ void Node::printRbStatus(const char* line) {
     printKeyValue("behavior.resting", b.resting ? 1 : 0);
     printKeyValue("behavior.rest_until_ms", b.restUntilMs);
     printKeyValue("behavior.rests", b.restsEntered);
+    printKeyValue("behavior.level", b.level);
+    printKeyValue("behavior.declined", b.declinedByLevel);
+    printKeyValue("behavior.yielded", b.yielded);
     printKeyValue("behavior.last_rest", b.lastRestReasonName);
     printKeyValue("behavior.blocked_resting", b.blockedResting);
     serialOut().print(" ");

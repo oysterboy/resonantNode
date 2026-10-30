@@ -39,6 +39,7 @@ ResonantBehavior configured() {
     ResonantBehavior b;
     BehaviorGateConfig cfg;
     cfg.idleEnabled = false;
+    cfg.levelMax = 0;  // deterministic: the snapshot against the getters, not the level's draws
     b.configure(cfg);
     b.resetState();
     return b;

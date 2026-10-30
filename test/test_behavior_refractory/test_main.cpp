@@ -69,6 +69,7 @@ detection::OccurrenceVerdict validPattern(unsigned long heardAtMs) {
 BehaviorGateConfig shippedDefaults() {
     BehaviorGateConfig cfg;  // BehaviorProfile.h as compiled
     cfg.idleEnabled = false;  // keep the idle voice out of the timeline
+    cfg.levelMax = 0;  // the refractory alone: no level draws, no jitter (BEH-008's own suite is test_behavior_level)
     return cfg;
 }
 

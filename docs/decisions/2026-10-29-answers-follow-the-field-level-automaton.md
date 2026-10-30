@@ -33,6 +33,11 @@ Chords (owner 2026-10-29, at the step 12-19 ordering): several Nodes answering a
 trains for the level, not one. Step 14 measures what the detector makes of a chord (one verdict, several, or none);
 step 16 implements the count from whatever 14 finds a chord yields.
 
+Implemented 2026-10-30 (step 16.1): a chord counts its trains by the merged occurrence's duration, 1..3 (owner
+2026-10-30; step 14 found one verdict per chord, ~430 ms when two answers 250 ms apart merge). As in the desk model
+the train is counted before the draw, so the first train heard is answered with p = 2 / L (open: the research
+note's "1 / L at level 0" reading would draw before counting).
+
 ## Why
 
 - Today both of Behavior's knobs are steps: every listener answers after the same 100 ms with probability 1

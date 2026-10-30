@@ -115,6 +115,10 @@ enum class ParamId : uint16_t {
     Detection_ShapeMediumMinRisingSteps,
     Detection_ShapeStrongMinBins,
     Detection_ShapeStrongMinRisingSteps,
+    // The level automaton (BEH-008, step 16).
+    Behavior_LevelMax,
+    Behavior_LevelDecayMs,
+    Behavior_AnswerJitterMs,
 };
 
 }  // namespace param

@@ -48,6 +48,11 @@ struct BehaviorStatus {
     const char* lastRestReasonName = "";
     unsigned long blockedResting = 0;
 
+    // The level automaton (BEH-008): the level at nowMs, trains heard but not answered, answers yielded.
+    unsigned long level = 0;
+    unsigned long declinedByLevel = 0;
+    unsigned long yielded = 0;
+
     // Counters since the last resetState().
     unsigned long patternsReceived = 0;
     unsigned long patternsIgnoredInvalid = 0;

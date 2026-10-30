@@ -158,11 +158,22 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    per-pair acceptance check (room-comb-and-margin.md "Consequences"). Takes over step 5h's open cells and
    NODE-012's next cell. On today's band; the band of 17 is measured again in 18.
 
-16. [TODO] Build BEH-008: answers follow the field level (the level automaton). (issue #78)
+16. [RUNNING 2026-10-30: 16.1 done] Build BEH-008: answers follow the field level (the level automaton). (issue #78)
    roadmap-behavior.md BEH-008, decisions/2026-10-29-answers-follow-the-field-level-automaton.md,
    field-activity-response.md. PC first (test_behavior_level; native-fieldsim with the matrix from 15), then the desk
    (step 6's protocol against 2026-10-22-step6-trial and 2026-10-26-soak24-shape-b). Changes what the nodes do: the
    baseline moves with it. A chord counts as several heard trains (owner 2026-10-29).
+   16.1 [DONE 2026-10-30] The automaton in ResonantBehavior, host-tested (test_behavior_level, 9 tests with a scripted
+        random source): level from the verdicts (FieldState no longer read), p = (level + 1) / L for the answer and
+        the yield, rest at L, decay, answer jitter; behavior.level_max / level_decay_ms / answer_jitter_ms (L 6,
+        2 s, 2 s; rest_ms 8 s; the old triggers default 0; level_max 0 = off). A chord counts its trains by the
+        occurrence's duration, 1..3 (owner 2026-10-30, from step 14: a merged chord reads ~430 ms). Order as in
+        tools/sim/fieldramp.py: the train is counted, then drawn against p, so the first train heard is answered with
+        2 / L (the research note's text says 1 / L: owner question). Deploying: the Nodes have the old triggers and
+        rest_ms stored (PAR-018), so set and PARAM SAVE the new values on each board.
+   16.2 [NEXT] native-fieldsim: N real Behaviors through a fake channel (step 14's chord rules, a hearing matrix:
+        the desk's for now, the tryout room's from 15), nodegroup.py's metrics, against tools/sim/fieldramp.py.
+   16.3 The desk: five Nodes free, step 6's protocol, after 14.2's board check.
 
 17. [TODO] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
    roadmap-behavior.md BEH-009, decisions/2026-10-29-wider-band-base-bin-per-node.md. PC first, then the desk.

@@ -152,7 +152,7 @@ for line, expect in (("RB help", "RB CMD"), ("RB summary", "RB"), ("RB log full"
     reply = cmd(GW, line, 3.0 if "rebase" in line else 1.5)
     check("cmd: " + line, expect in reply, (reply.strip().splitlines() or ["(no reply)"])[0][:70])
 dump = cmd(GW, "PARAM DUMP", 2.0)
-check("PARAM DUMP: 47 params", len(re.findall(r"^PARAM path=", dump, re.M)) == 47,
+check("PARAM DUMP: 50 params", len(re.findall(r"^PARAM path=", dump, re.M)) == 50,
       "%d" % len(re.findall(r"^PARAM path=", dump, re.M)))
 prof = cmd(GW, "RB PROFILE name=TonalPulseScalar", 2.0)
 check("cmd: RB PROFILE (reset lines)", "PROFILE" in prof, (prof.strip().splitlines() or ["-"])[0][:70])

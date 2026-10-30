@@ -39,8 +39,21 @@ struct BehaviorGateConfig {
     //    sees a thin field but keeps answering).
     // Same values on every node (no per-node variation, owner's choice).
     // 0 switches a trigger off.
-    uint32_t restAfterFieldPatterns = 4;
-    uint32_t ownEmitBudget = 6;
+    // Since BEH-008 (step 16) both triggers default to 0 (off): the level automaton below rests the node. They stay
+    // as params for the reproducibility rule until retired.
+    uint32_t restAfterFieldPatterns = 0;
+    uint32_t ownEmitBudget = 0;
     uint32_t ownEmitBudgetWindowMs = 10000;
-    uint32_t restMs = 5000;  // 5 s since 2026-10-22 (was 10 s), decisions/2026-10-22-network-pacing.md
+    // 8 s with the level automaton (BEH-008's first guess; 5 s since 2026-10-22 with the old triggers).
+    uint32_t restMs = 8000;
+
+    // The level automaton (BEH-008, decisions/2026-10-29-answers-follow-the-field-level-automaton.md): an integer
+    // level, +1 per heard valid train (a chord's merged occurrence counts its trains by duration), +1 per own
+    // emission, -1 per levelDecayMs of hearing nothing; p = (level + 1) / levelMax answers a heard train and keeps a
+    // pending answer when another verdict arrives (else it yields); at levelMax the node rests restMs and the level
+    // returns to 0. An answer waits waitAfterHeardMs plus a uniform 0..answerJitterMs. levelMax 0 switches the
+    // automaton off (p = 1, no level rest: the behaviour before step 16).
+    uint32_t levelMax = 6;
+    uint32_t levelDecayMs = 2000;
+    uint32_t answerJitterMs = 2000;
 };

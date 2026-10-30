@@ -46,8 +46,12 @@ detection::FieldState fieldWith(unsigned long patterns) {
 }
 
 BehaviorGateConfig config() {
-    BehaviorGateConfig cfg;  // shipped defaults, as compiled
+    BehaviorGateConfig cfg;  // the two rest triggers as they shipped until step 16, the level automaton off
     cfg.idleEnabled = false;
+    cfg.levelMax = 0;
+    cfg.restAfterFieldPatterns = 4;
+    cfg.ownEmitBudget = 6;
+    cfg.restMs = 5000;
     cfg.refractoryAfterEmitMs = 0;  // isolate the rest rule from the refractory question (step 5d)
     return cfg;
 }
@@ -73,10 +77,12 @@ unsigned long answer(ResonantBehavior& b, unsigned long heardAt, unsigned long f
 void setUp() {}
 void tearDown() {}
 
-void test_shipped_defaults_have_both_triggers_on() {
+// Since step 16 the shipped defaults rest by the level automaton; the two old triggers are off (0).
+void test_shipped_defaults_rest_by_the_level() {
     const BehaviorGateConfig cfg;
-    TEST_ASSERT_TRUE(cfg.restAfterFieldPatterns > 0);
-    TEST_ASSERT_TRUE(cfg.ownEmitBudget > 0);
+    TEST_ASSERT_TRUE(cfg.levelMax > 0);
+    TEST_ASSERT_EQUAL_UINT32(0, cfg.restAfterFieldPatterns);
+    TEST_ASSERT_EQUAL_UINT32(0, cfg.ownEmitBudget);
     TEST_ASSERT_TRUE(cfg.restMs > 0);
 }
 
@@ -367,7 +373,7 @@ void test_triggers_off_means_no_rest() {
 
 int main(int, char**) {
     UNITY_BEGIN();
-    RUN_TEST(test_shipped_defaults_have_both_triggers_on);
+    RUN_TEST(test_shipped_defaults_rest_by_the_level);
     RUN_TEST(test_dense_field_starts_a_rest_instead_of_an_answer);
     RUN_TEST(test_rest_ignores_verdicts_until_it_ends);
     RUN_TEST(test_rest_drops_a_scheduled_answer);

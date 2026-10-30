@@ -39,6 +39,12 @@ inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
     registry.addUInt32(ParamId::Behavior_OwnEmitBudgetWindowMs, ModuleId::Behavior,
                        "behavior.own_emit_budget_window_ms", &b.ownEmitBudgetWindowMs, 0U, 600000U);
     registry.addUInt32(ParamId::Behavior_RestMs, ModuleId::Behavior, "behavior.rest_ms", &b.restMs, 0U, 600000U);
+    // The level automaton (BEH-008): L, the forgetting, the answer's random window. level_max 0 = off.
+    registry.addUInt32(ParamId::Behavior_LevelMax, ModuleId::Behavior, "behavior.level_max", &b.levelMax, 0U, 32U);
+    registry.addUInt32(ParamId::Behavior_LevelDecayMs, ModuleId::Behavior, "behavior.level_decay_ms", &b.levelDecayMs,
+                       0U, 600000U);
+    registry.addUInt32(ParamId::Behavior_AnswerJitterMs, ModuleId::Behavior, "behavior.answer_jitter_ms",
+                       &b.answerJitterMs, 0U, 10000U);
 }
 
 }  // namespace param

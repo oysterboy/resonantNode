@@ -326,7 +326,7 @@ while time.time() - t0 < a.hours * 3600.0:
     now = time.time() - t0
     if now >= next_status:
         to_nodes("RB STATUS")
-        next_status += a.status_every
+        next_status = now + a.status_every  # not +=: after a long room check that fired a burst of RB STATUS (review 2026-10-30)
     if now >= next_check:
         cycle += 1
         log.write("%.2f -- room check %d start\n" % (now, cycle))
@@ -353,7 +353,7 @@ while time.time() - t0 < a.hours * 3600.0:
         to_nodes("PARAM SET output.silent 0")
         log.write("%.2f -- room check %d end\n" % (time.time() - t0, cycle))
         log.flush()
-        next_check = next_clock_check(time.time()) if AT_MIN else next_check + a.cycle_min * 60.0
+        next_check = next_clock_check(time.time()) if AT_MIN else max(next_check + a.cycle_min * 60.0, time.time() - t0 + 60.0)
 
 to_nodes("PARAM SET output.silent 1")  # leave them quiet; a reboot also boots them silent (stored)
 pump(1)

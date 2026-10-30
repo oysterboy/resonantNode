@@ -307,8 +307,15 @@ void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurren
         out.occurrence.shape = OccurrenceShape{};
         return;
     }
-    const uint32_t start = static_cast<uint32_t>(occurrence.startMs) - static_cast<uint32_t>(config.preMs);
-    const uint32_t span = static_cast<uint32_t>(config.preMs + occurrence.durationMs + config.tailMs);
+    uint32_t start = static_cast<uint32_t>(occurrence.startMs) - static_cast<uint32_t>(config.preMs);
+    uint32_t span = static_cast<uint32_t>(config.preMs + occurrence.durationMs + config.tailMs);
+    // Not back past the previous inspected occurrence's release (its bins are its own).
+    const uint32_t occStart = static_cast<uint32_t>(occurrence.startMs);
+    if (_lookBackFloorSet && timing::after(_lookBackFloorMs, start) && timing::after(occStart, _lookBackFloorMs)) {
+        const uint32_t floorStart = _lookBackFloorMs + 1U;
+        span -= floorStart - start;
+        start = floorStart;
+    }
     out.occurrence.shape = measureBinShape(*_binTrack, start, span, _shapeMinLevel, config).shape;
 }
 

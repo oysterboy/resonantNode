@@ -104,6 +104,9 @@ private:
     FieldStateTracker _fieldStateTracker;
     FeatureHistory _featureHistory;
     BinTrack _binTrack;  // the strongest band bin per ms, for the ShapeInspector (DET-015)
+    // The previous inspected occurrence's release: the shape look-back's floor (deep review I-M-A).
+    bool _haveLastInspectedRelease = false;
+    uint32_t _lastInspectedReleaseMs = 0;
     ActiveDetectionDiagnostics _diagnostics;
 
     RingQueue<OccurrenceVerdict, kResultQueueCapacity> _verdictQueue;

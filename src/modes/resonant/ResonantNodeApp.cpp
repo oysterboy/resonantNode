@@ -591,6 +591,7 @@ void Node::update() {
                 // Detection resumes after the Node's own emission: no occurrence carries over the gap, and the own
                 // ring-down cannot open one (review 14.1).
                 _detection.restartAfterInputGap();
+                _freqBandStream.resetState();  // no Goertzel window mixing pre-gap samples (deep review D-M2)
             }
             _detectionWasSuppressed = ownEmitSuppressed;
             if (!ownEmitSuppressed) {

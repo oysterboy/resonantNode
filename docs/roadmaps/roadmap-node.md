@@ -418,6 +418,10 @@ Gate: as step 3d in roadmap-0-steps.md.
 Status: DEFERRED, known issue (found 2026-10-17 after the TX-buffer fix 0ede378; code review of
 `AudioSourceI2S::stampBlock`, the Node loop and the consumers, nothing changed). Harmless while
 `i2s.dropped_dma_buffers` stays 0; watched through `RB STATUS`.
+2026-10-30 (deep review D-M1): backsteps are larger than first assumed: up to 9,999 us on the Nodes in the
+2026-10-29 soak (`backstep_us=` in RB STATUS). The detector's elapsed times were unsigned differences and a backstep
+right after an onset dropped the whole train; fixed with a clamped elapsed time (step 14.2). The clock itself is
+unchanged; resetStats() re-anchoring it may explain some of the steps (review L, output).
 
 ```text
 Symptom: RB STATUS i2s.backsteps rises by ~10 per 30 s in a busy session

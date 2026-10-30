@@ -242,6 +242,29 @@ void test_train_split_by_a_middle_null_passes_with_the_look_back() {
     TEST_ASSERT_TRUE(in.occurrence.shape.shapeClass >= StrengthClass::Medium);
 }
 
+// Deep review I-M-A: a steady tone that starts right after a train does not borrow the train's bins once the
+// look-back stops at the train's release (the runtime sets that floor before each inspection).
+void test_tone_after_a_train_borrows_no_bins_past_the_floor() {
+    BinTrack track;
+    playSteps(track, 300, kHop, 5, 25, 10);  // the train: 300..465
+    const uint32_t tone[1] = {3700};
+    const uint32_t toneStart = 300 + 5 * 35 + 25;  // 35 ms after the last bin: the look-back holds 3450, 3700, 3950
+    playSteps(track, toneStart, tone, 1, 120, 0);
+    OccurrenceInspector inspector;
+    inspector.configure(shippedShapePlan());
+    inspector.setBinTrack(&track);
+    inspector.setShapeMinLevel(1000.0f);
+    const Occurrence toneOcc = occurrence(toneStart, 120);
+    // Without the floor the 120 ms look-back reaches the train's last bins.
+    const StrengthClass without =
+        inspector.inspectWithHistory(toneOcc, nullptr, toneStart + 200).occurrence.shape.shapeClass;
+    inspector.setShapeLookBackFloor(true, 300 + 5 * 35);  // the train's release
+    const StrengthClass with =
+        inspector.inspectWithHistory(toneOcc, nullptr, toneStart + 200).occurrence.shape.shapeClass;
+    TEST_ASSERT_TRUE(without >= StrengthClass::Medium);
+    TEST_ASSERT_TRUE(with < StrengthClass::Medium);
+}
+
 // The shipped settings still keep random jumps and a steady tone out.
 void test_shipped_settings_still_reject_jumps_and_steady_tones() {
     BinTrack track;
@@ -309,6 +332,7 @@ int main(int, char**) {
     RUN_TEST(test_single_target_mode_is_not_applicable_and_passes);
     RUN_TEST(test_track_forgets_what_left_the_ring);
     RUN_TEST(test_train_split_by_a_middle_null_passes_with_the_look_back);
+    RUN_TEST(test_tone_after_a_train_borrows_no_bins_past_the_floor);
     RUN_TEST(test_shipped_settings_still_reject_jumps_and_steady_tones);
     RUN_TEST(test_shape_holds_across_the_ms_wrap);
     RUN_TEST(test_shape_level_follows_the_release_threshold);

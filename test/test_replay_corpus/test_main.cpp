@@ -378,6 +378,11 @@ void test_shipped_plan_fits_the_history_and_the_window() {
     TEST_ASSERT_TRUE(c.hardOk());
     TEST_ASSERT_EQUAL_UINT32(0, c.earlyWindowMs);
     TEST_ASSERT_TRUE(c.softOk());
+    // The class limits are ordered on the shipped plan; a medium above strong is flagged (deep review I-M-B).
+    TEST_ASSERT_TRUE(c.classLimitsOrdered);
+    detection::InspectionPlan unordered = profile.inspectionPlan;
+    unordered.modules[1].magnitude.supportStrength.mediumPeakThreshold = 8000.0f;  // the amp module, strong 5000
+    TEST_ASSERT_FALSE(detection::checkInspectionPlan(profile.scalarTransient, unordered).classLimitsOrdered);
     // A history of 400 ms would not hold the longest occurrence's window.
     TEST_ASSERT_FALSE(detection::checkInspectionPlan(profile.scalarTransient, profile.inspectionPlan, 400).hardOk());
     // The shape rule's level is the release threshold, a FrequencyTarget score: above 32767, or on another stream,

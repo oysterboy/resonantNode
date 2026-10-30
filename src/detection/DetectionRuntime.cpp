@@ -53,6 +53,7 @@ void DetectionRuntime::resetDetectionState() {
     _fieldStateTracker.reset();
     _featureHistory.reset();
     _binTrack.reset();
+    _haveLastInspectedRelease = false;
     resetDetectionQueues();
     _diagnostics.resetBookkeeping();
 }
@@ -231,7 +232,10 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
 
 void DetectionRuntime::inspectAndRender(const Occurrence& occurrence,
                                         const ActiveDetectionDiagnostics::ReportSlot& report, unsigned long nowMs) {
+    _occurrenceInspector.setShapeLookBackFloor(_haveLastInspectedRelease, _lastInspectedReleaseMs);
     const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
+    _lastInspectedReleaseMs = static_cast<uint32_t>(occurrence.releaseMs);
+    _haveLastInspectedRelease = true;
     _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
     _diagnostics.onInspected(inspected);
 

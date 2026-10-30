@@ -23,6 +23,14 @@ public:
     // DetectionRuntime whenever the scalar config or the plan changes, so a live PARAM SET of
     // detection.scalar_release_threshold moves both stages together (review D1.5, 2026-10-26).
     void setShapeMinLevel(float level) { _shapeMinLevel = level; }
+    // The shape's look-back (preMs) reaches back no further than this: the release of the previous inspected
+    // occurrence, so a sound already judged lends no bins to the next one (a steady tone right after a train
+    // passed on the train's last bins; deep review I-M-A). A train the detector split keeps its look-back: its
+    // first piece was a reject, not an inspected occurrence. Set by DetectionRuntime before each inspection.
+    void setShapeLookBackFloor(bool set, uint32_t releaseMs) {
+        _lookBackFloorSet = set;
+        _lookBackFloorMs = releaseMs;
+    }
 
     // Annotates an accepted occurrence with the plan's evidence from the
     // history; an absent or invalid occurrence comes back Rejected.
@@ -48,6 +56,8 @@ private:
     InspectionPlan _inspectionPlan = {};
     const BinTrack* _binTrack = nullptr;
     float _shapeMinLevel = 0.0f;
+    bool _lookBackFloorSet = false;
+    uint32_t _lookBackFloorMs = 0;
 };
 
 } // namespace detection

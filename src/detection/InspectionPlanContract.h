@@ -44,9 +44,12 @@ struct InspectionPlanCheck {
     bool shapeFits = true;  // DET-015: the BinShape window fits BinTrack
     bool windowCompleteAtRelease = true;
     bool shapeLevelInDomain = true;  // the shape level is a FrequencyTarget value in 0..32767 (L4)
+    // Every module's medium limit is at or below its strong one: the class tests Strong first, so a medium limit
+    // above strong is silently ignored (e.g. amp_medium 8000 with strong 5000 passes from 5000; deep review I-M-B).
+    bool classLimitsOrdered = true;
 
     bool hardOk() const { return historyFits && shapeFits; }
-    bool softOk() const { return windowCompleteAtRelease && shapeLevelInDomain; }
+    bool softOk() const { return windowCompleteAtRelease && shapeLevelInDomain && classLimitsOrdered; }
 };
 
 inline InspectionPlanCheck checkInspectionPlan(const ScalarTransientConfig& scalar, const InspectionPlan& plan,
@@ -58,6 +61,16 @@ inline InspectionPlanCheck checkInspectionPlan(const ScalarTransientConfig& scal
     const size_t count = plan.count > kMaxInspectionModules ? kMaxInspectionModules : plan.count;
     for (size_t i = 0; i < count; ++i) {
         const InspectionModuleConfig& module = plan.modules[i];
+        if (module.kind == InspectionModuleKind::BinShape &&
+            (module.shape.mediumMinBins > module.shape.strongMinBins ||
+             module.shape.mediumMinRisingSteps > module.shape.strongMinRisingSteps)) {
+            c.classLimitsOrdered = false;
+        }
+        if (module.kind == InspectionModuleKind::MagnitudeFeatureStrength &&
+            module.magnitude.supportStrength.mediumPeakThreshold >
+                module.magnitude.supportStrength.strongPeakThreshold) {
+            c.classLimitsOrdered = false;
+        }
         if (module.kind == InspectionModuleKind::BinShape) {
             // DET-015: the shape window (look-back + the longest occurrence + margin) must fit the bin track
             // at the time it is read, which is up to the release debounce after the release; the track holds

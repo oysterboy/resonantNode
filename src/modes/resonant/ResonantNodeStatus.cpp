@@ -241,6 +241,12 @@ void Node::printInspectionPlanCheck() {
         // The shape rule's level (the release threshold) is not a FrequencyTarget score (review 12.0 L4).
         serialOut().print(sep);
         serialOut().print("shape_level_out_of_domain");
+        sep = ",";
+    }
+    if (!c.classLimitsOrdered) {
+        // A medium limit above its strong limit is ignored (deep review I-M-B).
+        serialOut().print(sep);
+        serialOut().print("class_limits_unordered");
     }
     serialOut().println();
 }

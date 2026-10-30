@@ -6,6 +6,15 @@
 #include "../../occurrences/OccurrenceIds.h"
 #include "../../../app/TimeBase.h"
 
+namespace {
+// Time elapsed from `then` to `now`, 0 when the sample clock stepped back (AudioSourceI2S re-anchors its stamps;
+// steps of up to 10 ms seen on the Nodes, 2026-10-30). An unsigned difference wrapped there and closed the open
+// candidate as too long, losing the whole train (deep review D-M1).
+inline uint64_t elapsedUs(uint64_t now, uint64_t then) {
+    return now > then ? now - then : 0;
+}
+}  // namespace
+
 // Lifecycle / summaries.
 ScalarTransientDetector::ScalarTransientDetector() = default;
 
@@ -213,15 +222,16 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
     // below release (one reject per continuous tone, not one per max duration).
     const uint64_t maxOpenUs =
         (static_cast<uint64_t>(_config.maxTransientDurationMs) + _config.releaseDebounceMs) * 1000ULL;
-    const bool openPastMax = _peak.active && _config.maxTransientDurationMs > 0 && nowUs - _peak.startedUs > maxOpenUs;
+    const bool openPastMax =
+        _peak.active && _config.maxTransientDurationMs > 0 && elapsedUs(nowUs, _peak.startedUs) > maxOpenUs;
     const bool releaseDebounced = _peak.active && _peak.releaseCandidateStartedUs != 0 &&
-        nowUs - _peak.releaseCandidateStartedUs >= releaseDebounceUs;
+        elapsedUs(nowUs, _peak.releaseCandidateStartedUs) >= releaseDebounceUs;
     if (openPastMax && !releaseDebounced && aboveReleaseThreshold) {
         _gate.awaitReleaseBeforeOnset = true;
     }
     if (releaseDebounced || openPastMax) {
         const uint64_t releaseObservedUs = _peak.releaseObservedUs != 0 ? _peak.releaseObservedUs : nowUs;
-        const unsigned long peakDurationUs = static_cast<unsigned long>(releaseObservedUs - _peak.startedUs);
+        const unsigned long peakDurationUs = static_cast<unsigned long>(elapsedUs(releaseObservedUs, _peak.startedUs));
         const unsigned long minTransientDurationUs = _config.minTransientDurationMs * 1000UL;
         const unsigned long maxTransientDurationUs = _config.maxTransientDurationMs * 1000UL;
         // max duration 0 means no limit, here as in openPastMax (review 12.0 L1).
@@ -334,7 +344,7 @@ void IRAM_ATTR ScalarTransientDetector::update(const AudioSamplePacket& audioSam
     const bool aboveAttackThreshold = signalMagnitude > _config.onsetDetectionThreshold;
     const bool aboveReleaseThreshold = signalMagnitude > _config.onsetReleaseThreshold;
     const unsigned long cooldownAfterOnsetUs = _config.cooldownAfterOnsetMs * 1000UL;
-    const bool onsetCooldownElapsed = nowUs - _gate.lastOnsetUs >= cooldownAfterOnsetUs;
+    const bool onsetCooldownElapsed = elapsedUs(nowUs, _gate.lastOnsetUs) >= cooldownAfterOnsetUs;
 
     if (!aboveReleaseThreshold) {
         _gate.awaitReleaseBeforeOnset = false;

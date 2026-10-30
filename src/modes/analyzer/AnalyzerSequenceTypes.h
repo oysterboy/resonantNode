@@ -131,16 +131,16 @@ struct TrialDiagnostics {
     float audioRms = 0.0f;
     const char* audioHealth = "unknown";
 
-    uint16_t rawFrames = 0;
-    int16_t rawMin = 0;
-    int16_t rawMax = 0;
-    int32_t rawSum = 0;
-    uint32_t rawAbsSum = 0;
+    uint32_t rawFrames = 0;  // 32 / 64 bits: the samples are 24-bit (deep review L5; 16-bit fields truncated)
+    int32_t rawMin = 0;
+    int32_t rawMax = 0;
+    int64_t rawSum = 0;
+    uint64_t rawAbsSum = 0;
     uint8_t rawZeroCrossings = 0;
     uint8_t rawSameValueCount = 0;
     uint8_t rawSameValueRun = 0;
     uint8_t rawSameValueMaxRun = 0;
-    int16_t rawLastSample = 0;
+    int32_t rawLastSample = 0;
     uint8_t rawBlockHashRepeatCount = 0;
     uint8_t rawLastBlockHash = 0;
 

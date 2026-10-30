@@ -222,6 +222,7 @@ void AnalyzerApp::startSequenceTest(const RunConfig& requested) {
         const unsigned long sequenceClaimSendMs = timebase::nowMs();
         sendEmitterCommand("MODE REMOTE");
         const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs);
+        _emitterLine.reset();  // see AnalyzerCommands (deep review L7)
         const unsigned long sequenceClaimAckMs = timebase::nowMs();
         if (_sequenceTest.config.showDetails && !_sequenceTest.config.quiet) {
             serialOut().print("SEQ remote claim: send=");

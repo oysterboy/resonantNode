@@ -85,6 +85,10 @@ void test_parse_unsigned_takes_whole_numbers_only() {
     uint8_t small = 0;
     TEST_ASSERT_TRUE(text_parse::parseUnsigned("2", small));
     TEST_ASSERT_EQUAL_UINT(2, small);
+    // Deep review L9: a value beyond the field and an overlong number are refused, not wrapped or saturated.
+    TEST_ASSERT_FALSE(text_parse::parseUnsigned("300", small));
+    TEST_ASSERT_EQUAL_UINT(2, small);
+    TEST_ASSERT_FALSE(text_parse::parseUnsigned("99999999999999999999999", v));
 }
 
 void test_token_value_and_rest() {

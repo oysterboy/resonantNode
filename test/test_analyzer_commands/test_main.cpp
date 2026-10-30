@@ -106,6 +106,13 @@ void test_hop_list() {
     TEST_ASSERT_FALSE(analyzer_commands::hopListInRange("3000,", 7900));
     TEST_ASSERT_FALSE(analyzer_commands::hopListInRange("", 7900));
     TEST_ASSERT_FALSE(analyzer_commands::hopListInRange("99999999999999999999", 7900));
+    // Deep review L2: at most 8 entries; a real 5-hop list counts 5 (and att= keeps its own 3-digit rule).
+    TEST_ASSERT_EQUAL_UINT32(5, analyzer_commands::listEntryCount("2950,3200,3450,3700,3950"));
+    TEST_ASSERT_EQUAL_UINT32(9, analyzer_commands::listEntryCount("100,200,300,400,500,600,700,800,900"));
+    TEST_ASSERT_TRUE(analyzer_commands::attListInRange("0,20,0,0,0", 8, 60));
+    TEST_ASSERT_FALSE(analyzer_commands::attListInRange("0,61", 8, 60));
+    TEST_ASSERT_FALSE(analyzer_commands::attListInRange("0,,3", 8, 60));
+    TEST_ASSERT_FALSE(analyzer_commands::attListInRange("0,0,0,0,0,0,0,0,0", 8, 60));
 }
 
 int main(int, char**) {

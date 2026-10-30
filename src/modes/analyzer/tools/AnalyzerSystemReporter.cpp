@@ -110,7 +110,7 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) {
                                                         : static_cast<int32_t>(rawDiagnostics.rawMin);
     const int32_t rawMaxAbsValue = rawDiagnostics.rawMax < 0 ? -static_cast<int32_t>(rawDiagnostics.rawMax)
                                                              : static_cast<int32_t>(rawDiagnostics.rawMax);
-    const uint16_t rawMaxAbs = static_cast<uint16_t>(rawMinAbs > rawMaxAbsValue ? rawMinAbs : rawMaxAbsValue);
+    const uint32_t rawMaxAbs = static_cast<uint32_t>(rawMinAbs > rawMaxAbsValue ? rawMinAbs : rawMaxAbsValue);
     const float rawZeroRatio = rawDiagnostics.rawFrames > 0
         ? static_cast<float>(_sequenceTest.trial.diagnostics.audioZeroishFrames) /
             static_cast<float>(rawDiagnostics.rawFrames)

@@ -336,7 +336,9 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, 
     }
 
     sendEmitterCommand("MODE REMOTE");
-    if (!waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs)) {
+    const bool acked = waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs);
+    _emitterLine.reset();  // the wait read Serial2 with its own reader: no half line left to glue onto (deep review L7)
+    if (!acked) {
         serialOut().println("RAW_ERR emitter_remote_claim_timeout");
         printRawMemoryState("emitter_timeout");
         return false;

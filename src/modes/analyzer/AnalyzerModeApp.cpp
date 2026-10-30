@@ -272,8 +272,8 @@ void IRAM_ATTR AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& a
     }
 
     ++diagnostics.rawFrames;
-    diagnostics.rawSum += static_cast<int32_t>(audioSamplePacket.rawAudioValue);
-    diagnostics.rawAbsSum += static_cast<uint32_t>(absRaw);
+    diagnostics.rawSum += static_cast<int64_t>(audioSamplePacket.rawAudioValue);
+    diagnostics.rawAbsSum += static_cast<uint64_t>(absRaw);
     if (diagnostics.rawFrames == 1) {
         diagnostics.rawMin = audioSamplePacket.rawAudioValue;
         diagnostics.rawMax = audioSamplePacket.rawAudioValue;

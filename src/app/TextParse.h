@@ -1,7 +1,10 @@
 #pragma once
 
 #include <ctype.h>
+#include <errno.h>
 #include <math.h>
+
+#include <limits>
 #include <stdlib.h>
 #include <string.h>
 
@@ -37,8 +40,10 @@ inline bool parseUnsigned(const char* text, T& out) {
         return false;
     }
     char* end = nullptr;
+    errno = 0;
     const unsigned long parsed = strtoul(text, &end, 10);
-    if (*end != '\0') {
+    // Overlong numbers saturated to ULONG_MAX, and a value beyond T wrapped in the cast (deep review L9).
+    if (*end != '\0' || errno == ERANGE || parsed > static_cast<unsigned long>(std::numeric_limits<T>::max())) {
         return false;
     }
     out = static_cast<T>(parsed);

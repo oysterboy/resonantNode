@@ -60,7 +60,8 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println(
         "SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [band=LOW-HIGH|off] [test=LABEL]");
     serialOut().println(
-        "SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
+        "SEQ IN: OBS start [N|tries=N] [period=2500] [window=2000] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]"
+        "(match the Emitter's AUTO interval, 2000 by default)");
     serialOut().println(
         "SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]"
         " [level=FS] [att=DB1,DB2,...]");
@@ -186,6 +187,10 @@ void AnalyzerApp::handleRawCommand(const char* line) {
         bool ok = true;
         if (startsWithIgnoreCase(token, "f=")) {
             ok = parseTokenValue(token, toneHz, kRawBadValue);
+            if (ok && (toneHz == 0 || toneHz > runtime::kMaxToneHz)) {  // the Emitter refused it in silence (L8)
+                printBadValue(kRawBadValue, token);
+                ok = false;
+            }
         } else if (startsWithIgnoreCase(token, "dur=")) {
             ok = parseTokenValue(token, durationMs, kRawBadValue);
         } else if (startsWithIgnoreCase(token, "post=")) {
@@ -227,6 +232,9 @@ void AnalyzerApp::handleRawCommand(const char* line) {
                 rawMode = AnalyzerApp::RawCaptureMode::I2s;
             } else if (equalsIgnoreCase(modeValue, "both")) {
                 rawMode = AnalyzerApp::RawCaptureMode::Both;
+            } else {
+                printBadValue(kRawBadValue, token);  // was taken as feat (deep review L8)
+                ok = false;
             }
         }
         if (!ok) {
@@ -468,6 +476,13 @@ void AnalyzerApp::handleSeqStart(const char* verb, char*& savePtr) {
         serialOut().println("]");
         return;
     }
+    // Keys that only a pulse train uses, and a sweep with one, were dropped without a word (deep review L3).
+    if ((request.pulseCount == 0 &&
+         (request.pulseHop[0] != '\0' || request.pulseLevel[0] != '\0' || request.pulseAtt[0] != '\0')) ||
+        (request.pulseCount > 0 && request.sweepToHz != 0)) {
+        serialOut().println("ERR SEQ hop= / level= / att= need pulses=; sweep= is for a plain chirp");
+        return;
+    }
     // The longest trial line (the highest trial number) must fit the Emitter's line reader, or every trial would
     // be dropped there in silence (review 14.1).
     if (!request.externalEmitter) {
@@ -548,7 +563,8 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
     } else if (startsWithIgnoreCase(token, "hop=")) {
         const char* list = text_parse::tokenValue(token);
         if (!analyzer_commands::validHopList(list, sizeof(request.pulseHop)) ||
-            !analyzer_commands::hopListInRange(list, runtime::kMaxToneHz)) {
+            !analyzer_commands::hopListInRange(list, runtime::kMaxToneHz) ||
+            analyzer_commands::listEntryCount(list) > 8) {  // the Emitter takes 8 (deep review L2)
             printBadValue(kSeqBadValue, token);
             return false;
         }
@@ -734,7 +750,9 @@ bool AnalyzerApp::handleEmitCommand(const char* line) {
 // EMIT CHIRP / PULSES: claim the Emitter (MODE REMOTE, acked) before the command, as a SEQ start does.
 void AnalyzerApp::sendClaimedEmitterCommand(const char* line, const char* name) {
     sendEmitterCommand("MODE REMOTE");
-    if (!waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs)) {
+    const bool acked = waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs);
+    _emitterLine.reset();  // the wait read Serial2 with its own reader: no half line left to glue onto (deep review L7)
+    if (!acked) {
         serialOut().print("ERR EMIT ");
         serialOut().print(name);
         serialOut().println(" emitter_remote_claim_timeout");

@@ -81,7 +81,8 @@ multi-tap echo, each pass quieter, until it drops under the floor. That is echoS
 behind a live whisper rather than the whole piece dying.
 
 What this costs: the node must listen while it plays, so own-emit suppression is off in this mode and the
-detector sees the live whisper plus the replay; the loud bound sits above that sum. The modulation test sees a
+detector sees the live whisper plus the replay; the loud bound sits above that sum ("Suppression off: who hears
+the replay" below). The modulation test sees a
 smeared envelope, which is fine. Gating needs 10-20 ms ramps or it clicks. Without the selectiveness tests this is
 echoSpace again; they are what make the gate safe.
 
@@ -112,6 +113,40 @@ nodes close enough to hear a whisper take part, a nice property in a room. The i
   request kind for it in `SoundOutput`, since Behavior decides and SoundOutput performs (myspec 7.2).
 - **Build**: a mode under `src/modes/` with its own env at 48 kHz (or 24), beside the echo room's; not a fork,
   see "In the repo or a fork" below.
+
+## Suppression off: who hears the replay (owner's question, 2026-10-30)
+
+With suppression off, either the node's mic hears its own replay, or the speaker sits away from the own mic and
+near a neighbour's. Both work, and the firmware is the same for both: the difference is one number per node, how
+much of its own output its mic hears, and that number can be measured rather than assumed.
+
+**Case 1: the mic hears the whisper and the own replay.** The ring holds the mix, so the replay is replayed D
+later at gain g, then at g squared: a decaying tail of repeats at spacing D. With g below 1 and the loud bound this
+is stable, and it is a sound, a whisper that smears and fades. Two things to do for it:
+
+- Count the tail as one episode, not one own emission per pass, or the level automaton runs to the top on a single
+  whisper.
+- Make the floor and the loud bound aware of the own output. The node knows what it plays and when. If it measures
+  its coupling at boot (a short burst and the level the mic reports, the way SELFTEST's amp check hears its own
+  tone), it raises the floor by the expected own level while it plays. Cheap, and it keeps a reflective room from
+  pinning the gate open. Full echo cancellation is not needed.
+
+**Case 2: the speaker sits away from the own mic, near the neighbour's.** The speaker moves, not the mic: the
+amp's output pair runs a metre or two of wire without complaint, while the mic shares BCLK and WS with the amp on
+the one I2S port and its lines must stay short (a mic on a long cable corrupts the timing). With the speaker at the
+next node's mic the chain is given by geometry: whisper into node 1, out at node 2's mic after D1, out at node 3's
+mic after D2. Self-coupling is low, the tail of case 1 nearly absent, each hop one re-recording through air. Closed
+into a ring, the whisper goes round and fades: Stille Post in its most literal form. The loop guard is the same loud
+bound and g below 1, now across nodes instead of inside one.
+
+**What it means for the design.** Build for case 1, because any room has reflections and the node must survive
+some self-coupling anyway. Measure the coupling at boot and feed it to the floor and the bound. Then the layout
+decides the character: speakers at their own nodes gives a room that smears, speakers at the neighbours gives a
+line or a ring that passes the whisper on. A mixed layout is a set of different coupling numbers.
+
+One point to say out loud: Behavior counts heard trains and own emissions per node. In case 2 a node's output is
+mostly heard by its neighbour, so the level rises where the sound arrives, not where it was played. Probably right
+for a chain; to be watched on the bench.
 
 ## In the repo or a fork (owner's question, 2026-10-30)
 
@@ -174,3 +209,5 @@ feel             an answer                            an echo, or an answer at a
 5. The gain per pass, which sets the self-echo tail.
 6. Whether the echo room and Whispernet are one mode with a profile switch or two modes. Two, unless the detector
    and the output path turn out to share more than expected.
+7. The layout: speakers at their own nodes (a room that smears) or at the neighbours' mics (a line or a ring);
+   the coupling measured at boot either way.

@@ -89,6 +89,8 @@ void test_targets_and_allowlist() {
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("RB CALL"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("SELFTEST"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("NET PING"));
+    TEST_ASSERT_TRUE(net::remoteCommandAllowed("ECHO STATUS"));  // the echo shell (ECHO-003)
+    TEST_ASSERT_FALSE(net::remoteCommandAllowed("ECHOSTATUS"));
     TEST_ASSERT_FALSE(net::remoteCommandAllowed("NET * PARAM SET x 1"));  // the radio does not address itself
     TEST_ASSERT_FALSE(net::remoteCommandAllowed("NET STATUS"));
     TEST_ASSERT_FALSE(net::remoteCommandAllowed("PARAMSET x"));

@@ -74,7 +74,8 @@ howl with the loop closed; a RAW capture holding the whisper and the replay; a b
 
 ### ECHO-003 - the switch on location: OTA in and out, params, WiFi
 
-Status: TODO (owner 2026-10-30: "on location it's just a firmware update")
+Status: PARTIAL (2026-10-30: the shell esp32dev-echo builds, radio and OTA in it; the board part open)
+(owner 2026-10-30: "on location it's just a firmware update")
 
 ```text
 1. ESP-NOW (NodeNet) stays in both builds: NET * OTA on a USB Node is the way in and the way out. The heap

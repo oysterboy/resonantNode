@@ -10,7 +10,8 @@ should not know the Node's command names. Pure; host-tested in test/test_net_fra
 namespace net {
 
 // What travels by radio (owner 2026-10-25): every Node command, PARAM, RB and
-// SELFTEST, plus NET PING. Not the other NET commands (the radio does not
+// SELFTEST, plus NET PING; ECHO for the echo modes' shell (ECHO-003: ECHO STATUS on a
+// board running it; a Node answers it as an unknown command). Not the other NET commands (the radio does not
 // address itself). Large replies are paced by the sender (NodeNet), so they
 // cost the gateway no audio. Operator rules for the ones that sound, block or
 // reset: docs/notes_manual.md, "Remote commands".
@@ -23,7 +24,8 @@ inline bool remoteCommandAllowed(const char* text) {
     if (text == nullptr) {
         return false;
     }
-    if (startsWithWord(text, "PARAM") || startsWithWord(text, "SELFTEST") || startsWithWord(text, "OTA")) {
+    if (startsWithWord(text, "PARAM") || startsWithWord(text, "SELFTEST") || startsWithWord(text, "OTA") ||
+        startsWithWord(text, "ECHO")) {
         return true;
     }
     if (strncasecmp(text, "RB ", 3) == 0) {

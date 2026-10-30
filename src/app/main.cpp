@@ -7,11 +7,14 @@
 // Select exactly one runtime mode at compile time:
 // - ANALYZER_MODE for occurrence analysis
 // - EMITTER_MODE for the standalone output device
+// - ECHO_MODE for the echo modes' shell (ECHO-003)
 // - default for the resonant node sketch
 #if defined(ANALYZER_MODE)
 #include "modes/analyzer/AnalyzerModeApp.h"
 #elif defined(EMITTER_MODE)
 #include "modes/emitter/EmitterApp.h"
+#elif defined(ECHO_MODE)
+#include "modes/echo/EchoApp.h"
 #else
 #include "modes/resonant/ResonantNodeApp.h"
 #endif
@@ -21,6 +24,8 @@
 AnalyzerModeApp app;
 #elif defined(EMITTER_MODE)
 EmitterApp app(CHIRP_PIN, CHIRP_BTL_PIN, EMITTER_UART_RX_PIN, EMITTER_UART_TX_PIN, EMITTER_UART_BAUD);
+#elif defined(ECHO_MODE)
+EchoApp app;
 #else
 Node app(STATUS_LED_PIN, CHIRP_PIN, CHIRP_BTL_PIN);
 #endif

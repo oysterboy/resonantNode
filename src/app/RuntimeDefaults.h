@@ -98,13 +98,14 @@ constexpr unsigned long kDefaultChirpDurationMs = 100UL;
 constexpr uint32_t kDefaultAudioI2SSampleRateHz = AUDIO_I2S_SAMPLE_RATE_HZ;
 
 // Band grid (DET-013). FreqBandStream's rolling window sets the bin
-// spacing: sample rate / window samples (16 kHz / 64 = 250 Hz). The
+// spacing: sample rate / window samples (16 kHz / 64 = 250 Hz; the window
+// follows the rate, so a 48 kHz build, the echo shell, keeps 250 Hz with 192). The
 // network band (decisions/2026-10-16-network-band-2950-3950.md) and the
 // Node's hop train sit on that grid, and the chirp must too: an off-bin
 // tone splits over two bins and fails the contrast gate (lab note
 // 2026-10-16 section 9). These are the one place the grid is defined;
 // FreqBandStream, the Node and the host replay read them from here.
-constexpr unsigned long kFreqBandWindowSamples = 64UL;
+constexpr unsigned long kFreqBandWindowSamples = kDefaultAudioI2SSampleRateHz / 250UL;
 constexpr unsigned long kBandBinSpacingHz = kDefaultAudioI2SSampleRateHz / kFreqBandWindowSamples;
 constexpr unsigned long kDefaultNetworkBandLowHz = 2950UL;
 constexpr unsigned long kDefaultNetworkBandHighHz = 3950UL;

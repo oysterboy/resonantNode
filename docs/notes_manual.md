@@ -18,6 +18,7 @@ When you find a stale name here, fix the pointer, do not add another table of va
 platformio run -e esp32dev            Node (RB, the field firmware)
 platformio run -e esp32dev-analyzer   Analyzer (default env)
 platformio run -e esp32dev-emitter    Emitter (signal source only)
+platformio run -e esp32dev-echo       the echo modes' shell at 48 kHz (D-AMP only; ECHO-003, 2026-10-30)
 ```
 
 These build the D-AMP board (MAX98357A amp and I2S mic on one full-duplex port), the node hardware
@@ -296,6 +297,27 @@ refused with `ERR EMIT line_too_long max=95` (2026-10-29).
 The Emitter prints `EVT emitter_ready`, `EVT emitter_cmd` and the trial markers `EMIT_START`,
 `EMIT_DRIVE_ON`, `EMIT_DONE`, `EMIT_DRIVE_OFF` (each `trial=... t_ms=...`), so a log of an Emitter-driven run can be aligned with the Analyzer's trials.
 
+## Echo shell (esp32dev-echo, 2026-10-30)
+
+The shell the echo room and Whispernet will grow in (`src/modes/echo/`, roadmap-echo.md ECHO-003). It does not
+detect or replay yet: it runs the per-sample path both modes need at 48 kHz (the mic block, an envelope, an int16
+ring of `ECHO_RING_MS`, 500 by default) with the radio up, and counts what that costs. Rate, DMA buffers and ring
+length are build flags (the env in `platformio.ini`); it has no params and leaves the Node's stored ones alone.
+
+```text
+ECHO STATUS (or STATUS)   one line: dropped_bufs since ECHO RESET, pass_us_mean / max, block_us_max,
+                          samples, measured_mhz, env_peak, free_heap, largest_block, net counters
+ECHO RESET                the load counters
+ECHO LOG <s>              the status line every s seconds (10 at boot), 0 = on request only
+TONE <hz> <ms>            a test tone through the amp, at the shell's rate
+OTA url=... token=...     as on the Node; the image confirms after 20 s once its radio started
+NET STATUS / NET PING     the radio's counters
+```
+
+By radio from a USB Node: `NET <name|*> OTA ...` (the way back to the Node image), `NET <name> ECHO STATUS`,
+`NET <name> NET PING`. The shell is not a gateway (no NET to other boards from it). Its boot line
+`ECHO boot ... ring_bytes=... largest_block_before_ring=... net_started=1` gives the memory numbers.
+
 ## Runtime gate chain
 
 One occurrence becomes one `OccurrenceVerdict` (`src/detection/evaluation/OccurrenceVerdict.h`),
@@ -359,14 +381,14 @@ src/behavior/       ResonantBehavior and BehaviorGateConfig
 src/output/         OutputRequest.h (the request vocabulary: ChirpPattern, OutputRequest,
                     OutputLimits, OutputStatus; no device), SoundOutput, ChirpOutput, ToneOutput
 src/audio/, src/hal/  signal chain and I2S input / output
-src/net/            ESP-NOW frames for NET commands
-src/modes/resonant|analyzer|emitter/   per-mode command handling and wiring
+src/net/            ESP-NOW frames for NET commands, NodeNet (transport), NetGateway (reply text layer)
+src/modes/resonant|analyzer|emitter|echo/   per-mode command handling and wiring
 src/modes/resonant/  the Node, split by role: ResonantNodeApp.cpp (boot, loop, pipeline, SELFTEST glue),
                      ResonantNodeParams (NodeParams: registry, NVS store, registration order; the Node's
                      apply per module, persistence, profile), ResonantNodeCommands.cpp
                      (serial and the command dispatch), ResonantNodeNet.cpp (radio), ResonantNodeStatus.cpp
                      (diagnostics); its parts (step 11i): ResonantNodeCounters.h (RB tallies),
-                     ResonantNodeBaseline (quiet-gated rebase), ResonantNodeNetGateway (radio replies),
+                     ResonantNodeBaseline (quiet-gated rebase), NetGateway (radio replies, src/net/),
                      ResonantNodeSelfTest (SELFTEST phases), ResonantNodeSignalComposer (band grid,
                      output.hop_* / idle call -> OutputRequest)
 src/app/            board config, runtime defaults, roster, param ids, NVS store, serial

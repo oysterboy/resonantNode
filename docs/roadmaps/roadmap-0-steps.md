@@ -207,6 +207,12 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    20.1 ECHO-003 first, on the bench (11-02 .. 11-06): the 48 kHz env and the loop budget with the dropped-buffer
         counter, the OTA round trip Node -> echo -> whisper -> Node, stored params across modes, WiFi for the site.
         Remote. Decision: 48 kHz or 24 kHz.
+        2026-10-30, PC part: esp32dev-echo (src/modes/echo/EchoApp, the shell: mic block, envelope, 500 ms int16
+        ring at 48 kHz, 8 DMA buffers = 21 ms, radio up, OTA; ECHO STATUS prints dropped buffers, pass and block
+        times, the heap) builds in CI, static RAM 48.5 KB (the Node 97 KB); NetGateway moved to src/net/; the radio
+        carries ECHO; the band window follows the rate (64 at 16 kHz, unchanged; T2h byte-identical, host 148 / 148).
+        Board part open: flash one Node by USB after the soak, ECHO STATUS for 10 min quiet / with TONE / with NET
+        traffic, then the OTA round trip.
    20.2 ECHO-001 built, host-tested and checked on the desk (11-09 .. 11-20; the Emitter's pulse train as the
         click). PC, then remote. Decision: the echo room heard on the desk.
    20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the

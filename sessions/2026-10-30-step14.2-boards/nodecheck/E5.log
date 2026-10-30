@@ -1,0 +1,29 @@
+NET cmd from=24:DC:C3:4A:B0:50 seq=47371 target=* text=NET PING
+NET node=E5 started=1 build=a5193220 silent=1 uptime_s=309 rx=1 rejected=0 queue_full=0 tx=0 tx_failed=0 outbox_full=0 commands=0
+NET cmd from=24:DC:C3:4A:B0:50 seq=47372 target=* text=PARAM SET behavior.wait_after_heard_ms 100
+PARAM SET path=behavior.wait_after_heard_ms module=behavior old=100 new=100 status=ok
+PARAM SET path=output.silent module=output old=1 new=0 status=ok
+RB silent=0
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+SELFTEST_CHIRP start n=5 freq_hz=3200 path=behavior gap_ms=1500
+SELFTEST_CHIRP done n=5 started=5
+PARAM SET path=output.silent module=output old=0 new=1 status=ok
+RB silent=1
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET cmd from=24:DC:C3:4A:B0:50 seq=47373 target=E5 text=SELFTEST
+NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:fe:38 board=damp role=node version=0.4.0 git=a5193220 built=Oct_30_2026 built_time=20:57:31 uptime_ms=349278
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=93784 floor_mean=1551 floor_peak=4851 bit8_pct=50.2 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=3313 smooth_at_rebase=150.0 quiet_rebases=1 forced_rebases=0 baseline=81.5
+SELFTEST_AMP n=1 floor=5575 tone=464823 snr_db=38.4 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=5190 tone=465050 snr_db=39.0 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=2409 tone=463552 snr_db=45.7 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=2543 tone=464844 snr_db=45.2 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=3383 tone=464459 snr_db=42.8 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=464823 floor=3383 snr_db=42.8 snr_min_db=38.4 snr_max_db=45.7 tone_spread=1.00 pass_db=30.0 max_spread=1.30
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=SKIP reason=silent
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=4 fail=0 skip=2 role=node
+RB baseline active

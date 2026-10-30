@@ -55,12 +55,12 @@ struct BehaviorGateConfig {
     // automaton off (p = 1, no level rest: the behaviour before step 16).
     uint32_t levelMax = 6;
     uint32_t levelDecayMs = 2000;
-    uint32_t answerJitterMs = 2000;
-    // p = (level + levelOffset) / levelMax, the level counted before the draw (as tools/sim/fieldramp.py): offset 1
-    // answers the first train heard with 2 / L, offset 0 with 1 / L (the research note's reading). Not a param: the
-    // decision's fixed choice, compared in native-fieldsim (step 16.2).
-    uint32_t levelOffset = 1;
+    uint32_t answerJitterMs = 3000;  // 3 s, shrinking with the level (owner 2026-10-30, after native-fieldsim)
+    // p = (level + levelOffset) / levelMax, the level counted before the draw (as tools/sim/fieldramp.py): offset 0
+    // answers the first train heard with 1 / L (owner 2026-10-30: "1 in 6"; offset 1 would be 2 / L). Not a param.
+    uint32_t levelOffset = 0;
     // The decision's named extra rule ("revisit when the ear wants each answer sooner"): the jitter window shrinks
-    // with the level, jitter * (levelMax - level) / levelMax. Off by default; compared in native-fieldsim (16.2).
-    bool answerJitterShrinks = false;
+    // with the level, jitter * (levelMax - level) / levelMax: a quiet node answers late, one near the top quickly
+    // (owner 2026-10-30, after native-fieldsim). Not a param.
+    bool answerJitterShrinks = true;
 };

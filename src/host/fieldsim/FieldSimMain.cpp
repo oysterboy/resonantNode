@@ -85,11 +85,11 @@ int main(int argc, char** argv) {
     int n = 5;
     double hours = 4.0;
     unsigned long seed = 1;
-    int offset = 1;
+    int offset = -1;
     bool old = false;
     long jitter = -1;
     long levelMax = -1;
-    bool shrink = false;
+    int shrink = -1;  // -1: the firmware's default
     const char* emissionsPath = nullptr;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -108,29 +108,37 @@ int main(int argc, char** argv) {
         } else if (a == "--levels" && i + 1 < argc) {
             levelMax = atol(argv[++i]);
         } else if (a == "--shrink") {
-            shrink = true;
+            shrink = 1;
+        } else if (a == "--no-shrink") {
+            shrink = 0;
         } else if (a == "--old") {
             old = true;
         } else if (a == "--emissions" && i + 1 < argc) {
             emissionsPath = argv[++i];
         } else {
-            fprintf(stderr, "usage: %s --matrix all|line|line2 --nodes N --hours H --seed S [--offset 0|1] [--jitter MS] "
-                            "[--levels L] [--old] "
-                            "[--emissions out.csv]\n", argv[0]);
+            fprintf(stderr,
+                    "usage: %s --matrix all|line|line2 --nodes N --hours H --seed S [--offset 0|1] [--jitter MS] "
+                    "[--levels L] [--old] "
+                    "[--emissions out.csv]\n",
+                    argv[0]);
             return 2;
         }
     }
     gRng ^= 0x9E3779B97F4A7C15ULL * (seed + 1);
 
     BehaviorGateConfig cfg;  // shipped: the level automaton
-    cfg.levelOffset = static_cast<uint32_t>(offset);
+    if (offset >= 0) {  // otherwise the firmware's default
+        cfg.levelOffset = static_cast<uint32_t>(offset);
+    }
     if (jitter >= 0) {
         cfg.answerJitterMs = static_cast<uint32_t>(jitter);
     }
     if (levelMax >= 0) {
         cfg.levelMax = static_cast<uint32_t>(levelMax);
     }
-    cfg.answerJitterShrinks = shrink;
+    if (shrink >= 0) {
+        cfg.answerJitterShrinks = shrink == 1;
+    }
     if (old) {  // the behaviour until step 16: fixed answer, the two rest triggers
         cfg.levelMax = 0;
         cfg.restAfterFieldPatterns = 4;
@@ -223,8 +231,7 @@ int main(int argc, char** argv) {
                 }
                 l.heardTrains.erase(l.heardTrains.begin() + static_cast<long>(k));
                 const bool deaf = (l.sounding && l.soundingUntil > tr.first) ||
-                                  l.behavior.ownEmitDetectionSuppressed(tr.first) ||
-                                  l.behavior.ownEmitDetectionSuppressed(tr.second);
+                    l.behavior.ownEmitDetectionSuppressed(tr.first) || l.behavior.ownEmitDetectionSuppressed(tr.second);
                 if (deaf) {
                     continue;
                 }
@@ -323,16 +330,17 @@ int main(int argc, char** argv) {
         maxMinute = std::max(maxMinute, b - a + 1);
     }
     auto pct = [](size_t num, size_t den) { return den ? 100.0 * static_cast<double>(num) / den : 0.0; };
-    printf("fieldsim matrix=%s nodes=%d hours=%.1f seed=%lu %s offset=%d L=%lu jitter=%lu\n", matrix.c_str(), n, hours,
-           seed, old ? "old(fixed answer, rest triggers 4/6)" : "level", offset, static_cast<unsigned long>(cfg.levelMax),
-           static_cast<unsigned long>(cfg.answerJitterMs), shrink ? " shrinking" : "");
+    printf("fieldsim matrix=%s nodes=%d hours=%.1f seed=%lu %s offset=%d L=%lu jitter=%lu%s\n", matrix.c_str(), n,
+           hours, seed, old ? "old(fixed answer, rest triggers 4/6)" : "level", static_cast<int>(cfg.levelOffset),
+           static_cast<unsigned long>(cfg.levelMax), static_cast<unsigned long>(cfg.answerJitterMs),
+           cfg.answerJitterShrinks ? " shrinking" : "");
     printf("  emissions %zu  chains %zu  mean %.1f  max %zu  rests %lu\n", emissions.size(), chains.size(),
            chains.empty() ? 0.0 : sumLen / chains.size(), maxLen, rests);
     printf("  idle calls igniting %.0f %% (%zu / %zu)\n", pct(ignited, idleStarts), ignited, idleStarts);
-    printf("  gate: chains ending within 30 s %.0f %% (>= 80)  max per minute %zu (<= 100)\n", pct(ended30, chains.size()),
-           maxMinute);
-    printf("  gate: chord rounds first half %.0f %% (< 25), last half %.0f %% (> first)\n", pct(chordsFirst, roundsFirst),
-           pct(chordsLast, roundsLast));
+    printf("  gate: chains ending within 30 s %.0f %% (>= 80)  max per minute %zu (<= 100)\n",
+           pct(ended30, chains.size()), maxMinute);
+    printf("  gate: chord rounds first half %.0f %% (< 25), last half %.0f %% (> first)\n",
+           pct(chordsFirst, roundsFirst), pct(chordsLast, roundsLast));
     printf("  gate: first answer later than 1 s in %.0f %% of ignited calls (most)\n", pct(lateFirst, firstAnswers));
     return 0;
 }

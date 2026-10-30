@@ -33,6 +33,12 @@ Chords (owner 2026-10-29, at the step 12-19 ordering): several Nodes answering a
 trains for the level, not one. Step 14 measures what the detector makes of a chord (one verdict, several, or none);
 step 16 implements the count from whatever 14 finds a chord yields.
 
+Amended 2026-10-30 (owner, after native-fieldsim, step 16.2): the jitter window is 3 s and shrinks with the level
+(window * (L - level) / L), the revisit rule below taken now: one fixed window could not give both a tentative
+first answer (later than 1 s in most chains) and a denser chorus late in a chain. And p = level / L counted before
+the draw, so a quiet node answers its first train with 1 in 6 (offset 0). Desk simulation with these values: 65 %
+of idle calls start a swell, chords 3 % early and 15 % late in a chain, the first answer later than 1 s in 58 %.
+
 Implemented 2026-10-30 (step 16.1): a chord counts its trains by the merged occurrence's duration, 1..3 (owner
 2026-10-30; step 14 found one verdict per chord, ~430 ms when two answers 250 ms apart merge). As in the desk model
 the train is counted before the draw, so the first train heard is answered with p = 2 / L (open: the research

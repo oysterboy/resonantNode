@@ -171,13 +171,14 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         tools/sim/fieldramp.py: the train is counted, then drawn against p, so the first train heard is answered with
         2 / L (the research note's text says 1 / L: owner question). Deploying: the Nodes have the old triggers and
         rest_ms stored (PAR-018), so set and PARAM SAVE the new values on each board.
-   16.2 [DONE 2026-10-30, sim; owner choices open] native-fieldsim: N real Behaviors through a fake channel (step 14's chord rules, a hearing matrix:
+   16.2 [DONE 2026-10-30] native-fieldsim: N real Behaviors through a fake channel (step 14's chord rules, a hearing matrix:
         the desk's for now, the tryout room's from 15), nodegroup.py's metrics, against tools/sim/fieldramp.py.
         Results: research/field-activity-response.md "native-fieldsim". Every chain ends, never near 100 per minute;
         chords late above 25 % and the first answer after 1 s cannot both be met by one jitter window, fixed or
-        shrinking with the level (behavior option answerJitterShrinks, off). Owner: which gate line wins, and
-        offset 0 or 1.
-   16.3 The desk: five Nodes free, step 6's protocol, after 14.2's board check.
+        shrinking with the level. Owner 2026-10-30: a 3 s window shrinking with the level, and 1 in 6 for a quiet
+        node's first answer (offset 0); now the shipped defaults (decision amended). Desk sim with them: 65 % of
+        idle calls swell, chords 3 % -> 15 %, first answer after 1 s in 58 %, every chain ends.
+   16.3 [NEXT, after 14.2's board check] The desk: five Nodes free, step 6's protocol.
 
 17. [TODO] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
    roadmap-behavior.md BEH-009, decisions/2026-10-29-wider-band-base-bin-per-node.md. PC first, then the desk.

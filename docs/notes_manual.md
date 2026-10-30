@@ -314,7 +314,8 @@ behaviorEligible  ResonantBehavior lets it trigger a reaction now
 The first four are verdict fields, decided in detection. `behaviorEligible` is decided in
 `src/behavior/ResonantBehavior.*` from the verdict and the behavior timing (wait, refractory,
 self-suppression, idle, rest) and, since 2026-10-30 (BEH-008), the level automaton: a level counted from the
-verdicts (FieldState is no longer read); a heard train is answered with p = (level + 1) / level_max
+verdicts (FieldState is no longer read); a heard train is answered with p = level / level_max (counted first)
+after the 100 ms wait plus a random window of answer_jitter_ms that shrinks as the level rises
 (`decision=declined_by_level` otherwise), a pending answer is dropped with 1 - p when another train comes
 (`yielded`), at level_max the node rests (`rest_level`). RB STATUS shows `behavior.level`, `behavior.declined`,
 `behavior.yielded`. `behavior.level_max 0` switches it off. `ResonantBehavior::BehaviorDecision` lists every

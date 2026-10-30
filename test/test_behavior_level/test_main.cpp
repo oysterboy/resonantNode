@@ -83,20 +83,33 @@ void test_trains_counted_by_duration() {
     TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsInVerdict(train(1000, 0)));
 }
 
-// The first train heard raises the level to 1, then draws against p = (1 + 1) / L, as tools/sim/fieldramp.py does
-// (count, then draw): a draw of 1 (below 2) answers, a draw of 2 declines; the train is counted either way.
+// The first train heard raises the level to 1, then draws against p = (1 + offset 0) / L, as tools/sim/fieldramp.py
+// counts (count, then draw): a draw of 0 answers, a draw of 1 declines; the train is counted either way.
 // Each answer also takes the jitter draw and the idle schedule's draw.
-void test_low_level_answers_with_two_in_l() {
+void test_low_level_answers_with_one_in_l() {
     ResonantBehavior b = make(automaton());
-    script({1, 0, 0});  // answer draw 1, jitter 0, idle schedule
+    script({0, 0, 0});  // answer draw 0, jitter 0, idle schedule
     TEST_ASSERT_EQUAL(Decision::ConsumedPattern, b.handleOccurrenceVerdict(train(1000), 1000));
     TEST_ASSERT_EQUAL_UINT32(1, b.level(1000));
 
     ResonantBehavior c = make(automaton());
-    script({2});
+    script({1});
     TEST_ASSERT_EQUAL(Decision::DeclinedByLevel, c.handleOccurrenceVerdict(train(1000), 1000));
     TEST_ASSERT_EQUAL_UINT32(1, c.level(1000));
     TEST_ASSERT_EQUAL_UINT32(1, c.declinedByLevel());
+}
+
+// The answer waits the fixed 100 ms plus the jitter draw (the window at level 1: 3 s * 5 / 6 = 2.5 s).
+void test_jitter_window_shrinks_with_the_level() {
+    BehaviorGateConfig cfg = automaton();
+    ResonantBehavior b = make(cfg);
+    script({0, 2600, 0});  // answer; a draw of 2600 is taken modulo the 2501-value window
+    b.handleOccurrenceVerdict(train(1000), 1000);
+    b.update(1000);
+    b.update(1000 + 100 + (2600 % 2501) - 1);
+    TEST_ASSERT_FALSE(b.shouldStartChirp());
+    b.update(1000 + 100 + (2600 % 2501));
+    TEST_ASSERT_TRUE(b.shouldStartChirp());
 }
 
 // The answer waits the fixed 100 ms plus the jitter draw.
@@ -144,7 +157,7 @@ void test_chord_counts_two() {
 // The yield: an answer pending and another train arrives; kept with p, dropped with 1 - p.
 void test_yield_drops_a_pending_answer_with_one_minus_p() {
     ResonantBehavior b = make(automaton());
-    script({0, 1500, 0, 5});  // answer the first (draw 0), 1.5 s jitter, idle draw; then draw 5 >= level 2 + 1: yield
+    script({0, 1500, 0, 5});  // answer the first (draw 0), 1.5 s jitter, idle draw; then draw 5 >= level 2: yield
     b.handleOccurrenceVerdict(train(1000), 1000);
     b.update(1000);
     TEST_ASSERT_EQUAL(Decision::Yielded, b.handleOccurrenceVerdict(train(1400), 1400));
@@ -153,7 +166,7 @@ void test_yield_drops_a_pending_answer_with_one_minus_p() {
     TEST_ASSERT_FALSE(b.shouldStartChirp());
 
     ResonantBehavior c = make(automaton());
-    script({0, 1500, 0, 1});  // the second train's draw 1 < level 2 + 1: the answer is kept
+    script({0, 1500, 0, 1});  // the second train's draw 1 < level 2: the answer is kept
     c.handleOccurrenceVerdict(train(1000), 1000);
     c.update(1000);
     TEST_ASSERT_EQUAL(Decision::AlreadyScheduled, c.handleOccurrenceVerdict(train(1400), 1400));
@@ -217,8 +230,9 @@ void test_off_reproduces_the_fixed_answer() {
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_trains_counted_by_duration);
-    RUN_TEST(test_low_level_answers_with_two_in_l);
+    RUN_TEST(test_low_level_answers_with_one_in_l);
     RUN_TEST(test_answer_waits_the_jitter_draw);
+    RUN_TEST(test_jitter_window_shrinks_with_the_level);
     RUN_TEST(test_top_rests_and_resets_the_level);
     RUN_TEST(test_chord_counts_two);
     RUN_TEST(test_yield_drops_a_pending_answer_with_one_minus_p);

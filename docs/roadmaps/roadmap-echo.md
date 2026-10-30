@@ -82,9 +82,20 @@ Status: TODO (owner 2026-10-30: "on location it's just a firmware update")
    "without ESP-NOW" option: not taken).
 2. Both modes answer OTA and NET OTA themselves. The round trip Node -> echo -> whisper -> Node on the bench,
    each image confirming itself after 20 s, before the first site day.
-3. Stored params: a board keeps NVS across a reflash. Check how a stored key the running build does not
-   register is handled; each mode its own NVS namespace, or the switch starts with PARAM RESET.
+3. Stored params: a board keeps NVS across a reflash. Read 2026-10-30 (lib/ParamRegistry/src/ParamRegistry.cpp
+   load(), src/app/NvsParamStore.h): the store is one NVS namespace "params", key "p<id>"; load() walks the
+   running build's registered bindings and reads the store only for those ids, so a stored key no build
+   registers is never read, never printed and never removed; an entry for a registered id is applied only when
+   version, id, type and range agree (else "status=invalid kept=current"), and a stored value wins over a
+   changed default with the "PARAM stale" line. PARAM RESET clears the whole namespace, every id. Only the Node
+   mode loads the store today (ResonantNodeParams); the Analyzer and the Emitter do not.
+   So: no namespace per mode needed. The echo and whisper modes register their detection and behavior params
+   under new ids (ParamIds.h, appended, never reused) and new paths (echo.*, whisper.*), so a Node save never
+   lands in them and theirs never land in the Node; output params with the same meaning on every mode (the
+   level) keep the shared id on purpose, so the board keeps its level across the switch. The one cross-mode
+   effect to remember on site: PARAM RESET in any mode wipes every mode's saves.
 4. WiFi: the images carry the credentials from the secrets header. The site's network, images built with the
    site's credentials, or the PC's hotspot as on the bench.
-Gate: the round trip done on the desk with the three images, PARAM load stored= read on each, cited.
+Gate: the round trip done on the desk with the three images, PARAM load stored= read on each (the Node's count
+unchanged after a pass through the other two), cited.
 ```

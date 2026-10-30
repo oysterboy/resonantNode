@@ -27,8 +27,8 @@ Step 14 additions (owner 2026-10-29: the 47 h soak), each opt-in, each per check
   --steps margin      the room check runs E005's margin set instead of the default three: hop10 at 0.5 / 0.35 /
                       0.25 / 0.21 FS (level=) and hops 2+3 and 4+5 down 20 dB (att=), 10 trials each
   --chord L,A,B       A and B answer the Emitter's hop10 (sent through the Analyzer's EMIT) at 0 / +150 / +250 ms
-                      (B's behavior.wait_after_heard_ms raised, unsaved) while L listens silent; 5 trains each;
-                      L's valid verdicts per train into chord.csv (E003 phase 2)
+                      (B's wait raised, the rest rules off, unsaved) while L listens silent; 5 trains each;
+                      L's valid verdicts and which of A / B answered, per train, into chord.csv (E003 phase 2)
   --noise-play        bench_audio.wav played once from this PC while every Node listens silent; verdicts per Node
                       into noise.csv (the max duration 450 noise cost, decisions/2026-10-29-max-duration-450...)
 """
@@ -149,11 +149,20 @@ def valid_verdicts(sink, n, t_from, t_to):
     return sum(1 for t, m, l in sink if m == n and t_from <= t < t_to and l.startswith("RB verdict=") and "valid=1" in l)
 
 
+def answers(sink, n, t_from, t_to):
+    return sum(1 for t, m, l in sink if m == n and t_from <= t < t_to and "BEH emit start" in l and
+               "source=heard_pattern" in l)
+
+
 def chord_check(cycle, stamp):
-    """A and B answer at 0 / +150 / +250 ms, L listens; L's valid verdicts per train (train + answers)."""
+    """A and B answer at 0 / +150 / +250 ms, L listens; per train L's valid verdicts (train + answers) and whether A
+    and B answered. The rest rules are off for the check (live): after 10 answers in a minute the own-emit budget
+    sent A and B into rest, and one answer could not be told from a merged pair (first run, 2026-10-30)."""
     global node_sink
     L, A, B = a.chord.split(",")
-    to_nodes("PARAM SET behavior.idle_enabled 0")
+    for c in ("PARAM SET behavior.idle_enabled 0", "PARAM SET behavior.own_emit_budget 0",
+              "PARAM SET behavior.rest_after_field_patterns 0"):
+        to_nodes(c)
     to_node(L, "PARAM SET output.silent 1")
     to_node(A, "PARAM SET output.silent 0")
     to_node(B, "PARAM SET output.silent 0")
@@ -162,21 +171,25 @@ def chord_check(cycle, stamp):
     for extra in (0, 150, 250):
         to_node(B, "PARAM SET behavior.wait_after_heard_ms %d" % (WAIT0 + extra))
         pump(2)
-        counts = []
+        counts, both = [], []
         for k in range(a.chord_trains):
             node_sink = []
             t_from = time.time()
-            analyzer.write(b"EMIT PULSES 5 25 10 trial=%d freq=3450 hop=2950,3200,3450,3700,3950\n" % (k + 1))
+            analyzer.write(("EMIT PULSES 5 25 10 trial=%d freq=3450 hop=2950,3200,3450,3700,3950\n" % (k + 1)).encode())
             pump(6)
-            counts.append(valid_verdicts(node_sink, L, t_from, time.time()))
+            t_to = time.time()
+            counts.append(valid_verdicts(node_sink, L, t_from, t_to))
+            both.append("%d%d" % (min(answers(node_sink, A, t_from, t_to), 1), min(answers(node_sink, B, t_from, t_to), 1)))
             node_sink = None
         rows.append((extra, counts))
         chord_w.writerow([cycle, stamp, "%.2f" % ((time.time() - t0) / 3600.0), extra,
-                          " ".join(str(c) for c in counts)])
+                          " ".join(str(c) for c in counts), " ".join(both)])
     chord_file.flush()
-    to_node(B, "PARAM SET behavior.wait_after_heard_ms %d" % WAIT0)
-    to_nodes("PARAM SET behavior.idle_enabled 1")
+    # Everything back as stored (wait, idle, the rest rules), then the run's own setup.
+    to_nodes("PARAM LOAD")
+    pump(1)
     to_nodes("PARAM SET output.silent 1")
+    to_nodes("RB log full")
     return rows
 
 
@@ -286,7 +299,8 @@ def csv_writer(name, header):
     return f, w
 
 
-chord_file, chord_w = csv_writer("chord.csv", ["cycle", "local_time", "elapsed_h", "offset_ms", "listener_valid"])
+chord_file, chord_w = csv_writer("chord.csv", ["cycle", "local_time", "elapsed_h", "offset_ms", "listener_valid",
+                                               "answered_ab"])
 noise_file, noise_w = csv_writer("noise.csv", ["cycle", "local_time", "elapsed_h", "node", "verdicts", "valid"])
 WAIT0 = 100
 if a.chord:

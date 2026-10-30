@@ -104,6 +104,10 @@ roadmap-echo.md
     The echo room and Whispernet modes, and the OTA switch between them and
     the Node on location (ECHO).
 
+roadmap-hardware.md
+    The installation's nodes as built objects: a stripboard prototype, ten
+    boards, ten cases, and ten nodes in the firmware (HW).
+
 implementation-status.md
     Live status table. Current state only, never dated history.
 ```

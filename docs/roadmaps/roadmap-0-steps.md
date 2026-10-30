@@ -214,6 +214,16 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.
 
+21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
+   roadmap-hardware.md HW-001 (the prototype, the D-AMP pinout as wired, room for the second mic), HW-002 (ten
+   boards, each nodecheck'd and in the roster), HW-003 (ten cases, one geometry), HW-004 (ten nodes in the firmware:
+   roster entries, the field measured at five). Handmade, hands-bound (owner 2026-10-30); runs beside 13-20 on the
+   owner's bench hours; the plan to 2026-12-13 in roadmap-hardware.md.
+   21.1 HW-001 the prototype (11-02 .. 11-13); parts for ten ordered. Owner's bench.
+   21.2 HW-002 ten boards and HW-003 ten cases (11-16 .. 12-04). Owner's bench.
+   21.3 HW-004: ten roster entries, the fieldsim at ten, step 18's node count named. PC.
+   Gate: ten checked nodes in cases, in the roster, a bench session cited; the room steps in December run on them.
+
 ## Carried over, not sequenced
 
 ```text
@@ -264,6 +274,8 @@ parallel.
 
 ## Status log
 
+Status update 2026-10-30, latest: step 21 added (the installation's nodes: a stripboard prototype, ten boards, ten
+cases; roadmap-hardware.md; issue #85), beside 20 on the owner's hours.
 Status update 2026-10-30, later: step 20 gets the date 2026-12-13 for both modes and a plan (roadmap-echo.md); its
 substeps carry the weeks and decision points.
 Status update 2026-10-30, late: step 20 added (the echo room and Whispernet in the tryout room, one OTA each; issue

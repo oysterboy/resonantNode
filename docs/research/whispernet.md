@@ -110,8 +110,33 @@ nodes close enough to hear a whisper take part, a nice property in a room. The i
 - **Behavior**: `ResonantBehavior`, a `SignalShape` for the gated replay, suppression off.
 - **Output**: the writer task in `I2sToneOutput` reads the ring D back and applies the delayed gate with ramps; a
   request kind for it in `SoundOutput`, since Behavior decides and SoundOutput performs (myspec 7.2).
-- **Build**: a mode under `src/modes/` with its own env at 48 kHz (or 24), beside the echo room's; the case for a
-  mode rather than a fork is in `echo-room.md`, "In the repo or a fork", and applies unchanged.
+- **Build**: a mode under `src/modes/` with its own env at 48 kHz (or 24), beside the echo room's; not a fork,
+  see "In the repo or a fork" below.
+
+## In the repo or a fork (owner's question, 2026-10-30)
+
+No. The echo room's answer (`echo-room.md`, "In the repo or a fork") holds, with more force, because Whispernet
+adds even less of its own.
+
+Shared with the Node: the I2S HAL and the port's writer task, the envelope in `AudioSignal`, the
+`ScalarTransientDetector` as the gate's shell, `ResonantBehavior` with the level automaton and the rest, the param
+registry, OTA, the serial command path, CI, and the bench tooling's serial and chain-metric layers.
+
+Its own, and all of it fits the mode layer:
+
+- the ring with the gate bits, one file in `src/audio`;
+- the loud-bound reject and the modulation measure, a few lines beside the detector;
+- a renderer that reads the ring D back and applies the delayed gate, a second output class next to the tone
+  renderer in `src/hal`, sharing the TX port;
+- the mode's wiring, commands and configs under `src/modes/`.
+
+Two settings look like departures but are not: suppression off is a config on the existing Behavior, and the
+48 kHz rate is a build define the HAL already takes.
+
+It would become a fork only if it dropped Behavior altogether (a pure gated line with no budget or rest) or moved
+to other hardware (a WROVER for a long D). Neither is in this note. The echo room and Whispernet are the fourth and
+fifth modes of one repo; open question 6 below, one mode with a profile switch or two, is a question inside the
+repo either way.
 
 ## Verification
 

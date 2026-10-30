@@ -99,3 +99,60 @@ Status: TODO (owner 2026-10-30: "on location it's just a firmware update")
 Gate: the round trip done on the desk with the three images, PARAM load stored= read on each (the Node's count
 unchanged after a pass through the other two), cited.
 ```
+
+---
+
+## Plan to 2026-12-13 (owner's date, 2026-10-30)
+
+Feasible for both modes, with one open-ended item (the whisper detector's tuning) and two conditions on the
+calendar. Estimates are working days of build plus bench at the pace of the last three weeks (D-AMP support landed
+in a step, OTA firmware took three days with review, the level automaton with its simulator one day).
+
+```text
+piece                                              days      what dominates
+ECHO-003 the switch and the 48 kHz go/no-go        2-3       loop budget at 48 kHz (dropped-buffer counter),
+                                                             OTA round trip, param ids
+ECHO-001 the echo room                             7-10      ring and clip, detector per block, Replay shape,
+                                                             Clip request and renderer, mode wiring, desk check
+                                                             with the Emitter's click, echocheck.py
+ECHO-002 Whispernet                                8-12      delay line with gate bits, the whisper detector and
+                                                             its thresholds, coupling at boot, no-howl test with
+                                                             the loop closed, desk check with recorded whispers
+room sessions, one per firmware                    2 site days, after the desk checks
+```
+
+17-25 working days against about 30 to 2026-12-13: it fits, not beside everything else in the queue.
+
+Conditions:
+1. Sequencing: steps 17 and 19 compete for the same weeks. Both modes by the date means step 20 runs ahead of 17
+   and 19, or in a parallel session. The owner sets the order.
+2. Site days: 11-01 and 11-03 are too early (nothing built). The room needs at least two site days between about
+   12-01 and 12-12, the desk work done before them.
+3. A 48 kHz go/no-go in week one: at 48 kHz the I2S read comes every 1.3 ms against an 8 ms DMA queue, with the
+   radio and the serial lines in the same loop. One desk day with the overflow counter answers it. Fallback 24 kHz
+   (halves the memory pressure, keeps whisper fricatives to 12 kHz).
+
+Risks, ranked:
+- Whisper selectivity in a real room (false triggers on HVAC and speech, missed whispers). No bench corpus, and the
+  Emitter cannot make one. Mitigation: record whispers and the room's noise early, tune on the desk through a small
+  speaker against a RAW capture. The one item that can run past the date; the echo room has no equivalent.
+- The howl guard is an argument, not a measurement: verify with two boards facing each other and a gain above 1 on
+  purpose. One desk session.
+- Memory at 48 kHz with the radio up: known numbers (D ~1 s for Whispernet, a 300 ms clip for the echo room); 24 kHz
+  or ADPCM as the way out.
+- The loop at 48 kHz: measurable on day one (condition 3).
+
+Sequence and decision points:
+
+```text
+week            work                                                       decision point
+11-02 .. 11-06  ECHO-003: 48 kHz env, loop budget on the desk, OTA round   48 kHz or 24 kHz
+                trip, param ids
+11-09 .. 11-20  ECHO-001 built, host-tested, desk check                    the echo room heard on the desk
+11-16 .. 12-04  ECHO-002 built, detector tuned on recordings, no-howl      no howl, whispers answered, speech
+                test                                                       ignored
+12-05 .. 12-12  the room, one firmware per session, the Node image back    step 20's gate
+```
+
+If only one fits in the end, the echo room is the safe one; Whispernet carries the tuning risk and its desk work is
+where the schedule can slip.

@@ -199,11 +199,18 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    a whisper through a gated delay line), ECHO-003 (the switch: NET OTA in and out, params, WiFi).
    docs/research/echo-room.md, docs/research/whispernet.md (owner 2026-10-30: both "deserve a slot in the tryout";
    "on location it's just a firmware update").
-   20.1 ECHO-003 first, on the bench: the OTA round trip Node -> echo -> whisper -> Node, stored params across
-        modes, WiFi for the site. Remote.
-   20.2 ECHO-001 built and checked on the desk (the Emitter's pulse train as the click). PC, then remote.
-   20.3 ECHO-002 built and checked on the desk (a recorded whisper, a loud control, a fan). PC, then remote.
-   20.4 The room: a session per firmware, the Node image back at the end. On site.
+   Target 2026-12-13 for both modes (owner 2026-10-30); the plan with estimates, conditions and risks in
+   roadmap-echo.md "Plan to 2026-12-13". Its conditions: 20 ahead of 17 and 19 or in a parallel session; two site
+   days between about 12-01 and 12-12; the 48 kHz go/no-go in week one.
+   20.1 ECHO-003 first, on the bench (11-02 .. 11-06): the 48 kHz env and the loop budget with the dropped-buffer
+        counter, the OTA round trip Node -> echo -> whisper -> Node, stored params across modes, WiFi for the site.
+        Remote. Decision: 48 kHz or 24 kHz.
+   20.2 ECHO-001 built, host-tested and checked on the desk (11-09 .. 11-20; the Emitter's pulse train as the
+        click). PC, then remote. Decision: the echo room heard on the desk.
+   20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the
+        desk check (11-16 .. 12-04; a recorded whisper, a loud control, a fan). PC, then remote. Decision: no howl,
+        whispers answered, speech ignored.
+   20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.
 
@@ -257,6 +264,8 @@ parallel.
 
 ## Status log
 
+Status update 2026-10-30, later: step 20 gets the date 2026-12-13 for both modes and a plan (roadmap-echo.md); its
+substeps carry the weeks and decision points.
 Status update 2026-10-30, late: step 20 added (the echo room and Whispernet in the tryout room, one OTA each; issue
 #84, roadmap-echo.md); place after 18 to be set by the owner.
 

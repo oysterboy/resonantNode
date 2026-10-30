@@ -70,6 +70,8 @@ frequency-drift-detection.md   drift: Goertzel bank vs sliding DFT vs FFT
                                decisions/2026-10-15-signal-variation-inside-a-
                                shared-band.md, DET-013..015, OUT-005/006; the
                                bank built, DET-014 carried over)
+code-review-2026-10-30.md      deep review, six areas: no high, 15 medium, ~35 low
+                               (promoted: step 14.2)
 code-review-2026-10-29.md      step 12.0's review: 1 high, 9 medium, ~25 low
                                (promoted: 12.0.1)
 frequency-tuning-sweep.md      the network band swept over 500-5000 Hz: hits vs

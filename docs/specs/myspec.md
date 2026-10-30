@@ -1193,6 +1193,11 @@ the kind of emission (`SignalShape`: the network signal, or a plain chirp),
 the Node turns that into one `OutputRequest` from the detection band's bin
 grid and the `output.*` params (which bins, in what order, how many steps,
 pulse and gap length), because Behavior does not know the band grid.
+One exception, by design (BEH-009, 2026-10-30): Behavior owns the node's base
+bin, the index the train starts climbing from, as behavior-facing config the
+Node hands in (the grid's low edge, spacing and how many bases fit). Behavior
+moves it (toward the base heard, which the verdict states as the heard train's
+lowest bin; a scatter at rest) and the Node still composes the request from it.
 Decided 2026-10-23 (`decisions/2026-10-23-soundoutput-executes-node-composes.md`);
 until Behavior variants exist (OUT-004, NODE-005's ResonantProgram), the
 Node is the one composer. A variation that needs Behavior to state the
@@ -1208,9 +1213,9 @@ between bins of the network band, it does not deviate continuously around
 a centre; `decisions/2026-10-16-network-band-2950-3950.md`):
 
 ```text
-network band (detection):  2950-3950 Hz, bins 2950 / 3200 / 3450 / 3700 / 3950
+network band (detection):  a bank of bins on one grid (the values: notes_manual.md, PARAM DUMP)
 emit variation:            which bins, in what order, how many steps, pulse and gap length
-                           (per node: the start bin; over time: the rest), always on the bins
+                           (per node: the base bin, moved by Behavior; over time: the rest), always on the bins
 dense field behavior:      shorten the train and spread it over more bins
 ```
 

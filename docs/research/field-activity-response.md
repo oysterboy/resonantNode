@@ -387,3 +387,26 @@ answers); the release is instant and the attack slow; nodes saturating at slight
 chorus up over a second or two without a rule for it. A check for the polyphony list (docs/research/polyphony.md):
 at the top the chorus is aligned and several trains on the same rotation sound tens of milliseconds apart, which
 E003 did not measure (it had adjacent and non-adjacent rotations).
+
+## native-fieldsim: the firmware's Behavior in a simulated room (step 16.2, 2026-10-30)
+
+`pio run -e native-fieldsim` (src/host/fieldsim/FieldSimMain.cpp): five real ResonantBehaviors, 1 ms ticks, step
+14's chord rules (starts under 230 ms apart merge, counted by duration), deaf while sounding or suppressed; 4 h per
+run, three seeds, averages. Matrices: all hear all (the desk), line (neighbours only), line2 (two either side).
+Gate columns as in BEH-008.
+
+```text
+                     ignite  chains   end30  max/min  chords 1st / 2nd half  first answer > 1 s
+all   old (fixed)     100 %   6.4     100 %     60       14 % / 77 %              2 %
+all   level o1 j2000   86 %   6.2     100 %     19        5 % / 13 %             43 %
+all   level o0 j2000   65 %   4.1     100 %     20        4 % /  8 %             50 %
+line  level o1 j2000   57 %   3.6     100 %     26        2 % /  5 %             55 %
+fixed jitter (all, o1): 500 ms 14 / 27 % chords, 7 % late; 1 s 8 / 21 %, 15 %; 3 s 4 / 8 %, 56 %
+shrinking jitter (window * (L - level) / L; all, o1): 2 s 7 / 23 %, 35 %; 3 s 3 / 18 %, 52 %; 4 s 4 / 16 %, 57 %
+```
+
+Every variant ends every chain and stays far under 100 per minute. The two remaining gate lines pull against each
+other: chords above 25 % late in a chain need a short window, a first answer later than 1 s in most chains a long
+one; no fixed or shrinking window tried meets both. Offset 0 (first answer 1 / L) ignites 65 % of idle calls on the
+desk and 38 % on a neighbour line, offset 1 (2 / L) 86 % and 57 %. The numbers follow tools/sim/fieldramp.py's
+(12 -> 25 % chords at 2 s -> 1 s fixed jitter there; 13 -> 21 % here).

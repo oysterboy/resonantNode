@@ -92,8 +92,8 @@ bool ResonantBehavior::raiseLevel(unsigned long now, uint32_t events) {
 }
 
 bool ResonantBehavior::drawUnderP() {
-    // p = (level + 1) / levelMax, as an exact integer draw: a uniform r in [0, levelMax) below level + 1.
-    return _random(_config.levelMax) < _level.count + 1U;
+    // p = (level + offset) / levelMax, as an exact integer draw: a uniform r in [0, levelMax) below level + offset.
+    return _random(_config.levelMax) < _level.count + _config.levelOffset;
 }
 
 uint32_t ResonantBehavior::level(unsigned long now) const {
@@ -251,8 +251,11 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         _timing.heardPatternStartedMs = now;
         _state = State::HeardPattern;
         // The fixed wait plus the automaton's random window (0 when off or set to 0).
-        const unsigned long jitterMs =
-            automaton && _config.answerJitterMs > 0 ? _random(_config.answerJitterMs + 1U) : 0UL;
+        unsigned long windowMs = _config.answerJitterMs;
+        if (automaton && _config.answerJitterShrinks && _level.count < _config.levelMax) {
+            windowMs = windowMs * (_config.levelMax - _level.count) / _config.levelMax;
+        }
+        const unsigned long jitterMs = automaton && windowMs > 0 ? _random(static_cast<uint32_t>(windowMs) + 1U) : 0UL;
         _timing.waitUntilMs = now + _config.waitAfterHeardMs + jitterMs;
         scheduleNextIdle(now);
     }

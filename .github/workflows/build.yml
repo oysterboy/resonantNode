@@ -63,6 +63,7 @@ jobs:
       - run: pip install platformio
       - run: g++ --version
       - run: pio run -e native-replay
+      - run: pio run -e native-fieldsim  # BEH-008's field simulation (step 16.2)
       # Step 11e item 7 follow-up: the replay with the Analyzer's diagnostics compiled in must print exactly
       # what the Null build prints over the fixtures (the side channel does not change a verdict).
       - run: pio run -e native-replay-diag

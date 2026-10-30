@@ -180,7 +180,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         idle calls swell, chords 3 % -> 15 %, first answer after 1 s in 58 %, every chain ends.
    16.3 [NEXT, after 14.2's board check] The desk: five Nodes free, step 6's protocol.
 
-17. [TODO] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
+17. [TODO, after 20 (owner 2026-10-30)] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
    roadmap-behavior.md BEH-009, decisions/2026-10-29-wider-band-base-bin-per-node.md. PC first, then the desk.
    Glide: one bin per own answer (owner 2026-10-29, as the decision says); the desk model converged slowly with it,
    so 18 watches whether the field settles on a shared base. Includes the node-structure
@@ -189,11 +189,13 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.
 
-19. [TODO] Explore range: frequency hearing radius, a band per Node. (issue #81)
+19. [TODO, after 20 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
    BEH-009 part 3; field-activity-response.md Part 2 "What to measure" 1-2. Remote and PC. Ends in a decision between
    this and OUT-006 (8a).
 
-20. [TODO] Echo room and Whispernet in the tryout room: one OTA each. (issue #84) On site, after 18; place in the
+20. [RUNNING 2026-10-30: 20.1's PC part] Echo room and Whispernet in the tryout room: one OTA each. (issue #84)
+   Order (owner 2026-10-30): 20 runs ahead of 17 and 19, so both modes make 2026-12-13; 14.2's board check and
+   16.3 keep their place on the bench. Was: on site, after 18; place in the
    order to be set by the owner.
    roadmap-echo.md ECHO-001 (the echo room: a clap answered by a replay of a clip), ECHO-002 (Whispernet, layout 1:
    a whisper through a gated delay line), ECHO-003 (the switch: NET OTA in and out, params, WiFi).
@@ -274,6 +276,8 @@ parallel.
 
 ## Status log
 
+Status update 2026-10-30, night: the owner set 20 ahead of 17 and 19 (both echo modes by 2026-12-13); 20.1's PC
+part starts while the soak holds the boards.
 Status update 2026-10-30, latest: step 21 added (the installation's nodes: a stripboard prototype, ten boards, ten
 cases; roadmap-hardware.md; issue #85), beside 20 on the owner's hours.
 Status update 2026-10-30, later: step 20 gets the date 2026-12-13 for both modes and a plan (roadmap-echo.md); its

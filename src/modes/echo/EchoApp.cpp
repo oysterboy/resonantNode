@@ -135,8 +135,8 @@ void EchoApp::pollAudio() {
 }
 
 void EchoApp::pollUsb() {
-    serial_line::pollLines(Serial, _usbLine, serialOut(), "ERR line_too_long max=",
-                           [this](const char* line) { handleLine(line); });
+    serial_line::pollLines(Serial, _usbLine, serialOut(),
+                           "ERR line_too_long max=", [this](const char* line) { handleLine(line); });
 }
 
 // The receive side of the radio: a NET command from a USB Node runs here as if typed, its output goes back as the

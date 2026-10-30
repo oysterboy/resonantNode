@@ -193,6 +193,37 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    BEH-009 part 3; field-activity-response.md Part 2 "What to measure" 1-2. Remote and PC. Ends in a decision between
    this and OUT-006 (8a).
 
+20. [TODO] Echo room and Whispernet in the tryout room: one OTA each. (issue #84) On site, after 18; place in the
+   order to be set by the owner.
+   roadmap-echo.md ECHO-001 (the echo room: a clap answered by a replay of a clip), ECHO-002 (Whispernet, layout 1:
+   a whisper through a gated delay line), ECHO-003 (the switch: NET OTA in and out, params, WiFi).
+   docs/research/echo-room.md, docs/research/whispernet.md (owner 2026-10-30: both "deserve a slot in the tryout";
+   "on location it's just a firmware update").
+   Target 2026-12-13 for both modes (owner 2026-10-30); the plan with estimates, conditions and risks in
+   roadmap-echo.md "Plan to 2026-12-13". Its conditions: 20 ahead of 17 and 19 or in a parallel session; two site
+   days between about 12-01 and 12-12; the 48 kHz go/no-go in week one.
+   20.1 ECHO-003 first, on the bench (11-02 .. 11-06): the 48 kHz env and the loop budget with the dropped-buffer
+        counter, the OTA round trip Node -> echo -> whisper -> Node, stored params across modes, WiFi for the site.
+        Remote. Decision: 48 kHz or 24 kHz.
+   20.2 ECHO-001 built, host-tested and checked on the desk (11-09 .. 11-20; the Emitter's pulse train as the
+        click). PC, then remote. Decision: the echo room heard on the desk.
+   20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the
+        desk check (11-16 .. 12-04; a recorded whisper, a loud control, a fan). PC, then remote. Decision: no howl,
+        whispers answered, speech ignored.
+   20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
+   Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
+   session per firmware.
+
+21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
+   roadmap-hardware.md HW-001 (the prototype, the D-AMP pinout as wired, room for the second mic), HW-002 (ten
+   boards, each nodecheck'd and in the roster), HW-003 (ten cases, one geometry), HW-004 (ten nodes in the firmware:
+   roster entries, the field measured at five). Handmade, hands-bound (owner 2026-10-30); runs beside 13-20 on the
+   owner's bench hours; the plan to 2026-12-13 in roadmap-hardware.md.
+   21.1 HW-001 the prototype (11-02 .. 11-13); parts for ten ordered. Owner's bench.
+   21.2 HW-002 ten boards and HW-003 ten cases (11-16 .. 12-04). Owner's bench.
+   21.3 HW-004: ten roster entries, the fieldsim at ten, step 18's node count named. PC.
+   Gate: ten checked nodes in cases, in the roster, a bench session cited; the room steps in December run on them.
+
 ## Carried over, not sequenced
 
 ```text
@@ -242,6 +273,13 @@ parallel.
 ```
 
 ## Status log
+
+Status update 2026-10-30, latest: step 21 added (the installation's nodes: a stripboard prototype, ten boards, ten
+cases; roadmap-hardware.md; issue #85), beside 20 on the owner's hours.
+Status update 2026-10-30, later: step 20 gets the date 2026-12-13 for both modes and a plan (roadmap-echo.md); its
+substeps carry the weeks and decision points.
+Status update 2026-10-30, late: step 20 added (the echo room and Whispernet in the tryout room, one OTA each; issue
+#84, roadmap-echo.md); place after 18 to be set by the owner.
 
 Status update 2026-10-30: 14 done (14.0 max duration 450, 14.1 review fixes b006c00); 13 running (13.2-13.4 done,
 13.1 and the other distances on site); the 47 h soak on b006c00 runs until 2026-11-01 ~23:00

@@ -131,6 +131,6 @@ readability-measures.md        what can be counted (lizard CCN / NLOC / params,
 echo-room.md                   a node that replays what it hears: why the continuous
                                delay line (echoSpace) howled or faded, triggered replay
                                on the Node's onset detector, Behavior and SoundOutput;
-                               buffer sizes, which transients, the chain between nodes
-                               (idea, 2026-10-30)
+                               buffer sizes, which transients, the chain between nodes;
+                               48 kHz with an amplitude-only detector (idea, 2026-10-30)
 ```

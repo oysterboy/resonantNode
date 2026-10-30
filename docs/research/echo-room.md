@@ -1,7 +1,8 @@
 # Echo room: a node that replays what it hears, on the Node's detector, Behavior and output
 
 ```text
-Status:  idea (2026-10-30; owner's discussion of 2026-10-30, written up from it)
+Status:  idea (2026-10-30; owner's discussion of 2026-10-30, written up from it; the audio-quality trade added the
+         same day)
 Lab:     the echoSpace repo (oysterboy/echoSpace, 48f74a5): a continuous 500 ms delay line, mic to amp, at 48 kHz;
          the owner's report of what it did in a room ("shrill feedback, or died off"); no bench session
 ```
@@ -77,10 +78,13 @@ format                             bytes / s   200 ms   500 ms   the 110 KB bloc
 16 kHz, int16 (the Node's rate)       32 KB    6.4 KB    16 KB    ~3.4 s
 ```
 
-At the Node's 16 kHz stored as int16, seconds are cheap and detection keeps running; the replay is band-limited to
-8 kHz. At 48 kHz the replay sounds fuller, but detection would have to be decimated or dropped and the ring eats the
-heap. With B the ring holds pre plus post and a copied clip of up to 500 ms is 16 KB, so the wait can be any
-length, including the 3 s jitter, with no second buffer. Proposed: 16 kHz, int16, clip <= 500 ms.
+At the Node's 16 kHz stored as int16, seconds are cheap and the shipped detection keeps running; the replay is
+band-limited to 8 kHz. At 48 kHz the replay sounds fuller, but the shipped detection would have to be decimated or
+dropped and the ring eats the heap. With B the ring holds pre plus post and a copied clip of up to 500 ms is 16 KB
+at 16 kHz, so the wait can be any length, including the 3 s jitter, with no second buffer.
+
+First proposal: 16 kHz, int16, clip <= 500 ms. Amended the same day: the owner prefers the audio quality and a
+simpler detector; see "Audio quality first, a simpler detector" below for 48 kHz and its budget.
 
 ## Which transients
 
@@ -129,10 +133,63 @@ probabilistic through p = level / L, capped by the rest at levelMax. Two things 
   pieces to reuse (detection, Behavior, SoundOutput, the param registry) live in resonantNode, so the echo room is a
   mode here, not a second repo. echoSpace stays the delay-line reference and I2S bring-up, or retires.
 
+## Audio quality first, a simpler detector (owner, 2026-10-30)
+
+The owner's preference: better audio quality at the cost of a simpler detector, a scalar transient gate on the
+amplitude alone, with no feature history and no inspectors. The numbers support it.
+
+**Where the Node's 37 us go.** The Goertzel bank for the band (`FreqBandStream`), the feature history record per
+sample, and the inspection on top. The amplitude path itself (`AudioSignal::processSample`) is a DC blocker, an
+absolute value and a one-pole smoother, three operations. With the detector's compares added that is a few us,
+inside the 20.8 us a sample allows at 48 kHz.
+
+**How the simple detector runs.** Today a packet is built and `ScalarTransientDetector::update()` is called once
+per sample. At 48 kHz the onset gate runs once per DMA block on the block's envelope instead (every 1.3-2.7 ms,
+by the block length), still far finer than an onset needs; the per-sample loop shrinks to the three operations plus
+the ring write. The detector is reused unchanged: it wants a packet and a scalar, and its ms timers do not care that
+packets come per block. The echo mode skips `DetectionRuntime` entirely: envelope, detector, occurrence, Behavior.
+The spec's boundary holds (the detector states facts, Behavior decides).
+
+**Given up, kept, to add.**
+
+- Gone: frequency selectivity, so the echo node cannot tell a node from the room (the room is the point); the
+  inspectors' quality checks and the history behind them.
+- Kept: the gates inside the detector: onset and release thresholds, cooldown, maximum duration, minimum peak
+  strength, coverage. These separate a clap from a steady tone.
+- To add, cheap: an attack-slope gate. The detector thresholds level, not rise time. A clap crosses the threshold
+  in a millisecond or two; a voice swelling or a door scraping takes tens. For an echo room this is the
+  selectiveness that matters, and with per-block envelopes it is one subtraction.
+- To re-tune: the smoothing factor and the threshold values were set for 16 kHz per-sample updates. Same knobs,
+  new constants.
+
+**Audio quality, honestly.** Sample rate buys bandwidth above 8 kHz; whether that is audible is decided by the rest
+of the chain. The MEMS mic reaches 20 kHz and the MAX98357A is fine; the small speaker and the room decide. The
+mic's 24 bits stored as int16 after the shift lose nothing the amp reproduces, so the ring and the clip hold int16.
+RX and TX share BCLK and WS, so mic and amp run at one rate: 48 kHz is the natural choice, 24 kHz a middle path if
+memory bites.
+
+**Memory at 48 kHz, int16, 96 KB per second:**
+
+```text
+piece                 300 ms   500 ms
+ring, pre plus post    29 KB    48 KB
+clip copy              29 KB    48 KB
+both                   58 KB    96 KB
+```
+
+The 500 ms pair just fits the ~110 KB block and leaves nothing. Two ways out: play from the ring with no copy,
+which works as long as wait plus clip stays shorter than the ring; or leave ESP-NOW out of the echo build, which
+frees a good margin. A 300 ms clip with a copy is comfortable either way.
+
+**A cost that is neither CPU nor RAM.** The Analyzer's SEQ tooling and the replay corpus are built around the band
+and the hop train. An amplitude-only echo node has none of that, so its verification is a RAW capture and ears, not
+the existing bench battery. Acceptable for an idea; the thing to notice before the first board run.
+
 ## Open questions (the owner's calls)
 
 1. Shape A or B. This note argues B.
-2. 16 kHz with detection intact, or 48 kHz for sound with a decimated detector.
+2. 16 kHz with the shipped detection, or 48 kHz with the amplitude-only detector. The owner leans to 48 kHz
+   (2026-10-30, the section above).
 3. Clip length, and whether the pre window is in the clip.
 4. Whether chains across neighbours are wanted and how long; levelMax and restMs set that.
 5. Whether ESP-NOW stays in the build. Without it the heap grows by a good margin.

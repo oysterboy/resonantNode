@@ -129,7 +129,8 @@ private:
     static void selfTestCancelChirp(void* ctx);
 
     // Network band and the node's hop signal (BEH-005 / OUT-005 / DET-013).
-    void applyBandParams();              // band params -> FreqBandStream, when they differ
+    void applyBandParams();              // band params -> FreqBandStream, when they differ; then syncBaseBin()
+    void syncBaseBin();                  // Behavior's base grid and, when output.hop_rotation changed, its seed
     NodeSignalComposer::BandGrid bandGrid() const;  // FreqBandStream's applied grid (call after applyBandParams())
     void printHopShape(const OutputRequest& request);
     void printSignalConfig();
@@ -157,6 +158,9 @@ private:
     NodeNet _net;
     NetGateway _netGateway{_net};  // reply tee and reply reassembly (step 11i N3)
     const char* _nodeName = "unknown";  // from the roster (app/NodeRoster.h)
+    // The output.hop_rotation last seeded into Behavior's base bin (syncBaseBin); re-seeded only when it changes.
+    uint32_t _baseSeed = 0;
+    bool _baseSeeded = false;
 
     // Occurrence / detection / behavior pipeline.
     AudioSignal _audioSignal;

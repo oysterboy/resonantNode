@@ -410,3 +410,25 @@ other: chords above 25 % late in a chain need a short window, a first answer lat
 one; no fixed or shrinking window tried meets both. Offset 0 (first answer 1 / L) ignites 65 % of idle calls on the
 desk and 38 % on a neighbour line, offset 1 (2 / L) 86 % and 57 %. The numbers follow tools/sim/fieldramp.py's
 (12 -> 25 % chords at 2 s -> 1 s fixed jitter there; 13 -> 21 % here).
+
+### The base bin's glide in native-fieldsim (step 17.2, 2026-10-30)
+
+The simulator seeds each node's base at random (0..3, the 8-bin band), the heard train carries its sender's base
+(a merged chord the lowest), and Behavior glides one bin per answer, scattering at the level's rest. Chains of six
+trains or more, distinct bases among the first three and the last three, "settled" when the last three share one;
+4 h each, seeds 1-3:
+
+```text
+             glide on                          glide off
+all    1.76 -> 2.08 / 20 %, 1.66 -> 1.97 / 25 %,   2.34 -> 2.37 / 0 %, 2.29 -> 2.33 / 1 %,
+       1.69 -> 2.04 / 22 %                         1.50 -> 1.60 / 40 % (seed 3: bases seeded alike)
+line   1.39 -> 1.54 / 54 %, 1.09 -> 1.56 / 50 %,   2.19 -> 2.14 / 11 %, 2.11 -> 2.18 / 11 %,
+       1.23 -> 1.43 / 58 %                         1.20 -> 1.33 / 67 % (seed 3)
+```
+
+Reading: the glide pulls the field together across chains (a chain starts on fewer bases: ~1.7 against ~2.3 on
+the desk), but within a chain the spread grows toward its end, because the level's rest, which ends most chains,
+scatters the base. With five nodes on four bases the seeding alone can put several on one base (seed 3), so a
+desk run reads the spread over time, not one chain. Whether the field should hold a shared base longer (scatter
+only some of the time, or glide per hearing as the desk model suggested) is step 18's question, as the decision
+says.

@@ -63,6 +63,7 @@ struct OccurrenceShape {
     uint8_t runs = 0;
     uint16_t firstBinHz = 0;
     uint16_t lastBinHz = 0;
+    uint16_t lowestBinHz = 0;  // the lowest kept bin: a rising train's base (BEH-009), also when its start was cut
     StrengthClass shapeClass = StrengthClass::Unknown;
 };
 

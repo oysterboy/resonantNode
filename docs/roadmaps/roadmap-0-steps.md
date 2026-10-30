@@ -199,9 +199,15 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         E1 0, E4 3, E5 1. T2h re-recorded: only the replay's band line differs, every verdict on the 5-bin
         fixtures the same (bench/sessions/2026-10-30-step17-band8). Boards: the stored output.hop_rotation wins
         (PAR-018), so set it per Node after the OTA; the Analyzer's per-base hop10 set is the gate's board part.
-   17.2 Behavior owns the base bin (random at boot, the roster as override), the verdict carries the heard train's
-        lowest bin, the glide one bin per own answer toward the base last heard, the scatter at rest; the shape
-        rule's wrap allowance goes. Host tests and native-fieldsim.
+   17.2 [DONE 2026-10-30, host] Behavior owns the base bin (seeded from output.hop_rotation: the roster, else the
+        MAC; a stored or set value over it), the verdict carries the heard train's lowest bin (OccurrenceShape
+        lowestBinHz -> OccurrenceVerdict primaryLowestBinHz), each answer glides one bin toward the base last heard,
+        the level's rest scatters it (uniform over the bases: the scatter range the decision left open). The Node
+        composes from Behavior's base. test_behavior_base (6), the shape test's lowest bin; host 154, T2h
+        byte-identical to 17.1's. native-fieldsim: the glide pulls chains onto fewer bases (desk ~1.7 against ~2.3
+        distinct at a chain's start), the rest's scatter spreads them at a chain's end (field-activity-response.md
+        "The base bin's glide"). Kept: the shape rule's wrap allowance (trains no longer wrap; dropping it is a
+        detection change for its own commit, with T2h).
    17.3 The desk: the decision's gate (hop10 per base bin >= 9 / 10, chirp rejected, music 0, the Node battery),
         then the glide on five Nodes.
 

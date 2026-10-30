@@ -52,6 +52,11 @@ struct BehaviorStatus {
     unsigned long level = 0;
     unsigned long declinedByLevel = 0;
     unsigned long yielded = 0;
+    // BEH-009: the base bin played, the base last heard (-1 none), glides and scatters so far.
+    unsigned long baseBin = 0;
+    long baseHeard = -1;
+    unsigned long baseGlides = 0;
+    unsigned long baseScatters = 0;
 
     // Counters since the last resetState().
     unsigned long patternsReceived = 0;

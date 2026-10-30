@@ -63,4 +63,8 @@ struct BehaviorGateConfig {
     // with the level, jitter * (levelMax - level) / levelMax: a quiet node answers late, one near the top quickly
     // (owner 2026-10-30, after native-fieldsim). Not a param.
     bool answerJitterShrinks = true;
+    // BEH-009 (decisions/2026-10-29-wider-band-base-bin-per-node.md): on each own answer the base bin moves one bin
+    // toward the base last heard (the glide, owner 2026-10-29), and at the automaton's rest it scatters to a random
+    // base. Off: the base stays where the Node seeded it. Not a param.
+    bool baseGlide = true;
 };

@@ -19,7 +19,7 @@ void Node::printSignalConfig() {
     const NodeSignalComposer::Values& hop = _composer.values();
     const NodeSignalComposer::BandGrid grid = bandGrid();
     uint32_t hz[8];
-    const size_t n = _composer.hopFrequencies(grid, hz, sizeof(hz) / sizeof(hz[0]));
+    const size_t n = _composer.hopFrequencies(grid, _behavior.baseBin(), hz, sizeof(hz) / sizeof(hz[0]));
     serialOut().print("RB signal band=");
     serialOut().print(_band.lowHz);
     serialOut().print('-');
@@ -27,6 +27,7 @@ void Node::printSignalConfig() {
     printKeyValue("bins", static_cast<unsigned long>(grid.bins));
     printKeyValue("hop", hop.hopEnabled ? "on" : "off");
     printKeyValue("rotation", hop.hopRotation);
+    printKeyValue("base", _behavior.baseBin());
     printKeyValue("steps", hop.hopSteps);
     printKeyValue("pulse_ms", hop.hopPulseMs);
     printKeyValue("gap_ms", hop.hopGapMs);
@@ -152,6 +153,10 @@ void Node::printRbStatus(const char* line) {
     printKeyValue("behavior.level", b.level);
     printKeyValue("behavior.declined", b.declinedByLevel);
     printKeyValue("behavior.yielded", b.yielded);
+    printKeyValue("behavior.base_bin", b.baseBin);
+    printKeyValue("behavior.base_heard", b.baseHeard);
+    printKeyValue("behavior.base_glides", b.baseGlides);
+    printKeyValue("behavior.base_scatters", b.baseScatters);
     printKeyValue("behavior.last_rest", b.lastRestReasonName);
     printKeyValue("behavior.blocked_resting", b.blockedResting);
     serialOut().print(" ");
@@ -170,7 +175,8 @@ void Node::printHopGapCheck() {
     }
     uint32_t hz[8];
     detection::HopTrainShape shape;
-    shape.steps = static_cast<unsigned long>(_composer.hopFrequencies(bandGrid(), hz, sizeof(hz) / sizeof(hz[0])));
+    shape.steps = static_cast<unsigned long>(
+        _composer.hopFrequencies(bandGrid(), _behavior.baseBin(), hz, sizeof(hz) / sizeof(hz[0])));
     shape.pulseMs = hop.hopPulseMs;
     shape.gapMs = hop.hopGapMs;
     const detection::ScalarTransientConfig& sc = _activeDetectionProfile.scalarTransient;

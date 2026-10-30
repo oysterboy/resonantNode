@@ -51,6 +51,7 @@ bool makeVerdict(const InspectedOccurrence& inspected, const InspectionPlan& pla
     verdict.primaryReleaseStrength = source.magnitude.releaseStrength;
     verdict.primaryAmbientBaseline = source.magnitude.baseline;
     verdict.primaryAudioOverflow = source.magnitude.audioOverflowDuringOccurrence;
+    verdict.primaryLowestBinHz = source.shape.applicable ? source.shape.lowestBinHz : 0;
 
     verdict.proposalMatched = true;
     verdict.supportMatched = true;

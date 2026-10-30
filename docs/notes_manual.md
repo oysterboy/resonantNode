@@ -340,7 +340,12 @@ verdicts (FieldState is no longer read); a heard train is answered with p = leve
 after the 100 ms wait plus a random window of answer_jitter_ms that shrinks as the level rises
 (`decision=declined_by_level` otherwise), a pending answer is dropped with 1 - p when another train comes
 (`yielded`), at level_max the node rests (`rest_level`). RB STATUS shows `behavior.level`, `behavior.declined`,
-`behavior.yielded`. `behavior.level_max 0` switches it off. `ResonantBehavior::BehaviorDecision` lists every
+`behavior.yielded`. `behavior.level_max 0` switches it off. Since 2026-10-30 (BEH-009) Behavior also owns the
+hop train's base bin (0..3 on the 8-bin band): seeded from `output.hop_rotation` (the roster at boot, a stored or
+set value over it), it moves one bin toward the base last heard on each answer (the verdict's heard lowest bin) and
+jumps to a random base at the level's rest; RB STATUS `behavior.base_bin` / `base_heard` / `base_glides` /
+`base_scatters`, the boot line `RB signal ... base=`. The glide is config (`BehaviorGateConfig::baseGlide`), not a
+param. `ResonantBehavior::BehaviorDecision` lists every
 reason a valid verdict is not acted on; the Node prints it as `decision=` in the event log.
 Older docs name the first two `patternAccepted` and `patternMatched`; same gates.
 

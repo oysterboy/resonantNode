@@ -510,6 +510,22 @@ void Node::restoreAfterSelfTestHardware() {
 
 void Node::applyBandParams() {
     _band.applyTo(_freqBandStream);  // an empty or inverted band means "single target at the chirp tone"
+    syncBaseBin();
+}
+
+// Behavior's base bin follows the grid (band and hop steps decide how many bases fit) and is seeded from
+// output.hop_rotation whenever that changes (boot: the roster, then a stored value; PARAM SET); otherwise Behavior
+// keeps moving it (BEH-009). Runs with applyBandParams(), every loop pass: a few compares.
+void Node::syncBaseBin() {
+    const NodeSignalComposer::BandGrid grid = bandGrid();
+    const uint32_t bases = grid.bins > 0 ? static_cast<uint32_t>(_composer.maxBaseBin(grid) + 1) : 0U;
+    _behavior.setBaseGrid(grid.lowHz, grid.spacingHz, bases);
+    const uint32_t seed = _composer.values().hopRotation;
+    if (!_baseSeeded || seed != _baseSeed) {
+        _behavior.seedBaseBin(seed);
+        _baseSeed = seed;
+        _baseSeeded = true;
+    }
 }
 
 // The hop train's grid is the detector's (NodeSignalComposer::gridOf reads FreqBandStream as applied).
@@ -705,8 +721,9 @@ void Node::startEmission(unsigned long now) {
     // The request from Behavior's ask, the band grid and output.* (NodeSignalComposer, step 11i N5): a heard
     // pattern is answered with the hop train, the idle call is announcement, gap, then the call. SoundOutput plays
     // it (step 10f); own-emit suppression covers its span.
-    OutputRequest request = _composer.compose(bandGrid(), chirpPattern,
-                                              _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal);
+    OutputRequest request =
+        _composer.compose(bandGrid(), chirpPattern,
+                          _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal, _behavior.baseBin());
     bool started = _soundOutput.start(request);
     if (!started && request.kind != OutputRequest::Kind::Pattern) {
         // As before step 10f: a train or call that does not start falls back to the pattern.

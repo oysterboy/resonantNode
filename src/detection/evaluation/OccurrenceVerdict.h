@@ -32,6 +32,9 @@ struct OccurrenceVerdict {
     float primaryReleaseStrength = 0.0f;
     float primaryAmbientBaseline = 0.0f;
     bool primaryAudioOverflow = false;
+    // The heard train's lowest band bin in Hz (the shape inspector's bin track, DET-015), 0 when the occurrence had
+    // no band bins: where the sender's train started, the base Behavior glides toward (BEH-009).
+    uint16_t primaryLowestBinHz = 0;
 
     bool accepted = false;
     bool proposalMatched = false;
@@ -44,4 +47,4 @@ struct OccurrenceVerdict {
     uint8_t firstFailedRequirementIndex = 255;
 };
 
-} // namespace detection
+}  // namespace detection

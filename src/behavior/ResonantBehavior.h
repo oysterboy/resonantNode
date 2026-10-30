@@ -54,6 +54,14 @@ public:
     // Heard trains in one verdict: a chord's answers that merged into one occurrence count by its duration (1..3).
     static uint32_t trainsInVerdict(const detection::OccurrenceVerdict& verdict);
 
+    // The base bin (BEH-009): where this node's network signal starts, as an index 0..count-1 into the bases the
+    // Node's train fits under. The Node hands in the grid (band low edge, bin spacing, how many bases) and the seed
+    // (the roster's or the stored output.hop_rotation); Behavior moves the base (the glide toward the base heard, the
+    // scatter at rest) and the Node composes the train from baseBin(). count 0: no base (single-target mode).
+    void setBaseGrid(uint32_t lowHz, uint32_t spacingHz, uint32_t count);
+    void seedBaseBin(uint32_t bin);
+    uint32_t baseBin() const { return _base.bin; }
+
     void resetState();
     void configure(const BehaviorGateConfig& profile);
     BehaviorDecision handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, unsigned long now);
@@ -180,6 +188,8 @@ private:
     // Moves the behavior-suppress deadline to suppressUntilMs if that is later.
     void extendBehaviorSuppress(unsigned long suppressUntilMs);
     void enterRest(unsigned long untilMs, BehaviorDecision reason);
+    void noteHeardBase(const detection::OccurrenceVerdict& verdict);
+    void glideBase();
     void setDecision(BehaviorDecision decision);
     unsigned long ownEmitsInWindow(unsigned long now) const;
 
@@ -286,6 +296,18 @@ private:
         unsigned long atMs = 0;  // the last event, the decay counts from here
     };
     Level _level = {};
+
+    // --- the base bin (BEH-009); kept by resetState(), like the outputs gate ---
+    struct Base {
+        uint32_t lowHz = 0;
+        uint32_t spacingHz = 0;
+        uint32_t count = 0;
+        uint32_t bin = 0;
+        long heard = -1;  // the base last heard, as an index; -1 none since boot or the last scatter
+        unsigned long glides = 0;
+        unsigned long scatters = 0;
+    };
+    Base _base = {};
     static uint32_t defaultRandom(uint32_t bound);  // random() on the board
     RandomFn _random = &ResonantBehavior::defaultRandom;
     void decayLevel(unsigned long now);

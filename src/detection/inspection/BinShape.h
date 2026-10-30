@@ -139,6 +139,11 @@ BinShapeMeasure measureBinShape(const BinSource& source, uint32_t startMs, uint3
     if (keptCount > 0) {
         shape.firstBinHz = static_cast<uint16_t>(kept[0].hz);
         shape.lastBinHz = static_cast<uint16_t>(kept[keptCount - 1].hz);
+        uint32_t lowest = kept[0].hz;
+        for (size_t i = 1; i < keptCount; ++i) {
+            lowest = kept[i].hz < lowest ? kept[i].hz : lowest;
+        }
+        shape.lowestBinHz = static_cast<uint16_t>(lowest);
     }
     shape.shapeClass = classifyBinShape(shape, config);
     return m;

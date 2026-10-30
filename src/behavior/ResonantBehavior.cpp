@@ -181,6 +181,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         // Heard, whatever the gates below decide: the idle call waits after any valid pattern, as on the outputs-off
         // path (deep review B-M3: blocked verdicts did not count, and an idle call could follow one at once).
         _timing.lastHeardPatternMs = result.primaryAcceptedMs != 0 ? result.primaryAcceptedMs : now;
+        noteHeardBase(result);
     }
     if (!result.valid) {
         _last.behaviorEligible = false;
@@ -341,6 +342,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _timing.lastEmitMs = now;
                 _state = State::Chirping;
                 _counts.wouldEmit++;
+                glideBase();  // this answer already sounds one bin nearer the base heard
             }
             break;
 
@@ -478,6 +480,12 @@ void ResonantBehavior::enterRest(unsigned long untilMs, BehaviorDecision reason)
     _rest.armed = true;
     _rest.entered++;
     _rest.lastReason = reason;
+    // The automaton's rest scatters the base (BEH-009), so a field that converged on one base spreads out again.
+    if (reason == BehaviorDecision::RestLevel && _config.baseGlide && _base.count > 1) {
+        _base.bin = _random(_base.count);
+        _base.heard = -1;
+        _base.scatters++;
+    }
     // Rest means no answers: one already scheduled is dropped, not played during the rest (deep review B-M1).
     if (_state == State::HeardPattern) {
         _state = State::Idle;
@@ -761,7 +769,42 @@ unsigned long ResonantBehavior::idleMaxMs() const {
 void ResonantBehavior::notePatternHeardWhileOutputsOff(const detection::OccurrenceVerdict& verdict, unsigned long now) {
     if (verdict.valid) {
         _timing.lastHeardPatternMs = verdict.primaryAcceptedMs != 0 ? verdict.primaryAcceptedMs : now;
+        noteHeardBase(verdict);
     }
+}
+
+void ResonantBehavior::setBaseGrid(uint32_t lowHz, uint32_t spacingHz, uint32_t count) {
+    _base.lowHz = lowHz;
+    _base.spacingHz = spacingHz;
+    _base.count = count;
+    if (count == 0) {
+        _base.bin = 0;
+        _base.heard = -1;
+    } else if (_base.bin >= count) {
+        _base.bin = count - 1;
+    }
+}
+
+void ResonantBehavior::seedBaseBin(uint32_t bin) {
+    _base.bin = _base.count == 0 ? 0 : (bin < _base.count ? bin : _base.count - 1);
+}
+
+// The heard train's lowest bin as a base index on this node's grid. A train that started above the highest base
+// (a sender with more bases, or a cut start) counts as the highest; below the band it is ignored.
+void ResonantBehavior::noteHeardBase(const detection::OccurrenceVerdict& verdict) {
+    if (_base.count == 0 || _base.spacingHz == 0 || verdict.primaryLowestBinHz < _base.lowHz) {
+        return;
+    }
+    const uint32_t index = (verdict.primaryLowestBinHz - _base.lowHz + _base.spacingHz / 2) / _base.spacingHz;
+    _base.heard = static_cast<long>(index < _base.count ? index : _base.count - 1);
+}
+
+void ResonantBehavior::glideBase() {
+    if (!_config.baseGlide || _base.heard < 0 || static_cast<uint32_t>(_base.heard) == _base.bin) {
+        return;
+    }
+    _base.bin = static_cast<uint32_t>(_base.heard) > _base.bin ? _base.bin + 1 : _base.bin - 1;
+    _base.glides++;
 }
 
 BehaviorStatus ResonantBehavior::status(unsigned long now) const {
@@ -773,6 +816,10 @@ BehaviorStatus ResonantBehavior::status(unsigned long now) const {
     st.outputBusy = outputBusy();
     st.behaviorEligible = _last.behaviorEligible;
     st.config = _config;
+    st.baseBin = _base.bin;
+    st.baseHeard = _base.heard;
+    st.baseGlides = _base.glides;
+    st.baseScatters = _base.scatters;
     st.lastDecisionName = lastDecisionName();
     st.lastBlockReasonName = lastBlockReasonName();
     st.lastVerdictTypeName = lastVerdictTypeName();

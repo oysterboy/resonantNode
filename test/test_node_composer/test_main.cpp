@@ -32,31 +32,28 @@ void test_hop_frequencies_per_base_bin() {
     c.values().hopSteps = 5;
     TEST_ASSERT_EQUAL_UINT32(3, c.maxBaseBin(shippedGrid()));
     for (uint32_t base = 0; base <= 3; ++base) {
-        c.values().hopRotation = base;
-        TEST_ASSERT_EQUAL_UINT32(5, c.hopFrequencies(shippedGrid(), hz, 8));
+        TEST_ASSERT_EQUAL_UINT32(5, c.hopFrequencies(shippedGrid(), base, hz, 8));
         for (size_t k = 0; k < 5; ++k) {
             TEST_ASSERT_EQUAL_UINT32(2950 + (base + k) * 250, hz[k]);  // climbing, never wrapping
         }
     }
     // A base too high for the train is lowered until the train fits: base 7 plays as base 3 (top bin 4700).
-    c.values().hopRotation = 7;
-    c.hopFrequencies(shippedGrid(), hz, 8);
+    c.hopFrequencies(shippedGrid(), 7, hz, 8);
     TEST_ASSERT_EQUAL_UINT32(3700, hz[0]);
     TEST_ASSERT_EQUAL_UINT32(4700, hz[4]);
     // Capacity caps the steps, so does the grid (8 steps on 8 bins: base 0 only); no bins or no room gives none.
     c.values().hopSteps = 8;
     TEST_ASSERT_EQUAL_UINT32(0, c.maxBaseBin(shippedGrid()));
-    TEST_ASSERT_EQUAL_UINT32(8, c.hopFrequencies(shippedGrid(), hz, 8));
+    TEST_ASSERT_EQUAL_UINT32(8, c.hopFrequencies(shippedGrid(), 0, hz, 8));
     TEST_ASSERT_EQUAL_UINT32(2950, hz[0]);
-    TEST_ASSERT_EQUAL_UINT32(3, c.hopFrequencies(shippedGrid(), hz, 3));
-    TEST_ASSERT_EQUAL_UINT32(0, c.hopFrequencies(shippedGrid(), hz, 0));
-    TEST_ASSERT_EQUAL_UINT32(0, c.hopFrequencies(Grid{}, hz, 8));
+    TEST_ASSERT_EQUAL_UINT32(3, c.hopFrequencies(shippedGrid(), 0, hz, 3));
+    TEST_ASSERT_EQUAL_UINT32(0, c.hopFrequencies(shippedGrid(), 0, hz, 0));
+    TEST_ASSERT_EQUAL_UINT32(0, c.hopFrequencies(Grid{}, 0, hz, 8));
 }
 
 void test_five_step_train_from_a_heard_pattern() {
     NodeSignalComposer c;  // shipped values: on, 25 ms x 5, gap 10
-    c.values().hopRotation = 2;
-    const OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Single, true);
+    const OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Single, true, 2);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::HopTrain), static_cast<int>(r.kind));
     TEST_ASSERT_EQUAL(static_cast<int>(ChirpPattern::Single), static_cast<int>(r.pattern));
     TEST_ASSERT_EQUAL_UINT32(5, r.hopSteps);
@@ -71,22 +68,21 @@ void test_five_step_train_from_a_heard_pattern() {
 void test_plain_pattern_when_no_train() {
     NodeSignalComposer c;
     // Not the network signal: the pattern.
-    OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Triple, false);
+    OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Triple, false, 0);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::Pattern), static_cast<int>(r.kind));
     // Hop off, or a grid without bins: the network signal falls back to the pattern.
     c.values().hopEnabled = false;
-    r = c.compose(shippedGrid(), ChirpPattern::Single, true);
+    r = c.compose(shippedGrid(), ChirpPattern::Single, true, 0);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::Pattern), static_cast<int>(r.kind));
     c.values().hopEnabled = true;
-    r = c.compose(Grid{}, ChirpPattern::Single, true);
+    r = c.compose(Grid{}, ChirpPattern::Single, true, 0);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::Pattern), static_cast<int>(r.kind));
     TEST_ASSERT_EQUAL_UINT32(0, r.hopSteps);
 }
 
 void test_idle_call_with_hop() {
     NodeSignalComposer c;
-    c.values().hopRotation = 1;
-    const OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Idle, false);
+    const OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 1);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::IdleCall), static_cast<int>(r.kind));
     TEST_ASSERT_EQUAL_UINT32(300, r.announceHz);
     TEST_ASSERT_EQUAL_UINT32(500, r.announceMs);
@@ -99,18 +95,18 @@ void test_idle_call_with_hop() {
 void test_idle_call_without_hop() {
     NodeSignalComposer c;
     c.values().hopEnabled = false;
-    OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Idle, false);
+    OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::IdleCall), static_cast<int>(r.kind));
     TEST_ASSERT_EQUAL_UINT32(0, r.hopSteps);  // the call is the plain chirp
     TEST_ASSERT_EQUAL_UINT32(300, r.announceHz);
     // Below what the output plays (OutputLimits.minHz): raised to it, not rejected (review 12.0 M8).
     c.values().idleAnnounceHz = 50;
-    r = c.compose(shippedGrid(), ChirpPattern::Idle, false);
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
     TEST_ASSERT_EQUAL_UINT32(OutputLimits().minHz, r.announceHz);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
     // No announcement tone: the plain idle pattern.
     c.values().idleAnnounceHz = 0;
-    r = c.compose(shippedGrid(), ChirpPattern::Idle, false);
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::Pattern), static_cast<int>(r.kind));
     TEST_ASSERT_EQUAL(static_cast<int>(ChirpPattern::Idle), static_cast<int>(r.pattern));
 }
@@ -131,8 +127,7 @@ void test_bins_from_a_moved_band() {
     TEST_ASSERT_EQUAL_UINT32(2200, g.lowHz);
     TEST_ASSERT_EQUAL_UINT32(3, g.bins);
     NodeSignalComposer c;
-    c.values().hopRotation = 4;
-    const OutputRequest r = c.compose(g, ChirpPattern::Single, true);
+    const OutputRequest r = c.compose(g, ChirpPattern::Single, true, 4);
     TEST_ASSERT_EQUAL_UINT32(3, r.hopSteps);
     const uint32_t expect[3] = {2200, 2450, 2700};
     TEST_ASSERT_EQUAL_UINT32_ARRAY(expect, r.hopHz, 3);
@@ -163,13 +158,13 @@ void test_longest_train_and_call_fit_the_span_limit() {
     c.values().hopSteps = 8;
     c.values().hopPulseMs = 250;
     c.values().hopGapMs = 250;
-    OutputRequest r = c.compose(wide, ChirpPattern::Single, true);
+    OutputRequest r = c.compose(wide, ChirpPattern::Single, true, 0);
     TEST_ASSERT_EQUAL_UINT32(8, r.hopSteps);
     TEST_ASSERT_EQUAL_UINT32(3750, SoundOutput::plannedSpanMs(r, runtime::kDefaultChirpDurationMs));
     TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
 
     c.values().idleAnnounceMs = 2000;
-    r = c.compose(wide, ChirpPattern::Idle, false);
+    r = c.compose(wide, ChirpPattern::Idle, false, 0);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::IdleCall), static_cast<int>(r.kind));
     TEST_ASSERT_EQUAL_UINT32(5950, SoundOutput::plannedSpanMs(r, runtime::kDefaultChirpDurationMs));
     TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));

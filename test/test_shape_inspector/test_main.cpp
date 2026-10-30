@@ -97,10 +97,13 @@ void test_hop_train_is_strong_and_passes() {
     TEST_ASSERT_EQUAL_UINT8(4, in.occurrence.shape.risingSteps);
     TEST_ASSERT_EQUAL_UINT16(2950, in.occurrence.shape.firstBinHz);
     TEST_ASSERT_EQUAL_UINT16(3950, in.occurrence.shape.lastBinHz);
+    TEST_ASSERT_EQUAL_UINT16(2950, in.occurrence.shape.lowestBinHz);
     TEST_ASSERT_EQUAL(StrengthClass::Strong, in.occurrence.shape.shapeClass);
     OccurrenceVerdict v;
     TEST_ASSERT_TRUE(makeVerdict(in, shapePlan(), v));
     TEST_ASSERT_TRUE(v.accepted);
+    // The heard train's base, promoted into the verdict for Behavior's glide (BEH-009).
+    TEST_ASSERT_EQUAL_UINT16(2950, v.primaryLowestBinHz);
 }
 
 void test_train_cut_to_three_steps_is_medium() {

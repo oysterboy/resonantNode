@@ -26,7 +26,7 @@
 #include "ResonantNodeLed.h"
 #include "ResonantNodeCounters.h"
 #include "ResonantNodeBaseline.h"
-#include "ResonantNodeNetGateway.h"
+#include "../../net/NetGateway.h"
 #include "ResonantNodeSelfTest.h"
 #include "ResonantNodeSignalComposer.h"
 #include "ResonantNodeParams.h"

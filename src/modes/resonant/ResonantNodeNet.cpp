@@ -1,7 +1,7 @@
 // Node radio transport (step 11a, PAR-013; owner 2026-10-25 split by role): NET commands, the
 // remote command path and its replies. Interim: VEKTOR replaces it
 // (docs/decisions/2026-10-25-vektor-replaces-net.md). Moved verbatim from ResonantNodeApp.cpp. The reply and join state
-// live in NetGateway (ResonantNodeNetGateway.h, step 11i N3).
+// live in NetGateway (net/NetGateway.h, step 11i N3).
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
 #include <string.h>

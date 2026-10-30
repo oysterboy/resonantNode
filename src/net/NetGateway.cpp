@@ -1,10 +1,10 @@
 // Moved from ResonantNodeNet.cpp's file-scope state (step 11i N3); the lines it prints are unchanged.
-#include "ResonantNodeNetGateway.h"
+#include "NetGateway.h"
 
 #include <string.h>
 #include <new>
 
-#include "../../app/SerialOut.h"
+#include "../app/SerialOut.h"
 
 NetGateway::~NetGateway() {
     delete[] _join;

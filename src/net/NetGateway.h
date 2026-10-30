@@ -3,11 +3,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../../net/NetFrame.h"
-#include "../../net/NodeNet.h"
+#include "NetFrame.h"
+#include "NodeNet.h"
 
 /*
-NetGateway (step 11i N3, docs/refactors/node-split.md)
+NetGateway (step 11i N3, docs/refactors/archive/node-split.md; moved to src/net/ 2026-10-30 for the echo modes)
 
 The text layer of the radio on the Node (PAR-013, step 11a): the reply of a
 remote command run here (the console tee, cut into reply frames) and, on the

@@ -158,6 +158,14 @@ public:
         }
     }
     void reset() { _len = 0; }
+    // A frame went missing: the partial line so far, as it is (not glued to the next frame's text).
+    template <typename Emit>
+    void flush(Emit emit) {
+        if (_len > 0) {
+            emit(_buf, _len);
+            _len = 0;
+        }
+    }
 
 private:
     char _buf[Capacity];

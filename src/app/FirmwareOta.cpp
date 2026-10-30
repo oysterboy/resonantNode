@@ -223,7 +223,7 @@ void armRebootDeadline(Print& out) {
     out.println(kRebootDeadlineMs);
 }
 
-void confirmRunningImage(Print& out) {
+void confirmRunningImage(Print& out, bool ready) {
     const unsigned long nowMs = uptimeMs();
 #if defined(OTA_TEST_CRASH)
     // Rollback test build only (-D OTA_TEST_CRASH): crash 5 s after boot, before the image confirms itself, so the
@@ -245,7 +245,9 @@ void confirmRunningImage(Print& out) {
         }
     }
 #endif
-    if (gConfirmChecked || nowMs < kConfirmAfterMs) {
+    // Not ready (the Node's radio did not start): no confirm, so the reboot deadline rolls the image back instead of
+    // leaving a Node that NET * OTA can no longer reach (deep review N-M-A, the owner's L-OTA2 rule).
+    if (gConfirmChecked || nowMs < kConfirmAfterMs || !ready) {
         return;
     }
     gConfirmChecked = true;

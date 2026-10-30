@@ -57,6 +57,7 @@ void armRebootDeadline(Print& out);
 
 // From each mode's loop: once uptime reaches kConfirmAfterMs, an unconfirmed (just updated) image is marked valid,
 // the reboot deadline cancelled and `OTA confirmed` printed. Cheap after that.
-void confirmRunningImage(Print& out);
+// ready: the mode is up as it should be (the Node: its radio started, or the radio is switched off).
+void confirmRunningImage(Print& out, bool ready = true);
 
 }  // namespace ota

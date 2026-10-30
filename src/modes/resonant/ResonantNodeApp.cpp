@@ -554,7 +554,7 @@ void Node::configureI2SParameters() {
 
 void Node::update() {
     const unsigned long now = timebase::nowMs();
-    ota::confirmRunningImage(serialOut());
+    ota::confirmRunningImage(serialOut(), !_switches.radioEnabled || _net.started());
     const bool selfChirpSuppressed = _behavior.behaviorSuppressed(now);
 
     pollSerialCommands();

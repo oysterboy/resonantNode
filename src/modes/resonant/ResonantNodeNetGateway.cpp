@@ -92,6 +92,8 @@ NetGateway::JoinSlot* NetGateway::joinSlotFor(const char* name, uint16_t seq) {
             if (s.seq != seq) {
                 s.seq = seq;
                 s.joiner.reset();
+                s.nextPart = 0;
+                s.missing = 0;
             }
             return &s;
         }
@@ -102,6 +104,8 @@ NetGateway::JoinSlot* NetGateway::joinSlotFor(const char* name, uint16_t seq) {
     s.name[net::kTargetLen] = '\0';
     s.seq = seq;
     s.joiner.reset();
+    s.nextPart = 0;
+    s.missing = 0;
     return &s;
 }
 
@@ -110,6 +114,24 @@ void NetGateway::handleReplyFrame(const net::Frame& f) {
     if (slot == nullptr) {
         return;
     }
+    const unsigned part = static_cast<unsigned>(f.part);
+    if (part != slot->nextPart) {
+        // Lost frames (a full queue or outbox, a failed send): the line in progress is cut there, marked, rather
+        // than spliced onto the next frame's text into one plausible wrong line (deep review N-M-B).
+        slot->missing += part > slot->nextPart ? part - slot->nextPart : 1U;
+        slot->joiner.flush([&](const char* line, size_t n) {
+            serialOut().print("NET reply from=");
+            serialOut().print(f.target);
+            serialOut().print(" seq=");
+            serialOut().print(f.seq);
+            serialOut().print(" part=");
+            serialOut().print(slot->nextPart > 0 ? slot->nextPart - 1U : 0U);
+            serialOut().print(" gap=1 ");
+            serialOut().write(reinterpret_cast<const uint8_t*>(line), n);
+            serialOut().println();
+        });
+    }
+    slot->nextPart = part + 1U;
     slot->joiner.feed(f.text, f.textLen, f.last, [&](const char* line, size_t n) {
         serialOut().print("NET reply from=");
         serialOut().print(f.target);
@@ -127,6 +149,11 @@ void NetGateway::handleReplyFrame(const net::Frame& f) {
         serialOut().print(" seq=");
         serialOut().print(f.seq);
         serialOut().print(" done parts=");
-        serialOut().println(static_cast<unsigned>(f.part) + 1U);
+        serialOut().print(part + 1U);
+        if (slot->missing > 0) {
+            serialOut().print(" missing=");
+            serialOut().print(slot->missing);
+        }
+        serialOut().println();
     }
 }

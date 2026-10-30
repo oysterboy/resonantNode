@@ -191,6 +191,28 @@ void test_line_joiner_rebuilds_lines_across_frames() {
     TEST_ASSERT_EQUAL_STRING("third", got[2]);
 }
 
+// Deep review N-M-B: after a lost frame the gateway flushes the partial line instead of gluing it to the next one.
+void test_line_joiner_flush_keeps_a_partial_line_apart() {
+    net::LineJoiner<64> j;
+    char got[4][65];
+    int n = 0;
+    auto emit = [&](const char* line, size_t len) {
+        memcpy(got[n], line, len);
+        got[n][len] = ' ';
+        ++n;
+    };
+    const char f1[] = "value=1 then-cut";
+    j.feed(f1, sizeof(f1) - 1, false, emit);
+    j.flush(emit);  // the next frame was lost
+    const char f3[] = "PARAM path=x";
+    j.feed(f3, sizeof(f3) - 1, true, emit);
+    TEST_ASSERT_EQUAL_INT(2, n);
+    TEST_ASSERT_EQUAL_STRING("value=1 then-cut", got[0]);
+    TEST_ASSERT_EQUAL_STRING("PARAM path=x", got[1]);
+    j.flush(emit);  // nothing pending: no line
+    TEST_ASSERT_EQUAL_INT(2, n);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_command_round_trip);
@@ -202,5 +224,6 @@ int main(int, char**) {
     RUN_TEST(test_seq_filter_random_start_runs_the_first_command);
     RUN_TEST(test_seq_filter_forgets_a_sender_after_ksenders_others);
     RUN_TEST(test_line_joiner_rebuilds_lines_across_frames);
+    RUN_TEST(test_line_joiner_flush_keeps_a_partial_line_apart);
     return UNITY_END();
 }

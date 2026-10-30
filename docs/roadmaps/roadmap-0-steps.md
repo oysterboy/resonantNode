@@ -189,7 +189,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         idle calls swell, chords 3 % -> 15 %, first answer after 1 s in 58 %, every chain ends.
    16.3 [NEXT, after 14.2's board check] The desk: five Nodes free, step 6's protocol.
 
-17. [TODO, after 20 (owner 2026-10-30)] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
+17. [NEXT on the PC; the desk after 16.3. Due 2026-12-06 (owner 2026-10-30)] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
    roadmap-behavior.md BEH-009, decisions/2026-10-29-wider-band-base-bin-per-node.md. PC first, then the desk.
    Glide: one bin per own answer (owner 2026-10-29, as the decision says); the desk model converged slowly with it,
    so 18 watches whether the field settles on a shared base. Includes the node-structure
@@ -198,14 +198,15 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.
 
-19. [TODO, after 20 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
+19. [TODO, after 17. Due 2026-12-06 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
    BEH-009 part 3; field-activity-response.md Part 2 "What to measure" 1-2. Remote and PC. Ends in a decision between
    this and OUT-006 (8a).
 
-20. [RUNNING 2026-10-30: 20.1's PC part] Echo room and Whispernet in the tryout room: one OTA each. (issue #84)
-   Order (owner 2026-10-30): 20 runs ahead of 17 and 19, so both modes make 2026-12-13; 14.2's board check and
-   16.3 keep their place on the bench. Was: on site, after 18; place in the
-   order to be set by the owner.
+20. [PARKED 2026-10-30 after 20.1's PC part: nice to have] Echo room and Whispernet in the tryout room: one OTA
+   each. (issue #84)
+   Order (owner 2026-10-30, later the same night): 17 and 19 first, both due 2026-12-06 (built and checked on the
+   desk); echo and whisper are nice to have, worked on when 17 and 19 leave room (PC time beside their bench
+   days), and the first to drop. Superseded: "20 ahead of 17 and 19" (set earlier the same evening).
    roadmap-echo.md ECHO-001 (the echo room: a clap answered by a replay of a clip), ECHO-002 (Whispernet, layout 1:
    a whisper through a gated delay line), ECHO-003 (the switch: NET OTA in and out, params, WiFi).
    docs/research/echo-room.md, docs/research/whispernet.md (owner 2026-10-30: both "deserve a slot in the tryout";
@@ -291,8 +292,11 @@ parallel.
 
 ## Status log
 
+Status update 2026-10-30, late night: the owner set 17 (wider band) and 19 (range) due 2026-12-06, 17 pulled
+forward; 20 (echo, whisper) nice to have, parked after 20.1's PC part (the shell esp32dev-echo). 14.2's board check
+done on a5193220, its short soak running; next on the bench 16.3.
 Status update 2026-10-30, night: the owner set 20 ahead of 17 and 19 (both echo modes by 2026-12-13); 20.1's PC
-part starts while the soak holds the boards.
+part starts while the soak holds the boards. (Reversed later that night, above.)
 Status update 2026-10-30, latest: step 21 added (the installation's nodes: a stripboard prototype, ten boards, ten
 cases; roadmap-hardware.md; issue #85), beside 20 on the owner's hours.
 Status update 2026-10-30, later: step 20 gets the date 2026-12-13 for both modes and a plan (roadmap-echo.md); its

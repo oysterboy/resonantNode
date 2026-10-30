@@ -126,7 +126,8 @@ room sessions, one per firmware                    2 site days, after the desk c
 
 Conditions:
 1. Sequencing: steps 17 and 19 compete for the same weeks. Both modes by the date means step 20 runs ahead of 17
-   and 19, or in a parallel session. Set 2026-10-30 (owner): 20 runs ahead of 17 and 19.
+   and 19, or in a parallel session. Set 2026-10-30 (owner): 20 runs ahead of 17 and 19; reversed the same night:
+   17 and 19 first (due 2026-12-06), echo and whisper nice to have, the first to drop if time runs short.
 2. Site days: 11-01 and 11-03 are too early (nothing built). The room needs at least two site days between about
    12-01 and 12-12, the desk work done before them.
 3. A 48 kHz go/no-go in week one: at 48 kHz the I2S read comes every 1.3 ms against an 8 ms DMA queue, with the

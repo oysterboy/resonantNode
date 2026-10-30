@@ -189,7 +189,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         idle calls swell, chords 3 % -> 15 %, first answer after 1 s in 58 %, every chain ends.
    16.3 [NEXT, after 14.2's board check] The desk: five Nodes free, step 6's protocol.
 
-17. [NEXT on the PC; the desk after 16.3. Due 2026-12-06 (owner 2026-10-30)] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
+17. [RUNNING 2026-10-30: 17.1-17.2 done, 17.3 on the desk. Due 2026-12-06 (owner 2026-10-30)] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
    roadmap-behavior.md BEH-009, decisions/2026-10-29-wider-band-base-bin-per-node.md. PC first, then the desk.
    Glide: one bin per own answer (owner 2026-10-29, as the decision says); the desk model converged slowly with it,
    so 18 watches whether the field settles on a shared base. Includes the node-structure
@@ -208,8 +208,14 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         distinct at a chain's start), the rest's scatter spreads them at a chain's end (field-activity-response.md
         "The base bin's glide"). Kept: the shape rule's wrap allowance (trains no longer wrap; dropping it is a
         detection change for its own commit, with T2h).
-   17.3 The desk: the decision's gate (hop10 per base bin >= 9 / 10, chirp rejected, music 0, the Node battery),
-        then the glide on five Nodes.
+   17.3 [RUNNING 2026-10-30] The desk: the decision's gate (hop10 per base bin >= 9 / 10, chirp rejected, music 0,
+        the Node battery), then the glide on five Nodes.
+        2026-10-30 evening (bench/sessions/2026-10-30-step17-band8, desk/): all five by OTA, the Nodes to 13902862
+        (a base clamped on a narrower band now re-seeds when the band widens; the Nodes had band_high_hz 3950 stored,
+        set to 4700 and saved, bases 0 / 3 / 1 saved). Analyzer hop10 at bases 0..3 10 / 10 each, chirps 3200 / 4450
+        10 / 10 rejected; nodecheck 26 / 27 (E4's quiet_boot after a reboot in a loud moment; again after a reboot:
+        PASS); the glide on E1 one bin per answer toward the base heard. Overnight soak with music each hour
+        running (2026-10-30-step17-soak8, 8 h from 23:22). Then the five Nodes free.
 
 18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.

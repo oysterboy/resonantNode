@@ -132,5 +132,7 @@ echo-room.md                   a node that replays what it hears: why the contin
                                delay line (echoSpace) howled or faded, triggered replay
                                on the Node's onset detector, Behavior and SoundOutput;
                                buffer sizes, which transients, the chain between nodes;
-                               48 kHz with an amplitude-only detector (idea, 2026-10-30)
+                               48 kHz with an amplitude-only detector; a mode in this
+                               repo, not a fork, and what tooling carries over (idea,
+                               2026-10-30)
 ```

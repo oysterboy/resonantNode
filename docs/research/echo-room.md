@@ -1,8 +1,8 @@
 # Echo room: a node that replays what it hears, on the Node's detector, Behavior and output
 
 ```text
-Status:  idea (2026-10-30; owner's discussion of 2026-10-30, written up from it; the audio-quality trade added the
-         same day)
+Status:  idea (2026-10-30; owner's discussion of 2026-10-30, written up from it; the audio-quality trade and the
+         repo-or-fork question added the same day)
 Lab:     the echoSpace repo (oysterboy/echoSpace, 48f74a5): a continuous 500 ms delay line, mic to amp, at 48 kHz;
          the owner's report of what it did in a room ("shrill feedback, or died off"); no bench session
 ```
@@ -129,9 +129,8 @@ probabilistic through p = level / L, capped by the rest at levelMax. Two things 
 - **The ring and the own emission**: the ring keeps recording while the node plays. A trigger just after the
   suppression tail could reach its pre window back into the own emission. Either keep the pre window shorter than
   the tail, or mark the ring region written during own emission and skip it. Cheap, but it has to be deliberate.
-- **Build**: a fourth mode under `src/modes/echo/` with its own env, next to resonant, analyzer and emitter. The
-  pieces to reuse (detection, Behavior, SoundOutput, the param registry) live in resonantNode, so the echo room is a
-  mode here, not a second repo. echoSpace stays the delay-line reference and I2S bring-up, or retires.
+- **Build**: a fourth mode under `src/modes/echo/` with its own env, next to resonant, analyzer and emitter; the
+  case and the layout in "In the repo or a fork" below.
 
 ## Audio quality first, a simpler detector (owner, 2026-10-30)
 
@@ -184,6 +183,50 @@ frees a good margin. A 300 ms clip with a copy is comfortable either way.
 **A cost that is neither CPU nor RAM.** The Analyzer's SEQ tooling and the replay corpus are built around the band
 and the hop train. An amplitude-only echo node has none of that, so its verification is a RAW capture and ears, not
 the existing bench battery. Acceptable for an idea; the thing to notice before the first board run.
+
+## In the repo or a fork (owner's question, 2026-10-30)
+
+In the repo, as a fourth mode. The question was answered once before: the Emitter is a signal-source-only mode
+that shares everything, and the mode layer (step 10) exists so that builds differ in `src/modes/` and share the
+rest.
+
+**Why in-repo.**
+
+- It reuses most of the tree: the I2S HAL, the envelope in `AudioSignal`, the `ScalarTransientDetector`,
+  `ResonantBehavior` with the level automaton, `SoundOutput` and the writer task, the param registry, OTA, the
+  serial command path. A fork copies all of that and the copies drift; the automaton is still being tuned (step
+  16), and a fork would freeze a snapshot of it.
+- The build system already supports it: the sample rate is a build define (`AUDIO_I2S_SAMPLE_RATE_HZ`), and
+  `AudioSignal` and `I2sToneOutput` take the rate at runtime, so `esp32dev-echo` at 48 kHz next to `esp32dev` at
+  16 kHz is an env, not a branch. CI builds every env, so the same run keeps the echo build compiling.
+- The repo's rules cost little and help: nothing under `src/detection/` includes `src/modes/`, the registry
+  includes nothing from `src/`, the format check. The echo mode holds its own `BehaviorGateConfig` and
+  `ScalarTransientConfig` instances, so it never touches the Node's tuning.
+
+**What is separate, and where it goes.**
+
+- `src/modes/echo/`: the mode's wiring, its command surface, its detector and behavior configs.
+- `src/audio/`: the capture ring (audio, not detection).
+- `src/output/` and `src/hal/`: the Clip request kind and its renderer.
+- A `roadmap-echo.md` with ECHO- IDs, and a step in `roadmap-0-steps.md` when it starts. The milestone decision
+  (decisions/2026-10-26-milestone-installation-ready-node.md) sequences at the cut-over, so the echo room lands
+  after the installation-ready node, not inside step 16.
+- Bench sessions on the `bench` branch like every other session, tagged echo.
+
+**The tooling is smaller than "separate" suggests.** Three pieces carry over:
+
+1. The Emitter as the clap source: its pulse train at a 5 ms pulse is nearly a click, repeatable and scriptable,
+   so the echo tests need no new hardware.
+2. `tools/bench/nodegroup.py`'s chain metrics (chain length, emissions per minute, time to quiet) apply unchanged
+   if the echo node prints the same emission log lines.
+3. `tools/bench/seqrun.py`'s serial layer for a new `echocheck.py`, the echo equivalent of `nodecheck.py`: trigger
+   on a click, clip captured, replay heard, level and rest counters move.
+
+Genuinely new: a RAW capture that includes the replay, so the clip that was played can be read against the sound
+that triggered it. That and ears are the verification until an echo-specific pass rule exists.
+
+**When a fork would be right:** a different board, or a Behavior that stops being "answer what you heard, with a
+budget". Neither is in the idea as it stands. echoSpace retires to a reference once the mode plays its first clip.
 
 ## Open questions (the owner's calls)
 

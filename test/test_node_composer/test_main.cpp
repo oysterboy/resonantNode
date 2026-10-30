@@ -1,7 +1,7 @@
 /*
 NodeSignalComposer on the host (step 11i N5, docs/refactors/node-split.md):
-the Node's half of an emission. Hop frequencies per rotation, the shipped
-5-step train, the idle call with and without the hop, the grid read from a
+the Node's half of an emission. Hop frequencies per base bin (no wrap, the
+8-bin band since 2026-10-30), the shipped 5-step train, the idle call with and without the hop, the grid read from a
 real FreqBandStream after the band moved, and the span bound the output.*
 ranges keep (8 x 250 + 7 x 250 fits OutputLimits, step 11g B2 / review
 D1.2). Runs in native-test-behavior.
@@ -17,32 +17,37 @@ namespace {
 
 using Grid = NodeSignalComposer::BandGrid;
 
-// The shipped band 2950-3950 on the 250 Hz grid: five bins.
+// The shipped band 2950-4700 on the 250 Hz grid: eight bins.
 Grid shippedGrid() {
     Grid g;
     g.lowHz = 2950;
     g.spacingHz = 250;
-    g.bins = 5;
+    g.bins = 8;
     return g;
 }
 
-void test_hop_frequencies_per_rotation() {
+void test_hop_frequencies_per_base_bin() {
     NodeSignalComposer c;
     uint32_t hz[8] = {};
     c.values().hopSteps = 5;
-    for (uint32_t rot = 0; rot < 5; ++rot) {
-        c.values().hopRotation = rot;
+    TEST_ASSERT_EQUAL_UINT32(3, c.maxBaseBin(shippedGrid()));
+    for (uint32_t base = 0; base <= 3; ++base) {
+        c.values().hopRotation = base;
         TEST_ASSERT_EQUAL_UINT32(5, c.hopFrequencies(shippedGrid(), hz, 8));
         for (size_t k = 0; k < 5; ++k) {
-            TEST_ASSERT_EQUAL_UINT32(2950 + ((k + rot) % 5) * 250, hz[k]);
+            TEST_ASSERT_EQUAL_UINT32(2950 + (base + k) * 250, hz[k]);  // climbing, never wrapping
         }
     }
-    // A rotation past the bin count wraps like the modulo it is.
+    // A base too high for the train is lowered until the train fits: base 7 plays as base 3 (top bin 4700).
     c.values().hopRotation = 7;
     c.hopFrequencies(shippedGrid(), hz, 8);
-    TEST_ASSERT_EQUAL_UINT32(3450, hz[0]);
-    // Capacity caps the steps; no bins or no room gives none.
+    TEST_ASSERT_EQUAL_UINT32(3700, hz[0]);
+    TEST_ASSERT_EQUAL_UINT32(4700, hz[4]);
+    // Capacity caps the steps, so does the grid (8 steps on 8 bins: base 0 only); no bins or no room gives none.
     c.values().hopSteps = 8;
+    TEST_ASSERT_EQUAL_UINT32(0, c.maxBaseBin(shippedGrid()));
+    TEST_ASSERT_EQUAL_UINT32(8, c.hopFrequencies(shippedGrid(), hz, 8));
+    TEST_ASSERT_EQUAL_UINT32(2950, hz[0]);
     TEST_ASSERT_EQUAL_UINT32(3, c.hopFrequencies(shippedGrid(), hz, 3));
     TEST_ASSERT_EQUAL_UINT32(0, c.hopFrequencies(shippedGrid(), hz, 0));
     TEST_ASSERT_EQUAL_UINT32(0, c.hopFrequencies(Grid{}, hz, 8));
@@ -57,7 +62,7 @@ void test_five_step_train_from_a_heard_pattern() {
     TEST_ASSERT_EQUAL_UINT32(5, r.hopSteps);
     TEST_ASSERT_EQUAL_UINT32(25, r.pulseMs);
     TEST_ASSERT_EQUAL_UINT32(10, r.gapMs);
-    const uint32_t expect[5] = {3450, 3700, 3950, 2950, 3200};
+    const uint32_t expect[5] = {3450, 3700, 3950, 4200, 4450};
     TEST_ASSERT_EQUAL_UINT32_ARRAY(expect, r.hopHz, 5);
     TEST_ASSERT_EQUAL_UINT32(0, r.announceHz);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
@@ -117,9 +122,10 @@ void test_bins_from_a_moved_band() {
     Grid g = NodeSignalComposer::gridOf(band);
     TEST_ASSERT_EQUAL_UINT32(2950, g.lowHz);
     TEST_ASSERT_EQUAL_UINT32(runtime::kBandBinSpacingHz, g.spacingHz);
-    TEST_ASSERT_EQUAL_UINT32(5, g.bins);
+    TEST_ASSERT_EQUAL_UINT32(8, g.bins);
 
-    // Moved and narrowed: the train follows the applied band.
+    // Moved and narrowed below the train's steps: the train follows the applied band and climbs it once (3 steps
+    // on 3 bins, from bin 0 whatever the base), never repeating a bin.
     band.setBand(2200, 2700);
     g = NodeSignalComposer::gridOf(band);
     TEST_ASSERT_EQUAL_UINT32(2200, g.lowHz);
@@ -127,8 +133,9 @@ void test_bins_from_a_moved_band() {
     NodeSignalComposer c;
     c.values().hopRotation = 4;
     const OutputRequest r = c.compose(g, ChirpPattern::Single, true);
-    const uint32_t expect[5] = {2450, 2700, 2200, 2450, 2700};
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expect, r.hopHz, 5);
+    TEST_ASSERT_EQUAL_UINT32(3, r.hopSteps);
+    const uint32_t expect[3] = {2200, 2450, 2700};
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expect, r.hopHz, 3);
 
     // Wider than the bank: the grid is the clamped one, not the asked one.
     band.setBand(1000, 6000);
@@ -175,7 +182,7 @@ void tearDown() {}
 
 int main(int, char**) {
     UNITY_BEGIN();
-    RUN_TEST(test_hop_frequencies_per_rotation);
+    RUN_TEST(test_hop_frequencies_per_base_bin);
     RUN_TEST(test_five_step_train_from_a_heard_pattern);
     RUN_TEST(test_plain_pattern_when_no_train);
     RUN_TEST(test_idle_call_with_hop);

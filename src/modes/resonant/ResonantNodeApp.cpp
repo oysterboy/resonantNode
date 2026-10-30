@@ -230,17 +230,17 @@ void Node::begin() {
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _detection.resetState();
     applyActiveProfiles();
-    // Per-node start bin for the hop train (BEH-005): from the roster
-    // (app/NodeRoster.h, step 5g: E1=0 ... E5=4), else MAC % bins. The band
-    // is applied inside applyActiveProfiles().
+    // Per-node base bin for the hop train (BEH-005, BEH-009): from the roster (app/NodeRoster.h), else the MAC,
+    // taken modulo the bases a train fits under (0..3 on the 8-bin band). The band is applied inside
+    // applyActiveProfiles().
     {
-        const size_t bins = bandGrid().bins;
+        const size_t bases = _composer.maxBaseBin(bandGrid()) + 1;
         const roster::Entry* me = roster::find(ESP.getEfuseMac());
         uint32_t& rotation = _composer.values().hopRotation;
-        if (me != nullptr && bins > 0) {
-            rotation = static_cast<uint32_t>(me->hopRotation % bins);
+        if (me != nullptr) {
+            rotation = static_cast<uint32_t>(me->hopRotation % bases);
         } else {
-            rotation = bins > 0 ? static_cast<uint32_t>(ESP.getEfuseMac() % bins) : 0U;
+            rotation = static_cast<uint32_t>(ESP.getEfuseMac() % bases);
         }
         _nodeName = me != nullptr ? me->name : "unknown";
         serialOut().print("RB node name=");

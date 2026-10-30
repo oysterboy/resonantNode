@@ -435,14 +435,14 @@ void test_hop_train_is_not_heard_on_the_single_target() {
 // Grid consistency (docs/research/unproven-assumptions-audit.md 3.6): the
 // detector's bank, the Node's hop train and the chirp all sit on one grid
 // defined in RuntimeDefaults.h; the band stream reports the same bin count
-// the static checks assume, and the hop fixture's steps are exactly those bins.
+// the static checks assume (8 since 2026-10-30; the hop fixtures, recorded at 5 bins, use the lower five).
 void test_band_grid_is_shared_by_detector_and_hop_train() {
     FreqBandStream band;
     band.resetState();
     band.setSampleRateHz(runtime::kDefaultAudioI2SSampleRateHz);
     band.setBand(runtime::kDefaultNetworkBandLowHz, runtime::kDefaultNetworkBandHighHz);
     TEST_ASSERT_FLOAT_WITHIN(0.01f, static_cast<float>(runtime::kBandBinSpacingHz), band.bandSpacingHz());
-    TEST_ASSERT_EQUAL_UINT32(5, band.bandBinCount());
+    TEST_ASSERT_EQUAL_UINT32(8, band.bandBinCount());  // 2950-4700 since 2026-10-30 (the fixtures were recorded at 5)
     TEST_ASSERT_EQUAL_UINT32(runtime::kDefaultNetworkBandHighHz, band.bandHighHz());
     // A band wider than the bank is clamped at the high edge, and says so.
     band.setBand(1000, 7000);

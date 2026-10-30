@@ -108,7 +108,9 @@ constexpr uint32_t kDefaultAudioI2SSampleRateHz = AUDIO_I2S_SAMPLE_RATE_HZ;
 constexpr unsigned long kFreqBandWindowSamples = kDefaultAudioI2SSampleRateHz / 250UL;
 constexpr unsigned long kBandBinSpacingHz = kDefaultAudioI2SSampleRateHz / kFreqBandWindowSamples;
 constexpr unsigned long kDefaultNetworkBandLowHz = 2950UL;
-constexpr unsigned long kDefaultNetworkBandHighHz = 3950UL;
+// 8 bins since 2026-10-30 (decisions/2026-10-29-wider-band-base-bin-per-node.md): room for a base bin per node
+// (0..3 under a 5-step train), upward only, the bank's limit (FreqBandStream::kMaxBandBins).
+constexpr unsigned long kDefaultNetworkBandHighHz = 4700UL;
 static_assert(kBandBinSpacingHz * kFreqBandWindowSamples == kDefaultAudioI2SSampleRateHz,
               "sample rate must be a multiple of the band window so the bins are exact");
 static_assert(kDefaultNetworkBandLowHz < kDefaultNetworkBandHighHz, "network band is inverted");

@@ -28,7 +28,7 @@ Never flash a piezo build onto a D-AMP board or the reverse: the pinouts collide
 
 Build-time knobs (not params, they need a rebuild): `platformio.ini` build flags
 (`CHIRP_FREQUENCY_HZ`, `BUILD_VERSION`), tone level `I2S_TONE_AMPLITUDE` and the other defaults in
-`src/app/RuntimeDefaults.h`, the node roster (name and hop rotation per board MAC) in
+`src/app/RuntimeDefaults.h`, the node roster (name and the hop train's base bin per board MAC; 0..3 on the 8-bin band since 2026-10-30) in
 `src/app/NodeRoster.h`.
 
 Host-side builds and tests (no board): see "Build & verify" in `CLAUDE.md`.
@@ -111,7 +111,7 @@ structs), `behavior.*` in `src/behavior/BehaviorProfile.h` (`BehaviorGateConfig`
 
 - `Node::begin()`: `configureParameters()`, audio source and signal start, detection reset, then
   `applyActiveProfiles()` (detection profile and behavior gate config from the headers), then the
-  roster lookup (node name, hop rotation; MAC fallback), then `captureDefaults()` so the registry
+  roster lookup (node name, base bin of the hop train; MAC fallback), then `captureDefaults()` so the registry
   knows the firmware defaults, then `loadStoredParams()`: a valid stored value wins, `PARAM stale`
   is printed per entry saved against a default that has since changed. The radio comes up last, so
   a stored `node.radio_enabled 0` keeps it off.

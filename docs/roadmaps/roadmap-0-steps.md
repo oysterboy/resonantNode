@@ -194,6 +194,16 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    Glide: one bin per own answer (owner 2026-10-29, as the decision says); the desk model converged slowly with it,
    so 18 watches whether the field settles on a shared base. Includes the node-structure
    question whether the composer applies the band.
+   17.1 [DONE 2026-10-30, host] The band 2950-4700 (8 bins); the train climbs 5 bins from the node's base bin
+        (output.hop_rotation, now 0..3, lowered when too high; no wrap, so a narrowed band climbs once); roster
+        E1 0, E4 3, E5 1. T2h re-recorded: only the replay's band line differs, every verdict on the 5-bin
+        fixtures the same (bench/sessions/2026-10-30-step17-band8). Boards: the stored output.hop_rotation wins
+        (PAR-018), so set it per Node after the OTA; the Analyzer's per-base hop10 set is the gate's board part.
+   17.2 Behavior owns the base bin (random at boot, the roster as override), the verdict carries the heard train's
+        lowest bin, the glide one bin per own answer toward the base last heard, the scatter at rest; the shape
+        rule's wrap allowance goes. Host tests and native-fieldsim.
+   17.3 The desk: the decision's gate (hop10 per base bin >= 9 / 10, chirp rejected, music 0, the Node battery),
+        then the glide on five Nodes.
 
 18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.

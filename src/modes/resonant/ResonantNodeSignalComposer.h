@@ -37,8 +37,8 @@ public:
     };
 
     // output.hop_* and output.idle_announce_*: the node's network signal and its idle call. Shape from the
-    // 2026-10-16 battery (25 ms x 5, gap 10); the rotation is the train's start bin (from the roster or the MAC
-    // at boot, PARAM SET output.hop_rotation overrides). Idle call (owner 2026-10-17): announcement tone below
+    // 2026-10-16 battery (25 ms x 5, gap 10); hopRotation is the train's base bin, where it starts climbing (from
+    // the roster or the MAC at boot, PARAM SET output.hop_rotation overrides; no wrap since the 8-bin band). Idle call (owner 2026-10-17): announcement tone below
     // the band, a gap, then the node's call (its hop train); 0 Hz = plain idle chirp pattern.
     // decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md
     struct Values {
@@ -58,8 +58,12 @@ public:
     Values& values() { return _values; }
     const Values& values() const { return _values; }
 
-    // The train's bins on the grid, rotated per node: hopSteps of them (at most capacity), 0 when the grid has
-    // no bins.
+    // The highest base bin a train of hopSteps fits under (bins - steps; 3 on the 8-bin band with 5 steps), and the
+    // base bin played: hopRotation, lowered to that.
+    size_t maxBaseBin(const BandGrid& grid) const;
+    size_t baseBin(const BandGrid& grid) const;
+    // The train's bins on the grid, climbing from the base bin: hopSteps of them (at most capacity and the grid's
+    // bins), 0 when the grid has no bins.
     size_t hopFrequencies(const BandGrid& grid, uint32_t* out, size_t capacity) const;
     // The node's network signal into request's hop fields (BEH-005). False when the grid has no bins or the
     // pulse is 0 (request.hopSteps is then 0).

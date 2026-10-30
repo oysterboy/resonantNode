@@ -12,6 +12,16 @@ NodeSignalComposer::BandGrid NodeSignalComposer::gridOf(const FreqBandStream& ba
     return grid;
 }
 
+size_t NodeSignalComposer::maxBaseBin(const BandGrid& grid) const {
+    const size_t steps = _values.hopSteps < grid.bins ? _values.hopSteps : grid.bins;
+    return grid.bins > steps ? grid.bins - steps : 0;
+}
+
+size_t NodeSignalComposer::baseBin(const BandGrid& grid) const {
+    const size_t top = maxBaseBin(grid);
+    return _values.hopRotation < top ? static_cast<size_t>(_values.hopRotation) : top;
+}
+
 size_t NodeSignalComposer::hopFrequencies(const BandGrid& grid, uint32_t* out, size_t capacity) const {
     if (grid.bins == 0 || capacity == 0) {
         return 0;
@@ -20,11 +30,15 @@ size_t NodeSignalComposer::hopFrequencies(const BandGrid& grid, uint32_t* out, s
     if (steps > capacity) {
         steps = capacity;
     }
-    // Bin-aligned by construction (the detector's bank sits on the same
-    // grid); the rotation picks the start bin, the order is the grid's.
+    if (steps > grid.bins) {
+        steps = grid.bins;
+    }
+    // Bin-aligned by construction (the detector's bank sits on the same grid). The train climbs from the node's
+    // base bin without wrapping (the base is the node's note, decisions/2026-10-29-wider-band-base-bin-per-node.md);
+    // a base too high for the train is lowered until the train fits.
+    const size_t base = baseBin(grid);
     for (size_t k = 0; k < steps; ++k) {
-        const size_t bin = (k + static_cast<size_t>(_values.hopRotation)) % grid.bins;
-        out[k] = grid.lowHz + static_cast<uint32_t>(bin) * grid.spacingHz;
+        out[k] = grid.lowHz + static_cast<uint32_t>(base + k) * grid.spacingHz;
     }
     return steps;
 }

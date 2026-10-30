@@ -514,16 +514,19 @@ void Node::applyBandParams() {
 }
 
 // Behavior's base bin follows the grid (band and hop steps decide how many bases fit) and is seeded from
-// output.hop_rotation whenever that changes (boot: the roster, then a stored value; PARAM SET); otherwise Behavior
-// keeps moving it (BEH-009). Runs with applyBandParams(), every loop pass: a few compares.
+// output.hop_rotation whenever that or the number of bases changes (boot: the roster, then a stored value; PARAM
+// SET of the rotation, the band or the steps): a seed clamped on a narrower grid would otherwise stay clamped once
+// the band widens (found on the bench 2026-10-30, a stored 5-bin band). Otherwise Behavior keeps moving it (BEH-009).
+// Runs with applyBandParams(), every loop pass: a few compares.
 void Node::syncBaseBin() {
     const NodeSignalComposer::BandGrid grid = bandGrid();
     const uint32_t bases = grid.bins > 0 ? static_cast<uint32_t>(_composer.maxBaseBin(grid) + 1) : 0U;
     _behavior.setBaseGrid(grid.lowHz, grid.spacingHz, bases);
     const uint32_t seed = _composer.values().hopRotation;
-    if (!_baseSeeded || seed != _baseSeed) {
+    if (!_baseSeeded || seed != _baseSeed || bases != _baseCount) {
         _behavior.seedBaseBin(seed);
         _baseSeed = seed;
+        _baseCount = bases;
         _baseSeeded = true;
     }
 }

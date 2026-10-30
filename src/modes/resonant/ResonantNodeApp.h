@@ -158,8 +158,10 @@ private:
     NodeNet _net;
     NetGateway _netGateway{_net};  // reply tee and reply reassembly (step 11i N3)
     const char* _nodeName = "unknown";  // from the roster (app/NodeRoster.h)
-    // The output.hop_rotation last seeded into Behavior's base bin (syncBaseBin); re-seeded only when it changes.
+    // The output.hop_rotation last seeded into Behavior's base bin and the bases then (syncBaseBin); re-seeded only
+    // when either changes.
     uint32_t _baseSeed = 0;
+    uint32_t _baseCount = 0;
     bool _baseSeeded = false;
 
     // Occurrence / detection / behavior pipeline.

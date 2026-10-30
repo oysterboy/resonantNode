@@ -96,6 +96,67 @@ void test_dense_field_starts_a_rest_instead_of_an_answer() {
     TEST_ASSERT_FALSE(b.shouldStartChirp());
 }
 
+// Deep review B-M1: a rest that starts while an answer is scheduled drops it.
+void test_rest_drops_a_scheduled_answer() {
+    ResonantBehavior b;
+    b.configure(config());
+    b.resetState();
+    const unsigned long threshold = b.config().restAfterFieldPatterns;
+    const unsigned long t = 1000;
+    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::ConsumedPattern,
+                      b.handleOccurrenceVerdict(validPattern(t), fieldWith(threshold - 1), t));
+    b.update(t);
+    const unsigned long t2 = t + 60;  // inside the wait
+    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::RestFieldDense,
+                      b.handleOccurrenceVerdict(validPattern(t2), fieldWith(threshold), t2));
+    b.update(t + b.config().waitAfterHeardMs + 5);
+    TEST_ASSERT_FALSE(b.shouldStartChirp());
+}
+
+// Deep review B-M2: after an own-budget rest the next answer does not rest again at once.
+void test_budget_rest_does_not_rearm_on_the_next_answer() {
+    ResonantBehavior b;
+    b.configure(config());
+    b.resetState();
+    const unsigned long budget = b.config().ownEmitBudget;
+    unsigned long t = 1000;
+    for (unsigned long i = 0; i < budget; ++i) {
+        answer(b, t, 0);
+        t += 700;
+    }
+    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::RestOwnBudget, b.lastRestReason());
+    const unsigned long entered = b.restsEntered();
+    unsigned long after = t + b.config().restMs + kTrainMs + 10;
+    while (b.resting(after)) {
+        after += 100;
+    }
+    answer(b, after, 0);
+    TEST_ASSERT_EQUAL_UINT32(entered, b.restsEntered());
+}
+
+// Deep review B-M3: a valid verdict blocked by a rest still counts as heard: an idle call due when the rest ends
+// waits idleBlockedAfterHeardMs after it instead of firing at once.
+void test_blocked_verdict_holds_the_idle_call() {
+    ResonantBehavior b;
+    BehaviorGateConfig cfg = config();
+    cfg.idleEnabled = true;
+    cfg.idleTimeoutMs = 500;  // due long before the rest ends
+    cfg.idleTimeVariationMs = 0;
+    b.configure(cfg);
+    b.resetState();
+    const unsigned long t0 = 2000;
+    b.update(t0);  // schedules the idle call
+    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(cfg.restAfterFieldPatterns), t0);  // starts a rest
+    const unsigned long restEnd = t0 + cfg.restMs;
+    const unsigned long late = restEnd - 200;  // heard 200 ms before the rest ends, blocked as Resting
+    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::Resting,
+                      b.handleOccurrenceVerdict(validPattern(late), fieldWith(0), late));
+    b.update(restEnd + 1);
+    TEST_ASSERT_FALSE(b.shouldStartChirp());
+    b.update(late + cfg.idleBlockedAfterHeardMs + 1);
+    TEST_ASSERT_TRUE(b.shouldStartChirp());
+}
+
 // While resting every valid verdict is ignored, whatever the field says; after restMs the node answers again.
 void test_rest_ignores_verdicts_until_it_ends() {
     ResonantBehavior b;
@@ -309,6 +370,9 @@ int main(int, char**) {
     RUN_TEST(test_shipped_defaults_have_both_triggers_on);
     RUN_TEST(test_dense_field_starts_a_rest_instead_of_an_answer);
     RUN_TEST(test_rest_ignores_verdicts_until_it_ends);
+    RUN_TEST(test_rest_drops_a_scheduled_answer);
+    RUN_TEST(test_budget_rest_does_not_rearm_on_the_next_answer);
+    RUN_TEST(test_blocked_verdict_holds_the_idle_call);
     RUN_TEST(test_own_budget_starts_a_rest);
     RUN_TEST(test_slow_traffic_stays_under_the_budget);
     RUN_TEST(test_two_node_ping_pong_is_cut);

@@ -35,7 +35,7 @@ inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
     registry.addUInt32(ParamId::Behavior_RestAfterFieldPatterns, ModuleId::Behavior,
                        "behavior.rest_after_field_patterns", &b.restAfterFieldPatterns, 0U, 100U);
     registry.addUInt32(ParamId::Behavior_OwnEmitBudget, ModuleId::Behavior, "behavior.own_emit_budget",
-                       &b.ownEmitBudget, 0U, 100U);
+                       &b.ownEmitBudget, 0U, 16U);  // the emission ring holds 16 (deep review L3)
     registry.addUInt32(ParamId::Behavior_OwnEmitBudgetWindowMs, ModuleId::Behavior,
                        "behavior.own_emit_budget_window_ms", &b.ownEmitBudgetWindowMs, 0U, 600000U);
     registry.addUInt32(ParamId::Behavior_RestMs, ModuleId::Behavior, "behavior.rest_ms", &b.restMs, 0U, 600000U);

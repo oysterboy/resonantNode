@@ -114,6 +114,11 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         return _last.decision;
     }
 
+    if (result.valid) {
+        // Heard, whatever the gates below decide: the idle call waits after any valid pattern, as on the outputs-off
+        // path (deep review B-M3: blocked verdicts did not count, and an idle call could follow one at once).
+        _timing.lastHeardPatternMs = result.primaryAcceptedMs != 0 ? result.primaryAcceptedMs : now;
+    }
     if (!result.valid) {
         _last.behaviorEligible = false;
         if (result.rejectReason == detection::VerdictRejectReason::MissingSupport) {
@@ -367,6 +372,9 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitS
     _emitTimes.pushOverwrite(now);
     if (_config.ownEmitBudget > 0 && ownEmitsInWindow(now) >= _config.ownEmitBudget) {
         enterRest(now + emitSpanMs + _config.restMs, BehaviorDecision::RestOwnBudget);
+        // The emissions that caused this rest are paid for: without the clear the first answer after it found them
+        // still in the window and rested again, ~10 s with one answer inside (deep review B-M2).
+        _emitTimes.clear();
     }
 }
 
@@ -377,6 +385,11 @@ void ResonantBehavior::enterRest(unsigned long untilMs, BehaviorDecision reason)
     _rest.armed = true;
     _rest.entered++;
     _rest.lastReason = reason;
+    // Rest means no answers: one already scheduled is dropped, not played during the rest (deep review B-M1).
+    if (_state == State::HeardPattern) {
+        _state = State::Idle;
+        _heard = {};
+    }
 }
 
 unsigned long ResonantBehavior::ownEmitsInWindow(unsigned long now) const {

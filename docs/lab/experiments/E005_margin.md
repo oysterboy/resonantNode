@@ -79,3 +79,17 @@ show it. A dipped hop bites through duration and coverage, not strength.
 - 13.1: is the 3500-4500 Hz hump the speaker's or the mic's (swap the Emitter board).
 - Whether the amp medium class, the first gate to fail, is where a lower installation level should be bought back
   (a tuning question, its own pass: not as a side effect).
+
+## 2026-10-30: the margin over a day (soaks on b006c00)
+
+bench/sessions/2026-10-30-step14-soak47b (11 hourly cycles, 09:49-20:55) and 2026-10-29-step14-soak47 (10 cycles
+through the night), the 13.2 / 13.3 steps once an hour, 10 trials each:
+
+- 0.5 FS, 0.35 FS (-3 dB) and hops 4 + 5 at -45 dB never missed (210 / 210 each).
+- 0.25 FS (-6 dB) 198 / 210: two cycles of 21 at 3-5 / 10.
+- 0.21 FS (-7.5 dB) and hops 2 + 3 at -23 dB flip as a whole from one hour to the next (0 / 10 or 10 / 10): 0.21 FS
+  passed 8 / 100 through the night and morning, 45 / 110 the next day with every cycle from 17:00 at 10 / 10.
+- Reading: the margin at the edge moves by a dB or more over a day on the same desk with nothing touched
+  (temperature, the room's background, the Emitter's level). The operating point keeps its 6 dB; a site check at a
+  single hour over-reads or under-reads the edge by that much. One more reason to read margin, not pass / fail, on
+  site (15).

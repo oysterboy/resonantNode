@@ -143,13 +143,16 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Boards: chord +150 / +200 ms now one train (was lost), nodecheck 26 / 26
         (bench/sessions/2026-10-29-step14-review). The Nodes had 300 stored: 450 PARAM SAVEd on E1 / E4 / E5.
    14.2 [RUNNING 2026-10-30: fixes in, board check after the soak] Deep review fixes (docs/research/code-review-2026-10-30.md: six areas, no High, 15 Medium, ~35 Low).
-        Host-built and gated while the soak runs; flashed after it (2026-11-01). First: the sample-clock backstep
+        Host-built and gated while the soak ran; flashed after it (the owner stopped it at 11 h, 2026-10-30). First: the sample-clock backstep
         that can drop a whole train (D-M1), the shape look-back that lets a tone after a train pass (I-M-A), the
         rest / budget / idle holes in Behavior (B-M1..3), the Emitter's cancel ramp (O-M1). Behaviour-changing fixes
         (I-M-A, B-M1..3) move the baseline: board check and a short soak after.
         2026-10-30: every Medium fixed and host-gated (d53a881, e3b8ea1, 891c722, e24e175; T2h byte-identical,
         host 138 / 138), the useful Lows too (9f827c2, 6b18b2f); deferred ones placed in the review note. Next: OTA
         to all five after the soak, nodecheck, the Analyzer A/B and RAW sets, the chord cell, then a short soak.
+        Soak stopped 2026-10-30 20:55 after 11 cycles (owner: "bestehe nicht auf den 48h"): no reset, 0.5 / 0.35 FS
+        and hops 4 + 5 lost 110 / 110, the edge steps (0.21 FS, hops 2 + 3) all or nothing per hour, music 0
+        verdicts (bench/sessions/2026-10-30-step14-soak47b, lab E005).
 
 15. [TODO] Understand the room: the tryout room (5 x 6 m, 1 m spacing). (issue #77) On site.
    Hearing matrix strict and lenient (tools/bench/hearmatrix.py; field-activity-response.md "Measure first"), reach
@@ -292,7 +295,7 @@ Status update 2026-10-30, late: step 20 added (the echo room and Whispernet in t
 #84, roadmap-echo.md); place after 18 to be set by the owner.
 
 Status update 2026-10-30: 14 done (14.0 max duration 450, 14.1 review fixes b006c00); 13 running (13.2-13.4 done,
-13.1 and the other distances on site); the 47 h soak on b006c00 runs until 2026-11-01 ~23:00
+13.1 and the other distances on site); the 47 h soak on b006c00 (stopped early, see 14.2)
 (bench/sessions/2026-10-29-step14-soak47, soakcycle --steps margin --chord --noise-play: margin, chords and music
 every hour). New items DET-019, ANA-010, PAR-018 (carried over); platform decided off Arduino, not scheduled.
 Status update 2026-10-29, late: 12.4 done (5f1aa75, readability pass archived); 13 next (13.1 on site Sunday).

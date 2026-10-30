@@ -133,11 +133,11 @@ echo-room.md                   a node that replays what it hears: why the contin
                                on the Node's onset detector, Behavior and SoundOutput;
                                buffer sizes, which transients, the chain between nodes;
                                48 kHz with an amplitude-only detector; a mode in this
-                               repo, not a fork, and what tooling carries over (idea,
-                               2026-10-30)
+                               repo, not a fork, and what tooling carries over
+                               (promoted: ECHO-001, step 20, 2026-10-30)
 whispernet.md                  a room that whispers back: the whisper detector (a level
                                window with a loud bound, duration, modulation), a gated
                                delay line with the gate stored and delayed with the audio,
                                the loud bound as feedback guard; second piece beside
-                               echo-room.md (idea, 2026-10-30)
+                               echo-room.md (promoted: ECHO-002, step 20, 2026-10-30)
 ```

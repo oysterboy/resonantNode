@@ -1,8 +1,9 @@
 # Echo room: a node that replays what it hears, on the Node's detector, Behavior and output
 
 ```text
-Status:  idea (2026-10-30; owner's discussion of 2026-10-30, written up from it; the audio-quality trade and the
-         repo-or-fork question added the same day)
+Status:  promoted (2026-10-30; owner's discussion of 2026-10-30, written up from it; the audio-quality trade and
+         the repo-or-fork question added the same day; a tryout slot the same evening)
+Became:  ECHO-001 (roadmap-echo.md), step 20 (roadmap-0-steps.md, issue #84), 2026-10-30
 Lab:     the echoSpace repo (oysterboy/echoSpace, 48f74a5): a continuous 500 ms delay line, mic to amp, at 48 kHz;
          the owner's report of what it did in a room ("shrill feedback, or died off"); no bench session
 ```
@@ -240,5 +241,6 @@ budget". Neither is in the idea as it stands. echoSpace retires to a reference o
    (2026-10-30, the section above).
 3. Clip length, and whether the pre window is in the clip.
 4. Whether chains across neighbours are wanted and how long; levelMax and restMs set that.
-5. Whether ESP-NOW stays in the build. Without it the heap grows by a good margin.
+5. Whether ESP-NOW stays in the build. Without it the heap grows by a good margin. Settled 2026-10-30: it stays,
+   NET OTA is the way in and out on location (ECHO-003).
 6. Which transients: broadband (claps, voice) or the tonal band only.

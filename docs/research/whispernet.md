@@ -1,7 +1,9 @@
 # Whispernet: a room that whispers back, a gated delay line on a whisper detector
 
 ```text
-Status:  idea (2026-10-30; owner's discussion of 2026-10-30, written up from it)
+Status:  promoted (2026-10-30; owner's discussion of 2026-10-30, written up from it; a tryout slot the same evening,
+         layout 1)
+Became:  ECHO-002 (roadmap-echo.md), step 20 (roadmap-0-steps.md, issue #84), 2026-10-30
 Lab:     none. The echoSpace repo (oysterboy/echoSpace, 48f74a5) is the nearest thing: an always-open 500 ms delay
          line that howled or faded (docs/research/echo-room.md, "Why echoSpace howled or faded")
 ```
@@ -67,8 +69,9 @@ format            bytes / s   D = 500 ms   D = 1 s   D = 2 s   the ~110 KB block
 48 kHz, ADPCM 4-bit  24 KB        12 KB      24 KB     48 KB    ~4.5 s
 ```
 
-Without ESP-NOW the block grows by a good margin; a WROVER module (PSRAM, same DevKit footprint and pins) would
-make D of minutes possible but is a hardware change.
+Without ESP-NOW the block would grow by a good margin, but the radio stays: NET OTA is the way in and out on
+location (ECHO-003, 2026-10-30), so the budget is the block with the radio up. A WROVER module (PSRAM, same DevKit
+footprint and pins) would make D of minutes possible but is a hardware change.
 
 ## Why the howl does not come back
 

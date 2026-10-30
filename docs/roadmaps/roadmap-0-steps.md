@@ -193,6 +193,20 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    BEH-009 part 3; field-activity-response.md Part 2 "What to measure" 1-2. Remote and PC. Ends in a decision between
    this and OUT-006 (8a).
 
+20. [TODO] Echo room and Whispernet in the tryout room: one OTA each. (issue #84) On site, after 18; place in the
+   order to be set by the owner.
+   roadmap-echo.md ECHO-001 (the echo room: a clap answered by a replay of a clip), ECHO-002 (Whispernet, layout 1:
+   a whisper through a gated delay line), ECHO-003 (the switch: NET OTA in and out, params, WiFi).
+   docs/research/echo-room.md, docs/research/whispernet.md (owner 2026-10-30: both "deserve a slot in the tryout";
+   "on location it's just a firmware update").
+   20.1 ECHO-003 first, on the bench: the OTA round trip Node -> echo -> whisper -> Node, stored params across
+        modes, WiFi for the site. Remote.
+   20.2 ECHO-001 built and checked on the desk (the Emitter's pulse train as the click). PC, then remote.
+   20.3 ECHO-002 built and checked on the desk (a recorded whisper, a loud control, a fan). PC, then remote.
+   20.4 The room: a session per firmware, the Node image back at the end. On site.
+   Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
+   session per firmware.
+
 ## Carried over, not sequenced
 
 ```text
@@ -242,6 +256,9 @@ parallel.
 ```
 
 ## Status log
+
+Status update 2026-10-30, late: step 20 added (the echo room and Whispernet in the tryout room, one OTA each; issue
+#84, roadmap-echo.md); place after 18 to be set by the owner.
 
 Status update 2026-10-30: 14 done (14.0 max duration 450, 14.1 review fixes b006c00); 13 running (13.2-13.4 done,
 13.1 and the other distances on site); the 47 h soak on b006c00 runs until 2026-11-01 ~23:00

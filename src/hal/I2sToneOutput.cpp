@@ -121,13 +121,25 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
     portENTER_CRITICAL(&_trainMux);
     if (_trainCancelRequested) {
         _trainCancelRequested = false;
+        // A train cut short ramps out at its own gain and frequency; the drain below then clears gain and step
+        // (14.1 cleared them at once: up to 5 ms at the board's level over an attenuated pulse, deep review O-M1).
+        const bool sounding = (_trainRunning || _trainDraining) && _envelope > 0.0f;
         _trainRunning = false;
-        _trainDraining = false;
-        _trainStep = 0;
-        _gainCount = 0;  // a train cut short must not leave its gain on the next plain tone (review 14.1)
-        _trainGain = 1.0f;
+        _trainDraining = sounding;
+        if (!sounding) {
+            _trainStep = 0;
+            _gainCount = 0;  // a train cut short must not leave its gain on the next plain tone (review 14.1)
+            _trainGain = 1.0f;
+        }
     }
-    if (_trainRequested) {
+    if (_trainRequested && _envelope > 0.0f) {
+        // Something still sounds (a train being replaced, or a tone startPulseTrain just switched off): let it ramp
+        // to silence first, so the new train starts with its onset ramp at phase 0 (deep review O-M1).
+        if (_trainRunning) {
+            _trainRunning = false;
+            _trainDraining = true;
+        }
+    } else if (_trainRequested) {
         _trainRequested = false;
         _trainRunning = true;
         _trainDraining = false;

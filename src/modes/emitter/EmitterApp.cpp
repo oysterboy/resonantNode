@@ -150,6 +150,7 @@ void EmitterApp::handleSelfTestCommand(const char* line) {
         _activeTrialId = 0;
     }
 
+    _chirpOutput.setSweep(0, 0);  // the self-test's chirps are plain (deep review A-M3)
 #if defined(BOARD_PIEZO)
     AudioSourceI2S* mic = nullptr;  // the piezo Emitter build does not own the mic port
 #else
@@ -688,6 +689,7 @@ void EmitterApp::configureAuto(unsigned long intervalMs, unsigned long toneHz, u
     _autoIntervalMs = intervalMs;
     _autoToneHz = toneHz;
     _autoDurationMs = durationMs;
+    _chirpOutput.setSweep(0, 0);  // plain AUTO chirps (deep review A-M3)
     _chirpOutput.setToneHz(static_cast<uint32_t>(_autoToneHz));
     _chirpOutput.setTiming(_autoDurationMs, 0);
 }
@@ -709,6 +711,7 @@ void EmitterApp::configureSweep(unsigned long startHz, unsigned long stopHz, uns
     _sweepDurationMs = durationMs;
     _sweepPauseMs = pauseMs;
     _sweepCurrentHz = _sweepStartHz;
+    _chirpOutput.setSweep(0, 0);  // a CHIRP's sweep= stays set on the tone output until cleared (deep review A-M3)
     _chirpOutput.setToneHz(static_cast<uint32_t>(_sweepCurrentHz));
     _chirpOutput.setTiming(_sweepDurationMs, 0);
 }

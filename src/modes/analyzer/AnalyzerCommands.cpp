@@ -689,6 +689,14 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
 
 // EMIT <command> to the Emitter. False for a command the Analyzer does not forward.
 bool AnalyzerApp::handleEmitCommand(const char* line) {
+    // A forwarded EMIT during a run cut the trial's train (MODE REMOTE stops it) or, with MODE AUTO, planted stray
+    // chirps in later trials: refused like RAW and SELFTEST (deep review A-M2).
+    if ((startsWithIgnoreCase(line, "EMIT CHIRP") || startsWithIgnoreCase(line, "EMIT PULSES") ||
+         startsWithIgnoreCase(line, "EMIT MODE") || startsWithIgnoreCase(line, "EMIT SWEEP")) &&
+        (_sequenceTest.active || _pendingSequenceStart.active)) {
+        serialOut().println("ERR EMIT busy reason=seq_active (SEQ STOP first)");
+        return true;
+    }
     // The Emitter drops a line longer than its link buffer: refuse it here instead of printing OK (review 12.0 L17).
     if ((startsWithIgnoreCase(line, "EMIT CHIRP") || startsWithIgnoreCase(line, "EMIT PULSES") ||
          startsWithIgnoreCase(line, "EMIT MODE") || startsWithIgnoreCase(line, "EMIT SWEEP")) &&

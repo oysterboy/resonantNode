@@ -57,9 +57,6 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
 
     if (event.kind == detection::DetectionEventKind::RejectedSourceCandidate) {
         if (event.hasSourceRecord) {
-            _sequenceTest.trial.selectedSourceRejectCaptured = true;
-            _sequenceTest.trial.selectedSourceReject = event.sourceRecord;
-            _sequenceTest.trial.selectedSourceReject.eventTrialAttribution = _sequenceTest.trial.number;
             _sequenceTest.totals.consumedSourceRejectEventId = event.sourceRecord.eventId;
             _sequenceTest.totals.consumedSourceRejectReportGeneration = event.sourceRecord.reportGeneration;
         }
@@ -72,6 +69,13 @@ void AnalyzerApp::handleSequencePending(const detection::DetectionPipelineEvent&
         const bool inWindow = sourceOnsetMs > 0 && !preWindow && !postWindow;
         if (inWindow) {
             _sequenceTest.trial.rejectedInWindowCount++;
+            // The trial's source reject only from inside its window: one from before it or from the settle
+            // outranked an evaluator reject inside it and printed its own dt and reason (deep review A-M1).
+            if (event.hasSourceRecord) {
+                _sequenceTest.trial.selectedSourceRejectCaptured = true;
+                _sequenceTest.trial.selectedSourceReject = event.sourceRecord;
+                _sequenceTest.trial.selectedSourceReject.eventTrialAttribution = _sequenceTest.trial.number;
+            }
         }
         return;
     }

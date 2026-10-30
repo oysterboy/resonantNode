@@ -100,3 +100,29 @@ ring at 2^32, contracts at 450 / 576 / 1024, makeVerdict's ordering, P75, BinSha
 band of BEH-009, start / finish pairing on every Behavior path, the restart edge (14.1) on every path, the render
 task's handoff and envelope maths, SerialOut and its tee, the Analyzer's pending start and per-trial resets, the
 radio command policy, OTA token / url / rollback paths, ParamRegistry's checks and store format.
+
+## Status of the fixes (2026-10-30, step 14.2, host-built and gated; on the boards after the soak)
+
+Done:
+- d53a881 (detection): D-M1 backstep-safe elapsed times, D-M2 band bank restart, I-M-A shape look-back floor (host
+  test reproduces the borrowed bins and the fix), I-M-B class_limits_unordered in plan_check.
+- e3b8ea1 (Behavior): B-M1, B-M2, B-M3 (host tests; B-M3's fails without the fix), L3 own_emit_budget range.
+- 891c722 (output, Analyzer, Emitter): O-M1 cancel drains and a new train waits for silence, A-M1, A-M2, A-M3.
+- e24e175 (radio, OTA): N-M-A confirm waits for the radio, N-M-B reply gaps marked (gap=1, missing=; guide line).
+- ab17f5c (N-M-C, soakcycle status burst), 9f827c2 (firmware Lows: L1-L3, L5, L7, L8, L9), 6b18b2f (tools / CI:
+  L-C, L-E, L-F, L-H, L-I), and the chord check's A wait (L-A).
+
+Deferred, with their place:
+- `accepted == valid` in makeVerdict (Behavior's support branches never run): with DET-016, the verdict boundary
+  rule, which touches the same fields.
+- FieldState's tumbling 4 s windows: before BEH-008 builds on the counts (step 16, roadmap-behavior.md).
+- resetStats() re-anchoring the sample clock; per-sample 64-bit divides (AudioSignal, TimeBase), FreqBandStream's
+  per-update cost: NODE-019 and a measured performance pass (only with a loop-budget reason).
+- Behavior L1 (a rejected emission arms the own-emit tail), L2 (RB CALL during the quiet gate dropped without a
+  line), L4 (one loop's Refractory delay); Output L1 (a chirp restarted within one block keeps phase and sweep):
+  small, with the next change in those files.
+- Detection Lows: BinShape `>=` vs the detector's `>`, a plan without windows after 2^31 ms, the diagnostics'
+  generation stamp, verdictEventDroppedCount's mix: with DET-016 / DET-018.
+- AmpExperimental's contrast thresholds on the old 0..100 scale: a tuning pass (Analyzer-only profile).
+- EMIT case handling (L4 of the Analyzer area), the example OTA token accepted (L-G; CI builds with it), soakcycle
+  without try/finally (L-D), PARAM LOAD as undo (L-B, with PAR-018), no host test for NodeNet / NetGateway.

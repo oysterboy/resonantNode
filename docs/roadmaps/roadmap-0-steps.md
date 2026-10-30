@@ -142,11 +142,14 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         BinShape's run diagnostics can truncate on a chord; the SEQ settle margin for a 450 ms occurrence is 40 ms.
         Boards: chord +150 / +200 ms now one train (was lost), nodecheck 26 / 26
         (bench/sessions/2026-10-29-step14-review). The Nodes had 300 stored: 450 PARAM SAVEd on E1 / E4 / E5.
-   14.2 [NEXT] Deep review fixes (docs/research/code-review-2026-10-30.md: six areas, no High, 15 Medium, ~35 Low).
+   14.2 [RUNNING 2026-10-30: fixes in, board check after the soak] Deep review fixes (docs/research/code-review-2026-10-30.md: six areas, no High, 15 Medium, ~35 Low).
         Host-built and gated while the soak runs; flashed after it (2026-11-01). First: the sample-clock backstep
         that can drop a whole train (D-M1), the shape look-back that lets a tone after a train pass (I-M-A), the
         rest / budget / idle holes in Behavior (B-M1..3), the Emitter's cancel ramp (O-M1). Behaviour-changing fixes
         (I-M-A, B-M1..3) move the baseline: board check and a short soak after.
+        2026-10-30: every Medium fixed and host-gated (d53a881, e3b8ea1, 891c722, e24e175; T2h byte-identical,
+        host 138 / 138), the useful Lows too (9f827c2, 6b18b2f); deferred ones placed in the review note. Next: OTA
+        to all five after the soak, nodecheck, the Analyzer A/B and RAW sets, the chord cell, then a short soak.
 
 15. [TODO] Understand the room: the tryout room (5 x 6 m, 1 m spacing). (issue #77) On site.
    Hearing matrix strict and lenient (tools/bench/hearmatrix.py; field-activity-response.md "Measure first"), reach

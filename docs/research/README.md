@@ -128,4 +128,9 @@ readability-measures.md        what can be counted (lizard CCN / NLOC / params,
                                per directory; where the counts disagree with the
                                human read; a seven-row tracked set and the
                                measures to take, ranked (promoted: step 12.4)
+echo-room.md                   a node that replays what it hears: why the continuous
+                               delay line (echoSpace) howled or faded, triggered replay
+                               on the Node's onset detector, Behavior and SoundOutput;
+                               buffer sizes, which transients, the chain between nodes
+                               (idea, 2026-10-30)
 ```

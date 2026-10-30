@@ -10,6 +10,7 @@ gateway gets PARAM LOAD at the end (idle_enabled and the RB PROFILE reset undone
 12.0 L21). A PARAM GET that answers no value is a FAIL, not a skipped check (M9).
 """
 import argparse
+import atexit
 import os
 import re
 import time
@@ -45,6 +46,29 @@ ports["EM"] = op(a.emitter)
 buf = {n: "" for n in ports}
 GW, A, B = names["gw"], names["a"], names["b"]
 results = []
+# What a run that stops early (Ctrl+C, a serial error) still has to put back (deep review L-C): the param A has
+# SAVEd changed, B unsilenced, the gateway's params and log mode.
+pending = {"a_param": None, "b_unsilenced": False, "gw_log": None, "done": False}
+
+
+def put_back():
+    if pending["done"]:
+        return
+    try:
+        if pending["a_param"] is not None:
+            cmd(A, "PARAM SET behavior.idle_timeout_ms " + pending["a_param"], 0.8)
+            cmd(A, "PARAM SAVE", 2.0)
+        if pending["b_unsilenced"]:
+            cmd(B, "PARAM SET output.silent 1", 0.5)
+        cmd(GW, "PARAM LOAD", 1.5)
+        if pending["gw_log"]:
+            cmd(GW, "RB log " + pending["gw_log"], 0.5)
+    except Exception as e:  # the ports may be the reason we stopped
+        print("nodecheck: could not put the boards back:", e)
+    pending["done"] = True
+
+
+atexit.register(put_back)
 
 
 def pump(sec):
@@ -104,6 +128,7 @@ check("boot: BUILD, warmup, active", all(k in seen for k in ("BUILD role=", "RB 
 check("boot: params loaded", "PARAM load stored=" in boot,
       (re.findall(r"PARAM load stored=\d+ applied=\d+ stale=\d+ invalid=\d+", boot) or ["-"])[0])
 gw_log = re.findall(r"RB log mode=(\w+)", cmd(GW, "RB log", 0.8))  # put back at the end (L21)
+pending["gw_log"] = gw_log[0] if gw_log else None
 
 # 2. RB STATUS keys vs the reference build
 st = cmd(GW, "RB STATUS", 1.5)
@@ -162,6 +187,7 @@ cur = re.findall(r"value=(\d+)", cmd(A, "PARAM GET behavior.idle_timeout_ms", 1.
 cur = cur[0] if cur else None
 if cur:
     new = str(int(cur) + 1234)
+    pending["a_param"] = cur
     cmd(A, "PARAM SET behavior.idle_timeout_ms " + new, 0.8)
     cmd(A, "PARAM SAVE", 2.0)
     bootA, _ = reset(A)
@@ -171,6 +197,8 @@ if cur:
     cmd(A, "PARAM SAVE", 2.0)
     back = re.findall(r"value=(\d+)", cmd(A, "PARAM GET behavior.idle_timeout_ms", 1.0))
     check("param restored", back[:1] == [cur], "%s" % back[:1])
+    if back[:1] == [cur]:
+        pending["a_param"] = None
 else:
     check("PARAM SAVE / reboot / load", False, "PARAM GET behavior.idle_timeout_ms answered no value")
 
@@ -193,6 +221,7 @@ wait_for(A, mA, "SELFTEST_SUMMARY", 90)
 r = buf[A][mA:]
 checks = re.findall(r"SELFTEST check=(\w+) result=(\w+)", r)
 check("SELFTEST on " + A, bool(checks) and all(v in ("PASS", "SKIP") for _, v in checks), str(checks))
+pending["b_unsilenced"] = True
 cmd(B, "PARAM SET output.silent 0", 0.5)
 mA = len(buf[A])
 ports[A].write(b"SELFTEST external wait_ms=25000\n")
@@ -204,14 +233,13 @@ wait_for(B, mB, "SELFTEST_CHIRP done", 30)
 ext = re.findall(r"SELFTEST check=external_chirp result=(\w+)", buf[A][mA:])
 check("SELFTEST external (%s hears %s)" % (A, B), ext[:1] == ["PASS"], str(ext))
 cmd(B, "PARAM SET output.silent 1", 0.5)
+pending["b_unsilenced"] = False
 r = cmd(GW, "NET %s SELFTEST" % B, 30.0)
 radio = re.findall(r"NET reply from=%s .*SELFTEST check=(\w+) result=(\w+)" % B, r)
 check("SELFTEST by radio (NET %s)" % B, len(radio) >= 3, str(radio[:5]))
 
 # the gateway as found (L21): its stored params (idle_enabled, the profile reset), its RB log mode
-cmd(GW, "PARAM LOAD", 1.5)
-if gw_log:
-    cmd(GW, "RB log " + gw_log[0], 0.5)
+put_back()
 
 for n in ports:
     open(os.path.join(a.out, "%s.log" % n), "w", encoding="utf-8").write(buf[n])

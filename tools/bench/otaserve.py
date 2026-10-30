@@ -48,8 +48,17 @@ ap.add_argument("--dir", help="serve this folder instead (copies nothing)")
 a = ap.parse_args()
 
 envs = a.env or ["node=esp32dev", "analyzer=esp32dev-analyzer", "emitter=esp32dev-emitter"]
+if not a.dir:
+    # Earlier runs that were killed (Stop-Process) left their copies: the images hold the WiFi password and the
+    # OTA token in plain text (deep review L-F). Remove them, and this run's folder on a normal exit.
+    for old in os.listdir(tempfile.gettempdir()):
+        if old.startswith("otaserve_"):
+            shutil.rmtree(os.path.join(tempfile.gettempdir(), old), ignore_errors=True)
 serve_dir = a.dir or tempfile.mkdtemp(prefix="otaserve_")
 if not a.dir:
+    import atexit
+
+    atexit.register(shutil.rmtree, serve_dir, True)
     for item in envs:
         name, env = item.split("=")
         src = os.path.join(a.build_dir, env, "firmware.bin")

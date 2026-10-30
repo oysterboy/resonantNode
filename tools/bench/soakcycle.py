@@ -206,6 +206,14 @@ def noise_check(cycle, stamp):
         pump(1)
     pump(3)
     sink, node_sink = node_sink, None
+    played_s = time.time() - t_from
+    if player.returncode != 0 or played_s < 300:
+        # A missing or locked file read as 0 verdicts, exactly like a quiet result (deep review L-E).
+        log.write("%.2f -- noise play failed rc=%s played_s=%.0f\n" % (time.time() - t0, player.returncode, played_s))
+        for n in ports:
+            noise_w.writerow([cycle, stamp, "%.2f" % ((time.time() - t0) / 3600.0), n, "play_failed", "play_failed"])
+        noise_file.flush()
+        return
     for n in ports:
         verdicts = sum(1 for t, m, l in sink if m == n and l.startswith("RB verdict="))
         noise_w.writerow([cycle, stamp, "%.2f" % ((time.time() - t0) / 3600.0), n, verdicts,

@@ -40,6 +40,11 @@ jobs:
       # no_credentials stub (review 12.0 M3). include/wifi_secrets.h is git-ignored; CI never has the real one.
       - run: cp include/wifi_secrets.example.h include/wifi_secrets.h
       - run: pio run -e ${{ matrix.env }}
+      # The rollback gate's test images (step 11d, review 12.0 L-OTA2), built on the Node env only (deep review L-I).
+      - if: matrix.env == 'esp32dev'
+        run: |
+          PLATFORMIO_BUILD_FLAGS="-D OTA_TEST_CRASH" pio run -e esp32dev
+          PLATFORMIO_BUILD_FLAGS="-D OTA_TEST_HANG" pio run -e esp32dev
 
   host:
     runs-on: ubuntu-24.04

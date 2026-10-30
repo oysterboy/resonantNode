@@ -33,8 +33,11 @@ def main():
                 m = INCLUDE.match(line)
                 if not m:
                     continue
-                target = os.path.normpath(os.path.join(dirpath, m.group(1)))
-                if (target + os.sep).startswith(MODES):
+                # Relative to the file, and through src/ on the include path ("modes/..." compiles too; deep
+                # review L-H): either one landing in src/modes/ is a hit.
+                targets = (os.path.normpath(os.path.join(dirpath, m.group(1))),
+                           os.path.normpath(os.path.join(ROOT, "src", m.group(1))))
+                if any((t + os.sep).startswith(MODES) and os.path.exists(t) for t in targets):
                     hits.append("%s:%d: includes %s" % (os.path.relpath(path, ROOT), n, m.group(1)))
     for h in hits:
         print(("error: " if strict else "warning: ") + h)
@@ -53,8 +56,9 @@ def main():
                 m = INCLUDE.match(line)
                 if not m:
                     continue
-                target = os.path.normpath(os.path.join(dirpath, m.group(1)))
-                if (target + os.sep).startswith(src_root):
+                targets = (os.path.normpath(os.path.join(dirpath, m.group(1))),
+                           os.path.normpath(os.path.join(ROOT, "src", m.group(1))))
+                if any((t + os.sep).startswith(src_root) and os.path.exists(t) for t in targets):
                     lib_hits.append("%s:%d: includes %s" % (os.path.relpath(path, ROOT), n, m.group(1)))
     for h in lib_hits:
         print("error: " + h)

@@ -1,0 +1,211 @@
+# phase to_echo at 1.0
+1.03 E1 >> NET E5 OTA url=http://192.168.178.33:8070/echo.bin token=<hidden>
+1.06 E1 NET sent seq=12476 target=E5 text=OTA url=http://192.168.178.33:8070/echo.bin token=<hidden>
+1.09 E5 NET cmd from=24:DC:C3:4A:B0:50 seq=12476 target=E5 text=OTA url=http://192.168.178.33:8070/echo.bin token=<hidden>
+1.09 E5 OTA start url=http://192.168.178.33:8070/echo.bin
+1.28 E5 OTA wifi ip=192.168.178.120 rssi=-47
+2.03 E5 OTA progress pct=0
+2.78 E5 OTA progress pct=10
+3.34 E5 OTA progress pct=20
+4.21 E5 OTA progress pct=30
+4.76 E5 OTA progress pct=40
+5.31 E5 OTA progress pct=50
+6.15 E5 OTA progress pct=60
+7.01 E5 OTA progress pct=70
+8.59 E5 OTA progress pct=80
+10.57 E5 OTA progress pct=90
+11.32 E5 OTA progress pct=100
+11.51 E5 OTA result=ok rebooting (the new image confirms itself after 20 s)
+11.87 E5 ets Jul 29 2019 12:21:46
+11.87 E5 rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+11.87 E5 configsip: 0, SPIWP:0xee
+11.87 E5 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+11.87 E5 mode:DIO, clock div:1
+11.87 E5 load:0x3fff0030,len:1344
+11.87 E5 load:0x40078000,len:13964
+11.87 E5 load:0x40080400,len:3600
+11.87 E5 entry 0x400805f0
+12.24 E5 OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000
+12.24 E5 E (60) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+12.24 E5 BUILD role=echo git=967a4bd5 date=Oct 31 2026 time=21:15:41
+12.33 E5 version=0.4.0 board=damp
+12.33 E5 ECHO boot node=E5 rate_hz=48000 dma_bufs=8 dma_len=128 ring_ms=500 ring_bytes=48000 clip_bytes=28800 largest_block_before_ring=110580 net_star
+12.42 E5 ted=1 channel=1
+12.52 E5 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=51 decision=consumed_pattern
+12.98 E5 ECHO replay clip_missing
+22.39 E5 ECHO status node=E5 uptime_s=10 window_s=10 rate_hz=48000 measured_mhz=47999952 samples=481024 dropped_bufs=25 dropped_total=25 passes=10000 pass_us_mean=102 pass_us_max=1015 block_us_max=432 env_peak=474455 tone=0 free_heap=83728 largest_block=38900 net_rx=0 net_tx=0 level=227 occurrences=1 claps=1 slow=0 replays=0 clip_missing=1 behavior=Idle level_auto=0
+32.23 E5 OTA confirmed partition=app0
+32.26 EM >> EMIT MODE REMOTE
+32.26 E5 >> ECHO LOG 0
+32.26 E5 >> ECHO GATE
+32.32 E5 ECHO log every_s=0
+32.32 E5 ECHO gate onset=12000 release=9000 floor=7000 attack_ms=10 pre_ms=30 post_ms=270 gain=1.00 on=1
+32.34 EM EVT emitter_cmd line=MODE REMOTE
+# phase clicks at 35.3
+35.29 EM >> EMIT PULSES 1 5 10 freq=3000
+35.38 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+35.38 EM EVT emitter_chirp_finished
+39.33 EM >> EMIT PULSES 1 5 10 freq=3000
+39.43 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+39.43 EM EVT emitter_chirp_finished
+43.36 EM >> EMIT PULSES 1 5 10 freq=3000
+43.46 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+43.46 EM EVT emitter_chirp_finished
+47.41 EM >> EMIT PULSES 1 5 10 freq=3000
+47.51 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+47.51 EM EVT emitter_chirp_finished
+51.43 EM >> EMIT PULSES 1 5 10 freq=3000
+51.52 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+51.52 EM EVT emitter_chirp_finished
+55.45 EM >> EMIT PULSES 1 5 10 freq=3000
+55.54 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+55.54 EM EVT emitter_chirp_finished
+59.55 EM >> EMIT PULSES 1 5 10 freq=3000
+59.64 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+59.64 EM EVT emitter_chirp_finished
+63.59 EM >> EMIT PULSES 1 5 10 freq=3000
+63.69 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+63.69 EM EVT emitter_chirp_finished
+67.65 EM >> EMIT PULSES 1 5 10 freq=3000
+67.74 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+67.74 EM EVT emitter_chirp_finished
+71.71 EM >> EMIT PULSES 1 5 10 freq=3000
+71.81 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+71.81 EM EVT emitter_chirp_finished
+75.74 EM >> EMIT PULSES 1 5 10 freq=3000
+75.84 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+75.84 EM EVT emitter_chirp_finished
+79.80 EM >> EMIT PULSES 1 5 10 freq=3000
+79.89 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+79.89 EM EVT emitter_chirp_finished
+83.85 EM >> EMIT PULSES 1 5 10 freq=3000
+83.93 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+83.93 EM EVT emitter_chirp_finished
+87.90 EM >> EMIT PULSES 1 5 10 freq=3000
+88.00 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+88.00 EM EVT emitter_chirp_finished
+91.94 EM >> EMIT PULSES 1 5 10 freq=3000
+92.04 EM EVT emitter_cmd line=PULSES 1 5 10 freq=3000
+92.04 EM EVT emitter_chirp_finished
+96.03 E5 >> ECHO STATUS
+96.10 E5 ECHO status node=E5 uptime_s=83 window_s=83 rate_hz=48000 measured_mhz=47999984 samples=4018176 dropped_bufs=25 dropped_total=25 passes=83685 pass_us_mean=102 pass_us_max=37463 block_us_max=432 env_peak=8900 tone=0 free_heap=83768 largest_block=38900 net_rx=0 net_tx=0 level=109 occurrences=1 claps=1 slow=0 replays=0 clip_missing=1 behavior=Idle level_auto=0
+# phase slow at 98.1
+98.08 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+98.17 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+98.55 EM EVT emitter_chirp_finished
+102.13 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+102.22 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+102.59 EM EVT emitter_chirp_finished
+106.18 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+106.28 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+106.65 EM EVT emitter_chirp_finished
+110.24 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+110.33 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+110.71 EM EVT emitter_chirp_finished
+114.26 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+114.35 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+114.73 EM EVT emitter_chirp_finished
+118.31 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+118.40 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+118.77 EM EVT emitter_chirp_finished
+122.35 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+122.44 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+122.79 EM EVT emitter_chirp_finished
+126.40 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+126.50 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+126.87 EM EVT emitter_chirp_finished
+130.44 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+130.54 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+130.91 EM EVT emitter_chirp_finished
+134.50 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+134.60 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+134.97 EM EVT emitter_chirp_finished
+138.53 E5 >> ECHO STATUS
+138.59 E5 ECHO status node=E5 uptime_s=126 window_s=126 rate_hz=48000 measured_mhz=47999984 samples=6057728 dropped_bufs=25 dropped_total=25 passes=126175 pass_us_mean=102 pass_us_max=37463 block_us_max=432 env_peak=64764 tone=0 free_heap=83768 largest_block=38900 net_rx=0 net_tx=0 level=52 occurrences=1 claps=1 slow=0 replays=0 clip_missing=1 behavior=Idle level_auto=0
+# phase music at 140.6
+141.62 E5 >> ECHO STATUS
+141.69 E5 ECHO status node=E5 uptime_s=129 window_s=129 rate_hz=48000 measured_mhz=47999984 samples=6206464 dropped_bufs=25 dropped_total=25 passes=129273 pass_us_mean=102 pass_us_max=37463 block_us_max=432 env_peak=4850 tone=0 free_heap=83768 largest_block=38900 net_rx=0 net_tx=0 level=93 occurrences=1 claps=1 slow=0 replays=0 clip_missing=1 behavior=Idle level_auto=0
+# phase back_to_node at 143.7
+143.69 E1 >> NET E5 OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+143.72 E1 NET sent seq=12477 target=E5 text=OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+143.76 E5 OTA start url=http://192.168.178.33:8070/node.bin
+143.85 E5 OTA wi
+143.94 E5 fi ip=192.168.178.120 rssi=-49
+144.59 E5 OTA progress pct=0
+145.45 E5 OTA progress pct=10
+146.01 E5 OTA progress pct=20
+146.85 E5 OTA progress pct=30
+147.49 E5 OTA progress pct=40
+148.22 E5 OTA progress pct=50
+148.86 E5 OTA progress pct=60
+149.63 E5 OTA progress pct=70
+150.29 E5 OTA progress pct=80
+150.87 E5 OTA progress pct=90
+151.71 E5 OTA progress pct=100
+151.91 E5 OTA result=ok rebooting (the new image confirms itself after 20 s)
+152.28 E5 ets Jul 29 2019 12:21:46
+152.28 E5 rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+152.28 E5 configsip: 0, SPIWP:0xee
+152.28 E5 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+152.28 E5 mode:DIO, clock div:1
+152.28 E5 load:0x3fff0030,len:1344
+152.28 E5 load:0x40078000,len:13964
+152.28 E5 load:0x40080400,len:3600
+152.28 E5 entry 0x400805f0
+152.75 E5 OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000
+152.75 E5 E (64) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+152.75 E5 BUILD role=node git=967a4bd5 date=Oct 31 2026 time=21:16:18 version=0.4.0 board=damp
+152.75 E5 RB node_id=0x38FE4AC3DC24
+152.75 E5 RB node name=E5 rotation_source=roster
+152.75 E5 PARAM load path=output.silent value=1 default=0
+152.84 E5 PARAM load stored=50 applied=50 stale=0 invalid=0
+152.94 E5 RB net started=1 channel=1 net_id=82
+152.94 E5 RB signal band=2950-4700 bins=8 hop=on rotation=1 base=1 band_per_node=0 steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,4200
+152.94 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+152.94 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+152.94 E5 RB silent=1 (output.silent: listening, never sounding)
+152.94 E5 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape fieldStateConfig=4000/4000
+152.94 E5 RB PROFILE detail
+152.94 E5 kind=TonalPulseScalar
+152.94 E5 detectorSelection=ScalarTransient
+152.94 E5 inspectionPlan=contrast+amp+shape
+152.94 E5 scalarTransient.observedStream=FrequencyTarget
+152.94 E5 scalarTransient.on
+153.03 E5 setDetectionThreshold=2000.0
+153.03 E5 scalarTransient.onsetReleaseThreshold=1500.0
+153.03 E5 scalarTransient.cooldownAfterOnsetMs=50
+153.03 E5 scalarTransient.minTransientDurationMs=92
+153.03 E5 scalarTransient.maxTransientDurationMs=450
+153.03 E5 scalarTransient.releaseDebounceMs=10
+153.03 E5 scalarTransient.minTransientPeakStrength=3000.0
+153.03 E5 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+153.03 E5 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+153.03 E5 inspectionPlan.module[2].kind=BinShape label=shape
+153.03 E5 verdict.has_requirement=1
+153.03 E5 verdict.required_label=contrast
+153.03 E5 fieldState.occurrenceWindowMs=4000
+153.03 E5 fieldState.patternWindowMs=4000
+153.03 E5 fieldState.busyOccurrenceCountThreshold=3
+153.03 E5 fieldState.denseOccurrenceCountThreshold=6
+153.03 E5 fieldState.quietOccurrenceCountThreshold=0
+153.03 E5 RB behavior
+153.03 E5 idleEnabled=1
+153.03 E5 waitAfterHeardMs=100
+153.03 E5 refractoryAfterEmitMs=400
+153.03 E5 behaviorSuppressSelfChirpMs=100
+153.03 E5 detectionSuppressTailMsOwnEmit=60
+153.03 E5 idleTimeou
+153.12 E5 tMs=60000
+153.12 E5 idleTimeVariationMs=20000
+153.12 E5 idleBlockedAfterHeardMs=1000
+153.12 E5 idleBlockedAfterOwnEmitMs=500
+153.12 E5 RB startup baseline=BOOT
+153.12 E5 RB warmup waiting ms=2 of 2000
+153.87 E5 R
+153.98 E5 B warmup waiting ms=1002 of 2000
+154.94 E5 RB warmup done ms=2001 rebase=ok baseline=439.9
+154.94 E5 RB rebase waiting smooth=168.0 quietMs=0
+155.98 E5 RB rebase done quietMs=1004 baseline=277.7 smooth=0
+156.45 E5 RB baseline active
+172.62 E5 OTA confirmed partition=app1
+# phase done at 172.7

@@ -1,0 +1,1176 @@
+# phase to_echo at 1.1
+1.09 E1 >> NET E5 OTA url=http://192.168.178.33:8070/echo.bin token=<hidden>
+1.13 E1 NET sent seq=12480 target=E5 text=OTA url=http://192.168.178.33:8070/echo.bin token=<hidden>
+1.16 E5 NET cmd from=24:DC:C3:4A:B0:50 seq=12480 target=E5 text=OTA url=http://192.168.178.33:8070/echo.bin token=<hidden>
+1.16 E5 OTA start url=http://192.168.178.33:8070/echo.bin
+1.43 E5 OTA wifi ip=192.168.178.120 rssi=-45
+2.18 E5 OTA progress pct=0
+3.03 E5 OTA progress pct=10
+3.85 E5 OTA progress pct=20
+4.70 E5 OTA progress pct=30
+5.36 E5 OTA progress pct=40
+6.02 E5 OTA progress pct=50
+6.87 E5 OTA progress pct=60
+7.54 E5 OTA progress pct=70
+8.20 E5 OTA pro
+8.29 E5 gress pct=80
+9.05 E5 OTA progress pct=90
+9.78 E5 OTA progress pct=100
+10.07 E5 OTA result=ok rebooting (the new image confirms itself after 20 s)
+10.36 E5 e
+10.45 E5 ts Jul 29 2019 12:21:46
+10.45 E5 rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+10.45 E5 configsip: 0, SPIWP:0xee
+10.45 E5 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+10.45 E5 mode:DIO, clock div:1
+10.45 E5 load:0x3fff0030,len:1344
+10.45 E5 load:0x40078000,len:13964
+10.45 E5 load:0x40080400,len:3600
+10.45 E5 entry 0x400805f0
+10.82 E5 OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000
+10.82 E5 E (60) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+10.82 E5 BUILD role=echo git=cac39e37 date=Oct 31 2026 time=21:45:08 version=0.4.0 board=damp
+10.92 E5 ECHO boot node=E5 rate_hz=48000 dma_bufs=8 dma_len=128 ring_ms=500 ring_bytes=48000 clip_bytes=28800 largest_block_before_ring=110580 net_started=1 channel=1
+16.46 E5 ECHO clap valid=0 attack_ms=32 strength=1545 duration_ms=139 decision=ignored_invalid_pattern
+20.95 E5 ECHO status node=E5 uptime_s=10 window_s=10 rate_hz=48000 measured_mhz=47999952 samples=480896 dropped_bufs=26 dropped_total=26 passes=10000 pass_us_mean=101 pass_us_max=1006 block_us_max=482 env_peak=1063790 tone=0 free_heap=83696 largest_block=38900 net_rx=0 net_tx=0 level=127 occurrences=1 claps=0 slow=1 replays=0 clip_missing=0 behavior=Idle level_auto=0
+30.74 E5 OTA confirmed partition=app0
+30.77 EM >> EMIT MODE REMOTE
+30.78 E5 >> ECHO LOG 0
+30.78 E5 >> ECHO GATE
+30.83 E5 ECHO log every_s=0
+30.83 E5 ECHO gate onset=1000 release=700 floor=300 attack_ms=10 pre_ms=30 post_ms=270 gain=1.00 on=1
+30.86 EM EVT emitter_cmd line=MODE REMOTE
+# phase clicks at 33.8
+33.79 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+33.89 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+33.89 EM EVT emitter_chirp_finished
+33.95 E5 ECHO clap valid=1 attack_ms=5 strength=1838 duration_ms=51 decision=consumed_pattern
+34.32 E5 ECHO replay onset_index=1102080 ms=300 gain=1.00
+37.82 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+37.91 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+37.91 EM EVT emitter_chirp_finished
+37.98 E5 ECHO clap valid=1 attack_ms=6 strength=1871 duration_ms=50 decision=consumed_pattern
+38.46 E5 ECHO replay clip_missing
+41.86 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+41.95 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+41.95 EM EVT emitter_chirp_finished
+42.00 E5 ECHO clap valid=1 attack_ms=6 strength=1919 duration_ms=50 decision=consumed_pattern
+42.36 E5 ECHO replay onset_index=1489152 ms=300 gain=1.00
+45.89 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+45.99 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+45.99 EM EVT emitter_chirp_finished
+46.04 E5 ECHO clap valid=1 attack_ms=6 strength=1945 duration_ms=50 decision=resting
+49.97 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+50.06 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+50.06 EM EVT emitter_chirp_finished
+50.12 E5 ECHO clap valid=1 attack_ms=6 strength=1951 duration_ms=50 decision=consumed_pattern
+50.58 E5 ECHO replay clip_missing
+54.02 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+54.12 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+54.12 EM EVT emitter_chirp_finished
+54.18 E5 ECHO clap valid=1 attack_ms=6 strength=1946 duration_ms=50 decision=consumed_pattern
+54.65 E5 ECHO replay clip_missing
+58.05 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+58.14 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+58.14 EM EVT emitter_chirp_finished
+58.20 E5 ECHO clap valid=1 attack_ms=6 strength=1893 duration_ms=50 decision=consumed_pattern
+58.58 E5 ECHO re
+58.67 E5 play clip_missing
+62.15 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+62.25 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+62.25 EM EVT emitter_chirp_finished
+62.31 E5 ECHO clap valid=1 attack_ms=6 strength=1874 duration_ms=50 decision=resting
+66.17 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+66.26 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+66.26 EM EVT emitter_chirp_finished
+66.33 E5 ECHO clap valid=0 attack_ms=na strength=1934 duration_ms=285 decision=ignored_invalid_pattern
+70.18 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+70.27 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+70.27 EM EVT emitter_chirp_finished
+70.33 E5 ECHO clap valid=1 attack_ms=6 strength=1896 duration_ms=50 decision=declined_by_level
+74.18 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+74.28 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+74.28 EM EVT emitter_chirp_finished
+74.34 E5 ECHO clap valid=1 attack_ms=6 strength=1935 duration_ms=50 decision=consumed_pattern
+74.71 E5 ECHO replay onset_index=3040896 ms=300 gain=1.00
+78.23 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+78.32 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+78.32 EM EVT emitter_chirp_finished
+78.39 E5 ECHO clap valid=1 attack_ms=6 strength=1938 duration_ms=50 decision=consumed_pattern
+78.77 E5 ECHO replay clip_missing
+82.30 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+82.40 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+82.40 EM EVT emitter_chirp_finished
+82.46 E5 ECHO clap valid=1 attack_ms=6 strength=1963 duration_ms=50 decision=consumed_pattern
+82.85 E5 ECHO replay onset_index=3430656 ms=300 gain=1.00
+86.36 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+86.45 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+86.45 EM EVT emitter_chirp_finished
+86.51 E5 ECHO clap valid=1 attack_ms=6 strength=1985 duration_ms=18 decision=resting
+90.38 EM >> EMIT PULSES 1 10 10 freq=2000 ramp=1
+90.46 EM EVT emitter_cmd line=PULSES 1 10 10 freq=2000 ramp=1
+90.46 EM EVT emitter_chirp_finished
+90.53 E5 ECHO clap valid=1 attack_ms=6 strength=1973 duration_ms=18 decision=declined_by_level
+94.38 E5 >> ECHO STATUS
+94.45 E5 ECHO status node=E5 uptime_s=83 window_s=83 rate_hz=48000 measured_mhz=47999984 samples=4008448 dropped_bufs=26 dropped_total=26 passes=83461 pass_us_mean=102 pass_us_max=32458 block_us_max=575 env_peak=15886 tone=0 free_heap=83736 largest_block=38900 net_rx=0 net_tx=0 level=102 occurrences=16 claps=14 slow=2 replays=4 clip_missing=5 behavior=Idle level_auto=0
+# phase slow at 96.5
+96.46 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+96.55 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+96.93 EM EVT emitter_chirp_finished
+100.46 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+100.56 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+100.93 EM EVT emitter_chirp_finished
+104.50 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+104.59 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+104.96 EM EVT emitter_chirp_finished
+108.50 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+108.60 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+108.95 EM EVT emitter_chirp_finished
+112.53 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+112.63 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+113.01 EM EVT emitter_chirp_finished
+116.54 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+116.64 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+117.01 EM EVT emitter_chirp_finished
+120.59 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+120.69 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+121.06 EM EVT emitter_chirp_finished
+124.63 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+124.73 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+125.10 EM EVT emitter_chirp_finished
+128.69 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+128.78 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+129.16 EM EVT emitter_chirp_finished
+132.76 EM >> EMIT PULSES 1 400 10 freq=1000 ramp=50
+132.86 EM EVT emitter_cmd line=PULSES 1 400 10 freq=1000 ramp=50
+133.22 EM EVT emitter_chirp_finished
+136.78 E5 >> ECHO STATUS
+136.85 E5 ECHO status node=E5 uptime_s=126 window_s=125 rate_hz=48000 measured_mhz=47999984 samples=6043648 dropped_bufs=26 dropped_total=26 passes=125861 pass_us_mean=102 pass_us_max=32458 block_us_max=575 env_peak=67370 tone=0 free_heap=83736 largest_block=38900 net_rx=0 net_tx=0 level=49 occurrences=16 claps=14 slow=2 replays=4 clip_missing=5 behavior=Idle level_auto=0
+# phase music at 138.9
+153.17 E5 ECHO clap valid=0 attack_ms=na strength=2182 duration_ms=131 decision=ignored_invalid_pattern
+153.44 E5 ECHO clap valid=0 attack_ms=na strength=3246 duration_ms=261 decision=ignored_invalid_pattern
+153.62 E5 ECHO clap valid=0 attack_ms=na strength=1143 duration_ms=21 decision=ignored_invalid_pattern
+153.98 E5 ECHO clap valid=0 attack_ms=na strength=1210 duration_ms=88 decision=ignored_invalid_pattern
+154.27 E5 ECHO clap valid=0 attack_ms=na strength=2398 duration_ms=182 decision=ignored_invalid_pattern
+154.45 E5 ECHO clap valid=1 attack_ms=5 strength=1096 duration_ms=3 decision=consumed_pattern
+154.55 E5 ECHO clap valid=0 attack_ms=11 strength=1316 duration_ms=21 decision=ignored_invalid_pattern
+154.83 E5 ECHO clap valid=0 attack_ms=na strength=2781 duration_ms=208 decision=ignored_invalid_pattern
+154.92 E5 ECHO replay clip_missing
+155.20 E5 ECHO clap valid=1 attack_ms=5 strength=1030 duration_ms=75 decision=consumed_pattern
+155.66 E5 ECHO replay clip_missing
+156.79 E5 ECHO clap valid=0 attack_ms=30 strength=1163 duration_ms=85 decision=ignored_invalid_pattern
+156.98 E5 ECHO clap valid=0 attack_ms=na strength=2899 duration_ms=184 decision=ignored_invalid_pattern
+157.07 E5 ECHO clap valid=0 attack_ms=na strength=1134 duration_ms=5 decision=ignored_invalid_pattern
+157.80 E5 ECHO clap valid=0 attack_ms=11 strength=1001 duration_ms=3 decision=ignored_invalid_patt
+157.89 E5 ern
+157.98 E5 ECHO clap valid=0 attack_ms=13 strength=1112 duration_ms=27 decision=ignored_invalid_pattern
+158.44 E5 ECHO clap valid=0 attack_ms=na strength=3466 duration_ms=272 decision=ignored_invalid_pattern
+159.28 E5 ECHO clap valid=0 attack_ms=16 strength=1042 duration_ms=5 decision=ignored_invalid_pattern
+159.47 E5 ECHO clap valid=0 attack_ms=na strength=1316 duration_ms=43 decision=ignored_invalid_pattern
+159.75 E5 ECHO clap valid=0 attack_ms=na strength=2818 duration_ms=181 decision=ignored_invalid_pattern
+159.94 E5 ECHO clap valid=1 attack_ms=8 strength=1090 duration_ms=26 decision=declined_by_level
+160.03 E5 ECHO clap valid=0 attack_ms=11 strength=1227 duration_ms=29 decision=ignored_invalid_pattern
+160.21 E5 ECHO clap valid=0 attack_ms=37 strength=2694 duration_ms=120 decision=ignored_invalid_pattern
+160.31 E5 ECHO clap valid=0 attack_ms=na strength=1010 duration_ms=5 decision=ignored_invalid_pattern
+160.40 E5 ECHO clap valid=0 attack_ms=26 strength=1021 duration_ms=3 decision=ignored_invalid_pattern
+160.69 E5 ECHO clap valid=0 attack_ms=16 strength=1053 duration_ms=125 decision=ignored_invalid_pattern
+161.07 E5 ECHO clap valid=0 attack_ms=na strength=3580 duration_ms=267 decision=ignored_invalid_pattern
+161.16 E5 ECHO clap valid=1 attack_ms=5 strength=1403 duration_ms=83 decision=consumed_pattern
+161.35 E5 ECHO clap valid=1 attack_ms=6 strength=1130 duration_ms=122 decision=already_scheduled
+161.54 E5 ECHO replay clip_missing
+161.85 E5 ECHO clap valid=0 attack_ms=n
+161.93 E5 a strength=1181 duration_ms=77 decision=ignored_invalid_pattern
+162.02 E5 ECHO clap valid=1 attack_ms=3 strength=1124 duration_ms=85 decision=resting
+162.47 E5 ECHO clap valid=0 attack_ms=na strength=3108 duration_ms=242 decision=ignored_invalid_pa
+162.56 E5 ttern
+163.02 E5 ECHO clap valid=0 attack_ms=na strength=3211 duration_ms=274 decision=ignored_invalid_pattern
+163.59 E5 ECHO clap valid=0 attack_ms=42 strength=1401 duration_ms=42 decision=ignored_invalid_pattern
+164.90 E5 ECHO clap valid=0 attack_ms=na strength=1216 duration_ms=40 decision=ignored_invalid_pattern
+164.99 E5 ECHO clap valid=0 attack_ms=16 strength=1038 duration_ms=3 decision=ignored_invalid_pattern
+165.18 E5 ECHO clap valid=0 attack_ms=na strength=3311 duration_ms=181 dec
+165.26 E5 ision=ignored_invalid_pattern
+165.36 E5 ECHO clap valid=1 attack_ms=5 strength=1130 duration_ms=27 decision=resting
+165.65 E5 ECHO clap valid=0 attack_ms=43 strength=3325 duration_ms=122 decision=ignored_invalid_pattern
+165.74 E5 ECHO clap valid=0 attack_ms=26 strength=1091 duration_ms=48 decision=ignored_invalid_pattern
+166.03 E5 ECHO clap valid=0 attack_ms=16 strength=1012 duration_ms=6 decision=ignored
+166.13 E5 _invalid_pattern
+166.59 E5 ECHO clap valid=0 attack_ms=na strength=3149 duration_ms=211 decision=ignored_invalid_pattern
+166.88 E5 ECHO clap valid=0 attack_ms=29 strength=1248 duration_ms=38 decision=ignored_invalid_pattern
+167.07 E5 ECHO clap valid=0
+167.16 E5 attack_ms=na strength=2890 duration_ms=192 decision=ignored_invalid_pattern
+167.26 E5 ECHO clap valid=0 attack_ms=na strength=1005 duration_ms=48 decision=ignored_invalid_pattern
+167.55 E5 ECHO clap valid=0 attack_ms=na strength=1440 duration_ms=46 decision=ignored_invalid_pattern
+167.73 E5 ECHO clap valid=0 attack_ms=38 strength=1418 duration_ms=104 decision=ignored_invalid_pattern
+167.93 E5 ECHO clap valid=0 attack_ms=na strength=2727 duration_ms=181 decision=ignor
+168.02 E5 ed_invalid_pattern
+168.48 E5 ECHO clap valid=0 attack_ms=na strength=3180 duration_ms=186 decision=ignored_invalid_pattern
+169.01 E5 ECHO clap valid=1 attack_ms=5 strength=1103 duration_ms=115 decision=consumed_pattern
+169.38 E5 ECHO clap valid=0 attack_ms=na strength=3251 duration_ms=275 decision=ignored_invalid_pattern
+169.38 E5 ECHO replay clip_missing
+169.94 E5 ECHO clap valid=0 attack_ms=na strength=2647 duration_ms=298 decision=ignored_invalid_pattern
+170.40 E5 ECHO clap valid=0 attack_ms=29 strength=1189 duration_ms=11 decision=ignored_invalid_pattern
+170.78 E5 ECHO clap valid=0 attack_ms=na strength=3370 duration_ms=216 decision=ignored_invalid_pattern
+170.89 E5 ECHO clap valid=0 attack_ms=18 strength=1061 duration_ms=40 decision=ignored_invalid_pattern
+171.26 E5 ECHO clap valid=0 attack_ms=na strength=3756 duration_ms=288 decision=ignored_invalid_pattern
+171.45 E5 ECHO clap valid=0 attack_ms=19 strength=1030 duration_ms=91 decision=ignored_invalid_pattern
+171.55 E5 ECHO clap valid=0 attack_ms=11 strength=1068 duration_ms=56 decision=ignored_invalid_pattern
+171.83 E5 ECHO clap valid=0 attack_ms=na strength=1283 duration_ms=120 decision=ignored_invalid_pattern
+172.12 E5 ECHO clap valid=0 attack_ms=na strength=3092 duration_ms=211 decision=ignored_invalid_pattern
+172.32 E5 ECHO clap valid=0 attack_ms=14 strength=1083 duration_ms=18 de
+172.41 E5 cision=ignored_invalid_pattern
+172.60 E5 ECHO clap valid=0 attack_ms=na strength=3362 duration_ms=168 decision=ignored_invalid_pattern
+173.17 E5 ECHO clap valid=0 attack_ms=21 strength=1175 duration_ms=85 decision=igno
+173.27 E5 red_invalid_pattern
+173.45 E5 ECHO clap valid=0 attack_ms=na strength=2956 duration_ms=214 decision=ignored_invalid_pattern
+174.83 E5 ECHO clap valid=0 attack_ms=na strength=1229 duration_ms=51 decision=ignored_invalid_pattern
+175.39 E5 ECHO clap valid=0 attack_ms=na strength=2740 duration_ms=250 decision=ignored_invalid_pattern
+175.58 E5 ECHO
+175.67 E5 clap valid=0 attack_ms=na strength=1034 duration_ms=26 decision=ignored_invalid_pattern
+176.43 E5 ECHO clap valid=0 attack_ms=na strength=1277 duration_ms=142 decision=ignored_invalid_pattern
+177.76 E5 ECHO clap valid=0 attack_ms=na strength=1774 duration_ms=291 decision=ignored_invalid_pattern
+178.04 E5 ECHO clap valid=0 attack_ms=na strength=3143 durat
+178.13 E5 ion_ms=288 decision=ignored_invalid_pattern
+178.33 E5 ECHO clap valid=0 attack_ms=18 strength=1188 duration_ms=91 decision=ignored_invalid_pattern
+178.52 E5 ECHO clap valid=0 attack_ms=na strength=1015 duration_ms=77 decision=ignored_invalid_pattern
+178.62 E5 ECHO clap valid=0 attack_ms=29 strength=2296 duration_ms=22 decision=ignored_invalid_pattern
+179.08 E5 ECHO clap valid
+179.18 E5 =0 attack_ms=na strength=1124 duration_ms=133 decision=ignored_invalid_pattern
+179.46 E5 ECHO clap valid=0 attack_ms=na strength=3121 duration_ms=275 decision=ignored_invalid_pattern
+179.64 E5 ECHO clap valid=0 attack_ms=na strength=1115 duration_ms=134 decision=ignored_invalid_pattern
+179.83 E5 ECHO clap valid=0 attack_ms=na strength=1096 duration_ms=99 decision=ignored_invalid_pattern
+183.90 E5 ECHO clap valid=0 attack_ms=na strength=1684 duration_ms=195 decision=ignored_invalid_pattern
+184.09 E5 ECHO clap valid=0 attack_ms=na strength=1032 duration_ms=139 decision=ignored_invalid_pattern
+184.46 E5 ECHO clap valid=0 attack_ms=na strength=3097 duration_ms=258 decision=ignored_invalid_pattern
+184.92 E5 ECHO clap valid=0 attack_ms=na strength=2759 duration_ms=174 decision=ignored_invalid_pattern
+185.49 E5 ECHO clap valid=0 attack_ms=na strength=1203 duration_ms=24 decision=ignored_invalid_pattern
+185.75 E5 ECHO clap valid=0 attack_ms=na strength=3925 duration_ms=157 decision=ignored_invalid_pattern
+186.42 E5 ECHO clap valid=0 attack_ms=na strength=3787 duration_ms=251 decision=ignored_invalid_pattern
+186.42 E5 ECHO clap valid=0 attack_ms=11 strength=1081 duration_ms=21 decision=ignored_invalid_pattern
+186.61 E5 ECHO clap valid=0 attack_ms=na strength=1019 duration_ms=11 decision=ignored_invalid_pattern
+188.17 E5 ECHO clap valid=0 attack_ms=na strength=1763 duration_ms=290 decision=ignored_invalid_pattern
+189.09 E5 ECHO clap valid=0 attack_ms=na strength=1647 duration_ms=104 decision=ignored_invalid_pattern
+189.28 E5 ECHO clap valid=0 attack_ms=18 strength=1301 duration_ms=16 decision=ignored_invalid_pattern
+189.46 E5 ECHO clap valid=0 attack_ms=na strength=1089 duration_ms=80 decision=ignored_invalid_pattern
+189.65 E5 ECHO clap valid=0 attack_ms=32 strength=2044 duration_ms=66 decision=ignored_invalid_pattern
+190.11 E5 ECHO clap valid=0 attack_ms=38 strength=1011 duration_ms=69 decision=ignored_invalid_pattern
+190.49 E5 ECHO clap valid=0 attack_ms=na strength=3153 duration_ms=283 decision=ignored_invalid_pattern
+190.58 E5 ECHO clap valid=0 attack_ms=na strength=1069 duration_ms=107 decision=ignored_invalid_pattern
+190.77 E5 ECHO clap valid=0 attack_ms=na strength=1333 duration_ms=104 decision=ignored_invalid_pattern
+190.95 E5 ECHO clap valid=0 attack_ms=na strength=1136 duration_ms=123 decision=ignored_invalid_pattern
+191.05 E5 ECHO clap valid=0 attack_ms=na strength=1148 duration_ms=3 decision=ignored_invalid_pattern
+191.32 E5 ECHO clap valid=0 attack_ms=na strength=3503 duration_ms=246 decision=ignored_invalid_pattern
+191.42 E5 ECHO clap valid=0 attack_ms=14 strength=1232 duration_ms=83 decision=ignored_inva
+191.51 E5 lid_pattern
+193.31 E5 E
+193.39 E5 CHO clap valid=0 attack_ms=na strength=1144 duration_ms=136 decision=ignored_invalid_pattern
+194.61 E5 ECHO clap valid=0 attack_ms=11 strength=1348 duration_ms=131 decision=ignored_invalid_pattern
+194.89 E5 ECHO clap valid=0 attack_ms=na strength=1806 duration_ms=200 decision=ignored_invalid_pattern
+195.36 E5 ECHO clap valid=0 attack_ms=na strength=1726 duration_ms=102 decision=ignored_invalid_patter
+195.45 E5 n
+195.55 E5 ECHO clap valid=0 attack_ms=na strength=1356 duration_ms=72 decision=ignored_invalid_patter
+195.64 E5 n
+195.92 E5 ECHO clap valid=0 attack_ms=na strength=3280 duration_ms=261 decision=ignored_invalid_pattern
+196.47 E5 ECHO clap valid=0 attack_ms=na strength=1361 duration_ms=27 decision=ignored_invalid_pattern
+196.77 E5 ECHO clap valid=0 attack_ms=na strength=2879 duration_ms=144 decision=ignored_invalid_pattern
+197.62 E5 ECHO clap valid=0 attack_ms=na strength=1286 duration_ms=152 decision=ignored_invalid_pattern
+197.71 E5 ECHO clap valid=0 attack_ms=na strength=1171 duration_ms=51 decision=ignored_invalid_pattern
+197.90 E5 ECHO clap valid=0 attack_ms=na strength=1474 duration_ms=104 decision=ignored_invalid_pattern
+198.46 E5 ECHO clap valid=0 attack_ms=na strength=1201 duration_ms=27 decision=ignored_invalid_pattern
+198.64 E5 ECHO clap valid=0 attack_ms=na strength=3170 duration_ms=208 decision=ignored_invalid_pattern
+199.12 E5 ECHO clap valid=0 attack_ms=na strength=1139 duration_ms=98 decision=ignored_invalid_pattern
+200.43 E5 ECHO clap valid=0 attack_ms=na strength=1842 duration_ms=246 decision=ignored_invalid_pattern
+200.62 E5 ECHO clap valid=0 attack_ms=24 strength=1168 duration_ms=98 decision=ignored_in
+200.71 E5 valid_pattern
+200.89 E5 ECHO clap valid=0 attack_ms=na strength=3559 duration_ms=147 decision=ignored_invalid_pattern
+200.89 E5 ECHO clap valid=0 attack_ms=13 strength=1092 duration_ms=5 decision=ignored_invalid_pattern
+201.46 E5 ECHO clap valid=0 attack_ms=na strength=3803 duration_ms=242 decision=ignored_invalid_pattern
+201.56 E5 ECHO clap valid=1 attack_ms=3 strength=1045 duration_ms=26 decision=consumed_pattern
+201.65 E5 ECHO clap valid=0 attack_ms=19 strength=1172 duration_ms=96 decision=ignored_invalid_pattern
+201.85 E5 ECHO clap valid=0 attack_ms=na strength=1079
+201.94 E5 duration_ms=152 decision=ignored_invalid_pattern
+202.03 E5 ECHO replay clip_missing
+202.32 E5 ECHO clap valid=0 attack_ms=na strength=1367 duration_ms=42 decision=ignored_invalid_pattern
+203.17 E5 ECHO clap valid=0 attack_ms=16 strength=1200 duration_ms=48 decision=ignored_invalid_pattern
+203.35 E5 ECHO clap valid=0 attack_ms=38 strength=1248 duration_ms=82 decision=ignored_invalid_pattern
+203.61 E5 ECHO clap valid=0 attack_ms=na strength=2464 duration_ms=184 decision=ignored_invalid_pattern
+203.80 E5 ECHO clap valid=1 attack_ms=5 strength=1008 duration_ms=3 decision=consumed_pattern
+204.17 E5 ECHO clap valid=0 attack_ms=na strength=2780 duration_ms=162 decision=ignored_invalid_pattern
+204.26 E5 ECHO replay clip_missing
+204.63 E5 ECHO clap valid=0 attack_ms=19 strength=1088 duration_ms=120 decision=ignored_invalid_pattern
+204.91 E5 ECHO clap valid=0 attack_ms=24 strength=4020 duration_ms=171 decision=ignored_invalid_pattern
+205.00 E5 ECHO clap valid=1 attack_ms=5 strength=1306 duration_ms=51 decision=resting
+205.46 E5 ECHO clap
+205.55 E5 valid=0 attack_ms=na strength=3290 duration_ms=187 decision=ignored_invalid_pattern
+205.94 E5 ECHO clap valid=0 attack_ms=na strength=1123 duration_ms=267 decision=ignored_invalid_pattern
+206.40 E5 ECHO clap valid=0 attack_ms=na strength=3447 duration_ms=216 decision=ignored_invalid_pattern
+206.49 E5 ECHO clap valid=0 attack_ms=na strength=1003 duration_ms=32 decision=ignored_invalid_pattern
+206.88 E5 ECHO clap valid=0 attack_ms=na strength=3381 duration_ms=181 decision=ignored_invalid_pattern
+207.17 E5 ECHO clap valid=0 attack_ms=24 strength=1371 duration_ms=8 decision=ignored_invalid_pattern
+207.45 E5 ECHO clap valid=0 attack_ms=16 strength=1317 duration_ms=40 decision=ignored_invalid_pattern
+207.83 E5 ECHO clap valid=0 attack_ms=16 strength=1060 duration_ms=34 decision=ignored_invalid_pattern
+208.83 E5 ECHO clap valid=0 attack_ms=38 strength=1317 duration_ms=38 decision=ignored_invalid_pattern
+209.11 E5 ECHO clap valid=0 attack_ms=na strength=2850 duration_ms=182 decision=ignored_invalid_pattern
+209.29 E5 ECHO clap valid=1 attack_ms=8 strength=1003 duration_ms=27 decision=consumed_pattern
+209.57 E5 ECHO clap valid=0 attack_ms=na strength=2553 duration_ms=163 decision=ignored_invalid_pattern
+209.76 E5 ECHO clap valid=0 at
+209.85 E5 tack_ms=27 strength=1173 duration_ms=83 decision=ignored_invalid_pattern
+209.85 E5 ECHO replay clip_missing
+210.42 E5 ECHO clap valid=0 attack_ms=na strength=3885 duration_ms=291 decision=ignored_invalid_pattern
+210.51 E5 ECHO clap valid=0 attack_ms=16 strength=1374 duration_ms=53 decision=ignored_invalid_pattern
+211.04 E5 ECHO clap valid=0 attack_ms=na strength=2989 duration_ms=202 decision=ignored_invalid_pattern
+211.13 E5 ECHO clap valid=0 attack_ms=na strength=1236 duration_ms=48 decision=ignored_invalid_pat
+211.23 E5 tern
+211.41 E5 ECHO clap valid=0 attack_ms=na strength=1441 duration_ms=45 decision=ignored_invalid_pat
+211.50 E5 tern
+211.59 E5 ECHO clap valid=0 attack_ms=37 strength=1312 duration_ms=104 decision=ignored_invalid_pattern
+211.97 E5 ECHO clap valid=0 attack_ms=na strength=2934 duration_ms=266 decision=ignored_invalid_pattern
+212.15 E5 ECHO clap valid=1 attack_ms=8 strength=1080 duration_ms=72 decision=consumed_pattern
+212.43 E5 ECHO clap valid=0 attack_ms=na strength=3843 duration_ms=208 decision=ignored_invalid_pattern
+212.61 E5 ECHO replay clip_missing
+212.88 E5 ECHO clap valid=1 attack_ms=5 strength=1087 duration_ms=102 decision=resting
+213.26 E5 ECHO clap valid=0 attack_ms=na strength=3238 duration_ms=272 decision=ignored_invalid_pattern
+213.35 E5 ECHO clap valid=1 attack_ms=8 strength=1032 duration_ms=5 decision=resting
+214.28 E5 ECHO clap valid=0 attack_ms=29 strength=1287 duration_ms=35 decision=ignored_invalid_pattern
+214.56 E5 ECHO clap valid=0 attack_ms=na strength=3031 duration_ms=181 decision=ignored_invalid_pattern
+214.75 E5 ECHO clap valid=1 attack_ms=6 strength=1114 duration_ms=26 decision=resting
+215.03 E5 ECHO clap valid=0 attack_ms=na strength=3012 duration_ms=221 decision=ignored_invalid_pattern
+215.21 E5 ECHO clap valid=0 attack_ms=na strength=1046 duration_ms=5 decision=ignored_invalid_pattern
+215.49 E5 ECHO clap valid=0 attack_ms=16 strength=1088 duration_ms=77 decision=ignored_invalid_pat
+215.59 E5 tern
+215.87 E5 ECHO clap valid=0 attack_ms=na strength=3399 duration_
+215.97 E5 ms=267 decision=ignored_invalid_pattern
+215.97 E5 ECHO clap valid=1 attack_ms=5 strength=1301 duration_ms=53 decision=resting
+216.43 E5 ECHO clap valid=0 attack_ms=na strength=3330 duration_ms=168 decision=ignored_invalid_pattern
+217.09 E5 ECHO clap valid=0 attack_ms=21 strength=1127 duration_ms=96 decision=ignored_invalid_pattern
+217.38 E5 ECHO clap valid=0 attack_ms=na strength=2726 duration_ms=184 decision=ignored_invalid_pattern
+217.81 E5 ECHO clap valid=0 attack_ms=na strength=3365 duration_ms=176 decision=ignored_invalid_pattern
+219.29 E5 ECHO clap valid=0 attack_ms=na
+219.39 E5 strength=2984 duration_ms=293 decision=ignored_invalid_pattern
+219.48 E5 ECHO clap valid=0 attack_ms=na strength=1001 duration_ms=6 decision=ignored_invalid_pattern
+220.98 E5 ECHO clap valid=0 attack_ms=na strength=1478 duration_ms=234 decision=ignored_invalid_pattern
+222.12 E5 ECHO clap valid=0 attack_ms=18 strength=1
+222.20 E5 181 duration_ms=14 decision=ignored_invalid_pattern
+222.39 E5 ECHO clap valid=0 attack_ms=na strength=1038 duration_ms=86 decision=ignored_invalid_pattern
+222.85 E5 ECHO clap valid=0 attack_ms=na strength=1021 duration_ms=43 decision=ignored_invalid_pattern
+223.04 E5 ECHO clap valid=0 attack_ms=na strength=1123 duration_ms=110 decision=ignored_invalid_pattern
+223.33 E5 ECHO clap valid=0 attack_ms=na strength=3141 duration_ms=283 decision=ignored_invalid_pattern
+223.52 E5 ECHO clap valid=0 attack_ms=na strength=1170 duration_ms=75 decision=ignored_invalid_pattern
+223.72 E5 ECHO clap valid=0 attack_ms=na strength=1074 duration_ms=50 decision=ignored_invalid_pattern
+223.92 E5 ECHO clap valid=0 attack_ms=na strength=1346 duration_ms=163 decision=ignored_invalid_pattern
+224.20 E5 ECHO clap valid=0 attack_ms=na strength=3518 duration_ms=272 decision=ignored_invalid_pattern
+224.38 E5 ECHO clap valid=0 attack_ms=na strength=1310 duration_ms=77 decision=ignored_invalid_pattern
+224.75 E5 ECHO clap valid=0 attack_ms=na strength=2723 duration_ms=250 decision=ignored_invalid_pattern
+226.17 E5 ECHO clap valid=0 attack_ms=na strength=1060 duration_ms=11 decision=ignored_invalid_pattern
+227.51 E5 ECHO clap valid=0 attack_ms=na strength=3399 duration_ms=261 decision=ignored_invalid_pattern
+227.81 E5 ECHO clap valid=0 attack_ms=na strength=1640 duration_ms=192 decision=ignored_invalid_pattern
+228.00 E5 ECHO clap valid=0 attack_ms=na strength=1077 duration_ms=138 decision=ignored_invalid_pattern
+228.36 E5 ECHO clap valid=0 attack_ms=na strength=2625 duration_ms=259 decision=ignored_invalid_pattern
+228.83 E5 ECHO clap valid=0 attack_ms=na strength=2702 duration_ms=184 decision=ignored_invalid_pattern
+229.39 E5 ECHO clap valid=0 attack_ms=na strength=1647 duration_ms=64 decision=ignored_invalid_pattern
+229.67 E5 ECHO clap valid=0 attack_ms=na strength=3887 duration_ms=192 decision=ignored_invalid_pattern
+229.77 E5 ECHO clap valid=0 attack_ms=na strength=1334 duration_ms=101 decision=ignored_invalid_pattern
+229.95 E5 ECHO clap valid=1 attack_ms=5 strength=1092 duration_ms=24 decision=consumed_pattern
+230.43 E5 ECHO replay clip_missing
+231.94 E5 ECHO clap valid=0 attack_ms=na strength=1278 duration_ms=155 decision=ignored_invalid_pattern
+232.13 E5 ECHO clap valid=0 attack_ms=na strength=1288 duration_ms=101 decision=ignored_invalid_pattern
+232.99 E5 ECHO clap valid=0 attack_ms=na strength=1905 duration_ms=134 decision=ignored_invalid_pattern
+233.18 E5 ECHO clap valid=0 attack_ms=18 strength=1197 duration_ms=86 decision=ignored_invalid_pattern
+233.37 E5 ECHO clap valid=0 attack_ms=na strength=1117 duration_ms=88 decision=ignored_invalid_pattern
+234.03 E5 ECHO clap valid=0 attack_ms=na strength=1051 duration_ms=139 decision=ignored_invalid_pattern
+234.31 E5 ECHO clap valid=0 attack_ms=na strength=2747 duration_ms=277 decision=ignored_invalid_pattern
+234.68 E5 ECHO clap valid=0 attack_ms=na strength=1183 duration_ms=104 decision=ignored_invalid_pattern
+234.77 E5 ECHO clap valid=0 attack_m
+234.86 E5 s=27 strength=1223 duration_ms=106 decision=ignored_invalid_pattern
+234.86 E5 E
+234.96 E5 CHO clap valid=0 attack_ms=na strength=1059 duration_ms=2 decision=ignored_invalid_pattern
+235.23 E5 ECHO clap valid=0 attack_ms=na strength=3798 duration_ms=274 decision=ignored_invalid_pattern
+235.33 E5 ECHO clap valid=0 attack_ms=na strength=1260 duration_ms=83 decision=ignored_invalid_pattern
+236.71 E5 ECHO clap valid=0 attack_ms=na strength=1712 duration_ms=250 decision=ignored_invalid_pattern
+237.27 E5 ECHO clap valid=0 attack_ms=na strength=1138 duration_ms=125 decision=ignored_invalid_pattern
+238.48 E5 ECHO clap valid=0 attack_ms=na strength=1330 duration_ms=141 decision=ignored_invalid_pattern
+238.77 E5 ECHO clap valid=0 attack_ms=na strength=1706 duration_ms=192 decision=ignored_invalid_pattern
+238.96 E5 ECHO clap valid=0 attack_ms=na strength=1065 duration_ms=109 decision=ignored_invalid_pattern
+239.24 E5 ECHO clap valid=0 attack_ms=na strength=3491 duration_ms=258 decision=ignored_invalid_pattern
+239.43 E5 ECHO clap valid=0 attack_
+239.52 E5 ms=na strength=1162 duration_ms=72 decision=ignored_invalid_pattern
+239.80 E5 ECHO clap valid=0 attack_ms=na strength=2977 duration_ms=179 decision=ignored_invalid_pattern
+239.80 E5 ECHO clap valid=0 attack_ms=13 strength=1031 duration_ms=32 decision=ignored_invalid_pattern
+240.36 E5 ECHO clap valid=0 attack_ms=na strength=1562 duration_ms=69 decision=ignored_invalid_pattern
+240.92 E5 ECHO clap valid=1 attack_ms=10 strength=1136 duration_ms=3 decision=consumed_pattern
+241.30 E5 ECHO replay clip_missing
+242.04 E5 ECHO clap valid=0 attack_ms=na strength=2642 duration_ms=181 decision=ignored_invalid_pattern
+242.22 E5 ECHO clap valid=0 attack_ms=na strength=1290 duration_ms=138 decision=ignored_invalid_pattern
+242.60 E5 ECHO clap valid=0 attack_ms=na strength=3437 duration_ms=246 decision=ignored_invalid_pattern
+242.70 E5 ECHO clap valid=0 attack_ms=21 strength=1031 duration_ms=115 decision=ignored_invalid_pattern
+242.79 E5 ECHO clap valid=0 attack_ms=na strength=1066 duration_ms=34 decision=ignored_invalid_pattern
+243.08 E5 ECHO clap valid=1 attack_ms=5 strength=1177 duration_ms=147 decision=consumed_pattern
+243.44 E5 ECHO replay clip_missing
+243.92 E5 ECHO clap valid=0 attack_ms=na strength=2809 duration_ms=243 decision=ignored_invalid_pattern
+244.48 E5 ECHO clap valid=0 attack_ms=na strength=1345 duration_ms=299 decision=ignored_invalid_pattern
+244.76 E5 ECHO clap valid=0 attack_ms=na strength=3010 duration_ms=235 decision=ignored_invalid_pattern
+244.85 E5 ECHO clap valid=0 attack_ms=na strength=1294 duration_ms=24 decision=ignored_invalid_pattern
+245.32 E5 ECHO clap valid=0 attack_ms=na strength=3170 duration_ms=197 decision=ignored_invalid_pattern
+245.39 E5 ECHO clap valid=1 attack_ms=6 strength=1077 duration_ms=26 decision=resting
+246.15 E5 ECHO clap valid=0 attack_ms=na strength=3420 duration_ms=184 decision=ignored_invalid_pattern
+246.34 E5 ECHO clap valid=1 attack_ms=5 strength=1424 duration_ms=51 decision=resting
+247.18 E5 ECHO clap valid=0 attack_ms=na strength=1258 duration_ms=72 decision=ignored_invalid_pattern
+247.47 E5 ECHO clap valid=0 attack_ms=na strength=2686 duration_ms=18
+247.57 E5 2 decision=ignored_invalid_pattern
+247.67 E5 ECHO clap valid=1 attack_ms=8 strength=1044 duration_ms=24 decision=consumed_pattern
+248.05 E5 ECHO clap valid=0 attack_ms=na strength=3143 duration_ms=163 decision=ignored_invalid_pattern
+248.15 E5 ECHO clap valid=0 attack_ms=21 strength=1024 duration_ms=22 decision=ignored_invalid_pattern
+248.23 E5 ECHO replay clip_missing
+248.52 E5 ECHO clap valid=1 attack_ms=10 strength=1136 duration_ms=104 decision=refractory_after_emit
+249.36 E5 ECHO clap valid=0 attack_ms=na strength=2880 duration_ms=277 decision=ignored_invalid_pattern
+254.45 E5 ECHO clap valid=0 attack_ms=43 strength=2433 duration_ms=91 decision=ignored_invalid_pattern
+254.64 E5 ECHO clap valid=0 attack_ms=32 strength=2216 duration_ms=70 decision=ignored_invalid_pattern
+254.82 E5 ECHO clap valid=0 attack_ms=na strength=1453 duration_ms=184 decision=ignored_invalid_pattern
+255.01 E5 ECHO clap valid=0 attack_ms=26 strength=2370 duration_ms=64 decision=ignored_invalid_pattern
+255.20 E5 ECHO clap valid=0 attack_ms=27 strength=2562 duration_ms=107 decision=ignored_invalid_pattern
+255.57 E5 ECHO clap valid=0 attack_ms=na strength=2098 duration_ms=203 decision=ignored_invalid_pattern
+255.85 E5 ECHO clap valid=0 attack_ms=na strength=3099 duration_ms=219 decision=ignored_invalid_pattern
+256.14 E5 ECHO clap valid=0 attack_ms=na strength=2273 duration_ms=229 decision=ignored_invalid_pattern
+256.33 E5 ECHO clap valid=0 attack_ms=72 strength=2826 duration_ms=101 decision=ignored_invalid_pattern
+256.60 E5 ECHO clap valid=0 attack_ms=24 strength=2078 duration_ms=147 decision=ignored_invalid_pattern
+258.10 E5 ECHO clap valid=0 attack_ms=na strength=1890 duration_ms=176 decision=ignored_invalid_pattern
+258.48 E5 ECHO clap valid=0 attack_ms=na strength=2462 duration_ms=176 decision=ignored_invalid_pattern
+258.67 E5 ECHO clap valid=0 attack_ms=18 strength=1458 duration_ms=74 decision=ignored_invalid_pattern
+258.76 E5 ECHO clap valid=0 attack_ms=na strength=1786 duration_ms=69 decision=ignored_invalid_pattern
+259.24 E5 ECHO clap valid=0 attack_ms=na strength=2025 duration_ms=166 decision=ignored_invalid_pattern
+259.43 E5 ECHO clap valid=0 attack_ms=27 strength=2446 duration_ms=107 decision=ignored_invalid_pattern
+259.71 E5 ECHO clap valid=0 attack_ms=na strength=1518 duration_ms=216 decision=ignored_invalid_pattern
+259.89 E5 ECHO clap valid=0 attack_ms=43 strength=1854 duration_ms=139 decision=ignored_invalid_pattern
+260.08 E5 ECHO clap valid=0 attack_ms=18 strength=1884 duration_ms=85 decision=ignored_invalid_pattern
+260.36 E5 ECHO clap valid=0 attack_ms=na strength=1119 duration_ms=85 decision=ignored_invalid_pattern
+260.44 E5 ECHO clap valid=1 attack_ms=10 strength=1351 duration_ms=72 decision=consumed_pattern
+260.72 E5 ECHO clap valid=0 attack_ms=na strength=2569 duration_ms=66 decision=ignored_invalid_pattern
+260.82 E5 E
+260.90 E5 CHO replay clip_missing
+261.18 E5 ECHO clap valid=0 attack_ms=16 strength=2021 duration_ms=34 decision=ignored_invalid_pattern
+261.28 E5 ECHO clap valid=0 attack_ms=na strength=1756 duration_ms=112 decision=ignored_i
+261.37 E5 nvalid_pattern
+261.57 E5 ECHO clap valid=0 attack_ms=na strength=1999 duration_ms=224 decision=ignored_invalid_pattern
+261.74 E5 ECHO clap valid=0 attack_ms=32 strength=1446 duration_ms=110 decision=ignored_invalid_pattern
+261.83 E5 ECHO clap valid=0 attack_ms=na strength=1264 duration_ms=13 decision=ignored_invalid_pattern
+262.11 E5 ECHO clap valid=0 attack_ms=16 strength=1640 duration_ms=11 decision=ignored_invalid_pattern
+262.21 E5 ECHO clap valid=0 attack_ms=35 strength=1458 duration_ms=64 decision=ignored_invalid_pattern
+262.49 E5 ECHO clap valid=0 attack_ms=na strength=3322 duration_ms=274 decision=ignored_invalid_pattern
+262.58 E5 ECHO clap valid=0 attack_ms=na strength=1780 duration_ms=51 decision=ignored_invalid_pattern
+262.94 E5 ECHO clap valid=0 attack_ms=40 strength=1367 duration_ms=48 decision=ignored_invalid_pattern
+264.38 E5 ECHO clap valid=0 attack_ms=na strength=3123 duration_ms=274 decision=ignored_invalid_pattern
+264.57 E5 ECHO clap valid=0 attack_ms=37 strength=5361 duration_ms=120 decision=ignored_invalid_pattern
+264.75 E5 ECHO clap valid=0 attack_ms=29 strength=1732 duration_ms=21 decision=ignored_invalid_pattern
+264.85 E5 ECHO clap valid=0 attack_ms=na strength=2036 duration_ms=64 decision=ignored_invalid_pattern
+265.13 E5 ECHO clap valid=0 attack_ms=na strength=2806 duration_ms=168 decisi
+265.22 E5 on=ignored_invalid_pattern
+265.32 E5 ECHO clap valid=1 attack_ms=8 strength=1185 duration_ms=120 decision=consumed_
+265.41 E5 pattern
+265.51 E5 ECHO clap valid=0 attack_ms=na strength=2424 duration_ms=83 decision=ignored_invalid_pattern
+265.60 E5 ECHO clap valid=0 attack_ms=30 strength=1976 duration_ms=53 decision=ignored_invalid_pattern
+265.78 E5 ECHO replay clip_missing
+266.07 E5 ECHO clap valid=0 attack_ms=na strength=1121 duration_ms=144 decision=ignored_invalid_pattern
+266.35 E5 ECHO clap valid=0 attack_ms=na strength=4014 duration_ms=232 decision=ignored_invalid_pattern
+266.63 E5 ECHO clap valid=0 attack_ms=na strength=3658 duration_ms=224 decision=ignored_invalid_pattern
+266.81 E5 ECHO clap valid=0 attack_ms=64 s
+266.90 E5 trength=2420 duration_ms=118 decision=ignored_invalid_pattern
+267.00 E5 ECHO clap valid=0 attack_ms=19 strength=1016 duration_ms=51 decision=ignored_invalid_pattern
+267.66 E5 ECHO clap valid=0 attack_ms=na strength=1968 duration_ms=117 decision=ignored_invalid_pattern
+267.75 E5 ECHO clap valid=0 attack_ms=13 strength=1168 duration_ms=27 decision=ignored_invalid_pattern
+267.94 E5 ECHO clap valid=0 attack_ms=na strength=1919 duration_ms=184 decision=ignored_invalid_pattern
+268.32 E5 ECHO clap valid=0 attack_ms=35 strength=4242 duration_ms=162 decision=ignored_invalid_pattern
+268.60 E5 ECHO clap valid=0 attack_ms=na strength=2896 duration_ms=208 decision=ignored_invalid_pattern
+268.78 E5 E
+268.87 E5 CHO clap valid=0 attack_ms=na strength=2142 duration_ms=160 decision=ignored_invalid_pattern
+269.52 E5 ECHO clap valid=0 attack_ms=na strength=3023 duration_ms=250 decision=ignored_invalid_pattern
+269.61 E5 ECHO clap valid=0 attack_ms=29 strength=1104 duration_ms=67 decision=ignored_invalid_pattern
+269.80 E5 ECHO clap valid=0 attack_ms=46 strength=1409 duration_ms=109 decision=ignored_invalid_pattern
+270.17 E5 ECHO clap valid=0 attack_ms=na strength=1170 duration_ms=61 decision=ignored_invalid_pattern
+270.27 E5 ECHO clap valid=0 attack_ms=38 strength=1438 duration_ms=45 decision=ignored_invalid_pattern
+270.46 E5 ECHO clap valid=0 attack_ms=24 strength=1235 duration_ms=72 decision=ignored_invalid_pat
+270.55 E5 tern
+270.64 E5 ECHO clap valid=0 attack_ms=27 strength=1255 duration_ms=51 decision=ignored_invalid_pattern
+270.83 E5 ECHO clap valid=0 attack_ms=72 strength=2154 duration_ms=109 decision=ignored_invalid_pattern
+271.00 E5 ECHO clap valid=0 attack_ms=29 strength=1250 duration_ms=43 decision=ignored_invalid_pattern
+273.22 E5 ECHO clap valid=0 attack_ms=na strength=2081 duration_ms=147 decision=ignored_invalid_pattern
+273.51 E5 ECHO clap valid=0 attack_ms=na strength=2332 duration_ms=293 decision=ignored_invalid_pattern
+273.60 E5 ECHO clap valid=0 attack_ms=16 strength=1331 duration_ms=16 decision=ignored_invalid_pattern
+273.79 E5 ECHO clap valid=0 attack_ms=24 strength=2585 duration_ms=53 decision=ignored_invalid_pat
+273.88 E5 tern
+274.25 E5 ECHO clap valid=0 attack_ms=na strength=2202 duration_ms=275 decision=ignored_invalid_pattern
+274.44 E5 ECHO clap valid=0 attack_ms=40 strength=1651 duration_ms=66 decision=ignored_invalid_pattern
+274.91 E5 ECHO clap valid=0 attack_ms=30 strength=2494 duration_ms=104 decision=ignored_invalid_pattern
+275.18 E5 ECHO clap valid=1 attack_ms=8 strength=1324 duration_ms=8 decision=consumed_pattern
+275.56 E5 ECHO replay clip_missing
+276.11 E5 ECHO clap valid=0 attack_ms=na strength=1616 duration_ms=26 decision=ignored_invalid_pattern
+276.67 E5 ECHO clap valid=0 attack_ms=na strength=2180 duration_ms=104 decision=ignored_invalid_pattern
+276.85 E5 ECHO clap valid=0 attack_ms=na strength=1579 duration_ms=115 decision=ignored_invalid_pattern
+277.33 E5 ECHO clap valid=0 attack_ms=na strength=2701 duration_ms=296 decision=ignored_invalid_pattern
+277.72 E5 ECHO clap valid=0 attack_ms=30 strength=3299 duration_ms=139 decision=ignored_invalid_pattern
+278.00 E5 ECHO clap valid=0 attack_ms=na strength=3850 duration_ms=168 decision=ignored_invalid_pattern
+278.10 E5 ECHO clap valid=0 attack_ms=77 strength=1767 duration_ms=104 decision=ignored_invalid_pattern
+278.30 E5 ECHO clap valid=0 attack_ms=na strength=2325 duration_ms=78 decision=ignored_invalid_pattern
+278.39 E5 ECHO clap valid=0 attack_ms=16 strength=1566 duration_ms=91 decision=ignored_invalid_pattern
+278.77 E5 ECHO clap valid=0 attack_ms=na strength=2975 duration_ms=189 decision=ignored_invalid_pattern
+279.14 E5 ECHO clap valid=0 attack_ms=na strength=3333 duration_ms=232 decision=ignored_invalid_pattern
+279.33 E5 ECHO clap valid=0 attack_ms=75 strength=1575 duration_ms=122 decision=ignored_invalid_pattern
+279.70 E5 ECHO clap valid=0 attack_ms=43 strength=1569 duration_ms=70 decision=ignored_invalid_pattern
+279.89 E5 ECHO clap valid=0 attack_ms=40 strength=1907 duration_ms=125 decision=ignored_invalid_pattern
+280.26 E5 ECHO clap valid=0 attack_ms=na strength=3393 duration_ms=189 decision=ignored_invalid_pattern
+280.45 E5 ECHO clap valid=0 attack_ms=na strength=1789 duration_ms=182 decision=ignored_invalid_pattern
+280.82 E5 ECHO clap valid=0 attack_ms=na strength=3049 duration_ms=274 decision=ignored_invalid_pattern
+280.90 E5 ECHO clap valid=0 attack_ms=29 strength=1211 duration_ms=19 decision=ignored_invalid_pattern
+280.99 E5 ECHO clap valid=0 attack_ms=26 strength=2793 duration_ms=96 decision=ignored_invalid_pattern
+281.28 E5 ECHO clap valid=0 attack_ms=na strength=1802 duration_ms=168 decision=ignored_invalid_pattern
+281.93 E5 ECHO clap valid=0 attack_ms=na strength=3114 duration_ms=264 decision=ignored_invalid_pattern
+282.12 E5 ECHO clap valid=0 attack_ms=na strength=2475 duration_ms=107 decision=ignored_invalid_pattern
+282.49 E5 ECHO clap valid=0 attack_ms=na strength=1505 duration_ms=155 decision=ignored_invalid_pattern
+283.49 E5 ECHO clap valid=0 attack_ms=na strength=1665 duration_ms=56 decision=ignored_invalid_pattern
+283.68 E5 ECHO clap valid=0 attack_ms=na strength=1335 duration_ms=83 decision=ignored_invalid_pattern
+284.90 E5 ECHO clap valid=0 attack_ms=na strength=2914 duration_ms=128 decision=ignored_invalid_pattern
+285.28 E5 ECHO clap valid=0 attack_ms=na strength=3179 duration_ms=283 decision=ignored_invalid_pattern
+285.47 E5 ECHO clap valid=0 attack_ms=na strength=2637 duration_ms=178 de
+285.57 E5 cision=ignored_invalid_pattern
+286.04 E5 ECHO clap valid=0 attack_ms=na strength=1108 duration_ms=3 decision=ignored_invalid_pattern
+286.13 E5 ECHO clap valid=0 attack_ms=30 strength=1560 duration_ms=61 decision=ignored_invalid_pattern
+286.23 E5 ECHO clap valid=0 attack_ms=24 strength=1321 duration_ms=62 decision=ignored_invalid_pattern
+286.50 E5 ECHO clap valid=0 attack_ms=18 strength=1880 duration_ms=136 decision=ignored_invalid_pattern
+286.86 E5 ECHO clap valid=0 attack_ms=na strength=1845 duration_ms=224 decision=ignored_invalid_pattern
+287.32 E5 ECHO clap valid=0 attack_ms=na strength=3078 duration_ms=291 decision=ignored_invalid_pattern
+287.51 E5 ECHO clap valid=0 attack_ms=na strength=2434 duration_ms=125 decision=ignored_invalid_pattern
+288.64 E5 ECHO clap valid=0 attack_ms=56 strength=1969 duration_ms=91 decision=ignored_invalid_pattern
+289.20 E5 ECHO clap valid=0 attack_ms=na strength=1432 duration_ms=50 decision=ignored_invalid_pattern
+289.30 E5 ECHO clap valid=0 attack_ms=na strength=1395 duration_ms=22 decision=ignored_invalid_pattern
+289.57 E5 ECHO clap valid=0 attack_ms=na strength=1552 duration_ms=160 decision=ignored_invalid_pattern
+289.76 E5 ECHO clap valid=0 attack_ms=37 strength=1739 duration_ms=83 decision=ignored_invalid_pattern
+289.85 E5 ECHO clap valid=0 attack_ms=na strength=1015 duration_ms=19 decision=ignored_invalid_pattern
+290.14 E5 ECHO clap valid=0 attack_ms=19 strength=1301 duration_ms=24 decision=ignored_invalid_pattern
+290.32 E5 ECHO clap valid=0 attack_ms=22 strength=1546 duration_ms=22 decision=ignored_invalid_pattern
+290.41 E5 ECHO clap valid=0 attack_ms=21 strength=1165 duration_ms=22 decision=ignored_invalid_pattern
+290.69 E5 ECHO clap valid=0 attack_ms=29 strength=1752 duration_ms=70 decision=ignored_invalid_pattern
+290.88 E5 ECHO clap valid=0 attack_ms=40 strength=1837 duration_ms=155 decision=ignored_invalid_pattern
+291.34 E5 ECHO clap valid=0 attack_ms=na strength=2344 duration_ms=205 decision=ignored_invalid_pattern
+291.34 E5 ECHO clap valid=
+291.43 E5 0 attack_ms=16 strength=1174 duration_ms=18 decision=ignored_invalid_pattern
+292.01 E5 ECHO clap valid=0 attack_ms=32 strength=2092 duration_ms=130 decision=ignored_invalid_pattern
+292.21 E5 ECHO clap valid=0 attack_ms=58 strength=1749 duration_ms=126 decision=ignored_invalid_pattern
+292.88 E5 ECHO clap valid=0 attack_ms=na strength=3171 duration_ms=253 decision=ignored_invalid
+292.98 E5 _pattern
+293.17 E5 ECHO clap valid=0 attack_ms=na strength=1938 duration_ms=208 decision=ignored_invalid_pattern
+293.46 E5 ECHO clap valid
+293.54 E5 =0 attack_ms=na strength=3434 duration_ms=186 decision=ignored_invalid_pattern
+294.38 E5 ECHO clap valid=0 attack_ms=na strengt
+294.48 E5 h=2120 duration_ms=152 decision=ignored_invalid_pattern
+294.76 E5 ECHO clap valid=0 attack_ms=na strength=3000 duration_ms=213 decision=ignored_invalid_pattern
+295.13 E5 ECHO clap valid=0 attack_ms=40 strength=1681 duration_ms=112 decision=ignored_invalid_pattern
+295.50 E5 ECHO clap valid=0 attack_ms=na strength=3300 durat
+295.59 E5 ion_ms=259 decision=ignored_invalid_pattern
+295.77 E5 ECHO clap valid=0 attack_ms=24 strength=5091 duration_ms=133 decision=ignored_invalid_pattern
+296.43 E5 ECHO clap valid=0 attack_ms=na strength=1024 duration_ms=11 decision=ignored_invalid_pattern
+296.71 E5 ECHO clap valid=0 attack_ms=na strength=2555 duration_ms=160 decision=ignored_invalid_pattern
+296.80 E5 ECHO clap valid=0 attack_ms=40 strength=1661 duration_ms=82 decision=ignored_invalid_pattern
+297.09 E5 ECHO clap valid=0 attack_ms=27 strength=1372 duration_ms=93 decision=ignored_invalid_pattern
+297.67 E5 ECHO clap valid=0 attack_ms=16 strength=1180 duration_ms=69 decision=ignored_invalid_pattern
+297.95 E5 ECHO clap valid=0 attack_ms=na strength=1079 duration_ms=24 decision=ignored_invalid_pattern
+298.15 E5 ECHO clap valid=0 attack_ms=21 strength=1030 duration_ms=93 decision=ignored_invalid_pattern
+298.63 E5 ECHO clap valid=0 attack_ms=27 strength=1032 duration_ms=40 decision=ignored_invalid_pattern
+299.76 E5 ECHO clap valid=0 attack_ms=na strength=1508 duration_ms=51 decision=ignored_invalid_pattern
+300.04 E5 ECHO clap valid=0 attack_ms=35 strength=1554 duration_ms=112 decision=ignored_invalid_pattern
+300.51 E5 ECHO clap valid=0 attack_ms=na strength=2384 duration_ms=75 decision=ignored_invalid_pattern
+300.79 E5 ECHO clap valid=0 attack_ms=na strength=2274 duration_ms=189 decision=ignored_invalid_pattern
+300.98 E5 ECHO clap valid=0 attack_ms=50 strength=2603 duration_ms=93 decision=ignored_invalid_pattern
+301.07 E5 ECHO clap valid=0 attack_ms=72 strength=2307 duration_ms=80 decision=ignored_invalid_pattern
+301.36 E5 ECHO clap valid=0 attack_ms=na strength=2486 duration_ms=139 decision=ignored_invalid_pattern
+301.46 E5 ECHO clap valid=0 attack_ms=na strength=1042 duration_ms=16 decision=ignored_invalid_pattern
+301.65 E5 ECHO clap valid=0 attack_ms=43 strength=1792 duration_ms=131 decision=ignored_invalid_pattern
+301.84 E5 ECHO clap valid=0 attack_ms=na strength=1768 duration_ms=56 decision=ignored_invalid_pattern
+302.13 E5 ECHO clap valid=0 attack_ms=na strength=2820 duration_ms=229 decision=ignored_invalid_pattern
+302.22 E5 ECHO clap valid=0 attack_ms=na strength=1706 duration_ms=112 decision=ignored_invalid_pattern
+302.41 E5 ECHO clap valid=0 attack_ms=64 strength=2125 duration_ms=96 decision=ignored_invalid_pattern
+302.60 E5 ECHO clap valid=0 attack_ms=na strength=1538 duration_ms=45 decision=ignored_invalid_pattern
+302.99 E5 ECHO clap valid=0 attack_ms=na strength=1457 duration_ms=235 decision=ignored_invalid_pattern
+303.09 E5 ECHO clap valid=0 attack_ms=na strength=1786 duration_ms=86 decision=ignored_invalid_pattern
+303.28 E5 ECHO clap valid=0 attack_ms=51 strength=2970 duration_ms=99 decision=ignored_invalid_pattern
+303.84 E5 ECHO clap valid=0 attack
+303.93 E5 _ms=35 strength=1600 duration_ms=131 decision=ignored_invalid_pattern
+304.02 E5 ECHO clap valid=0 attack_ms=14 strength=1359 duration_ms=40 decision=ignored_invalid_pattern
+304.21 E5 ECHO clap valid=0 attack_ms=13 strength=1879 duration_ms=136 decision=ignored_invalid_pattern
+304.58 E5 ECHO clap valid=0 attack_ms=na strength=2648 duration_ms=283 decision=ignored_invalid_pattern
+304.77 E5 ECHO clap valid=0 attack_ms=32 strength=1463 duration_ms=56 decision=ignored_invalid_pattern
+305.05 E5 ECHO clap valid=0 attack_ms=13 strength=1578 duration_ms=91 decision=ignored_invalid_pattern
+305.33 E5 ECHO clap valid=0 attack_ms=na strength=2638 duration_ms=165 decision=ignored_invalid_pattern
+305.89 E5 ECHO clap valid=0 attack_ms=26 strength=1041 duration_ms=86 decision=ignored_invalid_pattern
+306.18 E5 ECHO clap valid=0 attack_ms=na strength=1774 duration_ms=166 decision=ignored_invalid_pattern
+306.57 E5 ECHO clap valid=0 attack_ms=40 strength=1248 duration_ms=96 decision=ignored_invalid_pattern
+307.03 E5 ECHO clap valid=0 attack_ms=na strength=2563 duration_ms=272 decision=ignored_invalid_pattern
+307.71 E5 ECHO clap valid=0 attack_ms=19 strength=1749 duration_ms=114 decision=ignored_invalid_pattern
+307.99 E5 ECHO clap valid=0 attack_ms=35 strength=3173 duration_ms=126 decision=ignored_invalid_pattern
+308.38 E5 ECHO clap valid=0 attack_ms=na strength=2664 duration_ms=194 decision=ignored_invalid_pattern
+308.57 E5 ECHO clap valid=0 attack_ms=na strength=2562 duration_ms=211 decision=ignored_invalid_pattern
+308.74 E5 ECHO clap valid=0 attack_ms=56 strength=2958 duration_ms=93 decision=ignored_invalid_pattern
+309.20 E5 ECHO clap valid=0 attack_ms=na strength=1767 duration_ms=182 decision=ignored_invalid_pattern
+309.39 E5 ECHO clap valid=0 attack_ms=50 strength=2753 duration_ms=91 decision=ignored_invalid_pattern
+309.67 E5 ECHO clap valid=0 attack_ms=48 strength=3227 duration_ms=128 decision=ignored_invalid_pattern
+309.77 E5 ECHO clap valid=0 attack_ms=24 strength=1389 duration_ms=72 decision=ignored_invalid_pattern
+310.42 E5 ECHO clap valid=0 attack_ms=na strength=1218 duration_ms=125 decision=ignored_invalid_pattern
+310.97 E5 ECHO clap valid=0 attack_ms=43 strength=2778 duration_ms=91 decision=ignored_invalid_pattern
+311.43 E5 E
+311.52 E5 CHO clap valid=0 attack_ms=na strength=1382 duration_ms=131 decision=ignored_invalid_pattern
+311.80 E5 ECHO clap valid=0 attack_ms=14 strength=1340 duration_ms=62 decision=ignored_invalid_pattern
+311.98 E5 ECHO clap valid=0 attack_ms=na strength=2864 duration_ms=200 decision=ignored_invalid_pattern
+312.36 E5 ECHO clap valid=0 attack_ms=na strength=1144 duration_ms=24 decision=
+312.45 E5 ignored_invalid_pattern
+312.74 E5 ECHO clap valid=0 attack_ms=37 strength=2069 duration_ms=67 decision=ignored_invalid_pattern
+312.92 E5 ECHO clap valid=0 attack_ms=na strength=1533 duration_ms=179 decision=ignored_invalid_pattern
+313.20 E5 ECHO clap valid=0 attack_ms=69 strength=2908 duration_ms=125 decision=ignored_invalid_pattern
+313.39 E5 E
+313.49 E5 CHO clap valid=0 attack_ms=na strength=2757 duration_ms=182 decision=ignored_invalid_pattern
+313.58 E5 ECHO clap valid=0 attack_ms=48 strength=2102 duration_ms=59 decision=ignored_invalid_pattern
+313.68 E5 ECHO clap valid=0 attack_ms=14 strength=2651 duration_ms=51 decision=ignored_invalid_pattern
+314.42 E5 ECHO clap valid=0 attack_ms=na strength=2173 duration_ms=168 decision=ignored_invalid_pattern
+315.54 E5 ECHO clap valid=0 attack_ms=na strength=2339 duration_ms=152 decision=ignored_invalid_pattern
+315.73 E5 ECHO clap valid=0 attack_ms=42 strength=2230 duration_ms=112 decision=ignored_invalid_pattern
+316.37 E5 ECHO clap valid=0 attack_ms=62 strength=1287 duration_ms=72 decision=ignored_invalid_pattern
+316.46 E5 ECHO clap valid=0 attack_ms=na strength=1047 duration_ms=50 decision=ignored_invalid_pattern
+316.55 E5 ECHO clap valid=0 attack_ms=61 strength=1942 duration_ms=80 decision=ignored_invalid_pattern
+316.75 E5 ECHO clap valid=0 attack_ms=45 strength=1728 duration_ms=104 decision=ignored_invalid_pattern
+317.22 E5 ECHO clap valid=0 attack_ms=na strength=2092 duration_ms=269 decision=ignored_invalid_pattern
+317.97 E5 ECHO clap valid=0 attack_ms=27 strength=1395 duration_ms=96 decision=ignored_invalid_pattern
+318.83 E5 ECHO clap valid=0 attack_ms=na strength=2470 duration_ms=275 decision=ignored_invalid_pattern
+319.49 E5 ECHO clap valid=0 attack_ms=na strength=2969 duration_ms=211 decision=ignored_invalid_pattern
+319.67 E5 ECHO clap valid=0 attack_ms=na strength=2599 duration_ms=102 decision=ignored_invalid_pattern
+320.04 E5 ECHO clap valid=0 attack_ms=na strength=2353 duration_ms=176 decision=ignored_invalid_pattern
+320.14 E5 ECHO clap valid=0 attack_ms=46 strength=1869 duration_ms=80 decision=ignored_invalid_pattern
+320.32 E5 ECHO clap valid=0 attack_ms=na strength=3170 duration_ms=144 decision=ignored_invalid_pattern
+320.70 E5 ECHO clap valid=0 attack_ms=na strength=3593 duration_ms=149 decision=ignored_invalid_pattern
+321.16 E5 ECHO clap valid=0 attack_ms=na strength=1270 duration_ms=13 decision=ignored_invalid_pattern
+321.36 E5 ECHO clap valid=0 attack_ms=na strength=3078 duration_ms=160 decision=ignored_invalid_pattern
+321.64 E5 ECHO clap valid=0 attack_ms=43 strength=3455 duration_ms=136 decision=ignored_invalid_pattern
+321.84 E5 ECHO clap valid=0 attack_ms=16 strength=1537 duration_ms=83 decision=ignored_invalid_pattern
+322.02 E5 ECHO clap valid=0 attack_ms=67 strength=2223 duration_ms=120 decision=ignored_invalid_pattern
+322.11 E5 ECHO clap valid=0 attack_ms=27 strength=1231 duration_ms=35 decision=ignored_invalid_pattern
+322.49 E5 ECHO clap valid=0 attack_ms=24 strength=1751 duration_ms=75 decision=ignored_invalid_pattern
+322.68 E5 ECHO clap valid=0 attack_ms=na strength=2337 duration_ms=149 decision=ignored_invalid_pattern
+322.96 E5 ECHO clap valid=0 attack_ms=na strength=2621 duration_ms=155 decision=ignored_invalid_pattern
+323.03 E5 ECHO clap valid=0 attack_ms=na strength=1140 duration_ms=24 decision=ignored_invalid_pattern
+323.30 E5 ECHO clap valid=1 attack_ms=8 strength=2964 duration_ms=186 decision=consumed_pattern
+323.39 E5 ECHO clap
+323.49 E5 valid=0 attack_ms=22 strength=1072 duration_ms=5 decision=ignored_invalid_pattern
+323.49 E5 ECHO clap valid=0 attack_ms=26 strength=1149 duration_ms=11 decision=ignored_invalid_pattern
+323.78 E5 ECHO replay clip_missing
+325.28 E5 ECHO clap valid=0 attack_ms=45 strength=2898 duration_ms=112 decision=ignored_invalid_pattern
+325.57 E5 ECHO clap valid=0 attack_ms=na strength=2868 duration_ms=232 decision=ignored_invalid_pattern
+326.24 E5 ECHO clap valid=0 attack_ms=na strength=2320 duration_ms=150 decision=ignored_invalid_pattern
+326.52 E5 ECHO clap valid=0 attack_ms=na strength=4701 duration_ms=160 decision=ignored_invalid_pattern
+326.81 E5 ECHO clap valid=0 attack_ms=na strength=1903 duration_ms=262 decision=ignored_invalid_pattern
+327.65 E5 ECHO clap valid=1 attack_ms=8 strength=1246 duration_ms=13 decision=consumed_pattern
+328.14 E5 ECHO replay clip_missing
+328.90 E5 ECHO clap valid=0 attack_ms=na strength=2311 duration_ms=288 decision=ignored_invalid_pattern
+329.19 E5 ECHO clap valid=0 attack_ms=38 strength=1923 duration_ms=128 decision=ignored_invalid_pattern
+329.47 E5 ECHO clap valid=0 attack_ms=16 strength=1515 duration_ms=58 decision=ignored_invalid_pattern
+329.75 E5 ECHO clap valid=0 attack_ms=na strength=1579 duration_ms=128 decision=ignored_invalid_pattern
+330.12 E5 ECHO clap valid=0 attack_ms=62 strength=2154 duration_ms=115 decision=ignored_invalid_pattern
+330.69 E5 ECHO clap valid=0 attack_ms=18 strength=1620 duration_ms=110 decision=ignored_invalid_pattern
+330.98 E5 ECHO clap valid=0 attack_ms=54 strength=1914 duration_ms=98 decision=ignored_invalid_pattern
+330.98 E5 ECHO clap valid=0 attack_ms=16 strength=1301 duration_ms=21 decision=ignored_invalid_pattern
+331.72 E5 ECHO clap valid=0 attack_ms=na strength=1554 duration_ms=142 decision=ignored_invalid_pattern
+332.00 E5 ECHO clap valid=0 attack_ms=43 strength=1955 duration_ms=88 decision=ignored_invalid_pattern
+333.11 E5 ECHO clap valid=1 attack_ms=6 strength=1422 duration_ms=83 decision=consumed_pattern
+333.40 E5 ECHO clap valid=0 attack_ms=51 strength=2011 duration_ms=74 decision=ignored_invalid_pattern
+333.49 E5 ECHO replay clip_missing
+333.85 E5 ECHO clap valid=0 attack_ms=na strength=2754 duration_ms=155 decision=ignored_invalid_pattern
+334.31 E5 ECHO clap valid=0 attack_ms=na strength=1480 duration_ms=26 decision=ignored_invalid_pattern
+334.97 E5 ECHO clap valid=0 attack_ms=48 strength=3558 duration_ms=138 decision=ignored_invalid_pattern
+335.25 E5 ECHO clap valid=0 attack_ms=na strength=3322 duration_ms=291 decision=ignored_invalid_pattern
+335.71 E5 ECHO clap valid=0 attack_ms=na strength=1385 duration_ms=211 decision=ignored_invalid_pattern
+336.48 E5 ECHO clap valid=0 attack_ms=na strength=2207 duration_ms=208 decision=ignored_invalid_pattern
+336.66 E5 ECHO clap valid=0 attack_ms=30 strength=1940 duration_ms=43 decision=ignored_invalid_pattern
+336.76 E5 ECHO clap valid=0 attack_ms=37 strength=1293 duration_ms=48 decision=ignored_invalid_pattern
+336.86 E5 ECHO clap valid=0 attack_ms=14 strength=1200 duration_ms=11 decision=ignored_invalid_pattern
+336.86 E5 ECHO clap valid=0 attack_ms=14 strength=1276 duration_ms=69 decision=ignored_invalid_pattern
+337.05 E5 ECHO clap valid=0 attack_ms=51 strength=2394 duration_ms=74 decision=ignored_invalid_pattern
+337.15 E5 ECHO clap valid=0 attack_ms=18 strength=1579 duration_ms=40 decision=ignored_invalid_pattern
+337.44 E5 ECHO clap valid=0 attack_ms=69 strength=1330 duration_ms=64 decision=ignored_invalid_pattern
+337.62 E5 ECHO clap valid=0 attack_ms=13 strength=1706 duration_ms=72 decision=ignored_invalid_pattern
+337.72 E5 ECHO clap valid=0 attack_ms=27 strength=1065 duration_ms=19 decision=ignored_invalid_pattern
+338.01 E5 ECHO clap valid=0 attack_ms=19 strength=1067 duration_ms=35 decision=ignored_invalid_pattern
+338.28 E5 ECHO clap valid=0 attack_ms=na strength=2194 duration_ms=202 decision=ignored_invalid_pattern
+338.65 E5 ECHO clap valid=0 attack_ms=na strength=2510 duration_ms=275 decision=ignored_invalid_pattern
+338.83 E5 ECHO clap valid=0 attack_ms=42 strength=1223 duration_ms=61 decision=ignored_invalid_pattern
+338.92 E5 ECHO clap valid=0 attack_ms=19 strength=1257 duration_ms=45 decision=ignored_invalid_pattern
+339.21 E5 ECHO clap valid=0 attack_ms=19 strength=2362 duration_ms=141 decision=ignored_invalid_pattern
+339.77 E5 ECHO clap valid=0 attack_ms=na strength=1315 duration_ms=21 decision=ignored_invalid_pattern
+340.05 E5 ECHO clap valid=0 attack_ms=na strength=1487 duration_ms=163 decision=ignored_invalid_pattern
+340.33 E5 ECHO clap valid=0 attack_ms=16 strength=1028 duration_ms=16 decision=ignored_invalid_pattern
+341.38 E5 ECHO clap valid=0 attack_ms=37 strength=1649 duration_ms=62 decision=ignored_invalid_pattern
+341.66 E5 ECHO clap valid=0 attack_ms=na strength=2068 duration_ms=176 decision=ignored_invalid_pattern
+341.93 E5 ECHO clap valid=0 attack_ms=na strength=1554 duration_ms=37 decision=ignored_invalid_pattern
+342.12 E5 ECHO clap valid=0
+342.20 E5 attack_ms=27 strength=2519 duration_ms=99 decision=ignored_invalid_pattern
+342.30 E5 ECHO clap valid=0 attack_ms=na strength=1017 duration_ms=19 decision=ignored_invalid_pattern
+342.59 E5 ECHO clap valid=0 attack_ms=16 strength=2121 duration_ms=117 decision=ignored_invalid_pattern
+342.68 E5 ECHO clap valid=0 attack_ms=27 strength=1471 duration_ms=59 decision=ignored_invalid_pattern
+343.05 E5 ECHO clap valid=0 attack_ms=62 strength=1648 duration_ms=80 decision=ignored_invalid_pattern
+343.34 E5 ECHO clap valid=0 attack_ms=62 strength=3041 duration_ms=136 decision=ignored_invalid_pattern
+343.52 E5 ECHO clap valid=0 attack_ms=26 strength=1662 duration_ms=70 decision=ignored_invalid_pattern
+343.71 E5 ECHO clap valid=0 attack_ms=na strength=1808 duration_ms=83 decision=ignored_invalid_pattern
+345.95 E5 ECHO clap valid=0 attack_ms=43 strength=2750 duration_ms=96 decision=ignored_invalid_pattern
+346.52 E5 ECHO clap valid=0 attack_ms=na strength=2130 duration_ms=77 decision=ignored_invalid_pattern
+346.61 E5 ECHO clap valid=0 attack_ms=na strength=1472 duration_ms=38 decision=ignored_invalid_pattern
+346.90 E5 ECHO clap valid=0 attack_ms=24 strength=3169 duration_ms=163 decision=ignored_invalid_pattern
+347.09 E5 ECHO clap valid=0 attack_ms=26 strength=2705 duration_ms=133 decision=ignored_invalid_pattern
+347.44 E5 ECHO clap valid=0 attack_ms=na strength=2548 duration_ms=82 decision=ignored_invalid_pattern
+347.73 E5 ECHO clap valid=0 attack_ms=na strength=1451 duration_ms=144 decision=ignored_invalid_pattern
+348.01 E5 ECHO clap valid=0 attack_ms=na strength=1157 duration_ms=34 decision=ignored_invalid_pattern
+348.29 E5 ECHO clap valid=0 attack_ms=19 strength=1422 duration_ms=96 decision=ignored_invalid_pattern
+348.67 E5 ECHO clap valid=0 attack_ms=na strength=2463 duration_ms=237 decision=ignored_invalid_pattern
+348.77 E5 ECHO clap valid=0 attack_ms=na strength=1064 duration_ms=8 decision=ignored_invalid_pattern
+348.86 E5 ECHO clap valid=0 attack_ms=24 strength=1818 duration_ms=102 decision=ignored_invalid_pattern
+349.04 E5 ECHO clap valid=0 attack_ms=21 strength=1337 duration_ms=21 decision=ignored_invalid_pattern
+349.14 E5 ECHO clap valid=0 attack_ms=na strength=1324 duration_ms=27 decision=ignored_invalid_pattern
+349.70 E5 ECHO clap valid=1 attack_ms=10 strength=1572 duration_ms=91 decision=declined_by_level
+349.88 E5 ECHO clap valid=0 attack_ms=na strength=1279 duration_ms=99 decision=ignored_invalid_pattern
+350.34 E5 ECHO clap valid=0 attack_ms=na strength=2007 duration_ms=296 decision=ignored_invalid_pattern
+350.53 E5 ECHO clap valid=0 attack_ms=40 strength=2200 duration_ms=80 decision=ignored_invalid_pattern
+350.73 E5 ECHO clap valid=0 attack_ms
+350.83 E5 =27 strength=1954 duration_ms=128 decision=ignored_invalid_pattern
+351.21 E5 ECHO clap valid=0 attack_ms=na strength=1257 duration_ms=230 decision=ignored_invalid_pattern
+351.50 E5 ECHO clap valid=0 attack_ms=24 strength=1306 duration_ms=32 decision=ignored_invalid_pattern
+351.88 E5 ECHO clap valid=0 attack_ms=46 strength=2503 duration_ms=112 decision=ignored_invalid_pattern
+352.07 E5 ECHO clap valid=0 attack_ms=na strength=1032 duration_ms=19 decision=ignored_invalid_pattern
+352.35 E5 ECHO clap valid=0 attack_ms=43 strength=1678 duration_ms=112 decision=ignored_invalid_pattern
+352.44 E5 ECHO clap valid=0 attack_ms=21 strength=1176 duration_ms=24 decision=ignored_invalid_pattern
+352.83 E5 ECHO clap valid=0 attack_ms=51 strength=1570 duration_ms=122 decision=ignored_invalid_pattern
+353.61 E5 ECHO clap valid=0 attack_ms=51 strength=1997 duration_ms=88 decision=ignored_invalid_pattern
+353.99 E5 ECHO clap valid=0 attack_ms=na strength=2756 duration_ms=136 decision=ignored_invalid_pattern
+354.27 E5 ECHO clap valid=0 attack_ms=na strength=1180 duration_ms=88 decision=ignored_invalid_pattern
+359.64 E5 ECHO clap valid=0 attack_ms=na strength=1661 duration_ms=181 decision=ignored_invalid_pattern
+360.30 E5 ECHO clap valid=0 attack_ms=37 strength=1695 duration_ms=93 decision=ignored_invalid_pattern
+360.48 E5 ECHO clap valid=0 attack_ms=13 strength=1406 duration_ms=115 decision=ignored_invalid_pattern
+360.87 E5 ECHO clap valid=0 attack_ms=na strength=5233 duration_ms=280 decision=ignored_invalid_pattern
+360.97 E5 ECHO clap valid=0 attack_ms=na strength=1413 duration_ms=5 decision=ignored_invalid_pattern
+361.92 E5 ECHO clap valid=0 attack_ms=29 strength=2945 duration_ms=133 decision=i
+362.02 E5 gnored_invalid_pattern
+363.70 E5 ECHO clap valid=0 attack_ms=na strength=3341 duration_ms=152 decision=ignored_invalid_pattern
+365.38 E5 ECHO clap valid=0 attack_ms=na strength=2746 duration_ms=218 decision=ignored_invalid_pattern
+365.95 E5 ECHO clap valid=1 attack_ms=6 strength=1025 duration_ms=16 decision=consumed_pattern
+366.05 E5 ECHO clap valid=0 attack_ms=13 strength=1567 duration_ms=80 decision=ignored_invalid_pattern
+366.40 E5 ECHO replay clip_missing
+366.59 E5 ECHO clap valid=0 attack_ms=na strength=1467 duration_ms=61 decision=ignored_invalid_pattern
+366.86 E5 ECHO clap valid=0 attack_ms=na strength=1390 duration_ms=117 decision=ignored_invalid_pattern
+367.25 E5 ECHO clap valid=0 attack_ms=na strength=3327 duration_ms=235 decision=ignored_invalid_pattern
+367.35 E5 ECHO clap valid=1 attack_ms=10 strength=1583 duration_ms=48 decision=consumed_pattern
+367.74 E5 ECHO replay onset_index=17106064 ms=300 gain=1.00
+368.96 E5 ECHO clap valid=0 attack_ms=na strength=8389 duration_ms=272 decision=ignored_invalid_pattern
+369.34 E5 ECHO clap valid=0 attack_ms=na strength=2685 duration_ms=285 decision=ignored_invalid_pattern
+369.43 E5 ECHO clap valid=0 attack_ms=na strength=1449 duration_ms=37 decision=ignored_invalid_pattern
+369.81 E5 ECHO clap valid=0 attack_ms=na strength=3245 duration_ms=168 decision=ignored_invalid_pattern
+369.99 E5 ECHO clap valid=1 attack_ms=10 strength=1110 duration_ms=56 decision=resting
+370.36 E5 ECHO clap valid=0 attack_ms=na strength=2358 duration_ms=226 decision=ignored_invalid_pattern
+370.46 E5 ECHO clap valid=0 attack_ms=na strength=2077 duration_ms=96 decision=ignored_invalid_pattern
+370.64 E5 ECHO clap valid=0 attack_ms=na strength=1181 duration_ms=40 decision=ignored_invalid_pattern
+370.92 E5 ECHO clap valid=0 attack_ms=na strength=2788 duration_ms=176 decision=ignored_invalid_pattern
+371.38 E5 ECHO clap valid=0 attack_ms=na strength=2790 duration_ms=253 decision=ignored_invalid_pattern
+373.53 E5 ECHO clap valid=0 attack_ms=24 strength=1250 duration_ms=24 decision=ignored_invalid_pattern
+374.00 E5 ECHO clap valid=0 attack_ms=na strength=2205 duration_ms=118 decision=ignored_invalid_pattern
+374.20 E5 ECHO clap valid=0 attack_ms=50 str
+374.29 E5 ength=2070 duration_ms=58 decision=ignored_invalid_pattern
+374.58 E5 ECHO clap valid=0 attack_ms=na strength=3907 duration_ms=195 decision=ignored_invalid_pattern
+374.76 E5 ECHO clap valid=0 attack_ms=27 strength=2017 duration_ms=61 decision=ignored_invalid_pattern
+374.85 E5 ECHO clap valid=0 atta
+374.95 E5 ck_ms=30 strength=2620 duration_ms=77 decision=ignored_invalid_pattern
+375.14 E5 ECHO clap valid=0 attack_ms=27 strength=3606 duration_ms=96 decision=ignored_invalid_pattern
+375.23 E5 ECHO clap valid=0 attack_ms=56 strength=2724 duration_ms=102 decision=ignored_invalid_pattern
+375.89 E5 ECHO clap valid=0 attack_ms=na strength=4806 duration_ms=160 decision=ignored_invalid_pattern
+375.98 E5 ECHO clap valid=0 attack_ms=59 strength=2419 duration_ms=53 decision=ignored_invalid_pattern
+376.26 E5 ECHO clap valid=0 attack_ms=29 strength=1046 duration_ms=11 decision=ignored_invalid_pattern
+376.73 E5 ECHO clap valid=0 attack_ms=na strength=3680 duration_ms=107 decision=ignored_invalid_pattern
+376.92 E5 ECHO clap valid=0 attack_ms=45 strength=2312 duration_ms=96 decision
+377.01 E5 =ignored_invalid_pattern
+377.09 E5 E
+377.18 E5 CHO clap valid=0 attack_ms=29 strength=1386 duration_ms=72 decision=ignored_invalid_pattern
+377.83 E5 ECHO clap valid=0 attack_ms=na strength=4070 duration_ms=163 decision=ignored_invalid_pattern
+378.21 E5 ECHO clap valid=0 attack_ms=na strength=4437 duration_ms=282 decision=ignored_invalid_pattern
+378.88 E5 ECHO clap valid=0 attack_ms=na strength=2970 duration_ms=176 decision=ignored_invalid_pattern
+383.40 E5 ECHO clap valid=0 attack_ms=61 strength=4147 duration_ms=110 decision=ignored_invalid_pattern
+383.78 E5 ECHO clap valid=0 attack_ms=na strength=2609 duration_ms=184 decision=ignored_invalid_pattern
+383.97 E5 ECHO clap valid=0 attack_ms=59 strength=3940 duration_ms=120 decision=ignored_invalid_pattern
+384.25 E5 ECHO clap valid=0 attack_ms=na strength=6347 duration_ms=259 decision=ignored_invalid_pattern
+384.53 E5 ECHO clap valid=0 attack_ms=16 strength=1277 duration_ms=24 decision=ignored_invalid_pattern
+385.56 E5 ECHO clap valid=0 attack_ms=na strength=4997 duration_ms=221 decision=ignored_invalid_pattern
+386.40 E5 ECHO clap valid=0 attack_ms=na strength=1208 duration_ms=24 decision=ignored_invalid_pattern
+386.96 E5 ECHO clap valid=0 attack_ms=na strength=1317 duration_ms=21 decision=ignored_invalid_pattern
+387.15 E5 ECHO clap valid=0 attack_ms=67 strength=2130 duration_ms=104 decision=ignored_invalid_pattern
+387.71 E5 ECHO clap valid=0 attack_ms=na strength=2416 duration_ms=162 decision=ignored_invalid_pattern
+388.19 E5 ECHO clap valid=0 attack_ms=na strength=4696 duration_ms=259 decision=ignored_invalid_pattern
+388.29 E5 ECHO clap valid=0 attack_ms=29 strength=1137 duration_ms=11 decision=ignored_invalid_pattern
+389.05 E5 ECHO clap valid=0 attack_ms=na strength=5268 duration_ms=218 decision=ignored_invalid_pattern
+389.14 E5 ECHO clap valid=0 attack_ms=16 strength=2309 duration_ms=77 decision=ignored_invalid_pattern
+389.88 E5 ECHO clap valid=0 attack_ms=na strength=3565 duration_ms=197 decision=ignored_invalid_pattern
+390.07 E5 ECHO clap valid=0 attack_ms=30 strength=3422 duration_ms=109 decision=ignored_invalid_pattern
+390.16 E5 ECHO clap valid=0 attack_ms=37 strength=1930 duration_ms=40 decision=ignored_invalid_pattern
+390.34 E5 ECHO clap valid=0 attack_ms=24 strength=3255 duration_ms=80 decision=ignored_invalid_pattern
+390.90 E5 ECHO clap valid=0 attack_ms=na strength=2251 duration_ms=149 decision=ignored_invalid_pattern
+390.99 E5 ECHO clap valid=1 attack_ms=5 strength=1106 duration_ms=11 decision=declined_by_level
+391.64 E5 ECHO clap valid=0 attack_ms=na strength=1172 duration_ms=8 decision=ignored_invalid_pattern
+392.39 E5 ECHO clap valid=0 attack_ms=59 strength=3104 duration_ms=130 decision=ignored_invalid_pattern
+393.05 E5 ECHO clap valid=0 attack_ms=na strength=2659 duration_ms=170 decision=ignored_invalid_pattern
+393.63 E5 ECHO clap valid=0 attack_ms=na strength=3587 duration_ms=189 decision=ignored_invalid_pattern
+394.10 E5 ECHO clap valid=0 attack_ms=na strength=3907 duration_ms=288 decision=ignored_invalid_pattern
+394.28 E5 ECHO clap valid=0 attack_ms=22 strength=1778 duration_ms=114 decision=ignored_invalid_pattern
+394.84 E5 ECHO clap valid=0 attack_ms=na strength=3063 duration_ms=184 decision=ignored_invalid_pattern
+395.03 E5 ECHO clap valid=0 attack_ms=24 strength=1527 duration_ms=51 decision=ignored_invalid_pattern
+395.58 E5 ECHO clap valid=0 attack_ms=19 strength=1281 duration_ms=35 decision=ignored_invalid_pattern
+396.07 E5 ECHO clap valid=0 attack_ms=na strength=2128 duration_ms=35 decision=ignored_invalid_pattern
+396.57 E5 ECHO clap valid=0 attack_ms=na strength=4700 duration_ms=267 decision=ignored_invalid_pattern
+398.71 E5 ECHO clap valid=0 attack_ms=na strength=2231 duration_ms=170 decision=ignored_invalid_pattern
+399.00 E5 ECHO clap valid=0 attack_ms=42 strength=2009 duration_ms=46 decision=ignored_invalid_pattern
+399.28 E5 ECHO clap valid=0 attack_ms=na strength=3455 duration_ms=155 decision=ignored_invalid_pattern
+399.93 E5 ECHO clap valid=0 attack_ms=18 strength=1179 duration_ms=78 decision=ignored_invalid_pattern
+400.31 E5 ECHO clap valid=0 attack_ms=72 strength=2275 duration_ms=112 decision=ignored_invalid_pattern
+400.96 E5 ECHO clap valid=1 attack_ms=2 strength=1278 duration_ms=43 decision=declined_by_level
+401.52 E5 ECHO clap valid=0 attack_ms=na strength=1925 duration_ms=224 decision=ignored_invalid_pattern
+401.71 E5 ECHO clap valid=0 attack_ms=na strength=1422 duration_ms=74 decision=ignored_invalid_pattern
+402.00 E5 ECHO clap valid=0 attack_ms=na strength=2181 duration_ms=173 decision=ignored_invalid_pattern
+402.28 E5 ECHO clap valid=0 attack_ms=29 strength=4754 duration_ms=106 decision=ignored_invalid_pattern
+403.03 E5 ECHO clap valid=0 attack_ms=67 strength=2153 duration_ms=110 decision=ignored_invalid_pattern
+403.22 E5 ECHO clap valid=0 attack_ms=27 strength=1689 duration_ms=74 decision=ignored_invalid_pattern
+403.69 E5 ECHO clap valid=0 attack_ms=na strength=1819 duration_ms=72 decision=ignored_invalid_p
+403.78 E5 attern
+403.88 E5 ECHO clap valid=0 attack_ms=21 strength=1060 duration_ms=8 decision=ignored_invalid_pattern
+404.44 E5 ECHO clap valid=0 attack_ms=26 strength=2699 duration_ms=75 decision=ignored_invalid_pattern
+405.28 E5 ECHO clap valid=0 attack_ms=na strength=1104 duration_ms=27 decision=ignored_invalid_pattern
+405.37 E5 ECHO
+405.47 E5 clap valid=0 attack_ms=59 strength=1485 duration_ms=106 decision=ignored_invalid_pattern
+405.56 E5 ECHO clap valid=0 attack_ms=19 strength=1617 duration_ms=53 decision=ignored_invalid_pattern
+406.41 E5 ECHO clap valid=0 attack_ms=na strength=5525 duration_ms=264 decision=ignored_invalid_pattern
+408.92 E5 ECHO clap valid=0 attack_ms=na strength=2319 duration_ms=144 decision=ignored_invalid_pattern
+409.21 E5 ECHO clap valid=0 attack_ms=na strength=2507 duration_ms=243 decision=ignored_invalid_pattern
+410.34 E5 ECHO clap valid=0 attack_ms=19 strength=1006 duration_ms=24 decision=ignored_invalid_pattern
+410.52 E5 ECHO clap valid=0 attack_ms=na strength=2818 duration_ms=171 decision=ignored_invalid_pattern
+410.72 E5 ECHO clap valid=0 attack_ms=21 strength=1617 duration_ms=59 decision=ignored_invalid_pattern
+411.66 E5 ECHO clap valid=0 attack_ms=na strength=2317 duration_ms=136 decision=ignored_invalid_pattern
+411.85 E5 ECHO clap valid=0 attack_ms=54 strength=2741 duration_ms=99 decision=ignored_invalid_pattern
+412.14 E5 ECHO clap valid=0 attack_ms=na strength=5164 duration_ms=200 decision=ignored_invalid_pattern
+412.82 E5 ECHO clap valid=0 attack_ms=na strength=1245 duration_ms=19 decision=ignored_invalid_pattern
+413.01 E5 ECHO clap valid=0 attack_ms=na strength=3424 duration_ms=136 decision=ignored_invalid_pattern
+413.29 E5 ECHO clap valid=0 attack_ms=13 strength=1248 duration_ms=11 decision=ignored_invalid_pattern
+414.32 E5 ECHO clap valid=0 attack_ms=na strength=3023 duration_ms=115 decision=ignored_invalid_pattern
+414.60 E5 ECHO clap valid=0 attack_ms=na strength=4052 duration_ms=232 decision=ignored_invalid_pattern
+415.45 E5 ECHO clap valid=0 attack_ms=na strength=5823 duration_ms=248 decision=ignored_invalid_pattern
+415.73 E5 ECHO clap valid=0 attack_ms=na strength=3162 duration_ms=240 decision=ignored_invalid_pattern
+416.38 E5 ECHO clap valid=0 attack_ms=na strength=2864 duration_ms=192 decision=ignored_invalid_pattern
+416.92 E5 ECHO clap valid=0 attack_ms=na strength=1203 duration_ms=22 decision=ignored_invalid_pattern
+417.01 E5 ECHO clap valid=0 attack_ms=na strength=1667 duration_ms=61 decision=ignored_invalid_pattern
+417.20 E5 ECHO clap valid=0 attack_ms=na strength=1821 duration_ms=83 decision=ignored_invalid_pattern
+418.04 E5 ECHO clap valid=0 attack_ms=na strength=4358 duration_ms=200 decision=ignored_invalid_pattern
+418.52 E5 ECHO clap valid=0 attack_ms=na strength=2026 duration_ms=59 decision=ignored_invalid_pattern
+419.37 E5 ECHO clap valid=0 attack_ms=48 strength=4547 duration_ms=99 decision=ignored_invalid_pattern
+420.11 E5 ECHO clap valid=0 attack_ms=na strength=3462 duration_ms=250 decision=ignored_invalid_pattern
+420.39 E5 ECHO clap valid=0 attack_ms=na strength=3671 duration_ms=221 decision=ignored_invalid_pattern
+420.68 E5 ECHO clap valid=0 attack_ms=na strength=3526 duration_ms=240 decision=ignored_invalid_pattern
+421.73 E5 ECHO clap valid=0 attack_ms=na strength=5050 duration_ms=171 decision=ignored_invalid_pattern
+422.66 E5 ECHO clap valid=0 attack_ms=na strength=1820 duration_ms=27 decision=ignored_invalid_pattern
+425.46 E5 ECHO clap valid=0 attack_ms=na strength=1714 duration_ms=181 decision=ignored_invalid_pattern
+426.01 E5 E
+426.11 E5 CHO clap valid=0 attack_ms=na strength=3064 duration_ms=176 decision=ignored_invalid_pattern
+426.29 E5 ECHO clap valid=0 attack_ms=na strength=1402 duration_ms=112 decision=ignored_invalid_pattern
+426.86 E5 ECHO clap valid=0 attack_ms=na strength=2442 duration_ms=77 decision=ignored_invalid_pattern
+427.52 E5 ECHO clap valid=0 attack_ms=14 strength=1545 duration_ms=74 decision=ignored_invalid_pattern
+427.80 E5 ECHO clap valid=0 attack_ms=na strength=2012 duration_ms=197 decision=ignored_invalid_pattern
+427.90 E5 ECHO clap valid=0 attack_ms=32 strength=1531 duration_ms=75 decision=ignored_invalid_pattern
+429.03 E5 ECHO clap valid=0 attack_ms=na strength=2449 duration_ms=62 decision=ignored_invalid_pattern
+429.31 E5 ECHO clap valid=0 attack_ms=na strength=3146 duration_ms=259 decision=ignored_invalid_pattern
+429.50 E5 ECHO clap valid=0 attack_ms=27 strength=2859 duration_ms=67 decision=ignored_invalid_pattern
+430.15 E5 ECHO clap valid=0 attack_ms=50 strength=2440 d
+430.25 E5 uration_ms=104 decision=ignored_invalid_pattern
+430.62 E5 ECHO clap valid=0 attack_ms=na strength=4087 duration_ms=288 decision=ignored_invalid_pattern
+431.98 E5 ECHO clap valid=0 attack_ms=na strength=1447 duration_ms=173 decision=ignored_invalid_pattern
+432.55 E5 ECHO clap valid=0 attack_ms=na strength=1162 duration_ms=54 decision=ignored_invalid_pattern
+433.70 E5 ECHO clap valid=0 attack_ms=na strength=1789 duration_ms=243 decision=ignored_invalid_pattern
+433.98 E5 ECHO clap valid=0 attack_ms=na strength=2993 duration_ms=240 decision=ignored_invalid_pattern
+435.38 E5 ECHO clap valid=0 attack_ms=na strength=1436 duration_ms=99 decision=ignored_invalid_pattern
+435.76 E5 ECHO clap valid=0 attack_ms=na strength=2486 duration_ms=146 decision=ignored_invalid_pattern
+435.84 E5 ECHO clap valid=0 attack_ms=45 str
+435.94 E5 ength=1631 duration_ms=69 decision=ignored_invalid_pattern
+436.03 E5 ECHO clap valid=0 attack_ms=na strength=1808 duration_ms=141 decision=ignored_invalid_pattern
+436.67 E5 ECHO clap valid=0 attack_ms=na strength=1128 duration_ms=80 decision=ignored_invalid_pattern
+437.33 E5 ECHO clap valid=0 attack_ms=na strength=2492 duration_ms=243 decision=ignored_invalid_pattern
+438.07 E5 ECHO clap valid=0 attack_ms=na strength=3580 duration_ms=189 decision=ignored_invalid_pattern
+438.35 E5 ECHO clap
+438.44 E5 valid=0 attack_ms=53 strength=2137 duration_ms=72 decision=ignored_invalid_pattern
+438.72 E5 ECHO clap valid=0 attack_ms=na strength=2530 duration_ms=203 decision=ignored_invalid_pattern
+438.93 E5 ECHO clap valid=0 attack_ms=na strength=3272 duration_ms=189 decision=ignored_invalid_pattern
+439.29 E5 E
+439.39 E5 CHO clap valid=0 attack_ms=na strength=3472 duration_ms=261 decision=ignored_invalid_pattern
+439.67 E5 ECHO clap valid=0 attack_ms=na strength=3364 duration_ms=194 decision=ignored_invalid_pattern
+439.95 E5 ECHO clap valid=0 attack_ms=na strength=2221 duration_ms=245 decision=ignored_invalid_pattern
+440.32 E5 ECHO clap valid=0 attack_ms=na strength=1745 duration_ms=226 decision=ignored_invalid_pattern
+440.97 E5 ECHO clap valid=0 attack_ms=na strength=2973 duration_ms=224 decision=ignored_invalid_pattern
+441.06 E5 ECHO clap valid=0 attack_ms=na strength=1204 duration_ms=83 decision=ignored_invalid_pattern
+442.20 E5 E
+442.30 E5 CHO clap valid=0 attack_ms=na strength=4090 duration_ms=160 decision=ignored_invalid_pattern
+442.48 E5 ECHO clap valid=0 attack_ms=na strength=3701 duration_ms=211 decision=ignored_invalid_pattern
+443.51 E5 ECHO clap valid=0 attack_ms=na strength=3672 duration_ms=162 decision=ignored_invalid_pattern
+443.78 E5 ECHO clap valid=0 attack_ms=na strength=2232 duration_ms=210 decision=ignored_invalid_pattern
+443.97 E5 ECHO clap valid=0 attack_ms=26 strength=1825 duration_ms=91 decision=ignored_invalid_pattern
+444.42 E5 ECHO clap valid=0 attack_ms=na strength=6615 duration_ms=261 decision=ignored_invalid_pattern
+444.70 E5 ECHO clap valid=0 attack_ms=37 strength=1782 duration_ms=88 decision=ignored_invalid_pattern
+450.31 E5 ECHO clap valid=0 attack_ms=na strength=1986 duration_ms=192 decision=ignored_invalid_pattern
+450.40 E5 ECHO cla
+450.49 E5 p valid=0 attack_ms=32 strength=1575 duration_ms=45 decision=ignored_invalid_pattern
+450.68 E5 ECHO clap valid=0 attack_ms=48 strength=3489 duration_ms=136 decision=ignored_invalid_pattern
+450.77 E5 ECHO clap valid=0 attack_ms=24 strength=3496 duration_ms=109 decision=ignored_invalid_pattern
+452.32 E5 ECHO clap valid=0 attack_ms=na strength=3673 duration_ms=179 decision=ignored_invalid_pattern
+452.61 E5 ECHO clap valid=0 attack_ms=69 strength=2404 duration_ms=123 decision=ignored_invalid_pattern
+453.20 E5 ECHO clap valid=0 attack_ms=51 strength=2794 duration_ms=117 decision=ignored_invalid_pattern
+453.29 E5 ECHO clap valid=0 attack_ms=64 strength=2760 duration_ms=86 decision=ignored_invalid_pattern
+453.48 E5 ECHO clap valid=0 attack_ms=18 strength=1864 duration_ms=115 decision=ignored_invalid_pattern
+453.68 E5 ECHO clap valid=0 attack_ms=16 strength=1592 duration_ms=53 decision=ignored_invalid_pattern
+453.77 E5 ECHO clap valid=0 attack_ms=na strength=1615 duration
+453.87 E5 _ms=59 decision=ignored_invalid_pattern
+454.43 E5 ECHO clap valid=0 attack_ms=na strength=1192 duration_ms=11 decision=ignored_invalid_pattern
+454.89 E5 ECHO clap valid=0 attack_ms=na strength=1386 duration_ms=22 decision=ignored_invalid_pattern
+455.64 E5 ECHO clap valid=0 attack_ms=na strength=2232 duration_ms=155 decision=ignored_invalid_pattern
+455.92 E5 ECHO clap valid=0 attack_ms=na strength=2089 duration_ms=195 decision=ignored_invalid_pattern
+456.48 E5 ECHO clap valid=0 attack_ms=na strength=1475 duration_ms=19 decision=ignored_invalid_pattern
+458.90 E5 ECHO clap valid=0 attack_ms=na strength=3991 duration_ms=117 decision=ignored_invalid_pattern
+464.79 E5 ECHO clap valid=0
+464.88 E5 attack_ms=na strength=2281 duration_ms=131 decision=ignored_invalid_pattern
+468.02 E5 ECHO clap valid=0 attack_ms=na strength=1806 duration_ms=112 decision=ignored_invalid_pattern
+468.47 E5 ECHO clap valid=0 attack_ms=na strength=1085 duration_ms=16 decision=ignored_invalid_pattern
+468.56 E5 ECHO clap valid=0 attack_ms
+468.66 E5 =na strength=1334 duration_ms=69 decision=ignored_invalid_pattern
+468.83 E5 ECHO clap valid=0 attack_ms=na strength=1058 duration_ms=146 decision=ignored_invalid_pattern
+468.94 E5 ECHO clap valid=0 attack_ms=na strength=1350 duration_ms=59 decision=ignored_invalid_pattern
+469.13 E5 ECHO clap valid=0 attack_ms=na strength=1060 duration_ms=85 decision=ignored_invalid_pattern
+469.41 E5 ECHO clap valid=0 attack_ms=na strength=1055 duration_ms=18 decision=ignored_invalid_pattern
+471.35 E5 ECHO clap valid=0 attack_ms
+471.44 E5 =na strength=1192 duration_ms=208 decision=ignored_invalid_pattern
+471.81 E5 ECHO clap valid=0 attack_ms=24 strength=1009 duration_ms=6 decision=ignored_invalid_pattern
+473.61 E5 ECHO clap valid=0 attack_ms=na strength=1417 duration_ms=285 d
+473.71 E5 ecision=ignored_invalid_pattern
+473.90 E5 ECHO clap valid=0 attack_ms=na strength=1236 duration_ms=147 decision=ignored_invalid_pattern
+474.37 E5 ECHO clap valid=0 attack_ms=na strength=1232 duration_ms=34 decision=ignored_invalid_pattern
+477.97 E5 ECHO clap valid=0 attack_ms=na strength=1098 duration_ms=288 decision=ignored_invalid_pattern
+478.24 E5 ECHO clap valid=0 attack_ms=19 strength=1028 duration_ms=18 decision=ignored_invalid_pattern
+484.08 E5 ECHO clap valid=0 attack_ms=na strength=1193 duration_ms=45 decision=ignored_inval
+484.17 E5 id_pattern
+484.28 E5 ECHO clap valid=0 attack_ms=29 strength=1077 duration_ms=40 decision=ignored_invalid_pattern
+484.56 E5 ECHO clap valid=0 attack_ms=24 strength=1176 duration_ms=59 decision=ignored_invalid_pattern
+485.50 E5 ECHO clap valid=0 attack_ms=na strength=1042 duration_ms=18 decision=ignored_invalid_pattern
+485.97 E5 E
+486.05 E5 CHO clap valid=0 attack_ms=37 strength=2024 duration_ms=69 decision=ignored_invalid_pattern
+486.23 E5 ECHO clap valid=0 attack_ms=na strength=1379 duration_ms=29 decision=ignored_invalid_pattern
+486.51 E5 ECHO clap valid=0 attack_ms=na strength=1894 duration_ms=48 decision=ignored_invalid_pattern
+487.34 E5 ECHO clap valid=0 attack_ms=24 strength=1314 duration_ms=106 decision=ignored_invalid_pattern
+488.00 E5 ECHO clap valid=0 attack_ms=na stren
+488.09 E5 gth=1828 duration_ms=179 decision=ignored_invalid_pattern
+490.22 E5 ECHO clap valid=0 attack_ms=na strength=1164 duration_ms=96 decision=ignored_invalid_pattern
+490.41 E5 ECHO clap valid=0 attack_ms=32 strength=2035 duration_ms=90 decision=ignored_invalid_pattern
+490.69 E5 ECHO clap valid=0 attack_ms=40 strength=1245 duration_ms=85 decision=ignored_invalid_pattern
+490.99 E5 ECHO clap valid=0 attack_ms=32 strength=1337 duration_ms=101 decision=ignored_invalid_pattern
+491.25 E5 ECHO clap valid=0 attack_ms=37 strength=1546 duration_ms=85 decision=ignored_invalid_pattern
+492.97 E5 ECHO clap valid=0 attack_ms=na strength=2135 duration_ms=219 decision=ignored_invalid_pattern
+493.25 E5 ECHO clap valid=0 attack_ms=13 strength=1237 duration_ms=11 decision=ignored_invalid_pattern
+493.34 E5 ECHO clap valid=0 attack_ms=13 strength=1328 duration_ms=64 decision=ignored_invalid_pattern
+493.52 E5 ECHO clap valid=0 attack_ms=26 strength=1004 duration_ms=61 decision=ignored_invalid_pattern
+494.08 E5 ECHO clap valid=0 attack_ms=na strength=1882 duration_ms=232 decision=ignored_invalid_pattern
+494.17 E5 ECHO clap valid=0 attack_ms=32 strength=1218 duration_ms=32 decision=ignored_invalid_pattern
+494.55 E5 ECHO clap valid=0 attack_ms=na strength=1487 duration_ms=138 decision=ignored_invalid_pattern
+495.20 E5 ECHO clap valid=0 attack_ms=na strength=1944 duration_ms=189 decision=ignored_invalid_pattern
+495.58 E5 ECHO clap valid=0 attack_ms=na strength=1530 duration_ms=93 decision=ignored_invalid_pattern
+496.32 E5 ECHO clap valid=0 attack_ms=na strength=2153 duration_ms=210 decision=ignored_invalid_pattern
+496.79 E5 ECHO clap valid=0 attack_ms=na strength=1227 duration_ms=163 decision=ignored_invalid_pattern
+498.41 E5 ECHO clap valid=0 attack_ms=na strength=1556 duration_ms=202 decision=ignored_invalid_pattern
+498.59 E5 ECHO clap valid=0 attack_ms=na strength=1409 duration_ms=86 decision=ignored_invalid_pattern
+500.84 E5 ECHO clap valid=0 attack_ms=na strength=1152 duration_ms=29 decision=ignored_invalid_pattern
+501.12 E5 ECHO clap valid=0 attack_ms=na strength=2230 duration_ms=56 decision=ignored_invalid_pattern
+501.21 E5 ECHO clap valid=0 attack_ms=na strength=1331 duration_ms=34 decision=ignored_invalid_pattern
+501.40 E5 ECHO clap valid=0 attack_ms=40 strength=2058 duration_ms=83 decision=ignored_invalid_pattern
+502.33 E5 ECHO clap valid=0 attack_ms=na strength=1069 duration_ms=50 decision=ignored_invalid_pattern
+503.54 E5 ECHO clap valid=0 attack_ms=na strength=1903
+503.63 E5 duration_ms=58 decision=ignored_invalid_pattern
+505.58 E5 ECHO clap valid=0 attack_ms=na strength=1953 duration_ms=235 decision=ignored_invalid_pattern
+505.87 E5 ECHO clap valid=0 attack_ms=30 strength=1210 duration_ms=29 decision=ignored_invalid_pattern
+505.96 E5 ECHO clap valid=0 attack_ms=40 strength=1171 duration_ms=82 decision=ignored_invalid_pattern
+506.35 E5 ECHO clap valid=1 attack_ms=5 strength=1037 duration_ms=40 decision=consumed_pattern
+506.73 E5 ECHO clap valid=0 attack_ms=na strength=1106 duration_ms=131 decision=ignored_invalid_pattern
+506.83 E5 ECHO replay clip_missing
+508.06 E5 ECHO clap valid=0 attack_ms=30 strength=1008 duration_ms=10 decision=ignored_invalid_pattern
+508.33 E5 ECHO clap valid=0 attack_ms=na strength=1109 duration_ms=48 decision=ignored_invalid_pattern
+508.69 E5 ECHO clap valid=0 attack_ms=na strength=1037 duration_ms=64 decision=ignored_invalid_pattern
+508.89 E5 ECHO clap valid=0 attack_ms=13 strength=1131 duration_ms=80 decision=ignored_invalid_pattern
+508.89 E5 ECHO clap valid=0 attack_ms=na strength=1021 duration_ms=5 decision=ignored_invalid_pattern
+509.47 E5 ECHO clap valid=0 attack_ms=na strength=1418 duration_ms=29 decision=ignored_invalid_pattern
+510.03 E5 ECHO clap valid=0 attack_ms=na strength=1024 duration_ms=8 decision=ignored_invalid_pattern
+510.87 E5 ECHO clap valid=0 attack_ms=na strength=1250 duration_ms=91 decision=ignored_invalid_pattern
+511.06 E5 ECHO clap valid=0 attack_ms=na strength=1055 duration_ms=75 decision=ignored_invalid_pattern
+511.24 E5 ECHO clap valid=1 attack_ms=8 strength=1033 duration_ms=5 decision=consumed_pattern
+511.61 E5 ECHO replay onset_index=2
+511.68 E5 4012304 ms=300 gain=1.00
+514.14 E5 ECHO clap valid=0 attack_ms=na strength=1080 duration_ms=59 decision=ignored_invalid_pattern
+515.33 E5 ECHO clap valid=0 attack_ms=na strength=1002 duration_ms=69 decision=ignored_invalid_pattern
+516.38 E5 ECHO clap valid=0 attack_ms=na strength=1223 duration_ms=243 decision=ignored_invalid_pattern
+517.06 E5 ECHO clap valid=0 attack_ms=26 strength=1130 duration_ms=101 decision=ignored_invalid_pattern
+517.34 E5 ECHO clap valid=0 attack_ms=na strength=2036 duration_ms=147 decision=ignored_invalid_pattern
+517.68 E5 ECHO cl
+517.78 E5 ap valid=0 attack_ms=na strength=1432 duration_ms=205 decision=ignored_invalid_pattern
+517.88 E5 ECHO clap valid=0 attack_ms=na strength=1085 duration_ms=53 decision=ignored_invalid_pattern
+517.97 E5 ECHO clap valid=0 attack_ms=32 strength=1241 duration_ms=48 decision=ignored_invalid_pattern
+518.16 E5 ECHO clap valid=0 attack_ms=67 strength=3066 duration_ms=130 decision=ignored_invalid_pattern
+518.45 E5 ECHO clap valid=0 attack_ms=75 strength=1764 duration_ms=109 decision=ignored_invalid_pattern
+518.55 E5 ECHO clap valid=0 attack_ms=48 strength=2186 duration_ms=77 decision=ignored_invalid_pattern
+518.65 E5 ECHO clap valid=0 attack_ms=na strength=1492 duration_ms=72 decision=ignored_invalid_pattern
+518.83 E5 ECHO clap valid=0 attack_ms=na strength=1832 duration_ms=91 decision=ignored_invalid_pattern
+519.32 E5 ECHO clap valid=0 attack_ms=na strength=1340 duration_ms=88 decision=ignored_invalid_pattern
+520.07 E5 ECHO clap valid=0 attack_ms=37 strength=1941 duration_ms=106 decision=ignored_invalid_pattern
+520.35 E5 ECHO clap valid=0 attack_ms=na strength=1245 duration_ms=35 decision=ignored_invalid_pattern
+524.86 E5 ECHO clap valid=0 attack_ms=na strength=1008 duration_ms=18 decision=ignored_invalid_pattern
+524.96 E5 ECHO clap valid=0 attack_ms=na strength=1634 duration_ms=50 decision=ignored_invalid_pattern
+525.33 E5 ECHO clap valid=0 attack_ms=na strength=1691 duration_ms=291 decision=ignored_invalid_pattern
+525.79 E5 ECHO clap valid=0 attack_ms=na strength=1081 duration_ms=32 decision=ignored_invalid_pattern
+525.89 E5 ECHO clap valid=0 attack_ms=16 strength=1012 duration_ms=24 decision=ignored_invalid_pattern
+526.16 E5 ECHO clap valid=0 attack_ms=24 strength=1195 duration_ms=46 decision=ignored_invalid_pattern
+526.25 E5 ECHO clap valid=0 attack_ms=37 strength=1431 duration_ms=53 decision=ignored_invalid_pattern
+526.44 E5 ECHO clap valid=0 attack_ms=na strength=1072 duration_ms=22 decision=ignored_invalid_pattern
+527.01 E5 ECHO clap valid=0 attack_ms=na strength=3044 duration_ms=245 decision=ignored_invalid_pattern
+527.29 E5 ECHO clap valid=0 attack_ms=na strength=1058 duration_ms=14 decision=ignored_invalid_pattern
+527.95 E5 ECHO clap valid=0 attack_ms=na strength=1544 duration_ms=214 decision=ignored_invalid_pattern
+528.04 E5 E
+528.13 E5 CHO clap valid=0 attack_ms=24 strength=1308 duration_ms=82 decision=ignored_invalid_pattern
+528.79 E5 ECHO clap valid=0 attack_ms=na strength=1121 duration_ms=11 decision=ignored_invalid_pattern
+529.73 E5 ECHO clap valid=0 attack_ms=35 strength=1213 duration_ms=30 decision=ignored_invalid_pattern
+530.01 E5 ECHO clap valid=0 attack_ms=29 strength=1082 duration_ms=24 decision=ignored_invalid_pattern
+530.20 E5 ECHO clap valid=1 attack_ms=8 strength=1321 duration_ms=107 decision=consumed_pattern
+530.29 E5 ECHO clap valid=0 attack_ms=21 strength=1114 duration_ms=30 decision=ignored_invalid_pattern
+530.57 E5 ECHO clap valid=0 attack_ms=26 strength=1596 duration_ms=69 decision=ignored_invalid_pattern
+530.76 E5 ECHO replay clip_missing
+531.78 E5 ECHO clap valid=0 attack_ms=53 strength=1672 duration_ms=62 decision=ignored_invalid_pattern
+531.97 E5 ECHO clap valid=0 attack_ms=48 strength=1238 duration_ms=72 decision=ignored_invalid_pattern
+532.25 E5 ECHO clap valid=0 attack_ms=37 strength=2297 duration_ms=96 decision=ignored_invalid_pattern
+533.38 E5 ECHO clap valid=0 attack_ms=18 strength=1041 duration_ms=8 decision=ignored_invalid_pattern
+533.76 E5 ECHO clap valid=0 attack_ms=na strength=2450 duration_ms=200 decision=ignored_invalid_pattern
+534.22 E5 ECHO clap valid=0 attack_ms=na strength=1365 duration_ms=112 decision=ignored_invalid_pattern
+534.51 E5 ECHO clap valid=0 attack_ms=53 strength=2275 duration_ms=118 decision=ignored_invalid_pattern
+534.70 E5 ECHO clap valid=0 attack_ms=40 strength=1248 duration_ms=48 decision=ignored_invalid_pattern
+535.25 E5 ECHO clap valid=0 attack_ms=na strength=1836 duration_ms=54 decision=ignored_invalid_pattern
+535.35 E5 ECHO clap valid=0 attack_ms=na strength=1581 duration_ms=61 decision=ignored_invalid_pattern
+536.38 E5 ECHO clap valid=0 attack_ms=na strength=1654 duration_ms=154 decision=ignored_invalid_pattern
+536.47 E5 ECHO clap valid=0 attack_ms=na strength=1057 duration_ms=64 decision=ignored_invalid_pattern
+537.22 E5 ECHO clap valid=0 attack_ms
+537.31 E5 =na strength=2143 duration_ms=243 decision=ignored_invalid_pattern
+537.41 E5 ECHO clap valid=0 attack_ms=30 strength=1751 duration_ms=88 decision=ignored_invalid_pattern
+539.20 E5 ECHO clap valid=0 attack_ms=na strength=1240 duration_ms=141 decision=ignored_invalid_pattern
+542.03 E5 ECHO clap valid=0 attack_ms=na strength=2132 duration_ms=77 decision=ignored_invalid_pattern
+542.52 E5 ECHO clap valid=0 attack_ms=70 strength=1640 duration_ms=98 decision=ignored_invalid_pattern
+543.48 E5 ECHO clap valid=0 attack_ms=na strength=2340 duration_ms=269 decision=ignored_invalid_pattern
+543.58 E5 ECHO clap valid=0 attack_ms=na strength=1489 duration_ms=56 decision=ignored_invalid_pattern
+544.98 E5 ECHO clap valid=0 attack_ms=na strength=2572 duration_ms=234 decision=ignored_invalid_pattern
+545.54 E5 ECHO clap valid=0 attack_ms=na strength=2633 duration_ms=250 decision=ignored_invalid_pattern
+545.73 E5 ECHO clap valid=0 attack_ms=43 strength=1506 duration_ms=96 decision=ignored_inval
+545.82 E5 id_pattern
+546.56 E5 ECHO clap valid=0 attack_ms=na strength=1332 duration_ms=40 decision=ignored_invalid_pattern
+547.67 E5 ECHO clap valid=0 attack_ms=na strength=1081 duration_ms=8 decision=ignored_invalid_pattern
+547.96 E5 ECHO clap valid=0 attack_ms=29 strength=1611 duration_ms=110 decision=ignored_invalid_pattern
+548.90 E5 ECHO clap valid=0 attack_ms=na strength=2709 duration_ms=162 decision=ignored_invalid_pattern
+549.38 E5 ECHO clap valid=0 attack_ms=na strength=1478 duration_ms=155 decision=ignored_invalid_pattern
+549.57 E5 ECHO clap valid=0 attack_ms=na strength=2315 duration_ms=144 decision=ignored_invalid_pattern
+549.85 E5 ECHO clap valid=0 attack_ms=30 strength=1112 duration_ms=18 decision=ignored_invalid_pattern
+552.95 E5 ECHO clap valid=0 attack_ms=na strength=1352 duration_ms=46 decision=ignored_invalid_pattern
+555.68 E5 ECHO clap valid=0 attack_ms=na strength=1098 duration_ms=24 decision=ignored_invalid_pattern
+555.96 E5 ECHO clap valid=0 attack_ms=na strength=1329 duration_ms=59 decision=ignored_invalid_pattern
+556.15 E5 ECHO clap valid=0 attack_ms=na strength=1084 duration_ms=112 decision=ignored_invalid_pattern
+556.98 E5 ECHO clap valid=0 attack_ms=na strength=1352 duration_ms=24 decision=ignored_invalid_pattern
+557.26 E5 ECHO clap valid=0 attack_ms=na strength=2865 duration_ms=253 decision=ignored_invalid_pattern
+557.35 E5 ECHO clap valid=0 attack_ms=na strength=1023 duration_ms=26 decision=ignored_invalid_pattern
+557.63 E5 ECHO clap valid=0 attack_ms=na strength=3075 duration_ms=2
+557.72 E5 54 decision=ignored_invalid_pattern
+563.91 E5 ECHO clap valid=0 attack_ms=40 strength=1136 duration_ms=48 decision=ignored_invalid_pattern
+564.11 E5 ECHO clap valid=0 attack_ms=na strength=1305 duration_ms=141 decision=ignored_i
+564.21 E5 nvalid_pattern
+564.30 E5 ECHO clap valid=0 attack_ms=43 strength=2335 duration_ms=75 decision=ignored_invalid_pattern
+583.94 E5 >> ECHO STATUS
+584.00 E5 ECHO status node=E5 uptime_s=573 window_s=573 rate_hz=48000 measured_mhz=47999936 samples=27506560 dropped_bufs=26 dropped_total=26 passes=572990 pass_us_mean=103 pass_us_max=32458 block_us_max=575 env_peak=68723 tone=0 free_heap=83736 largest_block=38900 net_rx=0 net_tx=0 level=46 occurrences=854 claps=53 slow=801 replays=6 clip_missing=26 behavior=Idle level_auto=0
+# phase back_to_node at 586.0
+586.01 E1 >> NET E5 OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+586.05 E1 NET sent seq=12481 target=E5 text=OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+586.07 E5 OTA start url=http://192.168.178.33:8070/node.bin
+586.35 E5 OTA wifi ip=192.168.178.120 rssi=-49
+587.07 E5 OTA progress pct=0
+588.00 E5 OTA progress pct=10
+588.67 E5 OTA progress pct=20
+589.51 E5 OTA progress pct=30
+590.26 E5 OTA progress pct=40
+591.10 E5 OTA progress pct=50
+591.84 E5 OTA progress pct=60
+592.70 E5 OTA progress pct=70
+593.35 E5 OTA progress pct=80
+593.91 E5 OTA progress pct=90
+594.84 E5 OTA progress pct=100
+595.03 E5 OTA result=ok rebooting (the new image confirms itself after 20 s)
+595.41 E5 ets Jul 29 2019 12:21:46
+595.41 E5 rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+595.41 E5 configsip: 0, SPIWP:0xee
+595.41 E5 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+595.41 E5 mode:DIO, clock div:1
+595.41 E5 load:0x3fff0030,len:1344
+595.41 E5 load:0x40078000,len:13964
+595.41 E5 load:0x40080400,len:3600
+595.41 E5 entry 0x400805f0
+595.87 E5 OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000
+595.87 E5 E (64) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+595.87 E5 BUILD role=node git=87664599 date=Oct 31 2026 time=21:38:01 version=0.4.0 board=damp
+595.87 E5 RB node_id=0x38FE4AC3DC24
+595.87 E5 RB node name=E5 rotation_source=roster
+595.87 E5 PARAM load path=output.silent value=1 default=0
+595.97 E5 PARAM load stored=50 applied=50 stale=0 invalid=0
+596.07 E5 RB net started=1 channel=1 net_id=82
+596.07 E5 RB signal band=2950-4700 bins=8 hop=on rotation=1 base=1 band_per_node=0 steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,4200
+596.07 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+596.07 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+596.07 E5 RB silent=1 (output.silent: listening, never sounding)
+596.07 E5 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape fieldStateConfig=4000/4000
+596.07 E5 RB PROFILE detail
+596.07 E5 kind=TonalPulseScalar
+596.07 E5 detectorSelection=ScalarTransient
+596.07 E5 inspectionPlan=contrast+amp+shape
+596.07 E5 scalarTransient.observedStream=FrequencyTarget
+596.07 E5 scalarTransient.onsetDetectionThreshold=2000.0
+596.07 E5 scalarT
+596.15 E5 ransient.onsetReleaseThreshold=1500.0
+596.15 E5 scalarTransient.cooldownAfterOnsetMs=50
+596.15 E5 scalarTransient.minTransientDurationMs=92
+596.15 E5 scalarTransient.maxTransientDurationMs=450
+596.15 E5 scalarTransient.releaseDebounceMs=10
+596.15 E5 scalarTransient.minTransientPeakStrength=3000.0
+596.15 E5 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+596.15 E5 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+596.15 E5 inspectionPlan.module[2].kind=BinShape label=shape
+596.15 E5 verdict.has_requirement=1
+596.15 E5 verdict.required_label=contrast
+596.15 E5 fieldState.occurrenceWindowMs=4000
+596.15 E5 fieldState.patternWindowMs=4000
+596.15 E5 fieldState.busyOccurrenceCountThreshold=3
+596.15 E5 fieldState.denseOccurrenceCountThreshold=6
+596.15 E5 fieldState.quietOccurrenceCountThreshold=0
+596.15 E5 RB behavior
+596.15 E5 idleEnabled=1
+596.15 E5 waitAfterHeardMs=100
+596.15 E5 refractoryAfterEmitMs=400
+596.15 E5 behaviorSuppressSelfChirpMs=100
+596.15 E5 detectionSuppressTailMsOwnEmit=60
+596.15 E5 idleTimeoutMs=6
+596.25 E5 0000
+596.25 E5 idleTimeVariationMs=20000
+596.25 E5 idleBlockedAfterHeardMs=1000
+596.25 E5 idleBlockedAfterOwnEmitMs=500
+596.25 E5 RB startup baseline=BOOT
+596.25 E5 RB warmup waiting ms=2 of 2000
+597.00 E5 RB warmup waitin
+597.09 E5 g ms=1002 of 2000
+598.05 E5 RB warmup done ms=2001 rebase=ok baseline=316.9
+598.05 E5 RB rebase waiting smooth=36.0 quietMs=0
+599.07 E5 RB rebase done quietMs=1004 baseline=-168.8 smooth=0
+599.54 E5 RB baseline active
+615.75 E5 OTA confirmed partition=app1
+# phase done at 615.8

@@ -11,8 +11,15 @@
 // chains end (3 s silence within 30 s in 80 % of starts), no minute over 100 emissions, chords under 25 % of rounds
 // in a chain's first half and above in its last, the first answer to a call later than 1 s in most chains.
 //
+// --bands random|step|none (step 19.2, BEH-009 part 3): a band per node instead of the shared one. Each node's 5-bin
+// window sits at one of 8 positions on 2200-4950 Hz (12 bins); its Behavior's base bin is the position. A listener
+// hears a train only when the acoustic matrix lets it and the windows are at most 2 bins apart (the radius measured
+// in bench/sessions/2026-10-31-step19-hearing-radius); it sees the train's lowest bin inside its window, or its own
+// guard bin below when the sender sits lower, so the glide moves the window toward the sender. A node that heard
+// nothing since its last idle call wanders before the next one: to a random position, or one step (none: stays).
+//
 //   program --matrix all|line|line2 --nodes 5 --hours 4 --seed 1 [--offset 0|1] [--jitter MS] [--levels L] [--old]
-//           [--emissions out.csv]
+//           [--no-glide] [--bands random|step|none] [--emissions out.csv]
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,10 +48,12 @@ uint32_t simRandom(uint32_t bound) {
     return bound == 0 ? 0U : static_cast<uint32_t>(gRng % bound);
 }
 
-// The 8-bin band with a 5-step train (BEH-009): bases 0..3 at 2950 + 250 * base.
-constexpr uint32_t kBandLowHz = 2950;
+// The 8-bin band with a 5-step train (BEH-009): bases 0..3 at 2950 + 250 * base. With --bands: 8 window positions
+// from 2200 Hz.
+uint32_t gBandLowHz = 2950;
 constexpr uint32_t kBinHz = 250;
-constexpr uint32_t kBases = 4;
+uint32_t gBases = 4;
+constexpr int kBandRadiusBins = 2;
 
 struct Emission {
     unsigned long startMs;     // the train's start (an idle call's train starts after its announcement)
@@ -57,13 +66,13 @@ struct Occurrence {  // one listener's open occurrence: merged trains
     bool open = false;
     unsigned long startMs = 0;
     unsigned long endMs = 0;
-    uint32_t lowestBase = 0;  // a chord's lowest train decides the heard base (the bin track's lowest bin)
+    int lowestBase = 0;  // a chord's lowest train decides the heard base (the bin track's lowest bin); -1 below
 };
 
 struct HeardTrain {
     unsigned long startMs;
     unsigned long endMs;
-    uint32_t base;
+    int base;  // the lowest bin the listener sees, as a base index (-1: below its grid)
 };
 
 struct Node {
@@ -72,6 +81,8 @@ struct Node {
     bool sounding = false;
     Occurrence occ;
     std::vector<HeardTrain> heardTrains;  // pending merge per listener
+    unsigned long lastHeardMs = 0;  // the last verdict delivered (the wander rule)
+    unsigned long lastIdleMs = 0;   // the last idle call
 };
 
 bool heard(const std::string& matrix, int listener, int speaker) {
@@ -104,6 +115,8 @@ int main(int argc, char** argv) {
     long levelMax = -1;
     int shrink = -1;  // -1: the firmware's default
     bool glide = true;
+    std::string bands;  // empty: the shared band
+    long scatter = -1;  // the scatter's range in bins (0 = anywhere); -1: the firmware's default
     const char* emissionsPath = nullptr;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -125,6 +138,10 @@ int main(int argc, char** argv) {
             shrink = 1;
         } else if (a == "--no-shrink") {
             shrink = 0;
+        } else if (a == "--bands" && i + 1 < argc) {
+            bands = argv[++i];
+        } else if (a == "--scatter" && i + 1 < argc) {
+            scatter = atol(argv[++i]);
         } else if (a == "--no-glide") {
             glide = false;
         } else if (a == "--old") {
@@ -134,7 +151,7 @@ int main(int argc, char** argv) {
         } else {
             fprintf(stderr,
                     "usage: %s --matrix all|line|line2 --nodes N --hours H --seed S [--offset 0|1] [--jitter MS] "
-                    "[--levels L] [--no-glide] [--old] "
+                    "[--levels L] [--no-glide] [--bands random|step|none] [--scatter BINS] [--old] "
                     "[--emissions out.csv]\n",
                     argv[0]);
             return 2;
@@ -156,11 +173,18 @@ int main(int argc, char** argv) {
         cfg.answerJitterShrinks = shrink == 1;
     }
     cfg.baseGlide = glide;
+    if (scatter >= 0) {
+        cfg.baseScatterBins = static_cast<uint32_t>(scatter);
+    }
     if (old) {  // the behaviour until step 16: fixed answer, the two rest triggers
         cfg.levelMax = 0;
         cfg.restAfterFieldPatterns = 4;
         cfg.ownEmitBudget = 6;
         cfg.restMs = 5000;
+    }
+    if (!bands.empty()) {
+        gBandLowHz = 2200;
+        gBases = 8;
     }
     std::vector<Node> nodes(static_cast<size_t>(n));
     for (Node& node : nodes) {
@@ -168,9 +192,9 @@ int main(int argc, char** argv) {
         node.behavior.resetState();
         node.behavior.setRandomSource(&simRandom);
         node.behavior.seedIdleSchedule(0);
-        node.behavior.setBaseGrid(kBandLowHz, kBinHz, kBases);
+        node.behavior.setBaseGrid(gBandLowHz, kBinHz, gBases);
         node.behavior.seedBaseBin(
-            simRandom(kBases));  // random at boot (the decision; the roster overrides on the desk)
+            simRandom(gBases));  // random at boot (the decision; the roster overrides on the desk)
     }
 
     std::vector<Emission> emissions;
@@ -182,10 +206,11 @@ int main(int argc, char** argv) {
         int listener;
         unsigned long startMs;
         unsigned long durationMs;
-        uint32_t lowestBase;
+        int lowestBase;
     };
     std::vector<Delivery> deliveries;
     unsigned long restsBefore = 0;
+    unsigned long pairsSampled = 0, pairsInReach = 0;  // --bands: acoustic pairs whose windows are within the radius
 
     for (unsigned long t = 1; t < endMs; ++t) {
         // 1. verdicts due now
@@ -202,8 +227,11 @@ int main(int argc, char** argv) {
                 v.primaryAcceptedMs = t;
                 v.primaryDurationMs = d.durationMs;
                 v.primaryStrength = 9000.0f;
-                v.primaryLowestBinHz = static_cast<uint16_t>(kBandLowHz + d.lowestBase * kBinHz);
+                v.primaryLowestBinHz = d.lowestBase < 0
+                    ? 0
+                    : static_cast<uint16_t>(gBandLowHz + static_cast<uint32_t>(d.lowestBase) * kBinHz);
                 node.behavior.handleOccurrenceVerdict(v, detection::FieldState{}, t);
+                node.lastHeardMs = t;
             } else {
                 ++k;
             }
@@ -231,6 +259,18 @@ int main(int argc, char** argv) {
                 node.sounding = true;
                 node.soundingUntil = t + span;
                 const unsigned long trainStart = t + span - kTrainMs;
+                if (idle && (bands == "random" || bands == "step")) {
+                    // The wander: nothing heard since the last idle call, so this call goes out from elsewhere.
+                    if (node.lastHeardMs <= node.lastIdleMs) {
+                        const uint32_t now = node.behavior.baseBin();
+                        uint32_t next = simRandom(gBases);
+                        if (bands == "step") {
+                            next = (now == 0 || (now + 1 < gBases && simRandom(2) == 0)) ? now + 1 : now - 1;
+                        }
+                        node.behavior.seedBaseBin(next);
+                    }
+                    node.lastIdleMs = t;
+                }
                 const uint32_t base = node.behavior.baseBin();  // after update(): an answer's glide is in it
                 emissions.push_back({trainStart, i, idle, base});
                 // every listener that hears it, unless sounding or suppressed while the train plays
@@ -239,7 +279,29 @@ int main(int argc, char** argv) {
                         continue;
                     }
                     Node& l = nodes[static_cast<size_t>(j)];
-                    l.heardTrains.push_back({trainStart, trainStart + kTrainMs, base});
+                    int seen = static_cast<int>(base);
+                    if (!bands.empty()) {
+                        const int mine = static_cast<int>(l.behavior.baseBin());
+                        if (abs(seen - mine) > kBandRadiusBins) {
+                            continue;  // outside this listener's window
+                        }
+                        seen = std::max(seen, mine - 1);  // a lower sender shows as the guard bin below the window
+                    }
+                    l.heardTrains.push_back({trainStart, trainStart + kTrainMs, seen});
+                }
+            }
+        }
+        // --bands: once a second, how many acoustic pairs have their windows within the radius
+        if (!bands.empty() && t % 1000 == 0) {
+            for (int i = 0; i < n; ++i) {
+                for (int j = i + 1; j < n; ++j) {
+                    if (!heard(matrix, i, j)) {
+                        continue;
+                    }
+                    ++pairsSampled;
+                    const int d = static_cast<int>(nodes[static_cast<size_t>(i)].behavior.baseBin()) -
+                        static_cast<int>(nodes[static_cast<size_t>(j)].behavior.baseBin());
+                    pairsInReach += abs(d) <= kBandRadiusBins ? 1 : 0;
                 }
             }
         }
@@ -391,5 +453,17 @@ int main(int argc, char** argv) {
     printf("  base (glide %s): chains >= 6 trains %zu, distinct bases first 3 %.2f -> last 3 %.2f, settled %.0f %%\n",
            cfg.baseGlide ? "on" : "off", longChains, longChains ? static_cast<double>(distinctFirst) / longChains : 0.0,
            longChains ? static_cast<double>(distinctLast) / longChains : 0.0, pct(settled, longChains));
+    if (!bands.empty()) {
+        std::vector<size_t> perPos(gBases, 0);
+        for (const Emission& e : emissions) {
+            ++perPos[e.base];
+        }
+        printf("  bands (wander %s): acoustic pairs within %d bins %.0f %% of the time; emissions per position",
+               bands.c_str(), kBandRadiusBins, pct(pairsInReach, pairsSampled));
+        for (size_t k = 0; k < perPos.size(); ++k) {
+            printf(" %zu", perPos[k]);
+        }
+        printf("\n");
+    }
     return 0;
 }

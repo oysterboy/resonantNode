@@ -242,10 +242,15 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         -5..+5 bins, 10 trials each (bench/sessions/2026-10-31-step19-hearing-radius). +-2 bins heard 10 / 10 (3 of
         5 bins inside, the shape rule's medium); -3 seen and rejected with a weak 2-bin shape (the train's end
         inside: a lenient listener knows where the sender is); +3 and +-4 too short; +-5 nothing.
-   19.2 native-fieldsim with a band per node: each node's 5-bin window wanders while it hears nothing, moves toward
+   19.2 [DONE 2026-10-31] native-fieldsim with a band per node: each node's 5-bin window wanders while it hears nothing, moves toward
         a train heard at its edge, scatters at the level's rest; hearing = acoustic matrix and the measured radius.
         Rendezvous time, cluster formation, the wander rule (a random position or a step), against the shared
         band with the glide (17). PC.
+        Done: --bands random|step|none and --scatter BINS (BehaviorGateConfig::baseScatterBins, 0 = anywhere, the
+        default; a config, not a param). Bands per node hold together when the rest scatters by one bin: 88-96 % of
+        the pairs within reach, chains and ignition as on the shared band, the group's band drifting across the
+        octave; with the scatter anywhere only 47 %, without the wander 27-31 % (field-activity-response.md "Bands
+        per node in native-fieldsim").
    19.3 The owner's decision: bands per node, or the second musical tone (OUT-006), or neither; from 19.1-19.2
         and the desk's glide numbers (17.3). If bands per node: built and checked on the desk before 2026-12-06.
 

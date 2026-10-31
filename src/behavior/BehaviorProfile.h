@@ -67,4 +67,7 @@ struct BehaviorGateConfig {
     // toward the base last heard (the glide, owner 2026-10-29), and at the automaton's rest it scatters to a random
     // base. Off: the base stays where the Node seeded it. Not a param.
     bool baseGlide = true;
+    // The scatter's range (the decision left it open): 0 = a random base anywhere; k = at most k bins from where it
+    // was, never 0 bins (step 19.2 compares them). Not a param.
+    uint32_t baseScatterBins = 0;
 };

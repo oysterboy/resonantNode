@@ -482,7 +482,16 @@ void ResonantBehavior::enterRest(unsigned long untilMs, BehaviorDecision reason)
     _rest.lastReason = reason;
     // The automaton's rest scatters the base (BEH-009), so a field that converged on one base spreads out again.
     if (reason == BehaviorDecision::RestLevel && _config.baseGlide && _base.count > 1) {
-        _base.bin = _random(_base.count);
+        if (_config.baseScatterBins == 0) {
+            _base.bin = _random(_base.count);
+        } else {
+            // 1..k bins up or down, folded back inside the grid.
+            const long step = 1 + static_cast<long>(_random(_config.baseScatterBins));
+            long bin = static_cast<long>(_base.bin) + (_random(2) == 0 ? step : -step);
+            const long top = static_cast<long>(_base.count) - 1;
+            bin = bin < 0 ? -bin : (bin > top ? 2 * top - bin : bin);
+            _base.bin = static_cast<uint32_t>(bin < 0 ? 0 : (bin > top ? top : bin));
+        }
         _base.heard = -1;
         _base.scatters++;
     }

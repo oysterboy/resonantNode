@@ -434,3 +434,37 @@ scatters the base. With five nodes on four bases the seeding alone can put sever
 desk run reads the spread over time, not one chain. Whether the field should hold a shared base longer (scatter
 only some of the time, or glide per hearing as the desk model suggested) is step 18's question, as the decision
 says.
+
+### Bands per node in native-fieldsim (step 19.2, 2026-10-31)
+
+`--bands random|step|none [--scatter BINS]`: each node's 5-bin window at one of 8 positions on 2200-4950 Hz, its
+Behavior's base bin the position; a listener hears a train when the acoustic matrix lets it and the windows are at
+most 2 bins apart (19.1's radius), and sees the train's lowest bin inside its window or its guard bin below, so the
+glide (one bin per own answer) moves it toward the sender; a node that heard nothing since its last idle call
+wanders before the next (random position, or one step); the level's rest scatters the window (anywhere, or 1..k
+bins). Five nodes, 4 h, seeds 1-2:
+
+```text
+                     emissions  long chains  ignite  pairs within reach
+all   shared band     1968-2033   200-209     61-65 %      (all)
+all   bands, scatter anywhere      1729-1737    91-94      44-46 %    47-48 %
+all   bands, scatter 1 bin         1992-1997   186-187     57-62 %    88-90 %
+all   bands, scatter 2 bins        1815-1868   123-136     47-51 %    59-62 %
+all   bands, step wander, scatter 1 1989-2005  186-191     57-59 %    88-89 %
+all   bands, no wander (scatter anywhere) 1403-1486  24-33  34-35 %   27-31 %
+line  shared band     1484-1565    32-41      38-41 %      (all)
+line  bands, scatter 1 bin         1512-1520    32-42      38-40 %    93-96 %
+```
+
+Every variant ends every chain within 30 s and stays at or under 22 per minute. Reading:
+
+- Bands per node work if the scatter is small. A scatter anywhere throws half the pairs out of each other's reach
+  after every rest (in the room, rests come often), and the field breaks into strangers: half the long chains, a
+  third fewer idle calls igniting. Scattering by one bin keeps 88-96 % of the pairs in reach and the field as lively
+  as on the shared band.
+- Without the wander, nodes that drifted apart never meet again (27-31 % in reach).
+- The random wander and the step wander do the same at a scatter of one bin.
+- With a one-bin scatter the field moves as a whole: its mean window position drifted from 2 to 6 of 8 within one
+  hour (seed 3), a band an octave wide traversed by the group, which is the owner's "the band is the note".
+- The firmware's scatter on the shared band (17) is "anywhere" by default; at one bin the shared band changes
+  little (settled 14-17 % against 20-25 % in the room).

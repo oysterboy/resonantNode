@@ -147,6 +147,19 @@ void test_rest_scatters_the_base() {
     TEST_ASSERT_EQUAL_UINT32(1, b.status(1300).baseScatters);
 }
 
+// A scatter range k moves the base 1..k bins, folded back at the grid's edges (step 19.2's variant).
+void test_rest_scatter_within_a_range() {
+    BehaviorGateConfig cfg;
+    cfg.idleEnabled = false;
+    cfg.levelMax = 2;
+    cfg.baseScatterBins = 1;
+    ResonantBehavior b = make(cfg, 0);
+    script({1, 0, 1});  // declined; the scatter: step 1 + (0 % 1), direction draw 1 = down, folded to +1
+    b.handleOccurrenceVerdict(train(1000, 3700), 1000);
+    TEST_ASSERT_EQUAL(Decision::RestLevel, b.handleOccurrenceVerdict(train(1300, 3700), 1300));
+    TEST_ASSERT_EQUAL_UINT32(1, b.baseBin());
+}
+
 // Hearing while the outputs are off still notes the base heard; resetState keeps the base.
 void test_outputs_off_hears_and_reset_keeps_the_base() {
     ResonantBehavior b = make(answerEvery(), 2);
@@ -164,6 +177,7 @@ int main(int, char**) {
     RUN_TEST(test_heard_base_clamped_and_no_shape_ignored);
     RUN_TEST(test_no_glide_when_off);
     RUN_TEST(test_rest_scatters_the_base);
+    RUN_TEST(test_rest_scatter_within_a_range);
     RUN_TEST(test_outputs_off_hears_and_reset_keeps_the_base);
     return UNITY_END();
 }

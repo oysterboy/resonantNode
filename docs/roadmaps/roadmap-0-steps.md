@@ -235,9 +235,19 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.
 
-19. [NEXT. Due 2026-12-06 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
+19. [RUNNING 2026-10-31: 19.1 done. Due 2026-12-06 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
    BEH-009 part 3; field-activity-response.md Part 2 "What to measure" 1-2. Remote and PC. Ends in a decision between
    this and OUT-006 (8a).
+   19.1 [DONE 2026-10-31] The frequency hearing radius on the Analyzer: a 5-bin window, the Emitter's train shifted
+        -5..+5 bins, 10 trials each (bench/sessions/2026-10-31-step19-hearing-radius). +-2 bins heard 10 / 10 (3 of
+        5 bins inside, the shape rule's medium); -3 seen and rejected with a weak 2-bin shape (the train's end
+        inside: a lenient listener knows where the sender is); +3 and +-4 too short; +-5 nothing.
+   19.2 native-fieldsim with a band per node: each node's 5-bin window wanders while it hears nothing, moves toward
+        a train heard at its edge, scatters at the level's rest; hearing = acoustic matrix and the measured radius.
+        Rendezvous time, cluster formation, the wander rule (a random position or a step), against the shared
+        band with the glide (17). PC.
+   19.3 The owner's decision: bands per node, or the second musical tone (OUT-006), or neither; from 19.1-19.2
+        and the desk's glide numbers (17.3). If bands per node: built and checked on the desk before 2026-12-06.
 
 20. [PARKED 2026-10-30 after 20.1's PC part: nice to have] Echo room and Whispernet in the tryout room: one OTA
    each. (issue #84)

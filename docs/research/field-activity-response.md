@@ -341,6 +341,8 @@ from the fixed model.)
 
 1. Frequency hearing radius: Analyzer at one band, Emitter's train shifted 0..5 bins; accepted / rejected-by-shape
    per offset (one session, the tools exist).
+   -> measured 2026-10-31 (step 19.1, bench/sessions/2026-10-31-step19-hearing-radius): +-2 bins heard, -3 seen as a
+   weak 2-bin shape (the train's end inside the window), +3 and beyond nothing usable.
 2. The desk model with a band dimension per node (hearing = acoustic reach and bin overlap): rendezvous time
    against the wander rule (random position per idle call vs a step), cluster formation, the scatter's effect.
 3. The hearing matrix in the tryout room (planned anyway), once per band position of interest, to see whether the

@@ -129,7 +129,13 @@ private:
     SoundOutput _soundOutput{_chirpOutput};
     std::unique_ptr<int16_t[]> _clip;
     size_t _clipCapacity = 0;
-    uint64_t _heardOnsetIndex = 0;  // the onset of the clap Behavior is answering
+    // The clap Behavior is answering: copied out of the ring as soon as its tail is recorded (the answer can come
+    // later than the ring holds its start: wait plus jitter reach ~700 ms, the ring 500).
+    uint64_t _clipOnset = 0;
+    size_t _clipCount = 0;
+    bool _clipWanted = false;
+    bool _clipReady = false;
+    void takeClip();
     bool _detectionPaused = false;
     int32_t _envelope = 0;  // smoothed |sample|, canonical PCM units (24-bit)
     int32_t _envelopePeak = 0;  // since the last status

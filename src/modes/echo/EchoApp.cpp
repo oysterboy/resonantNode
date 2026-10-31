@@ -152,6 +152,7 @@ void EchoApp::pollAudio() {
             _envelopePeak = _envelope;
         }
         detectBlock(block, ringIndex, timebase::msFromUs64(block.approxStartUs64));
+        takeClip();
         const uint32_t blockUs = micros() - startUs;
         if (blockUs > _load.blockUsMax) {
             _load.blockUsMax = blockUs;
@@ -249,8 +250,13 @@ void EchoApp::judgePending(uint32_t nowMs) {
     if (_gate.enabled) {
         decision = _behavior.handleOccurrenceVerdict(verdict, timebase::nowMs());
         if (decision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
-            _heardOnsetIndex = onset;
+            _clipOnset = onset;
+            _clipWanted = true;
+            _clipReady = false;
         }
+    }
+    if (!verdict.valid) {
+        return;  // counted; not printed (music made ~800 rejects in 7 min on the desk, and their lines cost the loop)
     }
     const detection::OccurrenceAttack& a = inspected.occurrence.attack;
     serialOut().print("ECHO clap valid=");
@@ -286,22 +292,37 @@ void EchoApp::runBehavior(unsigned long now) {
     }
 }
 
-// The answer: the clap as it was heard, preMs before its onset to postMs after, out of the ring.
-void EchoApp::startReplay(unsigned long now) {
+// The clap's clip, preMs before its onset to postMs after, copied once the ring holds all of it.
+void EchoApp::takeClip() {
+    if (!_clipWanted || !_clip) {
+        return;
+    }
     const uint64_t rate = _i2sPort.sampleRateHz();
     const uint64_t pre = rate * _gate.preMs / 1000U;
     uint64_t count = rate * (_gate.preMs + _gate.postMs) / 1000U;
     if (count > _clipCapacity) {
         count = _clipCapacity;
     }
-    const uint64_t from = _heardOnsetIndex > pre ? _heardOnsetIndex - pre : 0;
+    const uint64_t from = _clipOnset > pre ? _clipOnset - pre : 0;
+    if (_ring.written() < from + count) {
+        return;  // the tail is not recorded yet
+    }
+    _clipWanted = false;
+    _clipReady = _ring.copy(from, static_cast<size_t>(count), _clip.get());
+    _clipCount = _clipReady ? static_cast<size_t>(count) : 0;
+}
+
+// The answer: the clap as it was heard.
+void EchoApp::startReplay(unsigned long now) {
+    const uint64_t rate = _i2sPort.sampleRateHz();
     OutputRequest request;
     request.kind = OutputRequest::Kind::Clip;
     request.clipSamples = _clip.get();
-    request.clipCount = static_cast<size_t>(count);
-    request.clipMs = static_cast<unsigned long>(count * 1000U / (rate > 0 ? rate : 1));
+    request.clipCount = _clipCount;
+    request.clipMs = static_cast<unsigned long>(static_cast<uint64_t>(_clipCount) * 1000U / (rate > 0 ? rate : 1));
     request.clipGain = _gate.gain;
-    const bool cut = _clip && _ring.copy(from, static_cast<size_t>(count), _clip.get());
+    const bool cut = _clipReady;
+    _clipReady = false;
     if (!cut || !_soundOutput.start(request)) {
         // Behavior asked; close its request so it leaves Chirping.
         if (!cut) {
@@ -315,7 +336,7 @@ void EchoApp::startReplay(unsigned long now) {
     ++_echo.replays;
     _behavior.notifyChirpStarted(now, request.clipMs);
     serialOut().print("ECHO replay onset_index=");
-    serialOut().print(static_cast<unsigned long long>(_heardOnsetIndex));
+    serialOut().print(static_cast<unsigned long long>(_clipOnset));
     serialOut().print(" ms=");
     serialOut().print(request.clipMs);
     serialOut().print(" gain=");

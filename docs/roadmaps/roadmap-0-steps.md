@@ -302,7 +302,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Board part 2026-10-31 (bench/sessions/2026-10-31-step20.1-echo48k): E5 Node -> echo shell -> Node by NET OTA
         from E1, both images confirmed, the Node's stored params unchanged (50, stale 0). At 48 kHz with the radio
         up: 0 dropped DMA buffers quiet (600 s), with TONE (120 s) and with radio traffic (121 s); loop pass mean 77
-        us, max ~1 ms of the 21 ms queue; the ring leaves a 74 KB block. Proposed: 48 kHz (owner's call). Open in
+        us, max ~1 ms of the 21 ms queue; the ring leaves a 74 KB block. 48 kHz (the owner leaned to it 2026-10-30;
+        2026-10-31 "keep going" after these numbers; one word changes it). Open in
         20.1: the whisper image as the round trip's third leg (with 20.3).
    20.2 ECHO-001 built, host-tested and checked on the desk (11-09 .. 11-20; the Emitter's pulse train as the
         click). PC, then remote. Decision: the echo room heard on the desk.

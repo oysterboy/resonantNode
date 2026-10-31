@@ -22,6 +22,8 @@ const char* outputRejectName(OutputReject reject) {
             return "announce_out_of_range";
         case OutputReject::SpanTooLong:
             return "span_too_long";
+        case OutputReject::NoClip:
+            return "no_clip";
         case OutputReject::DeviceRefused:
             return "device_refused";
     }
@@ -84,6 +86,8 @@ unsigned long SoundOutput::plannedSpanMs(const OutputRequest& request, unsigned 
             return trainMs(request);
         case OutputRequest::Kind::IdleCall:
             return request.announceMs + request.announceGapMs + (request.hopSteps > 0 ? trainMs(request) : plainCallMs);
+        case OutputRequest::Kind::Clip:
+            return request.clipMs;
     }
     return 0;
 }
@@ -117,6 +121,11 @@ OutputReject SoundOutput::validate(const OutputRequest& request, const OutputLim
             }
             break;
         }
+        case OutputRequest::Kind::Clip:
+            if (request.clipSamples == nullptr || request.clipCount == 0) {
+                return OutputReject::NoClip;
+            }
+            break;
     }
     if (plannedSpanMs(request, runtime::kDefaultChirpDurationMs) > limits.maxSpanMs) {
         return OutputReject::SpanTooLong;
@@ -170,6 +179,14 @@ bool SoundOutput::start(const OutputRequest& request) {
                 return false;
             }
             _status.phase = OutputPhase::Announce;
+            break;
+        case OutputRequest::Kind::Clip:
+            _chirp.startClip(request.clipSamples, request.clipCount, request.clipGain);
+            if (!_chirp.isActive()) {
+                reject(OutputReject::DeviceRefused);
+                return false;
+            }
+            _status.phase = OutputPhase::Playing;
             break;
     }
     _status.kind = request.kind;

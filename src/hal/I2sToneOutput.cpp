@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <math.h>
 
+#include "../output/ClipEnvelope.h"
+
 namespace {
 // One DMA buffer of stereo 32-bit frames per write: small enough that
 // toneOn reaches the speaker within the TX queue depth plus one buffer.
@@ -59,6 +61,48 @@ void I2sToneOutput::toneOn() {
     _on = true;
 }
 
+// A clip (ECHO-001) replaces the tone for its length: taken from the handoff at a block boundary, played sample by
+// sample with clipEnvelope's ramps, dropped when toneOff() cleared it. True while a clip filled the block.
+bool I2sToneOutput::renderClip(int32_t* frames, size_t frameCount, uint32_t sampleRateHz) {
+    portENTER_CRITICAL(&_trainMux);
+    if (_clipRequested) {
+        _clipRequested = false;
+        _clip = _reqClip;
+        _clipCount = _reqClipCount;
+        _clipGain = _reqClipGain;
+        _clipPos = 0;
+    }
+    const bool keep = _clipActive;
+    portEXIT_CRITICAL(&_trainMux);
+    if (!keep) {
+        _clip = nullptr;
+    }
+    if (_clip == nullptr) {
+        return false;
+    }
+    const size_t rampSamples = static_cast<size_t>((sampleRateHz * _rampMs) / 1000U);
+    for (size_t i = 0; i < frameCount; ++i) {
+        int32_t value = 0;
+        if (_clipPos < _clipCount) {
+            const float s = static_cast<float>(_clip[_clipPos]) / 32768.0f;
+            value = static_cast<int32_t>(s * _clipGain * clipEnvelope(_clipPos, _clipCount, rampSamples) * kFullScale);
+            ++_clipPos;
+        }
+        frames[2 * i] = value;
+        frames[2 * i + 1] = value;
+    }
+    if (_clipPos >= _clipCount) {
+        _clip = nullptr;
+        portENTER_CRITICAL(&_trainMux);
+        if (!_clipRequested) {
+            _clipActive = false;
+        }
+        portEXIT_CRITICAL(&_trainMux);
+    }
+    _envelope = 0.0f;  // a tone after the clip ramps in from silence
+    return true;
+}
+
 void I2sToneOutput::setSweep(uint32_t endHz, uint32_t durationMs) {
     const bool clear = endHz == 0 || durationMs == 0;
     _sweepEndHz = clear ? 0 : endHz;
@@ -71,7 +115,31 @@ void I2sToneOutput::toneOff() {
     _trainRequested = false;
     _trainCancelRequested = true;
     _trainActive = false;
+    _clipRequested = false;
+    _clipActive = false;  // the task drops a running clip at its next block
     portEXIT_CRITICAL(&_trainMux);
+}
+
+bool I2sToneOutput::startClip(const int16_t* samples, size_t count, float gain) {
+    if (_task == nullptr || samples == nullptr || count == 0) {
+        return false;
+    }
+    _on = false;
+    portENTER_CRITICAL(&_trainMux);
+    _reqClip = samples;
+    _reqClipCount = count;
+    _reqClipGain = gain;
+    _clipRequested = true;
+    _clipActive = true;
+    portEXIT_CRITICAL(&_trainMux);
+    return true;
+}
+
+bool I2sToneOutput::clipActive() const {
+    portENTER_CRITICAL(&_trainMux);
+    const bool active = _clipActive;
+    portEXIT_CRITICAL(&_trainMux);
+    return active;
 }
 
 void I2sToneOutput::setPulseHop(const uint32_t* hz, size_t n) {
@@ -228,6 +296,9 @@ void I2sToneOutput::run() {
 void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
     const uint32_t sampleRateHz =
         _port.sampleRateHz() > 0 ? _port.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
+    if (renderClip(frames, frameCount, sampleRateHz)) {
+        return;
+    }
     takePulseTrainRequest(sampleRateHz);
     const uint32_t phaseStep =
         static_cast<uint32_t>((static_cast<uint64_t>(_toneHz) << 32) / static_cast<uint64_t>(sampleRateHz));

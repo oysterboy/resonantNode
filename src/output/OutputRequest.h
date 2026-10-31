@@ -43,6 +43,7 @@ struct OutputRequest {
         Pattern,   // a ChirpOutput pattern at the chirp tone, timed by ChirpOutput
         HopTrain,  // the network signal: hopSteps pulses on hopHz
         IdleCall,  // announceHz for announceMs, announceGapMs of silence, then the call
+        Clip,      // a recorded clip played back as it was (ECHO-001, the echo room's replay)
     };
     Kind kind = Kind::Pattern;
     ChirpPattern pattern = ChirpPattern::Single;
@@ -55,6 +56,12 @@ struct OutputRequest {
     uint32_t announceHz = 0;
     unsigned long announceMs = 0;
     unsigned long announceGapMs = 0;
+    // Clip: int16 samples at the port's rate, owned by the caller and left untouched until the request ends;
+    // clipMs is their length (for the span checks), clipGain the level (1.0 = as recorded).
+    const int16_t* clipSamples = nullptr;
+    size_t clipCount = 0;
+    unsigned long clipMs = 0;
+    float clipGain = 1.0f;
 };
 
 // What the device can play: the I2S tone runs at 16 kHz (Nyquist 8 kHz). The
@@ -80,6 +87,7 @@ enum class OutputReject : uint8_t {
     GapOutOfRange,
     AnnounceOutOfRange,
     SpanTooLong,
+    NoClip,
     DeviceRefused,
 };
 

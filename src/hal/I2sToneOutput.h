@@ -49,6 +49,8 @@ public:
     void setPulseGains(const float* gain, size_t n) override;
     bool pulseTrainActive() const override;
     void setSweep(uint32_t endHz, uint32_t durationMs) override;
+    bool startClip(const int16_t* samples, size_t count, float gain) override;
+    bool clipActive() const override;
 
     // Stops the writer task (tone off first; returns once the task is gone,
     // at most ~100 ms). begin() starts it again. For a build that needs the
@@ -60,6 +62,7 @@ private:
     static void taskEntry(void* self);
     void run();
     void renderBlock(int32_t* frames, size_t frameCount);
+    bool renderClip(int32_t* frames, size_t frameCount, uint32_t sampleRateHz);
     void takePulseTrainRequest(uint32_t sampleRateHz);
     uint32_t hopStep(uint32_t sampleRateHz);
     float nextGain();
@@ -112,6 +115,18 @@ private:
     size_t _gainCount = 0;
     size_t _gainIndex = 0;
     float _trainGain = 1.0f;
+    // Clip handoff, caller <-> task, under _trainMux; the task plays it in place of the tone.
+    const int16_t* _reqClip = nullptr;
+    size_t _reqClipCount = 0;
+    float _reqClipGain = 1.0f;
+    bool _clipRequested = false;
+    bool _clipActive = false;
+    // Task-only clip state.
+    const int16_t* _clip = nullptr;
+    size_t _clipCount = 0;
+    size_t _clipPos = 0;
+    float _clipGain = 1.0f;
+
     // Sweep render state: samples since the tone started and the current
     // phase step as a float accumulator (one add per sample).
     uint32_t _sweepPos = 0;

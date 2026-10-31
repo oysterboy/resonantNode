@@ -75,11 +75,20 @@ void ChirpOutput::startPulseTrain(uint32_t count, unsigned long onMs, unsigned l
     _toneOutput.toneOn();
 }
 
+void ChirpOutput::startClip(const int16_t* samples, size_t count, float gain) {
+    if (_active || samples == nullptr || count == 0) return;
+    _finished = false;
+    _deviceClip = _toneOutput.startClip(samples, count, gain);
+    _active = _deviceClip;
+    _phaseStartMs = timebase::nowMs();
+}
+
 void ChirpOutput::stop() {
     _toneOutput.toneOff();
     _active = false;
     _finished = false;
     _deviceTimedTrain = false;
+    _deviceClip = false;
     _activePattern = ChirpPattern::Single;
     _phase = 0;
     _phaseStartMs = timebase::nowMs();
@@ -87,6 +96,16 @@ void ChirpOutput::stop() {
 
 void ChirpOutput::update() {
     if (!_active) return;
+
+    if (_deviceClip) {
+        if (!_toneOutput.clipActive()) {
+            _deviceClip = false;
+            _active = false;
+            _finished = true;
+            _phaseStartMs = timebase::nowMs();
+        }
+        return;
+    }
 
     if (_deviceTimedTrain) {
         if (!_toneOutput.pulseTrainActive()) {

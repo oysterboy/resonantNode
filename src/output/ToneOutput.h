@@ -54,4 +54,14 @@ public:
         (void)endHz;
         (void)durationMs;
     }
+    // Optional (ECHO-001): plays `count` int16 samples at the device's rate, scaled by gain, with short ramps in and
+    // out; the caller keeps the samples untouched until clipActive() is false. toneOff() cuts it. False: the device
+    // can't (the piezo LEDC output).
+    virtual bool startClip(const int16_t* samples, size_t count, float gain) {
+        (void)samples;
+        (void)count;
+        (void)gain;
+        return false;
+    }
+    virtual bool clipActive() const { return false; }
 };

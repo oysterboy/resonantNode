@@ -9,6 +9,7 @@ native-test-behavior.
 #include <unity.h>
 
 #include "../../src/output/ChirpOutput.cpp"
+#include "../../src/output/ClipEnvelope.h"
 #include "../../src/output/SoundOutput.cpp"
 
 namespace {
@@ -43,6 +44,19 @@ public:
         }
     }
     bool pulseTrainActive() const override { return trainEndMs != 0 && timebase::nowMs() < trainEndMs; }
+    // A clip plays at 48 samples a millisecond (the echo shell's rate).
+    bool startClip(const int16_t* samples, size_t count, float gain) override {
+        clip = samples;
+        clipGain = gain;
+        clipEndMs = timebase::nowMs() + count / 48;
+        ++clips;
+        return true;
+    }
+    bool clipActive() const override { return clipEndMs != 0 && timebase::nowMs() < clipEndMs; }
+    const int16_t* clip = nullptr;
+    float clipGain = 0.0f;
+    unsigned long clipEndMs = 0;
+    int clips = 0;
 
     uint32_t toneHz = 0;
     uint32_t lastOnHz = 0;
@@ -236,6 +250,56 @@ void test_idle_call_restores_the_callers_chirp_setup() {
     TEST_ASSERT_EQUAL_UINT32(30, chirp2.chirpPauseMs());
 }
 
+// ECHO-001: a clip request goes to the device as it is and ends when the device says so.
+void test_clip_plays_and_finishes() {
+    setNowMs(1000);
+    FakeTone tone;
+    ChirpOutput chirp(tone, 3200);
+    SoundOutput out(chirp);
+    static int16_t samples[4800] = {};
+    OutputRequest r;
+    r.kind = OutputRequest::Kind::Clip;
+    r.clipSamples = samples;
+    r.clipCount = 4800;
+    r.clipMs = 100;
+    r.clipGain = 0.5f;
+    TEST_ASSERT_TRUE(out.start(r));
+    TEST_ASSERT_EQUAL(1, tone.clips);
+    TEST_ASSERT_EQUAL_PTR(samples, tone.clip);
+    TEST_ASSERT_EQUAL_FLOAT(0.5f, tone.clipGain);
+    TEST_ASSERT_TRUE(out.busy());
+    setNowMs(1050);
+    out.update();
+    TEST_ASSERT_TRUE(out.busy());
+    setNowMs(1101);
+    TEST_ASSERT_EQUAL_UINT8(SoundOutput::kEventFinished, out.update());
+    TEST_ASSERT_FALSE(out.busy());
+    TEST_ASSERT_EQUAL_UINT32(100, out.status().spanMs);
+}
+
+void test_clip_without_samples_is_rejected() {
+    OutputRequest r;
+    r.kind = OutputRequest::Kind::Clip;
+    TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::NoClip),
+                      static_cast<int>(SoundOutput::validate(r, OutputLimits())));
+    static int16_t one[1] = {};
+    r.clipSamples = one;
+    r.clipCount = 1;
+    r.clipMs = 7000;  // longer than OutputLimits.maxSpanMs
+    TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::SpanTooLong),
+                      static_cast<int>(SoundOutput::validate(r, OutputLimits())));
+}
+
+void test_clip_envelope_ramps_in_and_out() {
+    TEST_ASSERT_FLOAT_WITHIN(1e-6f, 1.0f / 11.0f, clipEnvelope(0, 1000, 10));
+    TEST_ASSERT_FLOAT_WITHIN(1e-6f, 1.0f, clipEnvelope(500, 1000, 10));
+    TEST_ASSERT_FLOAT_WITHIN(1e-6f, 1.0f / 11.0f, clipEnvelope(999, 1000, 10));
+    TEST_ASSERT_FLOAT_WITHIN(1e-6f, 0.0f, clipEnvelope(1000, 1000, 10));
+    TEST_ASSERT_FLOAT_WITHIN(1e-6f, 1.0f, clipEnvelope(0, 1, 0));
+    // Shorter than two ramps: each ramp is half the clip.
+    TEST_ASSERT_FLOAT_WITHIN(1e-6f, 1.0f / 3.0f, clipEnvelope(0, 4, 10));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_hop_train_plays_the_bins_and_finishes_after_its_span);
@@ -246,5 +310,8 @@ int main(int, char**) {
     RUN_TEST(test_a_second_request_while_busy_is_rejected);
     RUN_TEST(test_pattern_is_timed_by_chirp_output);
     RUN_TEST(test_idle_call_restores_the_callers_chirp_setup);
+    RUN_TEST(test_clip_plays_and_finishes);
+    RUN_TEST(test_clip_without_samples_is_rejected);
+    RUN_TEST(test_clip_envelope_ramps_in_and_out);
     return UNITY_END();
 }

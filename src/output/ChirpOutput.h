@@ -39,6 +39,8 @@ public:
     // Sweep inside the next plain chirp (OUT-005): glide from the tone to
     // endHz over durationMs; endHz = 0 clears. Stays set until cleared.
     void setSweep(uint32_t endHz, uint32_t durationMs) { _toneOutput.setSweep(endHz, durationMs); }
+    // A recorded clip (ECHO-001), played and timed by the device; inactive at once when the device can't play one.
+    void startClip(const int16_t* samples, size_t count, float gain);
     void stop();
     void update();
     bool isActive() const;
@@ -54,6 +56,7 @@ private:
     bool _active = false;
     bool _finished = false;
     bool _deviceTimedTrain = false;
+    bool _deviceClip = false;
     ChirpPattern _activePattern = ChirpPattern::Single;
     int _phase = 0;
     int _beepCount = 1;

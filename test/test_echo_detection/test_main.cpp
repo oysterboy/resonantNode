@@ -69,10 +69,10 @@ OccurrenceVerdict judge(FeatureHistory& h, const Occurrence& occ, InspectedOccur
 void setUp() {}
 void tearDown() {}
 
-// Quiet until 1000, loud from 1003: a rise within one block.
+// Quiet until 1000, loud from 1003: 10 % -> 90 % within one block.
 void test_a_clap_rises_fast_and_passes() {
     FeatureHistory& h = history();
-    record(h, 900, 1100, [](unsigned long t) { return t < 1003 ? 5000.0f : 30000.0f; });
+    record(h, 900, 1100, [](unsigned long t) { return t < 1003 ? 100.0f : 30000.0f; });
     InspectedOccurrence in;
     const OccurrenceVerdict v = judge(h, occurrence(1003), in);
     TEST_ASSERT_TRUE(in.occurrence.attack.applicable);
@@ -82,11 +82,11 @@ void test_a_clap_rises_fast_and_passes() {
     TEST_ASSERT_TRUE(v.valid);
 }
 
-// A swell from 5000 to 30000 over 60 ms crosses the onset (12000) about 17 ms after leaving the floor: too slow.
+// A swell from 5000 to 30000 over 60 ms: 10 % -> 90 % of its peak takes ~50 ms, too slow.
 void test_a_swell_rises_slowly_and_fails() {
     FeatureHistory& h = history();
     record(h, 900, 1100, [](unsigned long t) {
-        return t < 1000 ? 5000.0f : (t > 1060 ? 30000.0f : 5000.0f + 25000.0f * (t - 1000) / 60.0f);
+        return t < 1000 ? 100.0f : (t > 1060 ? 30000.0f : 100.0f + 29900.0f * (t - 1000) / 60.0f);
     });
     InspectedOccurrence in;
     const OccurrenceVerdict v = judge(h, occurrence(1018), in);
@@ -113,7 +113,7 @@ void test_no_quiet_before_the_onset_is_not_measured() {
 void test_window_complete_after_the_onset() {
     OccurrenceInspector inspector;
     inspector.configure(echoPlan());
-    TEST_ASSERT_EQUAL_UINT32(1003 + 20, inspector.windowCompleteAtMs(occurrence(1003)));
+    TEST_ASSERT_EQUAL_UINT32(1003 + 60, inspector.windowCompleteAtMs(occurrence(1003)));
 }
 
 // The query itself, and a bin length above 1 ms rounding times down to the bin's start.

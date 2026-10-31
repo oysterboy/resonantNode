@@ -97,19 +97,20 @@ private:
 
     // The echo room (ECHO-001): gate values (ECHO GATE sets them live; params come with ECHO-003's ids).
     struct Gate {
-        float floor = 7000.0f;     // Strength16: quiet below this
-        float onset = 12000.0f;    // Strength16: the detector's onset and AttackSlope's crossing
-        float release = 9000.0f;   // Strength16: the detector's release
-        uint32_t maxAttackMs = 10; // a clap rises within this
-        uint32_t preMs = 30;       // the clip from the onset back
-        uint32_t postMs = 270;     // and forward (clip <= 300 ms)
-        float gain = 1.0f;         // the replay's level
+        // Strength16 levels (the desk 2026-10-31: the quiet room reads 40-100, a click from the Emitter at ~1 m ~2,000)
+        float floor = 300.0f;  // the noise: the attack's low point never below it
+        float onset = 1000.0f;  // the detector's onset
+        float release = 700.0f;  // the detector's release
+        uint32_t maxAttackMs = 10;  // a clap rises (10 % -> 90 % of its peak) within this
+        uint32_t preMs = 30;  // the clip from the onset back
+        uint32_t postMs = 270;  // and forward (clip <= 300 ms)
+        float gain = 1.0f;  // the replay's level
         bool enabled = true;
     };
     struct EchoCounts {
         unsigned long occurrences = 0;
-        unsigned long claps = 0;        // valid verdicts
-        unsigned long slow = 0;         // rejected: the attack too slow or not measured
+        unsigned long claps = 0;  // valid verdicts
+        unsigned long slow = 0;  // rejected: the attack too slow or not measured
         unsigned long replays = 0;
         unsigned long clipMissing = 0;  // the clip no longer (or not yet) whole in the ring
     };
@@ -130,7 +131,7 @@ private:
     size_t _clipCapacity = 0;
     uint64_t _heardOnsetIndex = 0;  // the onset of the clap Behavior is answering
     bool _detectionPaused = false;
-    int32_t _envelope = 0;   // smoothed |sample|, canonical PCM units (24-bit)
+    int32_t _envelope = 0;  // smoothed |sample|, canonical PCM units (24-bit)
     int32_t _envelopePeak = 0;  // since the last status
 
     Load _load;

@@ -181,7 +181,6 @@ void EchoApp::configureEcho() {
     m.minimumStrength = detection::StrengthClass::Medium;
     m.attack.stream = detection::FeatureStreamId::AmpEnvelope;
     m.attack.floorLevel = _gate.floor;
-    m.attack.onsetLevel = _gate.onset;
     m.attack.mediumMaxMs = _gate.maxAttackMs;
     m.attack.strongMaxMs = _gate.maxAttackMs / 2;
     m.attack.weakMaxMs = _gate.maxAttackMs * 3;

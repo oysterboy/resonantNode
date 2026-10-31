@@ -332,11 +332,21 @@ void OccurrenceInspector::annotateAttack(InspectedOccurrence& out, const Occurre
     OccurrenceAttack& attack = out.occurrence.attack;
     attack = OccurrenceAttack{};
     attack.applicable = true;
+    if (featureHistory == nullptr) {
+        return;  // Unknown
+    }
+    const unsigned long fromMs = occurrence.startMs - config.preMs;
+    const unsigned long toMs = occurrence.startMs + config.postMs;
+    const MagnitudeWindow window = featureHistory->getWindow(config.stream, fromMs, toMs, toMs);
+    if (!window.hasValues || window.max <= config.floorLevel) {
+        return;  // Unknown: nothing above the noise
+    }
+    // 10 % -> 90 % of the window's peak, the low point never below the noise floor.
+    const float low =
+        config.lowFraction * window.max > config.floorLevel ? config.lowFraction * window.max : config.floorLevel;
     unsigned long riseMs = 0;
-    if (featureHistory == nullptr ||
-        !featureHistory->riseTimeMs(config.stream, occurrence.startMs - config.preMs,
-                                    occurrence.startMs + config.postMs, config.floorLevel, config.onsetLevel, riseMs)) {
-        return;  // Unknown: no rise in the window
+    if (!featureHistory->riseTimeMs(config.stream, fromMs, toMs, low, config.highFraction * window.max, riseMs)) {
+        return;  // Unknown: no low bin before the crossing (loud from the window's start)
     }
     attack.measured = true;
     attack.riseMs = static_cast<uint32_t>(riseMs);

@@ -156,16 +156,19 @@ struct ShapeInspectionConfig {
     uint16_t strongMinRisingSteps = 3;
 };
 
-// ECHO-001 (step 20.2): the rise into the onset, over [start - preMs, start + postMs] of the stream's history: the
-// time from the last bin at or below floorLevel to the first at or above onsetLevel. The class: Strong within
-// strongMaxMs, Medium within mediumMaxMs, Weak within weakMaxMs, None slower; Unknown when the window shows no rise
-// (no quiet bin before the crossing). A clap or a knock rises in a few ms, a voice or a scrape in tens.
+// ECHO-001 (step 20.2): the rise into the onset, over [start - preMs, start + postMs] of the stream's history, as a
+// rise time relative to the window's peak: from the last bin at or below lowFraction of it (never below floorLevel,
+// the noise) to the first at or above highFraction of it (10 % -> 90 %), so a loud swell is as slow as a quiet one
+// (an absolute floor-to-threshold time was not: a loud slow ramp crossed low thresholds fast; desk 2026-10-31). The
+// class: Strong within strongMaxMs, Medium within mediumMaxMs, Weak within weakMaxMs, None slower; Unknown when the
+// window shows no rise (no low bin before the crossing). A clap or a knock rises in a few ms, a voice in tens.
 struct AttackInspectionConfig {
     FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
     uint32_t preMs = 30;
-    uint32_t postMs = 20;
-    float floorLevel = 7000.0f;
-    float onsetLevel = 12000.0f;
+    uint32_t postMs = 60;
+    float floorLevel = 300.0f;
+    float lowFraction = 0.1f;
+    float highFraction = 0.9f;
     uint32_t strongMaxMs = 5;
     uint32_t mediumMaxMs = 10;
     uint32_t weakMaxMs = 30;

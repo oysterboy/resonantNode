@@ -18,3 +18,14 @@ against these 5 + 2: its per-compute cost is higher, roughly by the bin ratio on
 With 2026-10-31-band-update-replay (every replayed verdict the same at 8 / 16 / 32): a larger interval looks free in
 detection and saves a quarter or more of the CPU. Not done: a Node measurement, the margin's edge, chords, music.
 Changing the boards' value is its own pass.
+
+## The Node's 8-bin band (same build, band=2950-4700; report8bin_upd<N>.log)
+
+| N | compute calls | avg per compute | of which Goertzel | CPU on the bank | hop10 |
+|---|---|---|---|---|---|
+| 4 | 327,793 | 108.4 us | 79.3 us | ~43 % | 10 / 10 |
+| 16 | 81,965 | 108.3 us | 79.1 us | ~11 % | 10 / 10 |
+| 32 | 40,967 | 108.3 us | 79.2 us | ~5 % | 10 / 10 |
+
+The earlier estimate (~105 us) holds: the Goertzel part scales with the bins (10 against 7). At N = 4 the bank alone
+takes ~27 us of the 62.5 us a sample allows. E2 back to the normal Analyzer image (072f01cb) after the runs.

@@ -169,7 +169,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    per-pair acceptance check (room-comb-and-margin.md "Consequences"). Takes over step 5h's open cells and
    NODE-012's next cell. On today's band; the band of 17 is measured again in 18.
 
-16. [RUNNING 2026-10-30: 16.1 done] Build BEH-008: answers follow the field level (the level automaton). (issue #78)
+16. [DONE 2026-10-31] Build BEH-008: answers follow the field level (the level automaton). (issue #78)
    roadmap-behavior.md BEH-008, decisions/2026-10-29-answers-follow-the-field-level-automaton.md,
    field-activity-response.md. PC first (test_behavior_level; native-fieldsim with the matrix from 15), then the desk
    (step 6's protocol against 2026-10-22-step6-trial and 2026-10-26-soak24-shape-b). Changes what the nodes do: the
@@ -189,14 +189,14 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         shrinking with the level. Owner 2026-10-30: a 3 s window shrinking with the level, and 1 in 6 for a quiet
         node's first answer (offset 0); now the shipped defaults (decision amended). Desk sim with them: 65 % of
         idle calls swell, chords 3 % -> 15 %, first answer after 1 s in 58 %, every chain ends.
-   16.3 [DONE 2026-10-31, one mark for the owner] The desk: five Nodes free, step 6's protocol
+   16.3 [DONE 2026-10-31] The desk: five Nodes free, step 6's protocol
         (bench/sessions/2026-10-31-step17-desk5, run with 17's build). Hearing matrix 18 / 20; quiet and with
         speech and music 30 min each: every chain ended within 30 s (80 / 80, 88 / 88; max 11-13 s), at most
         19-21 per minute, 0 answers without a call before them (noise started none); a third of step 6's
         emissions, chains of median 1.3 s. Missed: step 6's time to quiet (a 15 s silence within 30 s of a
         start), 43 / 100 and 42 / 113 against 80 %: idle calls (80 in 30 min) mostly go unanswered at 1 / 6 and
-        the next node's call comes first. Owner: keep that mark (then a longer idle timeout for five nodes) or
-        let "chains end within 30 s" stand for it.
+        the next node's call comes first. Owner 2026-10-31 ("16 fertig"): chains ending within 30 s is the mark
+        (decisions/2026-10-31-chains-end-replaces-time-to-quiet.md); step 16 closed.
 
 17. [DONE 2026-10-31. Was due 2026-12-06 (owner 2026-10-30)] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
    roadmap-behavior.md BEH-009, decisions/2026-10-29-wider-band-base-bin-per-node.md. PC first, then the desk.

@@ -138,7 +138,7 @@ answers artistically: imitate, contrast, hand on.
 
 ### BEH-008 - answers that follow the field: the level automaton
 
-Status: TODO (decided 2026-10-29, owner; sequenced at the milestone cut-over as step 16)
+Status: LANDED (2026-10-31, step 16: host-tested, native-fieldsim, the desk with five Nodes; decided 2026-10-29)
 Decision: docs/decisions/2026-10-29-answers-follow-the-field-level-automaton.md
 Research: docs/research/field-activity-response.md (the automaton, its values, the set-aside mechanisms,
 the desk model tools/sim/fieldramp.py)

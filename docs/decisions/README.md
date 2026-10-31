@@ -95,6 +95,7 @@ what replaced it.
 | 2026-10-29 | [The network band widens to 8 bins (2950-4700 Hz) for a base bin per node; band shifting and a musical tone are tested after](2026-10-29-wider-band-base-bin-per-node.md) (BEH-009, not implemented; amends the 2026-10-28 band decision) |
 | 2026-10-29 | [Max duration 450 ms (history 576, bin track 1024), so answers 120-220 ms apart are not lost as one too-long sound](2026-10-29-max-duration-450-for-chords.md) (step 14) |
 | 2026-10-30 | [Platform: off Arduino, onto ESP-IDF; not scheduled, new code stays off Arduino meanwhile](2026-10-30-platform-off-arduino.md) |
+| 2026-10-31 | [Under the level automaton, "every chain ends within 30 s" is the settling mark; time to quiet is no longer one](2026-10-31-chains-end-replaces-time-to-quiet.md) (step 16) |
 
 ## Open
 

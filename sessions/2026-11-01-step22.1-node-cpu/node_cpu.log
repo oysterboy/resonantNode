@@ -1,0 +1,532 @@
+1.04 EM >> EMIT MODE REMOTE
+1.04 E1 >> NET E5 OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+1.06 E1 NET sent seq=12484 target=E5 text=OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+1.09 E5 NET cmd from=24:DC:C3:4A:B0:50 seq=12484 target=E5 text=OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+1.09 E5 OTA start url=http://192.168.178.33:8070/node.bin
+1.13 EM EVT emitter_cmd line=MODE REMOTE
+1.16 E1 n>
+1.38 E5 OTA wifi ip=192.168.178.120 rssi=-46
+2.22 E5 OTA progress pct=0
+3.05 E5 OTA progress pct=10
+3.81 E5 OTA progress pct=20
+4.64 E5 OTA progress pct=30
+5.29 E5 OTA progress pct=40
+6.14 E5 OTA progress pct=50
+6.86 E5 OTA progress pct=60
+7.69 E5 OTA progress pct=70
+8.32 E5 OTA progress pct=80
+8.89 E5 OTA progress pct=90
+9.73 E5 OTA progress pct=100
+9.91 E5 OTA result=ok rebooting (the new image confirms itself after 20 s)
+10.28 E5 ets Jul 29 2019 12:21:46
+10.28 E5 rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+10.28 E5 configsip: 0, SPIWP:0xee
+10.28 E5 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+10.28 E5 mo
+10.38 E5 de:DIO, clock div:1
+10.38 E5 load:0x3fff0030,len:1344
+10.38 E5 load:0x40078000,len:13964
+10.38 E5 load:0x40080400,len:3600
+10.38 E5 entry 0x400805f0
+10.76 E5 OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000
+10.76 E5 E (64) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+10.76 E5 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:37 version=0.4.0 board=damp
+10.76 E5 RB node_id=0x38FE4AC3DC24
+10.76 E5 RB node name=E5 rotation_source=roster
+10.76 E5 PARAM load path=output.silent v
+10.85 E5 alue=1 default=0
+10.85 E5 PARAM load stored=50 applied=50 stale=0 invalid=0
+10.94 E5 RB net started=1 channel=1 net_id=82
+10.94 E5 RB signal band=2950-4700 bins=8 hop=on rotation=1 base=1 band_per_node=0 steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,4200
+10.94 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+10.94 E5 RB plan_check status=ok history_needed_ms=560 history_ms=
+11.06 E5 576 early_window_ms=0 issues=none
+11.06 E5 RB silent=1 (output.silent: listening, never sounding)
+11.06 E5 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape fieldStateConfig=4000/4000
+11.06 E5 RB PROFILE detail
+11.06 E5 kind=TonalPulseScalar
+11.06 E5 detectorSelection=ScalarTransient
+11.06 E5 inspectionPlan=contrast+amp+shape
+11.06 E5 scalarTransient.observedStream=FrequencyTarget
+11.06 E5 scalarTransient.onsetDetectionThreshold=2000.0
+11.06 E5 scalarTransient.onsetReleaseThreshold=1500.0
+11.06 E5 scalarTransient.cooldownAfterOnsetMs=50
+11.06 E5 scalarTransient.minTransientDurationMs=92
+11.06 E5 scalarTransient.maxTransientDurationMs=450
+11.06 E5 scalarTransient.releaseDebounceMs=10
+11.06 E5 scalarTransient.minTransientPeakStrength=3000.0
+11.06 E5 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+11.06 E5 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+11.06 E5 inspectionPlan.module[2].kind=BinShape label=shape
+11.06 E5 verdict.has_requirement=1
+11.06 E5 verdict.required_label=contrast
+11.06 E5 fieldState.occurrenceWindowMs=4000
+11.06 E5 fieldState.patternWindowMs=4000
+11.06 E5 fieldState.busyOccurrenceCountThreshold=3
+11.06 E5 fieldState.denseOccurrenceCountThreshold=6
+11.06 E5 fieldState.quietOccurrenceCountThreshold=0
+11.06 E5 RB behavio
+11.15 E5 r
+11.15 E5 idleEnabled=1
+11.15 E5 waitAfterHeardMs=100
+11.15 E5 refractoryAfterEmitMs=400
+11.15 E5 behaviorSuppressSelfChirpMs=100
+11.15 E5 detectionSuppressTailMsOwnEmit=60
+11.15 E5 idleTimeoutMs=60000
+11.15 E5 idleTimeVariationMs=20000
+11.15 E5 idleBlockedAfterHeardMs=1000
+11.15 E5 idleBlockedAfterOwnEmitMs=500
+11.15 E5 RB startup baseline=BOOT
+11.15 E5 RB warmup waiting ms=2 of 2000
+11.99 E5 RB warmup waiting ms=1002 of 2000
+12.95 E5 RB warmup done ms=2001 rebase=ok baseline=366.5
+12.95 E5 RB rebase waiting smooth=22.0 quietMs=0
+13.99 E5 RB rebase done quietMs=1004 baseline=793.9 smooth=0
+14.47 E5 RB baseline active
+30.70 E5 OTA confirmed partition=app0
+40.78 E5 >> RB STATUS
+40.84 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.25
+40.93 E5 0 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=428928 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=53 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=30167 audio.deficit_s=3.4 audio.level=112 audio.level_max=449 audio.us_per_sample=34.61 audio.block_us_max=4585 audio.baseline=36.0 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=30167 audio.last_sample_ms=30162 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=
+41.02 E5 0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+101.33 E5 >> RB STATUS
+101.40 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s
+101.49 E5 .samples_read=1397760 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=173 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=90719 audio.deficit_s=3.4 audio.level=10 audio.level_max=360 audio.us_per_sample=34.60 audio.block_us_max=4450 audio.baseline=10.9 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=90719 audio.last_sample_ms=90714 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c
+101.60 E5 6 date=Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+103.34 E5 >> RB STATUS
+103.41 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_sam
+103.50 E5 ples=3 freq.packet_age_ms=0.187 i2s.samples_read=1429888 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=177 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=92729 audio.deficit_s=3.4 audio.level=48 audio.level_max=155 audio.us_per_sample=34.61 audio.block_us_max=4451 audio.baseline=-7.5 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=92729 audio.last_sample_ms=92722 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=no
+103.60 E5 ne behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+164.07 E5 >> RB STATUS
+164.13 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 f
+164.22 E5 req.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=2401408 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=297 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=153449 audio.deficit_s=3.4 audio.level=27 audio.level_max=377 audio.us_per_sample=34.60 audio.block_us_max=4464 audio.baseline=-15.0 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=153449 audio.last_sample_ms=153442 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=
+164.32 E5 Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+166.16 E5 >> RB STATUS
+166.23 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=2434816 i2s.dropped_dma_buffers=0 i2s.cloc
+166.33 E5 k_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=301 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=155538 audio.deficit_s=3.4 audio.level=38 audio.level_max=178 audio.us_per_sample=34.61 audio.block_us_max=4467 audio.baseline=-20.5 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=155538 audio.last_sample_ms=155530 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+226.91 E5 >> RB STATUS
+226.98 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.
+227.07 E5 packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=3406976 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=422 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=216295 audio.deficit_s=3.4 audio.level=74 audio.level_max=562 audio.us_per_sample=34.60 audio.block_us_max=4460 audio.baseline=4.5 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=216295 audio.last_sample_ms=216290 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none beha
+227.16 E5 vior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+# node.bin quiet [{'freq.update_every_samples': '4', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '34.60', 'audio.block_us_max': '4450'}, {'freq.update_every_samples': '4', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '34.60', 'audio.block_us_max': '4464'}, {'freq.update_every_samples': '4', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '34.60', 'audio.block_us_max': '4460'}]
+228.98 E5 >> RB STATUS
+228.98 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+229.04 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.
+229.06 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+229.13 E5 packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=3440000 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=426 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=218359 audio.deficit_s=3.4 audio.level=16 audio.level_max=271 audio.us_per_sample=34.61 audio.block_us_max=4449 audio.baseline=49.6 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=218359 audio.last_sample_ms=218354 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wa
+229.16 EM EVT emitter_chirp_finished
+229.22 E5 nders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+233.00 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+233.10 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+233.19 EM EVT emitter_chirp_finished
+237.09 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+237.19 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+237.29 EM EVT emitter_chirp_finished
+241.10 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+241.20 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+241.29 EM EVT emitter_chirp_finished
+245.17 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+245.27 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+245.35 EM EVT emitter_chirp_finished
+249.22 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+249.31 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+249.41 EM EVT emitter_chirp_finished
+253.29 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+253.39 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+253.49 EM EVT emitter_chirp_finished
+257.31 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+257.40 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+257.49 EM EVT emitter_chirp_finished
+261.35 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+261.44 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+261.54 EM EVT emitter_chirp_finished
+265.37 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+265.47 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+265.56 EM EVT emitter_chirp_finished
+269.46 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+269.55 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+269.64 EM EVT emitter_chirp_finished
+273.54 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+273.64 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+273.72 EM EVT emitter_chirp_finished
+277.58 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+277.68 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+277.77 EM EVT emitter_chirp_finished
+281.64 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+281.73 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+281.83 EM EVT emitter_chirp_finished
+285.72 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+285.81 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+285.92 EM EVT emitter_chirp_finished
+289.78 E5 >> RB STATUS
+289.83 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_ever
+289.92 E5 y_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=4412800 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=547 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=279159 audio.deficit_s=3.4 audio.level=59 audio.level_max=5305 audio.us_per_sample=34.47 audio.block_us_max=5979 audio.baseline=11.2 heard.valid=15 heard.strength_sum=115548 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13148 clock.now_ms=279159 audio.last_sample_ms=279154 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=1 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0
+290.01 E5 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+291.86 E5 >> RB STATUS
+291.86 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+291.93 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.sample
+291.96 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+292.03 E5 s_read=4446080 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=551 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=281241 audio.deficit_s=3.4 audio.level=13 audio.level_max=179 audio.us_per_sample=34.40 audio.block_us_max=4477 audio.baseline=-3.3 heard.valid=15 heard.strength_sum=115548 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13148 clock.now_ms=281241 audio.last_sample_ms=281234 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+292.06 EM EVT emitter_chirp_finished
+295.89 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+295.99 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+296.08 EM EVT emitter_chirp_finished
+299.94 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+300.04 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+300.14 EM EVT emitter_chirp_finished
+304.00 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+304.09 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+304.19 EM EVT emitter_chirp_finished
+308.07 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+308.16 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+308.26 EM EVT emitter_chirp_finished
+312.12 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+312.21 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+312.30 EM EVT emitter_chirp_finished
+316.16 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+316.26 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+316.36 EM EVT emitter_chirp_finished
+320.17 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+320.25 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+320.43 EM EVT emitter_chirp_finished
+324.20 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+324.30 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+324.39 EM EVT emitter_chirp_finished
+328.22 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+328.32 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+328.42 EM EVT emitter_chirp_finished
+332.28 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+332.38 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+332.48 EM EVT emitter_chirp_finished
+336.28 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+336.38 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+336.47 EM EVT emitter_chirp_finished
+340.30 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+340.39 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+340.49 EM EVT emitter_chirp_finished
+344.31 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+344.41 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+344.51 EM EVT emitter_chirp_finished
+348.35 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+348.45 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+348.56 EM EVT emitter_chirp_finished
+352.41 E5 >> RB STATUS
+352.47 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_ag
+352.56 E5 e_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=5414784 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=9999 i2s.clock_corrections=671 i2s.max_clock_correction_us=32001 i2s.read_errors=0 audio.uptime_ms=341784 audio.deficit_s=3.4 audio.level=137 audio.level_max=5378 audio.us_per_sample=34.57 audio.block_us_max=5757 audio.baseline=-51.2 heard.valid=30 heard.strength_sum=231926 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13116 clock.now_ms=341784 audio.last_sample_ms=341778 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0
+352.65 E5 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:40 version=0.4.0 board=damp
+# node.bin hop [{'freq.update_every_samples': '4', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '34.47', 'audio.block_us_max': '5979'}, {'freq.update_every_samples': '4', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '34.57', 'audio.block_us_max': '5757'}]
+354.47 E1 >> NET E5 OTA url=http://192.168.178.33:8070/node16.bin token=<hidden>
+354.50 E1 NET sent seq=12485 target=E5 text=OTA url=http://192.168.178.33:8070/node16.bin token=<hidden>
+354.53 E5 NET cmd from=24:DC:C3:4A:B0:50 seq=12485 target=E5 text=OTA url=http://192.168.178.33:8070/node16.bin token=<hidden>
+354.53 E5 OTA start url=http://192.168.178.33:8070/node16.bin
+354.81 E5 OTA wifi ip=192.168.178.120 rssi=-50
+355.51 E5 OTA progress pct=0
+356.37 E5 OTA progress pct=10
+357.14 E5 OTA progress pct=20
+358.04 E5 OTA progress pct=30
+358.78 E5 OTA progress pct=40
+359.70 E5 OTA progress pct=50
+360.54 E5 OTA progress pct=60
+361.57 E5 OTA progress pct=70
+362.22 E5 OTA progress pct=80
+362.96 E5 OTA progress pct=90
+363.92 E5 OTA progress pct=100
+364.20 E5 OTA result=ok rebooting (the new image confirms itself after 20 s)
+364.50 E5 ets Jul 29 2019 12:21:46
+364.50 E5 rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+364.50 E5 configsip: 0, SPIWP:0xee
+364.50 E5 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+364.50 E5 mode:DIO, clock div:1
+364.50 E5 load:0x3f
+364.58 E5 ff0030,len:1344
+364.58 E5 load:0x40078000,len:13964
+364.58 E5 load:0x40080400,len:3600
+364.58 E5 entry 0x400805f0
+364.95 E5 OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000
+364.95 E5 E (64) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+364.95 E5 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:55:17 version=0.4.0 board=damp
+364.95 E5 RB node_id=0x38FE4AC3DC24
+364.95 E5 RB node name=E5 rotation_source=roster
+365.06 E5 PARAM load path=output.silent value=1 default=0
+365.06 E5 PARAM load stored=50 applied=50 stale=0 invalid=0
+365.16 E5 RB net started=1 channel=1 net_id=82
+365.16 E5 RB signal band=2950-4700 bins=8 hop=on rotation=1 base=1 band_per_node=0 steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,4200
+365.16 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+365.16 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+365.16 E5 RB silent=1 (output.silent: listening, never
+365.25 E5 sounding)
+365.25 E5 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape fieldStateConfig=4000/4000
+365.25 E5 RB PROFILE detail
+365.25 E5 kind=TonalPulseScalar
+365.25 E5 detectorSelection=ScalarTransient
+365.25 E5 inspectionPlan=contrast+amp+shape
+365.25 E5 scalarTransient.observedStream=FrequencyTarget
+365.25 E5 scalarTransient.onsetDetectionThreshold=2000.0
+365.25 E5 scalarTransient.onsetReleaseThreshold=1500.0
+365.25 E5 scalarTransient.cooldownAfterOnsetMs=50
+365.25 E5 scalarTransient.minTransientDurationMs=92
+365.25 E5 scalarTransient.maxTransientDurationMs=450
+365.25 E5 scalarTransient.releaseDebounceMs=10
+365.25 E5 scalarTransient.minTransientPeakStrength=3000.0
+365.25 E5 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+365.25 E5 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+365.25 E5 inspectionPlan.module[2].kind=BinShape label=shape
+365.25 E5 verdict.has_requirement=1
+365.25 E5 verdict.required_label=contrast
+365.25 E5 fieldState.oc
+365.34 E5 currenceWindowMs=4000
+365.34 E5 fieldState.patternWindowMs=4000
+365.34 E5 fieldState.busyOccurrenceCountThreshold=3
+365.34 E5 fieldState.denseOccurrenceCountThreshold=6
+365.34 E5 fieldState.quietOccurrenceCountThreshold=0
+365.34 E5 RB behavior
+365.34 E5 idleEnabled=1
+365.34 E5 waitAfterHeardMs=100
+365.34 E5 refractoryAfterEmitMs=400
+365.34 E5 behaviorSuppressSelfChirpMs=100
+365.34 E5 detectionSuppressTailMsOwnEmit=60
+365.34 E5 idleTimeoutMs=60000
+365.34 E5 idleTimeVariationMs=20000
+365.34 E5 idleBlockedAfterHeardMs=1000
+365.34 E5 idleBlockedAfterOwnEmitMs=500
+365.34 E5 RB startup baseline=BOOT
+365.34 E5 RB warmup waiting ms=2 of 2000
+366.21 E5 RB warmup waiting ms=1002 of 2000
+367.17 E5 RB warmup done ms=2000 rebase=ok baseline=-18.3
+367.17 E5 RB rebase waiting smooth=46.0 quietMs=0
+368.25 E5 RB rebase done quietMs=1002 baseline=20.4 smooth=0
+368.71 E5 RB baseline active
+384.87 E5 OTA confirmed partition=app1
+394.95 E5 >> RB STATUS
+395.02 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_m
+395.11 E5 s=0.937 i2s.samples_read=428416 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=53 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=30125 audio.deficit_s=3.3 audio.level=34 audio.level_max=419 audio.us_per_sample=15.70 audio.block_us_max=2154 audio.baseline=-3.6 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=30125 audio.last_sample_ms=30122 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:55:20 version=0.4.0 boa
+395.21 E5 rd=damp
+455.58 E5 >> RB STATUS
+455.65 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=1398400 i2s.dropped_dma_buffers=0
+455.75 E5 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=173 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=90754 audio.deficit_s=3.4 audio.level=95 audio.level_max=376 audio.us_per_sample=15.70 audio.block_us_max=2028 audio.baseline=23.9 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=90754 audio.last_sample_ms=90746 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:55:20 version=0.4.0 board=damp
+457.66 E5 >> RB STATUS
+457.73 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet
+457.81 E5 _age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=1431808 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=177 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=92837 audio.deficit_s=3.3 audio.level=51 audio.level_max=242 audio.us_per_sample=15.70 audio.block_us_max=2036 audio.baseline=17.6 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=92837 audio.last_sample_ms=92834 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 b
+457.91 E5 ehavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:55:20 version=0.4.0 board=damp
+518.56 E5 >> RB STATUS
+518.62 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packe
+518.72 E5 t_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=2406016 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=298 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=153729 audio.deficit_s=3.4 audio.level=41 audio.level_max=481 audio.us_per_sample=15.70 audio.block_us_max=2031 audio.baseline=28.4 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=153729 audio.last_sample_ms=153722 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:55:20 version=0.4.0 board=damp
+520.57 E5 >> RB STATUS
+520.63 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fr
+520.72 E5 esh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=2438272 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=302 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=155743 audio.deficit_s=3.4 audio.level=95 audio.level_max=203 audio.us_per_sample=15.71 audio.block_us_max=2043 audio.baseline=-54.0 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=155743 audio.last_sample_ms=155738 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters
+520.82 E5 =0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:55:20 version=0.4.0 board=damp
+581.23 E5 >> RB STATUS
+581.29 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms
+581.38 E5 =0.937 i2s.samples_read=3408640 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=422 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=216394 audio.deficit_s=3.4 audio.level=97 audio.level_max=391 audio.us_per_sample=15.70 audio.block_us_max=2031 audio.baseline=53.3 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=216394 audio.last_sample_ms=216386 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7
+581.48 E5 c6 date=Oct 31 2026 time=23:55:20 version=0.4.0 board=damp
+# node16.bin quiet [{'freq.update_every_samples': '16', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '15.70', 'audio.block_us_max': '2028'}, {'freq.update_every_samples': '16', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '15.70', 'audio.block_us_max': '2031'}, {'freq.update_every_samples': '16', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '15.70', 'audio.block_us_max': '2031'}]
+583.23 E5 >> RB STATUS
+583.23 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+583.29 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_sam
+583.32 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+583.38 E5 ples=15 freq.packet_age_ms=0.937 i2s.samples_read=3440768 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=426 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=218398 audio.deficit_s=3.3 audio.level=222 audio.level_max=222 audio.us_per_sample=15.70 audio.block_us_max=2036 audio.baseline=10.8 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=218398 audio.last_sample_ms=218394 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a
+583.46 E5 7c6 date=Oct 31 2026 time=23:55:20 version=0.4.0 board=damp
+583.49 EM EVT emitter_chirp_finished
+587.28 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+587.37 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+587.47 EM EVT emitter_chirp_finished
+591.37 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+591.46 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+591.56 EM EVT emitter_chirp_finished
+595.37 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+595.46 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+595.56 EM EVT emitter_chirp_finished
+599.46 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+599.55 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+599.65 EM EVT emitter_chirp_finished
+603.52 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+603.61 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+603.70 EM EVT emitter_chirp_finished
+607.56 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+607.64 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+607.74 EM E
+607.83 EM VT emitter_chirp_finished
+611.58 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+611.68 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+611.77 EM EVT emitter_chirp_finished
+615.66 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+615.75 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+615.86 EM EVT emitter_chirp_finished
+619.67 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+619.77 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+619.87 EM EVT emitter_chirp_finished
+623.67 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+623.77 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+623.86 EM EVT emitter_chirp_finished
+627.74 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+627.84 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+627.95 EM EVT emitter_chirp_finished
+631.78 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+631.86 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+631.96 EM EVT emitter_chirp_finished
+635.79 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+635.89 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+635.99 EM EVT emitter_chirp_finished
+639.81 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+639.90 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+639.99 EM EVT emitter_chirp_finished
+643.81 E5 >> RB STATUS
+643.86 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_perio
+643.96 E5 d_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=4409984 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=546 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=278977 audio.deficit_s=3.4 audio.level=17 audio.level_max=5230 audio.us_per_sample=15.71 audio.block_us_max=3510 audio.baseline=51.7 heard.valid=15 heard.strength_sum=115603 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13148 clock.now_ms=278977 audio.last_sample_ms=278970 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=0 behavior.base_glides=0 beh
+644.05 E5 avior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:55:20 version=0.4.0 board=damp
+645.90 E5 >> RB STATUS
+645.90 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+645.96 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.
+645.99 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+646.05 E5 packet_age_ms=0.937 i2s.samples_read=4443392 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=551 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=281063 audio.deficit_s=3.4 audio.level=51 audio.level_max=182 audio.us_per_sample=15.65 audio.block_us_max=2037 audio.baseline=32.8 heard.valid=15 heard.strength_sum=115603 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13148 clock.now_ms=281063 audio.last_sample_ms=281058 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:
+646.09 EM EVT emitter_chirp_finished
+646.15 E5 55:20 version=0.4.0 board=damp
+649.94 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+650.03 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+650.14 EM EVT emitter_chirp_finished
+653.95 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+654.05 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+654.14 EM EVT emitter_chirp_finished
+657.97 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+658.07 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+658.17 EM EVT emitter_chirp_finished
+662.06 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+662.15 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+662.24 EM EVT emitter_chirp_finished
+666.10 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+666.19 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+666.28 EM EVT emitter_chirp_finished
+670.16 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+670.24 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+670.33 EM EVT emitter_chir
+670.43 EM p_finished
+674.16 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+674.26 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+674.36 EM EVT emitter_chirp_finished
+678.20 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+678.29 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+678.39 EM EVT emitter_chirp_finished
+682.23 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+682.33 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+682.43 EM EVT emitter_chirp_finished
+686.25 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+686.34 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+686.43 EM EVT emitter_chirp_finished
+690.28 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+690.37 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+690.47 EM EVT emitter_chirp_finished
+694.30 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+694.39 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+694.49 EM EVT emitter_chirp_finished
+698.35 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+698.44 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+698.54 EM EVT emitter_chirp_finished
+702.40 EM >> EMIT PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+702.50 EM EVT emitter_cmd line=PULSES 5 25 10 freq=3450 hop=2950,3200,3450,3700,3950
+702.60 EM EVT emitter_chirp_finished
+706.47 E5 >> RB STATUS
+706.54 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=2950-4700 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_re
+706.63 E5 ad=5412608 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=9999 i2s.clock_corrections=671 i2s.max_clock_correction_us=24002 i2s.read_errors=0 audio.uptime_ms=341640 audio.deficit_s=3.4 audio.level=11 audio.level_max=5398 audio.us_per_sample=15.86 audio.block_us_max=3338 audio.baseline=-25.7 heard.valid=30 heard.strength_sum=231014 net.started=1 net.rx=0 net.tx_failed=0 heap.free=83480 heap.free_min=83208 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13116 clock.now_ms=341640 audio.last_sample_ms=341634 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=b4f1a7c6 date=Oct 31
+706.73 E5 2026 time=23:55:20 version=0.4.0 board=damp
+# node16.bin hop [{'freq.update_every_samples': '16', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '15.71', 'audio.block_us_max': '3510'}, {'freq.update_every_samples': '16', 'i2s.dropped_dma_buffers': '0', 'audio.us_per_sample': '15.86', 'audio.block_us_max': '3338'}]
+708.48 E1 >> NET E5 OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+708.51 E1 NET sent seq=12486 target=E5 text=OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+708.55 E5 NET cmd from=24:DC:C3:4A:B0:50 seq=12486 target=E5 text=OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+708.55 E5 OTA start url=http://192.168.178.33:8070/node.bin
+711.67 E5 OTA wifi ip=192.168.178.120 rssi=-46
+712.43 E5 OTA progress pct=0
+713.37 E5 OTA progress pct=10
+714.03 E5 OTA progress pct=20
+714.90 E5 OTA progress pct=30
+715.64 E5 OTA progress pct=40
+716.41 E5 OTA progress pct=50
+717.09 E5 OTA progress pct=60
+718.00 E5 OTA progress pct=70
+718.66 E5 OTA progress pct=80
+719.34 E5 OTA progress pct=90
+720.29 E5 OTA
+720.39 E5 progress pct=100
+720.58 E5 OTA result=ok rebooting (the new image confirms itself after 20 s)
+720.87 E5 ets Jul 29 2019 12:21:46
+720.97 E5 rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+720.97 E5 configsip: 0, SPIWP:0xee
+720.97 E5 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+720.97 E5 mode:DIO, clock div:1
+720.97 E5 load:0x3fff0030,len:1344
+720.97 E5 load:0x40078000,len:13964
+720.97 E5 load:0x40080400,len:3600
+720.97 E5 entry 0x400805f0
+721.35 E5 OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000
+721.35 E5 E (64) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+721.35 E5 BUILD role=node git=b4f1a7c6 date=Oct 31 2026 time=23:54:37 version=0.4.0 board=damp
+721.35 E5 RB node_id=0x38FE4AC3DC24
+721.35 E5 RB node name=E5 rotation_source=roster
+721.45 E5 PARAM load path=output.silent value=1 default=0
+721.45 E5 PARAM load stored=50 applied=50 stale=0 invalid=0
+721.55 E5 RB net started=1 channel=1 net_id=82
+721.55 E5 RB signal band=2950-4700 bins=8 hop=on rotation=1 base=1 band_per_node=0 steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,4200
+721.55 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+721.55 E5 RB plan_check status=ok h
+721.64 E5 istory_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+721.64 E5 RB silent=1 (output.silent: listening, never sounding)
+721.64 E5 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape fieldStateConfig=4000/4000
+721.64 E5 RB PROFILE detail
+721.64 E5 kind=TonalPulseScalar
+721.64 E5 detectorSelection=ScalarTransient
+721.64 E5 inspectionPlan=contrast+amp+shape
+721.64 E5 scalarTransient.observedStream=FrequencyTarget
+721.64 E5 scalarTransient.onsetDetectionThreshold=2000.0
+721.64 E5 scalarTransient.onsetReleaseThreshold=1500.0
+721.64 E5 scalarTransient.cooldownAfterOnsetMs=50
+721.64 E5 scalarTransient.minTransientDurationMs=92
+721.64 E5 scalarTransient.maxTransientDurationMs=450
+721.64 E5 scalarTransient.releaseDebounceMs=10
+721.64 E5 scalarTransient.minTransientPeakStrength=3000.0
+721.64 E5 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+721.64 E5 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+721.64 E5 inspectionPlan.module[2].kind=BinShape label=shape
+721.64 E5 verdict.has_requiremen
+721.74 E5 t=1
+721.74 E5 verdict.required_label=contrast
+721.74 E5 fieldState.occurrenceWindowMs=4000
+721.74 E5 fieldState.patternWindowMs=4000
+721.74 E5 fieldState.busyOccurrenceCountThreshold=3
+721.74 E5 fieldState.denseOccurrenceCountThreshold=6
+721.74 E5 fieldState.quietOccurrenceCountThreshold=0
+721.74 E5 RB behavior
+721.74 E5 idleEnabled=1
+721.74 E5 waitAfterHeardMs=100
+721.74 E5 refractoryAfterEmitMs=400
+721.74 E5 behaviorSuppressSelfChirpMs=100
+721.74 E5 detectionSuppressTailMsOwnEmit=60
+721.74 E5 idleTimeoutMs=60000
+721.74 E5 idleTimeVariationMs=20000
+721.74 E5 idleBlockedAfterHeardMs=1000
+721.74 E5 idleBlockedAfterOwnEmitMs=500
+721.74 E5 RB startup baseline=BOOT
+721.74 E5 RB warmup waiting ms=2 of 2000
+722.61 E5 RB warmup waiting ms=1002 of 2000
+723.56 E5 RB warmup done ms=2001 rebase=ok baseline=-687.9
+723.56 E5 RB rebase waiting smooth=108.0 quietMs=0
+724.62 E5 RB rebase waiting smooth=138.0 quietMs=285
+725.57 E5 RB rebase waiting smooth=105.0 quietMs=205
+726.58 E5 RB rebase waiting smooth=59.0 quietMs=21
+727.56 E5 RB rebase waiting smooth=131.0 quietMs=93
+728.59 E5 RB rebase waiting smooth=41.0 quietMs=125
+729.63 E5 RB rebase waiting smooth=175.0 quietMs=13
+730.65 E5 RB rebase waiting smooth=239.0 quietMs=0
+731.60 E5 RB rebase waiting smooth=335.0 quietMs=152
+732.63 E5 RB rebase waiting smooth=280.0 quietMs=0
+733.58 E5 RB rebase waiting smooth=18.0 quietMs=336
+734.61 E5 RB rebase waiting smooth=41.0 quietMs=48
+735.57 E5 RB rebase waiting smooth=75.0 quietMs=192
+736.57 E5 RB rebase waiting smooth=229.0 quietMs=24
+737.63 E5 RB rebase waiting smooth=89.0 quietMs=16
+738.57 E5 RB rebase waiting smooth=347.0 quietMs=80
+739.62 E5 RB rebase waiting smooth=200.0 quietMs=16
+740.57 E5 RB rebase waiting smooth=274.0 quietMs=536
+741.34 E5 OTA confirmed partition=app0
+741.62 E5 RB rebase waiting smooth=47.0 quietMs=72
+742.57 E5 RB rebase waiting smooth=95.0 quietMs=120
+743.61 E5 RB rebase waiting smooth=148.0 quietMs=288
+744.29 E5 RB rebase done quietMs=1000 baseline=264.8 smooth=0
+744.85 E5 RB baseline active

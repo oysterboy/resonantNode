@@ -307,6 +307,11 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         20.1: the whisper image as the round trip's third leg (with 20.3).
    20.2 ECHO-001 built, host-tested and checked on the desk (11-09 .. 11-20; the Emitter's pulse train as the
         click). PC, then remote. Decision: the echo room heard on the desk.
+        2026-10-31, PC: CaptureRing (src/audio), the Clip request through SoundOutput / ChirpOutput / I2sToneOutput
+        (clipEnvelope's ramps), AttackSlope and makeClapVerdict (src/detection), the echo shell wired: the scalar
+        detector once per DMA block on the envelope, the echo room's Behavior values, the replay cut from the ring
+        (no new SignalShape: the echo mode composes every answer as the clip, as the Node composes the train).
+        test_capture_ring, test_echo_detection, test_sound_output +3; host 169. Desk next.
    20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the
         desk check (11-16 .. 12-04; a recorded whisper, a loud control, a fan). PC, then remote. Decision: no howl,
         whispers answered, speech ignored.

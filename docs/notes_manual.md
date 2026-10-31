@@ -309,10 +309,20 @@ ECHO STATUS (or STATUS)   one line: dropped_bufs since ECHO RESET, pass_us_mean 
                           samples, measured_mhz, env_peak, free_heap, largest_block, net counters
 ECHO RESET                the load counters
 ECHO LOG <s>              the status line every s seconds (10 at boot), 0 = on request only
+ECHO GATE [onset=] [release=] [floor=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]
+                          the echo room's values, live (Strength16 levels; the clip pre + post <= 300 ms)
 TONE <hz> <ms>            a test tone through the amp, at the shell's rate
 OTA url=... token=...     as on the Node; the image confirms after 20 s once its radio started
 NET STATUS / NET PING     the radio's counters
 ```
+
+The echo room (2026-10-31, ECHO-001): a clap (the envelope crossing `onset` within `attack` ms of sitting at or below
+`floor`, and an occurrence of the scalar detector on the envelope, once per DMA block) goes to a ResonantBehavior
+with the echo room's own values (no idle call, the first clap answered with 3 / 4, an answer 350 ms after it plus up to
+300 ms, a rest after a level of 4); the answer is the clap itself, `pre` ms before its onset to `post` ms after, cut
+from the ring and played at `gain`. Lines: `ECHO clap valid= strength= duration_ms= decision=`, `ECHO replay
+onset_index= ms= gain=`; ECHO STATUS adds `level= occurrences= claps= slow= replays= clip_missing= behavior=`.
+The values are code defaults in `EchoApp.h` / `echoBehavior()` until ECHO-003's params.
 
 By radio from a USB Node: `NET <name|*> OTA ...` (the way back to the Node image), `NET <name> ECHO STATUS`,
 `NET <name> NET PING`. The shell is not a gateway (no NET to other boards from it). Its boot line

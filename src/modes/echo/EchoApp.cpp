@@ -12,6 +12,8 @@
 #include "../../app/SerialOut.h"
 #include "../../app/TextParse.h"
 #include "../../app/TimeBase.h"
+#include "../../audio/AudioPcm.h"
+#include "../../detection/echo/ClapVerdict.h"
 #include "../../net/RemoteCommandPolicy.h"
 
 using text_parse::equalsIgnoreCase;
@@ -30,6 +32,25 @@ uint32_t largestFreeBlock() {
     return static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
 }
 
+// The echo room's Behavior (roadmap-echo.md ECHO-001 item 3): no idle call, a first clap answered with 3 / 4, a short
+// rest at the top of a small level, the answer after 350 ms (the clip's 270 ms after the onset recorded by then) plus a
+// little jitter. Own-emit suppression covers the replay and a tail for the room's ring-down.
+BehaviorGateConfig echoBehavior() {
+    BehaviorGateConfig b;
+    b.idleEnabled = false;
+    b.waitAfterHeardMs = 350;
+    b.refractoryAfterEmitMs = 300;
+    b.behaviorSuppressSelfChirpMs = 100;
+    b.detectionSuppressTailMsOwnEmit = 150;
+    b.levelMax = 4;
+    b.levelOffset = 2;
+    b.levelDecayMs = 3000;
+    b.restMs = 4000;
+    b.answerJitterMs = 300;
+    b.baseGlide = false;
+    return b;
+}
+
 }  // namespace
 
 EchoApp::EchoApp()
@@ -44,13 +65,17 @@ void EchoApp::begin() {
     _nodeName = me != nullptr ? me->name : "unknown";
 
     const uint32_t heapBeforeRing = largestFreeBlock();
-    _ringSamples = static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_RING_MS / 1000U;
-    _ring.reset(new (std::nothrow) int16_t[_ringSamples]);
-    if (!_ring) {
-        _ringSamples = 0;
+    _ring.begin(static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_RING_MS / 1000U);
+    _clipCapacity = static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * 300U / 1000U;
+    _clip.reset(new (std::nothrow) int16_t[_clipCapacity]);
+    if (!_clip) {
+        _clipCapacity = 0;
     }
     _i2sPort.begin();
     _toneOutput.begin();
+    _chirpOutput.begin();
+    _behavior.resetState();
+    configureEcho();
     const bool netUp = _net.begin();
     _netGateway.begin();
 
@@ -63,17 +88,19 @@ void EchoApp::begin() {
     serialOut().print(" dma_len=");
     serialOut().print(I2S_DMA_BUF_LEN);
     serialOut().print(" ring_ms=");
-    serialOut().print(_ringSamples > 0 ? ECHO_RING_MS : 0);
+    serialOut().print(_ring.capacity() > 0 ? ECHO_RING_MS : 0);
     serialOut().print(" ring_bytes=");
-    serialOut().print(static_cast<unsigned long>(_ringSamples * sizeof(int16_t)));
+    serialOut().print(static_cast<unsigned long>(_ring.capacity() * sizeof(int16_t)));
+    serialOut().print(" clip_bytes=");
+    serialOut().print(static_cast<unsigned long>(_clipCapacity * sizeof(int16_t)));
     serialOut().print(" largest_block_before_ring=");
     serialOut().print(heapBeforeRing);
     serialOut().print(" net_started=");
     serialOut().print(netUp ? 1 : 0);
     serialOut().print(" channel=");
     serialOut().println(NET_CHANNEL);
-    if (_ringSamples == 0) {
-        serialOut().println("ECHO ERR ring_alloc_failed");
+    if (_ring.capacity() == 0 || _clipCapacity == 0) {
+        serialOut().println("ECHO ERR ring_or_clip_alloc_failed");
     }
     resetLoad();
     _nextLogMs = timebase::nowMs() + _logEveryMs;
@@ -86,6 +113,7 @@ void EchoApp::update() {
     pollNet();
 
     const unsigned long now = timebase::nowMs();
+    runBehavior(now);
     if (_toneOn && static_cast<long>(now - _toneOffAtMs) >= 0) {
         _toneOutput.toneOff();
         _toneOn = false;
@@ -115,16 +143,12 @@ void EchoApp::pollAudio() {
             const int32_t s = block.samples[i];
             const int32_t magnitude = s < 0 ? -s : s;
             _envelope += (magnitude - _envelope) >> kEnvelopeShift;
-            if (_ringSamples > 0) {
-                _ring[_ringHead] = static_cast<int16_t>(s >> 8);  // 24-bit canonical PCM to int16
-                if (++_ringHead == _ringSamples) {
-                    _ringHead = 0;
-                }
-            }
+            _ring.push(static_cast<int16_t>(s >> 8));  // 24-bit canonical PCM to int16
         }
         if (_envelope > _envelopePeak) {
             _envelopePeak = _envelope;
         }
+        detectBlock(block, timebase::msFromUs64(block.approxStartUs64));
         const uint32_t blockUs = micros() - startUs;
         if (blockUs > _load.blockUsMax) {
             _load.blockUsMax = blockUs;
@@ -132,6 +156,191 @@ void EchoApp::pollAudio() {
         processed += block.sampleCount;
         _load.samples += block.sampleCount;
     }
+}
+
+void EchoApp::configureEcho() {
+    detection::ScalarTransientConfig d;
+    d.observedStream = detection::FeatureStreamId::AmpEnvelope;
+    d.onsetDetectionThreshold = _gate.onset;
+    d.onsetReleaseThreshold = _gate.release;
+    d.cooldownAfterOnsetMs = 50;
+    d.minTransientDurationMs = 0;
+    d.maxTransientDurationMs = 300;
+    d.minTransientPeakStrength = _gate.onset;
+    d.releaseDebounceMs = 20;
+    _detector.setConfig(d);
+    _attack.configure(_gate.floor, _gate.onset);
+    _behavior.configure(echoBehavior());
+}
+
+// One DMA block: the envelope as Strength16 (the scale the scalar detector's thresholds are in), its rise into
+// AttackSlope, the block into the detector; each occurrence it finishes becomes a clap verdict for Behavior. Paused
+// while the own replay sounds and for its tail (Behavior's own-emit suppression).
+void EchoApp::detectBlock(const AudioBlock& block, uint32_t blockMs) {
+    if (_detectionPaused) {
+        return;
+    }
+    const float level = static_cast<float>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_envelope)));
+    const long attack = _attack.update(level, blockMs);
+    if (attack >= 0) {
+        _crossingIndex = block.startSampleIndex;
+        _crossingAttackMs = attack;
+    }
+    AudioSamplePacket packet;
+    packet.sampleIndex = block.startSampleIndex;
+    packet.timeUs64 = block.approxStartUs64;
+    packet.timeMs = blockMs;
+    packet.sampleRateHz = _i2sPort.sampleRateHz();
+    packet.audioMagnitudeValue = static_cast<audio::Strength16>(level);
+    packet.smoothedLevel = static_cast<audio::Strength16>(level);
+    packet.valid = true;
+    packet.overflowDuringBlock = block.overflowBeforeBlock;
+    _detector.update(packet, level);
+    detection::Occurrence occurrence;
+    while (_detector.popOccurrence(occurrence)) {
+        ++_echo.occurrences;
+        const detection::OccurrenceVerdict verdict =
+            detection::makeClapVerdict(occurrence, _crossingAttackMs, _gate.maxAttackMs);
+        const uint64_t onset = _crossingIndex;
+        _crossingAttackMs = -1;
+        if (verdict.valid) {
+            ++_echo.claps;
+        } else {
+            ++_echo.slow;
+        }
+        if (!_gate.enabled) {
+            continue;
+        }
+        const ResonantBehavior::BehaviorDecision decision =
+            _behavior.handleOccurrenceVerdict(verdict, timebase::nowMs());
+        if (decision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
+            _heardOnsetIndex = onset;
+        }
+        serialOut().print("ECHO clap valid=");
+        serialOut().print(verdict.valid ? 1 : 0);
+        serialOut().print(" strength=");
+        serialOut().print(static_cast<unsigned long>(verdict.primaryStrength));
+        serialOut().print(" duration_ms=");
+        serialOut().print(verdict.primaryDurationMs);
+        serialOut().print(" decision=");
+        serialOut().println(ResonantBehavior::behaviorDecisionName(decision));
+    }
+}
+
+// Behavior's clock, the replay's end, and detection resuming clean after the own sound.
+void EchoApp::runBehavior(unsigned long now) {
+    const bool paused = _behavior.ownEmitDetectionSuppressed(now);
+    if (_detectionPaused && !paused) {
+        _detector.restartAfterInputGap();
+        _attack.reset();
+    }
+    _detectionPaused = paused;
+    if (_soundOutput.update() & SoundOutput::kEventFinished) {
+        _behavior.notifyChirpFinished(now);
+    }
+    _behavior.update(now);
+    if (!_soundOutput.busy() && _behavior.shouldStartChirp()) {
+        startReplay(now);
+    }
+}
+
+// The answer: the clap as it was heard, preMs before its onset to postMs after, out of the ring.
+void EchoApp::startReplay(unsigned long now) {
+    const uint64_t rate = _i2sPort.sampleRateHz();
+    const uint64_t pre = rate * _gate.preMs / 1000U;
+    uint64_t count = rate * (_gate.preMs + _gate.postMs) / 1000U;
+    if (count > _clipCapacity) {
+        count = _clipCapacity;
+    }
+    const uint64_t from = _heardOnsetIndex > pre ? _heardOnsetIndex - pre : 0;
+    OutputRequest request;
+    request.kind = OutputRequest::Kind::Clip;
+    request.clipSamples = _clip.get();
+    request.clipCount = static_cast<size_t>(count);
+    request.clipMs = static_cast<unsigned long>(count * 1000U / (rate > 0 ? rate : 1));
+    request.clipGain = _gate.gain;
+    const bool cut = _clip && _ring.copy(from, static_cast<size_t>(count), _clip.get());
+    if (!cut || !_soundOutput.start(request)) {
+        // Behavior asked; close its request so it leaves Chirping.
+        if (!cut) {
+            ++_echo.clipMissing;
+        }
+        _behavior.notifyChirpStarted(now, 0);
+        _behavior.notifyChirpFinished(now);
+        serialOut().println(cut ? "ECHO replay rejected" : "ECHO replay clip_missing");
+        return;
+    }
+    ++_echo.replays;
+    _behavior.notifyChirpStarted(now, request.clipMs);
+    serialOut().print("ECHO replay onset_index=");
+    serialOut().print(static_cast<unsigned long long>(_heardOnsetIndex));
+    serialOut().print(" ms=");
+    serialOut().print(request.clipMs);
+    serialOut().print(" gain=");
+    serialOut().println(_gate.gain, 2);
+}
+
+// ECHO GATE [onset=S16] [release=S16] [floor=S16] [attack=MS] [pre=MS] [post=MS] [gain=X] [on=0|1]: live values for the
+// desk (not saved); prints them either way.
+void EchoApp::handleGateCommand(const char* line) {
+    const char* rest = text_parse::rest(line, "ECHO GATE");
+    struct FloatKey {
+        const char* key;
+        float* field;
+    } floats[] = {
+        {"onset=", &_gate.onset}, {"release=", &_gate.release}, {"floor=", &_gate.floor}, {"gain=", &_gate.gain}};
+    for (const FloatKey& k : floats) {
+        const char* at = strstr(rest, k.key);
+        float v = 0.0f;
+        if (at != nullptr && text_parse::parseFiniteFloat(at + strlen(k.key), v) && v >= 0.0f) {
+            *k.field = v;
+        }
+    }
+    struct UintKey {
+        const char* key;
+        uint32_t* field;
+    } uints[] = {{"attack=", &_gate.maxAttackMs}, {"pre=", &_gate.preMs}, {"post=", &_gate.postMs}};
+    for (const UintKey& k : uints) {
+        const char* at = strstr(rest, k.key);
+        if (at == nullptr) {
+            continue;
+        }
+        char digits[12] = {};
+        size_t n = 0;
+        at += strlen(k.key);
+        while (at[n] >= '0' && at[n] <= '9' && n < sizeof(digits) - 1) {
+            digits[n] = at[n];
+            ++n;
+        }
+        uint32_t v = 0;
+        if (text_parse::parseUnsigned(digits, v)) {
+            *k.field = v;
+        }
+    }
+    if (_gate.preMs + _gate.postMs > 300) {
+        _gate.postMs = _gate.preMs < 300 ? 300 - _gate.preMs : 0;  // the clip buffer holds 300 ms
+    }
+    const char* on = strstr(rest, "on=");
+    if (on != nullptr) {
+        _gate.enabled = on[3] != '0';
+    }
+    configureEcho();
+    serialOut().print("ECHO gate onset=");
+    serialOut().print(_gate.onset, 0);
+    serialOut().print(" release=");
+    serialOut().print(_gate.release, 0);
+    serialOut().print(" floor=");
+    serialOut().print(_gate.floor, 0);
+    serialOut().print(" attack_ms=");
+    serialOut().print(_gate.maxAttackMs);
+    serialOut().print(" pre_ms=");
+    serialOut().print(_gate.preMs);
+    serialOut().print(" post_ms=");
+    serialOut().print(_gate.postMs);
+    serialOut().print(" gain=");
+    serialOut().print(_gate.gain, 2);
+    serialOut().print(" on=");
+    serialOut().println(_gate.enabled ? 1 : 0);
 }
 
 void EchoApp::pollUsb() {
@@ -171,6 +380,8 @@ void EchoApp::handleLine(const char* line) {
     } else if (equalsIgnoreCase(line, "ECHO RESET")) {
         resetLoad();
         serialOut().println("ECHO reset");
+    } else if (startsWithWordIgnoreCase(line, "ECHO GATE")) {
+        handleGateCommand(line);
     } else if (startsWithWordIgnoreCase(line, "ECHO LOG")) {
         handleLogCommand(line);
     } else if (startsWithWordIgnoreCase(line, "TONE")) {
@@ -284,7 +495,23 @@ void EchoApp::printStatus() {
     serialOut().print(" net_rx=");
     serialOut().print(_net.stats().rxFrames);
     serialOut().print(" net_tx=");
-    serialOut().println(_net.stats().txFrames);
+    serialOut().print(_net.stats().txFrames);
+    serialOut().print(" level=");
+    serialOut().print(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_envelope)));
+    serialOut().print(" occurrences=");
+    serialOut().print(_echo.occurrences);
+    serialOut().print(" claps=");
+    serialOut().print(_echo.claps);
+    serialOut().print(" slow=");
+    serialOut().print(_echo.slow);
+    serialOut().print(" replays=");
+    serialOut().print(_echo.replays);
+    serialOut().print(" clip_missing=");
+    serialOut().print(_echo.clipMissing);
+    serialOut().print(" behavior=");
+    serialOut().print(_behavior.stateName());
+    serialOut().print(" level_auto=");
+    serialOut().println(_behavior.level(timebase::nowMs()));
     _envelopePeak = 0;
 }
 
@@ -310,6 +537,8 @@ void EchoApp::printHelp() {
     serialOut().println("ECHO CMD: ECHO STATUS (also STATUS)");
     serialOut().println("ECHO CMD: ECHO RESET (the load counters)");
     serialOut().println("ECHO CMD: ECHO LOG <seconds> (status every n s, 0 = off)");
+    serialOut().println(
+        "ECHO CMD: ECHO GATE [onset=] [release=] [floor=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]");
     serialOut().println("ECHO CMD: TONE <hz> <ms>");
     serialOut().println("ECHO CMD: OTA url=... token=...");
     serialOut().println("ECHO CMD: NET STATUS");

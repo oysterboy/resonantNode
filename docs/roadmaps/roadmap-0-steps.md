@@ -316,7 +316,13 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Attack / module AttackRise read FeatureHistory::riseTimeMs; the echo shell runs detector -> held occurrence ->
         OccurrenceInspector (its one-module plan) -> makeVerdict -> Behavior; FeatureHistory sized per build
         (FEATURE_HISTORY_BIN_MS / _STREAMS; the echo env 64 x 1 ms x 1 stream, ~2.7 KB; the Node unchanged, T2h
-        byte-identical). AttackSlope and makeClapVerdict removed. Desk next.
+        byte-identical). AttackSlope and makeClapVerdict removed.
+        Desk 2026-10-31 (bench/sessions/2026-10-31-step20.2-echo-desk; E5 by NET OTA, the Emitter's click): run 5
+        answered 15 / 15 clicks (attack 3-6 ms, 12 replays, three declined by the level), rejected 10 / 10 swells
+        (50 ms ramp), no dropped buffer; the music made 34 claps in 7 min (sharp onsets just over the onset level).
+        On the way: the attack as 10 % -> 90 % of the peak, levels onset 1000 / release 700 / floor 300, the clip cut
+        by the ring's index and copied once its tail is recorded, only valid claps printed. Open for the owner: answer
+        music's sharp onsets or not (a higher onset / a minimum peak).
    20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the
         desk check (11-16 .. 12-04; a recorded whisper, a loud control, a fan). PC, then remote. Decision: no howl,
         whispers answered, speech ignored.

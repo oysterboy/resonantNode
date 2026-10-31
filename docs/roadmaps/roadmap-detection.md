@@ -198,6 +198,22 @@ Detail and the audit tables: docs/refactors/archive/cleanup-0-plan.md, "Phase 7"
 Pick up with DET-016 (the verdict boundary rule touches the same names).
 ```
 
+### DET-020 - the band bank's update interval (CPU)
+
+Status: PLANNED (2026-10-31, owner: "measure on the Node, then 16, then the edge cases and a soak"; step 22)
+
+```text
+FreqBandStream recomputes the band bank every 4 samples (0.25 ms) over a 64-sample (4 ms) window: each update
+overlaps the last by 94 %. One compute on the Node's 8-bin band (10 Goertzel bins with the guards) costs ~108 us
+on the board, so at 16 kHz the bank takes ~43 % of the CPU (bench/sessions/2026-10-31-band-update-board, the
+Analyzer's profiling build: 108 us at N = 4 / 16 / 32, hop10 10 / 10 at each). The host replay keeps every verdict
+at N = 8 / 16 / 32 (bench/sessions/2026-10-31-band-update-replay: strength within 7 %, one duration by 15 ms).
+Plan: 1. measure the Node's loop with the bank at 4 and 16 (a profiling Node build); 2. N = 16 as the default
+(FreqBandStream, the Analyzer's SeqOutputConfig), T2h re-recorded and its diff explained; 3. the edge cases on
+the board: the margin ladder (-6 / -7.5 dB, two hops lost), the chord cell, the music file; 4. a soak.
+Why now: before Whispernet (24 kHz detection per block) and ten nodes ask for the loop; the largest CPU item known.
+```
+
 ### DET-019 - the amp class is the first gate to fail as the level drops
 
 Status: PLANNED (2026-10-30, from lab E005; a tuning pass, not a side change)

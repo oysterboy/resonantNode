@@ -13,16 +13,17 @@ import time
 
 import serial
 
-HOP = "freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950"
-SEQ3 = "SEQ start profile=TonalPulseScalar tries=3 band=2950-3950 mode=detail when=all verbose=1"
+# The Node's 8-bin band since 2026-10-31 (a new A/B baseline: sets before this ran band=2950-3950).
+HOP = "freq=3450 band=2950-4700 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950"
+SEQ3 = "SEQ start profile=TonalPulseScalar tries=3 band=2950-4700 mode=detail when=all verbose=1"
 LONG_LABEL = "ab_label_" + "x" * 60
 
 # (name, [(delay_s_before_write, text)], wait_s after the last write)
 CASES = [
     ("hop10", [(0, "SEQ start profile=TonalPulseScalar tries=10 %s mode=detail when=all verbose=1" % HOP)], 45),
-    ("chirp3200_100", [(0, "SEQ start profile=TonalPulseScalar tries=10 dur=100 band=2950-3950 mode=detail when=all "
+    ("chirp3200_100", [(0, "SEQ start profile=TonalPulseScalar tries=10 dur=100 band=2950-4700 mode=detail when=all "
                            "verbose=1")], 45),
-    ("chirp3450_150", [(0, "SEQ start profile=TonalPulseScalar tries=10 freq=3450 dur=150 band=2950-3950 "
+    ("chirp3450_150", [(0, "SEQ start profile=TonalPulseScalar tries=10 freq=3450 dur=150 band=2950-4700 "
                            "mode=detail when=all verbose=1")], 45),
     ("status_idle", [(0, "SEQ STATUS")], 2),
     ("start_during_run", [(0, SEQ3), (3, "SEQ STATUS"), (0.5, SEQ3)], 20),

@@ -42,20 +42,21 @@ import time
 
 import serial
 
-HOP = "freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950"
+# The Node's 8-bin band since 2026-10-31: a new baseline for the margin steps (soaks before ran band=2950-3950).
+HOP = "freq=3300 band=2950-4700 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950"
 DEFAULT_STEPS = [
     ("hop10", "SEQ start profile=TonalPulseScalar tries=10 %s mode=detail when=all verbose=1" % HOP),
-    ("chirp3200_100", "SEQ start profile=TonalPulseScalar tries=10 dur=100 band=2950-3950 mode=detail when=all verbose=1"),
-    ("chirp3450_150", "SEQ start profile=TonalPulseScalar tries=10 freq=3450 dur=150 band=2950-3950 mode=detail when=all verbose=1"),
+    ("chirp3200_100", "SEQ start profile=TonalPulseScalar tries=10 dur=100 band=2950-4700 mode=detail when=all verbose=1"),
+    ("chirp3450_150", "SEQ start profile=TonalPulseScalar tries=10 freq=3450 dur=150 band=2950-4700 mode=detail when=all verbose=1"),
 ]
-HOP450 = "freq=3450 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950"
+HOP450 = "freq=3450 band=2950-4700 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950"
 MARGIN_STEPS = [("hop10_L%s" % lv, "SEQ start profile=TonalPulseScalar tries=10 %s level=%s mode=detail when=all "
                  "verbose=1" % (HOP450, lv)) for lv in ("0.5", "0.35", "0.25", "0.21")]
 MARGIN_STEPS += [("hop10_att_%s" % n, "SEQ start profile=TonalPulseScalar tries=10 %s att=%s mode=detail when=all "
                   "verbose=1" % (HOP450, at)) for n, at in (("mid23", "0,20,20,0,0"), ("end45", "0,0,0,20,20"))]
 AUDIO = r"C:\Users\admin\Downloads\bench_audio.wav"
 RAW_HOP = ("RAW trigger f=3300 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 pre=50 post=250 mode=both "
-           "band=2950-3950")
+           "band=2950-4700")
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--nodes", required=True, help="NAME=PORT,...")

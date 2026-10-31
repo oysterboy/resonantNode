@@ -326,12 +326,21 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Owner 2026-10-31: a minimum peak, permissive ("reacting to the unplanned is the point"); the echo room
         at 48 kHz, Whispernet at 24 kHz (~2 s delay); Whispernet's detector first on a synthetic whisper (the
         speech in bench_audio.wav and noise), real recordings later; site dates from the owner.
+        The bench tools' Analyzer band moved to 2950-4700 (analyzerab.py, soakcycle.py; owner 2026-10-31): a new
+        baseline for A/B sets and soak margins from here. Step 22 (the band bank's interval) comes before 20.3.
    20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the
         desk check (11-16 .. 12-04; a recorded whisper, a loud control, a fan). PC, then remote. Decision: no howl,
         whispers answered, speech ignored.
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.
+
+22. [NEXT, before 20.3 (owner 2026-10-31)] DET-020: the band bank's update interval. (issue #87)
+   roadmap-detection.md DET-020. The bank recomputes every 4 samples; one compute on the 8-bin band costs ~108 us,
+   ~43 % of the CPU (bench/sessions/2026-10-31-band-update-board); the replay keeps every verdict at 8 / 16 / 32
+   (2026-10-31-band-update-replay). 22.1 the Node's loop at 4 and 16 (a profiling build); 22.2 N = 16 as the default,
+   T2h re-recorded; 22.3 the edge cases on the board (margin ladder, chord cell, music); 22.4 a soak.
+   Gate: the Node's CPU saving measured, every edge case as at N = 4 or the difference explained, a soak cited.
 
 21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
    roadmap-hardware.md HW-001 (the prototype, the D-AMP pinout as wired, room for the second mic), HW-002 (ten

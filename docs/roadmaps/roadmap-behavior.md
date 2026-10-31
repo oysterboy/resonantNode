@@ -163,7 +163,8 @@ Moves the field baseline: its own field session is the gate, as 8a was told to.
 
 ### BEH-009 - the base frequency per node: a wider band and a base bin, then the range experiments
 
-Status: TODO (decided 2026-10-29, owner; after BEH-008, sequenced at the milestone cut-over)
+Status: PARTIAL (parts 1-2 landed 2026-10-31, step 17: the 8-bin band, base bins, the glide and scatter;
+part 3, the range experiments, is step 19)
 Decision: docs/decisions/2026-10-29-wider-band-base-bin-per-node.md
 Research: docs/research/field-activity-response.md, Part 2
 

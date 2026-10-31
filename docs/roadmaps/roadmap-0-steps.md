@@ -189,9 +189,16 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         shrinking with the level. Owner 2026-10-30: a 3 s window shrinking with the level, and 1 in 6 for a quiet
         node's first answer (offset 0); now the shipped defaults (decision amended). Desk sim with them: 65 % of
         idle calls swell, chords 3 % -> 15 %, first answer after 1 s in 58 %, every chain ends.
-   16.3 [NEXT, after 14.2's board check] The desk: five Nodes free, step 6's protocol.
+   16.3 [DONE 2026-10-31, one mark for the owner] The desk: five Nodes free, step 6's protocol
+        (bench/sessions/2026-10-31-step17-desk5, run with 17's build). Hearing matrix 18 / 20; quiet and with
+        speech and music 30 min each: every chain ended within 30 s (80 / 80, 88 / 88; max 11-13 s), at most
+        19-21 per minute, 0 answers without a call before them (noise started none); a third of step 6's
+        emissions, chains of median 1.3 s. Missed: step 6's time to quiet (a 15 s silence within 30 s of a
+        start), 43 / 100 and 42 / 113 against 80 %: idle calls (80 in 30 min) mostly go unanswered at 1 / 6 and
+        the next node's call comes first. Owner: keep that mark (then a longer idle timeout for five nodes) or
+        let "chains end within 30 s" stand for it.
 
-17. [RUNNING 2026-10-30: 17.1-17.2 done, 17.3 on the desk. Due 2026-12-06 (owner 2026-10-30)] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
+17. [DONE 2026-10-31. Was due 2026-12-06 (owner 2026-10-30)] Build BEH-009 parts 1-2: wider band 2950-4700, a base bin per Node, the glide. (issue #79)
    roadmap-behavior.md BEH-009, decisions/2026-10-29-wider-band-base-bin-per-node.md. PC first, then the desk.
    Glide: one bin per own answer (owner 2026-10-29, as the decision says); the desk model converged slowly with it,
    so 18 watches whether the field settles on a shared base. Includes the node-structure
@@ -210,7 +217,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         distinct at a chain's start), the rest's scatter spreads them at a chain's end (field-activity-response.md
         "The base bin's glide"). Kept: the shape rule's wrap allowance (trains no longer wrap; dropping it is a
         detection change for its own commit, with T2h).
-   17.3 [RUNNING 2026-10-30] The desk: the decision's gate (hop10 per base bin >= 9 / 10, chirp rejected, music 0,
+   17.3 [DONE 2026-10-31] The desk: the decision's gate (hop10 per base bin >= 9 / 10, chirp rejected, music 0,
         the Node battery), then the glide on five Nodes.
         2026-10-30 evening (bench/sessions/2026-10-30-step17-band8, desk/): all five by OTA, the Nodes to 13902862
         (a base clamped on a narrower band now re-seeds when the band widens; the Nodes had band_high_hz 3950 stored,
@@ -221,11 +228,14 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         2026-10-31 soak: 8 cycles, no reset, music 0 verdicts, 0.5 / -3 dB 80 / 80, chords as 14.1; -6 dB 54 / 80
         because the room's comb moved at 22:00 the evening before (3450 Hz -7 dB, 3950 Hz +11 dB on the Analyzer;
         RAW in 2026-10-31-step17-margin-drop), not the build (lab E005). Next: the five Nodes free.
+        2026-10-31 five Nodes free (16.3's session, 2026-10-31-step17-desk5): long chains (6+ trains) end on one
+        base in 92 % quiet and 74 % with music (distinct bases 1.5 -> 1.1-1.3 from a chain's start to its end;
+        tools/bench/basechains.py). The decision's gate met; step 17 closed.
 
 18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.
 
-19. [TODO, after 17. Due 2026-12-06 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
+19. [NEXT. Due 2026-12-06 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
    BEH-009 part 3; field-activity-response.md Part 2 "What to measure" 1-2. Remote and PC. Ends in a decision between
    this and OUT-006 (8a).
 
@@ -319,6 +329,8 @@ parallel.
 
 ## Status log
 
+Status update 2026-10-31: 17 done (8-bin band, base bins, glide; desk and soak), 14.2 closed, 16.3 run (one
+mark, time to quiet, for the owner); 19 next.
 Status update 2026-10-30, late night: the owner set 17 (wider band) and 19 (range) due 2026-12-06, 17 pulled
 forward; 20 (echo, whisper) nice to have, parked after 20.1's PC part (the shell esp32dev-echo). 14.2's board check
 done on a5193220, its short soak running; next on the bench 16.3.

@@ -1,0 +1,576 @@
+# phase to_echo at 1.1
+1.05 E1 >> NET E5 OTA url=http://192.168.178.33:8070/echo.bin token=<hidden>
+1.08 E1 NET sent seq=12422 target=E5 text=OTA url=http://192.168.178.33:8070/echo.bin token=<hidden>
+1.11 E5 NET cmd from=24:DC:C3:4A:B0:50 seq=12422 target=E5 text=OTA url=http://192.168.178.33:8070/echo.bin token=<hidden>
+1.11 E5 OTA start url=http://192.168.178.33:8070/echo.bin
+1.42 E5 OTA wifi ip=192.168.178.120 rssi=-48
+2.28 E5 OTA progress pct=0
+3.06 E5 OTA progress pct=10
+3.74 E5 OTA progress pct=20
+4.36 E5 OTA progress pct=30
+5.35 E5 OTA progress pct=40
+5.96 E5 OTA progress pct=50
+6.65 E5 OTA progress pct=60
+7.50 E5 OTA progress pct=70
+8.06 E5 OTA progress pct=80
+8.68 E5 OTA progress pct=90
+9.31 E5 OTA progress pct=100
+9.50 E5 OTA result=ok rebooting (the new image confirms itself after 20 s)
+9.94 E5 ets Jul 29 2019 12:21:46
+9.94 E5 rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+9.94 E5 configsip: 0, SPIWP:0xee
+9.94 E5 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+9.94 E5 mode:DIO, clock div:1
+9.94 E5 load:0x3fff0030,len:1344
+9.94 E5 load:0x40078000,len:13964
+9.94 E5 load:0x40080400,len:3600
+9.94 E5 entry 0x400805f0
+10.31 E5 OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000
+10.31 E5 E (59) I2S: i2s_driver_u
+10.37 E5 ninstall(2048): I2S port 0 has not installed
+10.37 E5 BUILD role=echo git=f8dfe8ce date=Oct 31 2026 time=19:58:28 version=0.4.0 board=damp
+10.44 E5 ECHO boot node=E5 rate_hz=48000 dma_bufs=8 dma_len=128 ring_ms=500 ring_bytes=48000 largest_block_before_ring=110580 net_started=1 channel=1
+20.40 E5 ECHO status node=E5 uptime_s=10 window_s=10 rate_hz=48000 measured_mhz=47999952 samples=4810
+20.46 E5 24 dropped_bufs=25 dropped_total=25 passes=10000 pass_us_mean=77 pass_us_max=739 block_us_max=26 env_peak=488585 tone=0 free_heap=119812 largest_block=73716 net_rx=0 net_tx=0
+30.28 E5 OTA confirmed partition=app0
+# phase quiet at 30.3
+30.29 E5 >> ECHO LOG 10
+30.29 E5 >> ECHO RESET
+30.36 E5 ECHO log every_s=10
+30.36 E5 ECHO reset
+40.32 E5 ECHO status node=E5 uptime_s=30 window_s=10 rate_hz=48000 measured_mhz=47999984 samples=480000 dropped_bufs=0 dropped_total=25 passes=10000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43353 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+50.35 E5 ECHO status node=E5 uptime_s=40 window_s=20 rate_hz=48000 measured_mhz=47999936 samples=960000 dropped_bufs=0 dropped_total=25 passes=20000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=42963 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+60.34 E5 ECHO status node=E5 uptime_s=50 window_s=30 rate_hz=48000 measured_mhz=47999984 samples=1440000 dropped_bufs=0 dropped_total=25 passes=30000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=42362 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+70.31 E5 ECHO status node=E5 uptime_s=60 window_s=40 rate_hz=48000 measured_mhz=47999984 samples=1920000 dropped_bufs=0 dropped_total=25 pa
+70.37 E5 sses=40000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43127 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+80.31 E5 ECHO status node=E5 uptime_s=70 window_s=50 rate_hz=48000 measured_mhz=47999936 samples=2400000 dropped_bufs=0 dropped_total=25 passes=50000
+80.37 E5 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43006 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+90.33 E5 ECHO status node=E5 uptime_s=80 window_s=60 rate_hz=48000 measured_mhz=47999984 samples=2880000 dropped_bufs=0 dropped_total=25 passes=60000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43377 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+100.32 E5 ECHO status node=E5 uptime_s=90 window_s=70 rate_hz=48000 measured_mhz=47999984 samples=3360000 dropped_bufs=0 dropped_total=25 passes=70000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43242 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+110.33 E5 ECHO status node=E5 uptime_s=100 window_s=80 rate_hz=48000 measured_mhz=47999936 samples=3840000 dropped_bufs=0 dropped_total=25 passes=80000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44565 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+120.31 E5 ECHO status node=E5 uptime_s=110 window_s=90 rate_hz=48000 measured_mhz=47999984 samples=4320000 dropped_bufs=0 dropped_total=25 passes=90000 p
+120.37 E5 ass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44348 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+130.36 E5 ECHO status node=E5 uptime_s=120 window_s=100 rate_hz=48000 measured_mhz=47999984 samples=4800000 dropped_bufs=0 dropped_total=25 passes=100000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43760 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+140.35 E5 ECHO status node=E5 uptime_s=130 window_s=110 rate_hz=48000 measured_mhz=47999936 samples=5280000 dropped_bufs=0 dropped_total=25 passes=110000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43982 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+150.31 E5 ECHO status node=E5 uptime_s=140 window_s=120 rate_hz=48000 measured_mhz=47999984 samples=5760000 dropped_bufs=0 dropped_total=25 passes=120000 pass_us_mean=77
+150.37 E5 pass_us_max=935 block_us_max=23 env_peak=43831 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+160.30 E5 ECHO status node=E5 uptime_s=150 window_s=130 rate_hz=48000 measur
+160.37 E5 ed_mhz=47999984 samples=6240000 dropped_bufs=0 dropped_total=25 passes=130000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44025 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+170.34 E5 ECHO status node=E5 uptime_s=160 window_s=140 rate_hz=48000 measured_mhz=47999984 samples=6720000 dropped_bufs=0 dropped_total=25 passes=140000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43040 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+180.33 E5 ECHO status node=E5 uptime_s=170 window_s=150 rate_hz=48000 measured_mhz=47999936 samples=7200000 dropped_bufs=0 dropped_total=25 passes=150000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43866 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+190.35 E5 ECHO status node=E5 uptime_s=180 window_s=160 rate_hz=48000 measured_mhz=47999984 samples=7680000 dropped_bufs=0 dropped_total=25 passes=160000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43392 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+200.30 E5 ECHO status node=E5 uptime_s=190 window_s=170 rate_hz=4800
+200.37 E5 0 measured_mhz=47999984 samples=8160000 dropped_bufs=0 dropped_total=25 passes=170000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43614 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+210.32 E5 ECHO status node=E5 uptime_s=200 window_s=180 rate_hz=48000 measured_mhz=47999936 samples=8640000 dropped_bufs=0 dropped_total=25 passes=180000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43772
+210.39 E5 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+220.36 E5 ECHO status node=E5 uptime_s=210 window_s=190 rate_hz=48000 measured_mhz=47999984 samples=9120000 dropped_bufs=0 dropped_total=25 passes=190000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43402 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+230.34 E5 ECHO status node=E5 uptime_s=220 window_s=200 rate_hz=48000 measured_mhz=47999984 samples=9600000 dropped_bufs=0 dropped_total=25 passes=200000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43875 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+240.34 E5 ECHO status node=E5 uptime_s=230 window_s=210 rate_hz=48000 measured_mhz=47999936 samples=10080000 dropped_bufs=0 dropped_total=25 passes=210000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43799 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+250.34 E5 ECHO status node=E5 uptime_s=240 window_s=220 rate_hz=48000 measured_mhz=47999984 samples=10560000 dropped_bufs=0 dropped_total=25 passes=220000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44498 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+260.32 E5 ECHO status node=E5 uptime_s=250 window_s=230 rate_hz=48000 measured_mhz=47999984 samples=11040000 dropped_bufs=0 dropped_total=25 passes=230000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env
+260.38 E5 _peak=43773 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+270.34 E5 ECHO status node=E5 uptime_s=260 window_s=240 rate_hz=48000 measured_mhz=47999936 samples=11520000 dropped_bufs=0 dropped_total=25 passes=240000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43866 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+280.34 E5 ECHO status node=E5 uptime_s=270 window_s=250 rate_hz=48000 measured_mhz=47999984 samples=12000000 dropped_bufs=0 dropped_total=25 passes=250000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43613 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+290.33 E5 ECHO status node=E5 uptime_s=280 window_s=260 rate_hz=48000 measured_mhz=47999984 samples=12480000 dropped_bufs=0 dropped_total=25 passes=260000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44175 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+300.30 E5 ECHO status node=E5 uptime_
+300.36 E5 s=290 window_s=270 rate_hz=48000 measured_mhz=47999936 samples=12960000 dropped_bufs=0 dropped_total=25 passes=270000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43639 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+310.34 E5 ECHO status node=E5 uptime_s=300 window_s=280 rate_hz=48000 measured_mhz=47999984 samples=13440000 dropped_bufs=0 dropped_total=25 passes=280000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44255 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+320.30 E5 E
+320.36 E5 CHO status node=E5 uptime_s=310 window_s=290 rate_hz=48000 measured_mhz=47999984 samples=13920000 dropped_bufs=0 dropped_total=25 passes=290000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44483 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+330.34 E5 ECHO status node=E5 uptime_s=320 window_s=300 rate_hz=48000 measured_mhz=47999936 samples=14400000 dropped_bufs=0 dropped_total=25 passes=300000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43628 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+340.30 E5 ECHO sta
+340.37 E5 tus node=E5 uptime_s=330 window_s=310 rate_hz=48000 measured_mhz=47999984 samples=14880000 dropped_bufs=0 dropped_total=25 passes=310000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43383 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+350.34 E5 ECHO status node=E5 uptime_s=340 window_s=320 rate_hz=48000 measured_mhz=47999984 samples=15360000 dropped_bufs=0 dropped_total=25 passes=320000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43765 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+360.36 E5 ECHO status node=E5 uptime_s=350 window_s=330 rate_hz=48000 measured_mhz=47999936 samples=15840000 dropped_bufs=0 dropped_total=25 passes=330000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43943 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+370.36 E5 ECHO status node=E5 uptime_s=360 window_s=340 rate_hz=48000 measured_mhz=47999984 samples=16320000 dropped_bufs=0 dropped_total=25 passes=340000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43439 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+380.34 E5 ECHO status node=E5 uptime_s=370 window_s=350 rate_hz=48000 measured_mhz=47999984 samples=16800000 dropped_bufs=0 dropped_total=25 passes=350000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44165 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+390.34 E5 ECHO status node=E5 uptime_s=380 window_s=360 rate_hz=48000 measured_mhz=47999936 samples=17280000 dropped_bufs=0 dropped_total=25 passes=360000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43611 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+400.37 E5 ECHO status node=E5 uptime_s=390 window_s=370 rate_hz=48000 measured_mhz=47999984 samples=17760000 dropped_bufs=0 dropped_total=25 passes=370000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43740 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+410.31 E5 ECHO status node=E5 uptime_s=400 window_s=380 rate_h
+410.38 E5 z=48000 measured_mhz=47999984 samples=18240000 dropped_bufs=0 dropped_total=25 passes=380000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43314 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+420.32 E5 ECHO status node=E5 uptime_s=410 window_s=390 rate_hz=48000 measured_mhz=47999936 samples=18720000 dropped_bufs=0 dropped_total=25 passes=390000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43898 ton
+420.38 E5 e=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+430.33 E5 ECHO status node=E5 uptime_s=420 window_s=400 rate_hz=48000 measured_mhz=47999984 samples=19200000 dropped_bufs=0 dropped_total=25 passes=400000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43692 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+440.31 E5 ECHO status node=E5 uptime_s=430 window_s=410 rate_hz=48000 measured_mhz=47999984 samples=19680000 dropped_bufs=0 d
+440.37 E5 ropped_total=25 passes=410000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44162 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+450.31 E5 ECHO status node=E5 uptime_s=440 window_s=420 rate_hz=48000 measured_mhz=479999
+450.38 E5 36 samples=20160000 dropped_bufs=0 dropped_total=25 passes=420000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44735 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+460.33 E5 ECHO status node=E5 uptime_s=450 window_s=430 rate_hz=48000 measured_mhz=47999984 samples=20640000 dropped_bufs=0 dropped_total=25 passes=430000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43670 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+470.33 E5 ECHO status node=E5 uptime_s=460 window_s=440 rate_hz=48000 measured_mhz=47999984 samples=21120000 dropped_bufs=0 dropped_total=25 passes=440000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43765 tone=0 free_heap=119852 largest_block=73
+470.39 E5 716 net_rx=0 net_tx=0
+480.31 E5 ECHO status node=E5 uptime_
+480.36 E5 s=470 window_s=450 rate_hz=48000 measured_mhz=47999936 samples=21600000 dropped_bufs=0 dropped_total=25 passes=450000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43094 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+490.31 E5 ECHO status node=E5 uptime_s=480 window_s=460 rate_hz=48000 measured_mhz=47999984 samples=2208
+490.38 E5 0000 dropped_bufs=0 dropped_total=25 passes=460000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43975 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+500.33 E5 ECHO status node=E5 uptime_s=490 window_s=470 rate_hz=48000 measured_mhz=47999984 samples=22560000 dropped_bufs=0 dropped_total=25 passes=470000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43663 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+510.31 E5 ECHO status node=E5 uptime_s=500 window_s=480 rate_hz=48000 measured_mhz=47999936 samples=23040000 dro
+510.37 E5 pped_bufs=0 dropped_total=25 passes=480000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43861 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+520.33 E5 ECHO status node=E5 uptime_s=510 window_s=490 rate_hz=48000 measured_mhz=47999984 samples=23520000 dropped_bufs=0 dropped_total=25 passes=490000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43405 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+530.36 E5 ECHO status node=E5 uptime_s=520 window_s=500 rate_hz=48000 measured_mhz=47999984 samples=24000000 dropped_bufs=0 dropped_total=25 passes=500000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43948 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+540.34 E5 ECHO status node=E5 uptime_s=530 window_s=510 rate_hz=48000 measured_mhz=47999984 samples=24480000 dropped_bufs=0 dropped_total=25 passes=510000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44017 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+550.33 E5 ECHO status node=E5 uptime_s=540 window_s=520 rate_hz=48000 measured_mhz=47999936 samples=24960000 dropped_bufs=0 dropped_total=25 passes=520000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44066 tone=0 free_heap=119852 largest_block=73716 net_
+550.40 E5 rx=0 net_tx=0
+560.33 E5 ECHO status node=E5 uptime_s=550 window_s=530 rate_hz=48000 measured_mhz=47999984 samples=25440000 dropped_bufs=0 dropped_total=25 passes=530000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44145 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+570.33 E5 ECHO status node=E5 uptime_s=560 window_s=540 rate_hz=48000 measured_mhz=47999984 samples=25920000 dropped_bufs=0 dropped_total=25 passes=540000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43875 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+580.36 E5 ECHO status node=E5 uptime_s=570 window_s=550 rate_hz=48000 measured_mhz=47999936 samples=26400000 dropped_bufs=0 dropped_total=25 passes=550000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43958 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+590.37 E5 ECHO status node=E5 uptime_s=580 window_s=560 rate_hz=48000 measured_mhz=47999984 samples=26880000 dropped_bufs=0 dropped_total=25 passes=560000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43792 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+600.34 E5 ECHO status node=E5 uptime_s=590 window_s=570 rate_hz=48000 measured_mhz=47999984 samples=27360000 dropped_bufs=0 dropped_total=25 passes=570000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=44052 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+610.36 E5 ECHO status node=E5 uptime_s=600 window_s=580 rate_hz=48000 measured_mhz=47999936 samples=27840000 dropped_bufs=0 dropped_total=25 passes=580000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43043 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+620.33 E5 ECHO status node=E5 uptime_s=610 window_s=590 rate_hz=48000 measured_mhz=47999984 samples=28320000 dropped_bufs=0 dropped_total=25 passes=590000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=43304 tone=0 free
+620.38 E5 _heap=119852 largest_block=73716 net_rx=0 net_tx=0
+630.32 E5 ECHO status node=E5 uptime_s=620 window_s=600 rate_hz=48000 measured_mhz=47999984 samples=
+630.32 E5 >> ECHO STATUS
+630.38 E5 28800000 dropped_bufs=0 dropped_total=25 passes=600000 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=42824 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+630.38 E5 ECHO status node=E5 uptime_s=620 window_s=600 rate_hz=48000 measured_mhz=47999984 samples=28800512 dropped_bufs=0 dropped_total=25 passes=600012 pass_us_mean=77 pass_us_max=935 block_us_max=23 env_peak=1145 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+# phase tone at 632.3
+632.35 E5 >> ECHO RESET
+632.35 E5 >> TONE 1000 5000
+632.40 E5 ECHO reset
+632.40 E5 ECHO tone hz=1000 ms=5000
+638.40 E5 >> TONE 1000 5000
+638.46 E5 ECHO tone hz=1000 ms=5000
+640.32 E5 ECHO status node=E5 uptime_s=630 window_s=7 rate_hz=48000 measured_mhz=47999936 samples=381824 dropped_bufs=0 dropped_total=25 passes=7954 pass_us_mean=77 pass_us_max=10
+640.38 E5 18 block_us_max=23 env_peak=774116 tone=1 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+644.41 E5 >> TONE 1000 5000
+644.47 E5 ECHO tone hz=1000 ms=5000
+650.34 E5 ECHO status node=E5 uptime_s=640 window_s=17 rate_hz=48000 measured_mhz=47999984 samples=861824 dropped_bufs=0 dropped_total=25 passes=17954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=727296 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+650.46 E5 >> TONE 1000 5000
+650.53 E5 ECHO tone hz=1000 ms=5000
+656.50 E5 >> TONE 1000 5000
+656.57 E5 ECHO tone hz=1000 ms=5000
+660.32 E5 ECHO status node=E5 uptime_s=650 window_s=27 rate_hz=48000 measured_mhz=47999984 samples=1341824 dropped_bufs=0 dropped_total=25 passes=27954 pass_us_mean=77 pass_us_max=1018 block_us_max=2
+660.38 E5 3 env_peak=722665 tone=1 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+662.54 E5 >> TONE 1000 5000
+662.60 E5 ECHO tone hz=1000 ms=5000
+668.59 E5 >> TONE 1000 5000
+668.66 E5 ECHO tone hz=1000 ms=5000
+670.32 E5 ECHO status node=E5 uptime_s=660 window_s=37 rate_hz=48000 measured_mhz=47999936 samples=1821824 dropped_b
+670.38 E5 ufs=0 dropped_total=25 passes=37954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=714605 tone=1 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+674.59 E5 >> TONE 1000 5000
+674.67 E5 ECHO tone hz=1000 ms=5000
+680.34 E5 ECHO status node=E5 uptime_s=670 window_s=47 rate_hz=48000 measured_mhz=47999984 samples=2301824 dropped_bufs=0 dropped_total=25 passes=47954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=709662 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+680.65 E5 >> TONE 1000 5000
+680.71 E5 ECHO tone hz=1000 ms=5000
+686.69 E5 >> TONE 1000 5000
+686.75 E5 ECHO tone hz=1000 ms=5000
+690.34 E5 ECHO status node=E5 uptime_s=680 window_s=57 rate_hz=48000 measured_mhz=47999984 samples=2781824 dropped_bufs=0 dropped_total=25 passes=57954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=707275 tone=1 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+692.74 E5 >> TONE 1000 5000
+692.81 E5 ECHO tone hz=1000 ms=5000
+698.77 E5 >> TONE 1000 5000
+698.83 E5 ECHO tone hz=1000 ms=5000
+700.33 E5 ECHO status node=E5 uptime_s=690 window_s=67 rate_hz=48000 measured_mhz=47999936 samples=3261824 dropped_bufs=0 dropped_total=25 passes=67954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=703220 tone=1 free_heap=119852 largest_block=73716 net_rx=0 n
+700.40 E5 et_tx=0
+704.78 E5 >> TONE 1000 5000
+704.84 E5 ECHO tone hz=1000 ms=5000
+710.34 E5 ECHO status node=E5 uptime_s=700 window_s=77 rate_hz=48000 measured_mhz=47999984 samples=3741824 dropped_bufs=0 dropped_total=25 passes=77954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=699173 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+710.84 E5 >> TONE 1000 5000
+710.90 E5 ECHO tone hz=1000 ms=5000
+716.84 E5 >> TONE 1000 5000
+716.91 E5 ECHO tone hz=1000 ms=5000
+720.33 E5 ECHO status node=E5 uptime_s=710 window_s=87 rate_hz=48000 measured_mhz=47999984 samples=4221824 dropped_bufs=0 dropped_total=25 passes=87954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=697780 tone=1 free_heap
+720.39 E5 =119852 largest_block=73716 net_rx=0 net_tx=0
+722.84 E5 >> TONE 1000 5000
+722.91 E5 ECHO tone hz=1000 ms=5000
+728.88 E5 >> TONE 1000 5000
+728.95 E5 ECHO tone hz=1000 ms=5000
+730.33 E5 ECHO status node=E5 uptime_s=720 window_s=97 rate_hz=48000 measured_mhz=47999936 samples=4701824 dropped_bufs=0 dropped_total=25 passes=97954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=693925 tone=1 free_heap=119852 la
+730.40 E5 rgest_block=73716 net_rx=0 net_tx=0
+734.89 E5 >> TONE 1000 5000
+734.94 E5 ECHO tone hz=1000 ms=5000
+740.34 E5 ECHO status node=E5 uptime_s=730 window_s=107 rate_hz=48000 measured_mhz=47999984 samples=5181824 dropped_bufs=0 dropped_total=25 passes=107954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=691322 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+740.91 E5 >> TONE 1000 5000
+740.98 E5 ECHO tone hz=1000 ms=5000
+746.97 E5 >> TONE 1000 5000
+747.03 E5 ECHO tone hz=1000 ms=5000
+750.36 E5 ECHO status node=E5 uptime_s=740 window_s=117 rate_hz=48000 measured_mhz=47999984 samples=5661824 dropped_bufs=0 dropped_total=25 passes=117954 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=689519 tone=1 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+752.99 E5 >> ECHO STATUS
+753.06 E5 ECHO status node=E5 uptime_s=742 window_s=120 rate_hz=48000 measured_mhz=47999984 samples=5790848 dropped_bufs=0 dropped_total=25 passes=120642 pass_us_mean=77 pass_us_max=1018 block_us_max=23 env_peak=659281 tone=0 free_heap=119852 largest_block=73716 net_rx=0 net_tx=0
+# phase radio at 755.0
+755.02 E5 >> ECHO RESET
+755.02 E1 >> NET E5 ECHO STATUS
+755.02 E1 >> NET * NET PING
+755.05 E1 NET sent seq=12423 target=E5 text=ECHO STATUS
+755.05 E1 NET sent seq=12424 target=* text=NET PING
+755.05 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7402 rx=0 rejected=0 queue_full=0 tx=3 tx_failed=0 outbox_full=0 commands=0
+755.08 E5 ECHO reset
+755.08 E5 ECHO status node=E5 uptime_s=744 window_s=0 rate_hz=48000 measured_mhz=47999984 samples=512 dropped_bufs=0 dropped_total=25 passes=10 pass_us_mean=103 pass_us_max=387 block_us_max=23 env_peak=43635 tone=0 free_heap=119852 largest_block=73716 net_rx=1 net_tx=0
+755.08 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=744 rx=4 tx=1 commands=1
+755.11 E1 NET reply from=E4 seq=12424 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7402 rx=7 rejected=4 queue_full=0 tx=0 tx_failed=0 outbox_full=0 commands=0
+755.11 E1 NET reply from=E4 seq=12424 done parts=1
+755.25 E1 NET reply from=E5 seq=12423 part=1 ECHO status node=E5 uptime_s=744 window_s=0 rate_hz=48000 measured_mhz=47999984 samples=512 dropped_bufs=0 dropped_total=25 passes=10 pass_us_mean=103 pass_us_max=387 block_us_max=23 env_peak=43635 tone=0 free_heap=119852 largest_block=73716 net_rx=1 net_tx=0
+755.25 E1 NET reply from=E5 seq=12423 done parts=2
+755.25 E1 NET reply from=E5 seq=12424 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=744 rx=4 tx=1 commands=1
+755.25 E1 NET reply from=E5 seq=12424 done parts=1
+758.08 E1 >> NET E5 ECHO STATUS
+758.10 E1 NET sent seq=12425 target=E5 text=ECHO STATUS
+758.13 E5 ECHO status node=E5 uptime_s=747 window_s=3 rate_hz=48000 measured_mhz=47999984 samples=147072 dropped_bufs=0 dropped_total=25 passes=3065 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43866 tone=0 free_heap=119812 largest_block=73716 net_rx=7 net_tx=3
+758.28 E1 NET reply from=E5 seq=12425 part=1 ECHO status node=E5 uptime_s=747 window_s=3 rate_hz=48000 measured_mhz=47999984 samples=147072 dropped_bufs=0 dropped_total=25 passes=3065 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43866 tone=0 free_heap=119812 largest_block=73716 net_rx=7 net_tx=3
+758.28 E1 NET reply from=E5 seq=12425 done parts=2
+760.33 E5 ECHO status node=E5 uptime_s=750 window_s=5 rate_hz=48000 measured_mhz=47999936 samples=253824 dropped_bufs=0 dropped_total=25 passes=5288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43246 tone=0 free_heap=119812 largest_block=73716 net_rx=9 net_tx=5
+761.12 E1 >> NET E5 ECHO STATUS
+761.15 E1 NET sent seq=12426 target=E5 text=ECHO STATUS
+761.19 E5 ECHO status node=E5 uptime_s=750 window_s=6 rate_hz=48000 measured_mhz=47999984 samples=292992 dropped_bufs=0 dropped_total=25 passes=6105 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=6945 tone=0 free_heap=119812 largest_block=73716 net_rx=10 net_tx=5
+761.33 E1 NET reply from=E5 seq=12426 part=1 ECHO status node=E5 uptime_s=750 window_s=6 rate_hz=48000 measured_mhz=47999984 samples=292992 dropped_bufs=0 dropped_total=25 passes=6105 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=6945 tone=0 free_heap=119812 largest_block=73716 net_rx=10 net_tx=5
+761.33 E1 NET reply from=E5 seq=12426 done parts=2
+764.14 E1 >> NET E5 ECHO STATUS
+764.17 E1 NET sent seq=12427 target=E5 text=ECHO STATUS
+764.20 E5 ECHO status node=E5 uptime_s=753 window_s=9 rate_hz=48000 measured_mhz=47999984 samples=438144 dropped_bufs=0 dropped_total=25 passes=9129 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43566 tone=0 free_heap=119812 largest_block=73716 net_rx=13 net_tx=7
+764.30 E1 NET reply from=E5 seq=12427
+764.37 E1 part=1 ECHO status node=E5 uptime_s=753 window_s=9 rate_hz=48000 measured_mhz=47999984 samples=438144 dropped_bufs=0 dropped_total=25 passes=9129 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43566 tone=0 free_heap=119812 largest_block=73716 net_rx=13 net_tx=7
+764.37 E1 NET reply from=E5 seq=12427 done parts=2
+767.16 E1 >> NET E5 ECHO STATUS
+767.16 E1 >> NET * NET PING
+767.19 E1 NET sent seq=12428 target=E5 text=ECHO STATUS
+767.19 E1 NET sent seq=12429 target=* text=NET PING
+767.19 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7415 rx=10 rejected=0 queue_full=0 tx=18 tx_failed=0 outbox_full=0 commands=0
+767.22 E5 ECHO status node=E5 uptime_s=756 window_s=12 rate_hz=48000 measured_mhz=47999984 samples=583168 dropped_bufs=0 dropped_total=25 passes=12149 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43790 tone=0 free_heap=119812 largest_block=73716 net_rx=16 net_tx=9
+767.22 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=756 rx=19 tx=10 commands=6
+767.26 E1 NET reply from=E4 seq=12429 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7415 rx=22 rejected=14 queue_full=0 tx=1 tx_failed=0 outbox_full=0 commands=1
+767.26 E1 NET reply from=E4 seq=12429 done parts=1
+767.39 E1 NET reply from=E5 seq=12428 part=1 ECHO status node=E5 uptime_s=756 window_s=12 rate_hz=48000 measured_mhz=47999984 samples=583168 dropped_bufs=0 dropped_total=25 passes=12149 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43790 tone=0 free_heap=119812 largest_block=73716 net_rx=16 net_tx=9
+767.39 E1 NET reply from=E5 seq=12428 done parts=2
+767.39 E1 NET reply from=E5 seq=12429 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=756 rx=19 tx=10 commands=6
+767.39 E1 NET reply from=E5 seq=12429 done parts=1
+770.19 E1 >> NET E5 ECHO STATUS
+770.22 E1 NET sent seq=12430 target=E5 text=ECHO STATUS
+770.26 E5 ECHO status node=E5 uptime_s=759 window_s=15 rate_hz=48000 measured_mhz=47999984 samples=728576 dropped_bufs=0 dropped_total=25 passes=15179 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=44137 tone=0 free_heap=119812 largest_block=73716 net_rx=22 net_tx=12
+770.32 E5 ECHO status node=E5 uptime_s=760 window_s=15 rate_hz=48000 measured_mhz=47999984 sample
+770.38 E5 s=733824 dropped_bufs=0 dropped_total=25 passes=15288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=5101 tone=0 free_heap=119812 largest_block=73716 net_rx=24 net_tx=13
+770.42 E1 NET reply from=E5 seq=12430 part=1 ECHO status node=E5 uptime_s=759 window_s=15 rate_hz=48000 measured_mhz=47999984 samples=728576 dropped_bufs=0 dropped_total=25 passes=15179 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=44137 tone=0 free_heap=119812 largest_block=73716 net_rx=22 net_tx=12
+770.42 E1 NET reply from=E5 seq=12430 done parts=2
+773.20 E1 >> NET E5 ECHO STATUS
+773.24 E1 NET sent seq=12431 target=E5 text=ECHO STATUS
+773.27 E5 ECHO status node=E5 uptime_s=762 window_s=18 rate_hz=48000 measured_mhz=47999984 samples=873216 dropped_bufs=0 dropped_total=25 passes=18193 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43726 tone=0 free_heap=119812 largest_block=73716 net_rx=25 net_tx=14
+773.37 E1 NET reply from=E5 seq=12431 part=1 ECHO status no
+773.44 E1 de=E5 uptime_s=762 window_s=18 rate_hz=48000 measured_mhz=47999984 samples=873216 dropped_bufs=0 dropped_total=25 passes=18193 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43726 tone=0 free_heap=119812 largest_block=73716 net_rx=25 net_tx=14
+773.44 E1 NET reply from=E5 seq=12431 done parts=2
+776.21 E1 >> NET E5 ECHO STATUS
+776.24 E1 NET sent seq=12432 target=E5 text=ECHO STATUS
+776.28 E5 ECHO status node=E5 uptime_s=765 window_s=21 rate_hz=48000 measured_mhz=47999984 samples=1017600 dropped_bufs=0 dropped_total=25 passes=21201 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=44014 tone=0 free_heap=119812 largest_block=73716 net_rx=28 net_tx=16
+776.41 E1 NET reply from=E5 seq=12432 part=1 ECHO status node=E5 uptime_s=765 window_s=21 rate_hz=48000 measured_mhz=47999984 samples=1017600 dropped_bufs=0 dropped_total=25 passes=21201 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=44014 tone=0 free_heap=119812 largest_block=73716 net_rx=28 net_tx=16
+776.41 E1 NET reply from=E5 seq=12432 done parts=2
+779.25 E1 >> NET E5 ECHO STATUS
+779.25 E1 >> NET * NET PING
+779.28 E1 NET sent seq=12433 target=E5 text=ECHO STATUS
+779.28 E1 NET sent seq=12434 target=* text=NET PING
+779.28 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7427 rx=20 rejected=0 queue_full=0 tx=33 tx_failed=0 outbox_full=0 commands=0
+779.31 E5 ECHO status node=E5 uptime_s=769 window_s=24 rate_hz=48000 measured_mhz=47999984 samples=1163520 dropped_bufs=0 dropped_total=25 passes=24240 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43966 tone=0 free_heap=119812 largest_block=73716 net_rx=31 net_tx=18
+779.31 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=769 rx=34 tx=19 commands=11
+779.35 E1 NET reply from=E4 seq=12434 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7427 rx=37 rejected=24 queue_full=0 tx=2 tx_failed=0 outbox_full=0 commands=2
+779.35 E1 NET reply from=E4 seq=12434 done parts=1
+779.46 E1 NET reply from=E5 seq=12433 part=1 ECHO status node=E5 uptime_s=769 window_s=24 rate_hz=48000 measured_mhz=47999984 samples=1163520 dropped_bufs=0 dropped_total=25 passes=24240 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43966 tone=0 free_heap=119812 largest_block=73716 net_rx=31 net_tx=18
+779.46 E1 NET reply from=E5 seq=12433 done parts=2
+779.46 E1 NET reply from=E5 seq=12434 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=769 rx=34 tx=19 commands=11
+779.46 E1 NET reply from=E5 seq=12434 done parts=1
+780.31 E5 ECHO status node=E5 uptime_s=770 window_s=25 rate_hz=48000 mea
+780.39 E5 sured_mhz=47999984 samples=1213824 dropped_bufs=0 dropped_total=25 passes=25288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43909 tone=0 free_heap=119812 largest_block=73716 net_rx=36 net_tx=21
+782.29 E1 >> NET E5 ECHO STATUS
+782.32 E1 NET sent seq=12435 target=E5 text=ECHO STATUS
+782.35 E5 ECHO status node=E5 uptime_s=772 window_s=27 rate_hz=48000 measured_mhz=47999984 samples=1309184 dropped_bufs=0 dropped_total=25 passes=27276 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43377 tone=0 free_heap=119812 largest_block=73716 net_rx=37 net_tx=21
+782.50 E1 NET reply from=E5 seq=12435 part=1 ECHO status node=E5 uptime_s=772 window_s=27 rate_hz=48000 measured_mhz=47999984 samples=1309184 dropped_bufs=0 dropped_total=25 passes=27276 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43377 tone=0 free_heap=119812 largest_block=73716 net_rx=37 net_tx=21
+782.50 E1 NET reply from=E5 seq=12435 done parts=2
+785.32 E1 >> NET E5 ECHO STATUS
+785.35 E1 NET sent seq=12436 target=E5 text=ECHO STATUS
+785.38 E5 ECHO status node=E5 uptime_s=775 window_s=30 rate_hz=48000 measured_mhz=47999984 samples=1454720 dropped_bufs=0 dropped_total=25 passes=30307 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43677 tone=0 free_heap=119812 largest_block=73716 net_rx=40 net_tx=23
+785.54 E1 NET reply from=E5 seq=12436 part=1 ECHO status node=E5 uptime_s=775 window_s=30 rate_hz=48000 measured_mhz=47999984 samples=1454720 dropped_bufs=0 dropped_total=25 passes=30307 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43677 tone=0 free_heap=119812 largest_block=73716 net_rx=40 net_tx=23
+785.54 E1 NET reply from=E5 seq=12436 done parts=2
+788.33 E1 >> NET E5 ECHO STATUS
+788.36 E1 NET sent seq=12437 target=E5 text=ECHO STATUS
+788.39 E5 ECHO status node=E5 uptime_s=778 window_s=33 rate_hz=48000 measured_mhz=47999984 samples=1599104 dropped_bufs=0 dropped_total=25 passes=33314 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43285 tone=0 free_heap=119812 largest_block=73716 net_rx=43 net_tx=25
+788.54 E1 NET reply from=E5 seq=12437 part=1 ECHO status node=E5 uptime_s=778 window_s=33 rate_hz=48000 measured_mhz=47999984 samples=1599104 dropped_bufs=0 dropped_total=25 passes=33314 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43285 tone=0 free_heap=119812 largest_block=73716 net_rx=43 net_tx=25
+788.54 E1 NET reply from=E5 seq=12437 done parts=2
+790.34 E5 ECHO status node=E5 uptime_s=780 window_s=35 rate_hz=48000 measured_mhz=47999936 samples=1693824 dropped_bufs=0 dropped_total=25 passes=35288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43358 tone=0 free_heap=119812 largest_block=73716 net_rx=45 net_tx=27
+791.37 E1 >> NET E5 ECHO STATUS
+791.37 E1 >> NET * NET PING
+791.41 E1 NET sent seq=12438 target=E5 text=ECHO STATUS
+791.41 E1 NET sent seq=12439 target=* text=NET PING
+791.41 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7439 rx=30 rejected=0 queue_full=0 tx=48 tx_failed=0 outbox_full=0 commands=0
+791.43 E5 ECHO status node=E5 uptime_s=781 window_s=36 rate_hz=48000 measured_mhz=47999984 samples=1745408 dropped_bufs=0 dropped_total=25 passes=36362 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=7189 tone=0 free_heap=119812 largest_block=73716 net_rx=46 net_tx=27
+791.43 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=781 rx=49 tx=28 commands=16
+791.46 E1 NET reply from=E4 seq=12439 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7439 rx=52 rejected=34 queue_full=0 tx=3 tx_failed=0 outbox_full=0 commands=3
+791.46 E1 NET reply from=E4 seq=12439 done parts=1
+791.59 E1 NET reply from=E5 seq=12438 part=1 ECHO status node=E5 uptime_s=781 window_s=36 rate_hz=48000 measured_mhz=47999984 samples=1745408 dropped_bufs=0 dropped_total=25 passes=36362 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=7189 tone=0 free_heap=119812 largest_block=73716 net_rx=46 net_tx=27
+791.59 E1 NET reply from=E5 seq=12438 done parts=2
+791.59 E1 NET reply from=E5 seq=12439 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=781 rx=49 tx=28 commands=16
+791.59 E1 NET reply from=E5 seq=12439 done parts=1
+794.42 E1 >> NET E5 ECHO STATUS
+794.46 E1 NET sent seq=12440 target=E5 text=ECHO STATUS
+794.48 E5 ECHO status node=E5 uptime_s=784 window_s=39 rate_hz=48000 measured_mhz=47999984 samples=1891584 dropped_bufs=0 dropped_total=25 passes=39409 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43395 tone=0 free_heap=119812 largest_block=73716 net_rx=52 net_tx=30
+794.64 E1 NET reply from=E5 seq=12440 part=1 ECHO status node=E5 uptime_s=784 window_s=39 rate_hz=48000 measured_mhz=47999984 samples=1891584 dropped_bufs=0 dropped_total=25 passes=39409 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43395 tone=0 free_heap=119812 largest_block=73716 net_rx=52 net_tx=30
+794.64 E1 NET reply from=E5 seq=12440 done parts=2
+797.46 E1 >> NET E5 ECHO STATUS
+797.49 E1 NET sent seq=12441 target=E5 text=ECHO STATUS
+797.52 E5 ECHO status node=E5 uptime_s=787 window_s=42 rate_hz=48000 measured_mhz=47999984 samples=2037248 dropped_bufs=0 dropped_total=25 passes=42444 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42974 tone=0 free_heap=119812 largest_block=73716 net_rx=55 net_tx=32
+797.68 E1 NET reply from=E5 seq=12441 part=1 ECHO status node=E5 uptime_s=787 window_s=42 rate_hz=48000 measured_mhz=47999984 samples=2037248 dropped_bufs=0 dropped_total=25 passes=42444 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42974 tone=0 free_heap=119812 largest_block=73716 net_rx=55 net_tx=32
+797.68 E1 NET reply from=E5 seq=12441 done parts=2
+800.35 E5 ECHO status node=E5 uptime_s=790 window_s=45 rate_hz=48000 measured_mhz=47999984 samples=2173824 dropped_bufs=0 dropped_total=25 passes=45288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43503 tone=0 free_heap=119812 largest_block=73716 net_rx=57 net_tx=34
+800.50 E1 >> NET E5 ECHO STATUS
+800.53 E1 NET sent seq=12442 target=E5 text=ECHO STATUS
+800.56 E5 ECHO status node=E5 uptime_s=790 window_s=45 rate_hz=48000 measured_mhz=47999984 samples=2183040 dropped_bufs=0 dropped_total=25 passes=45481 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=5623 tone=0 free_heap=119812 largest_block=73716 net_rx=58 net_tx=34
+800.72 E1 NET reply from=E5 seq=12442 part=1 ECHO status node=E5 uptime_s=790 window_s=45 rate_hz=48000 measured_mhz=47999984 samples=2183040 dropped_bufs=0 dropped_total=25 passes=45481 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=5623 tone=0 free_heap=119812 largest_block=73716 net_rx=58 net_tx=34
+800.72 E1 NET reply from=E5 seq=12442 done parts=2
+803.51 E1 >> NET E5 ECHO STATUS
+803.51 E1 >> NET * NET PING
+803.54 E1 NET sent seq=12443 target=E5 text=ECHO STATUS
+803.54 E1 NET sent seq=12444 target=* text=NET PING
+803.54 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7451 rx=40 rejected=0 queue_full=0 tx=63 tx_failed=0 outbox_full=0 commands=0
+803.56 E5 ECHO status node=E5 uptime_s=793 window_s=48 rate_hz=48000 measured_mhz=47999984 samples=2327552 dropped_bufs=0 dropped_total=25 passes=48492 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43105 tone=0 free_heap=119812 largest_block=73716 net_rx=61 net_tx=36
+803.56 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=793 rx=64 tx=37 commands=21
+803.59 E1 NET reply from=E4 seq=12444 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7451 rx=67 rejected=44 queue_full=0 tx=4 tx_failed=0 outbox_full=0 commands=4
+803.59 E1 NET reply from=E4 seq=12444 done parts=1
+803.72 E1 NET reply from=E5 seq=12443 part=1 ECHO status node=E5 uptime_s=793 window_s=48 rate_hz=48000 measured_mhz=47999984 samples=2327552 dropped_bufs=0 dropped_total=25 passes=48492 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43105 tone=0 free_heap=119812 largest_block=73716 net_rx=61 net_tx=36
+803.72 E1 NET reply from=E5 seq=12443 done parts=2
+803.72 E1 NET reply from=E5 seq=12444 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=793 rx=64 tx=37 commands=21
+803.72 E1 NET reply from=E5 seq=12444 done parts=1
+806.56 E1 >> NET E5 ECHO STATUS
+806.59 E1 NET sent seq=12445 target=E5 text=ECHO STATUS
+806.62 E5 ECHO status node=E5 uptime_s=796 window_s=51 rate_hz=48000 measured_mhz=47999984 samples=2474112 dropped_bufs=0 dropped_total=25 passes=51545 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42959 tone=0 free_heap=119812 largest_block=73716 net_rx=67 net_tx=39
+806.77 E1 NET reply from=E5 seq=12445 part=1 ECHO status node=E5 uptime_s=796 window_s=51 rate_hz=48000 measured_mhz=47999984 samples=2474112 dropped_bufs=0 dropped_total=25 passes=51545 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42959 tone=0 free_heap=119812 largest_block=73716 net_rx=67 net_tx=39
+806.77 E1 NET reply from=E5 seq=12445 done parts=2
+809.59 E1 >> NET E5 ECHO STATUS
+809.62 E1 NET sent seq=12446 target=E5 text=ECHO STATUS
+809.66 E5 ECHO status node=E5 uptime_s=799 window_s=54 rate_hz=48000 measured_mhz=47999984 samples=2620160 dropped_bufs=0 dropped_total=25 passes=54586 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42174 tone=0 free_heap=119812 largest_block=73716 net_rx=70 net_tx=41
+809.82 E1 NET reply from=E5 seq=12446 part=1 ECHO status node=E5 uptime_s=799 window_s=54 rate_hz=48000 measured_mhz=47999984 samples=2620160 dropped_bufs=0 dropped_total=25 passes=54586 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42174 tone=0 free_heap=119812 largest_block=73716 net_rx=70 net_tx=41
+809.82 E1 NET reply from=E5 seq=12446 done parts=2
+810.34 E5 ECHO status node=E5 uptime_s=800 window_s=55 rate_hz=48000 measured_mhz=47999984 samples=2653824 dropped_bufs=0 dropped_total=25 passes=55288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42210 tone=0 free_heap=119812 largest_block=73716 net_rx=72 net_tx=43
+812.61 E1 >> NET E5 ECHO STATUS
+812.64 E1 NET sent seq=12447 target=E5 text=ECHO STATUS
+812.67 E5 ECHO status node=E5 uptime_s=802 window_s=57 rate_hz=48000 measured_mhz=47999984 samples=2764416 dropped_bufs=0 dropped_total=25 passes=57593 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42220 tone=0 free_heap=119812 largest_block=73716 net_rx=73 net_tx=43
+812.82 E1 NET reply from=E5 seq=12447 part=1 ECHO status node=E5 uptime_s=802 window_s=57 rate_hz=48000 measured_mhz=47999984 samples=2764416 dropped_bufs=0 dropped_total=25 passes=57593 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42220 tone=0 free_heap=119812 largest_block=73716 net_rx=73 net_tx=43
+812.82 E1 NET reply from=E5 seq=12447 done parts=2
+815.63 E1 >> NET E5 ECHO STATUS
+815.63 E1 >> NET * NET PING
+815.66 E1 NET sent seq=12448 target=E5 text=ECHO STATUS
+815.66 E1 NET sent seq=12449 target=* text=NET PING
+815.66 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7463 rx=50 rejected=0 queue_full=0 tx=78 tx_failed=0 outbox_full=0 commands=0
+815.69 E5 ECHO status node=E5 uptime_s=805 window_s=60 rate_hz=48000 measured_mhz=47999984 samples=2909568 dropped_bufs=0 dropped_total=25 passes=60617 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42033 tone=0 free_heap=119812 largest_block=73716 net_rx=76 net_tx=45
+815.69 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=805 rx=79 tx=46 commands=26
+815.72 E1 NET reply from=E4 seq=12449 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7463 rx=82 rejected=54 queue_full=0 tx=5 tx_failed=0 outbox_full=0 commands=5
+815.72 E1 NET reply from=E4 seq=12449 done parts=1
+815.86 E1 NET reply from=E5 seq=12448 part=1 ECHO status node=E5 uptime_s=805 window_s=60 rate_hz=48000 measured_mhz=47999984 samples=2909568 dropped_bufs=0 dropped_total=25 passes=60617 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42033 tone=0 free_heap=119812 largest_block=73716 net_rx=76 net_tx=45
+815.86 E1 NET reply from=E5 seq=12448 done parts=2
+815.86 E1 NET reply from=E5 seq=12449 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=805 rx=79 tx=46 commands=26
+815.86 E1 NET reply from=E5 seq=12449 done parts=1
+818.64 E1 >> NET E5 ECHO STATUS
+818.67 E1 NET sent seq=12450 target=E5 text=ECHO STATUS
+818.71 E5 ECHO status node=E5 uptime_s=808 window_s=63 rate_hz=48000 measured_mhz=47999984 samples=3054080 dropped_bufs=0 dropped_total=25 passes=63627 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42557 tone=0 free_heap=119812 largest_block=73716 net_rx=82 net_tx=48
+818.84 E1 NET reply from=E5 seq=12450 part=1 ECHO status node=E5 uptime_s=808 window_s=63 rate_hz=48000 measured_mhz=47999984 samples=3054080 dropped_bufs=0 dropped_total=25 passes=63627 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42557 tone=0 free_heap=119812 largest_block=73716 net_rx=82 net_tx=48
+818.84 E1 NET reply from=E5 seq=12450 done parts=2
+820.32 E5 ECHO status node=E5 uptime_s=810 window_s=65 rate_hz=48000 measured_mhz=47999936 samples=3133824 dro
+820.38 E5 pped_bufs=0 dropped_total=25 passes=65288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42595 tone=0 free_heap=119812 largest_block=73716 net_rx=84 net_tx=50
+821.69 E1 >> NET E5 ECHO STATUS
+821.72 E1 NET sent seq=12451 target=E5 text=ECHO STATUS
+821.75 E5 ECHO status node=E5 uptime_s=811 window_s=66 rate_hz=48000 measured_mhz=47999984 samples=3200256 dropped_bufs=0 dropped_total=25 passes=66673 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=5579 tone=0 free_heap=119812 largest_block=73716 net_rx=85 net_tx=50
+821.91 E1 NET reply from=E5 seq=12451 part=1 ECHO status node=E5 uptime_s=811 window_s=66 rate_hz=48000 measured_mhz=47999984 samples=3200256 dropped_bufs=0 dropped_total=25 passes=66673 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=5579 tone=0 free_heap=119812 largest_block=73716 net_rx=85 net_tx=50
+821.91 E1 NET reply from=E5 seq=12451 done parts=2
+824.70 E1 >> NET E5 ECHO STATUS
+824.73 E1 NET sent seq=12452 target=E5 text=ECHO STATUS
+824.77 E5 ECHO status node=E5 uptime_s=814 window_s=69 rate_hz=48000 measured_mhz=47999984 samples=3345024 dropped_bufs=0 dropped_total=25 passes=69689 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42323 tone=0 free_heap=119812 largest_block=73716 net_rx=88 net_tx=52
+824.87 E1 NET reply from=E5 seq=12452 part=1 ECHO status node=E5 uptime_s
+824.93 E1 =814 window_s=69 rate_hz=48000 measured_mhz=47999984 samples=3345024 dropped_bufs=0 dropped_total=25 passes=69689 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42323 tone=0 free_heap=119812 largest_block=73716 net_rx=88 net_tx=52
+824.93 E1 NET reply from=E5 seq=12452 done parts=2
+827.75 E1 >> NET E5 ECHO STATUS
+827.75 E1 >> NET * NET PING
+827.78 E1 NET sent seq=12453 target=E5 text=ECHO STATUS
+827.78 E1 NET sent seq=12454 target=* text=NET PING
+827.78 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7475 rx=60 rejected=0 queue_full=0 tx=93 tx_failed=0 outbox_full=0 commands=0
+827.82 E5 ECHO status node=E5 uptime_s=817 window_s=72 rate_hz=48000 measured_mhz=47999984 samples=3491328 dropped_bufs=0 dropped_total=25 passes=72737 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42235 tone=0 free_heap=119812 largest_block=73716 net_rx=91 net_tx=54
+827.82 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=817 rx=94 tx=55 commands=31
+827.85 E1 NET reply from=E4 seq=12454 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7475 rx=97 rejected=64 queue_full=0 tx=6 tx_failed=0 outbox_full=0 commands=6
+827.85 E1 NET reply from=E4 seq=12454 done parts=1
+827.98 E1 NET reply from=E5 seq=12453 part=1 ECHO status node=E5 uptime_s=817 window_s=72 rate_hz=48000 measured_mhz=47999984 samples=3491328 dropped_bufs=0 dropped_total=25 passes=72737 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42235 tone=0 free_heap=119812 largest_block=73716 net_rx=91 net_tx=54
+827.98 E1 NET reply from=E5 seq=12453 done parts=2
+827.98 E1 NET reply from=E5 seq=12454 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=817 rx=94 tx=55 commands=31
+827.98 E1 NET reply from=E5 seq=12454 done parts=1
+830.35 E5 ECHO status node=E5 uptime_s=820 window_s=75 rate_hz=48000 measured_mhz=47999984 samples=3613824 dropped_bufs=0 dropped_total=25 passes=75288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42552 tone=0 free_heap=119812 largest_block=73716 net_rx=96 net_tx=57
+830.80 E1 >> NET E5 ECHO STATUS
+830.83 E1 NET sent seq=12455 target=E5 text=ECHO STATUS
+830.86 E5 ECHO status node=E5 uptime_s=820 window_s=75 rate_hz=48000 measured_mhz=47999984 samples=3637376 dropped_bufs=0 dropped_total=25 passes=75779 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=5904 tone=0 free_heap=119812 largest_block=73716 net_rx=97 net_tx=57
+831.01 E1 NET reply from=E5 seq=12455 part=1 ECHO status node=E5 uptime_s=820 window_s=75 rate_hz=48000 measured_mhz=47999984 samples=3637376 dropped_bufs=0 dropped_total=25 passes=75779 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=5904 tone=0 free_heap=119812 largest_block=73716 net_rx=97 net_tx=57
+831.01 E1 NET reply from=E5 seq=12455 done parts=2
+833.82 E1 >> NET E5 ECHO STATUS
+833.86 E1 NET sent seq=12456 target=E5 text=ECHO STATUS
+833.88 E5 ECHO status node=E5 uptime_s=823 window_s=78 rate_hz=48000 measured_mhz=47999984 samples=3782784 dropped_bufs=0 dropped_total=25 passes=78809 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42503 tone=0 free_heap=119812 largest_block=73716 net_rx=100 net_tx=59
+834.04 E1 NET reply from=E5 seq=12456 part=1 ECHO status node=E5 uptime_s=823 window_s=78 rate_hz=48000 measured_mhz=47999984 samples=3782784 dropped_bufs=0 dropped_total=25 passes=78809 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42503 tone=0 free_heap=119812 largest_block=73716 net_rx=100 net_tx=59
+834.04 E1 NET reply from=E5 seq=12456 done parts=2
+836.85 E1 >> NET E5 ECHO STATUS
+836.88 E1 NET sent seq=12457 target=E5 text=ECHO STATUS
+836.92 E5 ECHO status node=E5 uptime_s=826 window_s=81 rate_hz=48000 measured_mhz=47999984 samples=3928064 dropped_bufs=0 dropped_total=25 passes=81836 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42865 tone=0 free_heap=119812 largest_block=73716 net_rx=103 net_tx=61
+837.07 E1 NET reply from=E5 seq=12457 part=1 ECHO status node=E5 uptime_s=826 window_s=81 rate_hz=48000 measured_mhz=47999984 samples=3928064 dropped_bufs=0 dropped_total=25 passes=81836 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42865 tone=0 free_heap=119812 largest_block=73716 net_rx=103 net_tx=61
+837.07 E1 NET reply from=E5 seq=12457 done parts=2
+839.86 E1 >> NET E5 ECHO STATUS
+839.86 E1 >> NET * NET PING
+839.90 E1 NET sent seq=12458 target=E5 text=ECHO STATUS
+839.90 E1 NET sent seq=12459 target=* text=NET PING
+839.90 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7487 rx=70 rejected=0 queue_full=0 tx=108 tx_failed=0 outbox_full=0 commands=0
+839.93 E5 ECHO status node=E5 uptime_s=829 window_s=84 rate_hz=48000 measured_mhz=47999984 samples=4072832 dropped_bufs=0 dropped_total=25 passes=84850 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43109 tone=0 free_heap=119812 largest_block=73716 net_rx=106 net_tx=63
+839.93 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=829 rx=109 tx=64 commands=36
+839.96 E1 NET reply from=E4 seq=12459 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7487 rx=112 rejected=74 queue_full=0 tx=7 tx_failed=0 outbox_full=0 commands=7
+839.96 E1 NET reply from=E4 seq=12459 done parts=1
+840.09 E1 NET reply from=E5 seq=12458 part=1 ECHO status node=E5 uptime_s=829 window_s=84 rate_hz=48000 measured_mhz=47999984 samples=4072832 dropped_bufs=0 dropped_total=25 passes=84850 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43109 tone=0 free_heap=119812 largest_block=73716 net_rx=106 net_tx=63
+840.09 E1 NET reply from=E5 seq=12458 done parts=2
+840.09 E1 NET reply from=E5 seq=12459 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=829 rx=109 tx=64 commands=36
+840.09 E1 NET reply from=E5 seq=12459 done parts=1
+840.32 E5 ECHO status node=E5 uptime_s=830 window_s=85 rate_hz=48000 measured_mhz=4
+840.38 E5 7999984 samples=4093824 dropped_bufs=0 dropped_total=25 passes=85288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42343 tone=0 free_heap=119812 largest_block=73716 net_rx=111 net_tx=66
+842.88 E1 >> NET E5 ECHO STATUS
+842.91 E1 NET sent seq=12460 target=E5 text=ECHO STATUS
+842.93 E5 ECHO status node=E5 uptime_s=832 window_s=87 rate_hz=48000 measured_mhz=47999984 samples=4217472 dropped_bufs=0 dropped_total=25 passes=87865 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=41903 tone=0 free_heap=119812 largest_block=73716 net_rx=112 net_tx=66
+843.08 E1 NET reply from=E5 seq=12460 part=1 ECHO status node=E5 uptime_s=832 window_s=87 rate_hz=48000 measured_mhz=47999984 samples=4217472 dropped_bufs=0 dropped_total=25 passes=87865 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=41903 tone=0 free_heap=119812 largest_block=73716 net_rx=112 net_tx=66
+843.08 E1 NET reply from=E5 seq=12460 done parts=2
+845.93 E1 >> NET E5 ECHO STATUS
+845.96 E1 NET sent seq=12461 target=E5 text=ECHO STATUS
+845.99 E5 ECHO status node=E5 uptime_s=835 window_s=90 rate_hz=48000 measured_mhz=47999984 samples=4364032 dropped_bufs=0 dropped_total=25 passes=90918 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42270 tone=0 free_heap=119812 largest_block=73716 net_rx=115 net_tx=68
+846.13 E1 NET reply from=E5 seq=12461 part=1 ECHO status node=E5 uptime_s=835 window_s=90 rate_hz=48000 measured_mhz=47999984 samples=4364032 dropped_bufs=0 dropped_total=25 passes=90918 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42270 tone=0 free_heap=119812 largest_block=73716 net_rx=115 net_tx=68
+846.13 E1 NET reply from=E5 seq=12461 done parts=2
+848.94 E1 >> NET E5 ECHO STATUS
+848.97 E1 NET sent seq=12462 target=E5 text=ECHO STATUS
+849.01 E5 ECHO status node=E5 uptime_s=838 window_s=93 rate_hz=48000 measured_mhz=47999984 samples=4508288 dropped_bufs=0 dropped_total=25 passes=93924 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42856 tone=0 free_heap=119812 largest_block=73716 net_rx=118 net_tx=70
+849.16 E1 NET reply from=E5 seq=12462 part=1 ECHO status node=E5 uptime_s=838 window_s=93 rate_hz=48000 measured_mhz=47999984 samples=4508288 dropped_bufs=0 dropped_total=25 passes=93924 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42856 tone=0 free_heap=119812 largest_block=73716 net_rx=118 net_tx=70
+849.16 E1 NET reply from=E5 seq=12462 done parts=2
+850.37 E5 ECHO status node=E5 uptime_s=840 window_s=95 rate_hz=48000 measured_mhz=47999936 samples=4573824 dropped_bufs=0 dropped_total=25 passes=95288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43194 tone=0 free_heap=119812 largest_block=73716 net_rx=120 net_tx=72
+852.00 E1 >> NET E5 ECHO STATUS
+852.00 E1 >> NET * NET PING
+852.03 E1 NET sent seq=12463 target=E5 text=ECHO STATUS
+852.03 E1 NET sent seq=12464 target=* text=NET PING
+852.03 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7499 rx=80 rejected=0 queue_full=0 tx=123 tx_failed=0 outbox_full=0 commands=0
+852.06 E5 ECHO status node=E5 uptime_s=841 window_s=96 rate_hz=48000 measured_mhz=47999984 samples=4655360 dropped_bufs=0 dropped_total=25 passes=96986 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=21096 tone=0 free_heap=119812 largest_block=73716 net_rx=121 net_tx=72
+852.06 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=841 rx=124 tx=73 commands=41
+852.09 E1 NET reply from=E4 seq=12464 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7499 rx=127 rejected=84 queue_full=0 tx=8 tx_failed=0 outbox_full=0 commands=8
+852.09 E1 NET reply from=E4 seq=12464 done parts=1
+852.22 E1 NET reply from=E5 seq=12463 part=1 ECHO status node=E5 uptime_s=841 window_s=96 rate_hz=48000 measured_mhz=47999984 samples=4655360 dropped_bufs=0 dropped_total=25 passes=96986 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=21096 tone=0 free_heap=119812 largest_block=73716 net_rx=121 net_tx=72
+852.22 E1 NET reply from=E5 seq=12463 done parts=2
+852.22 E1 NET reply from=E5 seq=12464 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=841 rx=124 tx=73 commands=41
+852.22 E1 NET reply from=E5 seq=12464 done parts=1
+855.03 E1 >> NET E5 ECHO STATUS
+855.06 E1 NET sent seq=12465 target=E5 text=ECHO STATUS
+855.09 E5 ECHO status node=E5 uptime_s=844 window_s=100 rate_hz=48000 measured_mhz=47999984 samples=4800768 dropped_bufs=0 dropped_total=25 passes=100015 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43646 tone=0 free_heap=119812 largest_block=73716 net_rx=127 net_tx=75
+855.26 E1 NET reply from=E5 seq=12465 part=1 ECHO status node=E5 uptime_s=844 window_s=100 rate_hz=48000 measured_mhz=47999984 samples=4800768 dropped_bufs=0 dropped_total=25 passes=100015 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43646 tone=0 free_heap=119812 largest_block=73716 net_rx=127 net_tx=75
+855.26 E1 NET reply from=E5 seq=12465 done parts=2
+858.04 E1 >> NET E5 ECHO STATUS
+858.07 E1 NET sent seq=12466 target=E5 text=ECHO STATUS
+858.10 E5 ECHO status node=E5 uptime_s=847 window_s=103 rate_hz=48000 measured_mhz=47999984 samples=4944896 dropped_bufs=0 dropped_total=25 passes=103020 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43611 tone=0 free_heap=119812 largest_block=73716 net_rx=130 net_tx=77
+858.26 E1 NET reply from=E5 seq=12466 part=1 ECHO status node=E5 uptime_s=847 window_s=103 rate_hz=48000 measured_mhz=47999984 samples=4944896 dropped_bufs=0 dropped_total=25 passes=103020 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43611 tone=0 free_heap=119812 largest_block=73716 net_rx=130 net_tx=77
+858.26 E1 NET reply from=E5 seq=12466 done parts=2
+860.37 E5 ECHO status node=E5 uptime_s=850 window_s=105 rate_hz=48000 measured_mhz=47999984 samples=5053824 dropped_bufs=0 dropped_total=25 passes=105288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43263 tone=0 free_heap=119812 largest_block=73716 net_rx=132 net_tx=79
+861.06 E1 >> NET E5 ECHO STATUS
+861.10 E1 NET sent seq=12467 target=E5 text=ECHO STATUS
+861.13 E5 ECHO status node=E5 uptime_s=850 window_s=106 rate_hz=48000 measured_mhz=47999984 samples=5090304 dropped_bufs=0 dropped_total=25 passes=106049 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=7114 tone=0 free_heap=119812 largest_block=73716 net_rx=133 net_tx=79
+861.23 E1 NET reply from=E5 seq=12467 part=1 ECHO status node=E5 uptime_s=850 w
+861.30 E1 indow_s=106 rate_hz=48000 measured_mhz=47999984 samples=5090304 dropped_bufs=0 dropped_total=25 passes=106049 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=7114 tone=0 free_heap=119812 largest_block=73716 net_rx=133 net_tx=79
+861.30 E1 NET reply from=E5 seq=12467 done parts=2
+864.11 E1 >> NET E5 ECHO STATUS
+864.11 E1 >> NET * NET PING
+864.14 E1 NET sent seq=12468 target=E5 text=ECHO STATUS
+864.14 E1 NET sent seq=12469 target=* text=NET PING
+864.14 E1 NET node=E1 started=1 build=40ec12e7 silent=1 uptime_s=7512 rx=90 rejected=0 queue_full=0 tx=138 tx_failed=0 outbox_full=0 commands=0
+864.17 E5 ECHO status node=E5 uptime_s=853 window_s=109 rate_hz=48000 measured_mhz=47999984 samples=5236736 dropped_bufs=0 dropped_total=25 passes=109098 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43407 tone=0 free_heap=119812 largest_block=73716 net_rx=136 net_tx=81
+864.17 E5 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=853 rx=139 tx=82 commands=46
+864.21 E1 NET reply from=E4 seq=12469 part=0 NET node=E4 started=1 build=40ec12e7 silent=1 uptime_s=7512 rx=142 rejected=94 queue_full=0 tx=9 tx_failed=0 outbox_full=0 commands=9
+864.21 E1 NET reply from=E4 seq=12469 done parts=1
+864.28 E1 N
+864.34 E1 ET reply from=E5 seq=12468 part=1 ECHO status node=E5 uptime_s=853 window_s=109 rate_hz=48000 measured_mhz=47999984 samples=5236736 dropped_bufs=0 dropped_total=25 passes=109098 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=43407 tone=0 free_heap=119812 largest_block=73716 net_rx=136 net_tx=81
+864.34 E1 NET reply from=E5 seq=12468 done parts=2
+864.34 E1 NET reply from=E5 seq=12469 part=0 NET node=E5 role=echo started=1 build=f8dfe8ce uptime_s=853 rx=139 tx=82 commands=46
+864.34 E1 NET reply from=E5 seq=12469 done parts=1
+867.16 E1 >> NET E5 ECHO STATUS
+867.19 E1 NET sent seq=12470 target=E5 text=ECHO STATUS
+867.23 E5 ECHO status node=E5 uptime_s=856 window_s=112 rate_hz=48000 measured_mhz=47999984 samples=5383040 dropped_bufs=0 dropped_total=25 passes=112146 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42622 tone=0 free_heap=119812 largest_block=73716 net_rx=142 net_tx=84
+867.38 E1 NET reply from=E5 seq=12470 part=1 ECHO status node=E5 uptime_s=856 window_s=112 rate_hz=48000 measured_mhz=47999984 samples=5383040 dropped_bufs=0 dropped_total=25 passes=112146 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42622 tone=0 free_heap=119812 largest_block=73716 net_rx=142 net_tx=84
+867.38 E1 NET reply from=E5 seq=12470 done parts=2
+870.17 E1 >> NET E5 ECHO STATUS
+870.19 E1 NET sent seq=12471 target=E5 text=ECHO STATUS
+870.22 E5 ECHO status node=E5 uptime_s=859 window_s=115 rate_hz=48000 measured_mhz=47999984 samples=5527424 dropped_bufs=0 dropped_total=25 passes=115155 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42301 tone=0 free_heap=119812 largest_block=73716 net_rx=145 net_tx=86
+870.34 E5 ECHO status node=E5 uptime_s=860 window_s=115 rate_hz=48000 measured_mhz=47999984 samples=5533824 dropped_bufs=0 dropped_total=25 passes=115288 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=7163 tone=0 free_heap=119812 largest_block=73716 net_rx=147 net_tx=87
+870.38 E1 NET reply from=E5 seq=12471 part=1 ECHO status node=E5 uptime_s=859 window_s=115 rate_hz=48000 measured_mhz=47999984 samples=5527424 dropped_bufs=0 dropped_total=25 passes=115155 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42301 tone=0 free_heap=119812 largest_block=73716 net_rx=145 net_tx=86
+870.38 E1 NET reply from=E5 seq=12471 done parts=2
+873.20 E1 >> NET E5 ECHO STATUS
+873.23 E1 NET sent seq=12472 target=E5 text=ECHO STATUS
+873.26 E5 ECHO status node=E5 uptime_s=862 window_s=118 rate_hz=48000 measured_mhz=47999984 samples=5672576 dropped_bufs=0 dropped_total=25 passes=118180 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42357 tone=0 free_heap=119812 largest_block=73716 net_rx=148 net_tx=88
+873.40 E1 NET reply from=E5 seq=12472 part=1 ECHO status node=E5 uptime_s=862 window_s=118 rate_hz=48000 measured_mhz=47999984 samples=5672576 dropped_bufs=0 dropped_total=25 passes=118180 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42357 tone=0 free_heap=119812 largest_block=73716 net_rx=148 net_tx=88
+873.40 E1 NET reply from=E5 seq=12472 done parts=2
+876.24 E5 >> ECHO STATUS
+876.31 E5 ECHO status node=E5 uptime_s=866 window_s=121 rate_hz=48000 measured_mhz=47999984 samples=5818624 dropped_bufs=0 dropped_total=25 passes=121222 pass_us_mean=78 pass_us_max=486 block_us_max=23 env_peak=42842 tone=0 free_heap=119812 largest_block=73716 net_rx=150 net_tx=90
+# phase back_to_node at 878.3
+878.28 E1 >> NET E5 OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+878.31 E1 NET sent seq=12473 target=E5 text=OTA url=http://192.168.178.33:8070/node.bin token=<hidden>
+878.34 E5 OTA start url=http://192.168.178.33:8070/node.bin
+878.66 E5 OTA wifi ip=192.168.178.120 rssi=-47
+879.38 E5 OTA progress pct=0
+880.32 E5 OTA progress pct=10
+881.06 E5 OTA progress pct=20
+882.11 E5 OTA progress pct=30
+882.95 E5 OTA progress pct=40
+883.86 E5 OTA progress pct=50
+884.59 E5 OTA progress pct=60
+885.46 E5 OTA progress pct=70
+886.14 E5 OTA progress pct=80
+886.80 E5 OTA progress pct=90
+887.57 E5 OTA progress pct=100
+887.74 E5 OTA result=ok rebooting (the new image confirms itself after 20 s)
+888.14 E5 ets Jul 29 2019 12:21:46
+888.14 E5 rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+888.14 E5 configsip: 0, SPIWP:0xee
+888.14 E5 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+888.14 E5 mode:DIO, clock div:1
+888.14 E5 load:0x3fff0030,len:1344
+888.14 E5 load:0x40078000,len:13964
+888.14 E5 load:0x40080400,len:3600
+888.14 E5 entry 0x400805f0
+888.59 E5 OTA pending_verify confirm_after_ms=20000 reboot_deadline_ms=60000
+888.59 E5 E (64) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+888.59 E5 BUILD role=node git=40ec12e7 date=Oct 31 2026 time=17:03:17 version=0.4.0 board=damp
+888.59 E5 RB node_id=0x38FE4AC3DC24
+888.59 E5 RB node name=E5 rotation_source=roster
+888.65 E5 PARAM load path=output.silent value=1 default=0
+888.70 E5 PARAM load stored=50 applied=50 stale=0 invalid=0
+888.76 E5 RB net started=1 channel=1 net_id=82
+888.76 E5 RB signal band=2950-4700 bins=8 hop=on rotation=1 base=1 band_per_node=0 steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,
+888.82 E5 4200
+888.82 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+888.82 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+888.82 E5 RB silent=1 (output.silent: listening, never sounding)
+888.82 E5 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape fieldStateConfig=4000/4000
+888.82 E5 RB PROFILE detail
+888.82 E5 kind=TonalPulseScalar
+888.82 E5 detectorSelection=ScalarTransient
+888.82 E5 inspectionPlan=contrast+amp+shape
+888.82 E5 scalarTransient.observedStream=FrequencyTarget
+888.82 E5 scalarTransient.onsetDetectionThreshold=2000.0
+888.82 E5 scalarTransient.onsetReleaseThreshold=1500.0
+888.82 E5 scalarTransient.cooldownAfterOnsetMs=50
+888.82 E5 scalarTransient.minTransient
+888.89 E5 DurationMs=92
+888.89 E5 scalarTransient.maxTransientDurationMs=450
+888.89 E5 scalarTransient.releaseDebounceMs=10
+888.89 E5 scalarTransient.minTransientPeakStrength=3000.0
+888.89 E5 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+888.89 E5 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+888.89 E5 inspectionPlan.module[2].kind=BinShape label=shape
+888.89 E5 verdict.has_requirement=1
+888.89 E5 verdict.required_label=contrast
+888.89 E5 fieldState.occurrenceWindowMs=4000
+888.89 E5 fieldState.patternWindowMs=4000
+888.89 E5 fieldState.busyOccurrenceCountThreshold=3
+888.89 E5 fieldState.denseOccurrenceCountThreshold=6
+888.89 E5 fieldState.quietOccurrenceCountThreshold=0
+888.89 E5 RB behavior
+888.89 E5 idle
+888.95 E5 Enabled=1
+888.95 E5 waitAfterHeardMs=100
+888.95 E5 refractoryAfterEmitMs=400
+888.95 E5 behaviorSuppressSelfChirpMs=100
+888.95 E5 detectionSuppressTailMsOwnEmit=60
+888.95 E5 idleTimeoutMs=60000
+888.95 E5 idleTimeVariationMs=20000
+888.95 E5 idleBlockedAfterHeardMs=1000
+888.95 E5 idleBlockedAfterOwnEmitMs=500
+888.95 E5 RB startup baseline=BOOT
+888.95 E5 RB warmup waiting ms=2 of 2000
+889.76 E5 RB warmup waiting ms=1002 of 2000
+890.81 E5 RB warmup done ms=2001 rebase=ok baseline=-529.7
+890.81 E5 RB rebase waiting smooth=122.0 quietMs=0
+891.83 E5 RB rebase done quietMs=1004 baseline=-221.5 smooth=0
+892.33 E5 RB baseline active
+908.50 E5 OTA confirmed partition=app1
+# phase done at 908.5

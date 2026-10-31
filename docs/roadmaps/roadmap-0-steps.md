@@ -323,6 +323,9 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         On the way: the attack as 10 % -> 90 % of the peak, levels onset 1000 / release 700 / floor 300, the clip cut
         by the ring's index and copied once its tail is recorded, only valid claps printed. Open for the owner: answer
         music's sharp onsets or not (a higher onset / a minimum peak).
+        Owner 2026-10-31: a minimum peak, permissive ("reacting to the unplanned is the point"); the echo room
+        at 48 kHz, Whispernet at 24 kHz (~2 s delay); Whispernet's detector first on a synthetic whisper (the
+        speech in bench_audio.wav and noise), real recordings later; site dates from the owner.
    20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the
         desk check (11-16 .. 12-04; a recorded whisper, a loud control, a fan). PC, then remote. Decision: no howl,
         whispers answered, speech ignored.

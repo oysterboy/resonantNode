@@ -93,3 +93,18 @@ through the night), the 13.2 / 13.3 steps once an hour, 10 trials each:
   (temperature, the room's background, the Emitter's level). The operating point keeps its 6 dB; a site check at a
   single hour over-reads or under-reads the edge by that much. One more reason to read margin, not pass / fail, on
   site (15).
+
+## 2026-10-31: the comb moved overnight (soak on the 8-bin build)
+
+bench/sessions/2026-10-30-step17-soak8 (8 cycles, 23:22-07:22) and the RAW set after it
+(2026-10-31-step17-margin-drop): -6 dB passed 54 / 80 (the earlier nights 100 / 100 at the same received strength),
+failing on the amp class. The amp inspection reads p75 of |amp| over the occurrence's first 100 ms, which covers the
+train's first three hops; its value fell from ~2,700 to ~1,500 (the medium limit 1,500) between 21:31 and 22:31 on
+2026-10-30, on an unchanged build and untouched boards. Per pulse, the 3450 Hz hop dipped 7 dB and the 3950 Hz hop
+rose 11 dB: a comb shift at one spot, by something in the room or its temperature.
+
+- The operating point (0.5 FS) and -3 dB held 80 / 80; the margin at -6 dB is what a comb shift of this size eats.
+- The amp gate weighs the first 100 ms only, so which hops dip matters, not how loud the loudest one is
+  (Strength16). With the base bins (BEH-009) a train starting higher puts other bins in that window: the per-pair
+  acceptance on site (15) should read the margin per base, not once.
+- Feeds DET-019 (the amp class sets the margin, a tuning question for its own pass).

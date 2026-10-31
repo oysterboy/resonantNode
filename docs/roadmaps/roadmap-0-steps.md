@@ -142,7 +142,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         BinShape's run diagnostics can truncate on a chord; the SEQ settle margin for a 450 ms occurrence is 40 ms.
         Boards: chord +150 / +200 ms now one train (was lost), nodecheck 26 / 26
         (bench/sessions/2026-10-29-step14-review). The Nodes had 300 stored: 450 PARAM SAVEd on E1 / E4 / E5.
-   14.2 [RUNNING 2026-10-30: fixes in, board check after the soak] Deep review fixes (docs/research/code-review-2026-10-30.md: six areas, no High, 15 Medium, ~35 Low).
+   14.2 [DONE 2026-10-31] Deep review fixes (docs/research/code-review-2026-10-30.md: six areas, no High, 15 Medium, ~35 Low).
         Host-built and gated while the soak ran; flashed after it (the owner stopped it at 11 h, 2026-10-30). First: the sample-clock backstep
         that can drop a whole train (D-M1), the shape look-back that lets a tone after a train pass (I-M-A), the
         rest / budget / idle holes in Behavior (B-M1..3), the Emitter's cancel ramp (O-M1). Behaviour-changing fixes
@@ -159,6 +159,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         10 / 10 answered); Analyzer A/B and RAW unchanged against 12.4's set; chord cell as 14.1 (chordcheck and
         soakcycle's chord check now run the answerers with level_max 0). Short soak running, 10 h from 21:29
         (bench/sessions/2026-10-30-step14.2-soak10).
+        Closed 2026-10-31: the short soak was stopped after 2 cycles for step 17's build, which carries every 14.2
+        change; its 8 h soak (2026-10-30-step17-soak8) is the soak for both (no reset, music 0, chords as 14.1).
 
 15. [TODO] Understand the room: the tryout room (5 x 6 m, 1 m spacing). (issue #77) On site.
    Hearing matrix strict and lenient (tools/bench/hearmatrix.py; field-activity-response.md "Measure first"), reach
@@ -216,6 +218,9 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         10 / 10 rejected; nodecheck 26 / 27 (E4's quiet_boot after a reboot in a loud moment; again after a reboot:
         PASS); the glide on E1 one bin per answer toward the base heard. Overnight soak with music each hour
         running (2026-10-30-step17-soak8, 8 h from 23:22). Then the five Nodes free.
+        2026-10-31 soak: 8 cycles, no reset, music 0 verdicts, 0.5 / -3 dB 80 / 80, chords as 14.1; -6 dB 54 / 80
+        because the room's comb moved at 22:00 the evening before (3450 Hz -7 dB, 3950 Hz +11 dB on the Analyzer;
+        RAW in 2026-10-31-step17-margin-drop), not the build (lab E005). Next: the five Nodes free.
 
 18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.

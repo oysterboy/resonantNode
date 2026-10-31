@@ -139,6 +139,9 @@ void EchoApp::pollAudio() {
     AudioBlock block;
     while (processed < maxSamples && _i2sPort.readBlock(block)) {
         const uint32_t startUs = micros();
+        // The ring's own index of this block's first sample: the clip is cut by it. Not block.startSampleIndex, which
+        // also counts the DMA buffers the driver dropped (the ring never saw them; found on the desk 2026-10-31).
+        const uint64_t ringIndex = _ring.written();
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const int32_t s = block.samples[i];
             const int32_t magnitude = s < 0 ? -s : s;
@@ -148,7 +151,7 @@ void EchoApp::pollAudio() {
         if (_envelope > _envelopePeak) {
             _envelopePeak = _envelope;
         }
-        detectBlock(block, timebase::msFromUs64(block.approxStartUs64));
+        detectBlock(block, ringIndex, timebase::msFromUs64(block.approxStartUs64));
         const uint32_t blockUs = micros() - startUs;
         if (blockUs > _load.blockUsMax) {
             _load.blockUsMax = blockUs;
@@ -192,8 +195,8 @@ void EchoApp::configureEcho() {
 // One DMA block: the envelope as Strength16 (the scale the scalar detector's thresholds are in) into the history and
 // the detector; an occurrence it finishes waits in _pending for its inspection window. Paused while the own replay
 // sounds and for its tail (Behavior's own-emit suppression).
-void EchoApp::detectBlock(const AudioBlock& block, uint32_t blockMs) {
-    _lastBlockIndex = block.startSampleIndex;
+void EchoApp::detectBlock(const AudioBlock& block, uint64_t ringIndex, uint32_t blockMs) {
+    _lastBlockIndex = ringIndex;
     _lastBlockMs = blockMs;
     if (_detectionPaused) {
         return;

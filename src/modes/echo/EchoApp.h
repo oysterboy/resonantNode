@@ -76,7 +76,7 @@ private:
     void handleOtaCommand(const char* line);
     void handleLogCommand(const char* line);
     void handleGateCommand(const char* line);
-    void detectBlock(const AudioBlock& block, uint32_t blockMs);
+    void detectBlock(const AudioBlock& block, uint64_t ringIndex, uint32_t blockMs);
     void judgePending(uint32_t nowMs);
     void runBehavior(unsigned long now);
     void startReplay(unsigned long now);
@@ -121,7 +121,7 @@ private:
     ScalarTransientDetector _detector;
     detection::Occurrence _pending;  // held until its inspection window is complete
     bool _havePending = false;
-    uint64_t _lastBlockIndex = 0;  // the newest block's first sample index and time: ms -> sample index for the clip
+    uint64_t _lastBlockIndex = 0;  // the newest block's first sample in the ring, and its time: ms -> ring index
     uint32_t _lastBlockMs = 0;
     ResonantBehavior _behavior;
     ChirpOutput _chirpOutput{_toneOutput};

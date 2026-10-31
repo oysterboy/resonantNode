@@ -258,6 +258,13 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         before an idle call when it heard nothing, scatters one bin; the Node's band-per-node mode (params: on / off,
         the range) applies the window to the detector live and plays the train on it; native-fieldsim on the same
         hearing model. Host-tested.
+   19.4 [DONE 2026-10-31, host] cef23f87: the verdict's highest bin, Behavior's heard window and wander, the Node's
+        band-per-node mode (behavior.band_per_node, band_range_low_hz / high_hz, base_scatter_bins); native-fieldsim
+        on the same hearing model (83-95 % of pairs in reach with scatter 1). Host 157, T2h identical.
+        1 kHz (owner 2026-10-31; bench/sessions/2026-10-31-step19-1khz): the train heard 10 / 10 on 700-1700,
+        950-1950, 1450-2450 (louder than at 3-4 kHz), 85 / 90 under music on 950-1950, 0 valid verdicts from music
+        on the Nodes; native-fieldsim with the range 950-4950 (13 positions) holds as 2200-4950 does. Owner: the
+        range's low edge (2200 as decided, or 950).
    19.5 The desk: five Nodes free with bands per node, step 6's protocol and basechains.py, before 2026-12-06.
 
 20. [PARKED 2026-10-30 after 20.1's PC part: nice to have] Echo room and Whispernet in the tryout room: one OTA

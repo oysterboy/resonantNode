@@ -20,7 +20,7 @@
 // heard since the last one); none: the windows only glide and scatter.
 //
 //   program --matrix all|line|line2 --nodes 5 --hours 4 --seed 1 [--offset 0|1] [--jitter MS] [--levels L] [--old]
-//           [--no-glide] [--bands on|none] [--scatter BINS] [--emissions out.csv]
+//           [--no-glide] [--bands on|none] [--range-low HZ] [--scatter BINS] [--emissions out.csv]
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -118,6 +118,7 @@ int main(int argc, char** argv) {
     int shrink = -1;  // -1: the firmware's default
     bool glide = true;
     std::string bands;  // empty: the shared band
+    long rangeLow = 2200;  // --bands: the range's low edge (its top stays 4950)
     long scatter = -1;  // the scatter's range in bins (0 = anywhere); -1: the firmware's default
     const char* emissionsPath = nullptr;
     for (int i = 1; i < argc; ++i) {
@@ -142,6 +143,8 @@ int main(int argc, char** argv) {
             shrink = 0;
         } else if (a == "--bands" && i + 1 < argc) {
             bands = argv[++i];
+        } else if (a == "--range-low" && i + 1 < argc) {
+            rangeLow = atol(argv[++i]);
         } else if (a == "--scatter" && i + 1 < argc) {
             scatter = atol(argv[++i]);
         } else if (a == "--no-glide") {
@@ -153,7 +156,7 @@ int main(int argc, char** argv) {
         } else {
             fprintf(stderr,
                     "usage: %s --matrix all|line|line2 --nodes N --hours H --seed S [--offset 0|1] [--jitter MS] "
-                    "[--levels L] [--no-glide] [--bands on|none] [--scatter BINS] [--old] "
+                    "[--levels L] [--no-glide] [--bands on|none] [--range-low HZ] [--scatter BINS] [--old] "
                     "[--emissions out.csv]\n",
                     argv[0]);
             return 2;
@@ -185,8 +188,8 @@ int main(int argc, char** argv) {
         cfg.restMs = 5000;
     }
     if (!bands.empty()) {
-        gBandLowHz = 2200;
-        gBases = 8;
+        gBandLowHz = static_cast<uint32_t>(rangeLow);
+        gBases = (4950U - gBandLowHz) / kBinHz + 1U - (kTrainBins - 1U);
         cfg.bandPerNode = bands == "on";  // the firmware's wander
     }
     std::vector<Node> nodes(static_cast<size_t>(n));

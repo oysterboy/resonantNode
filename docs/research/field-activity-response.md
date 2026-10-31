@@ -468,3 +468,24 @@ Every variant ends every chain within 30 s and stays at or under 22 per minute. 
   hour (seed 3), a band an octave wide traversed by the group, which is the owner's "the band is the note".
 - The firmware's scatter on the shared band (17) is "anywhere" by default; at one bin the shared band changes
   little (settled 14-17 % against 20-25 % in the room).
+
+### The firmware's hearing model, and a range down to 950 Hz (step 19.4, 2026-10-31)
+
+native-fieldsim now reads the heard window as the firmware does (the lowest and highest bin inside the listener's
+window; the wander is Behavior's own, `--bands on`). Same picture: with a one-bin scatter 83-95 % of the pairs in
+reach (all: 83-89 %, line: 91-95 %), chains and ignition as on the shared band.
+
+After the 1 kHz session (bench/sessions/2026-10-31-step19-1khz: the train heard 10 / 10 on 700-1700, 950-1950 and
+1450-2450, 85 / 90 under music on 950-1950, no valid verdict from music on the Nodes), `--range-low 950`: 13
+positions on 950-4950 (about 2.4 octaves) against 8 on 2200-4950:
+
+```text
+       range       pairs in reach   long chains   ignite
+all    2200-4950      83-89 %         178-186     55-61 %
+all     950-4950      85-87 %         179-181     58-59 %
+line   2200-4950      91-95 %          32-41      38 %
+line    950-4950      83-88 %          23-37      34-38 %
+```
+
+The wider range costs little in reach; the field still wanders as a group, and in 4 h it does not visit every
+position evenly (the low positions are reached in some seeds and not in others).

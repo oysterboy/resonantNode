@@ -170,7 +170,7 @@ void EchoApp::configureEcho() {
     d.cooldownAfterOnsetMs = 50;
     d.minTransientDurationMs = 0;
     d.maxTransientDurationMs = 300;
-    d.minTransientPeakStrength = _gate.onset;
+    d.minTransientPeakStrength = _gate.minPeak;
     d.releaseDebounceMs = 20;
     _detector.setConfig(d);
     // The echo room's plan: one module, the attack; Medium (within maxAttackMs) is a clap.
@@ -350,8 +350,11 @@ void EchoApp::handleGateCommand(const char* line) {
     struct FloatKey {
         const char* key;
         float* field;
-    } floats[] = {
-        {"onset=", &_gate.onset}, {"release=", &_gate.release}, {"floor=", &_gate.floor}, {"gain=", &_gate.gain}};
+    } floats[] = {{"onset=", &_gate.onset},
+                  {"release=", &_gate.release},
+                  {"floor=", &_gate.floor},
+                  {"gain=", &_gate.gain},
+                  {"peak=", &_gate.minPeak}};
     for (const FloatKey& k : floats) {
         const char* at = strstr(rest, k.key);
         float v = 0.0f;
@@ -394,6 +397,8 @@ void EchoApp::handleGateCommand(const char* line) {
     serialOut().print(_gate.release, 0);
     serialOut().print(" floor=");
     serialOut().print(_gate.floor, 0);
+    serialOut().print(" peak=");
+    serialOut().print(_gate.minPeak, 0);
     serialOut().print(" attack_ms=");
     serialOut().print(_gate.maxAttackMs);
     serialOut().print(" pre_ms=");
@@ -601,7 +606,7 @@ void EchoApp::printHelp() {
     serialOut().println("ECHO CMD: ECHO RESET (the load counters)");
     serialOut().println("ECHO CMD: ECHO LOG <seconds> (status every n s, 0 = off)");
     serialOut().println(
-        "ECHO CMD: ECHO GATE [onset=] [release=] [floor=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]");
+        "ECHO CMD: ECHO GATE [onset=] [release=] [floor=] [peak=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]");
     serialOut().println("ECHO CMD: TONE <hz> <ms>");
     serialOut().println("ECHO CMD: OTA url=... token=...");
     serialOut().println("ECHO CMD: NET STATUS");

@@ -101,6 +101,9 @@ private:
         float floor = 300.0f;  // the noise: the attack's low point never below it
         float onset = 1000.0f;  // the detector's onset
         float release = 700.0f;  // the detector's release
+        // The occurrence's peak at least this (owner 2026-10-31: permissive, "reacting to the unplanned is the point"):
+        // above most of the music's sharp onsets on the desk (1,000-1,230), below a click at ~1 m (1,750-1,940).
+        float minPeak = 1200.0f;
         uint32_t maxAttackMs = 10;  // a clap rises (10 % -> 90 % of its peak) within this
         uint32_t preMs = 30;  // the clip from the onset back
         uint32_t postMs = 270;  // and forward (clip <= 300 ms)

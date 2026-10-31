@@ -309,7 +309,7 @@ ECHO STATUS (or STATUS)   one line: dropped_bufs since ECHO RESET, pass_us_mean 
                           samples, measured_mhz, env_peak, free_heap, largest_block, net counters
 ECHO RESET                the load counters
 ECHO LOG <s>              the status line every s seconds (10 at boot), 0 = on request only
-ECHO GATE [onset=] [release=] [floor=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]
+ECHO GATE [onset=] [release=] [floor=] [peak=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]
                           the echo room's values, live (Strength16 levels; the clip pre + post <= 300 ms)
 TONE <hz> <ms>            a test tone through the amp, at the shell's rate
 OTA url=... token=...     as on the Node; the image confirms after 20 s once its radio started

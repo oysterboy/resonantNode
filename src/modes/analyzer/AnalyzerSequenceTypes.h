@@ -62,7 +62,7 @@ struct SeqOutputConfig {
     unsigned long totalTrials = 100;
     detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
     bool diagnosticsEnabled = true;
-    unsigned long frequencyUpdateEverySamples = 4;
+    unsigned long frequencyUpdateEverySamples = FREQBAND_UPDATE_EVERY_SAMPLES;  // as the Node (DET-020)
 };
 
 // What SEQ start / SEQ OBS parses (the defaults are the start's defaults) and the

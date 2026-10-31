@@ -458,6 +458,10 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     FreqBandStream band;
     if (opt.bandUpdateEvery > 0) {
         band.setFrequencyUpdateEverySamples(opt.bandUpdateEvery);
+    } else if (opt.compare && cap.hasBandLead && cap.bandUpdateEvery > 0) {
+        // Compared sample for sample with the board's recorded columns: run the bank at the board's interval then
+        // (RAW_BEGIN band_update_every; 4 before 2026-11-01, DET-020), not today's default.
+        band.setFrequencyUpdateEverySamples(cap.bandUpdateEvery);
     }
     detection::DetectionRuntime runtime;
     runtime::PcmPreprocessMode preprocessMode = opt.preprocess;

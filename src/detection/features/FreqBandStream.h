@@ -1,9 +1,10 @@
 #pragma once
 
-// The bank's update interval in samples (DET-020, step 22): 4 on every board; a build flag so a measurement build
+// The bank's update interval in samples (DET-020, step 22): 16 (1 ms at 16 kHz) since 2026-11-01, was 4; the Node
+// spent 34.6 us a sample at 4, 15.7 at 16 (bench/sessions/2026-11-01-step22.1-node-cpu). A build flag so a measurement build
 // can run another without changing the default.
 #ifndef FREQBAND_UPDATE_EVERY_SAMPLES
-#define FREQBAND_UPDATE_EVERY_SAMPLES 4
+#define FREQBAND_UPDATE_EVERY_SAMPLES 16
 #endif
 
 #include <stdint.h>

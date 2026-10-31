@@ -45,4 +45,17 @@ print("bases played overall:", dict(sorted(Counter(b for _, _, b in emits).items
 last = {}
 for t, n, b, g, s in status:
     last[n] = (b, g, s)
+# Pairs within the hearing radius (2 bins, bench/sessions/2026-10-31-step19-hearing-radius), from each STATUS round:
+# every node's latest base when a round has come in from all of them.
+names = sorted({n for _, n, _, _, _ in status})
+cur, inreach, pairs = {}, 0, 0
+for t, n, b, g, s in status:
+    cur[n] = b
+    if n == names[-1] and len(cur) == len(names):
+        for i in range(len(names)):
+            for j in range(i + 1, len(names)):
+                pairs += 1
+                inreach += abs(cur[names[i]] - cur[names[j]]) <= 2
+if pairs:
+    print("pairs within 2 bins at the STATUS rounds: %.0f %% (%d / %d)" % (100.0 * inreach / pairs, inreach, pairs))
 print("last STATUS per node (base, glides, scatters):", dict(sorted(last.items())))

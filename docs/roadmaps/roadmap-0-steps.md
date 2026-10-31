@@ -265,7 +265,14 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         950-1950, 1450-2450 (louder than at 3-4 kHz), 85 / 90 under music on 950-1950, 0 valid verdicts from music
         on the Nodes; native-fieldsim with the range 950-4950 (13 positions) holds as 2200-4950 does. Owner
         2026-10-31: "950" (behavior.band_range_low_hz default 950; the decision amended).
-   19.5 The desk: five Nodes free with bands per node, step 6's protocol and basechains.py, before 2026-12-06.
+   19.5 [DONE 2026-10-31, two findings for the owner] The desk: five Nodes free with bands per node (950-4950,
+        scatter 1, live; bench/sessions/2026-10-31-step19-desk5-bands). Quiet and with music 30 min each: every
+        chain ended (105 / 105, 96 / 96), at most 19 / 14 per minute, windows glide and wander as designed.
+        Findings: (1) quiet, the field split into a low group (950-2200) and high nodes (3450-4950), 66 % of the
+        pairs within reach (with music the whole field stayed low, 94 %): a group that hears itself never wanders
+        and a one-bin scatter does not bridge the gap; (2) on the lowest window (950-1950) male speech made one
+        valid verdict that started a chain, once in 2.5 node-hours (0 on the shared band). The mode stays off by
+        default (behavior.band_per_node 0) until the owner's call on the low edge and the split.
 
 20. [PARKED 2026-10-30 after 20.1's PC part: nice to have] Echo room and Whispernet in the tryout room: one OTA
    each. (issue #84)

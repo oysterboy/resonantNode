@@ -251,8 +251,14 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         the pairs within reach, chains and ignition as on the shared band, the group's band drifting across the
         octave; with the scatter anywhere only 47 %, without the wander 27-31 % (field-activity-response.md "Bands
         per node in native-fieldsim").
-   19.3 The owner's decision: bands per node, or the second musical tone (OUT-006), or neither; from 19.1-19.2
-        and the desk's glide numbers (17.3). If bands per node: built and checked on the desk before 2026-12-06.
+   19.3 [DONE 2026-10-31] The owner's decision: bands per node ("A";
+        decisions/2026-10-31-bands-per-node.md), scatter one bin; OUT-006's low tone not now.
+   19.4 Build it: the verdict carries the heard train's highest bin too (the direction of a sender below: the
+        bank's peak never lands on a guard bin), Behavior reads the heard window from lowest and highest, wanders
+        before an idle call when it heard nothing, scatters one bin; the Node's band-per-node mode (params: on / off,
+        the range) applies the window to the detector live and plays the train on it; native-fieldsim on the same
+        hearing model. Host-tested.
+   19.5 The desk: five Nodes free with bands per node, step 6's protocol and basechains.py, before 2026-12-06.
 
 20. [PARKED 2026-10-30 after 20.1's PC part: nice to have] Echo room and Whispernet in the tryout room: one OTA
    each. (issue #84)

@@ -10,7 +10,8 @@
 #include "../../audio/CaptureRing.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/detectors/scalar/ScalarTransientDetector.h"
-#include "../../detection/features/AttackSlope.h"
+#include "../../detection/features/FeatureHistory.h"
+#include "../../detection/inspection/OccurrenceInspector.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/I2sToneOutput.h"
 #include "../../net/NetGateway.h"
@@ -27,10 +28,12 @@ EchoApp (ECHO-003, step 20.1; the echo room ECHO-001, step 20.2): the echo modes
 the echo room in it: a clap (a fast-rising transient) is answered by a replay of the sound itself, cut from the
 capture ring around its onset.
 
-Per DMA block: the envelope's Strength16 level into AttackSlope (how fast it rose) and ScalarTransientDetector (the
-occurrence: onset, release, duration, strength), both on the envelope alone; an accepted occurrence becomes a verdict
-by makeClapVerdict (valid when the attack was fast) and goes to ResonantBehavior with the echo room's config (no idle
-call, a high first-answer chance, a short rest, a wait long enough for the clip's tail to be recorded). When Behavior
+The detection chain is myspec's, with the echo room's own plan: per DMA block the envelope's Strength16 level is
+recorded into a FeatureHistory (sized for this build: FEATURE_HISTORY_* in platformio.ini) and fed to the
+ScalarTransientDetector (the occurrence: onset, release, duration, strength); an occurrence is held until its
+inspection window is complete, the OccurrenceInspector runs the one-module plan (AttackRise: how fast the envelope
+rose into the onset) and makeVerdict judges it; a valid verdict goes to ResonantBehavior with the echo room's config
+(no idle call, a high first-answer chance, a short rest, a wait long enough for the clip's tail to be recorded). When Behavior
 asks to emit, the clip (preMs before the onset to postMs after it) is copied out of the ring and played through
 SoundOutput as an OutputRequest::Kind::Clip; detection pauses while it sounds and for the tail after it.
 
@@ -43,7 +46,7 @@ the numbers too.
 
 Owns: the I2S port and the tone writer, the capture ring and the clip buffer, the echo room's gate values and
 counters, the load counters, the radio's receive side (OTA, NET PING and ECHO by radio, replies through NetGateway).
-Does not: decide when to answer (Behavior), judge an occurrence (makeClapVerdict), load or save params (the Node's
+Does not: decide when to answer (Behavior), judge an occurrence (the inspector and makeVerdict), load or save params (the Node's
 NVS store stays untouched, so a board that passes through this image comes back with its Node saves), act as a NET
 gateway. Whispernet (ECHO-002) is not in it yet.
 */
@@ -74,6 +77,7 @@ private:
     void handleLogCommand(const char* line);
     void handleGateCommand(const char* line);
     void detectBlock(const AudioBlock& block, uint32_t blockMs);
+    void judgePending(uint32_t nowMs);
     void runBehavior(unsigned long now);
     void startReplay(unsigned long now);
     void configureEcho();
@@ -105,21 +109,25 @@ private:
     struct EchoCounts {
         unsigned long occurrences = 0;
         unsigned long claps = 0;        // valid verdicts
-        unsigned long slow = 0;         // rejected: the attack too slow or unmeasured
+        unsigned long slow = 0;         // rejected: the attack too slow or not measured
         unsigned long replays = 0;
         unsigned long clipMissing = 0;  // the clip no longer (or not yet) whole in the ring
     };
     Gate _gate;
     EchoCounts _echo;
-    detection::AttackSlope _attack;
+    detection::FeatureHistory _history;
+    detection::OccurrenceInspector _inspector;
+    detection::InspectionPlan _plan;
     ScalarTransientDetector _detector;
+    detection::Occurrence _pending;  // held until its inspection window is complete
+    bool _havePending = false;
+    uint64_t _lastBlockIndex = 0;  // the newest block's first sample index and time: ms -> sample index for the clip
+    uint32_t _lastBlockMs = 0;
     ResonantBehavior _behavior;
     ChirpOutput _chirpOutput{_toneOutput};
     SoundOutput _soundOutput{_chirpOutput};
     std::unique_ptr<int16_t[]> _clip;
     size_t _clipCapacity = 0;
-    uint64_t _crossingIndex = 0;  // the sample index of the last onset crossing
-    long _crossingAttackMs = -1;
     uint64_t _heardOnsetIndex = 0;  // the onset of the clap Behavior is answering
     bool _detectionPaused = false;
     int32_t _envelope = 0;   // smoothed |sample|, canonical PCM units (24-bit)

@@ -117,6 +117,7 @@ enum class InspectionModuleKind {
     None,
     MagnitudeFeatureStrength,
     BinShape,  // DET-015: which band bins the occurrence visited, from the BinTrack
+    AttackRise,  // ECHO-001: how fast the level rose into the onset, from the FeatureHistory
 };
 
 enum class InspectionTarget {
@@ -126,6 +127,7 @@ enum class InspectionTarget {
     Contrast,
     TargetBand,
     Shape,  // DET-015, the BinShape module
+    Attack,  // ECHO-001, the AttackRise module
 };
 
 struct MagnitudeFeatureInspectionConfig {
@@ -154,6 +156,21 @@ struct ShapeInspectionConfig {
     uint16_t strongMinRisingSteps = 3;
 };
 
+// ECHO-001 (step 20.2): the rise into the onset, over [start - preMs, start + postMs] of the stream's history: the
+// time from the last bin at or below floorLevel to the first at or above onsetLevel. The class: Strong within
+// strongMaxMs, Medium within mediumMaxMs, Weak within weakMaxMs, None slower; Unknown when the window shows no rise
+// (no quiet bin before the crossing). A clap or a knock rises in a few ms, a voice or a scrape in tens.
+struct AttackInspectionConfig {
+    FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
+    uint32_t preMs = 30;
+    uint32_t postMs = 20;
+    float floorLevel = 7000.0f;
+    float onsetLevel = 12000.0f;
+    uint32_t strongMaxMs = 5;
+    uint32_t mediumMaxMs = 10;
+    uint32_t weakMaxMs = 30;
+};
+
 struct InspectionModuleConfig {
     InspectionModuleKind kind = InspectionModuleKind::None;
     InspectionTarget target = InspectionTarget::None;
@@ -161,6 +178,7 @@ struct InspectionModuleConfig {
     StrengthClass minimumStrength = StrengthClass::Unknown;
     MagnitudeFeatureInspectionConfig magnitude = {};
     ShapeInspectionConfig shape = {};
+    AttackInspectionConfig attack = {};
 };
 
 static constexpr size_t kMaxInspectionModules = 3;

@@ -68,6 +68,15 @@ struct OccurrenceShape {
     StrengthClass shapeClass = StrengthClass::Unknown;
 };
 
+// ECHO-001: the rise into the onset the AttackRise module found (FeatureHistory over the onset's window). Not
+// applicable when no plan module asked for it.
+struct OccurrenceAttack {
+    bool applicable = false;
+    bool measured = false;  // a quiet bin before the crossing was in the window
+    uint32_t riseMs = 0;
+    StrengthClass attackClass = StrengthClass::Unknown;
+};
+
 struct Occurrence {
     // Canonical generic accepted-event shell.
     DetectorId detectorId = DetectorId::Unknown;
@@ -94,6 +103,7 @@ struct Occurrence {
     MagnitudeOccurrenceDetail magnitude = {};
     FrequencyBandOccurrenceDetail band = {};
     OccurrenceShape shape = {};
+    OccurrenceAttack attack;  // ECHO-001, the AttackRise module
 };
 
 } // namespace detection

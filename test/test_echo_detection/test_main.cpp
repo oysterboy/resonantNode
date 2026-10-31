@@ -1,91 +1,138 @@
 /*
-The echo room's detection facts on the host (ECHO-001, step 20.2): AttackSlope's rise time per block and
-makeClapVerdict's verdict on one occurrence. Runs in native-test-behavior.
+The echo room's inspection on the host (ECHO-001, step 20.2): the AttackRise module in the inspection plan reads the
+envelope's history around an occurrence's onset (FeatureHistory::riseTimeMs), classes the rise, and makeVerdict
+judges it like any other requirement. A clap passes, a swell does not, a sound with no quiet before it is not
+measured. Runs in native-test-behavior.
 */
 #include <unity.h>
 
-#include "../../src/detection/echo/ClapVerdict.h"
-#include "../../src/detection/features/AttackSlope.h"
+#include "../../src/detection/features/FeatureHistory.h"
+#include "../../src/detection/inspection/OccurrenceInspector.h"
+#include "../../src/detection/inspection/VerdictProjection.h"
 
-using detection::AttackSlope;
+#include "../../src/detection/features/FeatureHistory.cpp"
+#include "../../src/detection/inspection/OccurrenceInspector.cpp"
+#include "../../src/detection/inspection/VerdictProjection.cpp"
 
-void setUp() {}
-void tearDown() {}
+using namespace detection;
 
-// Blocks every 2 ms (128 frames at 48 kHz is 2.7 ms; the gate only needs ms resolution).
-void test_a_clap_rises_in_a_block_or_two() {
-    AttackSlope a;
-    a.configure(6000.0f, 18000.0f);
-    TEST_ASSERT_EQUAL(-1, a.update(5000.0f, 100));
-    TEST_ASSERT_EQUAL(-1, a.update(5200.0f, 102));
-    TEST_ASSERT_EQUAL(2, a.update(30000.0f, 104));  // last quiet at 102
-    TEST_ASSERT_EQUAL(-1, a.update(31000.0f, 106)); // still above: no second crossing
+namespace {
+
+// The echo room's plan: one module, the attack, at least Medium (within 10 ms).
+InspectionPlan echoPlan() {
+    InspectionPlan plan = InspectionPlan{};
+    plan.modules[0].kind = InspectionModuleKind::AttackRise;
+    plan.modules[0].target = InspectionTarget::Attack;
+    plan.modules[0].enabled = true;
+    plan.modules[0].minimumStrength = StrengthClass::Medium;
+    plan.count = 1;
+    return plan;
 }
 
-void test_a_swell_rises_slowly() {
-    AttackSlope a;
-    a.configure(6000.0f, 18000.0f);
-    a.update(5000.0f, 0);
-    long attack = -1;
-    for (uint32_t t = 2; t <= 80 && attack < 0; t += 2) {
-        attack = a.update(5000.0f + 200.0f * t, t);  // reaches 18000 at 65 ms
-    }
-    TEST_ASSERT_TRUE(attack >= 60);
-}
-
-void test_no_attack_without_a_quiet_level_first() {
-    AttackSlope a;
-    a.configure(6000.0f, 18000.0f);
-    TEST_ASSERT_EQUAL(-1, a.update(20000.0f, 10));  // loud from the start
-    a.update(12000.0f, 12);                        // falls, but not to the floor
-    TEST_ASSERT_EQUAL(-1, a.update(20000.0f, 14));
-    a.update(4000.0f, 20);
-    TEST_ASSERT_EQUAL(4, a.update(20000.0f, 24));
-    a.reset();
-    TEST_ASSERT_EQUAL(-1, a.update(4000.0f, 30) < 0 ? -1 : 0);
-}
-
-detection::Occurrence accepted() {
-    detection::Occurrence o;
+Occurrence occurrence(unsigned long startMs) {
+    Occurrence o = {};
     o.present = true;
     o.valid = true;
-    o.occurrenceId = 7;
-    o.startMs = 1000;
-    o.peakMs = 1003;
-    o.releaseMs = 1040;
+    o.occurrenceType = OccurrenceType::Scalar;
+    o.startMs = startMs;
     o.durationMs = 40;
+    o.releaseMs = startMs + 40;
     o.strength = 25000.0f;
     return o;
 }
 
-void test_clap_verdict_valid_with_a_fast_attack() {
-    const detection::OccurrenceVerdict v = detection::makeClapVerdict(accepted(), 2, 10);
-    TEST_ASSERT_TRUE(v.valid);
-    TEST_ASSERT_EQUAL_UINT32(1040, v.primaryHeardAtMs);
-    TEST_ASSERT_EQUAL_UINT32(40, v.primaryDurationMs);
-    TEST_ASSERT_EQUAL_FLOAT(25000.0f, v.primaryStrength);
-    TEST_ASSERT_EQUAL_UINT16(0, v.primaryLowestBinHz);
+// The envelope as the echo shell records it: one value per DMA block, ~3 ms apart.
+void record(FeatureHistory& h, unsigned long fromMs, unsigned long toMs, float (*level)(unsigned long)) {
+    for (unsigned long t = fromMs; t <= toMs; t += 3) {
+        h.record(FeatureStreamId::AmpEnvelope, t, level(t));
+    }
 }
 
-void test_clap_verdict_rejects_a_slow_or_unmeasured_attack() {
-    detection::OccurrenceVerdict v = detection::makeClapVerdict(accepted(), 30, 10);
+FeatureHistory& history() {
+    static FeatureHistory h;  // ~41 KB at the host's default size: not on the stack
+    const FeatureStreamId streams[1] = {FeatureStreamId::AmpEnvelope};
+    h.setActiveStreams(streams, 1);
+    return h;
+}
+
+OccurrenceVerdict judge(FeatureHistory& h, const Occurrence& occ, InspectedOccurrence& inspected) {
+    OccurrenceInspector inspector;
+    inspector.configure(echoPlan());
+    inspected = inspector.inspectWithHistory(occ, &h, occ.startMs + 100);
+    OccurrenceVerdict v;
+    makeVerdict(inspected, echoPlan(), v);
+    return v;
+}
+
+}  // namespace
+
+void setUp() {}
+void tearDown() {}
+
+// Quiet until 1000, loud from 1003: a rise within one block.
+void test_a_clap_rises_fast_and_passes() {
+    FeatureHistory& h = history();
+    record(h, 900, 1100, [](unsigned long t) { return t < 1003 ? 5000.0f : 30000.0f; });
+    InspectedOccurrence in;
+    const OccurrenceVerdict v = judge(h, occurrence(1003), in);
+    TEST_ASSERT_TRUE(in.occurrence.attack.applicable);
+    TEST_ASSERT_TRUE(in.occurrence.attack.measured);
+    TEST_ASSERT_EQUAL_UINT32(3, in.occurrence.attack.riseMs);
+    TEST_ASSERT_EQUAL(StrengthClass::Strong, in.occurrence.attack.attackClass);
+    TEST_ASSERT_TRUE(v.valid);
+}
+
+// A swell from 5000 to 30000 over 60 ms crosses the onset (12000) about 17 ms after leaving the floor: too slow.
+void test_a_swell_rises_slowly_and_fails() {
+    FeatureHistory& h = history();
+    record(h, 900, 1100, [](unsigned long t) {
+        return t < 1000 ? 5000.0f : (t > 1060 ? 30000.0f : 5000.0f + 25000.0f * (t - 1000) / 60.0f);
+    });
+    InspectedOccurrence in;
+    const OccurrenceVerdict v = judge(h, occurrence(1018), in);
+    TEST_ASSERT_TRUE(in.occurrence.attack.measured);
+    TEST_ASSERT_TRUE(in.occurrence.attack.riseMs > 10);
     TEST_ASSERT_FALSE(v.valid);
-    TEST_ASSERT_TRUE(v.proposalMatched);
-    TEST_ASSERT_EQUAL(static_cast<int>(detection::VerdictRejectReason::SupportTooLow),
-                      static_cast<int>(v.rejectReason));
-    v = detection::makeClapVerdict(accepted(), -1, 10);
+    TEST_ASSERT_EQUAL(InspectionTarget::Attack, v.firstFailedRequirementTarget);
+    TEST_ASSERT_EQUAL(VerdictRejectReason::SupportTooLow, v.rejectReason);
+}
+
+// Loud all through the window: no quiet bin before the crossing, the attack is not measured (missing support).
+void test_no_quiet_before_the_onset_is_not_measured() {
+    FeatureHistory& h = history();
+    record(h, 900, 1100, [](unsigned long) { return 30000.0f; });
+    InspectedOccurrence in;
+    const OccurrenceVerdict v = judge(h, occurrence(1003), in);
+    TEST_ASSERT_FALSE(in.occurrence.attack.measured);
+    TEST_ASSERT_EQUAL(StrengthClass::Unknown, in.occurrence.attack.attackClass);
     TEST_ASSERT_FALSE(v.valid);
-    detection::Occurrence notAccepted = accepted();
-    notAccepted.valid = false;
-    TEST_ASSERT_FALSE(detection::makeClapVerdict(notAccepted, 2, 10).valid);
+    TEST_ASSERT_EQUAL(VerdictRejectReason::MissingSupport, v.rejectReason);
+}
+
+// The plan's window ends postMs after the start: the runtime holds the occurrence until then.
+void test_window_complete_after_the_onset() {
+    OccurrenceInspector inspector;
+    inspector.configure(echoPlan());
+    TEST_ASSERT_EQUAL_UINT32(1003 + 20, inspector.windowCompleteAtMs(occurrence(1003)));
+}
+
+// The query itself, and a bin length above 1 ms rounding times down to the bin's start.
+void test_rise_time_query() {
+    FeatureHistory& h = history();
+    record(h, 0, 60, [](unsigned long t) { return t < 30 ? 1000.0f : 20000.0f; });
+    unsigned long rise = 0;
+    TEST_ASSERT_TRUE(h.riseTimeMs(FeatureStreamId::AmpEnvelope, 0, 60, 2000.0f, 10000.0f, rise));
+    TEST_ASSERT_EQUAL_UINT32(3, rise);
+    TEST_ASSERT_FALSE(h.riseTimeMs(FeatureStreamId::AmpEnvelope, 40, 60, 2000.0f, 10000.0f, rise));  // no quiet in it
+    TEST_ASSERT_EQUAL_UINT32(1, FeatureHistory::kBinDurationMs);  // the host builds the Node's size
 }
 
 int main(int, char**) {
     UNITY_BEGIN();
-    RUN_TEST(test_a_clap_rises_in_a_block_or_two);
-    RUN_TEST(test_a_swell_rises_slowly);
-    RUN_TEST(test_no_attack_without_a_quiet_level_first);
-    RUN_TEST(test_clap_verdict_valid_with_a_fast_attack);
-    RUN_TEST(test_clap_verdict_rejects_a_slow_or_unmeasured_attack);
+    RUN_TEST(test_a_clap_rises_fast_and_passes);
+    RUN_TEST(test_a_swell_rises_slowly_and_fails);
+    RUN_TEST(test_no_quiet_before_the_onset_is_not_measured);
+    RUN_TEST(test_window_complete_after_the_onset);
+    RUN_TEST(test_rise_time_query);
     return UNITY_END();
 }

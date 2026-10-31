@@ -316,11 +316,12 @@ OTA url=... token=...     as on the Node; the image confirms after 20 s once its
 NET STATUS / NET PING     the radio's counters
 ```
 
-The echo room (2026-10-31, ECHO-001): a clap (the envelope crossing `onset` within `attack` ms of sitting at or below
-`floor`, and an occurrence of the scalar detector on the envelope, once per DMA block) goes to a ResonantBehavior
+The echo room (2026-10-31, ECHO-001): the scalar detector runs once per DMA block on the envelope; each occurrence is
+inspected by the echo room's one-module plan (AttackRise: the envelope rose from `floor` to `onset` within `attack` ms,
+read from a 64 ms FeatureHistory) and judged by makeVerdict; a clap goes to a ResonantBehavior
 with the echo room's own values (no idle call, the first clap answered with 3 / 4, an answer 350 ms after it plus up to
 300 ms, a rest after a level of 4); the answer is the clap itself, `pre` ms before its onset to `post` ms after, cut
-from the ring and played at `gain`. Lines: `ECHO clap valid= strength= duration_ms= decision=`, `ECHO replay
+from the ring and played at `gain`. Lines: `ECHO clap valid= attack_ms= strength= duration_ms= decision=`, `ECHO replay
 onset_index= ms= gain=`; ECHO STATUS adds `level= occurrences= claps= slow= replays= clip_missing= behavior=`.
 The values are code defaults in `EchoApp.h` / `echoBehavior()` until ECHO-003's params.
 

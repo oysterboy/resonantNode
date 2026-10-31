@@ -13,7 +13,7 @@
 #include "../../app/TextParse.h"
 #include "../../app/TimeBase.h"
 #include "../../audio/AudioPcm.h"
-#include "../../detection/echo/ClapVerdict.h"
+#include "../../detection/inspection/VerdictProjection.h"
 #include "../../net/RemoteCommandPolicy.h"
 
 using text_parse::equalsIgnoreCase;
@@ -169,23 +169,37 @@ void EchoApp::configureEcho() {
     d.minTransientPeakStrength = _gate.onset;
     d.releaseDebounceMs = 20;
     _detector.setConfig(d);
-    _attack.configure(_gate.floor, _gate.onset);
+    // The echo room's plan: one module, the attack; Medium (within maxAttackMs) is a clap.
+    _plan = detection::InspectionPlan{};
+    detection::InspectionModuleConfig& m = _plan.modules[0];
+    m.kind = detection::InspectionModuleKind::AttackRise;
+    m.target = detection::InspectionTarget::Attack;
+    m.enabled = true;
+    m.minimumStrength = detection::StrengthClass::Medium;
+    m.attack.stream = detection::FeatureStreamId::AmpEnvelope;
+    m.attack.floorLevel = _gate.floor;
+    m.attack.onsetLevel = _gate.onset;
+    m.attack.mediumMaxMs = _gate.maxAttackMs;
+    m.attack.strongMaxMs = _gate.maxAttackMs / 2;
+    m.attack.weakMaxMs = _gate.maxAttackMs * 3;
+    _plan.count = 1;
+    _inspector.configure(_plan);
+    const detection::FeatureStreamId streams[1] = {detection::FeatureStreamId::AmpEnvelope};
+    _history.setActiveStreams(streams, 1);
     _behavior.configure(echoBehavior());
 }
 
-// One DMA block: the envelope as Strength16 (the scale the scalar detector's thresholds are in), its rise into
-// AttackSlope, the block into the detector; each occurrence it finishes becomes a clap verdict for Behavior. Paused
-// while the own replay sounds and for its tail (Behavior's own-emit suppression).
+// One DMA block: the envelope as Strength16 (the scale the scalar detector's thresholds are in) into the history and
+// the detector; an occurrence it finishes waits in _pending for its inspection window. Paused while the own replay
+// sounds and for its tail (Behavior's own-emit suppression).
 void EchoApp::detectBlock(const AudioBlock& block, uint32_t blockMs) {
+    _lastBlockIndex = block.startSampleIndex;
+    _lastBlockMs = blockMs;
     if (_detectionPaused) {
         return;
     }
     const float level = static_cast<float>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_envelope)));
-    const long attack = _attack.update(level, blockMs);
-    if (attack >= 0) {
-        _crossingIndex = block.startSampleIndex;
-        _crossingAttackMs = attack;
-    }
+    _history.record(detection::FeatureStreamId::AmpEnvelope, blockMs, level);
     AudioSamplePacket packet;
     packet.sampleIndex = block.startSampleIndex;
     packet.timeUs64 = block.approxStartUs64;
@@ -199,32 +213,58 @@ void EchoApp::detectBlock(const AudioBlock& block, uint32_t blockMs) {
     detection::Occurrence occurrence;
     while (_detector.popOccurrence(occurrence)) {
         ++_echo.occurrences;
-        const detection::OccurrenceVerdict verdict =
-            detection::makeClapVerdict(occurrence, _crossingAttackMs, _gate.maxAttackMs);
-        const uint64_t onset = _crossingIndex;
-        _crossingAttackMs = -1;
-        if (verdict.valid) {
-            ++_echo.claps;
-        } else {
-            ++_echo.slow;
+        if (_havePending) {
+            judgePending(blockMs + 100000U);  // a second occurrence before the first's window closed: judge it now
         }
-        if (!_gate.enabled) {
-            continue;
-        }
-        const ResonantBehavior::BehaviorDecision decision =
-            _behavior.handleOccurrenceVerdict(verdict, timebase::nowMs());
+        _pending = occurrence;
+        _havePending = true;
+    }
+    judgePending(blockMs);
+}
+
+// The held occurrence, once the plan's window is in the history: inspected, judged by makeVerdict, handed to Behavior.
+void EchoApp::judgePending(uint32_t nowMs) {
+    if (!_havePending || !timing::atOrAfter(nowMs, static_cast<uint32_t>(_inspector.windowCompleteAtMs(_pending)))) {
+        return;
+    }
+    _havePending = false;
+    const detection::InspectedOccurrence inspected = _inspector.inspectWithHistory(_pending, &_history, nowMs);
+    detection::OccurrenceVerdict verdict;
+    if (!detection::makeVerdict(inspected, _plan, verdict)) {
+        return;
+    }
+    if (verdict.valid) {
+        ++_echo.claps;
+    } else {
+        ++_echo.slow;
+    }
+    // The onset's sample index, from the newest block's index and time (the clip is cut around it).
+    const uint64_t rate = _i2sPort.sampleRateHz();
+    const uint32_t backMs = _lastBlockMs - static_cast<uint32_t>(_pending.startMs);
+    const uint64_t back = static_cast<uint64_t>(backMs) * rate / 1000U;
+    const uint64_t onset = _lastBlockIndex > back ? _lastBlockIndex - back : 0;
+    ResonantBehavior::BehaviorDecision decision = ResonantBehavior::BehaviorDecision::None;
+    if (_gate.enabled) {
+        decision = _behavior.handleOccurrenceVerdict(verdict, timebase::nowMs());
         if (decision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
             _heardOnsetIndex = onset;
         }
-        serialOut().print("ECHO clap valid=");
-        serialOut().print(verdict.valid ? 1 : 0);
-        serialOut().print(" strength=");
-        serialOut().print(static_cast<unsigned long>(verdict.primaryStrength));
-        serialOut().print(" duration_ms=");
-        serialOut().print(verdict.primaryDurationMs);
-        serialOut().print(" decision=");
-        serialOut().println(ResonantBehavior::behaviorDecisionName(decision));
     }
+    const detection::OccurrenceAttack& a = inspected.occurrence.attack;
+    serialOut().print("ECHO clap valid=");
+    serialOut().print(verdict.valid ? 1 : 0);
+    serialOut().print(" attack_ms=");
+    if (a.measured) {
+        serialOut().print(a.riseMs);
+    } else {
+        serialOut().print("na");
+    }
+    serialOut().print(" strength=");
+    serialOut().print(static_cast<unsigned long>(verdict.primaryStrength));
+    serialOut().print(" duration_ms=");
+    serialOut().print(verdict.primaryDurationMs);
+    serialOut().print(" decision=");
+    serialOut().println(ResonantBehavior::behaviorDecisionName(decision));
 }
 
 // Behavior's clock, the replay's end, and detection resuming clean after the own sound.
@@ -232,7 +272,7 @@ void EchoApp::runBehavior(unsigned long now) {
     const bool paused = _behavior.ownEmitDetectionSuppressed(now);
     if (_detectionPaused && !paused) {
         _detector.restartAfterInputGap();
-        _attack.reset();
+        _havePending = false;  // an occurrence cut by the replay is dropped, as the Node drops one at its restart
     }
     _detectionPaused = paused;
     if (_soundOutput.update() & SoundOutput::kEventFinished) {

@@ -311,7 +311,12 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         (clipEnvelope's ramps), AttackSlope and makeClapVerdict (src/detection), the echo shell wired: the scalar
         detector once per DMA block on the envelope, the echo room's Behavior values, the replay cut from the ring
         (no new SignalShape: the echo mode composes every answer as the clip, as the Node composes the train).
-        test_capture_ring, test_echo_detection, test_sound_output +3; host 169. Desk next.
+        test_capture_ring, test_echo_detection, test_sound_output +3; host 169.
+        Reworked the same day (owner: the attack as an inspector in the inspection framework, "1"): InspectionTarget
+        Attack / module AttackRise read FeatureHistory::riseTimeMs; the echo shell runs detector -> held occurrence ->
+        OccurrenceInspector (its one-module plan) -> makeVerdict -> Behavior; FeatureHistory sized per build
+        (FEATURE_HISTORY_BIN_MS / _STREAMS; the echo env 64 x 1 ms x 1 stream, ~2.7 KB; the Node unchanged, T2h
+        byte-identical). AttackSlope and makeClapVerdict removed. Desk next.
    20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the
         desk check (11-16 .. 12-04; a recorded whisper, a loud control, a fan). PC, then remote. Decision: no howl,
         whispers answered, speech ignored.

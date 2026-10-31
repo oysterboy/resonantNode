@@ -53,6 +53,8 @@ private:
                              const InspectionModuleConfig& module) const;
     void annotateShape(InspectedOccurrence& out, const Occurrence& occurrence,
                        const ShapeInspectionConfig& config) const;
+    void annotateAttack(InspectedOccurrence& out, const Occurrence& occurrence, const FeatureHistory* featureHistory,
+                        const AttackInspectionConfig& config) const;
     InspectionPlan _inspectionPlan = {};
     const BinTrack* _binTrack = nullptr;
     float _shapeMinLevel = 0.0f;

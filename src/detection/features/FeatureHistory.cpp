@@ -168,6 +168,40 @@ void FeatureHistory::reset() {
     _outOfOrderRecords = 0;
 }
 
+bool FeatureHistory::riseTimeMs(FeatureStreamId stream, unsigned long fromMs, unsigned long toMs, float floorLevel,
+                                float onsetLevel, unsigned long& riseMs) const {
+    const size_t slot = slotFor(stream);
+    if (slot == kNoSlot) {
+        return false;
+    }
+    const StreamBuffer& buffer = _streams[slot];
+    bool haveQuiet = false;
+    unsigned long quietMs = 0;
+    bool done = false;
+    const auto consider = [&](unsigned long startMs, float value) {
+        if (done || timing::beforeDeadline(startMs, fromMs) || timing::after(startMs, toMs)) {
+            return;
+        }
+        if (value <= floorLevel) {
+            haveQuiet = true;
+            quietMs = startMs;
+        } else if (value >= onsetLevel && haveQuiet) {
+            riseMs = startMs - quietMs;
+            done = true;
+        }
+    };
+    const size_t oldestIndex = buffer.binCount == kBinsPerStream ? buffer.writeIndex : 0U;
+    for (size_t i = 0; i < buffer.binCount; ++i) {
+        const FeatureHistoryBin& bin = buffer.bins[(oldestIndex + i) % kBinsPerStream];
+        consider(bin.startMs, representativeValueForStream(stream, bin));
+    }
+    if (buffer.hasCurrent && buffer.current.inputCount > 0) {
+        consider(buffer.current.startMs,
+                 static_cast<float>(buffer.current.sum / static_cast<double>(buffer.current.inputCount)));
+    }
+    return done;
+}
+
 unsigned long FeatureHistory::oldestBinTimeMs(FeatureStreamId stream) const {
     const size_t slot = slotFor(stream);
     if (slot == kNoSlot || _streams[slot].binCount == 0) {
@@ -254,11 +288,13 @@ void IRAM_ATTR FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, 
     if (buffer.hasCurrent && timing::beforeDeadline(timeMs, buffer.current.startMs)) {
         ++_outOfOrderRecords;
     }
+    // The bin a time falls in starts on a multiple of kBinDurationMs (the time itself at the Node's 1 ms).
+    const unsigned long binStartMs = timeMs - timeMs % kBinDurationMs;
     if (!buffer.hasCurrent) {
-        startCurrentBin(buffer, timeMs);
-    } else if (timeMs != buffer.current.startMs) {
+        startCurrentBin(buffer, binStartMs);
+    } else if (binStartMs != buffer.current.startMs) {
         finalizeCurrentBin(buffer);
-        startCurrentBin(buffer, timeMs);
+        startCurrentBin(buffer, binStartMs);
     }
 
     accumulateIntoCurrentBin(buffer, value, fresh);

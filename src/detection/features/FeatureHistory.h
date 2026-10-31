@@ -27,6 +27,15 @@ which ones are worth keeping, based on what will actually be read back.
 // Each ms costs 72 bytes (three streams), taken from the Analyzer's RAW block.
 #define FEATURE_HISTORY_BINS 576
 #endif
+// The bin length in ms and the stream slots, per build (step 20.2, 2026-10-31): the Node keeps 1 ms x 3 slots; the echo
+// modes size theirs to what their one or two inspectors read (the heap holds their audio rings; at the Node's size the
+// history alone took 44 KB of static RAM). platformio.ini sets them per env.
+#ifndef FEATURE_HISTORY_BIN_MS
+#define FEATURE_HISTORY_BIN_MS 1
+#endif
+#ifndef FEATURE_HISTORY_STREAMS
+#define FEATURE_HISTORY_STREAMS 3
+#endif
 
 class FeatureHistory {
 public:
@@ -42,9 +51,9 @@ public:
     // kMaxInspectionModules distinct streams, so this many slots is
     // sufficient by construction. DetectionRuntime static_asserts the two
     // stay in step (this header must not depend on InspectorTypes.h).
-    static constexpr size_t kMaxActiveStreams = 3;
+    static constexpr size_t kMaxActiveStreams = FEATURE_HISTORY_STREAMS;
     static constexpr size_t kNoSlot = static_cast<size_t>(-1);
-    static constexpr unsigned long kBinDurationMs = 1UL;
+    static constexpr unsigned long kBinDurationMs = FEATURE_HISTORY_BIN_MS;
     static constexpr size_t debugFeatureBinSize();
 
     // Binds up to kMaxActiveStreams distinct, known streams and clears every
@@ -63,6 +72,12 @@ public:
                               unsigned long inspectionNowMs, float sustainedThreshold = 0.0f) const;
 
     size_t sampleCount(FeatureStreamId stream) const;
+
+    // The rise into an onset (the attack inspection, ECHO-001): within [fromMs, toMs], the first bin at or above
+    // onsetLevel that follows a bin at or below floorLevel; riseMs is the time between the last such quiet bin and it.
+    // False when the window holds no such rise (no quiet bin before the crossing, or no crossing).
+    bool riseTimeMs(FeatureStreamId stream, unsigned long fromMs, unsigned long toMs, float floorLevel,
+                    float onsetLevel, unsigned long& riseMs) const;
     // Diagnostics: span of the resident ring for a stream, and how often a
     // record() arrived with a time earlier than the bin being filled.
     unsigned long oldestBinTimeMs(FeatureStreamId stream) const;
@@ -124,7 +139,7 @@ private:
     StreamBuffer _streams[kMaxActiveStreams] = {};
 };
 
-} // namespace detection
+}  // namespace detection
 
 constexpr size_t detection::FeatureHistory::debugFeatureBinSize() {
     return sizeof(FeatureHistoryBin);

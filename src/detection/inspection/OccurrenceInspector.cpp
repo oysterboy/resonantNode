@@ -200,6 +200,8 @@ unsigned long OccurrenceInspector::windowCompleteAtMs(const Occurrence& occurren
             endMs = anchorMsForOccurrence(occurrence, module.magnitude.anchor) + module.magnitude.windowPostMs;
         } else if (module.kind == InspectionModuleKind::BinShape) {
             endMs = occurrence.startMs + occurrence.durationMs + module.shape.tailMs;  // the margin after the release
+        } else if (module.kind == InspectionModuleKind::AttackRise) {
+            endMs = occurrence.startMs + module.attack.postMs;
         } else {
             continue;
         }
@@ -293,6 +295,9 @@ void OccurrenceInspector::runInspectionModule(InspectedOccurrence& out, const Oc
         case InspectionModuleKind::BinShape:
             annotateShape(out, occurrence, module.shape);
             break;
+        case InspectionModuleKind::AttackRise:
+            annotateAttack(out, occurrence, featureHistory, module.attack);
+            break;
         case InspectionModuleKind::None:
         default:
             break;
@@ -317,6 +322,28 @@ void OccurrenceInspector::annotateShape(InspectedOccurrence& out, const Occurren
         start = floorStart;
     }
     out.occurrence.shape = measureBinShape(*_binTrack, start, span, _shapeMinLevel, config).shape;
+}
+
+// ECHO-001: the rise into the onset, from the stream's history around the occurrence's start (32-bit ms, wrap-safe in
+// FeatureHistory::riseTimeMs).
+void OccurrenceInspector::annotateAttack(InspectedOccurrence& out, const Occurrence& occurrence,
+                                         const FeatureHistory* featureHistory,
+                                         const AttackInspectionConfig& config) const {
+    OccurrenceAttack& attack = out.occurrence.attack;
+    attack = OccurrenceAttack{};
+    attack.applicable = true;
+    unsigned long riseMs = 0;
+    if (featureHistory == nullptr ||
+        !featureHistory->riseTimeMs(config.stream, occurrence.startMs - config.preMs,
+                                    occurrence.startMs + config.postMs, config.floorLevel, config.onsetLevel, riseMs)) {
+        return;  // Unknown: no rise in the window
+    }
+    attack.measured = true;
+    attack.riseMs = static_cast<uint32_t>(riseMs);
+    attack.attackClass = riseMs <= config.strongMaxMs ? StrengthClass::Strong
+        : riseMs <= config.mediumMaxMs                ? StrengthClass::Medium
+        : riseMs <= config.weakMaxMs                  ? StrengthClass::Weak
+                                                      : StrengthClass::None;
 }
 
 InspectedOccurrence OccurrenceInspector::inspectWithHistory(const Occurrence& occurrence,

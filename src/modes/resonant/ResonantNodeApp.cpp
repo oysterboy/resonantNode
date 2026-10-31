@@ -630,6 +630,7 @@ void Node::update() {
 
         const uint32_t sampleRateHz =
             _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
+        const uint32_t blockStartUs = micros();
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const uint64_t sampleTimeUs64 =
                 block.approxStartUs64 + timebase::sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
@@ -655,6 +656,13 @@ void Node::update() {
             }
         }
         sawI2SSample = true;
+        // The per-sample path's cost (DET-020): RB STATUS audio.us_per_sample against the 62.5 us a sample allows.
+        const uint32_t blockUs = micros() - blockStartUs;
+        _audioCost.us += blockUs;
+        _audioCost.samples += block.sampleCount;
+        if (blockUs > _audioCost.blockUsMax) {
+            _audioCost.blockUsMax = blockUs;
+        }
 
         processedSamples += static_cast<int>(block.sampleCount);
         if (processedSamples > kMaxSamplesPerLoop) {

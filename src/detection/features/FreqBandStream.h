@@ -1,5 +1,11 @@
 #pragma once
 
+// The bank's update interval in samples (DET-020, step 22): 4 on every board; a build flag so a measurement build
+// can run another without changing the default.
+#ifndef FREQBAND_UPDATE_EVERY_SAMPLES
+#define FREQBAND_UPDATE_EVERY_SAMPLES 4
+#endif
+
 #include <stdint.h>
 
 #ifndef FREQBAND_ENABLE_PROFILING
@@ -109,7 +115,7 @@ private:
     unsigned long _lastPeakBinHz = 0;
     unsigned long _sampleRateHz = runtime::kDefaultAudioI2SSampleRateHz;
     unsigned long _windowSizeSamples = runtime::kFreqBandWindowSamples;
-    unsigned long _frequencyUpdateEverySamples = 4;
+    unsigned long _frequencyUpdateEverySamples = FREQBAND_UPDATE_EVERY_SAMPLES;
     unsigned long _samplesUntilNextFrequencyUpdate = 0;
     bool _producedFreshPacketOnLastObserve = false;
     float _cachedTargetFrequencyHz = 0.0f;

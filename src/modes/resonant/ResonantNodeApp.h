@@ -203,6 +203,13 @@ private:
     serial_line::LineReader<serial_line::kCommandLineMax> _serialLine;
     NodeCounters _counters;  // RB tallies since boot or rebase (step 11i N1)
     int _rbLevelMaxSinceStatus = 0;  // loudest smoothed level since the last RB STATUS (room notes, 10c)
+    // The per-sample path's time since the last RB STATUS (DET-020): microseconds, samples, the longest block.
+    struct AudioCost {
+        uint64_t us = 0;
+        uint64_t samples = 0;
+        uint32_t blockUsMax = 0;
+    };
+    AudioCost _audioCost;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;
     BehaviorGateConfig _activeBehaviorProfile = {};  // the behavior.* params bind into it (step 10 item 4)

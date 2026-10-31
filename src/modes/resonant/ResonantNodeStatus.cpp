@@ -123,6 +123,11 @@ void Node::printRbStatus(const char* line) {
     printKeyValue("audio.level", _audioSignal.smoothedSignalMagnitude());
     printKeyValue("audio.level_max", _rbLevelMaxSinceStatus);
     _rbLevelMaxSinceStatus = 0;
+    printKeyValue(
+        "audio.us_per_sample",
+        _audioCost.samples > 0 ? static_cast<float>(_audioCost.us) / static_cast<float>(_audioCost.samples) : 0.0f, 2);
+    printKeyValue("audio.block_us_max", _audioCost.blockUsMax);
+    _audioCost = AudioCost{};
     printKeyValue("audio.baseline", _audioSignal.baseline(), 1);
     printKeyValue("heard.valid", _counters.validPatterns);
     printKeyValue("heard.strength_sum", static_cast<unsigned long long>(_counters.validStrengthSum));

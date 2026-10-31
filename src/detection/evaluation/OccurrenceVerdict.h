@@ -35,6 +35,9 @@ struct OccurrenceVerdict {
     // The heard train's lowest band bin in Hz (the shape inspector's bin track, DET-015), 0 when the occurrence had
     // no band bins: where the sender's train started, the base Behavior glides toward (BEH-009).
     uint16_t primaryLowestBinHz = 0;
+    // Its highest band bin (0 likewise): a listener on its own window reads a sender below from it, since the
+    // bank's peak never lands on a guard bin below the window (decisions/2026-10-31-bands-per-node.md).
+    uint16_t primaryHighestBinHz = 0;
 
     bool accepted = false;
     bool proposalMatched = false;

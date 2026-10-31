@@ -234,7 +234,7 @@ void Node::begin() {
     // taken modulo the bases a train fits under (0..3 on the 8-bin band). The band is applied inside
     // applyActiveProfiles().
     {
-        const size_t bases = _composer.maxBaseBin(bandGrid()) + 1;
+        const size_t bases = _composer.maxBaseBin(trainGrid()) + 1;
         const roster::Entry* me = roster::find(ESP.getEfuseMac());
         uint32_t& rotation = _composer.values().hopRotation;
         if (me != nullptr) {
@@ -509,6 +509,21 @@ void Node::restoreAfterSelfTestHardware() {
 // --- band and hop composition ---
 
 void Node::applyBandParams() {
+    if (_activeBehaviorProfile.bandPerNode) {
+        // A band per node (step 19, decisions/2026-10-31-bands-per-node.md): Behavior's base is the position of this
+        // node's window on behavior.band_range_*; the detector listens on that window only, detection.band_* aside.
+        syncBaseBin();
+        const NodeSignalComposer::BandGrid grid = trainGrid();
+        const uint32_t steps =
+            _composer.values().hopSteps < grid.bins ? _composer.values().hopSteps : static_cast<uint32_t>(grid.bins);
+        if (steps > 0) {
+            NetworkBand window;
+            window.lowHz = grid.lowHz + _behavior.baseBin() * grid.spacingHz;
+            window.highHz = window.lowHz + (steps - 1) * grid.spacingHz;
+            window.applyTo(_freqBandStream);
+            return;
+        }
+    }
     _band.applyTo(_freqBandStream);  // an empty or inverted band means "single target at the chirp tone"
     syncBaseBin();
 }
@@ -519,9 +534,14 @@ void Node::applyBandParams() {
 // the band widens (found on the bench 2026-10-30, a stored 5-bin band). Otherwise Behavior keeps moving it (BEH-009).
 // Runs with applyBandParams(), every loop pass: a few compares.
 void Node::syncBaseBin() {
-    const NodeSignalComposer::BandGrid grid = bandGrid();
+    const NodeSignalComposer::BandGrid grid = trainGrid();
     const uint32_t bases = grid.bins > 0 ? static_cast<uint32_t>(_composer.maxBaseBin(grid) + 1) : 0U;
-    _behavior.setBaseGrid(grid.lowHz, grid.spacingHz, bases);
+    uint32_t windowBins = 0;
+    if (_activeBehaviorProfile.bandPerNode) {
+        windowBins =
+            _composer.values().hopSteps < grid.bins ? _composer.values().hopSteps : static_cast<uint32_t>(grid.bins);
+    }
+    _behavior.setBaseGrid(grid.lowHz, grid.spacingHz, bases, windowBins);
     const uint32_t seed = _composer.values().hopRotation;
     if (!_baseSeeded || seed != _baseSeed || bases != _baseCount) {
         _behavior.seedBaseBin(seed);
@@ -535,6 +555,21 @@ void Node::syncBaseBin() {
 // Call after applyBandParams().
 NodeSignalComposer::BandGrid Node::bandGrid() const {
     return NodeSignalComposer::gridOf(_freqBandStream);
+}
+
+// The grid the base moves on and the train is composed from: the detector's band (step 17), or with a band per node
+// the whole range on the same bin spacing, so an answer composed right after a glide already sits on the new window
+// before the detector follows it at the next applyBandParams().
+NodeSignalComposer::BandGrid Node::trainGrid() const {
+    if (!_activeBehaviorProfile.bandPerNode) {
+        return bandGrid();
+    }
+    NodeSignalComposer::BandGrid grid;
+    const BehaviorGateConfig& b = _activeBehaviorProfile;
+    grid.lowHz = b.bandRangeLowHz;
+    grid.spacingHz = static_cast<uint32_t>(runtime::kBandBinSpacingHz);
+    grid.bins = b.bandRangeHighHz >= b.bandRangeLowHz ? (b.bandRangeHighHz - b.bandRangeLowHz) / grid.spacingHz + 1 : 0;
+    return grid;
 }
 
 void Node::printHopShape(const OutputRequest& request) {
@@ -725,7 +760,7 @@ void Node::startEmission(unsigned long now) {
     // pattern is answered with the hop train, the idle call is announcement, gap, then the call. SoundOutput plays
     // it (step 10f); own-emit suppression covers its span.
     OutputRequest request =
-        _composer.compose(bandGrid(), chirpPattern,
+        _composer.compose(trainGrid(), chirpPattern,
                           _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal, _behavior.baseBin());
     bool started = _soundOutput.start(request);
     if (!started && request.kind != OutputRequest::Kind::Pattern) {

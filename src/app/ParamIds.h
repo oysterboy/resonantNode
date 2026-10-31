@@ -119,6 +119,11 @@ enum class ParamId : uint16_t {
     Behavior_LevelMax,
     Behavior_LevelDecayMs,
     Behavior_AnswerJitterMs,
+    // The base bin and a band per node (BEH-009, step 19).
+    Behavior_BaseScatterBins,
+    Behavior_BandPerNode,
+    Behavior_BandRangeLowHz,
+    Behavior_BandRangeHighHz,
 };
 
 }  // namespace param

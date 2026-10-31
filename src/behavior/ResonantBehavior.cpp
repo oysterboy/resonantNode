@@ -321,6 +321,7 @@ void ResonantBehavior::update(unsigned long now) {
             } else if (canIdle(now)) {
                 _last.wouldEmit = true;
                 setDecision(BehaviorDecision::WouldEmit);
+                wanderBase();  // a band per node: alone since the last call, this one goes out from elsewhere
                 _request.requested = true;
                 _request.source = ChirpRequestSource::Idle;
                 _request.pattern = ChirpPattern::Idle;
@@ -782,10 +783,11 @@ void ResonantBehavior::notePatternHeardWhileOutputsOff(const detection::Occurren
     }
 }
 
-void ResonantBehavior::setBaseGrid(uint32_t lowHz, uint32_t spacingHz, uint32_t count) {
+void ResonantBehavior::setBaseGrid(uint32_t lowHz, uint32_t spacingHz, uint32_t count, uint32_t windowBins) {
     _base.lowHz = lowHz;
     _base.spacingHz = spacingHz;
     _base.count = count;
+    _base.windowBins = windowBins;
     if (count == 0) {
         _base.bin = 0;
         _base.heard = -1;
@@ -804,8 +806,30 @@ void ResonantBehavior::noteHeardBase(const detection::OccurrenceVerdict& verdict
     if (_base.count == 0 || _base.spacingHz == 0 || verdict.primaryLowestBinHz < _base.lowHz) {
         return;
     }
-    const uint32_t index = (verdict.primaryLowestBinHz - _base.lowHz + _base.spacingHz / 2) / _base.spacingHz;
-    _base.heard = static_cast<long>(index < _base.count ? index : _base.count - 1);
+    _base.heardSinceIdle = true;
+    const auto indexOf = [this](uint32_t hz) {
+        return static_cast<long>((hz - _base.lowHz + _base.spacingHz / 2) / _base.spacingHz);
+    };
+    long index = indexOf(verdict.primaryLowestBinHz);
+    if (_base.windowBins > 0 && verdict.primaryHighestBinHz >= _base.lowHz) {
+        // A band per node: a train above this window starts inside it (its lowest bin above the window's bottom);
+        // one below ends inside it, its highest bin under the window's top by as many bins as it sits lower.
+        const long bottom = static_cast<long>(_base.bin);
+        const long top = bottom + static_cast<long>(_base.windowBins) - 1;
+        const long highest = indexOf(verdict.primaryHighestBinHz);
+        index = index > bottom ? index : (highest < top ? bottom - (top - highest) : bottom);
+    }
+    const long last = static_cast<long>(_base.count) - 1;
+    _base.heard = index < 0 ? 0 : (index > last ? last : index);
+}
+
+void ResonantBehavior::wanderBase() {
+    if (_config.bandPerNode && _base.count > 1 && !_base.heardSinceIdle) {
+        _base.bin = _random(_base.count);
+        _base.heard = -1;
+        _base.wanders++;
+    }
+    _base.heardSinceIdle = false;
 }
 
 void ResonantBehavior::glideBase() {
@@ -829,6 +853,7 @@ BehaviorStatus ResonantBehavior::status(unsigned long now) const {
     st.baseHeard = _base.heard;
     st.baseGlides = _base.glides;
     st.baseScatters = _base.scatters;
+    st.baseWanders = _base.wanders;
     st.lastDecisionName = lastDecisionName();
     st.lastBlockReasonName = lastBlockReasonName();
     st.lastVerdictTypeName = lastVerdictTypeName();

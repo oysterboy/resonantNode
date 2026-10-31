@@ -57,6 +57,7 @@ struct BehaviorStatus {
     long baseHeard = -1;
     unsigned long baseGlides = 0;
     unsigned long baseScatters = 0;
+    unsigned long baseWanders = 0;  // a band per node: moves before an idle call after hearing nothing
 
     // Counters since the last resetState().
     unsigned long patternsReceived = 0;

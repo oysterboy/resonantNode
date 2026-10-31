@@ -170,8 +170,70 @@ void test_outputs_off_hears_and_reset_keeps_the_base() {
     TEST_ASSERT_EQUAL_UINT32(2, b.baseBin());
 }
 
+// A band per node (step 19): the listener's window is 5 bins from its base on the range 2200-4950 (8 bases). A
+// sender above shows its lowest bin above the window's bottom; one below shows only its highest bin under the
+// window's top; one level with it fills the window.
+void test_band_per_node_reads_the_sender_from_lowest_and_highest() {
+    BehaviorGateConfig cfg = answerEvery();
+    cfg.bandPerNode = true;
+    ResonantBehavior b = make(cfg, 0);
+    b.setBaseGrid(2200, 250, 8, 5);
+    b.seedBaseBin(3);  // window 2950-3950
+    b.setOutputsEnabled(false);  // note the heard base only, no answer
+    detection::OccurrenceVerdict above = train(1000, 3450);
+    above.primaryHighestBinHz = 4450;
+    b.handleOccurrenceVerdict(above, 1000);
+    TEST_ASSERT_EQUAL(5, b.status(1000).baseHeard);
+    detection::OccurrenceVerdict below = train(2000, 2950);  // a sender on base 1: 2700-3700, seen 2950-3450
+    below.primaryHighestBinHz = 3450;
+    b.handleOccurrenceVerdict(below, 2000);
+    TEST_ASSERT_EQUAL(1, b.status(2000).baseHeard);
+    detection::OccurrenceVerdict level = train(3000, 2950);
+    level.primaryHighestBinHz = 3950;
+    b.handleOccurrenceVerdict(level, 3000);
+    TEST_ASSERT_EQUAL(3, b.status(3000).baseHeard);
+}
+
+// Alone since its last idle call, a node with a band per node calls from a random position; after hearing it stays.
+void test_band_per_node_wanders_only_when_alone() {
+    BehaviorGateConfig cfg = answerEvery();
+    cfg.bandPerNode = true;
+    cfg.idleEnabled = true;
+    cfg.idleTimeoutMs = 1000;
+    cfg.idleTimeVariationMs = 0;
+    ResonantBehavior b = make(cfg, 0);
+    b.setBaseGrid(2200, 250, 8, 5);
+    b.seedBaseBin(0);
+    script({5, 5, 5, 5, 5, 5, 5, 5});
+    b.update(5000);
+    b.update(7000);
+    TEST_ASSERT_TRUE(b.shouldStartChirp());  // the idle call
+    TEST_ASSERT_EQUAL_UINT32(5, b.baseBin());
+    TEST_ASSERT_EQUAL_UINT32(1, b.status(7000).baseWanders);
+    b.notifyChirpStarted(7000, 865);
+    b.notifyChirpFinished(7865);
+    b.update(8500);  // refractory over, back to Idle
+    // A sender on base 6 (3700-4700) heard by the window at 5 (3450-4450): answered, gliding to 6.
+    detection::OccurrenceVerdict heard = train(9000, 3700);
+    heard.primaryHighestBinHz = 4450;
+    b.handleOccurrenceVerdict(heard, 9000);
+    b.update(9100);
+    TEST_ASSERT_TRUE(b.shouldStartChirp());
+    TEST_ASSERT_EQUAL_UINT32(6, b.baseBin());
+    b.notifyChirpStarted(9100, 165);
+    b.notifyChirpFinished(9265);
+    // The next idle call: it heard something since the last one, so no wander.
+    b.update(29000);  // Refractory -> Idle takes one pass
+    b.update(30000);
+    TEST_ASSERT_TRUE(b.shouldStartChirp());
+    TEST_ASSERT_EQUAL_UINT32(6, b.baseBin());
+    TEST_ASSERT_EQUAL_UINT32(1, b.status(30000).baseWanders);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_band_per_node_reads_the_sender_from_lowest_and_highest);
+    RUN_TEST(test_band_per_node_wanders_only_when_alone);
     RUN_TEST(test_seed_is_clamped_to_the_grid);
     RUN_TEST(test_glide_one_bin_per_answer);
     RUN_TEST(test_heard_base_clamped_and_no_shape_ignored);

@@ -3,6 +3,7 @@
 #include <ParamRegistry.h>
 
 #include "../app/ParamIds.h"
+#include "../app/RuntimeDefaults.h"
 #include "BehaviorProfile.h"
 
 /*
@@ -45,6 +46,14 @@ inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
                        0U, 600000U);
     registry.addUInt32(ParamId::Behavior_AnswerJitterMs, ModuleId::Behavior, "behavior.answer_jitter_ms",
                        &b.answerJitterMs, 0U, 10000U);
+    // The base bin (BEH-009) and a band per node (step 19): the scatter's range, the mode, the range it moves on.
+    registry.addUInt32(ParamId::Behavior_BaseScatterBins, ModuleId::Behavior, "behavior.base_scatter_bins",
+                       &b.baseScatterBins, 0U, 7U);
+    registry.addBool(ParamId::Behavior_BandPerNode, ModuleId::Behavior, "behavior.band_per_node", &b.bandPerNode);
+    registry.addUInt32(ParamId::Behavior_BandRangeLowHz, ModuleId::Behavior, "behavior.band_range_low_hz",
+                       &b.bandRangeLowHz, 500U, runtime::kMaxToneHz);
+    registry.addUInt32(ParamId::Behavior_BandRangeHighHz, ModuleId::Behavior, "behavior.band_range_high_hz",
+                       &b.bandRangeHighHz, 500U, runtime::kMaxToneHz);
 }
 
 }  // namespace param

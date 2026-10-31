@@ -67,7 +67,13 @@ struct BehaviorGateConfig {
     // toward the base last heard (the glide, owner 2026-10-29), and at the automaton's rest it scatters to a random
     // base. Off: the base stays where the Node seeded it. Not a param.
     bool baseGlide = true;
-    // The scatter's range (the decision left it open): 0 = a random base anywhere; k = at most k bins from where it
-    // was, never 0 bins (step 19.2 compares them). Not a param.
+    // The scatter's range: 0 = a random base anywhere; k = 1..k bins from where it was (step 19.2: a band per node
+    // needs 1, decisions/2026-10-31-bands-per-node.md).
     uint32_t baseScatterBins = 0;
+    // A band per node (step 19): the base is the position of the node's own window on bandRangeLowHz..HighHz (the
+    // Node applies the window to the detector), and a node that heard nothing since its last idle call wanders to a
+    // random position before the next. Off: the shared band with base bins (step 17).
+    bool bandPerNode = false;
+    uint32_t bandRangeLowHz = 2200;
+    uint32_t bandRangeHighHz = 4950;
 };

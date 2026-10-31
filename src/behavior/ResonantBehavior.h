@@ -58,7 +58,10 @@ public:
     // Node's train fits under. The Node hands in the grid (band low edge, bin spacing, how many bases) and the seed
     // (the roster's or the stored output.hop_rotation); Behavior moves the base (the glide toward the base heard, the
     // scatter at rest) and the Node composes the train from baseBin(). count 0: no base (single-target mode).
-    void setBaseGrid(uint32_t lowHz, uint32_t spacingHz, uint32_t count);
+    // windowBins: 0 for the shared band (the heard base is the train's lowest bin); n for a band per node, where the
+    // listener's window is n bins from its base and a sender below shows only as a highest bin under the window's
+    // top (the bank's peak never lands on a guard bin).
+    void setBaseGrid(uint32_t lowHz, uint32_t spacingHz, uint32_t count, uint32_t windowBins = 0);
     void seedBaseBin(uint32_t bin);
     uint32_t baseBin() const { return _base.bin; }
 
@@ -190,6 +193,7 @@ private:
     void enterRest(unsigned long untilMs, BehaviorDecision reason);
     void noteHeardBase(const detection::OccurrenceVerdict& verdict);
     void glideBase();
+    void wanderBase();  // before an idle call: nothing heard since the last one -> a random base
     void setDecision(BehaviorDecision decision);
     unsigned long ownEmitsInWindow(unsigned long now) const;
 
@@ -303,9 +307,12 @@ private:
         uint32_t spacingHz = 0;
         uint32_t count = 0;
         uint32_t bin = 0;
+        uint32_t windowBins = 0;
         long heard = -1;  // the base last heard, as an index; -1 none since boot or the last scatter
+        bool heardSinceIdle = false;
         unsigned long glides = 0;
         unsigned long scatters = 0;
+        unsigned long wanders = 0;
     };
     Base _base = {};
     static uint32_t defaultRandom(uint32_t bound);  // random() on the board

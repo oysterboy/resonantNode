@@ -132,6 +132,7 @@ private:
     void applyBandParams();              // band params -> FreqBandStream, when they differ; then syncBaseBin()
     void syncBaseBin();                  // Behavior's base grid and, when output.hop_rotation changed, its seed
     NodeSignalComposer::BandGrid bandGrid() const;  // FreqBandStream's applied grid (call after applyBandParams())
+    NodeSignalComposer::BandGrid trainGrid() const;  // the base's grid: bandGrid(), or the range with a band per node
     void printHopShape(const OutputRequest& request);
     void printSignalConfig();
     void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)

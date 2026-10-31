@@ -36,7 +36,9 @@ musical tone below 1 kHz (OUT-006) is not built now.
 
 - The tryout room's weak zones (E004: 1500-3000 weak in that room) or its music make the low positions deaf or
   noisy: then the range moves up or narrows (behavior.band_range_low_hz).
-- The desk shows windows that never meet again after a scatter.
+- The desk shows windows that never meet again after a scatter. Seen 2026-10-31 (bench/sessions/
+  2026-10-31-step19-desk5-bands): quiet, a low and a high group, 66 % of pairs in reach; and male speech started one
+  chain on the lowest window. Owner: judge both in the room (step 18) before changing the range or the wander.
 
 ## Source
 

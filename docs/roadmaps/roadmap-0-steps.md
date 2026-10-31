@@ -234,8 +234,12 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 
 18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.
+   With a band per node too (behavior.band_per_node 1, base_scatter_bins 1; decisions/2026-10-31-bands-per-node.md):
+   does the field split into groups that never meet (the desk: low and high, 66 % of pairs in reach), and does the
+   room's speech or music start chains on the lowest windows (the desk: once in 2.5 node-hours on 950-1950)? Then
+   the owner sets the mode's default, the range's low edge, or a wander inside a group.
 
-19. [RUNNING 2026-10-31: 19.1 done. Due 2026-12-06 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
+19. [DONE 2026-10-31. Was due 2026-12-06 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
    BEH-009 part 3; field-activity-response.md Part 2 "What to measure" 1-2. Remote and PC. Ends in a decision between
    this and OUT-006 (8a).
    19.1 [DONE 2026-10-31] The frequency hearing radius on the Analyzer: a 5-bin window, the Emitter's train shifted
@@ -273,6 +277,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         and a one-bin scatter does not bridge the gap; (2) on the lowest window (950-1950) male speech made one
         valid verdict that started a chain, once in 2.5 node-hours (0 on the shared band). The mode stays off by
         default (behavior.band_per_node 0) until the owner's call on the low edge and the split.
+        Owner 2026-10-31 ("3"): leave the range and the wander as they are and judge both in the room (step 18);
+        step 19 closed.
 
 20. [PARKED 2026-10-30 after 20.1's PC part: nice to have] Echo room and Whispernet in the tryout room: one OTA
    each. (issue #84)

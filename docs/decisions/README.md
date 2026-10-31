@@ -96,7 +96,7 @@ what replaced it.
 | 2026-10-29 | [Max duration 450 ms (history 576, bin track 1024), so answers 120-220 ms apart are not lost as one too-long sound](2026-10-29-max-duration-450-for-chords.md) (step 14) |
 | 2026-10-30 | [Platform: off Arduino, onto ESP-IDF; not scheduled, new code stays off Arduino meanwhile](2026-10-30-platform-off-arduino.md) |
 | 2026-10-31 | [Under the level automaton, "every chain ends within 30 s" is the settling mark; time to quiet is no longer one](2026-10-31-chains-end-replaces-time-to-quiet.md) (step 16) |
-| 2026-10-31 | [A band per node that wanders (a 5-bin window on 2200-4950 Hz, glide toward what is heard, wander when alone, scatter one bin); not OUT-006's low tone now](2026-10-31-bands-per-node.md) (step 19, not implemented) |
+| 2026-10-31 | [A band per node that wanders (a 5-bin window on 950-4950 Hz, glide toward what is heard, wander when alone, scatter one bin); not OUT-006's low tone now](2026-10-31-bands-per-node.md) (step 19; range 950-4950, a mode, off by default until the desk) |
 
 ## Open
 

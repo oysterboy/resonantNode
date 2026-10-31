@@ -74,6 +74,6 @@ struct BehaviorGateConfig {
     // Node applies the window to the detector), and a node that heard nothing since its last idle call wanders to a
     // random position before the next. Off: the shared band with base bins (step 17).
     bool bandPerNode = false;
-    uint32_t bandRangeLowHz = 2200;
+    uint32_t bandRangeLowHz = 950;  // owner 2026-10-31 after the 1 kHz session (was 2200)
     uint32_t bandRangeHighHz = 4950;
 };

@@ -2,13 +2,14 @@
 chains of six or more, distinct bases among the first three and the last three, and "settled" (the last three on
 one base). Also each node's last base, glides and scatters from RB STATUS.
 
-  python tools/bench/basechains.py bench/sessions/<folder>/<nodegroup log>
+  python tools/bench/basechains.py bench/sessions/<folder>/<nodegroup log> [grid low Hz: 2950, or 950 per node]
 """
 import re
 import sys
 from collections import Counter
 
-LOW, BIN = 2950, 250
+BIN = 250
+LOW = int(sys.argv[2]) if len(sys.argv) > 2 else 2950  # the grid's low edge: 2950 shared band, 950 band per node
 emits = []
 status = []
 for line in open(sys.argv[1], encoding="utf-8", errors="replace"):

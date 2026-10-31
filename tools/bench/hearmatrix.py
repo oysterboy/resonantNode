@@ -46,11 +46,15 @@ def pump(secs):
 
 pump(7)
 for n, s in ports.items():
+    # The level automaton off (BEH-008: it acts before the rest rule and would answer a lone call with 1 / L) and the
+    # outputs on (the bench boards store output.silent 1), live: a board that reboots comes back as stored.
     for cmd in ("PARAM SET behavior.idle_enabled 0", "PARAM SET behavior.rest_after_field_patterns 1",
-                "PARAM SET behavior.rest_ms %d" % a.rest_ms, "PARAM DUMP", "RB log full"):
+                "PARAM SET behavior.rest_ms %d" % a.rest_ms, "PARAM SET behavior.level_max 0",
+                "PARAM SET output.silent 0", "PARAM DUMP", "RB log full"):
         s.write((cmd + "\n").encode())
         pump(0.6)
-log.write("# setup done: behavior.idle_enabled=0, rest_after_field_patterns=1, rest_ms=%d on every board\n" % a.rest_ms)
+log.write("# setup done: behavior.idle_enabled=0, rest_after_field_patterns=1, rest_ms=%d, level_max=0, "
+          "output.silent=0 on every board\n" % a.rest_ms)
 pump(a.rest_ms / 1000.0 + 1)
 for caller in names:
     for k in range(a.calls):

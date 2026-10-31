@@ -280,7 +280,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Owner 2026-10-31 ("3"): leave the range and the wander as they are and judge both in the room (step 18);
         step 19 closed.
 
-20. [PARKED 2026-10-30 after 20.1's PC part: nice to have] Echo room and Whispernet in the tryout room: one OTA
+20. [RUNNING 2026-10-31: 20.1 board part (owner "Ja" after 16, 17, 19 closed)] Echo room and Whispernet in the tryout room: one OTA
    each. (issue #84)
    Order (owner 2026-10-30, later the same night): 17 and 19 first, both due 2026-12-06 (built and checked on the
    desk); echo and whisper are nice to have, worked on when 17 and 19 leave room (PC time beside their bench
@@ -299,8 +299,11 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         ring at 48 kHz, 8 DMA buffers = 21 ms, radio up, OTA; ECHO STATUS prints dropped buffers, pass and block
         times, the heap) builds in CI, static RAM 48.5 KB (the Node 97 KB); NetGateway moved to src/net/; the radio
         carries ECHO; the band window follows the rate (64 at 16 kHz, unchanged; T2h byte-identical, host 148 / 148).
-        Board part open: flash one Node by USB after the soak, ECHO STATUS for 10 min quiet / with TONE / with NET
-        traffic, then the OTA round trip.
+        Board part 2026-10-31 (bench/sessions/2026-10-31-step20.1-echo48k): E5 Node -> echo shell -> Node by NET OTA
+        from E1, both images confirmed, the Node's stored params unchanged (50, stale 0). At 48 kHz with the radio
+        up: 0 dropped DMA buffers quiet (600 s), with TONE (120 s) and with radio traffic (121 s); loop pass mean 77
+        us, max ~1 ms of the 21 ms queue; the ring leaves a 74 KB block. Proposed: 48 kHz (owner's call). Open in
+        20.1: the whisper image as the round trip's third leg (with 20.3).
    20.2 ECHO-001 built, host-tested and checked on the desk (11-09 .. 11-20; the Emitter's pulse train as the
         click). PC, then remote. Decision: the echo room heard on the desk.
    20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the

@@ -1,0 +1,149 @@
+1_free_run_quiet_30min: 1800 s, boards E1,E2,E3,E4,E5
+  E1: emits heard_pattern=18 idle=22  verdicts=102  rests={'rest_level': 9}
+  E2: emits heard_pattern=12 idle=26  verdicts=74  rests={'rest_level': 4}
+  E3: emits heard_pattern=18 idle=22  verdicts=77  rests={'rest_level': 3}
+  E4: emits heard_pattern=30 idle=20  verdicts=103  rests={'rest_level': 9}
+  E5: emits heard_pattern=25 idle=21  verdicts=107  rests={'rest_level': 10}
+  who heard whom (listener <- sender: verdicts / sender's emissions):
+    E1 <- E2 8/38  E3 18/40  E4 25/50  E5 19/46
+    E2 <- E1 15/60  E3 11/40  E4 14/50  E5 13/46
+    E3 <- E1 9/60  E2 12/38  E4 15/50  E5 18/46
+    E4 <- E1 29/60  E2 5/38  E3 9/40  E5 23/46
+    E5 <- E1 27/60  E2 7/38  E3 12/40  E4 28/50
+  unattributed verdicts: 146
+  group emissions per minute: 6 7 14 6 9 8 13 19 6 10 11 10 6 6 5 6 8 6 6 7 4 7 7 5 7 7 5 7 11 5
+  start 1 at 15 s (RB CALL): quiet after 0.1 s, 1 emissions until then
+  start 2 at 34 s (idle): quiet after 7.0 s, 4 emissions until then
+  start 3 at 57 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 4 at 79 s (idle): never quiet before the next kick, 2 emissions until then
+  start 5 at 81 s (idle): quiet after 3.0 s, 3 emissions until then
+  start 6 at 100 s (idle): never quiet before the next kick, 0 emissions until then
+  start 7 at 105 s (RB CALL): quiet after 0.1 s, 1 emissions until then
+  start 8 at 147 s (idle): never quiet before the next kick, 1 emissions until then
+  start 9 at 147 s (idle): never quiet before the next kick, 1 emissions until then
+  start 10 at 149 s (idle): quiet after 11.1 s, 12 emissions until then
+  start 11 at 195 s (RB CALL): quiet after 0.2 s, 1 emissions until then
+  start 12 at 218 s (idle): never quiet before the next kick, 1 emissions until then
+  start 13 at 218 s (idle): never quiet before the next kick, 3 emissions until then
+  start 14 at 225 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 15 at 268 s (idle): never quiet before the next kick, 1 emissions until then
+  start 16 at 275 s (idle): never quiet before the next kick, 3 emissions until then
+  start 17 at 282 s (idle): never quiet before the next kick, 2 emissions until then
+  start 18 at 285 s (RB CALL): quiet after 1.7 s, 3 emissions until then
+  start 19 at 326 s (idle): never quiet before the next kick, 0 emissions until then
+  start 20 at 326 s (idle): never quiet before the next kick, 1 emissions until then
+  start 21 at 329 s (idle): never quiet before the next kick, 2 emissions until then
+  start 22 at 334 s (idle): never quiet before the next kick, 1 emissions until then
+  start 23 at 342 s (idle): quiet after 3.2 s, 3 emissions until then
+  start 24 at 375 s (RB CALL): never quiet before the next kick, 3 emissions until then
+  start 25 at 384 s (idle): quiet after 4.9 s, 6 emissions until then
+  start 26 at 415 s (idle): quiet after 6.2 s, 6 emissions until then
+  start 27 at 461 s (idle): never quiet before the next kick, 5 emissions until then
+  start 28 at 465 s (RB CALL): quiet after 15.0 s, 11 emissions until then
+  start 29 at 529 s (idle): never quiet before the next kick, 1 emissions until then
+  start 30 at 530 s (idle): never quiet before the next kick, 1 emissions until then
+  start 31 at 534 s (idle): never quiet before the next kick, 0 emissions until then
+  start 32 at 534 s (idle): never quiet before the next kick, 3 emissions until then
+  start 33 at 551 s (idle): never quiet before the next kick, 1 emissions until then
+  start 34 at 555 s (RB CALL): quiet after 6.3 s, 8 emissions until then
+  start 35 at 603 s (idle): never quiet before the next kick, 0 emissions until then
+  start 36 at 612 s (idle): never quiet before the next kick, 1 emissions until then
+  start 37 at 615 s (idle): quiet after 2.8 s, 8 emissions until then
+  start 38 at 645 s (RB CALL): quiet after 0.1 s, 1 emissions until then
+  start 39 at 665 s (idle): never quiet before the next kick, 1 emissions until then
+  start 40 at 674 s (idle): never quiet before the next kick, 0 emissions until then
+  start 41 at 676 s (idle): quiet after 5.8 s, 8 emissions until then
+  start 42 at 730 s (idle): never quiet before the next kick, 1 emissions until then
+  start 43 at 735 s (RB CALL): never quiet before the next kick, 2 emissions until then
+  start 44 at 749 s (idle): never quiet before the next kick, 0 emissions until then
+  start 45 at 755 s (idle): never quiet before the next kick, 1 emissions until then
+  start 46 at 760 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 47 at 805 s (idle): never quiet before the next kick, 1 emissions until then
+  start 48 at 807 s (idle): never quiet before the next kick, 2 emissions until then
+  start 49 at 809 s (idle): never quiet before the next kick, 1 emissions until then
+  start 50 at 811 s (idle): never quiet before the next kick, 0 emissions until then
+  start 51 at 817 s (idle): never quiet before the next kick, 1 emissions until then
+  start 52 at 825 s (RB CALL): quiet after 0.1 s, 1 emissions until then
+  start 53 at 859 s (idle): never quiet before the next kick, 0 emissions until then
+  start 54 at 860 s (idle): never quiet before the next kick, 2 emissions until then
+  start 55 at 871 s (idle): never quiet before the next kick, 1 emissions until then
+  start 56 at 875 s (idle): never quiet before the next kick, 1 emissions until then
+  start 57 at 882 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 58 at 915 s (RB CALL): never quiet before the next kick, 1 emissions until then
+  start 59 at 919 s (idle): never quiet before the next kick, 1 emissions until then
+  start 60 at 926 s (idle): never quiet before the next kick, 1 emissions until then
+  start 61 at 928 s (idle): never quiet before the next kick, 1 emissions until then
+  start 62 at 942 s (idle): never quiet before the next kick, 1 emissions until then
+  start 63 at 955 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 64 at 973 s (idle): never quiet before the next kick, 1 emissions until then
+  start 65 at 978 s (idle): never quiet before the next kick, 3 emissions until then
+  start 66 at 985 s (idle): never quiet before the next kick, 2 emissions until then
+  start 67 at 985 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 68 at 1005 s (RB CALL): quiet after 0.9 s, 2 emissions until then
+  start 69 at 1022 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 70 at 1038 s (idle): never quiet before the next kick, 1 emissions until then
+  start 71 at 1043 s (idle): never quiet before the next kick, 2 emissions until then
+  start 72 at 1047 s (idle): never quiet before the next kick, 1 emissions until then
+  start 73 at 1058 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 74 at 1079 s (idle): never quiet before the next kick, 0 emissions until then
+  start 75 at 1092 s (idle): never quiet before the next kick, 1 emissions until then
+  start 76 at 1095 s (RB CALL): never quiet before the next kick, 1 emissions until then
+  start 77 at 1099 s (idle): quiet after 3.0 s, 4 emissions until then
+  start 78 at 1144 s (idle): never quiet before the next kick, 2 emissions until then
+  start 79 at 1152 s (idle): never quiet before the next kick, 1 emissions until then
+  start 80 at 1165 s (idle): never quiet before the next kick, 1 emissions until then
+  start 81 at 1167 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 82 at 1185 s (RB CALL): never quiet before the next kick, 1 emissions until then
+  start 83 at 1195 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 84 at 1227 s (idle): never quiet before the next kick, 2 emissions until then
+  start 85 at 1227 s (idle): never quiet before the next kick, 0 emissions until then
+  start 86 at 1229 s (idle): never quiet before the next kick, 1 emissions until then
+  start 87 at 1231 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 88 at 1265 s (idle): never quiet before the next kick, 0 emissions until then
+  start 89 at 1275 s (RB CALL): never quiet before the next kick, 2 emissions until then
+  start 90 at 1280 s (idle): never quiet before the next kick, 2 emissions until then
+  start 91 at 1283 s (idle): never quiet before the next kick, 1 emissions until then
+  start 92 at 1293 s (idle): never quiet before the next kick, 1 emissions until then
+  start 93 at 1300 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 94 at 1323 s (idle): never quiet before the next kick, 1 emissions until then
+  start 95 at 1337 s (idle): never quiet before the next kick, 1 emissions until then
+  start 96 at 1351 s (idle): never quiet before the next kick, 2 emissions until then
+  start 97 at 1362 s (idle): never quiet before the next kick, 0 emissions until then
+  start 98 at 1365 s (idle): never quiet before the next kick, 1 emissions until then
+  start 99 at 1365 s (RB CALL): quiet after 1.4 s, 2 emissions until then
+  start 100 at 1393 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 101 at 1416 s (idle): never quiet before the next kick, 1 emissions until then
+  start 102 at 1417 s (idle): never quiet before the next kick, 1 emissions until then
+  start 103 at 1419 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 104 at 1455 s (RB CALL): never quiet before the next kick, 1 emissions until then
+  start 105 at 1457 s (idle): never quiet before the next kick, 1 emissions until then
+  start 106 at 1470 s (idle): never quiet before the next kick, 3 emissions until then
+  start 107 at 1477 s (idle): never quiet before the next kick, 1 emissions until then
+  start 108 at 1490 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 109 at 1533 s (idle): never quiet before the next kick, 1 emissions until then
+  start 110 at 1533 s (idle): never quiet before the next kick, 2 emissions until then
+  start 111 at 1541 s (idle): never quiet before the next kick, 0 emissions until then
+  start 112 at 1545 s (RB CALL): quiet after 1.6 s, 4 emissions until then
+  start 113 at 1592 s (idle): never quiet before the next kick, 1 emissions until then
+  start 114 at 1596 s (idle): never quiet before the next kick, 0 emissions until then
+  start 115 at 1603 s (idle): never quiet before the next kick, 1 emissions until then
+  start 116 at 1611 s (idle): never quiet before the next kick, 1 emissions until then
+  start 117 at 1617 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 118 at 1635 s (RB CALL): never quiet before the next kick, 4 emissions until then
+  start 119 at 1652 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 120 at 1668 s (idle): never quiet before the next kick, 2 emissions until then
+  start 121 at 1677 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 122 at 1703 s (idle): never quiet before the next kick, 2 emissions until then
+  start 123 at 1709 s (idle): never quiet before the next kick, 0 emissions until then
+  start 124 at 1715 s (idle): never quiet before the next kick, 4 emissions until then
+  start 125 at 1719 s (idle): never quiet before the next kick, 4 emissions until then
+  start 126 at 1725 s (RB CALL): quiet after 4.6 s, 1 emissions until then
+  start 127 at 1764 s (idle): never quiet before the next kick, 2 emissions until then
+  start 128 at 1766 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 129 at 1781 s (idle): never quiet before the next kick, 1 emissions until then
+  start 130 at 1781 s (idle): never quiet before the next kick, 1 emissions until then
+  start 131 at 1794 s (idle): never quiet before the next kick, 0 emissions until then
+  time to quiet (gap 15 s): 40 of 131 starts quiet, median 0.1 s; within 30 s: 40 of 131 (pass mark 80 %: FAIL)
+  chains: 105 distinct starts; length median 0.0 s, max 13.3 s; ended within 30 s: 105 of 105 (80 %: PASS)
+  max emissions per minute 19, M = 100: PASS
+  log: bench/sessions/2026-10-31-step19-desk5-bands\1_free_run_quiet_30min.log

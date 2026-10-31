@@ -1,0 +1,372 @@
+4,5c4,5
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=129 strength=9711 failed_target=shape observed=none required=medium
+< chirp3200_90cm_2026-10-16.csv        samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=129 strength=9711
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=129 strength=9698 failed_target=shape observed=none required=medium
+> chirp3200_90cm_2026-10-16.csv        samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=129 strength=9698
+7,8c7,8
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=142 strength=5520 failed_target=shape observed=none required=medium
+< chirp3200_band_freqcols_110cm_2026-10-22.csv samples=  4182 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=142 strength=5520
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=142 strength=5466 failed_target=shape observed=none required=medium
+> chirp3200_band_freqcols_110cm_2026-10-22.csv samples=  4182 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=142 strength=5466
+10,11c10,11
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=201 strength=9083
+< hop5_25x5g10_70cm_2026-10-16.csv     samples=  5157 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=201 strength=9083
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=201 strength=9044
+> hop5_25x5g10_70cm_2026-10-16.csv     samples=  5157 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=201 strength=9044
+13,14c13,14
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=109 dur_ms=115 strength=9083
+< hop5_25x5g10_70cm_2026-10-16_dry_g10.csv samples=  5157 accepted=1 rejected=0 first: accepted start_ms=109 dur_ms=115 strength=9083
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=109 dur_ms=115 strength=9044
+> hop5_25x5g10_70cm_2026-10-16_dry_g10.csv samples=  5157 accepted=1 rejected=0 first: accepted start_ms=109 dur_ms=115 strength=9044
+22,23c22,23
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=221 strength=9083
+< hop5_25x5g10_70cm_2026-10-16_wet_g15.csv samples=  5477 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=221 strength=9083
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=221 strength=9044
+> hop5_25x5g10_70cm_2026-10-16_wet_g15.csv samples=  5477 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=221 strength=9044
+25,26c25,26
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=109 dur_ms=191 strength=9083
+< hop5_25x5g10_70cm_2026-10-16_wet_g20.csv samples=  5797 accepted=1 rejected=0 first: accepted start_ms=109 dur_ms=191 strength=9083
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=109 dur_ms=191 strength=9044
+> hop5_25x5g10_70cm_2026-10-16_wet_g20.csv samples=  5797 accepted=1 rejected=0 first: accepted start_ms=109 dur_ms=191 strength=9044
+33,34c33,34
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=163 strength=7959 failed_target=contrast observed=weak required=medium
+< tone3300_90cm_2026-10-16.csv         samples=  4295 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=163 strength=7959
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=163 strength=7953 failed_target=contrast observed=weak required=medium
+> tone3300_90cm_2026-10-16.csv         samples=  4295 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=163 strength=7953
+39,40c39,40
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=58 dur_ms=96 strength=4237 failed_target=contrast observed=weak required=medium
+< tone2800_pos0_r0.csv                 samples=  4332 accepted=0 rejected=1 first: support_too_low start_ms=58 dur_ms=96 strength=4237
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=58 dur_ms=96 strength=4213 failed_target=contrast observed=weak required=medium
+> tone2800_pos0_r0.csv                 samples=  4332 accepted=0 rejected=1 first: support_too_low start_ms=58 dur_ms=96 strength=4213
+42,43c42,43
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=104 strength=4217 failed_target=contrast observed=weak required=medium
+< tone2800_pos0_r1.csv                 samples=  4224 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=104 strength=4217
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=104 strength=4211 failed_target=contrast observed=weak required=medium
+> tone2800_pos0_r1.csv                 samples=  4224 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=104 strength=4211
+45,46c45,46
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=56 dur_ms=106 strength=4028 failed_target=shape observed=none required=medium
+< tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=56 dur_ms=106 strength=4028
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=56 dur_ms=106 strength=3912 failed_target=shape observed=none required=medium
+> tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=56 dur_ms=106 strength=3912
+48,49c48,49
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=112 strength=3962 failed_target=shape observed=none required=medium
+< tone3200_pos0_r1.csv                 samples=  4188 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=112 strength=3962
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=112 strength=3913 failed_target=shape observed=none required=medium
+> tone3200_pos0_r1.csv                 samples=  4188 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=112 strength=3913
+51,52c51,52
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=100 strength=4908 failed_target=contrast observed=weak required=medium
+< tone3300_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=100 strength=4908
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=100 strength=4904 failed_target=contrast observed=weak required=medium
+> tone3300_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=100 strength=4904
+54,55c54,55
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=101 strength=5028 failed_target=contrast observed=weak required=medium
+< tone3300_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=101 strength=5028
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=101 strength=5021 failed_target=contrast observed=weak required=medium
+> tone3300_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=101 strength=5021
+57,58c57,58
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=61 dur_ms=165 strength=7549 failed_target=contrast observed=weak required=medium
+< tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=61 dur_ms=165 strength=7549
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=61 dur_ms=165 strength=7548 failed_target=contrast observed=weak required=medium
+> tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=61 dur_ms=165 strength=7548
+60,61c60,61
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=61 dur_ms=173 strength=7518 failed_target=contrast observed=weak required=medium
+< tone3800_pos0_r1.csv                 samples=  4273 accepted=0 rejected=1 first: support_too_low start_ms=61 dur_ms=173 strength=7518
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=61 dur_ms=173 strength=7517 failed_target=contrast observed=weak required=medium
+> tone3800_pos0_r1.csv                 samples=  4273 accepted=0 rejected=1 first: support_too_low start_ms=61 dur_ms=173 strength=7517
+66,67c66,67
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=111 strength=4461 failed_target=contrast observed=weak required=medium
+< tone2800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=111 strength=4461
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=107 strength=4442 failed_target=contrast observed=weak required=medium
+> tone2800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=107 strength=4442
+69,70c69,70
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=119 strength=4417 failed_target=contrast observed=weak required=medium
+< tone2800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=119 strength=4417
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=111 strength=4406 failed_target=contrast observed=weak required=medium
+> tone2800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=111 strength=4406
+75,76c75,76
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=54 dur_ms=131 strength=5347 failed_target=shape observed=none required=medium
+< tone3200_pos0_r1.csv                 samples=  4298 accepted=0 rejected=1 first: support_too_low start_ms=54 dur_ms=131 strength=5347
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=54 dur_ms=131 strength=5330 failed_target=shape observed=none required=medium
+> tone3200_pos0_r1.csv                 samples=  4298 accepted=0 rejected=1 first: support_too_low start_ms=54 dur_ms=131 strength=5330
+82,83c82,83
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=131 strength=5722 failed_target=contrast observed=weak required=medium
+< tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=131 strength=5722
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=131 strength=5721 failed_target=contrast observed=weak required=medium
+> tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=131 strength=5721
+85,86c85,86
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=123 strength=5774 failed_target=contrast observed=weak required=medium
+< tone3800_pos0_r1.csv                 samples=  4238 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=123 strength=5774
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=123 strength=5772 failed_target=contrast observed=weak required=medium
+> tone3800_pos0_r1.csv                 samples=  4238 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=123 strength=5772
+99,100c99,100
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=172 strength=5571 failed_target=shape observed=none required=medium
+< tone3200_pos0_r0.csv                 samples=  4212 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=172 strength=5571
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=172 strength=5527 failed_target=shape observed=none required=medium
+> tone3200_pos0_r0.csv                 samples=  4212 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=172 strength=5527
+102,103c102,103
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=54 dur_ms=128 strength=4809 failed_target=shape observed=none required=medium
+< tone3200_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=54 dur_ms=128 strength=4809
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=54 dur_ms=128 strength=4773 failed_target=shape observed=none required=medium
+> tone3200_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=54 dur_ms=128 strength=4773
+105,106c105,106
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=149 strength=9290 failed_target=shape observed=none required=medium
+< tone3200_pos1_r0.csv                 samples=  4180 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=149 strength=9290
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=149 strength=9198 failed_target=shape observed=none required=medium
+> tone3200_pos1_r0.csv                 samples=  4180 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=149 strength=9198
+108,109c108,109
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=134 strength=9196 failed_target=shape observed=none required=medium
+< tone3200_pos1_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=134 strength=9196
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=134 strength=9183 failed_target=shape observed=none required=medium
+> tone3200_pos1_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=134 strength=9183
+114,115c114,115
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=68 dur_ms=114 strength=4109 failed_target=contrast observed=weak required=medium
+< tone3300_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=68 dur_ms=114 strength=4109
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=68 dur_ms=114 strength=4093 failed_target=contrast observed=weak required=medium
+> tone3300_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=68 dur_ms=114 strength=4093
+117,118c117,118
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=77 dur_ms=159 strength=5105 failed_target=contrast observed=weak required=medium
+< tone3300_pos1_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=77 dur_ms=159 strength=5105
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=77 dur_ms=159 strength=5095 failed_target=contrast observed=weak required=medium
+> tone3300_pos1_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=77 dur_ms=159 strength=5095
+120,121c120,121
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=77 dur_ms=161 strength=5461 failed_target=contrast observed=weak required=medium
+< tone3300_pos1_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=77 dur_ms=161 strength=5461
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=77 dur_ms=160 strength=5426 failed_target=contrast observed=weak required=medium
+> tone3300_pos1_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=77 dur_ms=160 strength=5426
+126,127c126,127
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=134 dur_ms=96 strength=5358 failed_target=contrast observed=weak required=medium
+< tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=134 dur_ms=96 strength=5358
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=134 dur_ms=96 strength=5351 failed_target=contrast observed=weak required=medium
+> tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=134 dur_ms=96 strength=5351
+129,130c129,130
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=180 strength=7194 failed_target=contrast observed=weak required=medium
+< tone3800_pos1_r0.csv                 samples=  4180 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=180 strength=7194
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=180 strength=7188 failed_target=contrast observed=weak required=medium
+> tone3800_pos1_r0.csv                 samples=  4180 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=180 strength=7188
+138,139c138,139
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=201 strength=9083
+< hop5_p25g10_pos1_r0.csv              samples=  5157 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=201 strength=9083
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=201 strength=9044
+> hop5_p25g10_pos1_r0.csv              samples=  5157 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=201 strength=9044
+141,142c141,142
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=200 strength=9153
+< hop5_p25g10_pos1_r1.csv              samples=  5157 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=200 strength=9153
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=200 strength=9136
+> hop5_p25g10_pos1_r1.csv              samples=  5157 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=200 strength=9136
+144,145c144,145
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=201 strength=9072
+< hop5_p25g10_pos1_r2.csv              samples=  5156 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=201 strength=9072
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=201 strength=8909
+> hop5_p25g10_pos1_r2.csv              samples=  5156 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=201 strength=8909
+156,157c156,157
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=54 dur_ms=185 strength=7971
+< sweep2950to3950_150ms_pos1_r0.csv    samples=  5052 accepted=1 rejected=0 first: accepted start_ms=54 dur_ms=185 strength=7971
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=54 dur_ms=185 strength=7909
+> sweep2950to3950_150ms_pos1_r0.csv    samples=  5052 accepted=1 rejected=0 first: accepted start_ms=54 dur_ms=185 strength=7909
+159,160c159,160
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=54 dur_ms=170 strength=7936
+< sweep2950to3950_150ms_pos1_r1.csv    samples=  5056 accepted=1 rejected=0 first: accepted start_ms=54 dur_ms=170 strength=7936
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=54 dur_ms=185 strength=7790
+> sweep2950to3950_150ms_pos1_r1.csv    samples=  5056 accepted=1 rejected=0 first: accepted start_ms=54 dur_ms=185 strength=7790
+166,167c166,167
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=53 dur_ms=125 strength=8663 failed_target=shape observed=none required=medium
+< tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=53 dur_ms=125 strength=8663
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=53 dur_ms=125 strength=8661 failed_target=shape observed=none required=medium
+> tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=53 dur_ms=125 strength=8661
+169,170c169,170
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=53 dur_ms=125 strength=8648 failed_target=shape observed=none required=medium
+< tone3200_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=53 dur_ms=125 strength=8648
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=53 dur_ms=125 strength=8609 failed_target=shape observed=none required=medium
+> tone3200_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=53 dur_ms=125 strength=8609
+175,176c175,176
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=137 strength=5781 failed_target=shape observed=none required=medium
+< tone3200_pos1_r1.csv                 samples=  4195 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=137 strength=5781
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=137 strength=5709 failed_target=shape observed=none required=medium
+> tone3200_pos1_r1.csv                 samples=  4195 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=137 strength=5709
+184,185c184,185
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=129 strength=5772 failed_target=contrast observed=weak required=medium
+< tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=129 strength=5772
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=129 strength=5770 failed_target=contrast observed=weak required=medium
+> tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=129 strength=5770
+187,188c187,188
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=129 strength=5861 failed_target=contrast observed=weak required=medium
+< tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=129 strength=5861
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=144 strength=5853 failed_target=contrast observed=weak required=medium
+> tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=144 strength=5853
+193,194c193,194
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=101 strength=3184 failed_target=contrast observed=weak required=medium
+< tone2800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=101 strength=3184
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=50 dur_ms=101 strength=3168 failed_target=contrast observed=weak required=medium
+> tone2800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=50 dur_ms=101 strength=3168
+199,200c199,200
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=120 strength=9489 failed_target=shape observed=none required=medium
+< tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=120 strength=9489
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=120 strength=9469 failed_target=shape observed=none required=medium
+> tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=120 strength=9469
+202,203c202,203
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=128 strength=9307 failed_target=shape observed=none required=medium
+< tone3200_pos0_r1.csv                 samples=  4227 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=128 strength=9307
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=55 dur_ms=128 strength=9293 failed_target=shape observed=none required=medium
+> tone3200_pos0_r1.csv                 samples=  4227 accepted=0 rejected=1 first: support_too_low start_ms=55 dur_ms=128 strength=9293
+222,223c222,223
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=129 strength=9711 failed_target=shape observed=none required=medium
+< tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=129 strength=9711
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=129 strength=9698 failed_target=shape observed=none required=medium
+> tone3200_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=129 strength=9698
+225,226c225,226
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=130 strength=9898 failed_target=shape observed=none required=medium
+< tone3200_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=130 strength=9898
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=51 dur_ms=130 strength=9885 failed_target=shape observed=none required=medium
+> tone3200_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=51 dur_ms=130 strength=9885
+228,229c228,229
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=163 strength=7959 failed_target=contrast observed=weak required=medium
+< tone3300_pos0_r0.csv                 samples=  4295 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=163 strength=7959
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=163 strength=7953 failed_target=contrast observed=weak required=medium
+> tone3300_pos0_r0.csv                 samples=  4295 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=163 strength=7953
+234,235c234,235
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=57 dur_ms=135 strength=8881 failed_target=contrast observed=weak required=medium
+< tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=57 dur_ms=135 strength=8881
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=57 dur_ms=135 strength=8874 failed_target=contrast observed=weak required=medium
+> tone3800_pos0_r0.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=57 dur_ms=135 strength=8874
+237,238c237,238
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=57 dur_ms=135 strength=8822 failed_target=contrast observed=weak required=medium
+< tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=57 dur_ms=135 strength=8822
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=57 dur_ms=135 strength=8813 failed_target=contrast observed=weak required=medium
+> tone3800_pos0_r1.csv                 samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=57 dur_ms=135 strength=8813
+295,296c295,296
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=121 strength=5397 failed_target=shape observed=none required=medium
+< chirp3200_110cm_r0.csv               samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=121 strength=5397
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=121 strength=5390 failed_target=shape observed=none required=medium
+> chirp3200_110cm_r0.csv               samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=121 strength=5390
+298,299c298,299
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=121 strength=5728 failed_target=shape observed=none required=medium
+< chirp3200_110cm_r1.csv               samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=121 strength=5728
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=121 strength=5718 failed_target=shape observed=none required=medium
+> chirp3200_110cm_r1.csv               samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=121 strength=5718
+301,302c301,302
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=56 dur_ms=127 strength=5643 failed_target=shape observed=none required=medium
+< chirp3200_110cm_r2.csv               samples=  4170 accepted=0 rejected=1 first: support_too_low start_ms=56 dur_ms=127 strength=5643
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=56 dur_ms=127 strength=5641 failed_target=shape observed=none required=medium
+> chirp3200_110cm_r2.csv               samples=  4170 accepted=0 rejected=1 first: support_too_low start_ms=56 dur_ms=127 strength=5641
+307,308c307,308
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=184 strength=9831
+< hop5_p25g10_110cm_r1.csv             samples=  5184 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=184 strength=9831
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=184 strength=9729
+> hop5_p25g10_110cm_r1.csv             samples=  5184 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=184 strength=9729
+310,311c310,311
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=214 strength=9694
+< hop5_p25g10_110cm_r2.csv             samples=  5108 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=214 strength=9694
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=214 strength=9632
+> hop5_p25g10_110cm_r2.csv             samples=  5108 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=214 strength=9632
+316,317c316,317
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=142 strength=5520 failed_target=shape observed=none required=medium
+< chirp3200_band_110cm_r0.csv          samples=  4182 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=142 strength=5520
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=142 strength=5466 failed_target=shape observed=none required=medium
+> chirp3200_band_110cm_r0.csv          samples=  4182 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=142 strength=5466
+319,320c319,320
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=141 strength=5599 failed_target=shape observed=none required=medium
+< chirp3200_band_110cm_r1.csv          samples=  4180 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=141 strength=5599
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=141 strength=5578 failed_target=shape observed=none required=medium
+> chirp3200_band_110cm_r1.csv          samples=  4180 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=141 strength=5578
+322,323c322,323
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=149 strength=5456 failed_target=shape observed=none required=medium
+< chirp3200_band_110cm_r2.csv          samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=149 strength=5456
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=149 strength=5454 failed_target=shape observed=none required=medium
+> chirp3200_band_110cm_r2.csv          samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=149 strength=5454
+328,329c328,329
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=196 strength=9860
+< hop5_band_110cm_r1.csv               samples=  5132 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=196 strength=9860
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=58 dur_ms=196 strength=9802
+> hop5_band_110cm_r1.csv               samples=  5132 accepted=1 rejected=0 first: accepted start_ms=58 dur_ms=196 strength=9802
+337,338c337,338
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=118 strength=5458 failed_target=shape observed=none required=medium
+< chirp3200_band_110cm_r0.csv          samples=  4213 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=118 strength=5458
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=118 strength=5407 failed_target=shape observed=none required=medium
+> chirp3200_band_110cm_r0.csv          samples=  4213 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=118 strength=5407
+340,341c340,341
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=141 strength=5540 failed_target=shape observed=none required=medium
+< chirp3200_band_110cm_r1.csv          samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=141 strength=5540
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=64 dur_ms=141 strength=5496 failed_target=shape observed=none required=medium
+> chirp3200_band_110cm_r1.csv          samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=64 dur_ms=141 strength=5496
+343,344c343,344
+<     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=127 strength=5563 failed_target=shape observed=none required=medium
+< chirp3200_band_110cm_r2.csv          samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=127 strength=5563
+---
+>     verdict type=single_pulse reason=support_requirement_failed reject=support_too_low accepted=0 valid=0 start_ms=63 dur_ms=127 strength=5535 failed_target=shape observed=none required=medium
+> chirp3200_band_110cm_r2.csv          samples=  4256 accepted=0 rejected=1 first: support_too_low start_ms=63 dur_ms=127 strength=5535
+346,347c346,347
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=212 strength=9742
+< hop5_band_110cm_r0.csv               samples=  5123 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=212 strength=9742
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=198 strength=9703
+> hop5_band_110cm_r0.csv               samples=  5123 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=198 strength=9703
+349,350c349,350
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=197 strength=9870
+< hop5_band_110cm_r1.csv               samples=  5159 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=197 strength=9870
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=59 dur_ms=197 strength=9856
+> hop5_band_110cm_r1.csv               samples=  5159 accepted=1 rejected=0 first: accepted start_ms=59 dur_ms=197 strength=9856
+352,353c352,353
+<     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=51 dur_ms=196 strength=9674
+< hop5_band_110cm_r2.csv               samples=  5089 accepted=1 rejected=0 first: accepted start_ms=51 dur_ms=196 strength=9674
+---
+>     verdict type=single_pulse reason=from_occurrence reject=none accepted=1 valid=1 start_ms=51 dur_ms=196 strength=9662
+> hop5_band_110cm_r2.csv               samples=  5089 accepted=1 rejected=0 first: accepted start_ms=51 dur_ms=196 strength=9662

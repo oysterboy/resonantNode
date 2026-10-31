@@ -85,7 +85,10 @@ bool I2sToneOutput::renderClip(int32_t* frames, size_t frameCount, uint32_t samp
         int32_t value = 0;
         if (_clipPos < _clipCount) {
             const float s = static_cast<float>(_clip[_clipPos]) / 32768.0f;
-            value = static_cast<int32_t>(s * _clipGain * clipEnvelope(_clipPos, _clipCount, rampSamples) * kFullScale);
+            // A gain above 1 lifts a quiet recording; clipped just under full scale, never past int32 (issue #31's trap).
+            float f = s * _clipGain * clipEnvelope(_clipPos, _clipCount, rampSamples);
+            f = f > 0.999f ? 0.999f : (f < -0.999f ? -0.999f : f);
+            value = static_cast<int32_t>(f * kFullScale);
             ++_clipPos;
         }
         frames[2 * i] = value;

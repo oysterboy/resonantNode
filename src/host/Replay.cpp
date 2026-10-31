@@ -456,6 +456,9 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     VectorAudioSource source(cap.pcm, cap.sampleRateHz);
     AudioSignal audioSignal(source);
     FreqBandStream band;
+    if (opt.bandUpdateEvery > 0) {
+        band.setFrequencyUpdateEverySamples(opt.bandUpdateEvery);
+    }
     detection::DetectionRuntime runtime;
     runtime::PcmPreprocessMode preprocessMode = opt.preprocess;
     if (!opt.preprocessForced) {

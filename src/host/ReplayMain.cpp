@@ -22,6 +22,7 @@ Options
     --skip-ms N           ignore verdicts whose occurrence starts before N ms (noise captures: the marker tone)
     --compare             with a mode=both transcript: the host amp feature against the board's column
     --verbose             one line per verdict
+    --band-update N       the band bank's update interval in samples (default 4, as the boards)
     --quiet               only the final summary
 
 Exit code 0; output is plain text, one capture per line.
@@ -101,6 +102,8 @@ int main(int argc, char** argv) {
             opt.tailMs = strtoul(next("--tail-ms"), nullptr, 10);
         } else if (a == "--skip-ms") {
             opt.skipMs = strtoul(next("--skip-ms"), nullptr, 10);
+        } else if (a == "--band-update") {
+            opt.bandUpdateEvery = strtoul(next("--band-update"), nullptr, 10);
         } else if (a == "--compare") {
             opt.compare = true;
         } else if (a == "--dump-freq" && i + 1 < argc) {

@@ -335,12 +335,23 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.
 
-22. [NEXT, before 20.3 (owner 2026-10-31)] DET-020: the band bank's update interval. (issue #87)
+22. [RUNNING 2026-11-01: 22.1-22.3 done, the soak running; before 20.3] DET-020: the band bank's update interval. (issue #87)
    roadmap-detection.md DET-020. The bank recomputes every 4 samples; one compute on the 8-bin band costs ~108 us,
    ~43 % of the CPU (bench/sessions/2026-10-31-band-update-board); the replay keeps every verdict at 8 / 16 / 32
    (2026-10-31-band-update-replay). 22.1 the Node's loop at 4 and 16 (a profiling build); 22.2 N = 16 as the default,
    T2h re-recorded; 22.3 the edge cases on the board (margin ladder, chord cell, music); 22.4 a soak.
    Gate: the Node's CPU saving measured, every edge case as at N = 4 or the difference explained, a soak cited.
+   22.1 [DONE 2026-11-01] The Node's per-sample path 34.6 us at 4, 15.7 us at 16 (25 % of the budget), longest block
+        4.5 -> 2.0 ms, no dropped buffer (bench/sessions/2026-11-01-step22.1-node-cpu; RB STATUS audio.us_per_sample).
+   22.2 [DONE 2026-11-01, 02e6a24] 16 by default (FREQBAND_UPDATE_EVERY_SAMPLES; the Analyzer follows); T2h
+        re-recorded, every verdict as at 4 (2026-11-01-step22.2-update16); the replay compares with a board's
+        recorded columns at the capture's own interval.
+   22.3 [DONE 2026-11-01, one finding for the owner] The ladder 4 and 16 interleaved: equal from 0.5 FS to -6 dB and
+        on the two hop cases; -7.5 dB 43 / 50 at 16 against 50 / 50 at 4, all coverage_too_low (74-76 ms against the
+        80 minimum; 83-84 at 4). Chord cell and music as at 4 (2026-11-01-step22.3-edges). Owner: keep 16 and the
+        ~0.5 dB at the edge, or 8, or 16 with the coverage minimum lowered (a tuning step with its noise check).
+   22.4 [RUNNING 2026-11-01 01:16] The soak, 8 h on 02e6a24 (2026-11-01-step22.4-soak8; the tools' 8-bin band).
+
 
 21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
    roadmap-hardware.md HW-001 (the prototype, the D-AMP pinout as wired, room for the second mic), HW-002 (ten

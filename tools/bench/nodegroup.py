@@ -76,6 +76,8 @@ for l in setup_log:
 
 events = []
 partial = {n: b"" for n, _ in boards}
+reopen_at = {n: 0.0 for n, _ in boards}
+resetup_at = {}     # name -> when to send --setup again (opening a port can reset the board)
 strengths = {}      # (t, listener) -> strength of a valid verdict
 trains = []         # (t, name): hop train starts, for the drift attribution
 status_heard = {}   # name -> [(t, heard.valid, heard.strength_sum)]
@@ -95,14 +97,47 @@ with open(log_path, "w", encoding="utf-8") as f:
             f.write("%.2f %s >> RB CALL\n" % (kicks[-1], a.kick))
             next_kick += a.kick_every
         if time.time() - t0 >= next_status:
-            for s in ports.values():
-                s.write(b"RB STATUS\n")
+            for n, s in ports.items():
+                if s is not None:
+                    try:
+                        s.write(b"RB STATUS\n")
+                    except serial.SerialException:
+                        pass  # the read below notices and reopens
             next_status += a.status_every
-        for n, s in ports.items():
+        for n in [n for n, due in resetup_at.items() if time.time() >= due]:
+            del resetup_at[n]
+            try:
+                for cmd in [c.strip() for c in a.setup.split(";") if c.strip()] + ["RB log full"]:
+                    ports[n].write((cmd + "\n").encode())
+                f.write("%.2f %s # setup sent again\n" % (time.time() - t0, n))
+            except (serial.SerialException, AttributeError):
+                pass
+        for n, s in list(ports.items()):
+            # A port that drops off USB for a moment (2026-11-01: "access denied" twice in a five-board run, no board
+            # reset) is logged and reopened, not the run ended: ending it closes every port and resets the boards.
+            if s is None:
+                if time.time() >= reopen_at[n]:
+                    try:
+                        ports[n] = serial.Serial(dict(boards)[n], 115200, timeout=0.005)
+                        f.write("%.2f %s # port reopened\n" % (time.time() - t0, n))
+                        resetup_at[n] = time.time() + 6.0  # after a reset's boot
+                    except serial.SerialException:
+                        reopen_at[n] = time.time() + 1.0
+                continue
             # Whole lines only: readline() with the 5 ms timeout returned the first piece of a line that
             # arrives in two UART bursts (RB STATUS, ~1.7 KB since 2026-10-25) and logged the rest as a
             # separate line.
-            partial[n] += s.read(s.in_waiting or 1)
+            try:
+                partial[n] += s.read(s.in_waiting or 1)
+            except serial.SerialException as e:
+                f.write("%.2f %s # port lost: %s\n" % (time.time() - t0, n, e))
+                try:
+                    s.close()
+                except serial.SerialException:
+                    pass
+                ports[n] = None
+                reopen_at[n] = time.time() + 1.0
+                continue
             if b"\n" not in partial[n]:
                 continue
             l, partial[n] = partial[n].split(b"\n", 1)
@@ -131,7 +166,8 @@ with open(log_path, "w", encoding="utf-8") as f:
         for s in held.values():
             s.read(4096)
 for s in list(ports.values()) + list(held.values()):
-    s.close()
+    if s is not None:
+        s.close()
 
 names = [n for n, _ in boards]
 print("%s: %d s, boards %s" % (a.name, a.secs, ",".join(names)))

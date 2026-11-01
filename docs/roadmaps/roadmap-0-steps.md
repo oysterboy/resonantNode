@@ -352,7 +352,11 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         150, loud bound 900); at -35 dBFS whispers pass and speech, music stay out, the fan once at the threshold;
         two boards at gain 1 kept a chain going past 60 s, at 0.5 it ended with the whisper (default 0.5). Found:
         a Whispernet board could not OTA (16 KB largest block); fixed in 748efe15, which E1 / E4 / E5 (on the
-        older images) need once by USB. Open: a real whisper, distances, a RAW capture, the howl test.
+        older images) need once by USB (done, owner's go). Owner at the desk 15:10-16:15 (same session): real
+        whispers read flatter than synthetic ones, a timbre range (BandFlatness 0.15-0.40) and gain 64 (gain <= 16
+        inaudible), the node deaf during its own playback (it answered itself at 64), soft edges (f3ddba37). Owner:
+        "works, but unresponsive for a while after a replay"; rustling and chair casters still pass. Open: rustling,
+        Behavior's pace for whispers, an adaptive floor, phrases longer than D. Boards on f3ddba37, on=0.
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

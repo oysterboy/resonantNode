@@ -351,7 +351,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.
 
-22. [RUNNING 2026-11-01: 22.1-22.3 done, the soak running; before 20.3] DET-020: the band bank's update interval. (issue #87)
+22. [DONE 2026-11-01] DET-020: the band bank's update interval. (issue #87)
    roadmap-detection.md DET-020. The bank recomputes every 4 samples; one compute on the 8-bin band costs ~108 us,
    ~43 % of the CPU (bench/sessions/2026-10-31-band-update-board); the replay keeps every verdict at 8 / 16 / 32
    (2026-10-31-band-update-replay). 22.1 the Node's loop at 4 and 16 (a profiling build); 22.2 N = 16 as the default,
@@ -366,7 +366,9 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         on the two hop cases; -7.5 dB 43 / 50 at 16 against 50 / 50 at 4, all coverage_too_low (74-76 ms against the
         80 minimum; 83-84 at 4). Chord cell and music as at 4 (2026-11-01-step22.3-edges). Owner 2026-11-01 ("1"):
         keep 16 and the ~0.5 dB at the edge (decisions/2026-11-01-band-update-16.md).
-   22.4 [RUNNING 2026-11-01 01:16] The soak, 8 h on 02e6a24 (2026-11-01-step22.4-soak8; the tools' 8-bin band).
+   22.4 [DONE 2026-11-01] The soak, 8 h on 02e6a24 (2026-11-01-step22.4-soak8; the tools' 8-bin band): 0.5 FS to
+        -6 dB 80 / 80 each, -7.5 dB 30 / 80 (all coverage_too_low, the accepted edge), hops 4 + 5 80 / 80, chords
+        answered in every cycle, music 0 verdicts, no reset. Gate closed.
 
 
 21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)

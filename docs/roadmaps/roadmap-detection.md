@@ -200,7 +200,7 @@ Pick up with DET-016 (the verdict boundary rule touches the same names).
 
 ### DET-020 - the band bank's update interval (CPU)
 
-Status: LANDED (2026-11-01, 02e6a24; decisions/2026-11-01-band-update-16.md; the soak of step 22.4 to cite)
+Status: DONE (2026-11-01, 02e6a24; decisions/2026-11-01-band-update-16.md; soak bench/sessions/2026-11-01-step22.4-soak8)
 
 ```text
 FreqBandStream recomputes the band bank every 4 samples (0.25 ms) over a 64-sample (4 ms) window: each update

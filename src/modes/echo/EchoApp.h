@@ -8,10 +8,9 @@
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/SerialLine.h"
 #include "../../audio/CaptureRing.h"
+#include "../../audio/EnvelopeFollower.h"
 #include "../../behavior/ResonantBehavior.h"
-#include "../../detection/detectors/scalar/ScalarTransientDetector.h"
-#include "../../detection/features/FeatureHistory.h"
-#include "../../detection/inspection/OccurrenceInspector.h"
+#include "../../detection/EnvelopeRuntime.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/I2sToneOutput.h"
 #include "../../net/NetGateway.h"
@@ -77,7 +76,7 @@ private:
     void handleLogCommand(const char* line);
     void handleGateCommand(const char* line);
     void detectBlock(const AudioBlock& block, uint64_t ringIndex, uint32_t blockMs);
-    void judgePending(uint32_t nowMs);
+    void handleResult(const detection::EnvelopeRuntime::Result& result);
     void runBehavior(unsigned long now);
     void startReplay(unsigned long now);
     void configureEcho();
@@ -119,12 +118,8 @@ private:
     };
     Gate _gate;
     EchoCounts _echo;
-    detection::FeatureHistory _history;
-    detection::OccurrenceInspector _inspector;
-    detection::InspectionPlan _plan;
-    ScalarTransientDetector _detector;
-    detection::Occurrence _pending;  // held until its inspection window is complete
-    bool _havePending = false;
+    EnvelopeFollower _follower;
+    detection::EnvelopeRuntime _runtime;  // detector -> inspector -> makeVerdict, the host echo replay's chain too
     uint64_t _lastBlockIndex = 0;  // the newest block's first sample in the ring, and its time: ms -> ring index
     uint32_t _lastBlockMs = 0;
     ResonantBehavior _behavior;
@@ -140,7 +135,6 @@ private:
     bool _clipReady = false;
     void takeClip();
     bool _detectionPaused = false;
-    int32_t _envelope = 0;  // smoothed |sample|, canonical PCM units (24-bit)
     int32_t _envelopePeak = 0;  // since the last status
 
     Load _load;

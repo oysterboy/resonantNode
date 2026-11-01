@@ -24,8 +24,6 @@ namespace {
 // The Node's loop bound (ResonantNodeApp.cpp, kMaxSamplesPerLoop) scaled to the rate: one pass drains at most
 // ~8 ms of audio, the length of the DMA queue at 16 kHz, so the console and the radio still get their turn.
 constexpr uint32_t kMaxDrainMs = 8;
-// One-pole smoother for the envelope, as a shift: ~1.3 ms at 48 kHz (2^6 samples), the attack an onset gate needs.
-constexpr int kEnvelopeShift = 6;
 constexpr uint32_t kToneMaxMs = 10000;
 
 uint32_t largestFreeBlock() {
@@ -74,6 +72,7 @@ void EchoApp::begin() {
     _i2sPort.begin();
     _toneOutput.begin();
     _chirpOutput.begin();
+    _follower.setShift(EnvelopeFollower::shiftForRate(_i2sPort.sampleRateHz()));  // ~1.3 ms at any rate
     _behavior.resetState();
     configureEcho();
     const bool netUp = _net.begin();
@@ -144,12 +143,11 @@ void EchoApp::pollAudio() {
         const uint64_t ringIndex = _ring.written();
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const int32_t s = block.samples[i];
-            const int32_t magnitude = s < 0 ? -s : s;
-            _envelope += (magnitude - _envelope) >> kEnvelopeShift;
+            _follower.push(s);
             _ring.push(static_cast<int16_t>(s >> 8));  // 24-bit canonical PCM to int16
         }
-        if (_envelope > _envelopePeak) {
-            _envelopePeak = _envelope;
+        if (_follower.value() > _envelopePeak) {
+            _envelopePeak = _follower.value();
         }
         detectBlock(block, ringIndex, timebase::msFromUs64(block.approxStartUs64));
         takeClip();
@@ -172,10 +170,9 @@ void EchoApp::configureEcho() {
     d.maxTransientDurationMs = 300;
     d.minTransientPeakStrength = _gate.minPeak;
     d.releaseDebounceMs = 20;
-    _detector.setConfig(d);
     // The echo room's plan: one module, the attack; Medium (within maxAttackMs) is a clap.
-    _plan = detection::InspectionPlan{};
-    detection::InspectionModuleConfig& m = _plan.modules[0];
+    detection::InspectionPlan plan = detection::InspectionPlan{};
+    detection::InspectionModuleConfig& m = plan.modules[0];
     m.kind = detection::InspectionModuleKind::AttackRise;
     m.target = detection::InspectionTarget::Attack;
     m.enabled = true;
@@ -185,65 +182,38 @@ void EchoApp::configureEcho() {
     m.attack.mediumMaxMs = _gate.maxAttackMs;
     m.attack.strongMaxMs = _gate.maxAttackMs / 2;
     m.attack.weakMaxMs = _gate.maxAttackMs * 3;
-    _plan.count = 1;
-    _inspector.configure(_plan);
-    const detection::FeatureStreamId streams[1] = {detection::FeatureStreamId::AmpEnvelope};
-    _history.setActiveStreams(streams, 1);
+    plan.count = 1;
+    _runtime.configure(d, plan);
     _behavior.configure(echoBehavior());
 }
 
-// One DMA block: the envelope as Strength16 (the scale the scalar detector's thresholds are in) into the history and
-// the detector; an occurrence it finishes waits in _pending for its inspection window. Paused while the own replay
-// sounds and for its tail (Behavior's own-emit suppression).
+// One DMA block into the detection chain (EnvelopeRuntime); paused while the own replay sounds and for its tail
+// (Behavior's own-emit suppression). Each judged occurrence goes to handleResult.
 void EchoApp::detectBlock(const AudioBlock& block, uint64_t ringIndex, uint32_t blockMs) {
     _lastBlockIndex = ringIndex;
     _lastBlockMs = blockMs;
     if (_detectionPaused) {
         return;
     }
-    const float level = static_cast<float>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_envelope)));
-    _history.record(detection::FeatureStreamId::AmpEnvelope, blockMs, level);
-    AudioSamplePacket packet;
-    packet.sampleIndex = block.startSampleIndex;
-    packet.timeUs64 = block.approxStartUs64;
-    packet.timeMs = blockMs;
-    packet.sampleRateHz = _i2sPort.sampleRateHz();
-    packet.audioMagnitudeValue = static_cast<audio::Strength16>(level);
-    packet.smoothedLevel = static_cast<audio::Strength16>(level);
-    packet.valid = true;
-    packet.overflowDuringBlock = block.overflowBeforeBlock;
-    _detector.update(packet, level);
-    detection::Occurrence occurrence;
-    while (_detector.popOccurrence(occurrence)) {
+    _runtime.onBlock(_follower.strength(), block.approxStartUs64, blockMs);
+    detection::EnvelopeRuntime::Result result;
+    while (_runtime.popResult(result)) {
         ++_echo.occurrences;
-        if (_havePending) {
-            judgePending(blockMs + 100000U);  // a second occurrence before the first's window closed: judge it now
-        }
-        _pending = occurrence;
-        _havePending = true;
+        handleResult(result);
     }
-    judgePending(blockMs);
 }
 
-// The held occurrence, once the plan's window is in the history: inspected, judged by makeVerdict, handed to Behavior.
-void EchoApp::judgePending(uint32_t nowMs) {
-    if (!_havePending || !timing::atOrAfter(nowMs, static_cast<uint32_t>(_inspector.windowCompleteAtMs(_pending)))) {
-        return;
-    }
-    _havePending = false;
-    const detection::InspectedOccurrence inspected = _inspector.inspectWithHistory(_pending, &_history, nowMs);
-    detection::OccurrenceVerdict verdict;
-    if (!detection::makeVerdict(inspected, _plan, verdict)) {
-        return;
-    }
+// A judged occurrence: counted, handed to Behavior; a clap Behavior takes marks its clip to be copied.
+void EchoApp::handleResult(const detection::EnvelopeRuntime::Result& result) {
+    const detection::OccurrenceVerdict& verdict = result.verdict;
     if (verdict.valid) {
         ++_echo.claps;
     } else {
         ++_echo.slow;
     }
-    // The onset's sample index, from the newest block's index and time (the clip is cut around it).
+    // The onset's ring index, from the newest block's index and time (the clip is cut around it).
     const uint64_t rate = _i2sPort.sampleRateHz();
-    const uint32_t backMs = _lastBlockMs - static_cast<uint32_t>(_pending.startMs);
+    const uint32_t backMs = _lastBlockMs - static_cast<uint32_t>(result.inspected.occurrence.startMs);
     const uint64_t back = static_cast<uint64_t>(backMs) * rate / 1000U;
     const uint64_t onset = _lastBlockIndex > back ? _lastBlockIndex - back : 0;
     ResonantBehavior::BehaviorDecision decision = ResonantBehavior::BehaviorDecision::None;
@@ -258,7 +228,7 @@ void EchoApp::judgePending(uint32_t nowMs) {
     if (!verdict.valid) {
         return;  // counted; not printed (music made ~800 rejects in 7 min on the desk, and their lines cost the loop)
     }
-    const detection::OccurrenceAttack& a = inspected.occurrence.attack;
+    const detection::OccurrenceAttack& a = result.inspected.occurrence.attack;
     serialOut().print("ECHO clap valid=");
     serialOut().print(verdict.valid ? 1 : 0);
     serialOut().print(" attack_ms=");
@@ -279,8 +249,8 @@ void EchoApp::judgePending(uint32_t nowMs) {
 void EchoApp::runBehavior(unsigned long now) {
     const bool paused = _behavior.ownEmitDetectionSuppressed(now);
     if (_detectionPaused && !paused) {
-        _detector.restartAfterInputGap();
-        _havePending = false;  // an occurrence cut by the replay is dropped, as the Node drops one at its restart
+        _runtime
+            .restartAfterInputGap();  // an occurrence cut by the replay is dropped, as the Node drops one at its restart
     }
     _detectionPaused = paused;
     if (_soundOutput.update() & SoundOutput::kEventFinished) {
@@ -565,7 +535,7 @@ void EchoApp::printStatus() {
     serialOut().print(" net_tx=");
     serialOut().print(_net.stats().txFrames);
     serialOut().print(" level=");
-    serialOut().print(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_envelope)));
+    serialOut().print(static_cast<unsigned long>(_follower.strength()));
     serialOut().print(" occurrences=");
     serialOut().print(_echo.occurrences);
     serialOut().print(" claps=");

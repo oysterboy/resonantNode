@@ -118,6 +118,8 @@ enum class InspectionModuleKind {
     MagnitudeFeatureStrength,
     BinShape,  // DET-015: which band bins the occurrence visited, from the BinTrack
     AttackRise,  // ECHO-001: how fast the level rose into the onset, from the FeatureHistory
+    LevelWindow,  // ECHO-002: the occurrence's level between a floor and a loud bound (the howl guard)
+    Modulation,   // ECHO-002: the envelope's movement at syllable rate
 };
 
 enum class InspectionTarget {
@@ -128,6 +130,8 @@ enum class InspectionTarget {
     TargetBand,
     Shape,  // DET-015, the BinShape module
     Attack,  // ECHO-001, the AttackRise module
+    Loudness,    // ECHO-002, the LevelWindow module
+    Modulation,  // ECHO-002, the Modulation module
 };
 
 struct MagnitudeFeatureInspectionConfig {
@@ -174,6 +178,30 @@ struct AttackInspectionConfig {
     uint32_t weakMaxMs = 30;
 };
 
+// ECHO-002 (step 20.3): the occurrence's level, P90 of the stream over its span (the last maxWindowMs of it), must lie
+// between floorLevel and loudBound: Strong inside, None below (too quiet to be meant) or above (speech, a clap, a door,
+// the own loop growing: the howl guard). Unknown without values.
+struct LevelWindowInspectionConfig {
+    FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
+    uint32_t maxWindowMs = 512;
+    float floorLevel = 1000.0f;
+    float loudBound = 20000.0f;
+};
+
+// ECHO-002 (step 20.3): the envelope's movement at syllable rate over the occurrence's span (its last maxWindowMs):
+// the bins minus their moving mean over slowMs, RMS against the window's mean (a modulation index). Strong from
+// strongIndex, Medium from mediumIndex, Weak from weakIndex, None below (a fan, HVAC, a steady tone). The synthetic set
+// (tools/bench/synthwhisper.py, 2026-11-01) reads whispers ~0.6, speech ~0.3, music ~0.1, a fan ~0.09.
+struct ModulationInspectionConfig {
+    FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
+    uint32_t maxWindowMs = 512;
+    uint32_t stepMs = 8;  // the grid the envelope is read on
+    uint32_t slowMs = 150;
+    float weakIndex = 0.2f;
+    float mediumIndex = 0.3f;
+    float strongIndex = 0.5f;
+};
+
 struct InspectionModuleConfig {
     InspectionModuleKind kind = InspectionModuleKind::None;
     InspectionTarget target = InspectionTarget::None;
@@ -182,6 +210,8 @@ struct InspectionModuleConfig {
     MagnitudeFeatureInspectionConfig magnitude = {};
     ShapeInspectionConfig shape = {};
     AttackInspectionConfig attack = {};
+    LevelWindowInspectionConfig level = {};
+    ModulationInspectionConfig modulation = {};
 };
 
 static constexpr size_t kMaxInspectionModules = 3;

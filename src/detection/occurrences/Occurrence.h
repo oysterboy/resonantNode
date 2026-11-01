@@ -77,6 +77,20 @@ struct OccurrenceAttack {
     StrengthClass attackClass = StrengthClass::Unknown;
 };
 
+// ECHO-002: the LevelWindow and Modulation modules' facts. Not applicable when no plan module asked for them.
+struct OccurrenceLevel {
+    bool applicable = false;
+    bool measured = false;
+    float p90 = 0.0f;
+    StrengthClass levelClass = StrengthClass::Unknown;
+};
+struct OccurrenceModulation {
+    bool applicable = false;
+    bool measured = false;
+    float index = 0.0f;
+    StrengthClass modulationClass = StrengthClass::Unknown;
+};
+
 struct Occurrence {
     // Canonical generic accepted-event shell.
     DetectorId detectorId = DetectorId::Unknown;
@@ -104,6 +118,8 @@ struct Occurrence {
     FrequencyBandOccurrenceDetail band = {};
     OccurrenceShape shape = {};
     OccurrenceAttack attack;  // ECHO-001, the AttackRise module
+    OccurrenceLevel level;            // ECHO-002, the LevelWindow module
+    OccurrenceModulation modulation;  // ECHO-002, the Modulation module
 };
 
 } // namespace detection

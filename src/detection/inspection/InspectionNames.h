@@ -98,6 +98,10 @@ inline const char* inspectionTargetName(InspectionTarget value) {
             return "shape";
         case InspectionTarget::Attack:
             return "attack";
+        case InspectionTarget::Loudness:
+            return "loudness";
+        case InspectionTarget::Modulation:
+            return "modulation";
         case InspectionTarget::None:
         default:
             return "none";

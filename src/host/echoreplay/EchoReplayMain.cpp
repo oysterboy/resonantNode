@@ -2,12 +2,13 @@
 //
 // A WAV (PCM 16 / 24 / 32-bit, any rate, mono or mixed to mono) is resampled to --rate, scaled to canonical PCM
 // (24-bit; a 16-bit sample << 8, then --level-db), and fed per 128-sample block through EnvelopeFollower and
-// EnvelopeRuntime with the echo room's plan, as EchoApp runs them. One line per judged occurrence with --verbose, a
-// summary per file. The levels a WAV reaches are not what a board's mic hears: a board's own capture (RAW mode=pcm,
+// EnvelopeRuntime with the echo room's plan (--plan clap, as EchoApp runs them) or Whispernet's (--plan whisper: a
+// phrase's level window and syllable modulation, ECHO-002). One line per judged occurrence with --verbose, a summary
+// per file. The levels a WAV reaches are not what a board's mic hears: a board's own capture (RAW mode=pcm,
 // tools/bench/rawcorpus.py) gives real levels; --level-db moves a file toward them.
 //
-//   program [--rate 48000|24000] [--level-db DB] [--onset S16] [--release S16] [--floor S16] [--peak S16]
-//           [--attack MS] [--verbose] <file.wav>...
+//   program [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] [--release S16] [--floor S16]
+//           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--verbose] <file.wav>...
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -119,6 +120,8 @@ int main(int argc, char** argv) {
     double levelDb = 0.0;
     float onset = 1000.0f, release = 700.0f, floorLevel = 300.0f, minPeak = 1200.0f;
     uint32_t attackMs = 10;
+    bool whisper = false;
+    float loudBound = 20000.0f, modIndex = 0.3f;
     bool verbose = false;
     std::vector<std::string> files;
     for (int i = 1; i < argc; ++i) {
@@ -130,7 +133,13 @@ int main(int argc, char** argv) {
             }
             return argv[++i];
         };
-        if (a == "--rate") {
+        if (a == "--plan") {
+            whisper = std::string(next("--plan")) == "whisper";
+        } else if (a == "--loud") {
+            loudBound = static_cast<float>(atof(next("--loud")));
+        } else if (a == "--mod") {
+            modIndex = static_cast<float>(atof(next("--mod")));
+        } else if (a == "--rate") {
             rate = static_cast<uint32_t>(strtoul(next("--rate"), nullptr, 10));
         } else if (a == "--level-db") {
             levelDb = atof(next("--level-db"));
@@ -148,8 +157,9 @@ int main(int argc, char** argv) {
             verbose = true;
         } else if (a == "--help" || a[0] == '-') {
             fprintf(stderr,
-                    "usage: %s [--rate 48000|24000] [--level-db DB] [--onset S16] [--release S16] [--floor S16] "
-                    "[--peak S16] [--attack MS] [--verbose] <file.wav>...\n",
+                    "usage: %s [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] "
+                    "[--release S16] [--floor S16] [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--verbose] "
+                    "<file.wav>...\n",
                     argv[0]);
             return 2;
         } else {
@@ -177,6 +187,35 @@ int main(int argc, char** argv) {
     m.attack.strongMaxMs = attackMs / 2;
     m.attack.weakMaxMs = attackMs * 3;
     plan.count = 1;
+    if (whisper) {
+        // A phrase is one occurrence: syllable gaps bridged by the release debounce, no length limit (the provisional
+        // inspection of an open candidate comes later). Defaults sized on the synthetic set (synthwhisper.py).
+        onset = onset == 1000.0f ? 1500.0f : onset;
+        release = release == 700.0f ? 1000.0f : release;
+        floorLevel = floorLevel == 300.0f ? 1000.0f : floorLevel;
+        d.onsetDetectionThreshold = onset;
+        d.onsetReleaseThreshold = release;
+        d.cooldownAfterOnsetMs = 0;
+        d.maxTransientDurationMs = 0;
+        d.minTransientDurationMs = 300;
+        d.minTransientPeakStrength = 0.0f;
+        d.releaseDebounceMs = 300;
+        plan = detection::InspectionPlan{};
+        detection::InspectionModuleConfig& lw = plan.modules[0];
+        lw.kind = detection::InspectionModuleKind::LevelWindow;
+        lw.target = detection::InspectionTarget::Loudness;
+        lw.enabled = true;
+        lw.minimumStrength = detection::StrengthClass::Strong;
+        lw.level.floorLevel = floorLevel;
+        lw.level.loudBound = loudBound;
+        detection::InspectionModuleConfig& mo = plan.modules[1];
+        mo.kind = detection::InspectionModuleKind::Modulation;
+        mo.target = detection::InspectionTarget::Modulation;
+        mo.enabled = true;
+        mo.minimumStrength = detection::StrengthClass::Medium;
+        mo.modulation.mediumIndex = modIndex;
+        plan.count = 2;
+    }
 
     static detection::EnvelopeRuntime runtime;  // its history is large: not on the stack
     const double scale = 8388607.0 * pow(10.0, levelDb / 20.0);
@@ -193,7 +232,8 @@ int main(int argc, char** argv) {
         runtime.reset();
         EnvelopeFollower follower;
         follower.setShift(EnvelopeFollower::shiftForRate(rate));
-        size_t occurrences = 0, valid = 0, slow = 0, unmeasured = 0;
+        size_t occurrences = 0, valid = 0, slow = 0, unmeasured = 0, outOfLevel = 0, flat = 0;
+        double validMs = 0.0, judgedMs = 0.0;
         float peakLevel = 0.0f;
         for (size_t start = 0; start + kBlock <= x.size(); start += kBlock) {
             for (size_t i = start; i < start + kBlock; ++i) {
@@ -208,7 +248,26 @@ int main(int argc, char** argv) {
             detection::EnvelopeRuntime::Result r;
             while (runtime.popResult(r)) {
                 ++occurrences;
-                const detection::OccurrenceAttack& at = r.inspected.occurrence.attack;
+                const detection::Occurrence& oc = r.inspected.occurrence;
+                const detection::OccurrenceAttack& at = oc.attack;
+                if (whisper) {
+                    judgedMs += oc.durationMs;
+                    if (r.verdict.valid) {
+                        ++valid;
+                        validMs += oc.durationMs;
+                    } else if (oc.level.levelClass == detection::StrengthClass::None) {
+                        ++outOfLevel;
+                    } else {
+                        ++flat;
+                    }
+                    if (verbose) {
+                        printf("  t_ms=%lu dur_ms=%lu level_p90=%.0f mod=%.2f%s valid=%d\n",
+                               static_cast<unsigned long>(oc.startMs), static_cast<unsigned long>(oc.durationMs),
+                               oc.level.p90, oc.modulation.index, oc.modulation.measured ? "" : "(na)",
+                               r.verdict.valid ? 1 : 0);
+                    }
+                    continue;
+                }
                 if (r.verdict.valid) {
                     ++valid;
                 } else if (at.measured) {
@@ -223,6 +282,13 @@ int main(int argc, char** argv) {
                            at.measured ? "" : "na/", static_cast<unsigned long>(at.riseMs), r.verdict.valid ? 1 : 0);
                 }
             }
+        }
+        if (whisper) {
+            printf("%-40s rate=%lu len_s=%.1f peak_level=%.0f phrases=%zu whispers=%zu (%.1f of %.1f s) "
+                   "out_of_level=%zu flat=%zu\n",
+                   path.c_str(), static_cast<unsigned long>(rate), static_cast<double>(x.size()) / rate, peakLevel,
+                   occurrences, valid, validMs / 1000.0, judgedMs / 1000.0, outOfLevel, flat);
+            continue;
         }
         printf("%-40s rate=%lu len_s=%.1f peak_level=%.0f occurrences=%zu claps=%zu slow=%zu unmeasured=%zu\n",
                path.c_str(), static_cast<unsigned long>(rate), static_cast<double>(x.size()) / rate, peakLevel,

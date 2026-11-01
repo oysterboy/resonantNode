@@ -236,3 +236,23 @@ echo shell and native-echoreplay share:
 
 Test set: tools/bench/synthwhisper.py (a noise vocoder on bench_audio.wav's speech: whispers at -45 dBFS, the same
 speech voiced at -25, music, a fan, claps, a mix), replayed with native-echoreplay.
+
+First host result (2026-11-01, LevelWindow and Modulation built; `native-echoreplay --plan whisper --rate 24000` on
+the synthetic set; a phrase is one occurrence, syllable gaps bridged by a 300 ms release debounce, judged when it
+closes, levels and modulation over its last 512 ms on an 8 ms grid; loud bound 20000, modulation Medium from 0.3):
+
+| file | phrases | passed as whisper |
+|---|---|---|
+| whisper_female, whisper_male | 7, 7 | 7, 7 (all; level P90 3400-15700, modulation 0.47-0.93) |
+| speech_male, music | 1, 1 | 0 (P90 32767, saturated) |
+| speech_female | 5 | 1 (one phrase's P90 18730, under the bound) |
+| fan | 1 | 0 (modulation 0.13) |
+| claps | 0 | - (shorter than 300 ms) |
+| mixed | 5 | 2 of the 2 whispers; whisper over the fan missed (modulation 0.29) |
+
+Readings: per phrase, voiced speech is as modulated as a whisper (0.4-0.7; the file-wide 0.3 of the prototype
+averaged the pauses away), so only the level separates speech from whisper here, by the 20 dB between the files.
+At a closer or quieter talker that margin goes: a voicing check (the optional third module: a voiced/unvoiced
+spectral reading) is the one that would hold. A fan under a whisper lowers the modulation index (the fan's constant
+level enters the mean): the floor's level, not 0, is what the mean should be taken against. Both are for the tuning
+on recordings, not the synthetic set.

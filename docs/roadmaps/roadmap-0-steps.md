@@ -331,6 +331,11 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    20.3 ECHO-002 built, the detector tuned on recordings, the no-howl test with two boards facing each other, the
         desk check (11-16 .. 12-04; a recorded whisper, a loud control, a fan). PC, then remote. Decision: no howl,
         whispers answered, speech ignored.
+        2026-11-01: the detector's modules on the host: LevelWindow (the loud bound) and Modulation (syllable rate)
+        in the inspection framework, host-tested (test_echo_detection), native-echoreplay --plan whisper on the
+        synthetic set: all 14 whisper phrases pass, fan, music, claps and male speech fail, 1 of 5 female speech
+        phrases passes (under the loud bound): research/whispernet.md, "First host result". Next: the provisional
+        inspection of an open phrase, then the delay line.
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

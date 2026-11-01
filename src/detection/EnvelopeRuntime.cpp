@@ -16,6 +16,10 @@ void EnvelopeRuntime::configure(const ScalarTransientConfig& detector, const Ins
         const InspectionModuleConfig& m = _plan.modules[i];
         if (m.kind == InspectionModuleKind::AttackRise) {
             streams[count++] = m.attack.stream;
+        } else if (m.kind == InspectionModuleKind::LevelWindow) {
+            streams[count++] = m.level.stream;
+        } else if (m.kind == InspectionModuleKind::Modulation) {
+            streams[count++] = m.modulation.stream;
         } else if (m.kind == InspectionModuleKind::MagnitudeFeatureStrength) {
             streams[count++] = m.magnitude.stream;
         }

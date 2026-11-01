@@ -55,6 +55,10 @@ private:
                        const ShapeInspectionConfig& config) const;
     void annotateAttack(InspectedOccurrence& out, const Occurrence& occurrence, const FeatureHistory* featureHistory,
                         const AttackInspectionConfig& config) const;
+    void annotateLevel(InspectedOccurrence& out, const Occurrence& occurrence, const FeatureHistory* featureHistory,
+                       const LevelWindowInspectionConfig& config) const;
+    void annotateModulation(InspectedOccurrence& out, const Occurrence& occurrence,
+                            const FeatureHistory* featureHistory, const ModulationInspectionConfig& config) const;
     InspectionPlan _inspectionPlan = {};
     const BinTrack* _binTrack = nullptr;
     float _shapeMinLevel = 0.0f;

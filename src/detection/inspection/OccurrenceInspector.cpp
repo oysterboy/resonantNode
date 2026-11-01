@@ -1,5 +1,7 @@
 #include "OccurrenceInspector.h"
 
+#include <math.h>
+
 #include "BinShape.h"
 
 #include "../../app/TimingUtils.h"
@@ -202,6 +204,9 @@ unsigned long OccurrenceInspector::windowCompleteAtMs(const Occurrence& occurren
             endMs = occurrence.startMs + occurrence.durationMs + module.shape.tailMs;  // the margin after the release
         } else if (module.kind == InspectionModuleKind::AttackRise) {
             endMs = occurrence.startMs + module.attack.postMs;
+        } else if (module.kind == InspectionModuleKind::LevelWindow ||
+                   module.kind == InspectionModuleKind::Modulation) {
+            endMs = occurrence.startMs + occurrence.durationMs;  // the span itself
         } else {
             continue;
         }
@@ -298,6 +303,12 @@ void OccurrenceInspector::runInspectionModule(InspectedOccurrence& out, const Oc
         case InspectionModuleKind::AttackRise:
             annotateAttack(out, occurrence, featureHistory, module.attack);
             break;
+        case InspectionModuleKind::LevelWindow:
+            annotateLevel(out, occurrence, featureHistory, module.level);
+            break;
+        case InspectionModuleKind::Modulation:
+            annotateModulation(out, occurrence, featureHistory, module.modulation);
+            break;
         case InspectionModuleKind::None:
         default:
             break;
@@ -354,6 +365,89 @@ void OccurrenceInspector::annotateAttack(InspectedOccurrence& out, const Occurre
         : riseMs <= config.mediumMaxMs                ? StrengthClass::Medium
         : riseMs <= config.weakMaxMs                  ? StrengthClass::Weak
                                                       : StrengthClass::None;
+}
+
+namespace {
+
+// The occurrence's span, its last maxWindowMs when longer (32-bit ms, wrap-safe in FeatureHistory).
+void spanWindow(const Occurrence& occurrence, uint32_t maxWindowMs, unsigned long& fromMs, unsigned long& toMs) {
+    toMs = occurrence.startMs + occurrence.durationMs;
+    fromMs = occurrence.durationMs > maxWindowMs ? toMs - maxWindowMs : occurrence.startMs;
+}
+
+}  // namespace
+
+// ECHO-002: the level window, P90 over the span.
+void OccurrenceInspector::annotateLevel(InspectedOccurrence& out, const Occurrence& occurrence,
+                                        const FeatureHistory* featureHistory,
+                                        const LevelWindowInspectionConfig& config) const {
+    OccurrenceLevel& level = out.occurrence.level;
+    level = OccurrenceLevel{};
+    level.applicable = true;
+    if (featureHistory == nullptr) {
+        return;
+    }
+    unsigned long fromMs = 0;
+    unsigned long toMs = 0;
+    spanWindow(occurrence, config.maxWindowMs, fromMs, toMs);
+    const MagnitudeWindow window = featureHistory->getWindow(config.stream, fromMs, toMs, toMs);
+    if (!window.hasValues) {
+        return;
+    }
+    level.measured = true;
+    level.p90 = window.p90;
+    level.levelClass =
+        window.p90 >= config.floorLevel && window.p90 <= config.loudBound ? StrengthClass::Strong : StrengthClass::None;
+}
+
+// ECHO-002: the modulation index, RMS of the bins around their moving mean against the window's mean.
+void OccurrenceInspector::annotateModulation(InspectedOccurrence& out, const Occurrence& occurrence,
+                                             const FeatureHistory* featureHistory,
+                                             const ModulationInspectionConfig& config) const {
+    OccurrenceModulation& mod = out.occurrence.modulation;
+    mod = OccurrenceModulation{};
+    mod.applicable = true;
+    if (featureHistory == nullptr) {
+        return;
+    }
+    unsigned long fromMs = 0;
+    unsigned long toMs = 0;
+    spanWindow(occurrence, config.maxWindowMs, fromMs, toMs);
+    static constexpr size_t kMaxBins = 128;
+    float v[kMaxBins];
+    const unsigned long stepMs =
+        config.stepMs > FeatureHistory::kBinDurationMs ? config.stepMs : FeatureHistory::kBinDurationMs;
+    const size_t n = featureHistory->copyValues(config.stream, fromMs, toMs, stepMs, v, kMaxBins);
+    const size_t half = static_cast<size_t>(config.slowMs / stepMs / 2U);
+    if (n < 2 * half + 3) {
+        return;  // Unknown: too short to see syllables
+    }
+    double mean = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        mean += v[i];
+    }
+    mean /= static_cast<double>(n);
+    if (mean <= 0.0) {
+        return;
+    }
+    double sumSq = 0.0;
+    size_t used = 0;
+    for (size_t i = half; i + half < n; ++i) {
+        double slow = 0.0;
+        for (size_t k = i - half; k <= i + half; ++k) {
+            slow += v[k];
+        }
+        slow /= static_cast<double>(2 * half + 1);
+        const double d = v[i] - slow;
+        sumSq += d * d;
+        ++used;
+    }
+    mod.measured = true;
+    mod.index = static_cast<float>(sqrt(sumSq / static_cast<double>(used)) / mean);
+    mod.modulationClass = mod.index >= config.strongIndex ? StrengthClass::Strong
+        : mod.index >= config.mediumIndex                 ? StrengthClass::Medium
+        : mod.index >= config.weakIndex                   ? StrengthClass::Weak
+                                                          : StrengthClass::None;
 }
 
 InspectedOccurrence OccurrenceInspector::inspectWithHistory(const Occurrence& occurrence,

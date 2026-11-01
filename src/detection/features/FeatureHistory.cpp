@@ -202,6 +202,61 @@ bool FeatureHistory::riseTimeMs(FeatureStreamId stream, unsigned long fromMs, un
     return done;
 }
 
+size_t FeatureHistory::copyValues(FeatureStreamId stream, unsigned long fromMs, unsigned long toMs,
+                                  unsigned long stepMs, float* out, size_t maxCount) const {
+    const size_t slot = slotFor(stream);
+    if (slot == kNoSlot || maxCount == 0) {
+        return 0;
+    }
+    if (stepMs < kBinDurationMs) {
+        stepMs = kBinDurationMs;
+    }
+    const StreamBuffer& buffer = _streams[slot];
+    size_t count = 0;
+    bool open = false;
+    unsigned long group = 0;
+    double sum = 0.0;
+    size_t n = 0;
+    const auto emit = [&]() {
+        if (!open || n == 0) {
+            return;
+        }
+        if (count == maxCount) {  // keep the newest: shift one out
+            for (size_t i = 1; i < maxCount; ++i) {
+                out[i - 1] = out[i];
+            }
+            --count;
+        }
+        out[count++] = static_cast<float>(sum / static_cast<double>(n));
+    };
+    const auto take = [&](unsigned long startMs, float value) {
+        if (timing::beforeDeadline(startMs, fromMs) || timing::after(startMs, toMs)) {
+            return;
+        }
+        const unsigned long g = (startMs - fromMs) / stepMs;  // bins arrive oldest first
+        if (!open || g != group) {
+            emit();
+            open = true;
+            group = g;
+            sum = 0.0;
+            n = 0;
+        }
+        sum += value;
+        ++n;
+    };
+    const size_t oldestIndex = buffer.binCount == kBinsPerStream ? buffer.writeIndex : 0U;
+    for (size_t i = 0; i < buffer.binCount; ++i) {
+        const FeatureHistoryBin& bin = buffer.bins[(oldestIndex + i) % kBinsPerStream];
+        take(bin.startMs, representativeValueForStream(stream, bin));
+    }
+    if (buffer.hasCurrent && buffer.current.inputCount > 0) {
+        take(buffer.current.startMs,
+             static_cast<float>(buffer.current.sum / static_cast<double>(buffer.current.inputCount)));
+    }
+    emit();
+    return count;
+}
+
 unsigned long FeatureHistory::oldestBinTimeMs(FeatureStreamId stream) const {
     const size_t slot = slotFor(stream);
     if (slot == kNoSlot || _streams[slot].binCount == 0) {

@@ -78,6 +78,11 @@ public:
     // False when the window holds no such rise (no quiet bin before the crossing, or no crossing).
     bool riseTimeMs(FeatureStreamId stream, unsigned long fromMs, unsigned long toMs, float floorLevel,
                     float onsetLevel, unsigned long& riseMs) const;
+    // The bins' representative values within [fromMs, toMs], averaged per stepMs (at least one bin), oldest first, at
+    // most maxCount (the newest kept). The modulation inspection (ECHO-002) reads the envelope's movement from them on a
+    // grid that does not depend on the build's bin width.
+    size_t copyValues(FeatureStreamId stream, unsigned long fromMs, unsigned long toMs, unsigned long stepMs,
+                      float* out, size_t maxCount) const;
     // Diagnostics: span of the resident ring for a stream, and how often a
     // record() arrived with a time earlier than the bin being filled.
     unsigned long oldestBinTimeMs(FeatureStreamId stream) const;

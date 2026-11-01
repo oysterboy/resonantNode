@@ -1,0 +1,140 @@
+0.12 ECHO log every_s=10
+0.12 WHISPER status delay_ms=1717 phrases=1 whispers=0 checks=6 asked=0 answered=0 opens=0 gated_ms=0 replays=0 gate_open=0 fifo_wait=896 fifo_dropped=0 underruns=0 line_bytes=100800
+10.16 ECHO status node=E5 uptime_s=14 window_s=14 rate_hz=24000 measured_mhz=23999984 samples=354816 dropped_bufs=9 dropped_total=9 passes=14739 pass_us_mean=144 pass_us_max=1660 block_us_max=1499 env_peak=41721 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=49 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+10.16 WHISPER status delay_ms=1717 phrases=1 whispers=0 checks=6 asked=0 answered=0 opens=0 gated_ms=0 replays=0 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+20.15 ECHO status node=E5 uptime_s=24 window_s=24 rate_hz=24000 measured_mhz=23999984 samples=594816 dropped_bufs=9 dropped_total=9 passes=24739 pass_us_mean=145 pass_us_max=1660 block_us_max=1499 env_peak=3090 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=33 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+20.15 WHISPER status delay_ms=1717 phrases=1 whispers=0 checks=6 asked=0 answered=0 opens=0 gated_ms=0 replays=0 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+30.11 ECHO status node=E5 uptime_s=34 window_s=34 rate_hz=24000 measured_mhz=23999960 samples=834816 dropped_bufs=9 dropped_total=9 passes=34739 pass_us_mean=146 pass_us_max=1660 block_us_max=1499 env_peak=2441 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=47 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+30.16 WHISPER status delay_ms=1717 phrases=1 whispers=0 checks=6 asked=0 answered=0 opens=0 gated_ms=0 replays=0 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+37.62 WHISPER heard after_ms=896 level_p90=324 mod=0.47 flat=0.29 decision=consumed_pattern
+40.12 ECHO status node=E5 uptime_s=44 window_s=44 rate_hz=24000 measured_mhz=23999984 samples=1074816 dropped_bufs=9 dropped_total=9 passes=44728 pass_us_mean=146 pass_us_max=2214 block_us_max=2007 env_peak=7368 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=122 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+40.17 WHISPER status delay_ms=1717 phrases=1 whispers=0 checks=16 asked=1 answered=1 opens=1 gated_ms=1520 replays=1 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+40.78 WHISPER heard after_ms=304 level_p90=410 mod=0.36 flat=0.35 decision=resting
+43.07 WHISPER phrase dur_ms=2299 level_p90=509 mod=0.10 flat=0.30 valid=0 failed=modulation
+46.60 WHISPER heard after_ms=406 level_p90=642 mod=0.42 flat=0.37 decision=consumed_pattern
+47.15 WHISPER phrase dur_ms=672 level_p90=682 mod=0.10 flat=0.24 valid=0 failed=modulation
+50.14 ECHO status node=E5 uptime_s=54 window_s=54 rate_hz=24000 measured_mhz=23999912 samples=1314816 dropped_bufs=9 dropped_total=9 passes=54711 pass_us_mean=146 pass_us_max=2214 block_us_max=2007 env_peak=247371 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=85 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=2
+50.14 WHISPER status delay_ms=1717 phrases=3 whispers=0 checks=31 asked=3 answered=2 opens=2 gated_ms=2192 replays=2 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+50.62 WHISPER heard after_ms=384 level_p90=696 mod=0.33 flat=0.30 decision=rest_level
+51.42 WHISPER phrase dur_ms=875 level_p90=700 mod=0.46 flat=0.20 valid=1 failed=none
+56.55 WHISPER heard after_ms=341 level_p90=413 mod=0.43 flat=0.38 decision=consumed_pattern
+57.47 WHISPER phrase dur_ms=965 level_p90=1506 mod=0.84 flat=0.19 valid=0 failed=loudness
+60.15 ECHO status node=E5 uptime_s=64 window_s=64 rate_hz=24000 measured_mhz=23999888 samples=1554816 dropped_bufs=9 dropped_total=9 passes=64699 pass_us_mean=146 pass_us_max=2214 block_us_max=2007 env_peak=388604 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=34 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=2
+60.15 WHISPER status delay_ms=1717 phrases=5 whispers=1 checks=41 asked=5 answered=3 opens=3 gated_ms=2864 replays=3 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+61.55 WHISPER heard after_ms=747 level_p90=507 mod=0.32 flat=0.31 decision=rest_level
+62.82 WHISPER phrase dur_ms=1728 level_p90=657 mod=0.63 flat=0.17 valid=1 failed=none
+67.13 WHISPER heard after_ms=464 level_p90=574 mod=0.30 flat=0.32 decision=consumed_pattern
+70.16 ECHO status node=E5 uptime_s=74 window_s=74 rate_hz=24000 measured_mhz=23999984 samples=1794816 dropped_bufs=9 dropped_total=9 passes=74674 pass_us_mean=147 pass_us_max=2214 block_us_max=2007 env_peak=182402 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=39 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=3
+70.16 WHISPER status delay_ms=1717 phrases=6 whispers=2 checks=63 asked=7 answered=4 opens=4 gated_ms=3707 replays=4 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+72.91 WHISPER heard after_ms=693 level_p90=373 mod=0.31 flat=0.36 decision=rest_level
+74.03 WHISPER phrase dur_ms=1509 level_p90=293 mod=0.46 flat=0.28 valid=0 failed=loudness
+74.70 WHISPER heard after_ms=373 level_p90=486 mod=0.36 flat=0.24 decision=resting
+75.31 WHISPER phrase dur_ms=656 level_p90=671 mod=0.26 flat=0.21 valid=0 failed=modulation
+76.46 WHISPER heard after_ms=304 level_p90=658 mod=0.38 flat=0.23 decision=resting
+80.16 ECHO status node=E5 uptime_s=84 window_s=84 rate_hz=24000 measured_mhz=23999984 samples=2034816 dropped_bufs=9 dropped_total=9 passes=84614 pass_us_mean=148 pass_us_max=2214 block_us_max=2007 env_peak=28019 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=153 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+80.16 WHISPER status delay_ms=1717 phrases=8 whispers=2 checks=107 asked=10 answered=4 opens=4 gated_ms=3707 replays=4 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+80.74 WHISPER phrase dur_ms=4277 level_p90=265 mod=0.30 flat=0.24 valid=0 failed=loudness
+82.28 WHISPER phrase dur_ms=848 level_p90=809 mod=0.44 flat=0.42 valid=0 failed=timbre
+87.44 WHISPER phrase dur_ms=854 level_p90=739 mod=0.34 flat=0.37 valid=1 failed=none
+90.15 ECHO status node=E5 uptime_s=94 window_s=94 rate_hz=24000 measured_mhz=23999960 samples=2274816 dropped_bufs=9 dropped_total=9 passes=94596 pass_us_mean=148 pass_us_max=2214 block_us_max=2007 env_peak=15039 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=84 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+90.15 WHISPER status delay_ms=1717 phrases=11 whispers=3 checks=121 asked=10 answered=4 opens=4 gated_ms=3707 replays=4 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+92.58 WHISPER phrase dur_ms=373 level_p90=351 mod=0.56 flat=na valid=0 failed=timbre
+95.30 WHISPER phrase dur_ms=811 level_p90=964 mod=0.32 flat=0.31 valid=0 failed=loudness
+99.13 WHISPER phrase dur_ms=864 level_p90=685 mod=0.46 flat=0.40 valid=0 failed=timbre
+100.14 ECHO status node=E5 uptime_s=104 window_s=104 rate_hz=24000 measured_mhz=24000007 samples=2514816 dropped_bufs=9 dropped_total=9 passes=104579 pass_us_mean=148 pass_us_max=2214 block_us_max=2007 env_peak=22469 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=68 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+100.14 WHISPER status delay_ms=1717 phrases=14 whispers=3 checks=132 asked=10 answered=4 opens=4 gated_ms=3707 replays=4 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+102.02 WHISPER phrase dur_ms=432 level_p90=1234 mod=0.89 flat=0.32 valid=0 failed=loudness
+105.41 WHISPER heard after_ms=304 level_p90=577 mod=0.39 flat=0.19 decision=consumed_pattern
+110.12 ECHO status node=E5 uptime_s=114 window_s=114 rate_hz=24000 measured_mhz=23999912 samples=2754816 dropped_bufs=9 dropped_total=9 passes=114561 pass_us_mean=148 pass_us_max=2214 block_us_max=2007 env_peak=57465 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=121 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=1
+110.12 WHISPER status delay_ms=1717 phrases=15 whispers=3 checks=149 asked=11 answered=5 opens=5 gated_ms=5088 replays=5 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+110.17 WHISPER phrase dur_ms=565 level_p90=647 mod=0.21 flat=0.38 valid=0 failed=modulation
+115.63 WHISPER phrase dur_ms=2389 level_p90=259 mod=0.32 flat=na valid=0 failed=loudness
+117.72 WHISPER phrase dur_ms=635 level_p90=821 mod=0.25 flat=0.41 valid=0 failed=modulation
+120.15 ECHO status node=E5 uptime_s=124 window_s=124 rate_hz=24000 measured_mhz=23999984 samples=2994816 dropped_bufs=9 dropped_total=9 passes=124542 pass_us_mean=148 pass_us_max=2214 block_us_max=2007 env_peak=13984 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=45 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+120.15 WHISPER status delay_ms=1717 phrases=18 whispers=3 checks=165 asked=11 answered=5 opens=5 gated_ms=5088 replays=5 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+120.77 WHISPER heard after_ms=528 level_p90=706 mod=0.33 flat=0.38 decision=consumed_pattern
+125.50 WHISPER phrase dur_ms=506 level_p90=303 mod=0.49 flat=0.48 valid=0 failed=timbre
+126.58 WHISPER heard after_ms=950 level_p90=396 mod=0.39 flat=0.28 decision=rest_level
+128.72 WHISPER phrase dur_ms=2774 level_p90=284 mod=0.65 flat=na valid=0 failed=loudness
+130.16 ECHO status node=E5 uptime_s=134 window_s=134 rate_hz=24000 measured_mhz=23999960 samples=3234816 dropped_bufs=9 dropped_total=9 passes=134501 pass_us_mean=148 pass_us_max=2214 block_us_max=2007 env_peak=163640 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=58 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+130.16 WHISPER status delay_ms=1717 phrases=20 whispers=3 checks=197 asked=13 answered=6 opens=7 gated_ms=6608 replays=6 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+132.80 WHISPER heard after_ms=1472 level_p90=319 mod=0.76 flat=0.40 decision=consumed_pattern
+140.15 ECHO status node=E5 uptime_s=144 window_s=144 rate_hz=24000 measured_mhz=23999960 samples=3474816 dropped_bufs=9 dropped_total=9 passes=144491 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=24161 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=91 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+140.15 WHISPER status delay_ms=1717 phrases=20 whispers=3 checks=206 asked=14 answered=7 opens=8 gated_ms=8128 replays=7 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+142.46 WHISPER heard after_ms=304 level_p90=358 mod=0.37 flat=0.37 decision=declined_by_level
+143.69 WHISPER phrase dur_ms=1232 level_p90=278 mod=0.55 flat=na valid=0 failed=loudness
+146.18 WHISPER heard after_ms=1456 level_p90=399 mod=0.56 flat=0.40 decision=consumed_pattern
+149.06 WHISPER heard after_ms=741 level_p90=590 mod=0.45 flat=0.36 decision=resting
+150.16 ECHO status node=E5 uptime_s=154 window_s=154 rate_hz=24000 measured_mhz=23999936 samples=3714816 dropped_bufs=9 dropped_total=9 passes=154463 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=19032 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=91 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+150.16 WHISPER status delay_ms=1717 phrases=21 whispers=3 checks=231 asked=17 answered=8 opens=9 gated_ms=9648 replays=8 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+150.71 WHISPER phrase dur_ms=2096 level_p90=299 mod=0.53 flat=na valid=0 failed=loudness
+154.49 WHISPER phrase dur_ms=3067 level_p90=812 mod=0.33 flat=0.38 valid=1 failed=none
+156.48 WHISPER heard after_ms=512 level_p90=753 mod=0.55 flat=0.28 decision=consumed_pattern
+157.10 WHISPER phrase dur_ms=774 level_p90=266 mod=0.41 flat=0.21 valid=0 failed=loudness
+159.83 WHISPER heard after_ms=304 level_p90=340 mod=0.31 flat=0.20 decision=consumed_pattern
+160.14 ECHO status node=E5 uptime_s=164 window_s=164 rate_hz=24000 measured_mhz=23999912 samples=3954816 dropped_bufs=9 dropped_total=9 passes=164413 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=201592 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=181 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Chirping level_auto=0
+160.14 WHISPER status delay_ms=1717 phrases=24 whispers=4 checks=267 asked=19 answered=10 opens=11 gated_ms=10422 replays=10 gate_open=1 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+160.75 WHISPER phrase dur_ms=954 level_p90=166 mod=0.50 flat=na valid=0 failed=loudness
+163.18 WHISPER phrase dur_ms=325 level_p90=239 mod=0.46 flat=na valid=0 failed=loudness
+163.71 WHISPER heard after_ms=310 level_p90=365 mod=0.43 flat=0.25 decision=resting
+164.29 WHISPER phrase dur_ms=571 level_p90=248 mod=0.22 flat=na valid=0 failed=loudness
+167.66 WHISPER phrase dur_ms=1115 level_p90=206 mod=0.41 flat=na valid=0 failed=loudness
+170.04 WHISPER phrase dur_ms=688 level_p90=269 mod=0.32 flat=na valid=0 failed=loudness
+170.16 ECHO status node=E5 uptime_s=174 window_s=174 rate_hz=24000 measured_mhz=23999960 samples=4194816 dropped_bufs=9 dropped_total=9 passes=174395 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=94099 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=99 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+170.16 WHISPER status delay_ms=1717 phrases=29 whispers=4 checks=280 asked=20 answered=10 opens=11 gated_ms=11046 replays=10 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+173.16 WHISPER heard after_ms=304 level_p90=377 mod=0.45 flat=0.21 decision=declined_by_level
+173.54 WHISPER phrase dur_ms=352 level_p90=464 mod=0.52 flat=0.16 valid=1 failed=none
+174.32 WHISPER heard after_ms=480 level_p90=309 mod=0.47 flat=0.34 decision=consumed_pattern
+174.62 WHISPER phrase dur_ms=486 level_p90=313 mod=0.65 flat=0.34 valid=1 failed=none
+178.09 WHISPER heard after_ms=453 level_p90=405 mod=0.59 flat=0.40 decision=resting
+178.81 WHISPER phrase dur_ms=885 level_p90=324 mod=0.65 flat=0.70 valid=0 failed=timbre
+180.16 ECHO status node=E5 uptime_s=184 window_s=184 rate_hz=24000 measured_mhz=23999960 samples=4434816 dropped_bufs=9 dropped_total=9 passes=184383 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=77790 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=125 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+180.16 WHISPER status delay_ms=1717 phrases=32 whispers=6 checks=288 asked=23 answered=11 opens=12 gated_ms=11532 replays=11 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+189.08 WHISPER phrase dur_ms=325 level_p90=188 mod=0.48 flat=0.13 valid=0 failed=loudness
+190.17 ECHO status node=E5 uptime_s=194 window_s=194 rate_hz=24000 measured_mhz=23999984 samples=4674816 dropped_bufs=9 dropped_total=9 passes=194381 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=7893 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=118 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+190.17 WHISPER status delay_ms=1717 phrases=33 whispers=6 checks=289 asked=23 answered=11 opens=12 gated_ms=11532 replays=11 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+191.21 WHISPER phrase dur_ms=923 level_p90=1139 mod=0.52 flat=0.26 valid=0 failed=loudness
+196.67 WHISPER heard after_ms=309 level_p90=665 mod=0.38 flat=0.36 decision=consumed_pattern
+199.92 WHISPER heard after_ms=315 level_p90=612 mod=0.41 flat=0.23 decision=consumed_pattern
+200.12 ECHO status node=E5 uptime_s=204 window_s=204 rate_hz=24000 measured_mhz=23999888 samples=4914816 dropped_bufs=9 dropped_total=9 passes=204354 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=75287 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=218 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Chirping level_auto=3
+200.18 WHISPER status delay_ms=1717 phrases=34 whispers=6 checks=309 asked=25 answered=13 opens=14 gated_ms=12044 replays=13 gate_open=1 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+210.15 ECHO status node=E5 uptime_s=214 window_s=214 rate_hz=24000 measured_mhz=23999984 samples=5154816 dropped_bufs=9 dropped_total=9 passes=214349 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=45075 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=131 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+210.15 WHISPER status delay_ms=1717 phrases=34 whispers=6 checks=314 asked=25 answered=13 opens=15 gated_ms=13207 replays=13 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+217.11 WHISPER heard after_ms=1269 level_p90=596 mod=0.62 flat=0.34 decision=consumed_pattern
+220.13 ECHO status node=E5 uptime_s=224 window_s=224 rate_hz=24000 measured_mhz=23999936 samples=5394816 dropped_bufs=9 dropped_total=9 passes=224338 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=82899 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=68 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+220.13 WHISPER status delay_ms=1717 phrases=34 whispers=6 checks=324 asked=26 answered=14 opens=17 gated_ms=14727 replays=14 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+223.50 WHISPER heard after_ms=528 level_p90=433 mod=0.56 flat=0.40 decision=consumed_pattern
+230.15 ECHO status node=E5 uptime_s=234 window_s=234 rate_hz=24000 measured_mhz=23999960 samples=5634816 dropped_bufs=9 dropped_total=9 passes=234320 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=11872 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=36 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=1
+230.15 WHISPER status delay_ms=1717 phrases=34 whispers=6 checks=341 asked=27 answered=15 opens=19 gated_ms=16247 replays=15 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+232.14 WHISPER phrase dur_ms=3397 level_p90=242 mod=0.47 flat=na valid=0 failed=loudness
+233.29 WHISPER phrase dur_ms=630 level_p90=351 mod=0.53 flat=0.37 valid=1 failed=none
+235.76 WHISPER phrase dur_ms=1818 level_p90=235 mod=0.43 flat=0.43 valid=0 failed=loudness
+237.73 WHISPER heard after_ms=725 level_p90=473 mod=0.42 flat=0.39 decision=consumed_pattern
+240.16 ECHO status node=E5 uptime_s=244 window_s=244 rate_hz=24000 measured_mhz=23999984 samples=5874816 dropped_bufs=9 dropped_total=9 passes=244280 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=15200 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=551 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Chirping level_auto=0
+240.16 WHISPER status delay_ms=1717 phrases=37 whispers=7 checks=377 asked=28 answered=16 opens=20 gated_ms=17767 replays=16 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+247.83 WHISPER phrase dur_ms=1120 level_p90=600 mod=0.40 flat=0.50 valid=0 failed=timbre
+250.03 WHISPER phrase dur_ms=320 level_p90=1867 mod=0.13 flat=0.51 valid=0 failed=loudness
+250.16 ECHO status node=E5 uptime_s=254 window_s=254 rate_hz=24000 measured_mhz=23999984 samples=6114816 dropped_bufs=9 dropped_total=9 passes=254271 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=20081 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=149 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+250.16 WHISPER status delay_ms=1717 phrases=39 whispers=7 checks=384 asked=28 answered=16 opens=20 gated_ms=17767 replays=16 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+253.20 WHISPER phrase dur_ms=848 level_p90=780 mod=0.12 flat=0.53 valid=0 failed=modulation
+256.38 WHISPER phrase dur_ms=384 level_p90=351 mod=0.40 flat=0.30 valid=1 failed=none
+260.11 ECHO status node=E5 uptime_s=264 window_s=264 rate_hz=24000 measured_mhz=23999960 samples=6354816 dropped_bufs=9 dropped_total=9 passes=264263 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=11589 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=86 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+260.17 WHISPER status delay_ms=1717 phrases=41 whispers=8 checks=390 asked=28 answered=16 opens=20 gated_ms=17767 replays=16 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+265.78 WHISPER phrase dur_ms=1046 level_p90=364 mod=0.48 flat=0.35 valid=1 failed=none
+270.14 ECHO status node=E5 uptime_s=274 window_s=274 rate_hz=24000 measured_mhz=23999984 samples=6594816 dropped_bufs=9 dropped_total=9 passes=274254 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=12445 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=137 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+270.14 WHISPER status delay_ms=1717 phrases=42 whispers=9 checks=398 asked=28 answered=16 opens=20 gated_ms=17767 replays=16 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+275.58 WHISPER heard after_ms=325 level_p90=500 mod=0.80 flat=0.34 decision=consumed_pattern
+280.13 ECHO status node=E5 uptime_s=284 window_s=284 rate_hz=24000 measured_mhz=23999960 samples=6834816 dropped_bufs=9 dropped_total=9 passes=284247 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=7001 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=187 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=2
+280.13 WHISPER status delay_ms=1717 phrases=42 whispers=9 checks=405 asked=29 answered=17 opens=21 gated_ms=18620 replays=17 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+284.97 WHISPER heard after_ms=304 level_p90=786 mod=0.54 flat=0.23 decision=consumed_pattern
+288.90 WHISPER phrase dur_ms=502 level_p90=1193 mod=0.26 flat=0.13 valid=0 failed=loudness
+290.14 ECHO status node=E5 uptime_s=294 window_s=294 rate_hz=24000 measured_mhz=23999960 samples=7074816 dropped_bufs=9 dropped_total=9 passes=294234 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=17137 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=47 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=1
+290.14 WHISPER status delay_ms=1717 phrases=43 whispers=9 checks=417 asked=30 answered=18 opens=22 gated_ms=19463 replays=18 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+293.49 WHISPER phrase dur_ms=1574 level_p90=359 mod=0.39 flat=0.37 valid=1 failed=none
+296.76 WHISPER phrase dur_ms=2443 level_p90=543 mod=1.04 flat=0.58 valid=0 failed=timbre
+297.45 WHISPER phrase dur_ms=336 level_p90=881 mod=0.22 flat=0.73 valid=0 failed=modulation
+300.15 ECHO status node=E5 uptime_s=304 window_s=304 rate_hz=24000 measured_mhz=23999984 samples=7314816 dropped_bufs=9 dropped_total=9 passes=304203 pass_us_mean=148 pass_us_max=2222 block_us_max=2030 env_peak=128916 tone=0 free_heap=59436 largest_block=16372 net_rx=0 net_tx=0 level=68 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+300.15 WHISPER status delay_ms=1717 phrases=46 whispers=10 checks=445 asked=30 answered=18 opens=22 gated_ms=19463 replays=18 gate_open=0 fifo_wait=768 fifo_dropped=0 underruns=0 line_bytes=100800
+300.52 WHISPER heard after_ms=720 level_p90=305 mod=0.66 flat=0.38 decision=consumed_pattern
+303.10 WHISPER status delay_ms=1717 phrases=46 whispers=10 checks=454 asked=31 answered=19 opens=23 gated_ms=20589 replays=19 gate_open=0 fifo_wait=896 fifo_dropped=0 underruns=0 line_bytes=100800
+303.60 WHISPER heard after_ms=304 level_p90=384 mod=0.61 flat=0.33 decision=resting

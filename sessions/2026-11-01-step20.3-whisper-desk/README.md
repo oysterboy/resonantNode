@@ -69,3 +69,28 @@ reads flatter. Real whispers are needed before a threshold is chosen.
 
 Load with the eight biquads per sample: block_us_max 1.6-1.9 ms against the 5.3 ms block, pass_us_mean 142 us, no
 dropped DMA buffer over the 5 min.
+
+## The owner at the desk (15:10-16:15)
+
+- wsess1 (15:10, b352e8f9's predecessor f9b204b9 with flat=1, WHISPER REC 50; the owner whispered without the pauses):
+  real whispers read flatter than the synthetic ones. Board flatness of the recordings: whisper 0.5 m 0.16-0.45, 1 m
+  0.03-0.49, 2 m 0.17-0.36; speech at 1 m 0.04-0.41 (median ~0.07); rustling / typing 0.19-0.76 (median ~0.45). The
+  owner's speech at 1 m (level 558) sat under his whisper at 0.5 m (863): the loud bound cannot tell them apart.
+- wsess2 (15:22, b352e8f9, range flatmin 0.15 .. flat 0.40, gain 0.5): whisper 0.5 m 23 passing checks, 1 m 1, 2 m 18,
+  speech 3, rustling 2. The owner heard no replay at all: gain 0.5 plays the mic's digital level, inaudible at a metre.
+- wgain1-3 (E5 only answering; E1, E4 on=0): gain 16 still inaudible; gain 64 loud enough, but E5 answered room noise
+  near the floor (long phrases at level 165-200) and its own replay (louder than the whisper at its mic: the loop grew
+  until the loud bound cut it).
+- wgain4 (onset 400, release 280, floor 300, gain 64): the room itself sat at 150-260 (one "phrase" of 78 s); the owner:
+  "good loudness, hard cut at start and end, sometimes louder then cut off (own output), sporadic, and on outside
+  transients".
+- wsoft2 (16:09, f3ddba37: no listening during the own playback plus 300 ms, 200 ms pre-roll, 300 ms hold, 40 ms fades,
+  gain 64, onset 400 / release 280 / floor 300): the owner: "works, but unresponsive for a while after a replay";
+  reacted to rustling (chair casters on the floor, typing). 31 phrases put to Behavior in 5 min, 19 answered, 12 not:
+  resting 8 / rest_level 6 counted with declined_by_level 2 (the echo room's level 4 and 4 s rest), on top of the deaf
+  time during each own playback (~D plus the phrase).
+
+Open after the day: rustling and chair noise still pass (the timbre range is not enough on real sounds); Behavior's
+level and rest are the echo room's and too slow for a conversation; the threshold follows no room level (an adaptive
+floor); a phrase longer than D is cut where the own playback starts. All three boards left on f3ddba37 with on=0
+(listening, silent).

@@ -134,6 +134,10 @@ void EchoApp::update() {
         printStatus();
         _nextLogMs = now + _logEveryMs;
     }
+    if (kWhispernet && _whisper.recordingDue(now)) {
+        _whisper.dumpRecording();  // stalls the loop for the print: the audio after it starts clean
+        _runtime.restartAfterInputGap();
+    }
     ota::confirmRunningImage(serialOut(), _net.started());
 
     const uint32_t passUs = micros() - passStartUs;
@@ -450,6 +454,8 @@ void EchoApp::handleLine(const char* line) {
         handleGateCommand(line);
     } else if (kWhispernet && startsWithWordIgnoreCase(line, "WHISPER GATE")) {
         _whisper.handleGateCommand(line, _runtime, _behavior);
+    } else if (kWhispernet && startsWithWordIgnoreCase(line, "WHISPER REC")) {
+        _whisper.handleRecCommand(line);
     } else if (kWhispernet && equalsIgnoreCase(line, "WHISPER STATUS")) {
         _whisper.printStatus();
     } else if (startsWithWordIgnoreCase(line, "ECHO LOG")) {
@@ -620,6 +626,8 @@ void EchoApp::printHelp() {
         "ECHO CMD: ECHO GATE [onset=] [release=] [floor=] [peak=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]");
     if (kWhispernet) {
         serialOut().println("ECHO CMD: WHISPER STATUS");
+        serialOut().println(
+            "ECHO CMD: WHISPER REC <n>|now (record around the next n passing phrases / the last 1.5 s)");
         serialOut().println(
             "ECHO CMD: WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [delay=MS 400..2000] [gain=] [on=0|1]");
     }

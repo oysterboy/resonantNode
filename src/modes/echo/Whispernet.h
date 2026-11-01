@@ -83,6 +83,12 @@ public:
     // WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [delay=MS] [gain=] [on=0|1]; prints the values.
     void handleGateCommand(const char* line, detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior);
     void printStatus();
+    // WHISPER REC <n>|now: record the mic around the next n phrases that pass a check (300 ms before the phrase's
+    // start to 1.2 s after the check), or the last 1.5 s now; printed as WHISPER_REC lines (base64 int16) by
+    // dumpRecording(), which the shell calls outside the audio path. Diagnostic: the loop stalls ~8 s per dump.
+    void handleRecCommand(const char* line);
+    bool recordingDue(unsigned long now) const;
+    void dumpRecording();
     const Values& values() const { return _values; }
     bool ready() const { return _line.capacity() > 0 && _fifo.capacity() > 0; }
     size_t bytes() const { return _line.capacity() * sizeof(int16_t) + _fifo.capacity() * sizeof(int16_t); }
@@ -105,4 +111,11 @@ private:
     bool _emitting = false;  // Behavior's emission runs
     bool _answerPending = false;  // a phrase was answered, Behavior's chirp not started yet
     unsigned long _playedOutAtMs = 0;  // the closed gate's last sample plays then
+    // WHISPER REC
+    unsigned long _recArmed = 0;
+    bool _recPending = false;
+    unsigned long _recDueMs = 0;
+    uint64_t _recFrom = 0;
+    unsigned long _recSeq = 0;
+    char _recNote[96] = {};
 };

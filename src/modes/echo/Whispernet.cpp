@@ -1,6 +1,7 @@
 #include "Whispernet.h"
 
 #include <Arduino.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "../../app/SerialOut.h"
@@ -152,6 +153,17 @@ void Whispernet::handleResult(const detection::EnvelopeRuntime::Result& result, 
             const bool answer = decision == ResonantBehavior::BehaviorDecision::ConsumedPattern;
             _counts.answered += answer ? 1 : 0;
             step = _gate.decide(answer);
+            if (_recArmed > 0 && !_recPending) {  // WHISPER REC: this phrase, from 300 ms before its start
+                --_recArmed;
+                _recPending = true;
+                const uint64_t start = lineIndexAtMs(oc.startMs);
+                const uint64_t pre = static_cast<uint64_t>(_rateHz) * 3U / 10U;
+                _recFrom = start > pre ? start - pre : 0;
+                _recDueMs = _blockMs + 1200;
+                snprintf(_recNote, sizeof(_recNote), "after_ms=%lu level_p90=%lu mod=%.2f decision=%s",
+                         static_cast<unsigned long>(oc.durationMs), static_cast<unsigned long>(oc.level.p90),
+                         static_cast<double>(oc.modulation.index), ResonantBehavior::behaviorDecisionName(decision));
+            }
             serialOut().print("WHISPER heard after_ms=");
             serialOut().print(oc.durationMs);
             serialOut().print(" level_p90=");
@@ -235,6 +247,84 @@ void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime&
     serialOut().print(_values.gain, 2);
     serialOut().print(" on=");
     serialOut().println(_values.enabled ? 1 : 0);
+}
+
+void Whispernet::handleRecCommand(const char* line) {
+    const char* rest = text_parse::rest(line, "WHISPER REC");
+    unsigned long n = 0;
+    if (text_parse::equalsIgnoreCase(rest, "now")) {
+        const uint64_t span = static_cast<uint64_t>(_rateHz) * 3U / 2U;
+        _recFrom = _line.written() > span ? _line.written() - span : 0;
+        _recDueMs = _blockMs;
+        _recPending = true;
+        snprintf(_recNote, sizeof(_recNote), "manual=1");
+    } else if (text_parse::parseUnsigned(rest, n) && n <= 50) {
+        _recArmed = n;
+    } else {
+        serialOut().println("WHISPER ERR usage=WHISPER REC <n 0..50>|now");
+        return;
+    }
+    serialOut().print("WHISPER rec armed=");
+    serialOut().print(_recArmed);
+    serialOut().print(" pending=");
+    serialOut().println(_recPending ? 1 : 0);
+}
+
+bool Whispernet::recordingDue(unsigned long now) const {
+    return _recPending && timing::atOrAfter(now, _recDueMs);
+}
+
+// The recorded span as base64 of little-endian int16, 96 characters a line (72 bytes), between a header and an end.
+void Whispernet::dumpRecording() {
+    static const char kB64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    _recPending = false;
+    const uint64_t to = _line.written();
+    const uint64_t from = _recFrom + _line.capacity() > to ? _recFrom : to - _line.capacity() + 1;
+    const uint64_t count = to > from ? to - from : 0;
+    ++_recSeq;
+    serialOut().print("WHISPER_REC_BEGIN seq=");
+    serialOut().print(_recSeq);
+    serialOut().print(" rate=");
+    serialOut().print(_rateHz);
+    serialOut().print(" samples=");
+    serialOut().print(static_cast<unsigned long>(count));
+    serialOut().print(" from_index=");
+    serialOut().print(static_cast<unsigned long long>(from));
+    serialOut().print(" ");
+    serialOut().println(_recNote);
+    char out[100];
+    uint8_t bytes[72];
+    size_t nBytes = 0;
+    const auto flush = [&]() {
+        size_t o = 0;
+        for (size_t i = 0; i < nBytes; i += 3) {
+            const uint32_t v = (static_cast<uint32_t>(bytes[i]) << 16) |
+                (i + 1 < nBytes ? static_cast<uint32_t>(bytes[i + 1]) << 8 : 0U) |
+                (i + 2 < nBytes ? static_cast<uint32_t>(bytes[i + 2]) : 0U);
+            out[o++] = kB64[(v >> 18) & 63];
+            out[o++] = kB64[(v >> 12) & 63];
+            out[o++] = i + 1 < nBytes ? kB64[(v >> 6) & 63] : '=';
+            out[o++] = i + 2 < nBytes ? kB64[v & 63] : '=';
+        }
+        out[o] = '\0';
+        serialOut().print("WHISPER_REC ");
+        serialOut().println(out);
+        nBytes = 0;
+    };
+    for (uint64_t i = from; i < to; ++i) {
+        int16_t s = 0;
+        _line.sampleAt(i, s);
+        bytes[nBytes++] = static_cast<uint8_t>(static_cast<uint16_t>(s) & 0xFF);
+        bytes[nBytes++] = static_cast<uint8_t>(static_cast<uint16_t>(s) >> 8);
+        if (nBytes == sizeof(bytes)) {
+            flush();
+        }
+    }
+    if (nBytes > 0) {
+        flush();
+    }
+    serialOut().print("WHISPER_REC_END seq=");
+    serialOut().println(_recSeq);
 }
 
 void Whispernet::printStatus() {

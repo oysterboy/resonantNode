@@ -115,6 +115,14 @@ public:
 
     size_t delay() const { return _delay; }
     size_t capacity() const { return _capacity; }
+    // The input sample at an absolute index, while the line still holds it (the last capacity samples written).
+    bool sampleAt(uint64_t index, int16_t& out) const {
+        if (_capacity == 0 || index >= _written || index + _capacity < _written) {
+            return false;
+        }
+        out = _samples[static_cast<size_t>(index % _capacity)];
+        return true;
+    }
     // The index the next input sample gets.
     uint64_t written() const { return _written; }
     float gain() const { return _gain; }

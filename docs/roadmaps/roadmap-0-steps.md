@@ -346,7 +346,13 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         board yet): esp32dev-whisper, the echo shell at 24 kHz with Whispernet (src/modes/echo/Whispernet.*):
         the delay line streamed to the amp through a FIFO (SampleFifo, I2sToneOutput::setStream), WhisperGate
         on the provisional verdicts, the first pass of a phrase to Behavior (no wait, no jitter, suppression
-        off), D from the chip id. Next: the desk (the heap for the 96 KB line, levels, a whisper, the controls).
+        off), D from the chip id.
+        2026-11-01 desk (bench/sessions/2026-11-01-step20.3-whisper-desk): the line fits (110 KB block free), the
+        stream runs clean; levels ~20 dB under the synthetic scale, defaults set from the desk (onset 250, floor
+        150, loud bound 900); at -35 dBFS whispers pass and speech, music stay out, the fan once at the threshold;
+        two boards at gain 1 kept a chain going past 60 s, at 0.5 it ended with the whisper (default 0.5). Found:
+        a Whispernet board could not OTA (16 KB largest block); fixed in 748efe15, which E1 / E4 / E5 (on the
+        older images) need once by USB. Open: a real whisper, distances, a RAW capture, the howl test.
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

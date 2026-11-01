@@ -1,5 +1,6 @@
 #include "Whispernet.h"
 
+#include <Arduino.h>
 #include <string.h>
 
 #include "../../app/SerialOut.h"
@@ -46,6 +47,7 @@ uint32_t delayForSeed(uint64_t seed) {
 
 bool Whispernet::begin(uint32_t rateHz, uint64_t seed) {
     _rateHz = rateHz;
+    _seed = seed;
     _values.delayMs = delayForSeed(seed);
     const bool line = _line.begin(static_cast<size_t>(rateHz) * kLineMs / 1000U, 128, rateHz * kRampMs / 1000U);
     const bool fifo = _fifo.begin(static_cast<size_t>(rateHz) * kFifoMs / 1000U);
@@ -57,6 +59,28 @@ bool Whispernet::begin(uint32_t rateHz, uint64_t seed) {
 void Whispernet::attachOutput(I2sToneOutput& output) {
     _output = &output;
     output.setStream(&_fifo, _values.gain, static_cast<size_t>(_rateHz) * kPrimeMs / 1000U);
+}
+
+void Whispernet::release() {
+    if (_output != nullptr) {
+        _output->setStream(nullptr, _values.gain, 0);
+        delay(50);  // the writer renders one DMA buffer (~5 ms) per pass: past any pop() that read the old pointer
+    }
+    _line.end();
+    _fifo.end();
+    _gate.reset();
+}
+
+bool Whispernet::resume() {
+    const uint32_t delayMs = _values.delayMs;  // a WHISPER GATE delay= survives
+    const bool ok = begin(_rateHz, _seed);
+    _values.delayMs = delayMs;
+    _line.setDelay(static_cast<size_t>(_rateHz) * delayMs / 1000U);
+    _gate.setDelayMs(delayMs);
+    if (ok && _output != nullptr) {
+        attachOutput(*_output);
+    }
+    return ok;
 }
 
 void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior) {

@@ -31,6 +31,13 @@ public:
         return _size > 0;
     }
 
+    // Frees the buffer (capacity 0: push refuses, pop gives nothing); begin() allocates it again. Only while no reader
+    // can be inside pop().
+    void end() {
+        _buffer.reset();
+        _size = 0;
+    }
+
     // Writer side. False (counted) when full.
     bool push(int16_t sample) {
         if (_size == 0) {
@@ -76,7 +83,7 @@ public:
         return (head + _size - tail) % _size;
     }
     size_t capacity() const { return _size > 0 ? _size - 1 : 0; }
-    uint32_t dropped() const { return _dropped; }      // writer's count
+    uint32_t dropped() const { return _dropped; }  // writer's count
     uint32_t underruns() const { return _underruns; }  // reader's count
 
 private:

@@ -39,7 +39,9 @@ public:
         float loud = 900.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
         float modulation = 0.3f;  // the modulation index a whisper reaches at least (Medium)
         uint32_t delayMs = 1000;  // D, set per node at begin()
-        float gain = 1.0f;  // the replay's level
+        // The replay at half its level (-6 dB a hop): at 1 two boards on the desk kept whispering each other's replays past
+        // the 60 s watched, at 0.5 the chain ended with the whisper (E1 / E4, 2026-11-01).
+        float gain = 0.5f;  // the replay's level
         bool enabled = true;
     };
     struct Counts {
@@ -57,6 +59,10 @@ public:
     bool begin(uint32_t rateHz, uint64_t seed);
     // The writer streams the FIFO from here on.
     void attachOutput(I2sToneOutput& output);
+    // Before an OTA: the stream stopped and the line and FIFO freed (~100 KB), else the download stalls with 16 KB as
+    // the largest free block (E5 on the desk, 2026-11-01). resume() after a failed update allocates them again.
+    void release();
+    bool resume();
     // Whispernet's detector config, plan and Behavior config into the shell's runtime and Behavior.
     void configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior);
 
@@ -86,6 +92,7 @@ private:
     uint64_t lineIndexAtMs(unsigned long ms) const;
 
     uint32_t _rateHz = 24000;
+    uint64_t _seed = 0;
     Values _values;
     Counts _counts;
     GatedDelayLine _line;

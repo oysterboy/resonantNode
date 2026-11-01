@@ -502,10 +502,16 @@ void EchoApp::handleOtaCommand(const char* line) {
     // its channel, pull and reboot; on failure the radio goes back to its channel.
     _toneOutput.toneOff();
     _toneOn = false;
+    if (kWhispernet) {
+        _whisper.release();
+    }
     if (_net.started()) {
         _net.flush(1500);
     }
     ota::runCommand(line, serialOut());
+    if (kWhispernet && !_whisper.resume()) {  // the update failed: back to listening, if the heap still allows
+        serialOut().println("ECHO ERR whisper_alloc_failed");
+    }
     if (_net.started()) {
         _net.restoreChannel();
     }

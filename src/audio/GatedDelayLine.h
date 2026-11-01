@@ -48,6 +48,15 @@ public:
         return true;
     }
 
+    // Frees the buffers (capacity 0, process() gives silence); begin() allocates them again.
+    void end() {
+        _samples.reset();
+        _bits.reset();
+        _capacity = 0;
+        _delay = 0;
+        _open = false;
+    }
+
     // The delay, 1 .. the capacity (Whispernet's per-node D). A change mid-stream replays or skips a stretch once.
     void setDelay(size_t samples) {
         if (_capacity == 0) {

@@ -100,6 +100,20 @@ void test_token_value_and_rest() {
     TEST_ASSERT_EQUAL_STRING("CHIRP freq=3200", text_parse::rest("EMIT CHIRP freq=3200", "EMIT"));
 }
 
+// Several keys on one line, each value up to its space; a key only at a token's start ("on=" is not in "onset=").
+void test_key_value_among_tokens() {
+    char v[8] = {};
+    const char* line = "onset=250 release=170 on=0";
+    TEST_ASSERT_TRUE(text_parse::keyValue(line, "onset=", v, sizeof(v)));
+    TEST_ASSERT_EQUAL_STRING("250", v);
+    TEST_ASSERT_TRUE(text_parse::keyValue(line, "release=", v, sizeof(v)));
+    TEST_ASSERT_EQUAL_STRING("170", v);
+    TEST_ASSERT_TRUE(text_parse::keyValue(line, "on=", v, sizeof(v)));
+    TEST_ASSERT_EQUAL_STRING("0", v);
+    TEST_ASSERT_FALSE(text_parse::keyValue("onset=250", "on=", v, sizeof(v)));
+    TEST_ASSERT_FALSE(text_parse::keyValue("gain=123456789", "gain=", v, sizeof(v)));  // does not fit
+}
+
 void test_parse_finite_float_refuses_junk_and_nan() {
     float f = 1.5f;
     TEST_ASSERT_TRUE(text_parse::parseFiniteFloat("2000", f));
@@ -130,6 +144,7 @@ int main(int, char**) {
     RUN_TEST(test_reader_reports_an_empty_line);
     RUN_TEST(test_parse_unsigned_takes_whole_numbers_only);
     RUN_TEST(test_token_value_and_rest);
+    RUN_TEST(test_key_value_among_tokens);
     RUN_TEST(test_parse_finite_float_refuses_junk_and_nan);
     RUN_TEST(test_prefix_kinds);
     return UNITY_END();

@@ -363,10 +363,11 @@ void EchoApp::handleGateCommand(const char* line) {
                   {"floor=", &_gate.floor},
                   {"gain=", &_gate.gain},
                   {"peak=", &_gate.minPeak}};
+    char value[16] = {};
     for (const FloatKey& k : floats) {
-        const char* at = strstr(rest, k.key);
         float v = 0.0f;
-        if (at != nullptr && text_parse::parseFiniteFloat(at + strlen(k.key), v) && v >= 0.0f) {
+        if (text_parse::keyValue(rest, k.key, value, sizeof(value)) && text_parse::parseFiniteFloat(value, v) &&
+            v >= 0.0f) {
             *k.field = v;
         }
     }
@@ -375,28 +376,16 @@ void EchoApp::handleGateCommand(const char* line) {
         uint32_t* field;
     } uints[] = {{"attack=", &_gate.maxAttackMs}, {"pre=", &_gate.preMs}, {"post=", &_gate.postMs}};
     for (const UintKey& k : uints) {
-        const char* at = strstr(rest, k.key);
-        if (at == nullptr) {
-            continue;
-        }
-        char digits[12] = {};
-        size_t n = 0;
-        at += strlen(k.key);
-        while (at[n] >= '0' && at[n] <= '9' && n < sizeof(digits) - 1) {
-            digits[n] = at[n];
-            ++n;
-        }
         uint32_t v = 0;
-        if (text_parse::parseUnsigned(digits, v)) {
+        if (text_parse::keyValue(rest, k.key, value, sizeof(value)) && text_parse::parseUnsigned(value, v)) {
             *k.field = v;
         }
     }
     if (_gate.preMs + _gate.postMs > 300) {
         _gate.postMs = _gate.preMs < 300 ? 300 - _gate.preMs : 0;  // the clip buffer holds 300 ms
     }
-    const char* on = strstr(rest, "on=");
-    if (on != nullptr) {
-        _gate.enabled = on[3] != '0';
+    if (text_parse::keyValue(rest, "on=", value, sizeof(value))) {
+        _gate.enabled = value[0] != '0';
     }
     configureEcho();
     serialOut().print("ECHO gate onset=");

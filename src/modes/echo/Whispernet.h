@@ -30,11 +30,13 @@ the radio or the console (EchoApp).
 class Whispernet {
 public:
     struct Values {
-        // Strength16 levels; to be tuned on the desk (WHISPER GATE), the synthetic set's values to start.
-        float onset = 1500.0f;  // the detector's onset: a phrase starts
-        float release = 1000.0f;  // and its release
-        float floor = 1000.0f;  // the level window's low bound
-        float loud = 20000.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
+        // Strength16 levels from the desk, 2026-11-01 (E5, the synthetic set through the lab PC's speaker): the quiet
+        // room reads 40-100, a whisper (-35 dBFS file) 160-570 (level P90), speech (-20 / -25 dBFS) 1,100-4,400.
+        // Not the replay tool's scale (its files map to the mic's full scale); WHISPER GATE sets them live.
+        float onset = 250.0f;  // the detector's onset: a phrase starts
+        float release = 170.0f;  // and its release
+        float floor = 150.0f;  // the level window's low bound
+        float loud = 900.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
         float modulation = 0.3f;  // the modulation index a whisper reaches at least (Medium)
         uint32_t delayMs = 1000;  // D, set per node at begin()
         float gain = 1.0f;  // the replay's level

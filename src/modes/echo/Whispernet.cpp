@@ -174,30 +174,20 @@ void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime&
         float* field;
     } floats[] = {{"onset=", &_values.onset}, {"release=", &_values.release}, {"floor=", &_values.floor},
                   {"loud=", &_values.loud},   {"mod=", &_values.modulation},  {"gain=", &_values.gain}};
+    char value[16] = {};
     for (const FloatKey& k : floats) {
-        const char* at = strstr(rest, k.key);
         float v = 0.0f;
-        if (at != nullptr && text_parse::parseFiniteFloat(at + strlen(k.key), v) && v >= 0.0f) {
+        if (text_parse::keyValue(rest, k.key, value, sizeof(value)) && text_parse::parseFiniteFloat(value, v) &&
+            v >= 0.0f) {
             *k.field = v;
         }
     }
-    const char* delay = strstr(rest, "delay=");
-    if (delay != nullptr) {
-        char digits[12] = {};
-        size_t n = 0;
-        delay += strlen("delay=");
-        while (delay[n] >= '0' && delay[n] <= '9' && n < sizeof(digits) - 1) {
-            digits[n] = delay[n];
-            ++n;
-        }
-        uint32_t ms = 0;
-        if (text_parse::parseUnsigned(digits, ms)) {
-            _values.delayMs = ms < kDelayMinMs ? kDelayMinMs : (ms > kLineMs ? kLineMs : ms);
-        }
+    uint32_t ms = 0;
+    if (text_parse::keyValue(rest, "delay=", value, sizeof(value)) && text_parse::parseUnsigned(value, ms)) {
+        _values.delayMs = ms < kDelayMinMs ? kDelayMinMs : (ms > kLineMs ? kLineMs : ms);
     }
-    const char* on = strstr(rest, "on=");
-    if (on != nullptr) {
-        _values.enabled = on[3] != '0';
+    if (text_parse::keyValue(rest, "on=", value, sizeof(value))) {
+        _values.enabled = value[0] != '0';
     }
     _line.setDelay(static_cast<size_t>(_rateHz) * _values.delayMs / 1000U);
     _gate.setDelayMs(_values.delayMs);

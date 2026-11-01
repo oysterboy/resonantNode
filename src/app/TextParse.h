@@ -57,6 +57,34 @@ inline const char* tokenValue(const char* token) {
     return equals != nullptr ? equals + 1 : token + strlen(token);
 }
 
+// The value of `key` (given with its '=', e.g. "onset=") among space-separated key=value tokens, copied into out
+// up to the next space; false when the key is not at a token's start or the value does not fit. The parse helpers
+// above take a value whole, so a line of several keys needs this first (the echo shell's GATE commands read only
+// their last key until 2026-11-01).
+inline bool keyValue(const char* text, const char* key, char* out, size_t outSize) {
+    const size_t keyLen = strlen(key);
+    for (const char* p = text; p != nullptr && *p != '\0'; p = strchr(p, ' ')) {
+        while (*p == ' ') {
+            ++p;
+        }
+        if (strncmp(p, key, keyLen) != 0) {
+            continue;
+        }
+        const char* v = p + keyLen;
+        size_t n = 0;
+        while (v[n] != '\0' && v[n] != ' ') {
+            ++n;
+        }
+        if (n + 1 > outSize) {
+            return false;
+        }
+        memcpy(out, v, n);
+        out[n] = '\0';
+        return true;
+    }
+    return false;
+}
+
 // The text after `verb` (which the caller has already matched at the start
 // of `line`, case-insensitively or not), with the spaces skipped.
 inline const char* rest(const char* line, const char* verb) {

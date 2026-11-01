@@ -33,18 +33,19 @@ uint32_t largestFreeBlock() {
 // The echo room's Behavior (roadmap-echo.md ECHO-001 item 3): no idle call, a first clap answered with 3 / 4, a short
 // rest at the top of a small level, the answer after 350 ms (the clip's 270 ms after the onset recorded by then) plus a
 // little jitter. Own-emit suppression covers the replay and a tail for the room's ring-down.
-BehaviorGateConfig echoBehavior() {
+BehaviorGateConfig echoBehavior(uint32_t levelMax, uint32_t levelOffset, uint32_t levelDecayMs, uint32_t restMs,
+                                uint32_t waitMs, uint32_t jitterMs) {
     BehaviorGateConfig b;
     b.idleEnabled = false;
-    b.waitAfterHeardMs = 350;
+    b.waitAfterHeardMs = waitMs;
     b.refractoryAfterEmitMs = 300;
     b.behaviorSuppressSelfChirpMs = 100;
     b.detectionSuppressTailMsOwnEmit = 150;
-    b.levelMax = 4;
-    b.levelOffset = 2;
-    b.levelDecayMs = 3000;
-    b.restMs = 4000;
-    b.answerJitterMs = 300;
+    b.levelMax = levelMax;
+    b.levelOffset = levelOffset;
+    b.levelDecayMs = levelDecayMs;
+    b.restMs = restMs;
+    b.answerJitterMs = jitterMs;
     b.baseGlide = false;
     return b;
 }
@@ -216,7 +217,8 @@ void EchoApp::configureEcho() {
     m.attack.weakMaxMs = _gate.maxAttackMs * 3;
     plan.count = 1;
     _runtime.configure(d, plan);
-    _behavior.configure(echoBehavior());
+    _behavior.configure(echoBehavior(_gate.levelMax, _gate.levelOffset, _gate.levelDecayMs, _gate.restMs, _gate.waitMs,
+                                     _gate.jitterMs));
 }
 
 // One DMA block into the detection chain (EnvelopeRuntime); paused while the own replay sounds and for its tail
@@ -394,12 +396,17 @@ void EchoApp::handleGateCommand(const char* line) {
     struct UintKey {
         const char* key;
         uint32_t* field;
-    } uints[] = {{"attack=", &_gate.maxAttackMs}, {"pre=", &_gate.preMs}, {"post=", &_gate.postMs}};
+    } uints[] = {{"attack=", &_gate.maxAttackMs}, {"pre=", &_gate.preMs},          {"post=", &_gate.postMs},
+                 {"levelmax=", &_gate.levelMax},  {"offset=", &_gate.levelOffset}, {"decay=", &_gate.levelDecayMs},
+                 {"rest=", &_gate.restMs},        {"wait=", &_gate.waitMs},        {"jitter=", &_gate.jitterMs}};
     for (const UintKey& k : uints) {
         uint32_t v = 0;
         if (text_parse::keyValue(rest, k.key, value, sizeof(value)) && text_parse::parseUnsigned(value, v)) {
             *k.field = v;
         }
+    }
+    if (_gate.levelMax == 0) {
+        _gate.levelMax = 1;  // Behavior draws below it
     }
     if (_gate.preMs + _gate.postMs > 300) {
         _gate.postMs = _gate.preMs < 300 ? 300 - _gate.preMs : 0;  // the clip buffer holds 300 ms
@@ -424,6 +431,18 @@ void EchoApp::handleGateCommand(const char* line) {
     serialOut().print(_gate.postMs);
     serialOut().print(" gain=");
     serialOut().print(_gate.gain, 2);
+    serialOut().print(" levelmax=");
+    serialOut().print(_gate.levelMax);
+    serialOut().print(" offset=");
+    serialOut().print(_gate.levelOffset);
+    serialOut().print(" decay=");
+    serialOut().print(_gate.levelDecayMs);
+    serialOut().print(" rest=");
+    serialOut().print(_gate.restMs);
+    serialOut().print(" wait=");
+    serialOut().print(_gate.waitMs);
+    serialOut().print(" jitter=");
+    serialOut().print(_gate.jitterMs);
     serialOut().print(" on=");
     serialOut().println(_gate.enabled ? 1 : 0);
 }
@@ -640,6 +659,7 @@ void EchoApp::printHelp() {
     serialOut().println("ECHO CMD: ECHO LOG <seconds> (status every n s, 0 = off)");
     serialOut().println(
         "ECHO CMD: ECHO GATE [onset=] [release=] [floor=] [peak=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]");
+    serialOut().println("ECHO CMD:   Behavior: [levelmax=] [offset=] [decay=MS] [rest=MS] [wait=MS] [jitter=MS]");
     if (kWhispernet) {
         serialOut().println("ECHO CMD: WHISPER STATUS");
         serialOut().println(

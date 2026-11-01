@@ -112,11 +112,25 @@ private:
         // The occurrence's peak at least this (owner 2026-10-31: permissive, "reacting to the unplanned is the point"):
         // above most of the music's sharp onsets on the desk (1,000-1,230), below a click at ~1 m (1,750-1,940).
         float minPeak = 1200.0f;
-        uint32_t maxAttackMs = 10;  // a clap rises (10 % -> 90 % of its peak) within this
+        // A clap rises (10 % -> 90 % of its peak) within this. 20 since the five-board desk (2026-11-01): ~60 % of what
+        // the boards heard failed at 10, among it the neighbours' replays, which rise more slowly through the speaker.
+        uint32_t maxAttackMs = 20;
         uint32_t preMs = 30;  // the clip from the onset back
         uint32_t postMs = 270;  // and forward (clip <= 300 ms)
-        float gain = 1.0f;  // the replay's level
+        // The replay's level over the mic's: 1 plays the clip at the mic's digital level, far too quiet at a metre; 128
+        // "sounds good" (owner, 2026-11-01). Loud claps at 128 draw the amp's peak current from USB: five boards on one
+        // hub dropped ports (a powered hub or a separate amp supply for the room).
+        float gain = 128.0f;
         bool enabled = true;
+        // The echo room's Behavior (echoBehavior()), live too: the level that brings the rest, the first answers'
+        // head start, the level's decay, the rest, the wait before an answer and its jitter. Five boards on the desk
+        // (2026-11-01) rested together after a few claps: the owner found the chain ending too soon.
+        uint32_t levelMax = 4;
+        uint32_t levelOffset = 2;
+        uint32_t levelDecayMs = 3000;
+        uint32_t restMs = 4000;
+        uint32_t waitMs = 350;
+        uint32_t jitterMs = 300;
     };
     struct EchoCounts {
         unsigned long occurrences = 0;

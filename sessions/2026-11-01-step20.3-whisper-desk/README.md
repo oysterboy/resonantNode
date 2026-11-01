@@ -59,3 +59,13 @@ small bumps a second and a low crest: rustling or typing, heard by all three boa
 separates them from both the synthetic whisper and speech by a wide margin here. Caveat: the synthetic whisper
 through this speaker has its energy at 300-1000 Hz; a real whisper carries its fricatives (s, sh) at 4-8 kHz and
 reads flatter. Real whispers are needed before a threshold is chosen.
+
+## The timbre check on the boards (11:06-11:20, f9b204b9; flat= 0.25)
+
+| run | result |
+|---|---|
+| wflat1: 5 min quiet room, three boards | 4 passes in all (before: ~27 in 90 s); the room's phrases fail on the timbre at 0.33-0.51 or on the level; one pass at 0.25 (the bound) |
+| wflat2: whisper_male, whisper_female (-35), speech_female (-20) | the whispers 23 and 26 passes over the three boards, speech 0; the timbre failed 2 phrases |
+
+Load with the eight biquads per sample: block_us_max 1.6-1.9 ms against the 5.3 ms block, pass_us_mean 142 us, no
+dropped DMA buffer over the 5 min.

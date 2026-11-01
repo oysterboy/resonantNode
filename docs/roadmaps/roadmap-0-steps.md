@@ -357,6 +357,12 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         inaudible), the node deaf during its own playback (it answered itself at 64), soft edges (f3ddba37). Owner:
         "works, but unresponsive for a while after a replay"; rustling and chair casters still pass. Open: rustling,
         Behavior's pace for whispers, an adaptive floor, phrases longer than D. Boards on f3ddba37, on=0.
+        Owner 2026-11-01 evening, after five boards as Nodes (a band per node) and as the echo room: all three modes
+        work as a proof of concept, "not clean and beautiful". All three are to run as well as they can (a trial; no
+        longer "the first to drop"). Next: identify every knob of the three modes and make it a param (ECHO-003 for
+        the echo room and Whispernet, stored like the Node's), then tune by ear in short desk sessions; perhaps a UI
+        that shows what runs (tbd). Power for the amps first (USB ports dropped at gain 128). Work paused until
+        2026-11-03 evening (owner: token budget). Session: bench/sessions/2026-11-01-desk5-bands-7e4c.
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

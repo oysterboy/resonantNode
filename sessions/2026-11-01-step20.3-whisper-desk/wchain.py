@@ -28,7 +28,7 @@ for kv in a.ports.split(","):
     s.dtr = False
     s.rts = False
     s.open()
-    boards[name] = {"s": s, "lines": [], "buf": ""}
+    boards[name] = {"s": s, "lines": [], "buf": "", "f": open(os.path.join(a.out, name + ".log"), "w", encoding="utf-8")}
 stop = False
 
 
@@ -42,6 +42,8 @@ def reader(name):
         while "\n" in b["buf"]:
             line, b["buf"] = b["buf"].split("\n", 1)
             b["lines"].append((time.time() - t0, line.rstrip()))
+            b["f"].write("%.2f %s\n" % (b["lines"][-1][0], b["lines"][-1][1]))  # at once: a killed run keeps its log
+            b["f"].flush()
 
 
 threads = [threading.Thread(target=reader, args=(n,), daemon=True) for n in boards]

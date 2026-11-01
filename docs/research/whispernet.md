@@ -214,3 +214,25 @@ feel             an answer                            an echo, or an answer at a
    and the output path turn out to share more than expected.
 7. The layout: speakers at their own nodes (a room that smears) or at the neighbours' mics (a line or a ring);
    the coupling measured at boot either way.
+
+## The detector in the inspection framework (step 20.3, 2026-11-01)
+
+As the echo room's attack (decisions in roadmap-0-steps.md 20.2: one framework for the echo modes' detection), the
+whisper tests become inspection modules judged by makeVerdict, run by EnvelopeRuntime (src/detection), the chain the
+echo shell and native-echoreplay share:
+
+- **The detector**: ScalarTransientDetector on the envelope, its duration window 300 ms .. 3 s, its levels just above
+  the room's floor (the onset then marks a phrase's start, not a transient).
+- **LevelWindow** (new module, target Loudness): the occurrence's envelope (P90 over its span) between a floor and the
+  **loud bound**; above the bound class None (speech, a clap, a door, the own loop's growth: the howl guard).
+- **Modulation** (new module, target Modulation): the envelope's movement at syllable rate over the occurrence (or the
+  history's last 512 ms): the envelope minus its slow mean, its RMS against the mean (a modulation index), classed by
+  thresholds; a fan or HVAC reads near 0.
+- **A provisional inspection while the phrase runs**: the detector's open candidate (a read-only accessor: active,
+  since when) is inspected once it is 300 ms old, and again every ~100 ms; a valid verdict opens the gate from the
+  candidate's start (the delay line still holds it, D >= the evidence time), the release closes it. Behavior counts a
+  gate-open episode as a heard train and its own replay as an emission (roadmap-echo.md ECHO-002 item 4).
+- **The history**: 64 bins of 8 ms (FEATURE_HISTORY_BIN_MS 8), ~0.5 s of envelope, enough for 2-10 Hz.
+
+Test set: tools/bench/synthwhisper.py (a noise vocoder on bench_audio.wav's speech: whispers at -45 dBFS, the same
+speech voiced at -25, music, a fan, claps, a mix), replayed with native-echoreplay.

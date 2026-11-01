@@ -39,10 +39,12 @@ public:
         float floor = 150.0f;  // the level window's low bound
         float loud = 900.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
         float modulation = 0.3f;  // the modulation index a whisper reaches at least (Medium)
-        // The spectrum's flatness a whisper stays under (BandFlatness, the median of the phrase's loud blocks): the
-        // room's false passes read 0.32-0.60 on the desk, a whisper through the speaker 0.06-0.16 (2026-11-01); to be
-        // set with real whispers. 1 turns the check off in effect.
-        float flatMax = 0.25f;
+        // The spectrum's flatness a whisper lies within (BandFlatness, the median of the phrase's loud blocks): the
+        // owner's whispers on the desk read 0.16-0.49 (median ~0.3), speech 0.04-0.41 (median ~0.07), rustling and
+        // typing 0.19-0.76 (median ~0.45) (2026-11-01, bench/sessions/2026-11-01-step20.3-whisper-desk). A first
+        // range, under test; flatmin=0 flat=1 turn the check off in effect.
+        float flatMin = 0.15f;
+        float flatMax = 0.40f;
         uint32_t delayMs = 1000;  // D, set per node at begin()
         // The replay at half its level (-6 dB a hop): at 1 two boards on the desk kept whispering each other's replays past
         // the 60 s watched, at 0.5 the chain ended with the whisper (E1 / E4, 2026-11-01).

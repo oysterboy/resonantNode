@@ -117,6 +117,7 @@ void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior
     timbre.target = detection::InspectionTarget::Timbre;
     timbre.enabled = true;
     timbre.minimumStrength = detection::StrengthClass::Strong;
+    timbre.flatness.minFlatness = _values.flatMin;
     timbre.flatness.maxFlatness = _values.flatMax;
     plan.count = 3;
     runtime.configure(d, plan);
@@ -244,9 +245,9 @@ void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime&
     struct FloatKey {
         const char* key;
         float* field;
-    } floats[] = {{"onset=", &_values.onset}, {"release=", &_values.release}, {"floor=", &_values.floor},
-                  {"loud=", &_values.loud},   {"mod=", &_values.modulation},  {"flat=", &_values.flatMax},
-                  {"gain=", &_values.gain}};
+    } floats[] = {{"onset=", &_values.onset},     {"release=", &_values.release}, {"floor=", &_values.floor},
+                  {"loud=", &_values.loud},       {"mod=", &_values.modulation},  {"flat=", &_values.flatMax},
+                  {"flatmin=", &_values.flatMin}, {"gain=", &_values.gain}};
     char value[16] = {};
     for (const FloatKey& k : floats) {
         float v = 0.0f;
@@ -278,6 +279,8 @@ void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime&
     serialOut().print(_values.loud, 0);
     serialOut().print(" mod=");
     serialOut().print(_values.modulation, 2);
+    serialOut().print(" flatmin=");
+    serialOut().print(_values.flatMin, 2);
     serialOut().print(" flat=");
     serialOut().print(_values.flatMax, 2);
     serialOut().print(" delay_ms=");

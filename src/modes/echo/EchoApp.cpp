@@ -632,7 +632,7 @@ void EchoApp::printHelp() {
         serialOut().println(
             "ECHO CMD: WHISPER REC <n>|now (record around the next n passing phrases / the last 1.5 s)");
         serialOut().println(
-            "ECHO CMD: WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [flat=] [delay=MS 400..2000] [gain=] "
+            "ECHO CMD: WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [flatmin=] [flat=] [delay=MS 400..2000] [gain=] "
             "[on=0|1]");
     }
     serialOut().println("ECHO CMD: TONE <hz> <ms>");

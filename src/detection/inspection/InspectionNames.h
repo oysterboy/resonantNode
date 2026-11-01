@@ -102,6 +102,8 @@ inline const char* inspectionTargetName(InspectionTarget value) {
             return "loudness";
         case InspectionTarget::Modulation:
             return "modulation";
+        case InspectionTarget::Timbre:
+            return "timbre";
         case InspectionTarget::None:
         default:
             return "none";

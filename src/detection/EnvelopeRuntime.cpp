@@ -20,6 +20,8 @@ void EnvelopeRuntime::configure(const ScalarTransientConfig& detector, const Ins
             streams[count++] = m.level.stream;
         } else if (m.kind == InspectionModuleKind::Modulation) {
             streams[count++] = m.modulation.stream;
+        } else if (m.kind == InspectionModuleKind::Flatness) {
+            streams[count++] = m.flatness.stream;
         } else if (m.kind == InspectionModuleKind::MagnitudeFeatureStrength) {
             streams[count++] = m.magnitude.stream;
         }
@@ -64,6 +66,10 @@ void EnvelopeRuntime::onBlock(float level, uint64_t blockUs, uint32_t blockMs) {
     }
     judgePending(blockMs);
     judgeOpen(blockMs);
+}
+
+void EnvelopeRuntime::recordFeature(FeatureStreamId stream, uint32_t blockMs, float value) {
+    _history.record(stream, blockMs, value);
 }
 
 void EnvelopeRuntime::judgeOpen(uint32_t nowMs) {

@@ -22,6 +22,8 @@ StrengthClass strengthForTarget(const Occurrence& source, InspectionTarget targe
             return source.level.levelClass;
         case InspectionTarget::Modulation:
             return source.modulation.modulationClass;
+        case InspectionTarget::Timbre:
+            return source.timbre.timbreClass;
         case InspectionTarget::None:
         default:
             return StrengthClass::Unknown;

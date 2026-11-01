@@ -38,6 +38,9 @@ public:
     // After a gap in the input (the own replay): no occurrence carries over it.
     void restartAfterInputGap();
 
+    // A further stream's value for a block (Whispernet's SpectralFlatness), recorded before that block's onBlock().
+    void recordFeature(FeatureStreamId stream, uint32_t blockMs, float value);
+
     // One block: its envelope level (Strength16), its time on the 64-bit time base, its time in ms.
     void onBlock(float level, uint64_t blockUs, uint32_t blockMs);
 

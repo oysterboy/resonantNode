@@ -67,6 +67,8 @@ static const char* streamDisplayName(detection::FeatureStreamId stream) {
             return "FrequencyTarget";
         case detection::FeatureStreamId::FrequencyContrast:
             return "FrequencyContrast";
+        case detection::FeatureStreamId::SpectralFlatness:
+            return "SpectralFlatness";
         case detection::FeatureStreamId::Unknown:
         default:
             return "Unknown";

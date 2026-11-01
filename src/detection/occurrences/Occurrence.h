@@ -91,6 +91,14 @@ struct OccurrenceModulation {
     StrengthClass modulationClass = StrengthClass::Unknown;
 };
 
+struct OccurrenceTimbre {
+    bool applicable = false;
+    bool measured = false;
+    float flatness = 0.0f;  // the window's median
+    uint32_t values = 0;
+    StrengthClass timbreClass = StrengthClass::Unknown;
+};
+
 struct Occurrence {
     // Canonical generic accepted-event shell.
     DetectorId detectorId = DetectorId::Unknown;
@@ -120,6 +128,7 @@ struct Occurrence {
     OccurrenceAttack attack;  // ECHO-001, the AttackRise module
     OccurrenceLevel level;            // ECHO-002, the LevelWindow module
     OccurrenceModulation modulation;  // ECHO-002, the Modulation module
+    OccurrenceTimbre timbre;          // ECHO-002, the Flatness module
 };
 
 } // namespace detection

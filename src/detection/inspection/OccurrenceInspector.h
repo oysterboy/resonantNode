@@ -59,6 +59,8 @@ private:
                        const LevelWindowInspectionConfig& config) const;
     void annotateModulation(InspectedOccurrence& out, const Occurrence& occurrence,
                             const FeatureHistory* featureHistory, const ModulationInspectionConfig& config) const;
+    void annotateFlatness(InspectedOccurrence& out, const Occurrence& occurrence, const FeatureHistory* featureHistory,
+                          const FlatnessInspectionConfig& config) const;
     InspectionPlan _inspectionPlan = {};
     const BinTrack* _binTrack = nullptr;
     float _shapeMinLevel = 0.0f;

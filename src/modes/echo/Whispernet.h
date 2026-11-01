@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../../audio/BandFlatness.h"
 #include "../../audio/GatedDelayLine.h"
 #include "../../audio/SampleFifo.h"
 #include "../../behavior/ResonantBehavior.h"
@@ -38,6 +39,10 @@ public:
         float floor = 150.0f;  // the level window's low bound
         float loud = 900.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
         float modulation = 0.3f;  // the modulation index a whisper reaches at least (Medium)
+        // The spectrum's flatness a whisper stays under (BandFlatness, the median of the phrase's loud blocks): the
+        // room's false passes read 0.32-0.60 on the desk, a whisper through the speaker 0.06-0.16 (2026-11-01); to be
+        // set with real whispers. 1 turns the check off in effect.
+        float flatMax = 0.25f;
         uint32_t delayMs = 1000;  // D, set per node at begin()
         // The replay at half its level (-6 dB a hop): at 1 two boards on the desk kept whispering each other's replays past
         // the 60 s watched, at 0.5 the chain ended with the whisper (E1 / E4, 2026-11-01).
@@ -67,7 +72,13 @@ public:
     void configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior);
 
     // One mic sample (int16) in, the delay line's sample out to the FIFO.
-    void pushSample(int16_t in) { _fifo.push(_line.process(in)); }
+    void pushSample(int16_t in) {
+        _fifo.push(_line.process(in));
+        _flat.push(static_cast<float>(in));
+    }
+    // After a block's samples: its flatness into the runtime's history when the block is loud (above the onset), so
+    // the phrase's timbre is read from its sound, not from the gaps between syllables.
+    void endBlock(detection::EnvelopeRuntime& runtime, float level, uint32_t blockMs);
     // Before a block's samples: its first sample's line index and its time (ms -> line index for the gate).
     void beginBlock(uint32_t blockMs) {
         _blockIndex = _line.written();
@@ -80,7 +91,7 @@ public:
     // Behavior's emission: started when it asks, finished once the closed gate's last sample has played.
     void runBehavior(ResonantBehavior& behavior, unsigned long now);
 
-    // WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [delay=MS] [gain=] [on=0|1]; prints the values.
+    // WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [flat=] [delay=MS] [gain=] [on=0|1]; prints them.
     void handleGateCommand(const char* line, detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior);
     void printStatus();
     // WHISPER REC <n>|now: record the mic around the next n phrases that pass a check (300 ms before the phrase's
@@ -102,6 +113,7 @@ private:
     Values _values;
     Counts _counts;
     GatedDelayLine _line;
+    BandFlatness _flat;
     SampleFifo _fifo;
     WhisperGate _gate;
     I2sToneOutput* _output = nullptr;

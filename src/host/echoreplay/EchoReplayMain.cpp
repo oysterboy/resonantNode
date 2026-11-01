@@ -8,7 +8,7 @@
 // tools/bench/rawcorpus.py) gives real levels; --level-db moves a file toward them.
 //
 //   program [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] [--release S16] [--floor S16]
-//           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--out-dir DIR] [--loop-gain G] [--verbose]
+//           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--flat-max F] [--out-dir DIR] [--loop-gain G] [--verbose]
 //           <file.wav>...
 //
 // With --plan whisper and --out-dir, each file also goes through Whispernet's delay line (GatedDelayLine, 2 s) under
@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "../../audio/EnvelopeFollower.h"
+#include "../../audio/BandFlatness.h"
 #include "../../audio/GatedDelayLine.h"
 #include "../../behavior/WhisperGate.h"
 #include "../../detection/EnvelopeRuntime.h"
@@ -158,7 +159,7 @@ int main(int argc, char** argv) {
     float onset = 1000.0f, release = 700.0f, floorLevel = 300.0f, minPeak = 1200.0f;
     uint32_t attackMs = 10;
     bool whisper = false;
-    float loudBound = 20000.0f, modIndex = 0.3f;
+    float loudBound = 20000.0f, modIndex = 0.3f, flatMax = 0.0f;  // flatMax 0: no timbre check
     bool verbose = false;
     double loopGain = 0.0;
     std::string outDir;  // --plan whisper: the delay line's output per file, <name>.gated.wav
@@ -176,6 +177,8 @@ int main(int argc, char** argv) {
             whisper = std::string(next("--plan")) == "whisper";
         } else if (a == "--loud") {
             loudBound = static_cast<float>(atof(next("--loud")));
+        } else if (a == "--flat-max") {
+            flatMax = static_cast<float>(atof(next("--flat-max")));
         } else if (a == "--mod") {
             modIndex = static_cast<float>(atof(next("--mod")));
         } else if (a == "--out-dir") {
@@ -199,11 +202,12 @@ int main(int argc, char** argv) {
         } else if (a == "--verbose") {
             verbose = true;
         } else if (a == "--help" || a[0] == '-') {
-            fprintf(stderr,
-                    "usage: %s [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] "
-                    "[--release S16] [--floor S16] [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] "
-                    "[--out-dir DIR] [--loop-gain G] [--verbose] <file.wav>...\n",
-                    argv[0]);
+            fprintf(
+                stderr,
+                "usage: %s [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] "
+                "[--release S16] [--floor S16] [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--flat-max F] "
+                "[--out-dir DIR] [--loop-gain G] [--verbose] <file.wav>...\n",
+                argv[0]);
             return 2;
         } else {
             files.push_back(a);
@@ -258,6 +262,15 @@ int main(int argc, char** argv) {
         mo.minimumStrength = detection::StrengthClass::Medium;
         mo.modulation.mediumIndex = modIndex;
         plan.count = 2;
+        if (flatMax > 0.0f) {  // the timbre (BandFlatness over the loud blocks), as Whispernet's shell runs it
+            detection::InspectionModuleConfig& fl = plan.modules[2];
+            fl.kind = detection::InspectionModuleKind::Flatness;
+            fl.target = detection::InspectionTarget::Timbre;
+            fl.enabled = true;
+            fl.minimumStrength = detection::StrengthClass::Strong;
+            fl.flatness.maxFlatness = flatMax;
+            plan.count = 3;
+        }
     }
 
     static detection::EnvelopeRuntime runtime;  // its history is large: not on the stack
@@ -292,6 +305,8 @@ int main(int argc, char** argv) {
         runtime.setProvisional(whisper ? 300 : 0, 100);
         runtime.reset();
         EnvelopeFollower follower;
+        BandFlatness flatness;
+        flatness.begin(rate);
         follower.setShift(EnvelopeFollower::shiftForRate(rate));
         size_t occurrences = 0, valid = 0, slow = 0, unmeasured = 0, outOfLevel = 0, flat = 0;
         double validMs = 0.0, judgedMs = 0.0;
@@ -333,6 +348,7 @@ int main(int argc, char** argv) {
                 double v = heard * scale;
                 v = v > 8388607.0 ? 8388607.0 : (v < -8388608.0 ? -8388608.0 : v);
                 follower.push(static_cast<int32_t>(v));
+                flatness.push(static_cast<float>(v));
                 if (line.delay() > 0) {
                     const double s = heard * 32767.0;
                     lastOut = line.process(static_cast<int16_t>(s > 32767.0 ? 32767.0 : (s < -32768.0 ? -32768.0 : s)));
@@ -342,6 +358,11 @@ int main(int argc, char** argv) {
             const uint64_t blockUs = static_cast<uint64_t>(start) * 1000000ULL / rate;
             const float level = follower.strength();
             peakLevel = level > peakLevel ? level : peakLevel;
+            float flat = 0.0f;
+            if (flatness.take(flat) && whisper && flatMax > 0.0f && level >= onset) {
+                runtime.recordFeature(detection::FeatureStreamId::SpectralFlatness,
+                                      static_cast<uint32_t>(blockUs / 1000U), flat);
+            }
             runtime.onBlock(level, blockUs, static_cast<uint32_t>(blockUs / 1000U));
             detection::EnvelopeRuntime::Result r;
             while (runtime.popResult(r)) {
@@ -371,10 +392,10 @@ int main(int argc, char** argv) {
                         ++flat;
                     }
                     if (verbose) {
-                        printf("  t_ms=%lu dur_ms=%lu peak=%.0f level_p90=%.0f mod=%.2f%s valid=%d\n",
+                        printf("  t_ms=%lu dur_ms=%lu peak=%.0f level_p90=%.0f mod=%.2f%s flat=%.2f%s valid=%d\n",
                                static_cast<unsigned long>(oc.startMs), static_cast<unsigned long>(oc.durationMs),
                                oc.strength, oc.level.p90, oc.modulation.index, oc.modulation.measured ? "" : "(na)",
-                               r.verdict.valid ? 1 : 0);
+                               oc.timbre.flatness, oc.timbre.measured ? "" : "(na)", r.verdict.valid ? 1 : 0);
                     }
                     continue;
                 }

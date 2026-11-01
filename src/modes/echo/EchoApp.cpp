@@ -174,6 +174,9 @@ void EchoApp::pollAudio() {
         if (_follower.value() > _envelopePeak) {
             _envelopePeak = _follower.value();
         }
+        if (kWhispernet) {
+            _whisper.endBlock(_runtime, _follower.strength(), blockMs);
+        }
         detectBlock(block, ringIndex, blockMs);
         takeClip();
         const uint32_t blockUs = micros() - startUs;
@@ -629,7 +632,8 @@ void EchoApp::printHelp() {
         serialOut().println(
             "ECHO CMD: WHISPER REC <n>|now (record around the next n passing phrases / the last 1.5 s)");
         serialOut().println(
-            "ECHO CMD: WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [delay=MS 400..2000] [gain=] [on=0|1]");
+            "ECHO CMD: WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [flat=] [delay=MS 400..2000] [gain=] "
+            "[on=0|1]");
     }
     serialOut().println("ECHO CMD: TONE <hz> <ms>");
     serialOut().println("ECHO CMD: OTA url=... token=...");

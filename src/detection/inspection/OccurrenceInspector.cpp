@@ -205,7 +205,7 @@ unsigned long OccurrenceInspector::windowCompleteAtMs(const Occurrence& occurren
         } else if (module.kind == InspectionModuleKind::AttackRise) {
             endMs = occurrence.startMs + module.attack.postMs;
         } else if (module.kind == InspectionModuleKind::LevelWindow ||
-                   module.kind == InspectionModuleKind::Modulation) {
+                   module.kind == InspectionModuleKind::Modulation || module.kind == InspectionModuleKind::Flatness) {
             endMs = occurrence.startMs + occurrence.durationMs;  // the span itself
         } else {
             continue;
@@ -309,6 +309,9 @@ void OccurrenceInspector::runInspectionModule(InspectedOccurrence& out, const Oc
         case InspectionModuleKind::Modulation:
             annotateModulation(out, occurrence, featureHistory, module.modulation);
             break;
+        case InspectionModuleKind::Flatness:
+            annotateFlatness(out, occurrence, featureHistory, module.flatness);
+            break;
         case InspectionModuleKind::None:
         default:
             break;
@@ -398,6 +401,31 @@ void OccurrenceInspector::annotateLevel(InspectedOccurrence& out, const Occurren
     level.p90 = window.p90;
     level.levelClass =
         window.p90 >= config.floorLevel && window.p90 <= config.loudBound ? StrengthClass::Strong : StrengthClass::None;
+}
+
+// ECHO-002: the timbre, the median flatness of the span's loud blocks.
+void OccurrenceInspector::annotateFlatness(InspectedOccurrence& out, const Occurrence& occurrence,
+                                           const FeatureHistory* featureHistory,
+                                           const FlatnessInspectionConfig& config) const {
+    OccurrenceTimbre& timbre = out.occurrence.timbre;
+    timbre = OccurrenceTimbre{};
+    timbre.applicable = true;
+    if (featureHistory == nullptr) {
+        return;
+    }
+    unsigned long fromMs = 0;
+    unsigned long toMs = 0;
+    spanWindow(occurrence, config.maxWindowMs, fromMs, toMs);
+    const MagnitudeWindow window = featureHistory->getWindow(config.stream, fromMs, toMs, toMs);
+    timbre.values = static_cast<uint32_t>(window.valueCount);
+    if (!window.hasValues || window.valueCount < config.minValues) {
+        return;  // Unknown: too few loud blocks to say
+    }
+    timbre.measured = true;
+    timbre.flatness = window.median;
+    timbre.timbreClass = window.median >= config.minFlatness && window.median <= config.maxFlatness
+        ? StrengthClass::Strong
+        : StrengthClass::None;
 }
 
 // ECHO-002: the modulation index, RMS of the bins around their moving mean against the window's mean.

@@ -85,6 +85,7 @@ bool FeatureHistory::isKnownStream(FeatureStreamId stream) {
         case FeatureStreamId::AmpEnvelope:
         case FeatureStreamId::FrequencyTarget:
         case FeatureStreamId::FrequencyContrast:
+        case FeatureStreamId::SpectralFlatness:
             return true;
         case FeatureStreamId::Unknown:
         default:
@@ -145,6 +146,7 @@ float FeatureHistory::representativeValueForStream(FeatureStreamId stream, const
             return bin.meanAbs;
         case FeatureStreamId::FrequencyTarget:
         case FeatureStreamId::FrequencyContrast:
+        case FeatureStreamId::SpectralFlatness:
             return bin.mean;
         case FeatureStreamId::Unknown:
         default:

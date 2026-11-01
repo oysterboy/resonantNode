@@ -201,6 +201,53 @@ void test_whisper_window_complete_at_the_end() {
     TEST_ASSERT_EQUAL_UINT32(11000, inspector.windowCompleteAtMs(occ));
 }
 
+// The timbre (Flatness module): the median of the span's flatness values between the bounds; too few values: Unknown.
+void test_flatness_window() {
+    FeatureHistory& h = history();
+    h.reset();
+    const FeatureStreamId streams[2] = {FeatureStreamId::AmpEnvelope, FeatureStreamId::SpectralFlatness};
+    h.setActiveStreams(streams, 2);
+    for (unsigned long t = 10000; t <= 11000; t += 16) {
+        h.record(FeatureStreamId::SpectralFlatness, t, t < 10500 ? 0.12f : 0.15f);  // a whisper's
+    }
+    InspectionPlan plan = InspectionPlan{};
+    plan.modules[0].kind = InspectionModuleKind::Flatness;
+    plan.modules[0].target = InspectionTarget::Timbre;
+    plan.modules[0].enabled = true;
+    plan.modules[0].minimumStrength = StrengthClass::Strong;
+    plan.count = 1;
+    Occurrence occ = occurrence(10000);
+    occ.durationMs = 1000;
+    OccurrenceInspector inspector;
+    inspector.configure(plan);
+    InspectedOccurrence in = inspector.inspectWithHistory(occ, &h, 11000);
+    TEST_ASSERT_TRUE(in.occurrence.timbre.measured);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.15f, in.occurrence.timbre.flatness);  // the last 512 ms
+    TEST_ASSERT_EQUAL(StrengthClass::Strong, in.occurrence.timbre.timbreClass);
+    OccurrenceVerdict v;
+    makeVerdict(in, plan, v);
+    TEST_ASSERT_TRUE(v.valid);
+
+    h.reset();
+    h.setActiveStreams(streams, 2);
+    for (unsigned long t = 10000; t <= 11000; t += 16) {
+        h.record(FeatureStreamId::SpectralFlatness, t, 0.5f);  // rustling
+    }
+    in = inspector.inspectWithHistory(occ, &h, 11000);
+    TEST_ASSERT_EQUAL(StrengthClass::None, in.occurrence.timbre.timbreClass);
+    makeVerdict(in, plan, v);
+    TEST_ASSERT_FALSE(v.valid);
+    TEST_ASSERT_EQUAL(InspectionTarget::Timbre, v.firstFailedRequirementTarget);
+
+    h.reset();
+    h.setActiveStreams(streams, 2);
+    h.record(FeatureStreamId::SpectralFlatness, 10900, 0.1f);  // one loud block only
+    in = inspector.inspectWithHistory(occ, &h, 11000);
+    TEST_ASSERT_FALSE(in.occurrence.timbre.measured);
+    TEST_ASSERT_EQUAL(StrengthClass::Unknown, in.occurrence.timbre.timbreClass);
+    h.setActiveStreams(streams, 1);  // as the other tests expect
+}
+
 // The values query averages 1 ms bins on an 8 ms grid, oldest first, and keeps the newest when out is short.
 void test_copy_values_on_a_grid() {
     FeatureHistory& h = history();
@@ -230,5 +277,6 @@ int main(int, char**) {
     RUN_TEST(test_a_loud_phrase_fails_on_the_level_window);
     RUN_TEST(test_whisper_window_complete_at_the_end);
     RUN_TEST(test_copy_values_on_a_grid);
+    RUN_TEST(test_flatness_window);
     return UNITY_END();
 }

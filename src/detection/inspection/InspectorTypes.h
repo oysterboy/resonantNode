@@ -120,6 +120,7 @@ enum class InspectionModuleKind {
     AttackRise,  // ECHO-001: how fast the level rose into the onset, from the FeatureHistory
     LevelWindow,  // ECHO-002: the occurrence's level between a floor and a loud bound (the howl guard)
     Modulation,   // ECHO-002: the envelope's movement at syllable rate
+    Flatness,     // ECHO-002: the spectrum's flatness (the timbre: a whisper, not rustling or a voice)
 };
 
 enum class InspectionTarget {
@@ -132,6 +133,7 @@ enum class InspectionTarget {
     Attack,  // ECHO-001, the AttackRise module
     Loudness,    // ECHO-002, the LevelWindow module
     Modulation,  // ECHO-002, the Modulation module
+    Timbre,      // ECHO-002, the Flatness module
 };
 
 struct MagnitudeFeatureInspectionConfig {
@@ -202,6 +204,19 @@ struct ModulationInspectionConfig {
     float strongIndex = 0.5f;
 };
 
+// ECHO-002 (step 20.3): the spectrum's flatness over the occurrence's span (its last maxWindowMs), the median of the
+// SpectralFlatness stream (BandFlatness, recorded for the loud blocks only). Strong between minFlatness and
+// maxFlatness, None outside, Unknown with fewer than minValues values. The desk (2026-11-01) read the room's false
+// passes (rustling, typing) 0.32-0.60, a whisper through the speaker 0.06-0.16, speech 0.02-0.05; a real whisper's
+// fricatives read flatter: maxFlatness is set with real whispers.
+struct FlatnessInspectionConfig {
+    FeatureStreamId stream = FeatureStreamId::SpectralFlatness;
+    uint32_t maxWindowMs = 512;
+    float minFlatness = 0.0f;
+    float maxFlatness = 0.25f;
+    uint32_t minValues = 3;
+};
+
 struct InspectionModuleConfig {
     InspectionModuleKind kind = InspectionModuleKind::None;
     InspectionTarget target = InspectionTarget::None;
@@ -212,6 +227,7 @@ struct InspectionModuleConfig {
     AttackInspectionConfig attack = {};
     LevelWindowInspectionConfig level = {};
     ModulationInspectionConfig modulation = {};
+    FlatnessInspectionConfig flatness = {};
 };
 
 static constexpr size_t kMaxInspectionModules = 3;

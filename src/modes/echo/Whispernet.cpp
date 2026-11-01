@@ -7,6 +7,7 @@
 #include "../../app/SerialOut.h"
 #include "../../app/TextParse.h"
 #include "../../app/TimingUtils.h"
+#include "../../detection/inspection/InspectionNames.h"
 
 namespace {
 
@@ -54,6 +55,7 @@ bool Whispernet::begin(uint32_t rateHz, uint64_t seed) {
     const bool fifo = _fifo.begin(static_cast<size_t>(rateHz) * kFifoMs / 1000U);
     _line.setDelay(static_cast<size_t>(rateHz) * _values.delayMs / 1000U);
     _gate.setDelayMs(_values.delayMs);
+    _flat.begin(rateHz);
     return line && fifo;
 }
 
@@ -110,10 +112,23 @@ void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior
     mod.enabled = true;
     mod.minimumStrength = detection::StrengthClass::Medium;
     mod.modulation.mediumIndex = _values.modulation;
-    plan.count = 2;
+    detection::InspectionModuleConfig& timbre = plan.modules[2];
+    timbre.kind = detection::InspectionModuleKind::Flatness;
+    timbre.target = detection::InspectionTarget::Timbre;
+    timbre.enabled = true;
+    timbre.minimumStrength = detection::StrengthClass::Strong;
+    timbre.flatness.maxFlatness = _values.flatMax;
+    plan.count = 3;
     runtime.configure(d, plan);
     runtime.setProvisional(300, 100);
     behavior.configure(whisperBehavior());
+}
+
+void Whispernet::endBlock(detection::EnvelopeRuntime& runtime, float level, uint32_t blockMs) {
+    float flatness = 0.0f;
+    if (_flat.take(flatness) && level >= _values.onset) {
+        runtime.recordFeature(detection::FeatureStreamId::SpectralFlatness, blockMs, flatness);
+    }
 }
 
 uint64_t Whispernet::lineIndexAtMs(unsigned long ms) const {
@@ -160,9 +175,10 @@ void Whispernet::handleResult(const detection::EnvelopeRuntime::Result& result, 
                 const uint64_t pre = static_cast<uint64_t>(_rateHz) * 3U / 10U;
                 _recFrom = start > pre ? start - pre : 0;
                 _recDueMs = _blockMs + 1200;
-                snprintf(_recNote, sizeof(_recNote), "after_ms=%lu level_p90=%lu mod=%.2f decision=%s",
+                snprintf(_recNote, sizeof(_recNote), "after_ms=%lu level_p90=%lu mod=%.2f flat=%.2f decision=%s",
                          static_cast<unsigned long>(oc.durationMs), static_cast<unsigned long>(oc.level.p90),
-                         static_cast<double>(oc.modulation.index), ResonantBehavior::behaviorDecisionName(decision));
+                         static_cast<double>(oc.modulation.index), static_cast<double>(oc.timbre.flatness),
+                         ResonantBehavior::behaviorDecisionName(decision));
             }
             serialOut().print("WHISPER heard after_ms=");
             serialOut().print(oc.durationMs);
@@ -170,6 +186,8 @@ void Whispernet::handleResult(const detection::EnvelopeRuntime::Result& result, 
             serialOut().print(static_cast<unsigned long>(oc.level.p90));
             serialOut().print(" mod=");
             serialOut().print(oc.modulation.index, 2);
+            serialOut().print(" flat=");
+            serialOut().print(oc.timbre.flatness, 2);
             serialOut().print(" decision=");
             serialOut().println(ResonantBehavior::behaviorDecisionName(decision));
         }
@@ -178,6 +196,24 @@ void Whispernet::handleResult(const detection::EnvelopeRuntime::Result& result, 
     }
     ++_counts.phrases;
     _counts.whispers += result.verdict.valid ? 1 : 0;
+    // Every phrase, passed or not: what the checks read over its last 512 ms (the desk sets the bounds from these).
+    serialOut().print("WHISPER phrase dur_ms=");
+    serialOut().print(oc.durationMs);
+    serialOut().print(" level_p90=");
+    serialOut().print(static_cast<unsigned long>(oc.level.p90));
+    serialOut().print(" mod=");
+    serialOut().print(oc.modulation.index, 2);
+    serialOut().print(" flat=");
+    if (oc.timbre.measured) {
+        serialOut().print(oc.timbre.flatness, 2);
+    } else {
+        serialOut().print("na");
+    }
+    serialOut().print(" valid=");
+    serialOut().print(result.verdict.valid ? 1 : 0);
+    serialOut().print(" failed=");
+    serialOut().println(
+        result.verdict.valid ? "none" : detection::inspectionTargetName(result.verdict.firstFailedRequirementTarget));
     apply(_gate.onPhraseEnd(oc.startMs + oc.durationMs));
 }
 
@@ -209,7 +245,8 @@ void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime&
         const char* key;
         float* field;
     } floats[] = {{"onset=", &_values.onset}, {"release=", &_values.release}, {"floor=", &_values.floor},
-                  {"loud=", &_values.loud},   {"mod=", &_values.modulation},  {"gain=", &_values.gain}};
+                  {"loud=", &_values.loud},   {"mod=", &_values.modulation},  {"flat=", &_values.flatMax},
+                  {"gain=", &_values.gain}};
     char value[16] = {};
     for (const FloatKey& k : floats) {
         float v = 0.0f;
@@ -241,6 +278,8 @@ void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime&
     serialOut().print(_values.loud, 0);
     serialOut().print(" mod=");
     serialOut().print(_values.modulation, 2);
+    serialOut().print(" flat=");
+    serialOut().print(_values.flatMax, 2);
     serialOut().print(" delay_ms=");
     serialOut().print(_values.delayMs);
     serialOut().print(" gain=");

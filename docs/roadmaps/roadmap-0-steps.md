@@ -348,8 +348,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         recorded columns at the capture's own interval.
    22.3 [DONE 2026-11-01, one finding for the owner] The ladder 4 and 16 interleaved: equal from 0.5 FS to -6 dB and
         on the two hop cases; -7.5 dB 43 / 50 at 16 against 50 / 50 at 4, all coverage_too_low (74-76 ms against the
-        80 minimum; 83-84 at 4). Chord cell and music as at 4 (2026-11-01-step22.3-edges). Owner: keep 16 and the
-        ~0.5 dB at the edge, or 8, or 16 with the coverage minimum lowered (a tuning step with its noise check).
+        80 minimum; 83-84 at 4). Chord cell and music as at 4 (2026-11-01-step22.3-edges). Owner 2026-11-01 ("1"):
+        keep 16 and the ~0.5 dB at the edge (decisions/2026-11-01-band-update-16.md).
    22.4 [RUNNING 2026-11-01 01:16] The soak, 8 h on 02e6a24 (2026-11-01-step22.4-soak8; the tools' 8-bin band).
 
 

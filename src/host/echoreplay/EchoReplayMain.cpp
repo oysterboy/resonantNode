@@ -8,10 +8,13 @@
 // tools/bench/rawcorpus.py) gives real levels; --level-db moves a file toward them.
 //
 //   program [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] [--release S16] [--floor S16]
-//           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--out-dir DIR] [--verbose] <file.wav>...
+//           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--out-dir DIR] [--loop-gain G] [--verbose]
+//           <file.wav>...
 //
 // With --plan whisper and --out-dir, each file also goes through Whispernet's delay line (GatedDelayLine, 2 s) under
-// the gate, and what it would play is written as DIR/<name>.gated.wav.
+// the gate, and what it would play is written as DIR/<name>.gated.wav. --loop-gain G feeds that output back into
+// the input at G (the howl path: G > 1 grows by 20 log G dB per round of D), with 20 s of silence after the file to
+// see whether the loop dies down; the summary gives the output's loudest second and its last 5 s.
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -156,6 +159,7 @@ int main(int argc, char** argv) {
     bool whisper = false;
     float loudBound = 20000.0f, modIndex = 0.3f;
     bool verbose = false;
+    double loopGain = 0.0;
     std::string outDir;  // --plan whisper: the delay line's output per file, <name>.gated.wav
     std::vector<std::string> files;
     for (int i = 1; i < argc; ++i) {
@@ -175,6 +179,8 @@ int main(int argc, char** argv) {
             modIndex = static_cast<float>(atof(next("--mod")));
         } else if (a == "--out-dir") {
             outDir = next("--out-dir");
+        } else if (a == "--loop-gain") {
+            loopGain = atof(next("--loop-gain"));
         } else if (a == "--rate") {
             rate = static_cast<uint32_t>(strtoul(next("--rate"), nullptr, 10));
         } else if (a == "--level-db") {
@@ -195,7 +201,7 @@ int main(int argc, char** argv) {
             fprintf(stderr,
                     "usage: %s [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] "
                     "[--release S16] [--floor S16] [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] "
-                    "[--out-dir DIR] [--verbose] <file.wav>...\n",
+                    "[--out-dir DIR] [--loop-gain G] [--verbose] <file.wav>...\n",
                     argv[0]);
             return 2;
         } else {
@@ -269,9 +275,13 @@ int main(int argc, char** argv) {
         if (whisper) {
             x.resize(x.size() + static_cast<size_t>(rate) * kDelayMs / 1000U, 0.0f);  // the line's tail plays out
         }
+        if (whisper && loopGain > 0.0) {
+            x.resize(x.size() + static_cast<size_t>(rate) * 20U, 0.0f);  // 20 s more: does the loop die down?
+        }
         GatedDelayLine line;
         std::vector<int16_t> played;
-        if (whisper && !outDir.empty() &&
+        int16_t lastOut = 0;
+        if (whisper && (!outDir.empty() || loopGain > 0.0) &&
             !line.begin(static_cast<size_t>(rate) * kDelayMs / 1000U, kBlock, static_cast<size_t>(rate) / 100U)) {
             printf("%s: no memory for the delay line\n", path.c_str());
             continue;
@@ -292,13 +302,15 @@ int main(int argc, char** argv) {
         float peakLevel = 0.0f;
         for (size_t start = 0; start + kBlock <= x.size(); start += kBlock) {
             for (size_t i = start; i < start + kBlock; ++i) {
-                double v = x[i] * scale;
+                // --loop-gain: the own replay back into the mic (the howl path, one sample late on top of D).
+                const double heard = x[i] + loopGain * lastOut / 32768.0;
+                double v = heard * scale;
                 v = v > 8388607.0 ? 8388607.0 : (v < -8388608.0 ? -8388608.0 : v);
                 follower.push(static_cast<int32_t>(v));
                 if (line.delay() > 0) {
-                    const double s = x[i] * 32767.0;
-                    played.push_back(
-                        line.process(static_cast<int16_t>(s > 32767.0 ? 32767.0 : (s < -32768.0 ? -32768.0 : s))));
+                    const double s = heard * 32767.0;
+                    lastOut = line.process(static_cast<int16_t>(s > 32767.0 ? 32767.0 : (s < -32768.0 ? -32768.0 : s)));
+                    played.push_back(lastOut);
                 }
             }
             const uint64_t blockUs = static_cast<uint64_t>(start) * 1000000ULL / rate;
@@ -406,7 +418,28 @@ int main(int argc, char** argv) {
                    path.c_str(), static_cast<unsigned long>(rate), static_cast<double>(x.size()) / rate, peakLevel,
                    occurrences, valid, validMs / 1000.0, judgedMs / 1000.0, outOfLevel, flat, opens, gatedMs / 1000.0,
                    phrasesOpened > 0 ? latencyMs / phrasesOpened : 0.0);
-            if (!played.empty()) {
+            if (loopGain > 0.0 && !played.empty()) {
+                // The output's RMS per second: the loudest, and the last 5 s (0 when the loop died down).
+                double loudest = 0.0, tail = 0.0;
+                const size_t sec = rate;
+                for (size_t k = 0; k + sec <= played.size(); k += sec) {
+                    double sum = 0.0;
+                    for (size_t j = k; j < k + sec; ++j) {
+                        sum += static_cast<double>(played[j]) * played[j];
+                    }
+                    loudest = sum > loudest ? sum : loudest;
+                }
+                const size_t tailFrom = played.size() > 5 * sec ? played.size() - 5 * sec : 0;
+                for (size_t j = tailFrom; j < played.size(); ++j) {
+                    tail += static_cast<double>(played[j]) * played[j];
+                }
+                const auto dbfs = [](double meanSquare) {
+                    return 10.0 * log10(meanSquare / (32768.0 * 32768.0) + 1e-18);
+                };
+                printf("  loop_gain=%.2f out_loudest_s_dbfs=%.1f out_last5s_dbfs=%.1f\n", loopGain, dbfs(loudest / sec),
+                       dbfs(tail / static_cast<double>(played.size() - tailFrom)));
+            }
+            if (!played.empty() && !outDir.empty()) {
                 const size_t slash = path.find_last_of("/\\");
                 std::string name = path.substr(slash == std::string::npos ? 0 : slash + 1);
                 name = outDir + "/" + name.substr(0, name.rfind('.')) + ".gated.wav";

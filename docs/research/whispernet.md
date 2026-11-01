@@ -280,3 +280,19 @@ phrase's start), set for each new block while open, the gain ramped over 10 ms a
 holds 96 KB of samples and 377 bytes of gate. native-echoreplay --plan whisper --out-dir DIR writes what it would play
 (DIR/<name>.gated.wav): on the synthetic set the whispers come out whole at their input level (-45.4 dBFS from -45),
 speech, music, fan and claps as silence, the mixed file 17.5 s (its whisper and its whisper over the fan).
+
+The howl simulation (2026-11-01): native-echoreplay --loop-gain G feeds the delay line's output back into the input
+at G (one round = D = 2 s, so G > 1 grows by 20 log G dB per round), 20 s of silence after the file. whisper_female
+(-45 dBFS):
+
+| loop gain | gate opens | gated | output, loudest second | output, last 5 s |
+|---|---|---|---|---|
+| 0.5 | 9 | 34.7 s (the echo's echo, decaying) | -39.6 dBFS | silent |
+| 1.0 | 8 | 17.6 s | -36.6 | silent |
+| 1.5 | 5 | 15.9 s | -37.1 | silent |
+| 2.0 | 5 | 10.8 s | -35.9 | silent |
+| 4.0 | 5 | 9.3 s | -36.4 | silent |
+
+No gain makes it howl: a grown replay crosses the loud bound within a round or two and keeps the gate shut to the
+phrase's end, and the fan never opens it. The loop here is a flat gain; a room's loop has peaks (a howl there is a
+tone, which reads unmodulated and shuts the gate as well). The two-board test on the desk is still the decision.

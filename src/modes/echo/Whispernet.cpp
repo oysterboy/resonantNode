@@ -16,7 +16,10 @@ constexpr uint32_t kDelayMinMs =
     400;  // the gate needs ~400 ms to open (decisions/2026-11-01-whispernet-delay-per-node.md)
 constexpr uint32_t kFifoMs = 100;
 constexpr uint32_t kPrimeMs = 20;  // the writer starts once this waits: the loop pushes in bursts of up to 8 ms
-constexpr uint32_t kRampMs = 10;
+constexpr uint32_t kRampMs = 40;  // the gain's fade at each edge (10 ms sounded cut off to the owner)
+constexpr uint32_t kPreMs = 200;  // passed before the phrase's start: the whisper's soft beginning under the onset
+constexpr uint32_t kHoldMs = 300;  // the line kept open after the gate shuts: the whisper's tail
+constexpr uint32_t kTailMs = 300;  // not listening this long after the own playback (the room's ring-down)
 
 // Whispernet's Behavior (roadmap-echo.md ECHO-002 item 4): an answered phrase is passed at once (no wait, no jitter: D
 // is the spread), the node keeps listening while it plays (suppression off); the level climbs with every phrase heard
@@ -126,6 +129,9 @@ void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior
 }
 
 void Whispernet::endBlock(detection::EnvelopeRuntime& runtime, float level, uint32_t blockMs) {
+    if (_holdPending && timing::atOrAfter(blockMs, _holdUntilMs)) {
+        shutLine();
+    }
     float flatness = 0.0f;
     if (_flat.take(flatness) && level >= _values.onset) {
         runtime.recordFeature(detection::FeatureStreamId::SpectralFlatness, blockMs, flatness);
@@ -142,15 +148,46 @@ uint64_t Whispernet::lineIndexAtMs(unsigned long ms) const {
 
 void Whispernet::apply(const WhisperGate::Step& step) {
     if (step.event == WhisperGate::Event::Open) {
-        _line.pass(lineIndexAtMs(step.fromMs), _line.written());
+        const unsigned long from = step.fromMs > kPreMs ? step.fromMs - kPreMs : 0UL;
+        _line.pass(lineIndexAtMs(from), _line.written());
         _line.setOpen(true);
+        _holdPending = false;
         _openedAtMs = step.fromMs;
+        if (!_playArmed) {
+            _playArmed = true;
+            _playFromMs = from + _values.delayMs;  // the first passed sample's turn
+        }
         ++_counts.opens;
     } else if (step.event == WhisperGate::Event::Close) {
-        _line.setOpen(false);
         _counts.gatedMs += step.fromMs - _openedAtMs;
-        _playedOutAtMs = _blockMs + _values.delayMs + kRampMs;  // what passed up to now plays within D
+        _holdPending = true;  // shut after the tail (endBlock)
+        _holdUntilMs = _blockMs + kHoldMs;
     }
+}
+
+void Whispernet::shutLine() {
+    _holdPending = false;
+    if (_line.isOpen()) {
+        _line.setOpen(false);
+        _playedOutAtMs = _blockMs + _values.delayMs + kRampMs;  // what passed up to now plays within D
+        _playUntilMs = _playedOutAtMs + kTailMs;
+    }
+}
+
+bool Whispernet::inputSuppressed(uint32_t blockMs) {
+    if (!_playArmed) {
+        return false;
+    }
+    if (!_line.isOpen() && !_holdPending && timing::atOrAfter(blockMs, _playUntilMs)) {
+        _playArmed = false;  // played out
+        return false;
+    }
+    return timing::atOrAfter(blockMs, _playFromMs);
+}
+
+void Whispernet::suppressNow() {
+    apply(_gate.onPhraseEnd(_blockMs));  // the phrase ends here for the gate: what follows holds the own replay
+    shutLine();
 }
 
 void Whispernet::handleResult(const detection::EnvelopeRuntime::Result& result, ResonantBehavior& behavior,

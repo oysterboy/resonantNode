@@ -147,6 +147,7 @@ private:
     int32_t _envelopePeak = 0;  // since the last status
 
     Whispernet _whisper;
+    bool _whisperDeaf = false;  // detection paused for Whispernet's own playback
 
     Load _load;
     unsigned long _toneOffAtMs = 0;

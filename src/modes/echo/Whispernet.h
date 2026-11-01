@@ -33,10 +33,12 @@ public:
     struct Values {
         // Strength16 levels from the desk, 2026-11-01 (E5, the synthetic set through the lab PC's speaker): the quiet
         // room reads 40-100, a whisper (-35 dBFS file) 160-570 (level P90), speech (-20 / -25 dBFS) 1,100-4,400.
-        // Not the replay tool's scale (its files map to the mic's full scale); WHISPER GATE sets them live.
-        float onset = 250.0f;  // the detector's onset: a phrase starts
-        float release = 170.0f;  // and its release
-        float floor = 150.0f;  // the level window's low bound
+        // The owner's whispers: 300-860 from 0.5-1 m, ~150-200 from 2 m; in the afternoon the room sat at 150-260, so
+        // the thresholds went up (2.5x the room): 2 m whispers are lost. Not the replay tool's scale (its files map to
+        // the mic's full scale); WHISPER GATE sets them live.
+        float onset = 400.0f;  // the detector's onset: a phrase starts
+        float release = 280.0f;  // and its release
+        float floor = 300.0f;  // the level window's low bound
         float loud = 900.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
         float modulation = 0.3f;  // the modulation index a whisper reaches at least (Medium)
         // The spectrum's flatness a whisper lies within (BandFlatness, the median of the phrase's loud blocks): the
@@ -46,9 +48,9 @@ public:
         float flatMin = 0.15f;
         float flatMax = 0.40f;
         uint32_t delayMs = 1000;  // D, set per node at begin()
-        // The replay at half its level (-6 dB a hop): at 1 two boards on the desk kept whispering each other's replays past
-        // the 60 s watched, at 0.5 the chain ended with the whisper (E1 / E4, 2026-11-01).
-        float gain = 0.5f;  // the replay's level
+        // The replay's level over the mic's: the amp plays the line's int16 at full scale, so gain 1 is the mic's digital
+        // level, inaudible at a metre; 16 still was, 64 sounded about right to the owner (desk, 2026-11-01).
+        float gain = 64.0f;
         bool enabled = true;
     };
     struct Counts {
@@ -104,6 +106,11 @@ public:
     void dumpRecording();
     const Values& values() const { return _values; }
     bool ready() const { return _line.capacity() > 0 && _fifo.capacity() > 0; }
+    // The node is playing its own replay (or its tail) at blockMs: the shell does not feed detection meanwhile and
+    // restarts it after (owner 2026-11-01: at an audible gain the node answered itself).
+    bool inputSuppressed(uint32_t blockMs);
+    // Detection pauses for the own playback: the gate shuts now (the line holds no own output).
+    void suppressNow();
     size_t bytes() const { return _line.capacity() * sizeof(int16_t) + _fifo.capacity() * sizeof(int16_t); }
 
 private:
@@ -125,6 +132,15 @@ private:
     bool _emitting = false;  // Behavior's emission runs
     bool _answerPending = false;  // a phrase was answered, Behavior's chirp not started yet
     unsigned long _playedOutAtMs = 0;  // the closed gate's last sample plays then
+    // The line held open a little past the gate's closing (the whisper's tail), then shut.
+    bool _holdPending = false;
+    unsigned long _holdUntilMs = 0;
+    // The own playback: from the first passed sample's turn (its time + D) to the last's plus a tail, the node does not
+    // listen (it would hear its own replay as a new whisper, louder than the first at an audible gain).
+    bool _playArmed = false;
+    unsigned long _playFromMs = 0;
+    unsigned long _playUntilMs = 0;
+    void shutLine();
     // WHISPER REC
     unsigned long _recArmed = 0;
     bool _recPending = false;

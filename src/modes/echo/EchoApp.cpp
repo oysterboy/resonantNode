@@ -227,6 +227,19 @@ void EchoApp::detectBlock(const AudioBlock& block, uint64_t ringIndex, uint32_t 
     if (_detectionPaused) {
         return;
     }
+    if (kWhispernet) {
+        // Not listening to the own replay: detection paused while it plays, restarted clean after.
+        const bool deaf = _whisper.inputSuppressed(blockMs);
+        if (deaf && !_whisperDeaf) {
+            _whisper.suppressNow();
+        } else if (!deaf && _whisperDeaf) {
+            _runtime.restartAfterInputGap();
+        }
+        _whisperDeaf = deaf;
+        if (deaf) {
+            return;
+        }
+    }
     _runtime.onBlock(_follower.strength(), block.approxStartUs64, blockMs);
     detection::EnvelopeRuntime::Result result;
     while (_runtime.popResult(result)) {

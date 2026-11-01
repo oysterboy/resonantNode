@@ -26,6 +26,7 @@
 
 #include "../../audio/EnvelopeFollower.h"
 #include "../../audio/GatedDelayLine.h"
+#include "../../behavior/WhisperGate.h"
 #include "../../detection/EnvelopeRuntime.h"
 
 namespace {
@@ -294,11 +295,36 @@ int main(int argc, char** argv) {
         follower.setShift(EnvelopeFollower::shiftForRate(rate));
         size_t occurrences = 0, valid = 0, slow = 0, unmeasured = 0, outOfLevel = 0, flat = 0;
         double validMs = 0.0, judgedMs = 0.0;
-        bool gateOpen = false, tooLoud = false, phraseOpened = false;
-        size_t phrasesOpened = 0;
-        unsigned long gateFromMs = 0, lastCloseMs = 0, phraseStartMs = 0;
+        WhisperGate gate;
+        gate.setDelayMs(kDelayMs);
+        bool phraseOpened = false;
+        unsigned long openedPhraseMs = 0, gateFromMs = 0;
+        size_t phrasesOpened = 0, opens = 0;
         double gatedMs = 0.0, latencyMs = 0.0;
-        size_t opens = 0;
+        // A gate step into the delay line and the counts; durationMs: how far into its phrase the gate opened.
+        const auto apply = [&](const WhisperGate::Step& step, unsigned long durationMs) {
+            if (step.event == WhisperGate::Event::Open) {
+                gateFromMs = step.fromMs;
+                if (line.delay() > 0) {
+                    line.pass(sampleAtMs(gateFromMs), line.written());
+                    line.setOpen(true);
+                }
+                ++opens;
+                phraseOpened = phraseOpened && openedPhraseMs == gate.phraseStartMs();
+                if (!phraseOpened) {  // the time to the first opening, per phrase
+                    phraseOpened = true;
+                    openedPhraseMs = gate.phraseStartMs();
+                    ++phrasesOpened;
+                    latencyMs += durationMs;
+                }
+            } else if (step.event == WhisperGate::Event::Close) {
+                line.setOpen(false);
+                gatedMs += step.fromMs - gateFromMs;
+                if (verbose) {
+                    printf("  gate_ms=%lu..%lu\n", gateFromMs, step.fromMs);
+                }
+            }
+        };
         float peakLevel = 0.0f;
         for (size_t start = 0; start + kBlock <= x.size(); start += kBlock) {
             for (size_t i = start; i < start + kBlock; ++i) {
@@ -322,52 +348,19 @@ int main(int argc, char** argv) {
                 const detection::Occurrence& oc = r.inspected.occurrence;
                 const detection::OccurrenceAttack& at = oc.attack;
                 if (r.provisional) {
-                    // The gate as the shell would run it: opened by a valid verdict on the running phrase (the delay
-                    // line passes it from the phrase's start, at most kDelayMs back), closed by a failing one or the
-                    // phrase's end. A phrase once too loud keeps it shut to its end: speech has quiet half-seconds.
+                    // The gate as the shell runs it (WhisperGate); every phrase is answered here (no Behavior).
                     const unsigned long nowMs = static_cast<unsigned long>(blockUs / 1000U);
-                    if (oc.startMs != phraseStartMs) {
-                        phraseStartMs = oc.startMs;
-                        tooLoud = false;
-                        phraseOpened = false;
+                    const bool tooLoud = oc.level.measured && oc.level.p90 > loudBound;
+                    WhisperGate::Step step = gate.onVerdict(oc.startMs, r.verdict.valid, tooLoud, nowMs);
+                    if (step.event == WhisperGate::Event::Ask) {
+                        step = gate.decide(true);
                     }
-                    tooLoud = tooLoud || oc.level.levelClass == detection::StrengthClass::None;
-                    const bool pass = r.verdict.valid && !tooLoud;
-                    if (pass && !gateOpen) {
-                        gateOpen = true;
-                        unsigned long from = nowMs > kDelayMs ? nowMs - kDelayMs : 0UL;
-                        from = oc.startMs > from ? oc.startMs : from;
-                        gateFromMs = lastCloseMs > from ? lastCloseMs : from;
-                        if (line.delay() > 0) {
-                            line.pass(sampleAtMs(gateFromMs), line.written());
-                            line.setOpen(true);
-                        }
-                        ++opens;
-                        if (!phraseOpened) {  // the time to the first opening, per phrase
-                            phraseOpened = true;
-                            ++phrasesOpened;
-                            latencyMs += oc.durationMs;
-                        }
-                    } else if (!pass && gateOpen) {
-                        gateOpen = false;
-                        gatedMs += nowMs - gateFromMs;
-                        if (verbose) {
-                            printf("  gate_ms=%lu..%lu\n", gateFromMs, nowMs);
-                        }
-                        lastCloseMs = nowMs;
-                    }
+                    apply(step, oc.durationMs);
                     continue;
                 }
                 ++occurrences;
                 if (whisper) {
-                    if (gateOpen) {
-                        gateOpen = false;
-                        lastCloseMs = oc.startMs + oc.durationMs;
-                        gatedMs += lastCloseMs - gateFromMs;
-                        if (verbose) {
-                            printf("  gate_ms=%lu..%lu\n", gateFromMs, lastCloseMs);
-                        }
-                    }
+                    apply(gate.onPhraseEnd(oc.startMs + oc.durationMs), 0);
                     judgedMs += oc.durationMs;
                     if (r.verdict.valid) {
                         ++valid;
@@ -399,17 +392,8 @@ int main(int argc, char** argv) {
                            at.measured ? "" : "na/", static_cast<unsigned long>(at.riseMs), r.verdict.valid ? 1 : 0);
                 }
             }
-            if (line.isOpen() && !gateOpen) {
-                line.setOpen(false);
-            }
-            if (gateOpen && !runtime.candidateOpen()) {  // the detector dropped the candidate without accepting it
-                gateOpen = false;
-                line.setOpen(false);
-                lastCloseMs = static_cast<unsigned long>(blockUs / 1000U);
-                gatedMs += lastCloseMs - gateFromMs;
-                if (verbose) {
-                    printf("  gate_ms=%lu..%lu\n", gateFromMs, lastCloseMs);
-                }
+            if (gate.open() && !runtime.candidateOpen()) {  // the detector dropped the phrase without accepting it
+                apply(gate.onPhraseEnd(static_cast<unsigned long>(blockUs / 1000U)), 0);
             }
         }
         if (whisper) {

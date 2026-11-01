@@ -123,6 +123,44 @@ void I2sToneOutput::toneOff() {
     portEXIT_CRITICAL(&_trainMux);
 }
 
+void I2sToneOutput::setStream(SampleFifo* fifo, float gain, size_t primeSamples) {
+    _streamGain = gain;
+    _streamPrime = primeSamples;
+    _stream = fifo;
+}
+
+// The stream's samples, or silence while it primes; true while a stream is set (the tone and the clip wait).
+bool I2sToneOutput::renderStream(int32_t* frames, size_t frameCount) {
+    SampleFifo* fifo = _stream;
+    if (fifo == nullptr) {
+        _streamPrimed = false;
+        return false;
+    }
+    int16_t samples[kBlockFrames];
+    const size_t n = frameCount < kBlockFrames ? frameCount : kBlockFrames;
+    size_t got = 0;
+    if (!_streamPrimed && fifo->available() >= _streamPrime) {
+        _streamPrimed = true;
+    }
+    if (_streamPrimed) {
+        got = fifo->pop(samples, n);
+        _streamPrimed = got == n;  // ran dry: prime again before the next sample
+    }
+    const float gain = _streamGain;
+    for (size_t i = 0; i < frameCount; ++i) {
+        int32_t value = 0;
+        if (i < got) {
+            float f = static_cast<float>(samples[i]) / 32768.0f * gain;
+            f = f > 0.999f ? 0.999f : (f < -0.999f ? -0.999f : f);  // never past int32 (issue #31's trap)
+            value = static_cast<int32_t>(f * kFullScale);
+        }
+        frames[2 * i] = value;
+        frames[2 * i + 1] = value;
+    }
+    _envelope = 0.0f;  // a tone after the stream ramps in from silence
+    return true;
+}
+
 bool I2sToneOutput::startClip(const int16_t* samples, size_t count, float gain) {
     if (_task == nullptr || samples == nullptr || count == 0) {
         return false;
@@ -299,7 +337,7 @@ void I2sToneOutput::run() {
 void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
     const uint32_t sampleRateHz =
         _port.sampleRateHz() > 0 ? _port.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
-    if (renderClip(frames, frameCount, sampleRateHz)) {
+    if (renderStream(frames, frameCount) || renderClip(frames, frameCount, sampleRateHz)) {
         return;
     }
     takePulseTrainRequest(sampleRateHz);

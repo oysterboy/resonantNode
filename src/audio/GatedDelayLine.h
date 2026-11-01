@@ -9,7 +9,7 @@
 /*
 GatedDelayLine (ECHO-002, step 20.3)
 
-Whispernet's output path: the mic delayed by D samples, passed only where a gate bit is set. The bits are per block
+Whispernet's output path: the mic delayed by D samples (up to the capacity allocated), passed only where a gate bit is set. The bits are per block
 of input samples and can be set after the samples came in, as long as they have not been played yet: the gate opens
 on a provisional verdict ~0.3 s into a phrase and passes the phrase from its start, which the line still holds when
 D is longer than the evidence time. The gain ramps toward each block's bit over rampSamples, so the gate opens and
@@ -20,19 +20,22 @@ Does not: decide when the gate opens (the mode's rule on Detection's verdicts), 
 */
 class GatedDelayLine {
 public:
-    // Allocates delaySamples int16 and a byte per block (on the heap; static RAM is full). False when the allocation
-    // fails. blockSamples is the gate's granularity, rampSamples the gain's ramp (0: a hard switch).
-    bool begin(size_t delaySamples, size_t blockSamples, size_t rampSamples) {
-        _delay = delaySamples;
+    // Allocates capacitySamples int16 and a byte per block (on the heap; static RAM is full); the delay starts at the
+    // capacity. False when the allocation fails. blockSamples is the gate's granularity, rampSamples the gain's ramp
+    // (0: a hard switch).
+    bool begin(size_t capacitySamples, size_t blockSamples, size_t rampSamples) {
+        _capacity = capacitySamples;
+        _delay = capacitySamples;
         _block = blockSamples > 0 ? blockSamples : 1;
-        _blocks = _delay / _block + 2;  // the block being written never aliases the block being played
-        _samples.reset(new (std::nothrow) int16_t[_delay > 0 ? _delay : 1]);
+        _blocks = _capacity / _block + 2;  // the block being written never aliases the block being played
+        _samples.reset(new (std::nothrow) int16_t[_capacity > 0 ? _capacity : 1]);
         _bits.reset(new (std::nothrow) uint8_t[_blocks]);
-        if (!_samples || !_bits || _delay == 0) {
+        if (!_samples || !_bits || _capacity == 0) {
+            _capacity = 0;
             _delay = 0;
             return false;
         }
-        for (size_t i = 0; i < _delay; ++i) {
+        for (size_t i = 0; i < _capacity; ++i) {
             _samples[i] = 0;
         }
         for (size_t i = 0; i < _blocks; ++i) {
@@ -43,6 +46,14 @@ public:
         _written = 0;
         _open = false;
         return true;
+    }
+
+    // The delay, 1 .. the capacity (Whispernet's per-node D). A change mid-stream replays or skips a stretch once.
+    void setDelay(size_t samples) {
+        if (_capacity == 0) {
+            return;
+        }
+        _delay = samples < 1 ? 1 : (samples > _capacity ? _capacity : samples);
     }
 
     // While open, every block that comes in is marked to pass (the gate as it stands now).
@@ -76,13 +87,13 @@ public:
         if (_written % _block == 0) {
             _bits[blockSlot(_written)] = _open ? 1 : 0;  // a new input block: the gate as it stands
         }
-        const size_t slot = static_cast<size_t>(_written % _delay);
-        const int16_t delayed = _samples[slot];
-        _samples[slot] = in;
+        int16_t delayed = 0;
         float target = 0.0f;
         if (_written >= _delay) {
+            delayed = _samples[static_cast<size_t>((_written - _delay) % _capacity)];  // read before the write below
             target = _bits[blockSlot(_written - _delay)] != 0 ? 1.0f : 0.0f;
         }
+        _samples[static_cast<size_t>(_written % _capacity)] = in;
         ++_written;
         if (_gain < target) {
             _gain = _gain + _step < target ? _gain + _step : target;
@@ -94,6 +105,7 @@ public:
     }
 
     size_t delay() const { return _delay; }
+    size_t capacity() const { return _capacity; }
     // The index the next input sample gets.
     uint64_t written() const { return _written; }
     float gain() const { return _gain; }
@@ -103,6 +115,7 @@ private:
 
     std::unique_ptr<int16_t[]> _samples;
     std::unique_ptr<uint8_t[]> _bits;
+    size_t _capacity = 0;
     size_t _delay = 0;
     size_t _block = 1;
     size_t _blocks = 0;

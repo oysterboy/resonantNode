@@ -6,6 +6,7 @@
 #include <freertos/task.h>
 
 #include "../app/RuntimeDefaults.h"
+#include "../audio/SampleFifo.h"
 #include "../output/ToneOutput.h"
 #include "AudioSourceI2S.h"
 
@@ -52,6 +53,11 @@ public:
     bool startClip(const int16_t* samples, size_t count, float gain) override;
     bool clipActive() const override;
 
+    // Whispernet (ECHO-002): play what the FIFO delivers, continuously, in place of the tone and the clip, until set
+    // to nullptr. The writer starts once primeSamples wait, and waits for them again after running dry (silence
+    // meanwhile), so the loop's 8 ms bursts do not tear the output. The caller keeps the FIFO alive while set.
+    void setStream(SampleFifo* fifo, float gain, size_t primeSamples);
+
     // Stops the writer task (tone off first; returns once the task is gone,
     // at most ~100 ms). begin() starts it again. For a build that needs the
     // tone only briefly (the Analyzer's SELFTEST amp check) and should not
@@ -63,6 +69,7 @@ private:
     void run();
     void renderBlock(int32_t* frames, size_t frameCount);
     bool renderClip(int32_t* frames, size_t frameCount, uint32_t sampleRateHz);
+    bool renderStream(int32_t* frames, size_t frameCount);
     void takePulseTrainRequest(uint32_t sampleRateHz);
     uint32_t hopStep(uint32_t sampleRateHz);
     float nextGain();
@@ -98,9 +105,9 @@ private:
     // Task-only render state.
     uint32_t _phase = 0;
     float _envelope = 0.0f;
-    bool _trainRunning = false;   // pulses still to render
+    bool _trainRunning = false;  // pulses still to render
     bool _trainDraining = false;  // last pulse off, ramping to silence
-    bool _trainOn = false;        // current segment: pulse (true) or gap
+    bool _trainOn = false;  // current segment: pulse (true) or gap
     uint32_t _trainPulsesLeft = 0;
     uint32_t _trainSegmentLeft = 0;  // samples left in the current segment
     uint32_t _trainOnSamples = 0;
@@ -108,8 +115,8 @@ private:
     uint32_t _trainRampMs = 0;
     uint32_t _hopHz[kMaxHop] = {};  // frequency per pulse, cycled; none = _toneHz
     size_t _hopCount = 0;
-    size_t _hopIndex = 0;           // next hop entry
-    uint32_t _trainStep = 0;        // phase step of the current pulse; 0 = use _toneHz
+    size_t _hopIndex = 0;  // next hop entry
+    uint32_t _trainStep = 0;  // phase step of the current pulse; 0 = use _toneHz
     // Gain per pulse, cycled; none = every pulse at _amplitude. Changes between pulses only (the envelope is 0).
     float _gain[kMaxHop] = {};
     size_t _gainCount = 0;
@@ -126,6 +133,11 @@ private:
     size_t _clipCount = 0;
     size_t _clipPos = 0;
     float _clipGain = 1.0f;
+    // Stream (Whispernet): set by the caller, read by the task.
+    SampleFifo* volatile _stream = nullptr;
+    volatile float _streamGain = 1.0f;
+    volatile size_t _streamPrime = 0;
+    bool _streamPrimed = false;  // task-only
 
     // Sweep render state: samples since the tone started and the current
     // phase step as a float accumulator (one add per sample).

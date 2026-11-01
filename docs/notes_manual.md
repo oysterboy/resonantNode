@@ -19,6 +19,7 @@ platformio run -e esp32dev            Node (RB, the field firmware)
 platformio run -e esp32dev-analyzer   Analyzer (default env)
 platformio run -e esp32dev-emitter    Emitter (signal source only)
 platformio run -e esp32dev-echo       the echo modes' shell at 48 kHz (D-AMP only; ECHO-003, 2026-10-30)
+platformio run -e esp32dev-whisper    the same shell as Whispernet at 24 kHz (D-AMP only; ECHO-002, 2026-11-01)
 ```
 
 These build the D-AMP board (MAX98357A amp and I2S mic on one full-duplex port), the node hardware
@@ -328,6 +329,27 @@ The values are code defaults in `EchoApp.h` / `echoBehavior()` until ECHO-003's 
 By radio from a USB Node: `NET <name|*> OTA ...` (the way back to the Node image), `NET <name> ECHO STATUS`,
 `NET <name> NET PING`. The shell is not a gateway (no NET to other boards from it). Its boot line
 `ECHO boot ... ring_bytes=... largest_block_before_ring=... net_started=1` gives the memory numbers.
+
+Whispernet (2026-11-01, ECHO-002; `esp32dev-whisper`, the same shell at 24 kHz): a whisper heard is whispered back
+after the board's own delay D (400 .. 2000 ms, from the chip id; `delay_ms=` in the boot line). The mic runs through a
+2 s delay line (96 KB, `whisper_bytes=` in the boot line, `ECHO ERR whisper_alloc_failed` when the heap had no such
+block) that the amp streams continuously, silent while the gate is shut. A phrase (onset to release, gaps under 300 ms
+bridged) is judged while it runs, 300 ms in and every 100 ms after: its level P90 between `floor` and `loud` and its
+syllable modulation at least `mod`; the first passing check asks Behavior (no idle call, no wait, no jitter; the echo
+room's level and rest), and an answered phrase is passed from its start. A failing check shuts the gate, a phrase once
+louder than `loud` stays shut to its end. Detection keeps running while the board plays (it hears its own replay).
+The rule is `src/behavior/WhisperGate.h`, the values code defaults in `Whispernet.h` (from the synthetic set, to be
+tuned on the desk); `native-echoreplay --plan whisper` runs the same chain and gate on WAV files.
+
+```text
+WHISPER STATUS            delay_ms phrases whispers checks asked answered opens gated_ms replays gate_open
+                          fifo_wait fifo_dropped underruns line_bytes (also after each ECHO STATUS)
+WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [delay=MS 400..2000] [gain=] [on=0|1]
+                          live values (Strength16 levels; not saved)
+```
+
+Lines: `WHISPER heard after_ms= level_p90= mod= decision=` when a phrase first passes. TONE is silent in this build
+(the stream has the amp). By radio: `NET <name> WHISPER STATUS` / `WHISPER GATE ...`.
 
 ## Runtime gate chain
 

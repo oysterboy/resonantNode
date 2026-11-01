@@ -17,9 +17,17 @@
 #include "../../net/NodeNet.h"
 #include "../../output/ChirpOutput.h"
 #include "../../output/SoundOutput.h"
+#include "Whispernet.h"
 
 #ifndef ECHO_RING_MS
 #define ECHO_RING_MS 500
+#endif
+
+// esp32dev-whisper builds the shell as Whispernet (ECHO-002) instead of the echo room; both paths compile in both.
+#ifdef WHISPERNET
+constexpr bool kWhispernet = true;
+#else
+constexpr bool kWhispernet = false;
 #endif
 
 /*
@@ -47,7 +55,8 @@ Owns: the I2S port and the tone writer, the capture ring and the clip buffer, th
 counters, the load counters, the radio's receive side (OTA, NET PING and ECHO by radio, replies through NetGateway).
 Does not: decide when to answer (Behavior), judge an occurrence (the inspector and makeVerdict), load or save params (the Node's
 NVS store stays untouched, so a board that passes through this image comes back with its Node saves), act as a NET
-gateway. Whispernet (ECHO-002) is not in it yet.
+gateway. Whispernet (ECHO-002) is the shell's other mode (kWhispernet, esp32dev-whisper): its delay line, gate and
+FIFO in Whispernet, the shell's runtime, Behavior, port and radio shared; the echo room's ring and clip not allocated.
 */
 class EchoApp {
 public:
@@ -136,6 +145,8 @@ private:
     void takeClip();
     bool _detectionPaused = false;
     int32_t _envelopePeak = 0;  // since the last status
+
+    Whispernet _whisper;
 
     Load _load;
     unsigned long _toneOffAtMs = 0;

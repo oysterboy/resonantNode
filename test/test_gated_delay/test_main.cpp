@@ -82,6 +82,24 @@ void test_pass_outside_the_unplayed_is_ignored() {
     TEST_ASSERT_EQUAL_INT16(0, line.process(0));  // sample 40 came in after the pass
 }
 
+// A delay below the capacity: the input comes out that many samples later (Whispernet's per-node D in a 2 s line).
+void test_delay_below_the_capacity() {
+    GatedDelayLine line;
+    TEST_ASSERT_TRUE(line.begin(100, 10, 0));
+    line.setDelay(30);
+    TEST_ASSERT_EQUAL_UINT32(30, line.delay());
+    line.setOpen(true);
+    int16_t out[60];
+    for (int i = 0; i < 60; ++i) {
+        out[i] = line.process(static_cast<int16_t>(i + 1));
+    }
+    TEST_ASSERT_EQUAL_INT16(0, out[29]);
+    TEST_ASSERT_EQUAL_INT16(1, out[30]);
+    TEST_ASSERT_EQUAL_INT16(30, out[59]);
+    line.setDelay(1000);  // clamped to the capacity
+    TEST_ASSERT_EQUAL_UINT32(100, line.delay());
+}
+
 // Whispernet's size: 2 s at 24 kHz, blocks of 128, 10 ms ramps.
 void test_whispernet_size() {
     GatedDelayLine line;
@@ -95,6 +113,7 @@ int main(int, char**) {
     RUN_TEST(test_only_passed_blocks_play);
     RUN_TEST(test_open_and_ramp);
     RUN_TEST(test_pass_outside_the_unplayed_is_ignored);
+    RUN_TEST(test_delay_below_the_capacity);
     RUN_TEST(test_whispernet_size);
     return UNITY_END();
 }

@@ -342,7 +342,11 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         Whispernet would play. The howl simulation (--loop-gain): no howl from gain 0.5 to 4, the loud bound
         shuts a grown replay within a round or two, the output silent 20 s on. Next: Behavior coupling and the
         24 kHz build (the Whispernet shell). Owner 2026-11-01: D per node, 400 ms .. 2 s
-        (decisions/2026-11-01-whispernet-delay-per-node.md).
+        (decisions/2026-11-01-whispernet-delay-per-node.md). The shell built (2026-11-01, compiled, not on a
+        board yet): esp32dev-whisper, the echo shell at 24 kHz with Whispernet (src/modes/echo/Whispernet.*):
+        the delay line streamed to the amp through a FIFO (SampleFifo, I2sToneOutput::setStream), WhisperGate
+        on the provisional verdicts, the first pass of a phrase to Behavior (no wait, no jitter, suppression
+        off), D from the chip id. Next: the desk (the heap for the 96 KB line, levels, a whisper, the controls).
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

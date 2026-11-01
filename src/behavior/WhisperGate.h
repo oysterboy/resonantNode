@@ -32,6 +32,10 @@ public:
         Close,  // the gate shuts at the time given
     };
     struct Step {
+        Step() = default;
+        Step(Event e, unsigned long from)
+            : event(e),
+              fromMs(from) {}  // the ESP toolchain's C++11: no aggregate init
         Event event = Event::None;
         unsigned long fromMs = 0;  // Open: pass from here; Close: shut here
     };

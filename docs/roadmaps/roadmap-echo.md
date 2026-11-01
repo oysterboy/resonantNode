@@ -52,7 +52,11 @@ a RAW capture holding the click and the replay; a bench session cited.
 
 ### ECHO-002 - Whispernet, layout 1: a whisper echoed through a gated delay line
 
-Status: TODO (owner 2026-10-30; layout 1, mic and speaker at the same position, for the tryout)
+Status: PARTIAL (owner 2026-10-30; layout 1, mic and speaker at the same position, for the tryout)
+Landed 2026-11-01 (step 20.3, host and compiled; not on a board yet): items 1, 2, 4 and 5 as built, item 2's loud
+bound as an inspection module (LevelWindow) rather than a detector reject, item 1's D per node 400 ms .. 2 s
+(decisions/2026-11-01-whispernet-delay-per-node.md), the mode in the echo shell (esp32dev-whisper) rather than its own
+directory. Open: item 3's coupling measured at boot, the unvoiced test, and the whole gate below on the desk.
 Research: docs/research/whispernet.md
 
 ```text

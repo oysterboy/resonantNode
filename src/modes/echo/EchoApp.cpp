@@ -58,20 +58,29 @@ EchoApp::EchoApp()
       _toneOutput(_i2sPort) {}
 
 void EchoApp::begin() {
-    printBuildIdentity(serialOut(), "echo");
+    printBuildIdentity(serialOut(), kWhispernet ? "whisper" : "echo");
     const roster::Entry* me = roster::find(ESP.getEfuseMac());
     _nodeName = me != nullptr ? me->name : "unknown";
 
     const uint32_t heapBeforeRing = largestFreeBlock();
-    _ring.begin(static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_RING_MS / 1000U);
-    _clipCapacity = static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * 300U / 1000U;
-    _clip.reset(new (std::nothrow) int16_t[_clipCapacity]);
-    if (!_clip) {
-        _clipCapacity = 0;
+    bool whisperReady = false;
+    if (kWhispernet) {
+        // Before the radio takes its heap: the line is one 96 KB block at 24 kHz.
+        whisperReady = _whisper.begin(runtime::kDefaultAudioI2SSampleRateHz, ESP.getEfuseMac());
+    } else {
+        _ring.begin(static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_RING_MS / 1000U);
+        _clipCapacity = static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * 300U / 1000U;
+        _clip.reset(new (std::nothrow) int16_t[_clipCapacity]);
+        if (!_clip) {
+            _clipCapacity = 0;
+        }
     }
     _i2sPort.begin();
     _toneOutput.begin();
     _chirpOutput.begin();
+    if (kWhispernet && whisperReady) {
+        _whisper.attachOutput(_toneOutput);
+    }
     _follower.setShift(EnvelopeFollower::shiftForRate(_i2sPort.sampleRateHz()));  // ~1.3 ms at any rate
     _behavior.resetState();
     configureEcho();
@@ -94,12 +103,16 @@ void EchoApp::begin() {
     serialOut().print(static_cast<unsigned long>(_clipCapacity * sizeof(int16_t)));
     serialOut().print(" largest_block_before_ring=");
     serialOut().print(heapBeforeRing);
+    serialOut().print(" whisper_bytes=");
+    serialOut().print(static_cast<unsigned long>(kWhispernet ? _whisper.bytes() : 0));
+    serialOut().print(" delay_ms=");
+    serialOut().print(kWhispernet ? _whisper.values().delayMs : 0);
     serialOut().print(" net_started=");
     serialOut().print(netUp ? 1 : 0);
     serialOut().print(" channel=");
     serialOut().println(NET_CHANNEL);
-    if (_ring.capacity() == 0 || _clipCapacity == 0) {
-        serialOut().println("ECHO ERR ring_or_clip_alloc_failed");
+    if (kWhispernet ? !whisperReady : (_ring.capacity() == 0 || _clipCapacity == 0)) {
+        serialOut().println(kWhispernet ? "ECHO ERR whisper_alloc_failed" : "ECHO ERR ring_or_clip_alloc_failed");
     }
     resetLoad();
     _nextLogMs = timebase::nowMs() + _logEveryMs;
@@ -141,15 +154,23 @@ void EchoApp::pollAudio() {
         // The ring's own index of this block's first sample: the clip is cut by it. Not block.startSampleIndex, which
         // also counts the DMA buffers the driver dropped (the ring never saw them; found on the desk 2026-10-31).
         const uint64_t ringIndex = _ring.written();
+        const uint32_t blockMs = timebase::msFromUs64(block.approxStartUs64);
+        if (kWhispernet) {
+            _whisper.beginBlock(blockMs);
+        }
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const int32_t s = block.samples[i];
             _follower.push(s);
-            _ring.push(static_cast<int16_t>(s >> 8));  // 24-bit canonical PCM to int16
+            if (kWhispernet) {
+                _whisper.pushSample(static_cast<int16_t>(s >> 8));  // 24-bit canonical PCM to int16, D later out
+            } else {
+                _ring.push(static_cast<int16_t>(s >> 8));  // 24-bit canonical PCM to int16
+            }
         }
         if (_follower.value() > _envelopePeak) {
             _envelopePeak = _follower.value();
         }
-        detectBlock(block, ringIndex, timebase::msFromUs64(block.approxStartUs64));
+        detectBlock(block, ringIndex, blockMs);
         takeClip();
         const uint32_t blockUs = micros() - startUs;
         if (blockUs > _load.blockUsMax) {
@@ -161,6 +182,10 @@ void EchoApp::pollAudio() {
 }
 
 void EchoApp::configureEcho() {
+    if (kWhispernet) {
+        _whisper.configure(_runtime, _behavior);
+        return;
+    }
     detection::ScalarTransientConfig d;
     d.observedStream = detection::FeatureStreamId::AmpEnvelope;
     d.onsetDetectionThreshold = _gate.onset;
@@ -198,8 +223,15 @@ void EchoApp::detectBlock(const AudioBlock& block, uint64_t ringIndex, uint32_t 
     _runtime.onBlock(_follower.strength(), block.approxStartUs64, blockMs);
     detection::EnvelopeRuntime::Result result;
     while (_runtime.popResult(result)) {
+        if (kWhispernet) {
+            _whisper.handleResult(result, _behavior, timebase::nowMs());
+            continue;
+        }
         ++_echo.occurrences;
         handleResult(result);
+    }
+    if (kWhispernet) {
+        _whisper.afterBlock(_runtime, blockMs);
     }
 }
 
@@ -247,6 +279,12 @@ void EchoApp::handleResult(const detection::EnvelopeRuntime::Result& result) {
 
 // Behavior's clock, the replay's end, and detection resuming clean after the own sound.
 void EchoApp::runBehavior(unsigned long now) {
+    if (kWhispernet) {
+        // Suppression off: detection keeps running while the node plays (it hears its own replay as a phrase).
+        _behavior.update(now);
+        _whisper.runBehavior(_behavior, now);
+        return;
+    }
     const bool paused = _behavior.ownEmitDetectionSuppressed(now);
     if (_detectionPaused && !paused) {
         _runtime
@@ -404,7 +442,8 @@ void EchoApp::pollNet() {
     NetGateway::ReplyScope reply(_netGateway, received.mac, f.seq, _nodeName);
     if (equalsIgnoreCase(f.text, "NET PING")) {
         printNetStatus();
-    } else if (startsWithWordIgnoreCase(f.text, "OTA") || startsWithWordIgnoreCase(f.text, "ECHO")) {
+    } else if (startsWithWordIgnoreCase(f.text, "OTA") || startsWithWordIgnoreCase(f.text, "ECHO") ||
+               startsWithWordIgnoreCase(f.text, "WHISPER")) {
         handleLine(f.text);
     } else {
         serialOut().println("NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)");
@@ -420,6 +459,10 @@ void EchoApp::handleLine(const char* line) {
         serialOut().println("ECHO reset");
     } else if (startsWithWordIgnoreCase(line, "ECHO GATE")) {
         handleGateCommand(line);
+    } else if (kWhispernet && startsWithWordIgnoreCase(line, "WHISPER GATE")) {
+        _whisper.handleGateCommand(line, _runtime, _behavior);
+    } else if (kWhispernet && equalsIgnoreCase(line, "WHISPER STATUS")) {
+        _whisper.printStatus();
     } else if (startsWithWordIgnoreCase(line, "ECHO LOG")) {
         handleLogCommand(line);
     } else if (startsWithWordIgnoreCase(line, "TONE")) {
@@ -551,6 +594,9 @@ void EchoApp::printStatus() {
     serialOut().print(" level_auto=");
     serialOut().println(_behavior.level(timebase::nowMs()));
     _envelopePeak = 0;
+    if (kWhispernet) {
+        _whisper.printStatus();
+    }
 }
 
 void EchoApp::printNetStatus() {
@@ -577,6 +623,11 @@ void EchoApp::printHelp() {
     serialOut().println("ECHO CMD: ECHO LOG <seconds> (status every n s, 0 = off)");
     serialOut().println(
         "ECHO CMD: ECHO GATE [onset=] [release=] [floor=] [peak=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]");
+    if (kWhispernet) {
+        serialOut().println("ECHO CMD: WHISPER STATUS");
+        serialOut().println(
+            "ECHO CMD: WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [delay=MS 400..2000] [gain=] [on=0|1]");
+    }
     serialOut().println("ECHO CMD: TONE <hz> <ms>");
     serialOut().println("ECHO CMD: OTA url=... token=...");
     serialOut().println("ECHO CMD: NET STATUS");

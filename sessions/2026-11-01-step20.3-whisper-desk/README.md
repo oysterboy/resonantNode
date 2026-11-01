@@ -39,3 +39,23 @@ E5 updated by OTA from Whispernet to Whispernet (100 %, confirmed on app1): the 
 Reading: at floor 150 (2-5x the quiet room) Whispernet answers the room's quiet, modulated sounds as whispers, about
 every 10-20 s with three boards. A higher floor trades those for quiet whispers (the -35 dBFS whispers read
 165-575 on E5): the owner's call, with a real whisper on the desk to set it.
+
+## Recordings at the boards' mics (10:35-10:50, 28b427e3: WHISPER REC)
+
+Source position: the lab PC and its speaker sit right next to E3 (the Emitter; owner 2026-11-01). wrec1: 8 min of
+the quiet room, each board recording its first 4 passes (66 passes in all); wrec2: the -35 dBFS whispers played
+(E1_rec5 came 0.5 s before the file started: a room pass, left out); wrec3: the -20 dBFS speech with the loud bound
+at 5000 for the run. WAVs in */rec (24 kHz int16, 300 ms before the phrase to 1.2 s after the check), decoded with
+recwav.py; features by recfeat.py (recfeat.txt):
+
+| class | <300 Hz | 300-1k | 1-3k | 3-6k | 6-11k | flatness 300-6k | voicing | peaks | crest |
+|---|---|---|---|---|---|---|---|---|---|
+| room (12) | 0.30 | 0.14 | 0.14 | 0.15 | 0.23 | 0.86 (0.64-0.90) | 0.74 | 12 | 2.5 |
+| whisper, synthetic via the speaker (7) | 0.03 | 0.64 | 0.10 | 0.05 | 0.01 | 0.17 (0.09-0.29) | 0.49 | 8 | 3.8 |
+| speech (9) | 0.71 | 0.24 | 0.00 | 0.00 | 0.00 | 0.02 (0.01-0.07) | 0.78 | 7 | 4.3 |
+
+The room's passes are broadband and nearly flat (white-noise-like, a quarter of the energy above 6 kHz) with ~7
+small bumps a second and a low crest: rustling or typing, heard by all three boards at once. Spectral flatness
+separates them from both the synthetic whisper and speech by a wide margin here. Caveat: the synthetic whisper
+through this speaker has its energy at 300-1000 Hz; a real whisper carries its fricatives (s, sh) at 4-8 kHz and
+reads flatter. Real whispers are needed before a threshold is chosen.

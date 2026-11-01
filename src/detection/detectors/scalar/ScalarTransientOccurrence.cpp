@@ -179,6 +179,36 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     freezeReport(audioSamplePacket.timeMs);
 }
 
+bool ScalarTransientDetector::openCandidate(detection::Occurrence& out, unsigned long nowMs) const {
+    if (!_peak.active || !_track.active) {
+        return false;
+    }
+    out = {};
+    out.detectorId = detection::DetectorId::ScalarTransient;
+    out.occurrenceType = detection::OccurrenceType::Scalar;
+    out.present = true;
+    out.valid = true;  // well-formed; whether the detector accepts it is open (the caller marks it provisional)
+    out.startSample = _track.startSample;
+    out.peakSample = _track.peakSample;
+    out.startMs = _track.startMs;
+    out.peakMs = _track.peakMs;
+    out.releaseMs = nowMs;
+    out.endMs = nowMs;
+    out.durationMs = timing::atOrAfter(nowMs, _track.startMs) ? nowMs - _track.startMs : 0UL;
+    out.strength = _track.peakStrength;
+    out.magnitude.present = true;
+    out.magnitude.value = _track.peakStrength;
+    out.magnitude.strength = _track.peakStrength;
+    out.magnitude.onsetStrength = _track.onsetStrength;
+    out.magnitude.peakStrength = _track.peakStrength;
+    out.magnitude.releaseStrength = _track.currentStrength;
+    return true;
+}
+
+bool ScalarTransientDetector::openCandidateReleasing() const {
+    return _peak.active && _peak.releaseCandidateStartedUs != 0;
+}
+
 void ScalarTransientDetector::updateAcceptedOccurrencePending(const AudioSamplePacket& audioSamplePacket,
                                                               float signalMagnitude) {
     if (_gate.onsetDetected) {

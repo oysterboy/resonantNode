@@ -256,3 +256,20 @@ At a closer or quieter talker that margin goes: a voicing check (the optional th
 spectral reading) is the one that would hold. A fan under a whisper lowers the modulation index (the fan's constant
 level enters the mean): the floor's level, not 0, is what the mean should be taken against. Both are for the tuning
 on recordings, not the synthetic set.
+
+The provisional inspection (2026-11-01, built): EnvelopeRuntime::setProvisional(300, 100) judges the detector's open
+candidate (ScalarTransientDetector::openCandidate, read-only) at 300 ms and every 100 ms after, skipped while the
+candidate is below release (a clap's tail sits in the release debounce and would read as modulated). The gate is the
+shell's rule, modelled in native-echoreplay: opened by a valid provisional verdict (the delay line passes the phrase
+from its start, at most 2 s back), closed by a failing one or the phrase's end, and kept shut to the phrase's end
+once the phrase was too loud (speech has quiet half-seconds that read inside the window). On the synthetic set:
+
+| file | gate opens | gated | first opening after |
+|---|---|---|---|
+| whisper_female, whisper_male | 9, 7 | 24.9 of 24.9 s, 22.3 of 22.3 s | 308, 341 ms |
+| speech_female, speech_male, music, fan, claps | 0 | 0 s | - |
+| mixed (whisper, speech, fan, whisper over fan) | 11 | 17.7 s: the whisper 7.8 s, whisper over fan ~9.9 s in 9 episodes, speech and fan 0 | 377 ms |
+
+The female speech phrase the closed-phrase judgement let through (above) does not open the gate: it was too loud
+earlier in the phrase. Whisper over the fan flickers at the modulation threshold (0.3); the floor-referenced mean
+(above) is the candidate fix.

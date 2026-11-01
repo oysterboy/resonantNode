@@ -229,11 +229,18 @@ int main(int argc, char** argv) {
         std::vector<float> x = resample(wav.samples, wav.rate, rate);
         x.resize(x.size() + rate / 2, 0.0f);  // 500 ms of silence so the last occurrence closes
         runtime.configure(d, plan);
+        runtime.setProvisional(whisper ? 300 : 0, 100);
         runtime.reset();
         EnvelopeFollower follower;
         follower.setShift(EnvelopeFollower::shiftForRate(rate));
         size_t occurrences = 0, valid = 0, slow = 0, unmeasured = 0, outOfLevel = 0, flat = 0;
         double validMs = 0.0, judgedMs = 0.0;
+        static constexpr unsigned long kDelayMs = 2000;  // Whispernet's delay line at 24 kHz
+        bool gateOpen = false, tooLoud = false, phraseOpened = false;
+        size_t phrasesOpened = 0;
+        unsigned long gateFromMs = 0, lastCloseMs = 0, phraseStartMs = 0;
+        double gatedMs = 0.0, latencyMs = 0.0;
+        size_t opens = 0;
         float peakLevel = 0.0f;
         for (size_t start = 0; start + kBlock <= x.size(); start += kBlock) {
             for (size_t i = start; i < start + kBlock; ++i) {
@@ -247,10 +254,51 @@ int main(int argc, char** argv) {
             runtime.onBlock(level, blockUs, static_cast<uint32_t>(blockUs / 1000U));
             detection::EnvelopeRuntime::Result r;
             while (runtime.popResult(r)) {
-                ++occurrences;
                 const detection::Occurrence& oc = r.inspected.occurrence;
                 const detection::OccurrenceAttack& at = oc.attack;
+                if (r.provisional) {
+                    // The gate as the shell would run it: opened by a valid verdict on the running phrase (the delay
+                    // line passes it from the phrase's start, at most kDelayMs back), closed by a failing one or the
+                    // phrase's end. A phrase once too loud keeps it shut to its end: speech has quiet half-seconds.
+                    const unsigned long nowMs = static_cast<unsigned long>(blockUs / 1000U);
+                    if (oc.startMs != phraseStartMs) {
+                        phraseStartMs = oc.startMs;
+                        tooLoud = false;
+                        phraseOpened = false;
+                    }
+                    tooLoud = tooLoud || oc.level.levelClass == detection::StrengthClass::None;
+                    const bool pass = r.verdict.valid && !tooLoud;
+                    if (pass && !gateOpen) {
+                        gateOpen = true;
+                        unsigned long from = nowMs > kDelayMs ? nowMs - kDelayMs : 0UL;
+                        from = oc.startMs > from ? oc.startMs : from;
+                        gateFromMs = lastCloseMs > from ? lastCloseMs : from;
+                        ++opens;
+                        if (!phraseOpened) {  // the time to the first opening, per phrase
+                            phraseOpened = true;
+                            ++phrasesOpened;
+                            latencyMs += oc.durationMs;
+                        }
+                    } else if (!pass && gateOpen) {
+                        gateOpen = false;
+                        gatedMs += nowMs - gateFromMs;
+                        if (verbose) {
+                            printf("  gate_ms=%lu..%lu\n", gateFromMs, nowMs);
+                        }
+                        lastCloseMs = nowMs;
+                    }
+                    continue;
+                }
+                ++occurrences;
                 if (whisper) {
+                    if (gateOpen) {
+                        gateOpen = false;
+                        lastCloseMs = oc.startMs + oc.durationMs;
+                        gatedMs += lastCloseMs - gateFromMs;
+                        if (verbose) {
+                            printf("  gate_ms=%lu..%lu\n", gateFromMs, lastCloseMs);
+                        }
+                    }
                     judgedMs += oc.durationMs;
                     if (r.verdict.valid) {
                         ++valid;
@@ -261,9 +309,9 @@ int main(int argc, char** argv) {
                         ++flat;
                     }
                     if (verbose) {
-                        printf("  t_ms=%lu dur_ms=%lu level_p90=%.0f mod=%.2f%s valid=%d\n",
+                        printf("  t_ms=%lu dur_ms=%lu peak=%.0f level_p90=%.0f mod=%.2f%s valid=%d\n",
                                static_cast<unsigned long>(oc.startMs), static_cast<unsigned long>(oc.durationMs),
-                               oc.level.p90, oc.modulation.index, oc.modulation.measured ? "" : "(na)",
+                               oc.strength, oc.level.p90, oc.modulation.index, oc.modulation.measured ? "" : "(na)",
                                r.verdict.valid ? 1 : 0);
                     }
                     continue;
@@ -282,12 +330,21 @@ int main(int argc, char** argv) {
                            at.measured ? "" : "na/", static_cast<unsigned long>(at.riseMs), r.verdict.valid ? 1 : 0);
                 }
             }
+            if (gateOpen && !runtime.candidateOpen()) {  // the detector dropped the candidate without accepting it
+                gateOpen = false;
+                lastCloseMs = static_cast<unsigned long>(blockUs / 1000U);
+                gatedMs += lastCloseMs - gateFromMs;
+                if (verbose) {
+                    printf("  gate_ms=%lu..%lu\n", gateFromMs, lastCloseMs);
+                }
+            }
         }
         if (whisper) {
             printf("%-40s rate=%lu len_s=%.1f peak_level=%.0f phrases=%zu whispers=%zu (%.1f of %.1f s) "
-                   "out_of_level=%zu flat=%zu\n",
+                   "out_of_level=%zu flat=%zu gate_opens=%zu gated_s=%.1f open_after_ms=%.0f\n",
                    path.c_str(), static_cast<unsigned long>(rate), static_cast<double>(x.size()) / rate, peakLevel,
-                   occurrences, valid, validMs / 1000.0, judgedMs / 1000.0, outOfLevel, flat);
+                   occurrences, valid, validMs / 1000.0, judgedMs / 1000.0, outOfLevel, flat, opens, gatedMs / 1000.0,
+                   phrasesOpened > 0 ? latencyMs / phrasesOpened : 0.0);
             continue;
         }
         printf("%-40s rate=%lu len_s=%.1f peak_level=%.0f occurrences=%zu claps=%zu slow=%zu unmeasured=%zu\n",

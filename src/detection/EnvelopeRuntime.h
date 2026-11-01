@@ -27,9 +27,13 @@ public:
     struct Result {
         OccurrenceVerdict verdict;
         InspectedOccurrence inspected;  // the occurrence with the plan's facts (attack, ...)
+        bool provisional = false;       // judged while the candidate was still open (the detector may yet reject it)
     };
 
     void configure(const ScalarTransientConfig& detector, const InspectionPlan& plan);
+    // Whispernet (ECHO-002): judge the open candidate once it is afterMs old and every everyMs after, so a phrase is
+    // known while it runs. 0 turns it off (the echo room judges closed occurrences only).
+    void setProvisional(uint32_t afterMs, uint32_t everyMs);
     void reset();
     // After a gap in the input (the own replay): no occurrence carries over it.
     void restartAfterInputGap();
@@ -39,9 +43,13 @@ public:
 
     // The next judged occurrence, oldest first. False when none is waiting.
     bool popResult(Result& out);
+    // A candidate is open in the detector (a gate opened on a provisional verdict closes when it is gone).
+    bool candidateOpen() const;
 
 private:
     void judgePending(uint32_t nowMs);
+    void judgeOpen(uint32_t nowMs);
+    void pushResult(const Result& r);
 
     static constexpr size_t kResults = 2;  // taken every block; an InspectedOccurrence is large
     FeatureHistory _history;
@@ -52,6 +60,11 @@ private:
     bool _havePending = false;
     Result _results[kResults];
     size_t _resultCount = 0;
+    uint32_t _provisionalAfterMs = 0;
+    uint32_t _provisionalEveryMs = 0;
+    bool _provisionalChecked = false;  // the open candidate has had a provisional verdict
+    unsigned long _provisionalStartMs = 0;
+    uint32_t _provisionalLastMs = 0;
 };
 
 }  // namespace detection

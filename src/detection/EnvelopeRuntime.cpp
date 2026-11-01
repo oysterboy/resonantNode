@@ -27,11 +27,17 @@ void EnvelopeRuntime::configure(const ScalarTransientConfig& detector, const Ins
     _history.setActiveStreams(streams, count);
 }
 
+void EnvelopeRuntime::setProvisional(uint32_t afterMs, uint32_t everyMs) {
+    _provisionalAfterMs = afterMs;
+    _provisionalEveryMs = everyMs;
+}
+
 void EnvelopeRuntime::reset() {
     _history.reset();
     _detector.resetState();
     _havePending = false;
     _resultCount = 0;
+    _provisionalChecked = false;
 }
 
 void EnvelopeRuntime::restartAfterInputGap() {
@@ -57,6 +63,36 @@ void EnvelopeRuntime::onBlock(float level, uint64_t blockUs, uint32_t blockMs) {
         _havePending = true;
     }
     judgePending(blockMs);
+    judgeOpen(blockMs);
+}
+
+void EnvelopeRuntime::judgeOpen(uint32_t nowMs) {
+    if (_provisionalAfterMs == 0) {
+        return;
+    }
+    Occurrence open;
+    if (!_detector.openCandidate(open, nowMs)) {
+        _provisionalChecked = false;
+        return;
+    }
+    if (_provisionalChecked && open.startMs != _provisionalStartMs) {
+        _provisionalChecked = false;  // a new candidate
+    }
+    // Not while it is below release: a clap's candidate stays open through the debounce, its quiet tail would read
+    // as a modulated phrase. A whisper's syllable gaps skip a check, the next syllable gets one.
+    if (open.durationMs < _provisionalAfterMs || _detector.openCandidateReleasing() ||
+        (_provisionalChecked && !timing::atOrAfter(nowMs, _provisionalLastMs + _provisionalEveryMs))) {
+        return;
+    }
+    _provisionalChecked = true;
+    _provisionalStartMs = open.startMs;
+    _provisionalLastMs = nowMs;
+    Result r;
+    r.provisional = true;
+    r.inspected = _inspector.inspectWithHistory(open, &_history, nowMs);
+    if (makeVerdict(r.inspected, _plan, r.verdict)) {
+        pushResult(r);
+    }
 }
 
 void EnvelopeRuntime::judgePending(uint32_t nowMs) {
@@ -66,9 +102,12 @@ void EnvelopeRuntime::judgePending(uint32_t nowMs) {
     _havePending = false;
     Result r;
     r.inspected = _inspector.inspectWithHistory(_pending, &_history, nowMs);
-    if (!makeVerdict(r.inspected, _plan, r.verdict)) {
-        return;
+    if (makeVerdict(r.inspected, _plan, r.verdict)) {
+        pushResult(r);
     }
+}
+
+void EnvelopeRuntime::pushResult(const Result& r) {
     if (_resultCount == kResults) {
         for (size_t i = 1; i < kResults; ++i) {
             _results[i - 1] = _results[i];  // the oldest dropped: the caller takes results every block
@@ -76,6 +115,11 @@ void EnvelopeRuntime::judgePending(uint32_t nowMs) {
         --_resultCount;
     }
     _results[_resultCount++] = r;
+}
+
+bool EnvelopeRuntime::candidateOpen() const {
+    Occurrence open;
+    return _detector.openCandidate(open, 0);
 }
 
 bool EnvelopeRuntime::popResult(Result& out) {

@@ -87,6 +87,11 @@ public:
     uint32_t selectedRejectGeneration() const;
     bool popOccurrence(detection::Occurrence& out);
     bool hasPendingOccurrence() const;
+    // The open candidate as it stands at nowMs (start, peak, duration so far), read-only: Whispernet inspects a phrase
+    // while it runs (ECHO-002). False when no candidate is open. Not an accepted occurrence: it may still be rejected.
+    bool openCandidate(detection::Occurrence& out, unsigned long nowMs) const;
+    // The open candidate is below its release level, its end not yet confirmed (the release debounce runs).
+    bool openCandidateReleasing() const;
 
 private:
     // Thresholds and gates (ScalarTransientConfig.h documents the fields).

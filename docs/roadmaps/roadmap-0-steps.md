@@ -334,8 +334,10 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         2026-11-01: the detector's modules on the host: LevelWindow (the loud bound) and Modulation (syllable rate)
         in the inspection framework, host-tested (test_echo_detection), native-echoreplay --plan whisper on the
         synthetic set: all 14 whisper phrases pass, fan, music, claps and male speech fail, 1 of 5 female speech
-        phrases passes (under the loud bound): research/whispernet.md, "First host result". Next: the provisional
-        inspection of an open phrase, then the delay line.
+        phrases passes (under the loud bound): research/whispernet.md, "First host result". The provisional
+        inspection of an open phrase built (EnvelopeRuntime::setProvisional, the detector's read-only open
+        candidate, test_envelope_runtime); the gate modelled in native-echoreplay: whispers open it after ~0.3 s
+        and pass whole, speech, music, fan and claps never open it. Next: the delay line with gate bits.
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

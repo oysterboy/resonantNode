@@ -26,3 +26,16 @@ tell a fan from a whisper (both 0.3-0.45 near the floor), at -35 it can (fan 1 p
 at 900 keeps speech and music out at this distance. Defaults set from these runs (545acdb7, 748efe15): onset 250,
 release 170, floor 150, loud 900, gain 0.5. Not yet: a real whisper, distances, a RAW capture of whisper and replay,
 the howl test with the loop closed at gain 1 on purpose.
+
+## After the USB upload (10:09, 4561106b with the OTA fix, on E1 / E4 / E5; the owner's go)
+
+E5 updated by OTA from Whispernet to Whispernet (100 %, confirmed on app1): the way back to the Node image is open.
+
+| run | result |
+|---|---|
+| wchain3: three boards, defaults (gain 0.5), whisper_female / speech_male / whisper_male at -35 / -20 | female whisper weak (2 passes, E5 none); speech 2 quiet passages passed detection, Behavior declined both; male whisper answered by all three at once, the rest holding the follow-ups; after the file, clusters every 10-20 s with two or three boards at the same moment (room sounds, not a chain: a chain steps by the 1.1-1.7 s delays) |
+| wquiet1: 90 s, nothing played | 27 passes, clusters every ~10-20 s, P90 150-330, mod 0.35-0.82, mostly on several boards at once; the room's level 30-90 |
+
+Reading: at floor 150 (2-5x the quiet room) Whispernet answers the room's quiet, modulated sounds as whispers, about
+every 10-20 s with three boards. A higher floor trades those for quiet whispers (the -35 dBFS whispers read
+165-575 on E5): the owner's call, with a real whisper on the desk to set it.

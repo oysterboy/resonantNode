@@ -5,6 +5,9 @@ the phrase runs, so the gate can open before the phrase ends. A whispered phrase
 within ~0.3 s, a steady noise only failing ones, and a clap none (its tail is in the release debounce). Runs in
 native-test-behavior.
 */
+// The echo modes' inspection modules are built only where ECHO_INSPECTION is defined (EchoInspection.cpp).
+#define ECHO_INSPECTION
+
 #include <unity.h>
 
 #include "../../src/detection/EnvelopeRuntime.h"
@@ -14,6 +17,7 @@ native-test-behavior.
 #include "../../src/detection/detectors/scalar/ScalarTransientOccurrence.cpp"
 #include "../../src/detection/detectors/scalar/ScalarTransientReport.cpp"
 #include "../../src/detection/features/FeatureHistory.cpp"
+#include "../../src/detection/inspection/EchoInspection.cpp"
 #include "../../src/detection/inspection/OccurrenceInspector.cpp"
 #include "../../src/detection/inspection/VerdictProjection.cpp"
 

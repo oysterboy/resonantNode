@@ -392,7 +392,10 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
 ```text
 Signal variation, part 2: aesthetics      8a (OUT-006): after 19's decision; a signal change moves the baseline.
   and polyphony                             docs/research/polyphony.md, E003 phase 1.
-Detector family as a build flag           step 9 (Phases 5d, 6): waits for a second detector family.
+Detector family as a build flag           step 9 (Phases 5d, 6): waits for a second detector family. Done before it
+                                          (2026-11-01, owner): each mode's image built from its own sources (the
+                                          echo shell and EchoInspection.cpp only in the echo builds, the band bank
+                                          not in them); the family itself stays one (ScalarTransient).
 DET-016                                   the verdict boundary rule (step 8's Part B).
 OutputProfile / ResonantProgram           OUT-004, NODE-005 (CommandRouter): the Node split (11i) left the seams.
 BehaviorRuntime / BehaviorHost            BEH-003 / BEH-004; BEH-008 may bring the input struct first.

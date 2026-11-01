@@ -27,6 +27,11 @@ since 2026-10-09. The discontinued piezo boards build as `esp32dev-piezo`, `esp3
 `esp32dev-piezo-emitter` (`-D BOARD_PIEZO`). Pins and I2S slots per board: `src/app/BoardConfig.h`.
 Never flash a piezo build onto a D-AMP board or the reverse: the pinouts collide on GPIO 25/26.
 
+What each image is built from (2026-11-01): the Node, Analyzer and Emitter builds leave out the echo shell
+(`src/modes/echo/`) and the echo modes' inspection modules (`src/detection/inspection/EchoInspection.cpp`, built
+only with `ECHO_INSPECTION`); the echo and whisper builds leave out the Node's mode, the band bank
+(`FreqBandStream.cpp`) and `DetectionRuntime.cpp`. The filters and flags are the envs in `platformio.ini`.
+
 Build-time knobs (not params, they need a rebuild): `platformio.ini` build flags
 (`CHIRP_FREQUENCY_HZ`, `BUILD_VERSION`), tone level `I2S_TONE_AMPLITUDE` and the other defaults in
 `src/app/RuntimeDefaults.h`, the node roster (name and the hop train's base bin per board MAC; 0..3 on the 8-bin band since 2026-10-30) in

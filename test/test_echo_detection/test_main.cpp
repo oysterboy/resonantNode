@@ -5,6 +5,9 @@ makeVerdict judges it like any other requirement. A clap passes, a swell does no
 not measured. Whispernet (ECHO-002, step 20.3): the LevelWindow and Modulation modules over a phrase's span; a whisper
 passes, a fan fails on modulation, a loud phrase on the level window. Runs in native-test-behavior.
 */
+// The echo modes' inspection modules are built only where ECHO_INSPECTION is defined (EchoInspection.cpp).
+#define ECHO_INSPECTION
+
 #include <unity.h>
 
 #include "../../src/detection/features/FeatureHistory.h"
@@ -12,6 +15,7 @@ passes, a fan fails on modulation, a loud phrase on the level window. Runs in na
 #include "../../src/detection/inspection/VerdictProjection.h"
 
 #include "../../src/detection/features/FeatureHistory.cpp"
+#include "../../src/detection/inspection/EchoInspection.cpp"
 #include "../../src/detection/inspection/OccurrenceInspector.cpp"
 #include "../../src/detection/inspection/VerdictProjection.cpp"
 

@@ -97,8 +97,8 @@ echoSpace again; they are what make the gate safe.
   levelMax the rest forces the gate closed for restMs, so a room full of whisperers goes quiet for a while.
   p = level / L becomes the probability that the gate opens for an episode. The echo build's own
   `BehaviorGateConfig`, as for the echo room; the Node's defaults are tuned for hop trains.
-- Jitter has no meaning when D is fixed, so it goes. A per-node D (say 250-600 ms) does its job of spreading the
-  room, and fits better anyway.
+- Jitter has no meaning when D is fixed, so it goes. A per-node D does its job of spreading the room: decided
+  400 ms .. 2 s (decisions/2026-11-01-whispernet-delay-per-node.md; the gate needs ~400 ms to open).
 
 Between nodes the chain is as in the echo room: B hears A's replay as a whisper (it is quiet, so it passes the
 loud bound) and replays it after its own D, each hop a little duller, until a hop no longer clears the floor. Only

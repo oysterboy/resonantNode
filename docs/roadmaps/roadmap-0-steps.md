@@ -341,7 +341,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         (GatedDelayLine, test_gated_delay, 96 KB at 2 s / 24 kHz); native-echoreplay --out-dir writes what
         Whispernet would play. The howl simulation (--loop-gain): no howl from gain 0.5 to 4, the loud bound
         shuts a grown replay within a round or two, the output silent 20 s on. Next: Behavior coupling and the
-        24 kHz build (the Whispernet shell).
+        24 kHz build (the Whispernet shell). Owner 2026-11-01: D per node, 400 ms .. 2 s
+        (decisions/2026-11-01-whispernet-delay-per-node.md).
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

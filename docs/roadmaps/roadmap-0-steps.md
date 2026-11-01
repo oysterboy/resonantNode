@@ -337,7 +337,9 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         phrases passes (under the loud bound): research/whispernet.md, "First host result". The provisional
         inspection of an open phrase built (EnvelopeRuntime::setProvisional, the detector's read-only open
         candidate, test_envelope_runtime); the gate modelled in native-echoreplay: whispers open it after ~0.3 s
-        and pass whole, speech, music, fan and claps never open it. Next: the delay line with gate bits.
+        and pass whole, speech, music, fan and claps never open it. The delay line with gate bits built
+        (GatedDelayLine, test_gated_delay, 96 KB at 2 s / 24 kHz); native-echoreplay --out-dir writes what
+        Whispernet would play. Next: Behavior coupling, the howl simulation, the 24 kHz build.
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

@@ -8,7 +8,10 @@
 // tools/bench/rawcorpus.py) gives real levels; --level-db moves a file toward them.
 //
 //   program [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] [--release S16] [--floor S16]
-//           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--verbose] <file.wav>...
+//           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--out-dir DIR] [--verbose] <file.wav>...
+//
+// With --plan whisper and --out-dir, each file also goes through Whispernet's delay line (GatedDelayLine, 2 s) under
+// the gate, and what it would play is written as DIR/<name>.gated.wav.
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -19,6 +22,7 @@
 #include <vector>
 
 #include "../../audio/EnvelopeFollower.h"
+#include "../../audio/GatedDelayLine.h"
 #include "../../detection/EnvelopeRuntime.h"
 
 namespace {
@@ -95,6 +99,35 @@ bool readWav(const char* path, Wav& out) {
     return false;
 }
 
+// 16-bit mono PCM.
+bool writeWav(const char* path, uint32_t rate, const std::vector<int16_t>& samples) {
+    FILE* f = fopen(path, "wb");
+    if (f == nullptr) {
+        return false;
+    }
+    const uint32_t dataBytes = static_cast<uint32_t>(samples.size() * 2U);
+    uint8_t h[44] = {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'A', 'V', 'E', 'f', 'm', 't', ' ', 16, 0, 0, 0, 1, 0, 1, 0};
+    const auto put32 = [&](size_t at, uint32_t v) {
+        for (int k = 0; k < 4; ++k) {
+            h[at + k] = static_cast<uint8_t>(v >> (8 * k));
+        }
+    };
+    put32(4, 36U + dataBytes);
+    put32(24, rate);
+    put32(28, rate * 2U);
+    h[32] = 2;
+    h[34] = 16;
+    memcpy(&h[36], "data", 4);
+    put32(40, dataBytes);
+    bool ok = fwrite(h, 1, sizeof(h), f) == sizeof(h);
+    for (int16_t s : samples) {  // little-endian on every host this runs on, written byte by byte all the same
+        const uint8_t b[2] = {static_cast<uint8_t>(s & 0xFF), static_cast<uint8_t>((s >> 8) & 0xFF)};
+        ok = ok && fwrite(b, 1, 2, f) == 2;
+    }
+    fclose(f);
+    return ok;
+}
+
 // Linear resampling: enough for an envelope detector (the clip quality is the board's, not this tool's).
 std::vector<float> resample(const std::vector<float>& in, uint32_t from, uint32_t to) {
     if (from == to || in.empty()) {
@@ -123,6 +156,7 @@ int main(int argc, char** argv) {
     bool whisper = false;
     float loudBound = 20000.0f, modIndex = 0.3f;
     bool verbose = false;
+    std::string outDir;  // --plan whisper: the delay line's output per file, <name>.gated.wav
     std::vector<std::string> files;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -139,6 +173,8 @@ int main(int argc, char** argv) {
             loudBound = static_cast<float>(atof(next("--loud")));
         } else if (a == "--mod") {
             modIndex = static_cast<float>(atof(next("--mod")));
+        } else if (a == "--out-dir") {
+            outDir = next("--out-dir");
         } else if (a == "--rate") {
             rate = static_cast<uint32_t>(strtoul(next("--rate"), nullptr, 10));
         } else if (a == "--level-db") {
@@ -158,8 +194,8 @@ int main(int argc, char** argv) {
         } else if (a == "--help" || a[0] == '-') {
             fprintf(stderr,
                     "usage: %s [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] "
-                    "[--release S16] [--floor S16] [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--verbose] "
-                    "<file.wav>...\n",
+                    "[--release S16] [--floor S16] [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] "
+                    "[--out-dir DIR] [--verbose] <file.wav>...\n",
                     argv[0]);
             return 2;
         } else {
@@ -228,6 +264,19 @@ int main(int argc, char** argv) {
         }
         std::vector<float> x = resample(wav.samples, wav.rate, rate);
         x.resize(x.size() + rate / 2, 0.0f);  // 500 ms of silence so the last occurrence closes
+        // Whispernet's output: the delay line under the gate below, written to --out-dir to be listened to.
+        static constexpr unsigned long kDelayMs = 2000;  // Whispernet's delay line at 24 kHz
+        if (whisper) {
+            x.resize(x.size() + static_cast<size_t>(rate) * kDelayMs / 1000U, 0.0f);  // the line's tail plays out
+        }
+        GatedDelayLine line;
+        std::vector<int16_t> played;
+        if (whisper && !outDir.empty() &&
+            !line.begin(static_cast<size_t>(rate) * kDelayMs / 1000U, kBlock, static_cast<size_t>(rate) / 100U)) {
+            printf("%s: no memory for the delay line\n", path.c_str());
+            continue;
+        }
+        const auto sampleAtMs = [&](unsigned long ms) { return static_cast<uint64_t>(ms) * rate / 1000U; };
         runtime.configure(d, plan);
         runtime.setProvisional(whisper ? 300 : 0, 100);
         runtime.reset();
@@ -235,7 +284,6 @@ int main(int argc, char** argv) {
         follower.setShift(EnvelopeFollower::shiftForRate(rate));
         size_t occurrences = 0, valid = 0, slow = 0, unmeasured = 0, outOfLevel = 0, flat = 0;
         double validMs = 0.0, judgedMs = 0.0;
-        static constexpr unsigned long kDelayMs = 2000;  // Whispernet's delay line at 24 kHz
         bool gateOpen = false, tooLoud = false, phraseOpened = false;
         size_t phrasesOpened = 0;
         unsigned long gateFromMs = 0, lastCloseMs = 0, phraseStartMs = 0;
@@ -247,6 +295,11 @@ int main(int argc, char** argv) {
                 double v = x[i] * scale;
                 v = v > 8388607.0 ? 8388607.0 : (v < -8388608.0 ? -8388608.0 : v);
                 follower.push(static_cast<int32_t>(v));
+                if (line.delay() > 0) {
+                    const double s = x[i] * 32767.0;
+                    played.push_back(
+                        line.process(static_cast<int16_t>(s > 32767.0 ? 32767.0 : (s < -32768.0 ? -32768.0 : s))));
+                }
             }
             const uint64_t blockUs = static_cast<uint64_t>(start) * 1000000ULL / rate;
             const float level = follower.strength();
@@ -273,6 +326,10 @@ int main(int argc, char** argv) {
                         unsigned long from = nowMs > kDelayMs ? nowMs - kDelayMs : 0UL;
                         from = oc.startMs > from ? oc.startMs : from;
                         gateFromMs = lastCloseMs > from ? lastCloseMs : from;
+                        if (line.delay() > 0) {
+                            line.pass(sampleAtMs(gateFromMs), line.written());
+                            line.setOpen(true);
+                        }
                         ++opens;
                         if (!phraseOpened) {  // the time to the first opening, per phrase
                             phraseOpened = true;
@@ -330,8 +387,12 @@ int main(int argc, char** argv) {
                            at.measured ? "" : "na/", static_cast<unsigned long>(at.riseMs), r.verdict.valid ? 1 : 0);
                 }
             }
+            if (line.isOpen() && !gateOpen) {
+                line.setOpen(false);
+            }
             if (gateOpen && !runtime.candidateOpen()) {  // the detector dropped the candidate without accepting it
                 gateOpen = false;
+                line.setOpen(false);
                 lastCloseMs = static_cast<unsigned long>(blockUs / 1000U);
                 gatedMs += lastCloseMs - gateFromMs;
                 if (verbose) {
@@ -345,6 +406,14 @@ int main(int argc, char** argv) {
                    path.c_str(), static_cast<unsigned long>(rate), static_cast<double>(x.size()) / rate, peakLevel,
                    occurrences, valid, validMs / 1000.0, judgedMs / 1000.0, outOfLevel, flat, opens, gatedMs / 1000.0,
                    phrasesOpened > 0 ? latencyMs / phrasesOpened : 0.0);
+            if (!played.empty()) {
+                const size_t slash = path.find_last_of("/\\");
+                std::string name = path.substr(slash == std::string::npos ? 0 : slash + 1);
+                name = outDir + "/" + name.substr(0, name.rfind('.')) + ".gated.wav";
+                if (!writeWav(name.c_str(), rate, played)) {
+                    printf("%s: not written\n", name.c_str());
+                }
+            }
             continue;
         }
         printf("%-40s rate=%lu len_s=%.1f peak_level=%.0f occurrences=%zu claps=%zu slow=%zu unmeasured=%zu\n",

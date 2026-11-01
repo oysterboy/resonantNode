@@ -273,3 +273,10 @@ once the phrase was too loud (speech has quiet half-seconds that read inside the
 The female speech phrase the closed-phrase judgement let through (above) does not open the gate: it was too loud
 earlier in the phrase. Whisper over the fan flickers at the modulation threshold (0.3); the floor-referenced mean
 (above) is the candidate fix.
+
+The delay line (2026-11-01, built): GatedDelayLine (src/audio, pure, test_gated_delay): int16 samples delayed by D, a
+gate byte per 128-sample block that can be set after the samples came in while they are unplayed (pass from the
+phrase's start), set for each new block while open, the gain ramped over 10 ms at each edge. At 24 kHz and D = 2 s it
+holds 96 KB of samples and 377 bytes of gate. native-echoreplay --plan whisper --out-dir DIR writes what it would play
+(DIR/<name>.gated.wav): on the synthetic set the whispers come out whole at their input level (-45.4 dBFS from -45),
+speech, music, fan and claps as silence, the mixed file 17.5 s (its whisper and its whisper over the fan).

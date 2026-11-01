@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "C:\+ DATA\Nodes\resonantNode\tools\bench\nodegroup.py", line 105, in <module>
+    partial[n] += s.read(s.in_waiting or 1)
+                         ^^^^^^^^^^^^
+  File "C:\Users\admin\.platformio\penv\Lib\site-packages\serial\serialwin32.py", line 259, in in_waiting
+    raise SerialException("ClearCommError failed ({!r})".format(ctypes.WinError()))
+serial.serialutil.SerialException: ClearCommError failed (PermissionError(13, 'Zugriff verweigert', None, 5))

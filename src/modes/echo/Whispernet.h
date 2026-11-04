@@ -102,6 +102,9 @@ public:
         unsigned long opens = 0;
         unsigned long gatedMs = 0;
         unsigned long replays = 0;  // Behavior emissions
+        unsigned long deafs = 0;  // times detection paused for the own playback
+        unsigned long deafMs = 0;  // and for how long in all
+        unsigned long cuts = 0;  // phrases still running when the own playback began (cut there)
     };
 
     // Allocates the 2 s line at rateHz, D from the seed (the chip id). False when out of heap.
@@ -179,6 +182,16 @@ public:
     bool inputSuppressed(uint32_t blockMs);
     // Detection pauses for the own playback: the gate shuts now (the line holds no own output).
     void suppressNow();
+    // The shell's deaf state per block (the counters deafs / deafMs).
+    void noteDeaf(bool deaf, uint32_t blockMs) {
+        if (deaf && !_deaf) {
+            ++_counts.deafs;
+            _deafSinceMs = blockMs;
+        } else if (!deaf && _deaf) {
+            _counts.deafMs += blockMs - _deafSinceMs;
+        }
+        _deaf = deaf;
+    }
     size_t bytes() const { return _line.capacity() * sizeof(int16_t); }
 
 private:
@@ -205,6 +218,8 @@ private:
     uint64_t _rxEnd = 0;  // the last block's end (RX index) and its time, for the calibration
     uint64_t _rxEndUs = 0;
     bool _calArmed = false;
+    bool _deaf = false;
+    uint32_t _deafSinceMs = 0;
     uint32_t _calNoiseLeft = 0;
     uint32_t _calRng = 12345;
     uint32_t _calStartMs = 0;

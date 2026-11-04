@@ -259,6 +259,9 @@ bool Whispernet::inputSuppressed(uint32_t blockMs) {
 }
 
 void Whispernet::suppressNow() {
+    if (_gate.following()) {
+        ++_counts.cuts;  // a phrase still running: its rest is not passed
+    }
     apply(_gate.onPhraseEnd(_blockMs));  // the phrase ends here for the gate: what follows holds the own replay
     shutLine();
 }
@@ -660,6 +663,12 @@ void Whispernet::printStatus() {
     serialOut().print(_counts.gatedMs);
     serialOut().print(" replays=");
     serialOut().print(_counts.replays);
+    serialOut().print(" deafs=");
+    serialOut().print(_counts.deafs);
+    serialOut().print(" deaf_ms=");
+    serialOut().print(_counts.deafMs);
+    serialOut().print(" cuts=");
+    serialOut().print(_counts.cuts);
     serialOut().print(" gate_open=");
     serialOut().print(_line.isOpen() ? 1 : 0);
     serialOut().print(" short_writes=");

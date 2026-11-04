@@ -311,6 +311,7 @@ void EchoApp::detectBlock(const AudioBlock& block, uint64_t ringIndex, uint32_t 
             _runtime.restartAfterInputGap();
         }
         _whisperDeaf = deaf;
+        _whisper.noteDeaf(deaf, blockMs);
         if (deaf) {
             return;
         }

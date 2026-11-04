@@ -1,0 +1,82 @@
+calm: 480 s, boards E1,E2,E3,E4,E5
+  E1: emits heard_pattern=2 idle=7  verdicts=29  rests={'rest_level': 1}
+  E2: emits heard_pattern=1 idle=8  verdicts=14  rests={}
+  E3: emits heard_pattern=3 idle=6  verdicts=31  rests={'rest_level': 1}
+  E4: emits heard_pattern=2 idle=9  verdicts=21  rests={'rest_level': 1}
+  E5: emits heard_pattern=5 idle=7  verdicts=28  rests={'rest_level': 1}
+  who heard whom (listener <- sender: verdicts / sender's emissions):
+    E1 <- E2 4/9  E3 8/9  E4 6/11  E5 11/12
+    E2 <- E1 2/9  E3 3/9  E4 3/11  E5 6/12
+    E3 <- E1 8/9  E2 4/9  E4 7/11  E5 12/12
+    E4 <- E1 4/9  E2 5/9  E3 4/9  E5 8/12
+    E5 <- E1 8/9  E2 4/9  E3 9/9  E4 7/11
+  unattributed verdicts: 0
+  strength drift, bins of 3600 s (median strength, verdict count in brackets):
+    E1 <- E2: 32767(3)  first->last bin +0 %
+    E1 <- E3: 32767(7)  first->last bin +0 %
+    E1 <- E4: 24146(5)  first->last bin +0 %
+    E1 <- E5: 11343(7)  first->last bin +0 %
+    E2 <- E1: 21749(1)  first->last bin +0 %
+    E2 <- E3: 32767(1)  first->last bin +0 %
+    E2 <- E4: 14632(4)  first->last bin +0 %
+    E2 <- E5: 19106(3)  first->last bin +0 %
+    E3 <- E1: 29498(8)  first->last bin +0 %
+    E3 <- E2: 30670(3)  first->last bin +0 %
+    E3 <- E4: 13926(6)  first->last bin +0 %
+    E3 <- E5: 15635(8)  first->last bin +0 %
+    E4 <- E1: 17600(3)  first->last bin +0 %
+    E4 <- E2: 17991(4)  first->last bin +0 %
+    E4 <- E3: 19731(2)  first->last bin +0 %
+    E4 <- E5: 32767(5)  first->last bin +0 %
+    E5 <- E1: 10743(7)  first->last bin +0 %
+    E5 <- E2: 17791(4)  first->last bin +0 %
+    E5 <- E3: 17640(7)  first->last bin +0 %
+    E5 <- E4: 32767(6)  first->last bin +0 %
+  mean valid strength per board and bin (RB STATUS heard.*; a counter drop = reboot or rebase):
+    E1: 23027(18)
+    E2: 19043(6)
+    E3: 20988(19)
+    E4: 23528(11)
+    E5: 17600(18)
+  group emissions per minute: 5 7 5 5 5 4 6 13
+  start 1 at 32 s (idle): never quiet before the next kick, 0 emissions until then
+  start 2 at 33 s (idle): never quiet before the next kick, 2 emissions until then
+  start 3 at 40 s (idle): never quiet before the next kick, 0 emissions until then
+  start 4 at 44 s (idle): never quiet before the next kick, 1 emissions until then
+  start 5 at 56 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 6 at 77 s (idle): never quiet before the next kick, 1 emissions until then
+  start 7 at 83 s (idle): never quiet before the next kick, 1 emissions until then
+  start 8 at 89 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 9 at 105 s (idle): never quiet before the next kick, 1 emissions until then
+  start 10 at 113 s (idle): never quiet before the next kick, 1 emissions until then
+  start 11 at 119 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 12 at 145 s (idle): never quiet before the next kick, 1 emissions until then
+  start 13 at 159 s (idle): never quiet before the next kick, 1 emissions until then
+  start 14 at 159 s (idle): never quiet before the next kick, 2 emissions until then
+  start 15 at 163 s (idle): never quiet before the next kick, 1 emissions until then
+  start 16 at 172 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 17 at 201 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 18 at 220 s (idle): never quiet before the next kick, 1 emissions until then
+  start 19 at 223 s (idle): never quiet before the next kick, 0 emissions until then
+  start 20 at 224 s (idle): never quiet before the next kick, 1 emissions until then
+  start 21 at 230 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 22 at 269 s (idle): never quiet before the next kick, 0 emissions until then
+  start 23 at 272 s (idle): never quiet before the next kick, 2 emissions until then
+  start 24 at 274 s (idle): never quiet before the next kick, 1 emissions until then
+  start 25 at 275 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 26 at 298 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 27 at 317 s (idle): never quiet before the next kick, 1 emissions until then
+  start 28 at 324 s (idle): never quiet before the next kick, 2 emissions until then
+  start 29 at 339 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 30 at 366 s (idle): never quiet before the next kick, 2 emissions until then
+  start 31 at 377 s (idle): never quiet before the next kick, 1 emissions until then
+  start 32 at 381 s (idle): never quiet before the next kick, 2 emissions until then
+  start 33 at 385 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 34 at 411 s (idle): never quiet before the next kick, 0 emissions until then
+  start 35 at 425 s (idle): quiet after 2.9 s, 2 emissions until then
+  start 36 at 450 s (idle): never quiet before the next kick, 1 emissions until then
+  start 37 at 452 s (idle): quiet after 6.8 s, 9 emissions until then
+  time to quiet (gap 15 s): 12 of 37 starts quiet, median 0.0 s; within 30 s: 12 of 37 (pass mark 80 %: FAIL)
+  chains: 30 distinct starts; length median 0.0 s, max 8.7 s; ended within 30 s: 30 of 30 (80 %: PASS)
+  max emissions per minute 13, M = 100: PASS
+  log: bench/sessions/2026-11-04-evening-node-presets\calm.log

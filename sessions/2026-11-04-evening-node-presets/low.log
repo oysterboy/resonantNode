@@ -1,0 +1,710 @@
+# nodegroup boards=E1=COM8,E2=COM3,E3=COM4,E4=COM10,E5=COM11 silent= secs=480 setup=PARAM SET behavior.band_per_node 1;PARAM SET behavior.base_scatter_bins 1;PARAM SET output.silent 0;PARAM SET behavior.band_range_low_hz 300;PARAM SET behavior.band_range_high_hz 5000;PARAM SET behavior.level_max 4;PARAM SET behavior.level_decay_ms 5000;PARAM SET behavior.answer_jitter_ms 800;PARAM SET output.idle_announce_hz 120;PARAM SET output.idle_announce_ms 80 started_unix=1793817763.940
+# state E1 << PARAM load path=output.silent value=1 default=0
+# state E1 << PARAM load stored=50 applied=50 stale=0 invalid=0
+# state E1 << PARAM SET path=behavior.band_per_node module=behavior old=0 new=1 status=ok
+# state E1 << PARAM SET path=behavior.base_scatter_bins module=behavior old=0 new=1 status=ok
+# state E1 << PARAM SET path=output.silent module=output old=1 new=0 status=ok
+# state E1 << PARAM SET path=behavior.band_range_low_hz module=behavior old=950 new=300 status=ok
+# state E1 << PARAM SET path=behavior.band_range_high_hz module=behavior old=4950 new=5000 status=ok
+# state E1 << PARAM SET path=behavior.level_max module=behavior old=6 new=4 status=ok
+# state E1 << PARAM SET path=behavior.level_decay_ms module=behavior old=2000 new=5000 status=ok
+# state E1 << PARAM SET path=behavior.answer_jitter_ms module=behavior old=3000 new=800 status=ok
+# state E1 << PARAM SET path=output.idle_announce_hz module=output old=300 new=120 status=ok
+# state E1 << PARAM SET path=output.idle_announce_ms module=output old=500 new=80 status=ok
+# state E1 << PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+# state E1 << PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+# state E1 << PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+# state E1 << PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=92
+# state E1 << PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=450
+# state E1 << PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+# state E1 << PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+# state E1 << PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+# state E1 << PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+# state E1 << PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+# state E1 << PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+# state E1 << PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+# state E1 << PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+# state E1 << PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+# state E1 << PARAM path=detection.band_high_hz module=detection type=uint32 value=4700
+# state E1 << PARAM path=output.hop_enabled module=output type=bool value=1
+# state E1 << PARAM path=output.hop_rotation module=output type=uint32 value=0
+# state E1 << PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+# state E1 << PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+# state E1 << PARAM path=output.hop_steps module=output type=uint32 value=5
+# state E1 << PARAM path=output.idle_announce_hz module=output type=uint32 value=120
+# state E1 << PARAM path=output.idle_announce_ms module=output type=uint32 value=80
+# state E1 << PARAM path=output.silent module=output type=bool value=0
+# state E1 << PARAM path=node.radio_enabled module=node type=bool value=1
+# state E1 << PARAM path=behavior.idle_enabled module=behavior type=bool value=1
+# state E1 << PARAM path=behavior.wait_after_heard_ms module=behavior type=uint32 value=100
+# state E1 << PARAM path=behavior.refractory_after_emit_ms module=behavior type=uint32 value=400
+# state E1 << PARAM path=behavior.suppress_self_chirp_ms module=behavior type=uint32 value=100
+# state E1 << PARAM path=behavior.detection_suppress_tail_ms module=behavior type=uint32 value=60
+# state E1 << PARAM path=behavior.idle_timeout_ms module=behavior type=uint32 value=60000
+# state E1 << PARAM path=behavior.idle_timeout_variation_ms module=behavior type=uint32 value=20000
+# state E1 << PARAM path=behavior.idle_blocked_after_heard_ms module=behavior type=uint32 value=1000
+# state E1 << PARAM path=behavior.idle_blocked_after_own_emit_ms module=behavior type=uint32 value=500
+# state E1 << PARAM path=behavior.rest_after_field_patterns module=behavior type=uint32 value=0
+# state E1 << PARAM path=behavior.own_emit_budget module=behavior type=uint32 value=0
+# state E1 << PARAM path=behavior.own_emit_budget_window_ms module=behavior type=uint32 value=10000
+# state E1 << PARAM path=behavior.rest_ms module=behavior type=uint32 value=8000
+# state E1 << PARAM path=behavior.level_max module=behavior type=uint32 value=4
+# state E1 << PARAM path=behavior.level_decay_ms module=behavior type=uint32 value=5000
+# state E1 << PARAM path=behavior.answer_jitter_ms module=behavior type=uint32 value=800
+# state E1 << PARAM path=behavior.base_scatter_bins module=behavior type=uint32 value=1
+# state E1 << PARAM path=behavior.band_per_node module=behavior type=bool value=1
+# state E1 << PARAM path=behavior.band_range_low_hz module=behavior type=uint32 value=300
+# state E1 << PARAM path=behavior.band_range_high_hz module=behavior type=uint32 value=5000
+# state E1 << PARAM path=detection.contrast_medium module=detection type=float value=30500.000
+# state E1 << PARAM path=detection.amp_medium module=detection type=float value=1500.000
+# state E1 << PARAM path=detection.shape_pre_ms module=detection type=uint32 value=120
+# state E1 << PARAM path=detection.shape_tail_ms module=detection type=uint32 value=0
+# state E1 << PARAM path=detection.shape_max_rising_step_bins module=detection type=uint16 value=2
+# state E1 << PARAM path=detection.shape_min_run_ms module=detection type=uint32 value=4
+# state E1 << PARAM path=detection.shape_medium_min_bins module=detection type=uint16 value=3
+# state E1 << PARAM path=detection.shape_medium_min_rising_steps module=detection type=uint16 value=2
+# state E1 << PARAM path=detection.shape_strong_min_bins module=detection type=uint16 value=4
+# state E1 << PARAM path=detection.shape_strong_min_rising_steps module=detection type=uint16 value=3
+# state E2 << PARAM load path=output.silent value=1 default=0
+# state E2 << PARAM load stored=50 applied=50 stale=0 invalid=0
+# state E2 << PARAM SET path=behavior.band_per_node module=behavior old=0 new=1 status=ok
+# state E2 << PARAM SET path=behavior.base_scatter_bins module=behavior old=0 new=1 status=ok
+# state E2 << PARAM SET path=output.silent module=output old=1 new=0 status=ok
+# state E2 << PARAM SET path=behavior.band_range_low_hz module=behavior old=950 new=300 status=ok
+# state E2 << PARAM SET path=behavior.band_range_high_hz module=behavior old=4950 new=5000 status=ok
+# state E2 << PARAM SET path=behavior.level_max module=behavior old=6 new=4 status=ok
+# state E2 << PARAM SET path=behavior.level_decay_ms module=behavior old=2000 new=5000 status=ok
+# state E2 << PARAM SET path=behavior.answer_jitter_ms module=behavior old=3000 new=800 status=ok
+# state E2 << PARAM SET path=output.idle_announce_hz module=output old=300 new=120 status=ok
+# state E2 << PARAM SET path=output.idle_announce_ms module=output old=500 new=80 status=ok
+# state E2 << PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+# state E2 << PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+# state E2 << PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+# state E2 << PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=92
+# state E2 << PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=450
+# state E2 << PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+# state E2 << PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+# state E2 << PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+# state E2 << PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+# state E2 << PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+# state E2 << PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+# state E2 << PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+# state E2 << PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+# state E2 << PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+# state E2 << PARAM path=detection.band_high_hz module=detection type=uint32 value=4700
+# state E2 << PARAM path=output.hop_enabled module=output type=bool value=1
+# state E2 << PARAM path=output.hop_rotation module=output type=uint32 value=1
+# state E2 << PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+# state E2 << PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+# state E2 << PARAM path=output.hop_steps module=output type=uint32 value=5
+# state E2 << PARAM path=output.idle_announce_hz module=output type=uint32 value=120
+# state E2 << PARAM path=output.idle_announce_ms module=output type=uint32 value=80
+# state E2 << PARAM path=output.silent module=output type=bool value=0
+# state E2 << PARAM path=node.radio_enabled module=node type=bool value=1
+# state E2 << PARAM path=behavior.idle_enabled module=behavior type=bool value=1
+# state E2 << PARAM path=behavior.wait_after_heard_ms module=behavior type=uint32 value=100
+# state E2 << PARAM path=behavior.refractory_after_emit_ms module=behavior type=uint32 value=400
+# state E2 << PARAM path=behavior.suppress_self_chirp_ms module=behavior type=uint32 value=100
+# state E2 << PARAM path=behavior.detection_suppress_tail_ms module=behavior type=uint32 value=60
+# state E2 << PARAM path=behavior.idle_timeout_ms module=behavior type=uint32 value=60000
+# state E2 << PARAM path=behavior.idle_timeout_variation_ms module=behavior type=uint32 value=20000
+# state E2 << PARAM path=behavior.idle_blocked_after_heard_ms module=behavior type=uint32 value=1000
+# state E2 << PARAM path=behavior.idle_blocked_after_own_emit_ms module=behavior type=uint32 value=500
+# state E2 << PARAM path=behavior.rest_after_field_patterns module=behavior type=uint32 value=0
+# state E2 << PARAM path=behavior.own_emit_budget module=behavior type=uint32 value=0
+# state E2 << PARAM path=behavior.own_emit_budget_window_ms module=behavior type=uint32 value=10000
+# state E2 << PARAM path=behavior.rest_ms module=behavior type=uint32 value=8000
+# state E2 << PARAM path=behavior.level_max module=behavior type=uint32 value=4
+# state E2 << PARAM path=behavior.level_decay_ms module=behavior type=uint32 value=5000
+# state E2 << PARAM path=behavior.answer_jitter_ms module=behavior type=uint32 value=800
+# state E2 << PARAM path=behavior.base_scatter_bins module=behavior type=uint32 value=1
+# state E2 << PARAM path=behavior.band_per_node module=behavior type=bool value=1
+# state E2 << PARAM path=behavior.band_range_low_hz module=behavior type=uint32 value=300
+# state E2 << PARAM path=behavior.band_range_high_hz module=behavior type=uint32 value=5000
+# state E2 << PARAM path=detection.contrast_medium module=detection type=float value=30500.000
+# state E2 << PARAM path=detection.amp_medium module=detection type=float value=1500.000
+# state E2 << PARAM path=detection.shape_pre_ms module=detection type=uint32 value=120
+# state E2 << PARAM path=detection.shape_tail_ms module=detection type=uint32 value=0
+# state E2 << PARAM path=detection.shape_max_rising_step_bins module=detection type=uint16 value=2
+# state E2 << PARAM path=detection.shape_min_run_ms module=detection type=uint32 value=4
+# state E2 << PARAM path=detection.shape_medium_min_bins module=detection type=uint16 value=3
+# state E2 << PARAM path=detection.shape_medium_min_rising_steps module=detection type=uint16 value=2
+# state E2 << PARAM path=detection.shape_strong_min_bins module=detection type=uint16 value=4
+# state E2 << PARAM path=detection.shape_strong_min_rising_steps module=detection type=uint16 value=3
+# state E3 << PARAM load path=output.silent value=1 default=0
+# state E3 << PARAM load stored=50 applied=50 stale=0 invalid=0
+# state E3 << PARAM SET path=behavior.band_per_node module=behavior old=0 new=1 status=ok
+# state E3 << PARAM SET path=behavior.base_scatter_bins module=behavior old=0 new=1 status=ok
+# state E3 << PARAM SET path=output.silent module=output old=1 new=0 status=ok
+# state E3 << PARAM SET path=behavior.band_range_low_hz module=behavior old=950 new=300 status=ok
+# state E3 << PARAM SET path=behavior.band_range_high_hz module=behavior old=4950 new=5000 status=ok
+# state E3 << PARAM SET path=behavior.level_max module=behavior old=6 new=4 status=ok
+# state E3 << PARAM SET path=behavior.level_decay_ms module=behavior old=2000 new=5000 status=ok
+# state E3 << PARAM SET path=behavior.answer_jitter_ms module=behavior old=3000 new=800 status=ok
+# state E3 << PARAM SET path=output.idle_announce_hz module=output old=300 new=120 status=ok
+# state E3 << PARAM SET path=output.idle_announce_ms module=output old=500 new=80 status=ok
+# state E3 << PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+# state E3 << PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+# state E3 << PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+# state E3 << PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=92
+# state E3 << PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=450
+# state E3 << PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+# state E3 << PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+# state E3 << PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+# state E3 << PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+# state E3 << PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+# state E3 << PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+# state E3 << PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+# state E3 << PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+# state E3 << PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+# state E3 << PARAM path=detection.band_high_hz module=detection type=uint32 value=4700
+# state E3 << PARAM path=output.hop_enabled module=output type=bool value=1
+# state E3 << PARAM path=output.hop_rotation module=output type=uint32 value=2
+# state E3 << PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+# state E3 << PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+# state E3 << PARAM path=output.hop_steps module=output type=uint32 value=5
+# state E3 << PARAM path=output.idle_announce_hz module=output type=uint32 value=120
+# state E3 << PARAM path=output.idle_announce_ms module=output type=uint32 value=80
+# state E3 << PARAM path=output.silent module=output type=bool value=0
+# state E3 << PARAM path=node.radio_enabled module=node type=bool value=1
+# state E3 << PARAM path=behavior.idle_enabled module=behavior type=bool value=1
+# state E3 << PARAM path=behavior.wait_after_heard_ms module=behavior type=uint32 value=100
+# state E3 << PARAM path=behavior.refractory_after_emit_ms module=behavior type=uint32 value=400
+# state E3 << PARAM path=behavior.suppress_self_chirp_ms module=behavior type=uint32 value=100
+# state E3 << PARAM path=behavior.detection_suppress_tail_ms module=behavior type=uint32 value=60
+# state E3 << PARAM path=behavior.idle_timeout_ms module=behavior type=uint32 value=60000
+# state E3 << PARAM path=behavior.idle_timeout_variation_ms module=behavior type=uint32 value=20000
+# state E3 << PARAM path=behavior.idle_blocked_after_heard_ms module=behavior type=uint32 value=1000
+# state E3 << PARAM path=behavior.idle_blocked_after_own_emit_ms module=behavior type=uint32 value=500
+# state E3 << PARAM path=behavior.rest_after_field_patterns module=behavior type=uint32 value=0
+# state E3 << PARAM path=behavior.own_emit_budget module=behavior type=uint32 value=0
+# state E3 << PARAM path=behavior.own_emit_budget_window_ms module=behavior type=uint32 value=10000
+# state E3 << PARAM path=behavior.rest_ms module=behavior type=uint32 value=8000
+# state E3 << PARAM path=behavior.level_max module=behavior type=uint32 value=4
+# state E3 << PARAM path=behavior.level_decay_ms module=behavior type=uint32 value=5000
+# state E3 << PARAM path=behavior.answer_jitter_ms module=behavior type=uint32 value=800
+# state E3 << PARAM path=behavior.base_scatter_bins module=behavior type=uint32 value=1
+# state E3 << PARAM path=behavior.band_per_node module=behavior type=bool value=1
+# state E3 << PARAM path=behavior.band_range_low_hz module=behavior type=uint32 value=300
+# state E3 << PARAM path=behavior.band_range_high_hz module=behavior type=uint32 value=5000
+# state E3 << PARAM path=detection.contrast_medium module=detection type=float value=30500.000
+# state E3 << PARAM path=detection.amp_medium module=detection type=float value=1500.000
+# state E3 << PARAM path=detection.shape_pre_ms module=detection type=uint32 value=120
+# state E3 << PARAM path=detection.shape_tail_ms module=detection type=uint32 value=0
+# state E3 << PARAM path=detection.shape_max_rising_step_bins module=detection type=uint16 value=2
+# state E3 << PARAM path=detection.shape_min_run_ms module=detection type=uint32 value=4
+# state E3 << PARAM path=detection.shape_medium_min_bins module=detection type=uint16 value=3
+# state E3 << PARAM path=detection.shape_medium_min_rising_steps module=detection type=uint16 value=2
+# state E3 << PARAM path=detection.shape_strong_min_bins module=detection type=uint16 value=4
+# state E3 << PARAM path=detection.shape_strong_min_rising_steps module=detection type=uint16 value=3
+# state E4 << PARAM load path=output.silent value=1 default=0
+# state E4 << PARAM load stored=50 applied=50 stale=0 invalid=0
+# state E4 << PARAM SET path=behavior.band_per_node module=behavior old=0 new=1 status=ok
+# state E4 << PARAM SET path=behavior.base_scatter_bins module=behavior old=0 new=1 status=ok
+# state E4 << PARAM SET path=output.silent module=output old=1 new=0 status=ok
+# state E4 << PARAM SET path=behavior.band_range_low_hz module=behavior old=950 new=300 status=ok
+# state E4 << PARAM SET path=behavior.band_range_high_hz module=behavior old=4950 new=5000 status=ok
+# state E4 << PARAM SET path=behavior.level_max module=behavior old=6 new=4 status=ok
+# state E4 << PARAM SET path=behavior.level_decay_ms module=behavior old=2000 new=5000 status=ok
+# state E4 << PARAM SET path=behavior.answer_jitter_ms module=behavior old=3000 new=800 status=ok
+# state E4 << PARAM SET path=output.idle_announce_hz module=output old=300 new=120 status=ok
+# state E4 << PARAM SET path=output.idle_announce_ms module=output old=500 new=80 status=ok
+# state E4 << PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+# state E4 << PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+# state E4 << PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+# state E4 << PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=92
+# state E4 << PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=450
+# state E4 << PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+# state E4 << PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+# state E4 << PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+# state E4 << PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+# state E4 << PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+# state E4 << PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+# state E4 << PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+# state E4 << PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+# state E4 << PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+# state E4 << PARAM path=detection.band_high_hz module=detection type=uint32 value=4700
+# state E4 << PARAM path=output.hop_enabled module=output type=bool value=1
+# state E4 << PARAM path=output.hop_rotation module=output type=uint32 value=3
+# state E4 << PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+# state E4 << PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+# state E4 << PARAM path=output.hop_steps module=output type=uint32 value=5
+# state E4 << PARAM path=output.idle_announce_hz module=output type=uint32 value=120
+# state E4 << PARAM path=output.idle_announce_ms module=output type=uint32 value=80
+# state E4 << PARAM path=output.silent module=output type=bool value=0
+# state E4 << PARAM path=node.radio_enabled module=node type=bool value=1
+# state E4 << PARAM path=behavior.idle_enabled module=behavior type=bool value=1
+# state E4 << PARAM path=behavior.wait_after_heard_ms module=behavior type=uint32 value=100
+# state E4 << PARAM path=behavior.refractory_after_emit_ms module=behavior type=uint32 value=400
+# state E4 << PARAM path=behavior.suppress_self_chirp_ms module=behavior type=uint32 value=100
+# state E4 << PARAM path=behavior.detection_suppress_tail_ms module=behavior type=uint32 value=60
+# state E4 << PARAM path=behavior.idle_timeout_ms module=behavior type=uint32 value=60000
+# state E4 << PARAM path=behavior.idle_timeout_variation_ms module=behavior type=uint32 value=20000
+# state E4 << PARAM path=behavior.idle_blocked_after_heard_ms module=behavior type=uint32 value=1000
+# state E4 << PARAM path=behavior.idle_blocked_after_own_emit_ms module=behavior type=uint32 value=500
+# state E4 << PARAM path=behavior.rest_after_field_patterns module=behavior type=uint32 value=0
+# state E4 << PARAM path=behavior.own_emit_budget module=behavior type=uint32 value=0
+# state E4 << PARAM path=behavior.own_emit_budget_window_ms module=behavior type=uint32 value=10000
+# state E4 << PARAM path=behavior.rest_ms module=behavior type=uint32 value=8000
+# state E4 << PARAM path=behavior.level_max module=behavior type=uint32 value=4
+# state E4 << PARAM path=behavior.level_decay_ms module=behavior type=uint32 value=5000
+# state E4 << PARAM path=behavior.answer_jitter_ms module=behavior type=uint32 value=800
+# state E4 << PARAM path=behavior.base_scatter_bins module=behavior type=uint32 value=1
+# state E4 << PARAM path=behavior.band_per_node module=behavior type=bool value=1
+# state E4 << PARAM path=behavior.band_range_low_hz module=behavior type=uint32 value=300
+# state E4 << PARAM path=behavior.band_range_high_hz module=behavior type=uint32 value=5000
+# state E4 << PARAM path=detection.contrast_medium module=detection type=float value=30500.000
+# state E4 << PARAM path=detection.amp_medium module=detection type=float value=1500.000
+# state E4 << PARAM path=detection.shape_pre_ms module=detection type=uint32 value=120
+# state E4 << PARAM path=detection.shape_tail_ms module=detection type=uint32 value=0
+# state E4 << PARAM path=detection.shape_max_rising_step_bins module=detection type=uint16 value=2
+# state E4 << PARAM path=detection.shape_min_run_ms module=detection type=uint32 value=4
+# state E4 << PARAM path=detection.shape_medium_min_bins module=detection type=uint16 value=3
+# state E4 << PARAM path=detection.shape_medium_min_rising_steps module=detection type=uint16 value=2
+# state E4 << PARAM path=detection.shape_strong_min_bins module=detection type=uint16 value=4
+# state E4 << PARAM path=detection.shape_strong_min_rising_steps module=detection type=uint16 value=3
+# state E5 << PARAM load path=output.silent value=1 default=0
+# state E5 << PARAM load stored=50 applied=50 stale=0 invalid=0
+# state E5 << PARAM SET path=behavior.band_per_node module=behavior old=0 new=1 status=ok
+# state E5 << PARAM SET path=behavior.base_scatter_bins module=behavior old=0 new=1 status=ok
+# state E5 << PARAM SET path=output.silent module=output old=1 new=0 status=ok
+# state E5 << PARAM SET path=behavior.band_range_low_hz module=behavior old=950 new=300 status=ok
+# state E5 << PARAM SET path=behavior.band_range_high_hz module=behavior old=4950 new=5000 status=ok
+# state E5 << PARAM SET path=behavior.level_max module=behavior old=6 new=4 status=ok
+# state E5 << PARAM SET path=behavior.level_decay_ms module=behavior old=2000 new=5000 status=ok
+# state E5 << PARAM SET path=behavior.answer_jitter_ms module=behavior old=3000 new=800 status=ok
+# state E5 << PARAM SET path=output.idle_announce_hz module=output old=300 new=120 status=ok
+# state E5 << PARAM SET path=output.idle_announce_ms module=output old=500 new=80 status=ok
+# state E5 << PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+# state E5 << PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+# state E5 << PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+# state E5 << PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=92
+# state E5 << PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=450
+# state E5 << PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+# state E5 << PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+# state E5 << PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+# state E5 << PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+# state E5 << PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+# state E5 << PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+# state E5 << PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+# state E5 << PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+# state E5 << PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+# state E5 << PARAM path=detection.band_high_hz module=detection type=uint32 value=4700
+# state E5 << PARAM path=output.hop_enabled module=output type=bool value=1
+# state E5 << PARAM path=output.hop_rotation module=output type=uint32 value=1
+# state E5 << PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+# state E5 << PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+# state E5 << PARAM path=output.hop_steps module=output type=uint32 value=5
+# state E5 << PARAM path=output.idle_announce_hz module=output type=uint32 value=120
+# state E5 << PARAM path=output.idle_announce_ms module=output type=uint32 value=80
+# state E5 << PARAM path=output.silent module=output type=bool value=0
+# state E5 << PARAM path=node.radio_enabled module=node type=bool value=1
+# state E5 << PARAM path=behavior.idle_enabled module=behavior type=bool value=1
+# state E5 << PARAM path=behavior.wait_after_heard_ms module=behavior type=uint32 value=100
+# state E5 << PARAM path=behavior.refractory_after_emit_ms module=behavior type=uint32 value=400
+# state E5 << PARAM path=behavior.suppress_self_chirp_ms module=behavior type=uint32 value=100
+# state E5 << PARAM path=behavior.detection_suppress_tail_ms module=behavior type=uint32 value=60
+# state E5 << PARAM path=behavior.idle_timeout_ms module=behavior type=uint32 value=60000
+# state E5 << PARAM path=behavior.idle_timeout_variation_ms module=behavior type=uint32 value=20000
+# state E5 << PARAM path=behavior.idle_blocked_after_heard_ms module=behavior type=uint32 value=1000
+# state E5 << PARAM path=behavior.idle_blocked_after_own_emit_ms module=behavior type=uint32 value=500
+# state E5 << PARAM path=behavior.rest_after_field_patterns module=behavior type=uint32 value=0
+# state E5 << PARAM path=behavior.own_emit_budget module=behavior type=uint32 value=0
+# state E5 << PARAM path=behavior.own_emit_budget_window_ms module=behavior type=uint32 value=10000
+# state E5 << PARAM path=behavior.rest_ms module=behavior type=uint32 value=8000
+# state E5 << PARAM path=behavior.level_max module=behavior type=uint32 value=4
+# state E5 << PARAM path=behavior.level_decay_ms module=behavior type=uint32 value=5000
+# state E5 << PARAM path=behavior.answer_jitter_ms module=behavior type=uint32 value=800
+# state E5 << PARAM path=behavior.base_scatter_bins module=behavior type=uint32 value=1
+# state E5 << PARAM path=behavior.band_per_node module=behavior type=bool value=1
+# state E5 << PARAM path=behavior.band_range_low_hz module=behavior type=uint32 value=300
+# state E5 << PARAM path=behavior.band_range_high_hz module=behavior type=uint32 value=5000
+# state E5 << PARAM path=detection.contrast_medium module=detection type=float value=30500.000
+# state E5 << PARAM path=detection.amp_medium module=detection type=float value=1500.000
+# state E5 << PARAM path=detection.shape_pre_ms module=detection type=uint32 value=120
+# state E5 << PARAM path=detection.shape_tail_ms module=detection type=uint32 value=0
+# state E5 << PARAM path=detection.shape_max_rising_step_bins module=detection type=uint16 value=2
+# state E5 << PARAM path=detection.shape_min_run_ms module=detection type=uint32 value=4
+# state E5 << PARAM path=detection.shape_medium_min_bins module=detection type=uint16 value=3
+# state E5 << PARAM path=detection.shape_medium_min_rising_steps module=detection type=uint16 value=2
+# state E5 << PARAM path=detection.shape_strong_min_bins module=detection type=uint16 value=4
+# state E5 << PARAM path=detection.shape_strong_min_rising_steps module=detection type=uint16 value=3
+0.00 E1 RB log mode=full
+0.00 E2 RB log mode=full
+0.00 E3 RB log mode=full
+0.00 E4 RB log mode=full
+0.02 E1 RB baseline active
+0.06 E5 RB log mode=full
+34.90 E3 BEH verdict=none heard=0 now=65561 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+34.97 E3 BEH emit start now=65561 source=idle state=Chirping pattern=idle
+35.05 E3 RB emit accepted source=idle state=Chirping pattern=idle
+35.12 E3 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+35.18 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2550,2800,3050,3300,3550
+40.56 E1 BEH verdict=none heard=0 now=71499 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+40.64 E1 BEH emit start now=71499 source=idle state=Chirping pattern=idle
+40.72 E1 RB emit accepted source=idle state=Chirping pattern=idle
+40.80 E1 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+40.86 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3800,4050,4300,4550,4800
+49.51 E2 BEH verdict=none heard=0 now=80343 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+49.59 E2 BEH emit start now=80343 source=idle state=Chirping pattern=idle
+49.67 E2 RB emit accepted source=idle state=Chirping pattern=idle
+49.73 E2 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+49.81 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+50.06 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 strength=4923 duration_ms=98 profile=TonalPulseScalar
+50.06 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=18008 duration_ms=199 profile=TonalPulseScalar
+55.05 E4 BEH verdict=single_pulse heard=80679 now=85717 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+55.13 E4 BEH emit start now=85717 source=idle state=Chirping pattern=idle
+55.22 E4 RB emit accepted source=idle state=Chirping pattern=idle
+55.30 E4 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+55.35 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3300,3550,3800,4050,4300
+55.61 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=25818 duration_ms=132 profile=TonalPulseScalar
+60.20 E2 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=1 output.done=1 output.rejected=0 output.last_reject=none output.last_start_ms=80343 output.last_done_ms=80787 output.span_ms=445 band=300-1300 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=1402368 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=6 i2s.max_backstep_us=4 i2s.clock_corrections=173 i2s.max_clock_correction_us=8 i2s.read_errors=0 audio.uptime_ms=90953 audio.deficit_s=3.3 audio.level=29 audio.level_max=32752 audio.us_per_sample=14.15 audio.block_us_max=2088 audio.baseline=0.1 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=90953 audio.last_sample_ms=90948 behavior.suppress_armed=1 behavior.suppress_until_ms=80847 behavior.suppressed_now=0 behavior.suppressed_samples=8103 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+60.21 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=1 output.done=1 output.rejected=0 output.last_reject=none output.last_start_ms=65561 output.last_done_ms=66004 output.span_ms=445 band=2550-3550 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=1377536 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=5 i2s.max_backstep_us=3 i2s.clock_corrections=170 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=90765 audio.deficit_s=4.7 audio.level=6 audio.level_max=32051 audio.us_per_sample=14.23 audio.block_us_max=2075 audio.baseline=3.2 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=90765 audio.last_sample_ms=90757 behavior.suppress_armed=1 behavior.suppress_until_ms=66064 behavior.suppressed_now=0 behavior.suppressed_samples=8103 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=9 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+60.21 E4 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=1 output.done=1 output.rejected=0 output.last_reject=none output.last_start_ms=85717 output.last_done_ms=86165 output.span_ms=445 band=3300-4300 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=1399040 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=4 i2s.max_backstep_us=1 i2s.clock_corrections=173 i2s.max_clock_correction_us=5 i2s.read_errors=0 audio.uptime_ms=90745 audio.deficit_s=3.3 audio.level=190 audio.level_max=32461 audio.us_per_sample=14.33 audio.block_us_max=3440 audio.baseline=-128.3 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13100 clock.now_ms=90745 audio.last_sample_ms=90742 behavior.suppress_armed=1 behavior.suppress_until_ms=86225 behavior.suppressed_now=0 behavior.suppressed_samples=8231 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=12 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+60.21 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=0 output.done=0 output.rejected=0 output.last_reject=none output.last_start_ms=0 output.last_done_ms=0 output.span_ms=0 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=1379328 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=16000000 i2s.overflows=0 i2s.backsteps=1 i2s.max_backstep_us=1 i2s.clock_corrections=171 i2s.max_clock_correction_us=2 i2s.read_errors=0 audio.uptime_ms=90587 audio.deficit_s=4.4 audio.level=173 audio.level_max=16025 audio.us_per_sample=14.48 audio.block_us_max=3588 audio.baseline=-49.1 heard.valid=1 heard.strength_sum=18008 net.started=1 net.rx=0 net.tx_failed=0 heap.free=81860 heap.free_min=81636 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13328 clock.now_ms=90587 audio.last_sample_ms=90579 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=0 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=1 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+60.21 E1 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=1 output.done=1 output.rejected=0 output.last_reject=none output.last_start_ms=71500 output.last_done_ms=71942 output.span_ms=445 band=3800-4800 hop_enabled=1 hop_rotation=0 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=10 freq.packet_age_ms=0.625 i2s.samples_read=1282816 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=13 i2s.max_backstep_us=972 i2s.clock_corrections=159 i2s.max_clock_correction_us=988 i2s.read_errors=0 audio.uptime_ms=91011 audio.deficit_s=10.8 audio.level=234 audio.level_max=30414 audio.us_per_sample=14.07 audio.block_us_max=3465 audio.baseline=-1.4 heard.valid=1 heard.strength_sum=25818 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13100 clock.now_ms=91011 audio.last_sample_ms=91008 behavior.suppress_armed=1 behavior.suppress_until_ms=72002 behavior.suppressed_now=0 behavior.suppressed_samples=8086 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=1 behavior.declined=1 behavior.yielded=0 behavior.base_bin=14 behavior.base_heard=12 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+70.97 E5 BEH verdict=single_pulse heard=80537 now=101494 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+71.03 E5 BEH emit start now=101494 source=idle state=Chirping pattern=idle
+71.11 E5 RB emit accepted source=idle state=Chirping pattern=idle
+71.19 E5 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+71.26 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+71.51 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=19136 duration_ms=184 profile=TonalPulseScalar
+72.05 E2 BEH verdict=single_pulse heard=102373 now=102928 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+72.12 E2 BEH emit start now=102928 source=heard_pattern state=Chirping pattern=single
+72.21 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+72.29 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+72.32 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=17439 duration_ms=200 profile=TonalPulseScalar
+72.77 E5 BEH verdict=single_pulse heard=102806 now=103281 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+72.83 E5 BEH emit start now=103281 source=heard_pattern state=Chirping pattern=single
+72.91 E5 RB emit accepted source=heard_pattern state=Chirping pattern=single
+72.99 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+73.01 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=19109 duration_ms=188 profile=TonalPulseScalar
+96.13 E1 BEH verdict=single_pulse heard=86524 now=127043 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+96.22 E1 BEH emit start now=127043 source=idle state=Chirping pattern=idle
+96.29 E1 RB emit accepted source=idle state=Chirping pattern=idle
+96.36 E1 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+96.41 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3800,4050,4300,4550,4800
+96.60 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12274 duration_ms=124 profile=TonalPulseScalar
+97.22 E4 BEH verdict=single_pulse heard=127213 now=127891 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+97.29 E4 BEH emit start now=127891 source=heard_pattern state=Chirping pattern=single
+97.36 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+97.44 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3550,3800,4050,4300,4550
+97.52 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=26155 duration_ms=144 profile=TonalPulseScalar
+111.87 E3 BEH emit start now=142561 source=idle state=Chirping pattern=idle
+111.93 E3 RB emit accepted source=idle state=Chirping pattern=idle
+112.00 E3 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+112.15 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2300,2550,2800,3050,3300
+115.37 E5 BEH emit start now=145840 source=idle state=Chirping pattern=idle
+115.45 E5 RB emit accepted source=idle state=Chirping pattern=idle
+115.53 E5 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+115.60 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+115.86 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=18863 duration_ms=201 profile=TonalPulseScalar
+120.21 E2 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=2 output.done=2 output.rejected=0 output.last_reject=none output.last_start_ms=102928 output.last_done_ms=103091 output.span_ms=165 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=2362496 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=16000000 i2s.overflows=0 i2s.backsteps=10 i2s.max_backstep_us=4 i2s.clock_corrections=292 i2s.max_clock_correction_us=8 i2s.read_errors=0 audio.uptime_ms=150963 audio.deficit_s=3.3 audio.level=53 audio.level_max=32647 audio.us_per_sample=14.00 audio.block_us_max=3538 audio.baseline=26.3 heard.valid=3 heard.strength_sum=57108 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=150963 audio.last_sample_ms=150956 behavior.suppress_armed=1 behavior.suppress_until_ms=103151 behavior.suppressed_now=0 behavior.suppressed_samples=11726 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=1 behavior.declined=2 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=1 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+120.22 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=2 output.done=2 output.rejected=0 output.last_reject=none output.last_start_ms=142561 output.last_done_ms=143004 output.span_ms=445 band=2300-3300 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=2337792 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=8 i2s.max_backstep_us=3 i2s.clock_corrections=289 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=150776 audio.deficit_s=4.7 audio.level=96 audio.level_max=32421 audio.us_per_sample=13.91 audio.block_us_max=1830 audio.baseline=65.7 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=150776 audio.last_sample_ms=150773 behavior.suppress_armed=1 behavior.suppress_until_ms=143064 behavior.suppressed_now=0 behavior.suppressed_samples=16206 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=8 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=2 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+120.22 E4 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=2 output.done=2 output.rejected=0 output.last_reject=none output.last_start_ms=127891 output.last_done_ms=128053 output.span_ms=165 band=3550-4550 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=2359168 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=8 i2s.max_backstep_us=3 i2s.clock_corrections=292 i2s.max_clock_correction_us=5 i2s.read_errors=0 audio.uptime_ms=150753 audio.deficit_s=3.3 audio.level=26 audio.level_max=32373 audio.us_per_sample=13.95 audio.block_us_max=3391 audio.baseline=-26.3 heard.valid=1 heard.strength_sum=12274 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=150753 audio.last_sample_ms=150750 behavior.suppress_armed=1 behavior.suppress_until_ms=128113 behavior.suppressed_now=0 behavior.suppressed_samples=11854 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=13 behavior.base_heard=14 behavior.base_glides=1 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+120.22 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=3 output.done=3 output.rejected=0 output.last_reject=none output.last_start_ms=145840 output.last_done_ms=146282 output.span_ms=445 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=2339584 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=6 i2s.max_backstep_us=2 i2s.clock_corrections=290 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=150598 audio.deficit_s=4.4 audio.level=55 audio.level_max=32749 audio.us_per_sample=13.79 audio.block_us_max=3391 audio.baseline=11.6 heard.valid=2 heard.strength_sum=35447 net.started=1 net.rx=0 net.tx_failed=0 heap.free=81860 heap.free_min=81636 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13100 clock.now_ms=150598 audio.last_sample_ms=150595 behavior.suppress_armed=1 behavior.suppress_until_ms=146342 behavior.suppressed_now=0 behavior.suppressed_samples=19850 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=1 behavior.declined=1 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+120.22 E1 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=2 output.done=2 output.rejected=0 output.last_reject=none output.last_start_ms=127043 output.last_done_ms=127486 output.span_ms=445 band=3800-4800 hop_enabled=1 hop_rotation=0 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=10 freq.packet_age_ms=0.625 i2s.samples_read=2242944 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=25 i2s.max_backstep_us=972 i2s.clock_corrections=278 i2s.max_clock_correction_us=988 i2s.read_errors=0 audio.uptime_ms=151021 audio.deficit_s=10.8 audio.level=44 audio.level_max=30786 audio.us_per_sample=13.93 audio.block_us_max=3391 audio.baseline=29.6 heard.valid=2 heard.strength_sum=51973 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13100 clock.now_ms=151021 audio.last_sample_ms=151016 behavior.suppress_armed=1 behavior.suppress_until_ms=127546 behavior.suppressed_now=0 behavior.suppressed_samples=16172 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=2 behavior.yielded=0 behavior.base_bin=14 behavior.base_heard=13 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+140.69 E2 BEH verdict=single_pulse heard=146734 now=171543 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+140.78 E2 BEH emit start now=171543 source=idle state=Chirping pattern=idle
+140.86 E2 RB emit accepted source=idle state=Chirping pattern=idle
+140.93 E2 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+141.01 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+141.21 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=17192 duration_ms=199 profile=TonalPulseScalar
+149.80 E4 BEH emit start now=180467 source=idle state=Chirping pattern=idle
+149.88 E4 RB emit accepted source=idle state=Chirping pattern=idle
+149.97 E4 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+150.10 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3550,3800,4050,4300,4550
+150.35 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=25672 duration_ms=131 profile=TonalPulseScalar
+150.81 E1 BEH verdict=single_pulse heard=181233 now=181749 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+150.87 E1 BEH emit start now=181749 source=heard_pattern state=Chirping pattern=single
+150.95 E1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+151.04 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3550,3800,4050,4300,4550
+151.07 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12253 duration_ms=202 profile=TonalPulseScalar
+151.21 E4 BEH verdict=single_pulse heard=181714 now=181849 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+151.30 E4 BEH emit start now=181849 source=heard_pattern state=Chirping pattern=single
+151.38 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+151.45 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3550,3800,4050,4300,4550
+151.46 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=25616 duration_ms=181 profile=TonalPulseScalar
+151.67 E1 BEH verdict=single_pulse heard=182336 now=182587 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+151.75 E1 BEH emit start now=182587 source=heard_pattern state=Chirping pattern=single
+151.84 E1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+151.90 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3550,3800,4050,4300,4550
+151.93 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_level valid=1 strength=12255 duration_ms=202 profile=TonalPulseScalar
+151.96 E1 RB rest start reason=rest_level now=182588 until=190752 field_patterns=2
+152.00 E4 RB rest start reason=rest_level now=182566 until=190566 field_patterns=2
+156.73 E3 BEH emit start now=187424 source=idle state=Chirping pattern=idle
+156.81 E3 RB emit accepted source=idle state=Chirping pattern=idle
+156.89 E3 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+157.04 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=1300,1550,1800,2050,2300
+157.17 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 strength=16092 duration_ms=116 profile=TonalPulseScalar
+175.58 E5 BEH verdict=single_pulse heard=171701 now=206102 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+175.64 E5 BEH emit start now=206102 source=idle state=Chirping pattern=idle
+175.73 E5 RB emit accepted source=idle state=Chirping pattern=idle
+175.81 E5 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+175.88 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+176.13 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=19476 duration_ms=189 profile=TonalPulseScalar
+180.21 E2 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=3 output.done=3 output.rejected=0 output.last_reject=none output.last_start_ms=171543 output.last_done_ms=171987 output.span_ms=445 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=3322368 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=13 i2s.max_backstep_us=4 i2s.clock_corrections=412 i2s.max_clock_correction_us=8 i2s.read_errors=0 audio.uptime_ms=210956 audio.deficit_s=3.3 audio.level=97 audio.level_max=32647 audio.us_per_sample=13.92 audio.block_us_max=3323 audio.baseline=-54.8 heard.valid=4 heard.strength_sum=76584 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=210956 audio.last_sample_ms=210948 behavior.suppress_armed=1 behavior.suppress_until_ms=172047 behavior.suppressed_now=0 behavior.suppressed_samples=19829 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=1 behavior.declined=3 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=1 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+180.21 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=4 output.done=4 output.rejected=0 output.last_reject=none output.last_start_ms=206102 output.last_done_ms=206546 output.span_ms=445 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=3299456 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=9 i2s.max_backstep_us=2 i2s.clock_corrections=409 i2s.max_clock_correction_us=5 i2s.read_errors=0 audio.uptime_ms=210591 audio.deficit_s=4.4 audio.level=111 audio.level_max=32748 audio.us_per_sample=13.92 audio.block_us_max=3399 audio.baseline=-8.8 heard.valid=3 heard.strength_sum=52639 net.started=1 net.rx=0 net.tx_failed=0 heap.free=81860 heap.free_min=81636 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13100 clock.now_ms=210591 audio.last_sample_ms=210587 behavior.suppress_armed=1 behavior.suppress_until_ms=206606 behavior.suppressed_now=0 behavior.suppressed_samples=27960 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=1 behavior.declined=2 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+180.21 E1 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=4 output.done=4 output.rejected=0 output.last_reject=none output.last_start_ms=182587 output.last_done_ms=182750 output.span_ms=165 band=3800-4800 hop_enabled=1 hop_rotation=0 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=3202816 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=37 i2s.max_backstep_us=972 i2s.clock_corrections=397 i2s.max_clock_correction_us=988 i2s.read_errors=0 audio.uptime_ms=211015 audio.deficit_s=10.8 audio.level=109 audio.level_max=20579 audio.us_per_sample=13.93 audio.block_us_max=3383 audio.baseline=28.8 heard.valid=4 heard.strength_sum=103261 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=211015 audio.last_sample_ms=211008 behavior.suppress_armed=1 behavior.suppress_until_ms=182810 behavior.suppressed_now=0 behavior.suppressed_samples=23392 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=190752 behavior.rests=1 behavior.level=0 behavior.declined=2 behavior.yielded=0 behavior.base_bin=14 behavior.base_heard=-1 behavior.base_glides=1 behavior.base_scatters=1 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+180.22 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=3 output.done=3 output.rejected=0 output.last_reject=none output.last_start_ms=187424 output.last_done_ms=187868 output.span_ms=445 band=1300-2300 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=3297664 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=11 i2s.max_backstep_us=3 i2s.clock_corrections=408 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=210769 audio.deficit_s=4.7 audio.level=63 audio.level_max=32398 audio.us_per_sample=13.91 audio.block_us_max=1859 audio.baseline=4.2 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=210769 audio.last_sample_ms=210765 behavior.suppress_armed=1 behavior.suppress_until_ms=187928 behavior.suppressed_now=0 behavior.suppressed_samples=24309 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=4 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=3 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+180.22 E4 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=4 output.done=4 output.rejected=0 output.last_reject=none output.last_start_ms=181849 output.last_done_ms=182013 output.span_ms=165 band=3800-4800 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=3319040 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=16000000 i2s.overflows=0 i2s.backsteps=12 i2s.max_backstep_us=3 i2s.clock_corrections=411 i2s.max_clock_correction_us=5 i2s.read_errors=0 audio.uptime_ms=210746 audio.deficit_s=3.3 audio.level=22 audio.level_max=32182 audio.us_per_sample=13.88 audio.block_us_max=3369 audio.baseline=70.2 heard.valid=3 heard.strength_sum=36782 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=210746 audio.last_sample_ms=210742 behavior.suppress_armed=1 behavior.suppress_until_ms=182073 behavior.suppressed_now=0 behavior.suppressed_samples=23580 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=190566 behavior.rests=1 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=14 behavior.base_heard=-1 behavior.base_glides=1 behavior.base_scatters=1 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=1 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+205.93 E1 BEH emit start now=236883 source=idle state=Chirping pattern=idle
+206.00 E1 RB emit accepted source=idle state=Chirping pattern=idle
+206.08 E1 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+206.23 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3800,4050,4300,4550,4800
+206.48 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12182 duration_ms=173 profile=TonalPulseScalar
+206.87 E4 BEH verdict=single_pulse heard=237101 now=237497 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+206.96 E4 BEH emit start now=237497 source=heard_pattern state=Chirping pattern=single
+207.03 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+207.10 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3800,4050,4300,4550,4800
+207.12 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=25803 duration_ms=198 profile=TonalPulseScalar
+207.51 E1 BEH verdict=single_pulse heard=238001 now=238427 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+207.59 E1 BEH emit start now=238427 source=heard_pattern state=Chirping pattern=single
+207.65 E1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+207.67 E3 BEH emit start now=238331 source=idle state=Chirping pattern=idle
+207.71 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3800,4050,4300,4550,4800
+207.75 E3 RB emit accepted source=idle state=Chirping pattern=idle
+207.75 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12276 duration_ms=173 profile=TonalPulseScalar
+207.81 E3 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+207.95 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=1800,2050,2300,2550,2800
+208.02 E4 BEH verdict=single_pulse heard=238365 now=238673 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+208.10 E4 BEH emit start now=238673 source=heard_pattern state=Chirping pattern=single
+208.18 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+208.26 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3800,4050,4300,4550,4800
+208.28 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_level valid=1 strength=25759 duration_ms=197 profile=TonalPulseScalar
+208.35 E4 RB rest start reason=rest_level now=238674 until=246838 field_patterns=2
+208.38 E1 RB rest start reason=rest_level now=239192 until=247192 field_patterns=1
+214.74 E2 BEH verdict=single_pulse heard=206986 now=245577 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+214.81 E2 BEH emit start now=245577 source=idle state=Chirping pattern=idle
+214.89 E2 RB emit accepted source=idle state=Chirping pattern=idle
+214.96 E2 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+215.01 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+215.27 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=17395 duration_ms=198 profile=TonalPulseScalar
+240.23 E1 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=6 output.done=6 output.rejected=0 output.last_reject=none output.last_start_ms=238427 output.last_done_ms=238590 output.span_ms=165 band=3550-4550 hop_enabled=1 hop_rotation=0 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=4163072 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999857 i2s.overflows=0 i2s.backsteps=48 i2s.max_backstep_us=977 i2s.clock_corrections=516 i2s.max_clock_correction_us=993 i2s.read_errors=0 audio.uptime_ms=271029 audio.deficit_s=10.8 audio.level=24 audio.level_max=31403 audio.us_per_sample=13.92 audio.block_us_max=3418 audio.baseline=-4.4 heard.valid=6 heard.strength_sum=154823 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=271029 audio.last_sample_ms=271024 behavior.suppress_armed=1 behavior.suppress_until_ms=238650 behavior.suppressed_now=0 behavior.suppressed_samples=35084 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=247192 behavior.rests=2 behavior.level=0 behavior.declined=2 behavior.yielded=0 behavior.base_bin=13 behavior.base_heard=-1 behavior.base_glides=1 behavior.base_scatters=2 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=1 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+240.23 E2 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=4 output.done=4 output.rejected=0 output.last_reject=none output.last_start_ms=245577 output.last_done_ms=246019 output.span_ms=445 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=4282624 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=16000000 i2s.overflows=0 i2s.backsteps=17 i2s.max_backstep_us=4 i2s.clock_corrections=531 i2s.max_clock_correction_us=8 i2s.read_errors=0 audio.uptime_ms=270971 audio.deficit_s=3.3 audio.level=102 audio.level_max=32644 audio.us_per_sample=13.91 audio.block_us_max=1874 audio.baseline=-48.4 heard.valid=4 heard.strength_sum=76584 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=270971 audio.last_sample_ms=270964 behavior.suppress_armed=1 behavior.suppress_until_ms=246079 behavior.suppressed_now=0 behavior.suppressed_samples=27932 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=3 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=1 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+240.23 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=4 output.done=4 output.rejected=0 output.last_reject=none output.last_start_ms=238331 output.last_done_ms=238772 output.span_ms=445 band=1800-2800 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=4257920 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=14 i2s.max_backstep_us=3 i2s.clock_corrections=528 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=270784 audio.deficit_s=4.7 audio.level=40 audio.level_max=28595 audio.us_per_sample=13.91 audio.block_us_max=1836 audio.baseline=52.7 heard.valid=0 heard.strength_sum=0 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13900 clock.now_ms=270784 audio.last_sample_ms=270781 behavior.suppress_armed=1 behavior.suppress_until_ms=238832 behavior.suppressed_now=0 behavior.suppressed_samples=32412 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=6 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=4 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+240.23 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=4 output.done=4 output.rejected=0 output.last_reject=none output.last_start_ms=206102 output.last_done_ms=206546 output.span_ms=445 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=4259712 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=9 i2s.max_backstep_us=2 i2s.clock_corrections=528 i2s.max_clock_correction_us=5 i2s.read_errors=0 audio.uptime_ms=270606 audio.deficit_s=4.4 audio.level=69 audio.level_max=20363 audio.us_per_sample=14.03 audio.block_us_max=3401 audio.baseline=11.9 heard.valid=4 heard.strength_sum=70034 net.started=1 net.rx=0 net.tx_failed=0 heap.free=81860 heap.free_min=81636 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13100 clock.now_ms=270606 audio.last_sample_ms=270603 behavior.suppress_armed=1 behavior.suppress_until_ms=206606 behavior.suppressed_now=0 behavior.suppressed_samples=27960 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=3 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+240.27 E4 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=6 output.done=6 output.rejected=0 output.last_reject=none output.last_start_ms=238673 output.last_done_ms=238837 output.span_ms=165 band=3550-4550 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=4279296 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999968 i2s.overflows=0 i2s.backsteps=16 i2s.max_backstep_us=3 i2s.clock_corrections=530 i2s.max_clock_correction_us=5 i2s.read_errors=0 audio.uptime_ms=270761 audio.deficit_s=3.3 audio.level=340 audio.level_max=30066 audio.us_per_sample=13.94 audio.block_us_max=3386 audio.baseline=49.5 heard.valid=5 heard.strength_sum=61240 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=270761 audio.last_sample_ms=270758 behavior.suppress_armed=1 behavior.suppress_until_ms=238897 behavior.suppressed_now=0 behavior.suppressed_samples=30826 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=246838 behavior.rests=2 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=13 behavior.base_heard=-1 behavior.base_glides=1 behavior.base_scatters=2 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=1 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+249.13 E3 BEH emit start now=279800 source=idle state=Chirping pattern=idle
+249.20 E3 RB emit accepted source=idle state=Chirping pattern=idle
+249.28 E3 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+249.38 E5 BEH verdict=single_pulse heard=245733 now=279906 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+249.41 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+249.43 E5 BEH emit start now=279906 source=idle state=Chirping pattern=idle
+249.52 E5 RB emit accepted source=idle state=Chirping pattern=idle
+249.59 E5 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+249.65 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 strength=7514 duration_ms=127 profile=TonalPulseScalar
+249.67 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6966 duration_ms=147 profile=TonalPulseScalar
+249.67 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+249.93 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=19504 duration_ms=189 profile=TonalPulseScalar
+262.50 E1 BEH verdict=single_pulse heard=280562 now=293444 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+262.56 E1 BEH emit start now=293444 source=idle state=Chirping pattern=idle
+262.64 E1 RB emit accepted source=idle state=Chirping pattern=idle
+262.72 E1 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+262.78 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3550,3800,4050,4300,4550
+262.97 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=3973 duration_ms=93 profile=TonalPulseScalar
+263.03 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12220 duration_ms=201 profile=TonalPulseScalar
+263.33 E4 BEH verdict=single_pulse heard=293690 now=294010 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+263.40 E4 BEH emit start now=294010 source=heard_pattern state=Chirping pattern=single
+263.49 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+263.53 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7443 duration_ms=123 profile=TonalPulseScalar
+263.55 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3550,3800,4050,4300,4550
+263.57 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=26410 duration_ms=182 profile=TonalPulseScalar
+263.73 E3 BEH verdict=single_pulse heard=294196 now=294397 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+263.81 E3 BEH emit start now=294397 source=heard_pattern state=Chirping pattern=single
+263.85 E1 BEH verdict=single_pulse heard=294497 now=294760 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+263.88 E3 RB emit accepted source=heard_pattern state=Chirping pattern=single
+263.92 E1 BEH emit start now=294760 source=heard_pattern state=Chirping pattern=single
+263.96 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3300,3550,3800,4050,4300
+264.01 E1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+264.08 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3550,3800,4050,4300,4550
+264.11 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12298 duration_ms=273 profile=TonalPulseScalar
+264.25 E4 BEH verdict=single_pulse heard=294730 now=294897 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+264.33 E4 BEH emit start now=294897 source=heard_pattern state=Chirping pattern=single
+264.41 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+264.45 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_level valid=1 strength=7381 duration_ms=167 profile=TonalPulseScalar
+264.46 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3550,3800,4050,4300,4550
+264.48 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_level valid=1 strength=26448 duration_ms=182 profile=TonalPulseScalar
+264.51 E3 RB rest start reason=rest_level now=295141 until=303141 field_patterns=3
+264.52 E4 RB rest start reason=rest_level now=294898 until=303062 field_patterns=2
+264.56 E1 RB rest start reason=rest_level now=295400 until=303400 field_patterns=1
+282.31 E2 BEH verdict=single_pulse heard=280794 now=313152 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+282.38 E2 BEH emit start now=313152 source=idle state=Chirping pattern=idle
+282.47 E2 RB emit accepted source=idle state=Chirping pattern=idle
+282.54 E2 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+282.61 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+282.86 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=17585 duration_ms=198 profile=TonalPulseScalar
+283.23 E5 BEH verdict=single_pulse heard=313309 now=313691 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+283.31 E5 BEH emit start now=313691 source=heard_pattern state=Chirping pattern=single
+283.39 E5 RB emit accepted source=heard_pattern state=Chirping pattern=single
+283.45 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+283.46 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=19217 duration_ms=188 profile=TonalPulseScalar
+300.18 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=6 output.done=6 output.rejected=0 output.last_reject=none output.last_start_ms=313693 output.last_done_ms=313858 output.span_ms=165 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=5218816 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=15 i2s.max_backstep_us=3 i2s.clock_corrections=647 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=330555 audio.deficit_s=4.4 audio.level=74 audio.level_max=32748 audio.us_per_sample=13.90 audio.block_us_max=3404 audio.baseline=34.1 heard.valid=5 heard.strength_sum=87619 net.started=1 net.rx=0 net.tx_failed=0 heap.free=81860 heap.free_min=81636 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13100 clock.now_ms=330555 audio.last_sample_ms=330547 behavior.suppress_armed=1 behavior.suppress_until_ms=313918 behavior.suppressed_now=0 behavior.suppressed_samples=39828 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=3 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+300.18 E2 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=5 output.done=5 output.rejected=0 output.last_reject=none output.last_start_ms=313152 output.last_done_ms=313595 output.span_ms=445 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=5241856 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=20 i2s.max_backstep_us=4 i2s.clock_corrections=650 i2s.max_clock_correction_us=8 i2s.read_errors=0 audio.uptime_ms=330921 audio.deficit_s=3.3 audio.level=189 audio.level_max=32643 audio.us_per_sample=13.94 audio.block_us_max=3374 audio.baseline=6.0 heard.valid=6 heard.strength_sum=115305 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=330921 audio.last_sample_ms=330916 behavior.suppress_armed=1 behavior.suppress_until_ms=313655 behavior.suppressed_now=0 behavior.suppressed_samples=36035 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=5 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=1 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+300.18 E1 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=8 output.done=8 output.rejected=0 output.last_reject=none output.last_start_ms=294762 output.last_done_ms=294926 output.span_ms=165 band=3300-4300 hop_enabled=1 hop_rotation=0 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=5122304 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=63 i2s.max_backstep_us=991 i2s.clock_corrections=635 i2s.max_clock_correction_us=999 i2s.read_errors=0 audio.uptime_ms=330980 audio.deficit_s=10.8 audio.level=69 audio.level_max=23585 audio.us_per_sample=13.91 audio.block_us_max=3358 audio.baseline=50.8 heard.valid=8 heard.strength_sum=207681 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=330980 audio.last_sample_ms=330976 behavior.suppress_armed=1 behavior.suppress_until_ms=294986 behavior.suppressed_now=0 behavior.suppressed_samples=46776 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=303400 behavior.rests=3 behavior.level=0 behavior.declined=2 behavior.yielded=0 behavior.base_bin=12 behavior.base_heard=-1 behavior.base_glides=1 behavior.base_scatters=3 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=2 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+300.18 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=6 output.done=6 output.rejected=0 output.last_reject=none output.last_start_ms=294399 output.last_done_ms=294564 output.span_ms=165 band=3050-4050 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=5217152 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=20 i2s.max_backstep_us=3 i2s.clock_corrections=646 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=330736 audio.deficit_s=4.7 audio.level=25 audio.level_max=31040 audio.us_per_sample=13.89 audio.block_us_max=3476 audio.baseline=4.6 heard.valid=3 heard.strength_sum=18797 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13100 clock.now_ms=330736 audio.last_sample_ms=330733 behavior.suppress_armed=1 behavior.suppress_until_ms=294624 behavior.suppressed_now=0 behavior.suppressed_samples=44138 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=303141 behavior.rests=1 behavior.level=0 behavior.declined=1 behavior.yielded=0 behavior.base_bin=11 behavior.base_heard=-1 behavior.base_glides=1 behavior.base_scatters=1 behavior.base_wanders=5 behavior.last_rest=rest_level behavior.blocked_resting=1 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+300.18 E4 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=8 output.done=8 output.rejected=0 output.last_reject=none output.last_start_ms=294897 output.last_done_ms=295061 output.span_ms=165 band=3300-4300 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=5238528 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999968 i2s.overflows=0 i2s.backsteps=20 i2s.max_backstep_us=3 i2s.clock_corrections=649 i2s.max_clock_correction_us=5 i2s.read_errors=0 audio.uptime_ms=330713 audio.deficit_s=3.3 audio.level=7 audio.level_max=32192 audio.us_per_sample=13.96 audio.block_us_max=3377 audio.baseline=-1.9 heard.valid=8 heard.strength_sum=92724 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=330713 audio.last_sample_ms=330710 behavior.suppress_armed=1 behavior.suppress_until_ms=295121 behavior.suppressed_now=0 behavior.suppressed_samples=38072 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=303062 behavior.rests=3 behavior.level=0 behavior.declined=1 behavior.yielded=0 behavior.base_bin=12 behavior.base_heard=-1 behavior.base_glides=1 behavior.base_scatters=3 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=1 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+305.13 E1 BEH verdict=single_pulse heard=295385 now=336032 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+305.20 E1 BEH emit start now=336032 source=idle state=Chirping pattern=idle
+305.28 E1 RB emit accepted source=idle state=Chirping pattern=idle
+305.35 E1 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+305.41 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3300,3550,3800,4050,4300
+305.66 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12271 duration_ms=192 profile=TonalPulseScalar
+306.03 E4 BEH verdict=single_pulse heard=336273 now=336666 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+306.11 E4 BEH emit start now=336666 source=heard_pattern state=Chirping pattern=single
+306.20 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+306.25 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7452 duration_ms=157 profile=TonalPulseScalar
+306.27 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3300,3550,3800,4050,4300
+306.28 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=26334 duration_ms=214 profile=TonalPulseScalar
+306.50 E1 BEH verdict=single_pulse heard=337186 now=337404 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+306.58 E1 BEH emit start now=337404 source=heard_pattern state=Chirping pattern=single
+306.66 E1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+306.67 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=5033 duration_ms=129 profile=TonalPulseScalar
+306.71 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3300,3550,3800,4050,4300
+306.74 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=12313 duration_ms=191 profile=TonalPulseScalar
+327.35 E5 BEH emit start now=357870 source=idle state=Chirping pattern=idle
+327.43 E5 RB emit accepted source=idle state=Chirping pattern=idle
+327.51 E5 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+327.65 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+327.90 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=18910 duration_ms=189 profile=TonalPulseScalar
+329.09 E3 BEH verdict=single_pulse heard=337322 now=359785 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+329.16 E3 BEH emit start now=359785 source=idle state=Chirping pattern=idle
+329.25 E3 RB emit accepted source=idle state=Chirping pattern=idle
+329.32 E3 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+329.39 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+329.64 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12421 duration_ms=162 profile=TonalPulseScalar
+329.67 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=10613 duration_ms=185 profile=TonalPulseScalar
+329.90 E4 BEH verdict=single_pulse heard=360303 now=360548 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+329.97 E4 BEH emit start now=360548 source=heard_pattern state=Chirping pattern=single
+329.98 E1 BEH verdict=single_pulse heard=360546 now=360910 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+330.02 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+330.05 E1 BEH emit start now=360910 source=heard_pattern state=Chirping pattern=single
+330.09 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+330.12 E1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+330.20 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+330.22 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7428 duration_ms=252 profile=TonalPulseScalar
+349.83 E2 BEH verdict=single_pulse heard=358753 now=380700 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+349.88 E2 BEH emit start now=380700 source=idle state=Chirping pattern=idle
+349.97 E2 RB emit accepted source=idle state=Chirping pattern=idle
+350.04 E2 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+350.10 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+350.40 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=17132 duration_ms=198 profile=TonalPulseScalar
+350.77 E5 BEH verdict=single_pulse heard=380861 now=381230 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+350.85 E5 BEH emit start now=381230 source=heard_pattern state=Chirping pattern=single
+350.92 E5 RB emit accepted source=heard_pattern state=Chirping pattern=single
+350.99 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+351.00 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=19076 duration_ms=189 profile=TonalPulseScalar
+360.22 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=8 output.done=8 output.rejected=0 output.last_reject=none output.last_start_ms=381230 output.last_done_ms=381394 output.span_ms=165 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=6179584 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=20 i2s.max_backstep_us=3 i2s.clock_corrections=766 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=390600 audio.deficit_s=4.4 audio.level=134 audio.level_max=32748 audio.us_per_sample=13.90 audio.block_us_max=3399 audio.baseline=91.6 heard.valid=6 heard.strength_sum=104751 net.started=1 net.rx=0 net.tx_failed=0 heap.free=81860 heap.free_min=81636 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13100 clock.now_ms=390600 audio.last_sample_ms=390595 behavior.suppress_armed=1 behavior.suppress_until_ms=381454 behavior.suppressed_now=0 behavior.suppressed_samples=51568 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=1 behavior.declined=3 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+360.22 E2 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=6 output.done=6 output.rejected=0 output.last_reject=none output.last_start_ms=380702 output.last_done_ms=381147 output.span_ms=445 band=550-1550 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=6202624 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=16000000 i2s.overflows=0 i2s.backsteps=24 i2s.max_backstep_us=4 i2s.clock_corrections=769 i2s.max_clock_correction_us=8 i2s.read_errors=0 audio.uptime_ms=390967 audio.deficit_s=3.3 audio.level=68 audio.level_max=32644 audio.us_per_sample=13.92 audio.block_us_max=3356 audio.baseline=21.6 heard.valid=8 heard.strength_sum=153291 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=390967 audio.last_sample_ms=390964 behavior.suppress_armed=1 behavior.suppress_until_ms=381207 behavior.suppressed_now=0 behavior.suppressed_samples=44138 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=1 behavior.declined=7 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=1 behavior.base_scatters=0 behavior.base_wanders=1 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+360.22 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=7 output.done=7 output.rejected=0 output.last_reject=none output.last_start_ms=359785 output.last_done_ms=360228 output.span_ms=445 band=3050-4050 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=6177792 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=23 i2s.max_backstep_us=3 i2s.clock_corrections=766 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=390778 audio.deficit_s=4.7 audio.level=61 audio.level_max=30925 audio.us_per_sample=13.96 audio.block_us_max=3372 audio.baseline=-61.1 heard.valid=6 heard.strength_sum=38710 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=390778 audio.last_sample_ms=390773 behavior.suppress_armed=1 behavior.suppress_until_ms=360288 behavior.suppressed_now=0 behavior.suppressed_samples=52241 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=303141 behavior.rests=1 behavior.level=0 behavior.declined=4 behavior.yielded=0 behavior.base_bin=11 behavior.base_heard=11 behavior.base_glides=1 behavior.base_scatters=1 behavior.base_wanders=5 behavior.last_rest=rest_level behavior.blocked_resting=1 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+360.22 E4 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=10 output.done=10 output.rejected=0 output.last_reject=none output.last_start_ms=360548 output.last_done_ms=360709 output.span_ms=165 band=3050-4050 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=6199168 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999968 i2s.overflows=0 i2s.backsteps=27 i2s.max_backstep_us=3 i2s.clock_corrections=768 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=390755 audio.deficit_s=3.3 audio.level=157 audio.level_max=32461 audio.us_per_sample=13.97 audio.block_us_max=3372 audio.baseline=-54.1 heard.valid=11 heard.strength_sum=127921 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=390755 audio.last_sample_ms=390750 behavior.suppress_armed=1 behavior.suppress_until_ms=360769 behavior.suppressed_now=0 behavior.suppressed_samples=45318 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=303062 behavior.rests=3 behavior.level=0 behavior.declined=2 behavior.yielded=0 behavior.base_bin=11 behavior.base_heard=11 behavior.base_glides=2 behavior.base_scatters=3 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=1 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+360.24 E1 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=11 output.done=11 output.rejected=0 output.last_reject=none output.last_start_ms=360910 output.last_done_ms=361078 output.span_ms=165 band=3050-4050 hop_enabled=1 hop_rotation=0 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=6083072 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=77 i2s.max_backstep_us=991 i2s.clock_corrections=754 i2s.max_clock_correction_us=999 i2s.read_errors=0 audio.uptime_ms=391027 audio.deficit_s=10.8 audio.level=169 audio.level_max=26458 audio.us_per_sample=13.86 audio.block_us_max=3420 audio.baseline=-50.2 heard.valid=10 heard.strength_sum=246436 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=391027 audio.last_sample_ms=391024 behavior.suppress_armed=1 behavior.suppress_until_ms=361138 behavior.suppressed_now=0 behavior.suppressed_samples=62203 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=303400 behavior.rests=3 behavior.level=0 behavior.declined=2 behavior.yielded=0 behavior.base_bin=11 behavior.base_heard=11 behavior.base_glides=2 behavior.base_scatters=3 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=2 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+378.63 E1 BEH emit start now=409536 source=idle state=Chirping pattern=idle
+378.72 E1 RB emit accepted source=idle state=Chirping pattern=idle
+378.79 E1 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+378.86 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+379.11 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 strength=4021 duration_ms=94 profile=TonalPulseScalar
+379.11 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=12173 duration_ms=177 profile=TonalPulseScalar
+385.35 E4 BEH verdict=single_pulse heard=409763 now=415977 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+385.42 E4 BEH emit start now=415977 source=idle state=Chirping pattern=idle
+385.49 E4 RB emit accepted source=idle state=Chirping pattern=idle
+385.56 E4 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+385.63 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+385.84 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7324 duration_ms=183 profile=TonalPulseScalar
+385.93 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=25569 duration_ms=243 profile=TonalPulseScalar
+386.09 E3 BEH verdict=single_pulse heard=416512 now=416747 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+386.16 E3 BEH emit start now=416747 source=heard_pattern state=Chirping pattern=single
+386.23 E3 RB emit accepted source=heard_pattern state=Chirping pattern=single
+386.31 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+386.34 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12538 duration_ms=197 profile=TonalPulseScalar
+386.37 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=10596 duration_ms=208 profile=TonalPulseScalar
+386.75 E1 BEH verdict=single_pulse heard=417234 now=417654 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+386.83 E1 BEH emit start now=417654 source=heard_pattern state=Chirping pattern=single
+386.87 E4 BEH verdict=single_pulse heard=416990 now=417494 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+386.89 E1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+386.94 E4 BEH emit start now=417494 source=heard_pattern state=Chirping pattern=single
+386.97 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+387.03 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+387.08 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7294 duration_ms=303 profile=TonalPulseScalar
+387.09 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+387.21 E3 BEH verdict=single_pulse heard=417752 now=417866 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+387.29 E3 BEH emit start now=417866 source=heard_pattern state=Chirping pattern=single
+387.36 E3 RB emit accepted source=heard_pattern state=Chirping pattern=single
+387.43 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+387.45 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_level valid=1 strength=12441 duration_ms=197 profile=TonalPulseScalar
+387.48 E3 RB rest start reason=rest_level now=417867 until=426031 field_patterns=1
+387.48 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_level valid=1 strength=10596 duration_ms=208 profile=TonalPulseScalar
+387.51 E1 RB rest start reason=rest_level now=418360 until=426360 field_patterns=3
+387.56 E4 RB rest start reason=rest_level now=418118 until=426118 field_patterns=2
+397.98 E2 BEH verdict=single_pulse heard=381832 now=428803 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+398.05 E2 BEH emit start now=428803 source=idle state=Chirping pattern=idle
+398.13 E2 RB emit accepted source=idle state=Chirping pattern=idle
+398.19 E2 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+398.28 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+398.47 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=17308 duration_ms=198 profile=TonalPulseScalar
+410.86 E5 BEH verdict=single_pulse heard=428965 now=441350 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+410.93 E5 BEH emit start now=441350 source=idle state=Chirping pattern=idle
+411.01 E5 RB emit accepted source=idle state=Chirping pattern=idle
+411.09 E5 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+411.15 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+411.40 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=19260 duration_ms=189 profile=TonalPulseScalar
+411.78 E2 BEH verdict=single_pulse heard=442233 now=442643 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+411.86 E2 BEH emit start now=442643 source=heard_pattern state=Chirping pattern=single
+411.93 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+412.01 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+412.04 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=17398 duration_ms=198 profile=TonalPulseScalar
+412.49 E5 BEH verdict=single_pulse heard=442526 now=442966 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+412.57 E5 BEH emit start now=442966 source=heard_pattern state=Chirping pattern=single
+412.65 E5 RB emit accepted source=heard_pattern state=Chirping pattern=single
+412.73 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+412.74 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=19225 duration_ms=189 profile=TonalPulseScalar
+412.96 E2 BEH verdict=single_pulse heard=443568 now=443811 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+413.03 E2 BEH emit start now=443811 source=heard_pattern state=Chirping pattern=single
+413.12 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+413.20 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=550,800,1050,1300,1550
+413.23 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_level valid=1 strength=17371 duration_ms=199 profile=TonalPulseScalar
+413.26 E2 RB rest start reason=rest_level now=443812 until=451976 field_patterns=1
+413.31 E5 RB rest start reason=rest_level now=443707 until=451707 field_patterns=2
+420.17 E1 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=13 output.done=13 output.rejected=0 output.last_reject=none output.last_start_ms=417654 output.last_done_ms=417822 output.span_ms=165 band=2800-3800 hop_enabled=1 hop_rotation=0 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=7042048 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=84 i2s.max_backstep_us=991 i2s.clock_corrections=873 i2s.max_clock_correction_us=999 i2s.read_errors=0 audio.uptime_ms=450968 audio.deficit_s=10.8 audio.level=83 audio.level_max=30827 audio.us_per_sample=13.88 audio.block_us_max=3423 audio.baseline=39.6 heard.valid=13 heard.strength_sum=296984 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=450968 audio.last_sample_ms=450960 behavior.suppress_armed=1 behavior.suppress_until_ms=417882 behavior.suppressed_now=0 behavior.suppressed_samples=74023 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=426360 behavior.rests=4 behavior.level=0 behavior.declined=3 behavior.yielded=0 behavior.base_bin=10 behavior.base_heard=-1 behavior.base_glides=2 behavior.base_scatters=4 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=3 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+420.17 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=9 output.done=9 output.rejected=0 output.last_reject=none output.last_start_ms=417866 output.last_done_ms=418028 output.span_ms=165 band=2800-3800 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=7136896 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=26 i2s.max_backstep_us=3 i2s.clock_corrections=885 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=450722 audio.deficit_s=4.7 audio.level=106 audio.level_max=30905 audio.us_per_sample=13.95 audio.block_us_max=3372 audio.baseline=4.2 heard.valid=8 heard.strength_sum=53328 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=450722 audio.last_sample_ms=450717 behavior.suppress_armed=1 behavior.suppress_until_ms=418088 behavior.suppressed_now=0 behavior.suppressed_samples=59615 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=426031 behavior.rests=2 behavior.level=0 behavior.declined=4 behavior.yielded=0 behavior.base_bin=10 behavior.base_heard=-1 behavior.base_glides=1 behavior.base_scatters=2 behavior.base_wanders=5 behavior.last_rest=rest_level behavior.blocked_resting=1 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+420.17 E5 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=10 output.done=10 output.rejected=0 output.last_reject=none output.last_start_ms=442966 output.last_done_ms=443130 output.span_ms=165 band=800-1800 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=7138688 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=24 i2s.max_backstep_us=3 i2s.clock_corrections=885 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=450543 audio.deficit_s=4.4 audio.level=41 audio.level_max=32748 audio.us_per_sample=13.92 audio.block_us_max=3365 audio.baseline=-9.2 heard.valid=9 heard.strength_sum=156828 net.started=1 net.rx=0 net.tx_failed=0 heap.free=81860 heap.free_min=81636 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=450543 audio.last_sample_ms=450539 behavior.suppress_armed=1 behavior.suppress_until_ms=443190 behavior.suppressed_now=0 behavior.suppressed_samples=63308 chirp_active=0 field.patterns=0 behavior.resting=1 behavior.rest_until_ms=451707 behavior.rests=1 behavior.level=0 behavior.declined=4 behavior.yielded=0 behavior.base_bin=2 behavior.base_heard=-1 behavior.base_glides=0 behavior.base_scatters=1 behavior.base_wanders=0 behavior.last_rest=rest_level behavior.blocked_resting=1 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+420.17 E2 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=9 output.done=9 output.rejected=0 output.last_reject=none output.last_start_ms=443811 output.last_done_ms=443979 output.span_ms=165 band=300-1300 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=7161728 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999984 i2s.overflows=0 i2s.backsteps=31 i2s.max_backstep_us=4 i2s.clock_corrections=888 i2s.max_clock_correction_us=8 i2s.read_errors=0 audio.uptime_ms=450911 audio.deficit_s=3.3 audio.level=92 audio.level_max=32644 audio.us_per_sample=13.86 audio.block_us_max=3371 audio.baseline=-0.2 heard.valid=10 heard.strength_sum=191776 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=450911 audio.last_sample_ms=450908 behavior.suppress_armed=1 behavior.suppress_until_ms=444039 behavior.suppressed_now=0 behavior.suppressed_samples=59871 chirp_active=0 field.patterns=0 behavior.resting=1 behavior.rest_until_ms=451976 behavior.rests=1 behavior.level=0 behavior.declined=7 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=-1 behavior.base_glides=1 behavior.base_scatters=1 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=0 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+420.19 E4 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=12 output.done=12 output.rejected=0 output.last_reject=none output.last_start_ms=417496 output.last_done_ms=417661 output.span_ms=165 band=3300-4300 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=7158272 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999968 i2s.overflows=0 i2s.backsteps=31 i2s.max_backstep_us=3 i2s.clock_corrections=887 i2s.max_clock_correction_us=6 i2s.read_errors=0 audio.uptime_ms=450699 audio.deficit_s=3.3 audio.level=7 audio.level_max=31970 audio.us_per_sample=13.91 audio.block_us_max=3361 audio.baseline=2.8 heard.valid=14 heard.strength_sum=161286 net.started=1 net.rx=0 net.tx_failed=0 heap.free=82416 heap.free_min=82184 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13068 clock.now_ms=450699 audio.last_sample_ms=450694 behavior.suppress_armed=1 behavior.suppress_until_ms=417721 behavior.suppressed_now=0 behavior.suppressed_samples=57044 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=426118 behavior.rests=4 behavior.level=0 behavior.declined=3 behavior.yielded=0 behavior.base_bin=12 behavior.base_heard=-1 behavior.base_glides=2 behavior.base_scatters=4 behavior.base_wanders=1 behavior.last_rest=rest_level behavior.blocked_resting=2 BUILD role=node git=ff6c612c date=Nov  4 2026 time=19:24:33 version=0.4.0 board=damp
+449.63 E3 BEH emit start now=480304 source=idle state=Chirping pattern=idle
+449.72 E3 RB emit accepted source=idle state=Chirping pattern=idle
+449.79 E3 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+449.92 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2800,3050,3300,3550,3800
+450.15 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=10395 duration_ms=113 profile=TonalPulseScalar
+450.17 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=12344 duration_ms=216 profile=TonalPulseScalar
+457.19 E1 BEH verdict=single_pulse heard=481085 now=488088 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+457.26 E1 BEH emit start now=488088 source=idle state=Chirping pattern=idle
+457.34 E1 RB emit accepted source=idle state=Chirping pattern=idle
+457.41 E1 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+457.47 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2800,3050,3300,3550,3800
+457.69 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 strength=5061 duration_ms=124 profile=TonalPulseScalar
+457.69 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12192 duration_ms=113 profile=TonalPulseScalar
+457.82 E4 BEH verdict=single_pulse heard=488319 now=488465 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+457.89 E4 BEH emit start now=488465 source=heard_pattern state=Chirping pattern=single
+457.98 E4 RB emit accepted source=heard_pattern state=Chirping pattern=single
+458.04 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+458.06 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=21922 duration_ms=185 profile=TonalPulseScalar
+458.07 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7368 duration_ms=175 profile=TonalPulseScalar
+458.45 E3 BEH verdict=single_pulse heard=488712 now=489125 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+458.53 E3 BEH emit start now=489125 source=heard_pattern state=Chirping pattern=single
+458.61 E3 RB emit accepted source=heard_pattern state=Chirping pattern=single
+458.67 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+458.70 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=12366 duration_ms=179 profile=TonalPulseScalar
+458.73 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=10701 duration_ms=208 profile=TonalPulseScalar
+458.83 E1 BEH verdict=single_pulse heard=489592 now=489726 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+458.90 E1 BEH emit start now=489726 source=heard_pattern state=Chirping pattern=single
+458.98 E1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+459.02 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3050,3300,3550,3800,4050
+459.04 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 strength=4115 duration_ms=93 profile=TonalPulseScalar
+459.04 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_level valid=1 strength=12226 duration_ms=177 profile=TonalPulseScalar
+459.07 E1 RB rest start reason=rest_level now=489727 until=497891 field_patterns=2
+459.12 E4 RB rest start reason=rest_level now=489686 until=497686 field_patterns=3
+465.76 E2 BEH emit start now=496618 source=idle state=Chirping pattern=idle
+465.84 E2 RB emit accepted source=idle state=Chirping pattern=idle
+465.93 E2 RB emit shape=idle_call announce_hz=120 announce_ms=80 gap_ms=200 then=hop
+466.05 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+466.33 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=17871 duration_ms=167 profile=TonalPulseScalar

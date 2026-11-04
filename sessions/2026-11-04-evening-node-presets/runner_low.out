@@ -1,0 +1,63 @@
+low: 480 s, boards E1,E2,E3,E4,E5
+  E1: emits heard_pattern=8 idle=7  verdicts=16  rests={'rest_level': 5}
+  E2: emits heard_pattern=3 idle=7  verdicts=10  rests={'rest_level': 1}
+  E3: emits heard_pattern=4 idle=7  verdicts=9  rests={'rest_level': 2}
+  E4: emits heard_pattern=10 idle=3  verdicts=18  rests={'rest_level': 5}
+  E5: emits heard_pattern=4 idle=6  verdicts=10  rests={'rest_level': 1}
+  who heard whom (listener <- sender: verdicts / sender's emissions):
+    E1 <- E2 0/10  E3 5/11  E4 11/13  E5 0/10
+    E2 <- E1 0/15  E3 0/11  E4 0/13  E5 10/10
+    E3 <- E1 3/15  E2 0/10  E4 6/13  E5 0/10
+    E4 <- E1 11/15  E2 0/10  E3 6/11  E5 1/10
+    E5 <- E1 0/15  E2 10/10  E3 0/11  E4 0/13
+  unattributed verdicts: 0
+  strength drift, bins of 3600 s (median strength, verdict count in brackets):
+    E1 <- E3: 25759(4)  first->last bin +0 %
+    E1 <- E4: 25569(7)  first->last bin +0 %
+    E2 <- E5: 19136(5)  first->last bin +0 %
+    E3 <- E1: 7368(5)  first->last bin +0 %
+    E3 <- E4: 7324(3)  first->last bin +0 %
+    E4 <- E1: 12192(7)  first->last bin +0 %
+    E4 <- E3: 10613(7)  first->last bin +0 %
+    E5 <- E2: 17395(7)  first->last bin +0 %
+  mean valid strength per board and bin (RB STATUS heard.*; a counter drop = reboot or rebase):
+    E1: 22597(12)
+    E2: 19177(10)
+    E3: 6666(8)
+    E4: 11520(14)
+    E5: 17352(8)
+  group emissions per minute: 4 7 7 6 9 9 11 6
+  start 1 at 35 s (idle): never quiet before the next kick, 1 emissions until then
+  start 2 at 41 s (idle): never quiet before the next kick, 1 emissions until then
+  start 3 at 50 s (idle): never quiet before the next kick, 1 emissions until then
+  start 4 at 55 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 5 at 71 s (idle): quiet after 1.8 s, 3 emissions until then
+  start 6 at 96 s (idle): never quiet before the next kick, 2 emissions until then
+  start 7 at 112 s (idle): never quiet before the next kick, 1 emissions until then
+  start 8 at 115 s (idle): quiet after 0.0 s, 0 emissions until then
+  start 9 at 141 s (idle): never quiet before the next kick, 1 emissions until then
+  start 10 at 150 s (idle): never quiet before the next kick, 4 emissions until then
+  start 11 at 157 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 12 at 176 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 13 at 206 s (idle): never quiet before the next kick, 4 emissions until then
+  start 14 at 208 s (idle): never quiet before the next kick, 1 emissions until then
+  start 15 at 215 s (idle): quiet after 0.0 s, 1 emissions until then
+  start 16 at 249 s (idle): never quiet before the next kick, 2 emissions until then
+  start 17 at 249 s (idle): never quiet before the next kick, 1 emissions until then
+  start 18 at 263 s (idle): quiet after 1.8 s, 4 emissions until then
+  start 19 at 282 s (idle): quiet after 0.9 s, 2 emissions until then
+  start 20 at 305 s (idle): quiet after 1.4 s, 2 emissions until then
+  start 21 at 327 s (idle): never quiet before the next kick, 2 emissions until then
+  start 22 at 329 s (idle): quiet after 0.9 s, 2 emissions until then
+  start 23 at 350 s (idle): quiet after 1.0 s, 2 emissions until then
+  start 24 at 379 s (idle): never quiet before the next kick, 1 emissions until then
+  start 25 at 385 s (idle): never quiet before the next kick, 6 emissions until then
+  start 26 at 398 s (idle): never quiet before the next kick, 0 emissions until then
+  start 27 at 411 s (idle): quiet after 2.1 s, 4 emissions until then
+  start 28 at 450 s (idle): never quiet before the next kick, 0 emissions until then
+  start 29 at 457 s (idle): never quiet before the next kick, 4 emissions until then
+  start 30 at 466 s (idle): never quiet before the next kick, 1 emissions until then
+  time to quiet (gap 15 s): 12 of 30 starts quiet, median 0.9 s; within 30 s: 12 of 30 (pass mark 80 %: FAIL)
+  chains: 28 distinct starts; length median 0.0 s, max 2.7 s; ended within 30 s: 28 of 28 (80 %: PASS)
+  max emissions per minute 11, M = 100: PASS
+  log: bench/sessions/2026-11-04-evening-node-presets\low.log

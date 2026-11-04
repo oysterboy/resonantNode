@@ -94,7 +94,7 @@ void Whispernet::buildConfig(detection::ScalarTransientConfig& d, detection::Ins
     d.onsetDetectionThreshold = onset;
     d.onsetReleaseThreshold = _values.release * scale;
     d.cooldownAfterOnsetMs = 0;
-    d.maxTransientDurationMs = 0;
+    d.maxTransientDurationMs = _values.maxPhraseMs;  // a phrase never ending held the room's learning (154 s seen)
     d.minTransientDurationMs = _values.minPhraseMs;
     d.minTransientPeakStrength = 0.0f;
     d.releaseDebounceMs = _values.gapMs;
@@ -180,11 +180,15 @@ void Whispernet::beginBlock(uint32_t blockMs, uint64_t blockUs, uint64_t rxIndex
         _nextCentreCheckMs = blockMs + 2000U;
         const size_t peak = _aec.peakTap();
         const uint32_t taps = static_cast<uint32_t>(_aec.taps());
-        if (peak + 8 >= taps) {
-            _aecDelayNow += taps / 2;
+        // Only a little either way of the set delay: the lockstep fixes it, so a filter that has not learned (no
+        // signal) must not walk the window away (E5 drifted 1066 -> 3274 overnight, ERLE 0).
+        const uint32_t lo = _values.aecDelay > taps / 2 ? _values.aecDelay - taps / 2 : 0U;
+        const uint32_t hi = _values.aecDelay + taps / 2;
+        if (peak + 8 >= taps && _aecDelayNow + taps / 4 <= hi) {
+            _aecDelayNow += taps / 4;
             _aec.reset();
             ++_centreShifts;
-        } else if (peak <= 2 && _aecDelayNow > taps / 4) {
+        } else if (peak <= 2 && _aecDelayNow >= lo + taps / 4) {
             _aecDelayNow -= taps / 4;
             _aec.reset();
             ++_centreShifts;
@@ -390,6 +394,8 @@ void Whispernet::describeParams(param::ParamRegistry& registry) {
                        &_values.minPhraseMs, 0U, 5000U);
     registry.addUInt32(param::ParamId::Whisper_GapMs, param::ModuleId::Detection, "whisper.gap_ms", &_values.gapMs, 0U,
                        2000U);
+    registry.addUInt32(param::ParamId::Whisper_MaxPhraseMs, param::ModuleId::Detection, "whisper.max_phrase_ms",
+                       &_values.maxPhraseMs, 0U, 600000U);
     registry.addUInt32(param::ParamId::Whisper_LevelMax, param::ModuleId::Behavior, "whisper.level_max",
                        &_values.levelMax, 1U, 50U);
     registry.addUInt32(param::ParamId::Whisper_LevelOffset, param::ModuleId::Behavior, "whisper.level_offset",

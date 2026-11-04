@@ -18,10 +18,10 @@ COUNTERS = ("phrases", "asked", "answered", "replays", "deafs", "deaf_ms", "cuts
 
 
 def section_of(t):
-    for s in schedule:
+    for i, s in enumerate(schedule):
         if s["start"] <= t < s["end"] + 2.0:  # a phrase may end, a status arrive just after
-            return s["name"]
-    return "outside"
+            return i
+    return -1
 
 
 for log in sorted(glob.glob(os.path.join(d, "E*.log"))):
@@ -52,9 +52,8 @@ for log in sorted(glob.glob(os.path.join(d, "E*.log"))):
             node[sec]["valid"] += 1
     print("## %s" % board)
     prev = None
-    for s in schedule:
-        name = s["name"]
-        line = "  %-24s" % name
+    for name, s in enumerate(schedule):
+        line = "  %-24s" % s["name"]
         if heard[name]:
             line += " heard %s" % dict(heard[name])
         if durs[name]:

@@ -66,6 +66,7 @@ public:
         uint32_t checkEveryMs = 100;  // and again this often
         uint32_t minPhraseMs = 300;  // shorter is no phrase
         uint32_t gapMs = 300;  // syllable gaps up to this are bridged (the detector's release debounce)
+        uint32_t maxPhraseMs = 20000;  // longer is no whisper phrase: closed (0: no limit)
         // Whispernet's Behavior (the echo room's values to start; the owner found them slow for whispers).
         uint32_t levelMax = 4;
         uint32_t levelOffset = 2;

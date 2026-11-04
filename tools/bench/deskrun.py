@@ -12,7 +12,7 @@ plan.json:
       "say": "whisper short sentences, 0.5-1 m, pauses between"},
      {"name": "pause", "secs": 20}]}
 
-A section with "cue" gets n quiet beeps 3 s before it (n counts the cued sections). The schedule (wall clock) goes
+A section with "play" has the lab PC play that WAV during it (cut off at its end). A section with "cue" gets n quiet beeps 3 s before it (n counts the cued sections). The schedule (wall clock) goes
 to DIR/schedule.json and is printed with each section's "say". Evaluate with deskeval.py DIR. The ports open
 without resetting the boards (DTR / RTS low) and close at the end.
 """
@@ -119,6 +119,13 @@ for s in schedule:
     for c in s.get("cmds", []):
         send(c)
     print("%s  %s" % (time.strftime("%H:%M:%S"), s["name"]), flush=True)
+    if s.get("play"):  # a WAV the lab PC plays during the section (unattended runs), cut off at the section's end
+        player = subprocess.Popen(["powershell", "-NoProfile", "-Command",
+                                   "(New-Object System.Media.SoundPlayer '%s').PlaySync()" % os.path.abspath(s["play"])])
+        while time.time() < s["end"] and player.poll() is None:
+            time.sleep(0.1)
+        if player.poll() is None:
+            player.kill()
     while time.time() < s["end"]:
         time.sleep(0.1)
     for c in plan.get("status", []):

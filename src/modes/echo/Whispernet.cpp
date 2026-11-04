@@ -62,6 +62,9 @@ bool Whispernet::begin(uint32_t rateHz, uint64_t seed) {
 void Whispernet::attachOutput(I2sToneOutput& output) {
     _output = &output;
     output.setStream(&_fifo, _values.gain, static_cast<size_t>(_rateHz) * kPrimeMs / 1000U);
+    // The echo cancellation's reference: what the amp plays, 4096 frames (170 ms: the DMA queue's ~37 ms, the filter's
+    // window and room to spare), 8 KB.
+    output.enablePlayedTap(4096);
 }
 
 void Whispernet::release() {
@@ -174,6 +177,78 @@ void Whispernet::endBlock(detection::EnvelopeRuntime& runtime, float level, uint
     }
 }
 
+// The block's played-sample alignment: a TX frame k sounds at writeUs + (k - first + (dma - 1) x len) / rate (the DMA
+// queue full when the write returns), so the frame under a mic sample captured at t is first + (t - writeUs) x rate -
+// (dma - 1) x len; a lead of 32 frames puts the direct sound (~1 ms of air) inside the filter's window. Counted
+// along from there; realigned when the RX index jumps (dropped buffers) or the computed value drifts past 10 ms.
+void Whispernet::beginBlock(uint32_t blockMs, uint64_t blockUs, uint64_t rxIndex, uint16_t samples) {
+    _blockIndex = _line.written();
+    _blockMs = blockMs;
+    _rxEnd = rxIndex + samples;
+    _rxEndUs = blockUs + static_cast<uint64_t>(samples) * 1000000ULL / _rateHz;
+    if (!_values.aec || _output == nullptr || blockUs == 0) {
+        return;
+    }
+    if (!_refLocked) {
+        uint64_t first = 0;
+        uint64_t writeUs = 0;
+        if (!_output->lastWrite(first, writeUs)) {
+            return;
+        }
+        const double frames = static_cast<double>(static_cast<int64_t>(blockUs - writeUs)) * _rateHz / 1e6;
+        const int64_t k = static_cast<int64_t>(first) + static_cast<int64_t>(frames) -
+            static_cast<int64_t>((I2S_DMA_BUF_COUNT - 1) * I2S_DMA_BUF_LEN) + 32;
+        _offsetEstimates[_offsetCount++] = k - static_cast<int64_t>(rxIndex);
+        if (_offsetCount < 32) {
+            return;
+        }
+        int64_t* e = _offsetEstimates;
+        for (int i = 1; i < 32; ++i) {  // insertion sort: 32 values once
+            const int64_t v = e[i];
+            int j = i - 1;
+            while (j >= 0 && e[j] > v) {
+                e[j + 1] = e[j];
+                --j;
+            }
+            e[j + 1] = v;
+        }
+        _refOffset = e[16];
+        _offsetSpread = static_cast<int32_t>(e[31] - e[0]);
+        _refLocked = true;
+        _offsetCount = 0;
+        _aec.reset();
+    }
+    // Auto-centring: once it has learned for half a second, the direct sound should sit early in the window; at its
+    // far end the echo comes later than the offset says (move the window older), at its very start earlier.
+    if (timing::atOrAfter(blockMs, _nextCentreCheckMs) && _aec.adapted() > _rateHz / 2U) {
+        _nextCentreCheckMs = blockMs + 2000U;
+        const size_t peak = _aec.peakTap();
+        const int64_t taps = static_cast<int64_t>(_aec.taps());
+        if (static_cast<int64_t>(peak) >= taps - 8) {
+            _refOffset -= taps / 2;
+            _aec.reset();
+            ++_centreShifts;
+        } else if (peak <= 2) {
+            _refOffset += taps / 4;
+            _aec.reset();
+            ++_centreShifts;
+        }
+    }
+    _refK = static_cast<int64_t>(rxIndex) + _refOffset +
+        static_cast<int64_t>(_values.aecTrimMs * static_cast<float>(_rateHz) / 1000.0f);
+}
+
+int32_t Whispernet::cancel(int32_t mic) {
+    if (!_values.aec || !_refLocked || _aec.taps() == 0) {
+        return mic;
+    }
+    int16_t r = 0;
+    _output->playedFrame(static_cast<uint64_t>(_refK > 0 ? _refK : 0), r);  // silence when not (yet) kept
+    ++_refK;
+    const float e = _aec.process(static_cast<float>(r) / 32768.0f, static_cast<float>(mic) / 8388608.0f) * 8388608.0f;
+    return static_cast<int32_t>(e > 8388607.0f ? 8388607.0f : (e < -8388608.0f ? -8388608.0f : e));
+}
+
 uint64_t Whispernet::lineIndexAtMs(unsigned long ms) const {
     if (static_cast<long>(_blockMs - ms) <= 0) {
         return _blockIndex;
@@ -213,6 +288,9 @@ void Whispernet::shutLine() {
 bool Whispernet::inputSuppressed(uint32_t blockMs) {
     if (!_playArmed) {
         return false;
+    }
+    if (_values.aec && _values.listenWhilePlaying && _aec.erleDb() >= _values.listenErleDb) {
+        return false;  // it hears the room, not itself: no need to go deaf
     }
     if (!_line.isOpen() && !_holdPending && timing::atOrAfter(blockMs, _playUntilMs)) {
         _playArmed = false;  // played out
@@ -364,6 +442,17 @@ void Whispernet::describeParams(param::ParamRegistry& registry) {
                       &_values.roomFactor, 1.0f, 20.0f);
     registry.addUInt32(param::ParamId::Whisper_RoomRiseMs, param::ModuleId::Detection, "whisper.room_rise_ms",
                        &_values.roomRiseMs, 100U, 600000U);
+    registry.addBool(param::ParamId::Whisper_Aec, param::ModuleId::Detection, "whisper.aec", &_values.aec);
+    registry.addUInt32(param::ParamId::Whisper_AecTaps, param::ModuleId::Detection, "whisper.aec_taps",
+                       &_values.aecTaps, 16U, 512U);
+    registry.addFloat(param::ParamId::Whisper_AecMu, param::ModuleId::Detection, "whisper.aec_mu", &_values.aecMu,
+                      0.001f, 1.0f);
+    registry.addFloat(param::ParamId::Whisper_AecTrimMs, param::ModuleId::Detection, "whisper.aec_trim_ms",
+                      &_values.aecTrimMs, -50.0f, 50.0f);
+    registry.addBool(param::ParamId::Whisper_ListenWhilePlaying, param::ModuleId::Detection,
+                     "whisper.listen_while_playing", &_values.listenWhilePlaying);
+    registry.addFloat(param::ParamId::Whisper_ListenErleDb, param::ModuleId::Detection, "whisper.listen_erle_db",
+                      &_values.listenErleDb, 0.0f, 60.0f);
     registry.addUInt32(param::ParamId::Whisper_RoomFallMs, param::ModuleId::Detection, "whisper.room_fall_ms",
                        &_values.roomFallMs, 10U, 60000U);
 }
@@ -373,6 +462,11 @@ void Whispernet::applyValues(detection::EnvelopeRuntime& runtime, ResonantBehavi
         _values.delayMs < kDelayMinMs ? kDelayMinMs : (_values.delayMs > kLineMs ? kLineMs : _values.delayMs);
     _line.setDelay(static_cast<size_t>(_rateHz) * _values.delayMs / 1000U);
     _line.setRamp(static_cast<size_t>(_rateHz) * _values.rampMs / 1000U);
+    if (_values.aec && _aec.taps() != _values.aecTaps) {
+        _aec.begin(_values.aecTaps);
+        _refLocked = false;
+    }
+    _aec.setStep(_values.aecMu);
     _gate.setDelayMs(_values.delayMs);
     if (_output != nullptr) {
         _output->setStream(&_fifo, _values.gain, static_cast<size_t>(_rateHz) * kPrimeMs / 1000U);
@@ -504,6 +598,101 @@ void Whispernet::dumpRecording() {
     serialOut().println(_recSeq);
 }
 
+namespace {
+
+// Base64 of little-endian int16, 96 characters a line, each line "<tag> <data>".
+template <typename Get>
+void printBase64(const char* tag, uint64_t count, Get get) {
+    static const char kB64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    char out[100];
+    uint8_t bytes[72];
+    size_t n = 0;
+    const auto flush = [&]() {
+        size_t o = 0;
+        for (size_t i = 0; i < n; i += 3) {
+            const uint32_t v = (static_cast<uint32_t>(bytes[i]) << 16) |
+                (i + 1 < n ? static_cast<uint32_t>(bytes[i + 1]) << 8 : 0U) |
+                (i + 2 < n ? static_cast<uint32_t>(bytes[i + 2]) : 0U);
+            out[o++] = kB64[(v >> 18) & 63];
+            out[o++] = kB64[(v >> 12) & 63];
+            out[o++] = i + 1 < n ? kB64[(v >> 6) & 63] : '=';
+            out[o++] = i + 2 < n ? kB64[v & 63] : '=';
+        }
+        out[o] = 0;
+        serialOut().print(tag);
+        serialOut().print(" ");
+        serialOut().println(out);
+        n = 0;
+    };
+    for (uint64_t i = 0; i < count; ++i) {
+        const int16_t s = get(i);
+        bytes[n++] = static_cast<uint8_t>(static_cast<uint16_t>(s) & 0xFF);
+        bytes[n++] = static_cast<uint8_t>(static_cast<uint16_t>(s) >> 8);
+        if (n == sizeof(bytes)) {
+            flush();
+        }
+    }
+    if (n > 0) {
+        flush();
+    }
+}
+
+}  // namespace
+
+bool Whispernet::calibrationDue(unsigned long now) const {
+    return _calArmed && _playArmed && timing::atOrAfter(now, _playFromMs + 600U);
+}
+
+void Whispernet::dumpCalibration() {
+    _calArmed = false;
+    if (_output == nullptr) {
+        return;
+    }
+    _output->setTapFrozen(true);
+    const uint64_t txEnd = _output->playedEnd();
+    uint64_t first = 0;
+    uint64_t writeUs = 0;
+    _output->lastWrite(first, writeUs);
+    const uint64_t lineEnd = _line.written();
+    const uint64_t n = 4096;
+    serialOut().print("WHISPER_CAL_BEGIN rate=");
+    serialOut().print(_rateHz);
+    serialOut().print(" n=");
+    serialOut().print(static_cast<unsigned long>(n));
+    serialOut().print(" tx_end=");
+    serialOut().print(static_cast<unsigned long long>(txEnd));
+    serialOut().print(" rx_end=");
+    serialOut().print(static_cast<unsigned long long>(_rxEnd));
+    serialOut().print(" rx_end_us=");
+    serialOut().print(static_cast<unsigned long long>(_rxEndUs));
+    serialOut().print(" write_first=");
+    serialOut().print(static_cast<unsigned long long>(first));
+    serialOut().print(" write_us=");
+    serialOut().print(static_cast<unsigned long long>(writeUs));
+    serialOut().print(" dma=");
+    serialOut().print(I2S_DMA_BUF_COUNT);
+    serialOut().print("x");
+    serialOut().print(I2S_DMA_BUF_LEN);
+    serialOut().print(" offset=");
+    serialOut().print(static_cast<long>(_refOffset));
+    serialOut().print(" aec=");
+    serialOut().println(_values.aec ? 1 : 0);
+    printBase64("WHISPER_CAL_MIC", n, [&](uint64_t i) {
+        int16_t s = 0;
+        _line.sampleAt(lineEnd - n + i, s);
+        return s;
+    });
+    printBase64("WHISPER_CAL_REF", n, [&](uint64_t i) {
+        int16_t s = 0;
+        _output->playedFrame(txEnd - n + i, s);
+        return s;
+    });
+    serialOut().println("WHISPER_CAL_END");
+    _output->setTapFrozen(false);
+    _refLocked = false;  // the tap's index stood still: align again
+    _offsetCount = 0;
+}
+
 void Whispernet::printStatus() {
     serialOut().print("WHISPER status delay_ms=");
     serialOut().print(_values.delayMs);
@@ -535,6 +724,20 @@ void Whispernet::printStatus() {
     serialOut().print(static_cast<unsigned long>(_room.value()));
     serialOut().print(" onset_now=");
     serialOut().print(static_cast<unsigned long>(_onsetApplied));
+    serialOut().print(" aec=");
+    serialOut().print(_values.aec ? 1 : 0);
+    serialOut().print(" aec_erle_db=");
+    serialOut().print(_aec.erleDb(), 1);
+    serialOut().print(" aec_peak_tap=");
+    serialOut().print(static_cast<unsigned long>(_aec.taps() > 0 ? _aec.peakTap() : 0));
+    serialOut().print(" aec_locked=");
+    serialOut().print(_refLocked ? 1 : 0);
+    serialOut().print(" aec_offset=");
+    serialOut().print(static_cast<long>(_refOffset));
+    serialOut().print(" aec_spread=");
+    serialOut().print(_offsetSpread);
+    serialOut().print(" aec_shifts=");
+    serialOut().print(_centreShifts);
     serialOut().print(" line_bytes=");
     serialOut().println(static_cast<unsigned long>(bytes()));
 }

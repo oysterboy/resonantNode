@@ -135,6 +135,10 @@ void EchoApp::update() {
         printStatus();
         _nextLogMs = now + _logEveryMs;
     }
+    if (kWhispernet && _whisper.calibrationDue(now)) {
+        _whisper.dumpCalibration();
+        _runtime.restartAfterInputGap();
+    }
     if (kWhispernet && _whisper.recordingDue(now)) {
         _whisper.dumpRecording();  // stalls the loop for the print: the audio after it starts clean
         _runtime.restartAfterInputGap();
@@ -161,10 +165,11 @@ void EchoApp::pollAudio() {
         const uint64_t ringIndex = _ring.written();
         const uint32_t blockMs = timebase::msFromUs64(block.approxStartUs64);
         if (kWhispernet) {
-            _whisper.beginBlock(blockMs);
+            _whisper.beginBlock(blockMs, block.approxStartUs64, block.startSampleIndex, block.sampleCount);
         }
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const int32_t s = block.samples[i];
+            // Whispernet hears the mic without its own replay (echo cancellation), everything after it too.
+            const int32_t s = kWhispernet ? _whisper.cancel(block.samples[i]) : block.samples[i];
             _follower.push(s);
             if (kWhispernet) {
                 _whisper.pushSample(static_cast<int16_t>(s >> 8));  // 24-bit canonical PCM to int16, D later out
@@ -543,6 +548,9 @@ void EchoApp::handleLine(const char* line) {
         handleGateCommand(line);
     } else if (kWhispernet && startsWithWordIgnoreCase(line, "WHISPER GATE")) {
         _whisper.handleGateCommand(line, _runtime, _behavior);
+    } else if (kWhispernet && equalsIgnoreCase(line, "WHISPER AEC CAL")) {
+        _whisper.armCalibration();
+        serialOut().println("WHISPER cal armed (at the next replay)");
     } else if (kWhispernet && startsWithWordIgnoreCase(line, "WHISPER REC")) {
         _whisper.handleRecCommand(line);
     } else if (kWhispernet && equalsIgnoreCase(line, "WHISPER STATUS")) {

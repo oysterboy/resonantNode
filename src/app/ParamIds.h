@@ -169,6 +169,12 @@ enum class ParamId : uint16_t {
     Whisper_RoomFactor,
     Whisper_RoomRiseMs,
     Whisper_RoomFallMs,
+    Whisper_Aec,
+    Whisper_AecTaps,
+    Whisper_AecMu,
+    Whisper_AecTrimMs,
+    Whisper_ListenWhilePlaying,
+    Whisper_ListenErleDb,
 };
 
 }  // namespace param

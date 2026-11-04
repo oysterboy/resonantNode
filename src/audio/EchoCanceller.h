@@ -99,6 +99,20 @@ public:
         return err;
     }
 
+    // The tap with the largest weight: where the path's direct sound sits in the window (the alignment's check).
+    size_t peakTap() const {
+        size_t best = 0;
+        for (size_t i = 1; i < _taps; ++i) {
+            if (fabsf(_w[i]) > fabsf(_w[best])) {
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    // Samples learned since the last reset (the auto-centring waits for enough of them).
+    uint32_t adapted() const { return _adapted; }
+
     // The smoothed echo return loss enhancement while playing, dB.
     float erleDb() const { return _erle; }
     // A reference quieter than this per sample counts as not playing (no learning on silence).

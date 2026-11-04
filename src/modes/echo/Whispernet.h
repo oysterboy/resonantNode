@@ -6,6 +6,7 @@
 #include <ParamRegistry.h>
 
 #include "../../audio/BandFlatness.h"
+#include "../../audio/EchoCanceller.h"
 #include "../../audio/GatedDelayLine.h"
 #include "../../audio/RoomLevel.h"
 #include "../../audio/SampleFifo.h"
@@ -77,6 +78,16 @@ public:
         float roomFactor = 2.5f;
         uint32_t roomRiseMs = 10000;
         uint32_t roomFallMs = 500;
+        // Echo cancellation (2026-11-04): the node's own output taken out of its mic (EchoCanceller) before anything
+        // else hears it. With listenWhilePlaying the node stops going deaf during its replay once the cancellation
+        // reaches listenErleDb.
+        bool aec =
+            false;  // off until the alignment holds (2026-11-04: timestamps and indices did not give a fixed offset)
+        uint32_t aecTaps = 128;  // 5 ms at 24 kHz: the direct sound and the first reflections (192 dropped buffers)
+        float aecMu = 0.2f;
+        float aecTrimMs = 0.0f;  // added to the computed speaker -> mic delay
+        bool listenWhilePlaying = false;
+        float listenErleDb = 15.0f;
     };
     struct Counts {
         unsigned long phrases = 0;  // final verdicts
@@ -101,6 +112,8 @@ public:
     void configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior);
 
     // One mic sample (int16) in, the delay line's sample out to the FIFO.
+    // One mic sample (24-bit) without the node's own echo (the samples it played, aligned by beginBlock).
+    int32_t cancel(int32_t mic);
     void pushSample(int16_t in) {
         _fifo.push(_line.process(in));
         _flat.push(static_cast<float>(in));
@@ -109,10 +122,8 @@ public:
     // the phrase's timbre is read from its sound, not from the gaps between syllables.
     void endBlock(detection::EnvelopeRuntime& runtime, float level, uint32_t blockMs);
     // Before a block's samples: its first sample's line index and its time (ms -> line index for the gate).
-    void beginBlock(uint32_t blockMs) {
-        _blockIndex = _line.written();
-        _blockMs = blockMs;
-    }
+    // ... and the block's capture time and RX index, which align the played samples to it (the echo cancellation).
+    void beginBlock(uint32_t blockMs, uint64_t blockUs = 0, uint64_t rxIndex = 0, uint16_t samples = 0);
     // A judged occurrence from the runtime: provisional ones drive the gate, final ones end the phrase.
     void handleResult(const detection::EnvelopeRuntime::Result& result, ResonantBehavior& behavior, unsigned long now);
     // After a block's results: a phrase the detector dropped without a verdict ends here.
@@ -133,6 +144,12 @@ public:
     void handleRecCommand(const char* line);
     bool recordingDue(unsigned long now) const;
     void dumpRecording();
+    // WHISPER AEC CAL: at the next replay, 600 ms in, the mic (the line, raw with whisper.aec 0) and what was played (the
+    // tap, held still meanwhile) are printed with their indices and times as WHISPER_CAL lines: the PC finds the true
+    // speaker -> mic offset by cross-correlation (tools/bench/aeccal.py). Diagnostic.
+    void armCalibration() { _calArmed = true; }
+    bool calibrationDue(unsigned long now) const;
+    void dumpCalibration();
     const Values& values() const { return _values; }
     bool ready() const { return _line.capacity() > 0 && _fifo.capacity() > 0; }
     // The node is playing its own replay (or its tail) at blockMs: the shell does not feed detection meanwhile and
@@ -153,6 +170,20 @@ private:
     GatedDelayLine _line;
     BandFlatness _flat;
     RoomLevel _room;
+    EchoCanceller _aec;
+    // The alignment: TX and RX run on one I2S clock, so the TX index under an RX sample is RX index + a fixed offset,
+    // estimated once (the median of 32 blocks' timestamp estimates), then moved by the auto-centring.
+    bool _refLocked = false;
+    int64_t _refOffset = 0;
+    int64_t _offsetEstimates[32] = {};
+    uint8_t _offsetCount = 0;
+    int32_t _offsetSpread = 0;  // the estimates' spread (samples): the timestamps' jitter
+    uint32_t _centreShifts = 0;
+    uint32_t _nextCentreCheckMs = 0;
+    int64_t _refK = 0;  // the TX index for the next mic sample
+    uint64_t _rxEnd = 0;  // the last block's end (RX index) and its time, for the calibration
+    uint64_t _rxEndUs = 0;
+    bool _calArmed = false;
     float _onsetApplied = 0.0f;
     uint32_t _lastRoomMs = 0;  // the onset the runtime holds now (configure / retune)
     float effectiveOnset() const;

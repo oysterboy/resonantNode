@@ -7,6 +7,7 @@
 
 #include "../../audio/BandFlatness.h"
 #include "../../audio/GatedDelayLine.h"
+#include "../../audio/RoomLevel.h"
 #include "../../audio/SampleFifo.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../behavior/WhisperGate.h"
@@ -38,9 +39,11 @@ public:
         // The owner's whispers: 300-860 from 0.5-1 m, ~150-200 from 2 m; in the afternoon the room sat at 150-260, so
         // the thresholds went up (2.5x the room): 2 m whispers are lost. Not the replay tool's scale (its files map to
         // the mic's full scale); WHISPER GATE sets them live.
-        float onset = 400.0f;  // the detector's onset: a phrase starts
-        float release = 280.0f;  // and its release
-        float floor = 300.0f;  // the level window's low bound
+        // With adaptive on (2026-11-04) these are the minimums and their ratios: the thresholds stand at roomFactor x the
+        // room's level (RoomLevel), never under these; release and floor keep their ratio to the onset.
+        float onset = 250.0f;  // the detector's onset: a phrase starts
+        float release = 175.0f;  // and its release
+        float floor = 190.0f;  // the level window's low bound
         float loud = 900.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
         float modulation = 0.3f;  // the modulation index a whisper reaches at least (Medium)
         // The spectrum's flatness a whisper lies within (BandFlatness, the median of the phrase's loud blocks): the
@@ -68,6 +71,12 @@ public:
         uint32_t levelOffset = 2;
         uint32_t levelDecayMs = 3000;
         uint32_t restMs = 4000;
+        // The thresholds follow the room (RoomLevel): the onset at roomFactor x the room's quiet level, learned while no
+        // phrase runs and the node does not play; quick down, slow up.
+        bool adaptive = true;
+        float roomFactor = 2.5f;
+        uint32_t roomRiseMs = 10000;
+        uint32_t roomFallMs = 500;
     };
     struct Counts {
         unsigned long phrases = 0;  // final verdicts
@@ -143,6 +152,12 @@ private:
     Counts _counts;
     GatedDelayLine _line;
     BandFlatness _flat;
+    RoomLevel _room;
+    float _onsetApplied = 0.0f;
+    uint32_t _lastRoomMs = 0;  // the onset the runtime holds now (configure / retune)
+    float effectiveOnset() const;
+    void retune(detection::EnvelopeRuntime& runtime);
+    void buildConfig(detection::ScalarTransientConfig& d, detection::InspectionPlan& plan) const;
     SampleFifo _fifo;
     WhisperGate _gate;
     I2sToneOutput* _output = nullptr;

@@ -34,6 +34,12 @@ void EnvelopeRuntime::setProvisional(uint32_t afterMs, uint32_t everyMs) {
     _provisionalEveryMs = everyMs;
 }
 
+void EnvelopeRuntime::retune(const ScalarTransientConfig& detector, const InspectionPlan& plan) {
+    _detector.setConfig(detector);
+    _plan = plan;
+    _inspector.configure(_plan);
+}
+
 void EnvelopeRuntime::reset() {
     _history.reset();
     _detector.resetState();

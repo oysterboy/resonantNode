@@ -31,6 +31,9 @@ public:
     };
 
     void configure(const ScalarTransientConfig& detector, const InspectionPlan& plan);
+    // New thresholds and plan values, the history and any open candidate kept (Whispernet's room-following thresholds,
+    // retuned while it runs; configure() rebinds the history's streams).
+    void retune(const ScalarTransientConfig& detector, const InspectionPlan& plan);
     // Whispernet (ECHO-002): judge the open candidate once it is afterMs old and every everyMs after, so a phrase is
     // known while it runs. 0 turns it off (the echo room judges closed occurrences only).
     void setProvisional(uint32_t afterMs, uint32_t everyMs);

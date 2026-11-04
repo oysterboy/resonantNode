@@ -296,3 +296,13 @@ at G (one round = D = 2 s, so G > 1 grows by 20 log G dB per round), 20 s of sil
 No gain makes it howl: a grown replay crosses the loud bound within a round or two and keeps the gate shut to the
 phrase's end, and the fan never opens it. The loop here is a flat gain; a room's loop has peaks (a howl there is a
 tone, which reads unmodulated and shuts the gate as well). The two-board test on the desk is still the decision.
+
+## A phrase longer than D (design note, 2026-11-04)
+
+Since f3ddba37 a node does not listen while its own replay plays: at an audible gain (64) it heard itself louder
+than the whisper and answered itself. The replay of a phrase starts D after the phrase's start, so a phrase longer
+than D is cut where the replay begins: from there the mic holds the node's own output, and passing it would feed
+the replay back into the line (a loop at gain 64 x the coupling, a howl). Ways out, none built: D near its top (2 s)
+on the nodes meant for long phrases; echo cancellation (the node knows exactly what it plays: an adaptive filter
+subtracting it from the mic, ~64-128 taps at 24 kHz, a few MAC/s million, the ESP32 can) which would also let the
+node hear others while it plays; or accepting the cut as part of the piece. Owner's call; the cut stays until then.

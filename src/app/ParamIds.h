@@ -165,6 +165,10 @@ enum class ParamId : uint16_t {
     Whisper_LevelOffset,
     Whisper_LevelDecayMs,
     Whisper_RestMs,
+    Whisper_Adaptive,
+    Whisper_RoomFactor,
+    Whisper_RoomRiseMs,
+    Whisper_RoomFallMs,
 };
 
 }  // namespace param

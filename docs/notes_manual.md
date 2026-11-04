@@ -337,6 +337,11 @@ Since 2026-11-04 every value is a param (ECHO-003): `echo.*` in the echo build, 
 modes' own ids: a mode loads only its own, and PARAM RESET in any mode clears every mode's. ECHO GATE and WHISPER
 GATE stay as shorthands for the same fields.
 
+Whispernet's thresholds follow the room (2026-11-04, `whisper.adaptive`, on by default): the onset stands at
+`whisper.room_factor` times the room's quiet level, learned while no phrase runs and the board does not play (it
+falls within `whisper.room_fall_ms`, rises over `whisper.room_rise_ms`), never under `whisper.onset`; release and
+floor keep their ratio to the onset. WHISPER STATUS shows `room=` and `onset_now=`.
+
 By radio from a USB Node: `NET <name|*> OTA ...` (the way back to the Node image), `NET <name> ECHO STATUS`,
 `NET <name> NET PING`. The shell is not a gateway (no NET to other boards from it). Its boot line
 `ECHO boot ... ring_bytes=... largest_block_before_ring=... net_started=1` gives the memory numbers.

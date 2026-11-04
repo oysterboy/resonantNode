@@ -86,25 +86,36 @@ bool Whispernet::resume() {
     return ok;
 }
 
-void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior) {
+// The onset in force: the set onset, or roomFactor x the room's level when that is higher (adaptive).
+float Whispernet::effectiveOnset() const {
+    if (!_values.adaptive || !_room.started()) {
+        return _values.onset;
+    }
+    const float byRoom = _values.roomFactor * _room.value();
+    return byRoom > _values.onset ? byRoom : _values.onset;
+}
+
+// The detector's config and the plan at the onset in force; release and floor keep their ratio to the set onset.
+void Whispernet::buildConfig(detection::ScalarTransientConfig& d, detection::InspectionPlan& plan) const {
     // A phrase is one occurrence: syllable gaps bridged by the release debounce, no length limit; it is judged while
     // it runs (the provisional verdicts), its final verdict only ends it.
-    detection::ScalarTransientConfig d;
+    const float onset = effectiveOnset();
+    const float scale = _values.onset > 0.0f ? onset / _values.onset : 1.0f;
     d.observedStream = detection::FeatureStreamId::AmpEnvelope;
-    d.onsetDetectionThreshold = _values.onset;
-    d.onsetReleaseThreshold = _values.release;
+    d.onsetDetectionThreshold = onset;
+    d.onsetReleaseThreshold = _values.release * scale;
     d.cooldownAfterOnsetMs = 0;
     d.maxTransientDurationMs = 0;
     d.minTransientDurationMs = _values.minPhraseMs;
     d.minTransientPeakStrength = 0.0f;
     d.releaseDebounceMs = _values.gapMs;
-    detection::InspectionPlan plan = detection::InspectionPlan{};
+    plan = detection::InspectionPlan{};
     detection::InspectionModuleConfig& level = plan.modules[0];
     level.kind = detection::InspectionModuleKind::LevelWindow;
     level.target = detection::InspectionTarget::Loudness;
     level.enabled = true;
     level.minimumStrength = detection::StrengthClass::Strong;
-    level.level.floorLevel = _values.floor;
+    level.level.floorLevel = _values.floor * scale;
     level.level.loudBound = _values.loud;
     detection::InspectionModuleConfig& mod = plan.modules[1];
     mod.kind = detection::InspectionModuleKind::Modulation;
@@ -120,17 +131,45 @@ void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior
     timbre.flatness.minFlatness = _values.flatMin;
     timbre.flatness.maxFlatness = _values.flatMax;
     plan.count = 3;
+}
+
+void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior) {
+    _room.setTimes(_values.roomRiseMs, _values.roomFallMs);
+    detection::ScalarTransientConfig d;
+    detection::InspectionPlan plan;
+    buildConfig(d, plan);
     runtime.configure(d, plan);
+    _onsetApplied = d.onsetDetectionThreshold;
     runtime.setProvisional(_values.firstCheckMs, _values.checkEveryMs);
     behavior.configure(whisperBehavior(_values));
+}
+
+// The room moved the onset by more than 5 %: the thresholds follow, the history and an open phrase kept.
+void Whispernet::retune(detection::EnvelopeRuntime& runtime) {
+    const float onset = effectiveOnset();
+    if (onset > _onsetApplied * 0.95f && onset < _onsetApplied * 1.05f) {
+        return;
+    }
+    detection::ScalarTransientConfig d;
+    detection::InspectionPlan plan;
+    buildConfig(d, plan);
+    runtime.retune(d, plan);
+    _onsetApplied = d.onsetDetectionThreshold;
 }
 
 void Whispernet::endBlock(detection::EnvelopeRuntime& runtime, float level, uint32_t blockMs) {
     if (_holdPending && timing::atOrAfter(blockMs, _holdUntilMs)) {
         shutLine();
     }
+    // The room's level, learned while nothing runs: no phrase open, the line shut, no own playback ahead or sounding.
+    const bool learning = !_gate.following() && !runtime.candidateOpen() && !_line.isOpen() && !_playArmed;
+    _room.update(level, blockMs > _lastRoomMs ? blockMs - _lastRoomMs : 0U, learning);
+    _lastRoomMs = blockMs;
+    if (_values.adaptive && learning) {
+        retune(runtime);
+    }
     float flatness = 0.0f;
-    if (_flat.take(flatness) && level >= _values.onset) {
+    if (_flat.take(flatness) && level >= _onsetApplied) {
         runtime.recordFeature(detection::FeatureStreamId::SpectralFlatness, blockMs, flatness);
     }
 }
@@ -319,6 +358,14 @@ void Whispernet::describeParams(param::ParamRegistry& registry) {
                        &_values.levelDecayMs, 0U, 60000U);
     registry.addUInt32(param::ParamId::Whisper_RestMs, param::ModuleId::Behavior, "whisper.rest_ms", &_values.restMs,
                        0U, 60000U);
+    registry.addBool(param::ParamId::Whisper_Adaptive, param::ModuleId::Detection, "whisper.adaptive",
+                     &_values.adaptive);
+    registry.addFloat(param::ParamId::Whisper_RoomFactor, param::ModuleId::Detection, "whisper.room_factor",
+                      &_values.roomFactor, 1.0f, 20.0f);
+    registry.addUInt32(param::ParamId::Whisper_RoomRiseMs, param::ModuleId::Detection, "whisper.room_rise_ms",
+                       &_values.roomRiseMs, 100U, 600000U);
+    registry.addUInt32(param::ParamId::Whisper_RoomFallMs, param::ModuleId::Detection, "whisper.room_fall_ms",
+                       &_values.roomFallMs, 10U, 60000U);
 }
 
 void Whispernet::applyValues(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior) {
@@ -484,6 +531,10 @@ void Whispernet::printStatus() {
     serialOut().print(_fifo.dropped());
     serialOut().print(" underruns=");
     serialOut().print(_fifo.underruns());
+    serialOut().print(" room=");
+    serialOut().print(static_cast<unsigned long>(_room.value()));
+    serialOut().print(" onset_now=");
+    serialOut().print(static_cast<unsigned long>(_onsetApplied));
     serialOut().print(" line_bytes=");
     serialOut().println(static_cast<unsigned long>(bytes()));
 }

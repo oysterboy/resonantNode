@@ -1,0 +1,21 @@
+log span 41.3 h
+emissions by board and source:
+  E1 {'idle': 1392, 'heard_pattern': 2624}
+  E2 {'idle': 1649, 'heard_pattern': 2043}
+  E3 {'idle': 1393, 'heard_pattern': 2659}
+  E4 {'idle': 1429, 'heard_pattern': 2548}
+  E5 {'idle': 1484, 'heard_pattern': 2465}
+  total idle 7347, answers 12339, per hour 178 / 299
+valid verdicts by board: {'E1': 8740, 'E4': 7907, 'E3': 8375, 'E5': 7684, 'E2': 6304}
+decisions on valid verdicts: {'declined_by_level': 16868, 'consumed_pattern': 12699, 'rest_level': 4732, 'resting': 3602, 'already_scheduled': 447, 'refractory_after_emit': 400, 'yielded': 262}
+chains (3 s gap): 6117; length median 2, max 9; duration max 8.2 s; >30 s: 0; length>=6: 1450
+per 6 h block: emissions/h, chains, bases played (position: count)
+   0- 6 h    473/h   881 chains  {0: 55, 1: 139, 2: 183, 3: 339, 4: 389, 5: 505, 6: 376, 7: 229, 8: 168, 9: 105, 10: 128, 11: 89, 12: 49, 13: 49, 14: 37}
+   6-12 h    470/h   934 chains  {0: 39, 1: 109, 2: 215, 3: 288, 4: 380, 5: 418, 6: 308, 7: 201, 8: 257, 9: 206, 10: 143, 11: 80, 12: 72, 13: 75, 14: 27}
+  12-18 h    482/h   781 chains  {0: 8, 1: 4, 2: 9, 3: 3, 4: 21, 5: 13, 6: 55, 7: 194, 8: 437, 9: 345, 10: 284, 11: 347, 12: 478, 13: 536, 14: 161}
+  18-24 h    483/h   905 chains  {0: 8, 1: 25, 2: 15, 3: 56, 4: 145, 5: 162, 6: 211, 7: 193, 8: 222, 9: 213, 10: 333, 11: 392, 12: 475, 13: 345, 14: 105}
+  24-30 h    476/h   927 chains  {0: 83, 1: 158, 2: 329, 3: 370, 4: 327, 5: 231, 6: 154, 7: 133, 8: 93, 9: 52, 10: 73, 11: 184, 12: 314, 13: 273, 14: 82}
+  30-36 h    474/h   878 chains  {0: 124, 1: 224, 2: 442, 3: 343, 4: 222, 5: 152, 6: 132, 7: 152, 8: 102, 9: 106, 10: 93, 11: 177, 12: 217, 13: 270, 14: 86}
+  36-42 h    479/h   811 chains  {0: 13, 1: 50, 2: 179, 3: 242, 4: 272, 5: 268, 6: 170, 7: 206, 8: 231, 9: 200, 10: 133, 11: 140, 12: 154, 13: 211, 14: 66}
+pairs within 2 positions at STATUS rounds: median 80 %, min 20 %
+port events: 0

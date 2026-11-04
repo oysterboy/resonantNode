@@ -1,0 +1,21 @@
+{
+  "sections": [
+    {"name": "silence", "secs": 15, "say": "nobody moves"},
+    {"name": "whisper_05m", "secs": 40, "cue": true, "say": "whisper at 0.5 m from the PC mic, sentences with pauses"},
+    {"name": "pause", "secs": 10},
+    {"name": "whisper_1m", "secs": 40, "cue": true, "say": "whisper at 1 m"},
+    {"name": "pause", "secs": 10},
+    {"name": "whisper_2m", "secs": 40, "cue": true, "say": "whisper at 2 m"},
+    {"name": "pause", "secs": 10},
+    {"name": "speech_1m", "secs": 30, "cue": true, "say": "speak normally at 1 m"},
+    {"name": "pause", "secs": 10},
+    {"name": "typing", "secs": 30, "cue": true, "say": "type on the keyboard"},
+    {"name": "pause", "secs": 10},
+    {"name": "chair", "secs": 30, "cue": true, "say": "roll the chair, sit down, stand up"},
+    {"name": "pause", "secs": 10},
+    {"name": "paper", "secs": 30, "cue": true, "say": "rustle paper"},
+    {"name": "pause", "secs": 10},
+    {"name": "clothes", "secs": 30, "cue": true, "say": "move, clothes rustling, steps"},
+    {"name": "pause", "secs": 5}
+  ]
+}

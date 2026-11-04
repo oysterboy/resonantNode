@@ -7,6 +7,7 @@
 #include "../../app/SerialOut.h"
 #include "../../app/TextParse.h"
 #include "../../app/TimingUtils.h"
+#include "../../app/ParamIds.h"
 #include "../../detection/inspection/InspectionNames.h"
 
 namespace {
@@ -16,26 +17,22 @@ constexpr uint32_t kDelayMinMs =
     400;  // the gate needs ~400 ms to open (decisions/2026-11-01-whispernet-delay-per-node.md)
 constexpr uint32_t kFifoMs = 100;
 constexpr uint32_t kPrimeMs = 20;  // the writer starts once this waits: the loop pushes in bursts of up to 8 ms
-constexpr uint32_t kRampMs = 40;  // the gain's fade at each edge (10 ms sounded cut off to the owner)
-constexpr uint32_t kPreMs = 200;  // passed before the phrase's start: the whisper's soft beginning under the onset
-constexpr uint32_t kHoldMs = 300;  // the line kept open after the gate shuts: the whisper's tail
-constexpr uint32_t kTailMs = 300;  // not listening this long after the own playback (the room's ring-down)
 
 // Whispernet's Behavior (roadmap-echo.md ECHO-002 item 4): an answered phrase is passed at once (no wait, no jitter: D
 // is the spread), the node keeps listening while it plays (suppression off); the level climbs with every phrase heard
 // and every replay, and the rest at its top shuts the gate for a while, so a room of whisperers goes quiet. No idle
 // call. The echo room's level and rest to start with.
-BehaviorGateConfig whisperBehavior() {
+BehaviorGateConfig whisperBehavior(const Whispernet::Values& v) {
     BehaviorGateConfig b;
     b.idleEnabled = false;
     b.waitAfterHeardMs = 0;
     b.refractoryAfterEmitMs = 0;
     b.behaviorSuppressSelfChirpMs = 0;
     b.detectionSuppressTailMsOwnEmit = 0;
-    b.levelMax = 4;
-    b.levelOffset = 2;
-    b.levelDecayMs = 3000;
-    b.restMs = 4000;
+    b.levelMax = v.levelMax > 0 ? v.levelMax : 1;
+    b.levelOffset = v.levelOffset;
+    b.levelDecayMs = v.levelDecayMs;
+    b.restMs = v.restMs;
     b.answerJitterMs = 0;
     b.baseGlide = false;
     return b;
@@ -54,7 +51,7 @@ bool Whispernet::begin(uint32_t rateHz, uint64_t seed) {
     _rateHz = rateHz;
     _seed = seed;
     _values.delayMs = delayForSeed(seed);
-    const bool line = _line.begin(static_cast<size_t>(rateHz) * kLineMs / 1000U, 128, rateHz * kRampMs / 1000U);
+    const bool line = _line.begin(static_cast<size_t>(rateHz) * kLineMs / 1000U, 128, rateHz * _values.rampMs / 1000U);
     const bool fifo = _fifo.begin(static_cast<size_t>(rateHz) * kFifoMs / 1000U);
     _line.setDelay(static_cast<size_t>(rateHz) * _values.delayMs / 1000U);
     _gate.setDelayMs(_values.delayMs);
@@ -98,9 +95,9 @@ void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior
     d.onsetReleaseThreshold = _values.release;
     d.cooldownAfterOnsetMs = 0;
     d.maxTransientDurationMs = 0;
-    d.minTransientDurationMs = 300;
+    d.minTransientDurationMs = _values.minPhraseMs;
     d.minTransientPeakStrength = 0.0f;
-    d.releaseDebounceMs = 300;
+    d.releaseDebounceMs = _values.gapMs;
     detection::InspectionPlan plan = detection::InspectionPlan{};
     detection::InspectionModuleConfig& level = plan.modules[0];
     level.kind = detection::InspectionModuleKind::LevelWindow;
@@ -124,8 +121,8 @@ void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior
     timbre.flatness.maxFlatness = _values.flatMax;
     plan.count = 3;
     runtime.configure(d, plan);
-    runtime.setProvisional(300, 100);
-    behavior.configure(whisperBehavior());
+    runtime.setProvisional(_values.firstCheckMs, _values.checkEveryMs);
+    behavior.configure(whisperBehavior(_values));
 }
 
 void Whispernet::endBlock(detection::EnvelopeRuntime& runtime, float level, uint32_t blockMs) {
@@ -148,7 +145,7 @@ uint64_t Whispernet::lineIndexAtMs(unsigned long ms) const {
 
 void Whispernet::apply(const WhisperGate::Step& step) {
     if (step.event == WhisperGate::Event::Open) {
-        const unsigned long from = step.fromMs > kPreMs ? step.fromMs - kPreMs : 0UL;
+        const unsigned long from = step.fromMs > _values.preMs ? step.fromMs - _values.preMs : 0UL;
         _line.pass(lineIndexAtMs(from), _line.written());
         _line.setOpen(true);
         _holdPending = false;
@@ -161,7 +158,7 @@ void Whispernet::apply(const WhisperGate::Step& step) {
     } else if (step.event == WhisperGate::Event::Close) {
         _counts.gatedMs += step.fromMs - _openedAtMs;
         _holdPending = true;  // shut after the tail (endBlock)
-        _holdUntilMs = _blockMs + kHoldMs;
+        _holdUntilMs = _blockMs + _values.holdMs;
     }
 }
 
@@ -169,8 +166,8 @@ void Whispernet::shutLine() {
     _holdPending = false;
     if (_line.isOpen()) {
         _line.setOpen(false);
-        _playedOutAtMs = _blockMs + _values.delayMs + kRampMs;  // what passed up to now plays within D
-        _playUntilMs = _playedOutAtMs + kTailMs;
+        _playedOutAtMs = _blockMs + _values.delayMs + _values.rampMs;  // what passed up to now plays within D
+        _playUntilMs = _playedOutAtMs + _values.tailMs;
     }
 }
 
@@ -277,6 +274,65 @@ void Whispernet::runBehavior(ResonantBehavior& behavior, unsigned long now) {
     }
 }
 
+// whisper.* (ECHO-003): every Values field, in the order PARAM LIST prints them.
+void Whispernet::describeParams(param::ParamRegistry& registry) {
+    registry.addFloat(param::ParamId::Whisper_Onset, param::ModuleId::Detection, "whisper.onset", &_values.onset, 0.0f,
+                      32767.0f);
+    registry.addFloat(param::ParamId::Whisper_Release, param::ModuleId::Detection, "whisper.release", &_values.release,
+                      0.0f, 32767.0f);
+    registry.addFloat(param::ParamId::Whisper_Floor, param::ModuleId::Detection, "whisper.floor", &_values.floor, 0.0f,
+                      32767.0f);
+    registry.addFloat(param::ParamId::Whisper_Loud, param::ModuleId::Detection, "whisper.loud", &_values.loud, 0.0f,
+                      32767.0f);
+    registry.addFloat(param::ParamId::Whisper_Modulation, param::ModuleId::Detection, "whisper.modulation",
+                      &_values.modulation, 0.0f, 2.0f);
+    registry.addFloat(param::ParamId::Whisper_FlatMin, param::ModuleId::Detection, "whisper.flat_min", &_values.flatMin,
+                      0.0f, 1.0f);
+    registry.addFloat(param::ParamId::Whisper_FlatMax, param::ModuleId::Detection, "whisper.flat_max", &_values.flatMax,
+                      0.0f, 1.0f);
+    registry.addUInt32(param::ParamId::Whisper_DelayMs, param::ModuleId::Output, "whisper.delay_ms", &_values.delayMs,
+                       kDelayMinMs, kLineMs);
+    registry.addFloat(param::ParamId::Whisper_Gain, param::ModuleId::Output, "whisper.gain", &_values.gain, 0.0f,
+                      512.0f);
+    registry.addBool(param::ParamId::Whisper_Enabled, param::ModuleId::Output, "whisper.enabled", &_values.enabled);
+    registry.addUInt32(param::ParamId::Whisper_PreMs, param::ModuleId::Output, "whisper.pre_ms", &_values.preMs, 0U,
+                       1000U);
+    registry.addUInt32(param::ParamId::Whisper_HoldMs, param::ModuleId::Output, "whisper.hold_ms", &_values.holdMs, 0U,
+                       2000U);
+    registry.addUInt32(param::ParamId::Whisper_TailMs, param::ModuleId::Output, "whisper.tail_ms", &_values.tailMs, 0U,
+                       3000U);
+    registry.addUInt32(param::ParamId::Whisper_RampMs, param::ModuleId::Output, "whisper.ramp_ms", &_values.rampMs, 1U,
+                       500U);
+    registry.addUInt32(param::ParamId::Whisper_FirstCheckMs, param::ModuleId::Detection, "whisper.first_check_ms",
+                       &_values.firstCheckMs, 100U, 2000U);
+    registry.addUInt32(param::ParamId::Whisper_CheckEveryMs, param::ModuleId::Detection, "whisper.check_every_ms",
+                       &_values.checkEveryMs, 20U, 1000U);
+    registry.addUInt32(param::ParamId::Whisper_MinPhraseMs, param::ModuleId::Detection, "whisper.min_phrase_ms",
+                       &_values.minPhraseMs, 0U, 5000U);
+    registry.addUInt32(param::ParamId::Whisper_GapMs, param::ModuleId::Detection, "whisper.gap_ms", &_values.gapMs, 0U,
+                       2000U);
+    registry.addUInt32(param::ParamId::Whisper_LevelMax, param::ModuleId::Behavior, "whisper.level_max",
+                       &_values.levelMax, 1U, 50U);
+    registry.addUInt32(param::ParamId::Whisper_LevelOffset, param::ModuleId::Behavior, "whisper.level_offset",
+                       &_values.levelOffset, 0U, 50U);
+    registry.addUInt32(param::ParamId::Whisper_LevelDecayMs, param::ModuleId::Behavior, "whisper.level_decay_ms",
+                       &_values.levelDecayMs, 0U, 60000U);
+    registry.addUInt32(param::ParamId::Whisper_RestMs, param::ModuleId::Behavior, "whisper.rest_ms", &_values.restMs,
+                       0U, 60000U);
+}
+
+void Whispernet::applyValues(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior) {
+    _values.delayMs =
+        _values.delayMs < kDelayMinMs ? kDelayMinMs : (_values.delayMs > kLineMs ? kLineMs : _values.delayMs);
+    _line.setDelay(static_cast<size_t>(_rateHz) * _values.delayMs / 1000U);
+    _line.setRamp(static_cast<size_t>(_rateHz) * _values.rampMs / 1000U);
+    _gate.setDelayMs(_values.delayMs);
+    if (_output != nullptr) {
+        _output->setStream(&_fifo, _values.gain, static_cast<size_t>(_rateHz) * kPrimeMs / 1000U);
+    }
+    configure(runtime, behavior);
+}
+
 void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior) {
     const char* rest = text_parse::rest(line, "WHISPER GATE");
     struct FloatKey {
@@ -300,12 +356,7 @@ void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime&
     if (text_parse::keyValue(rest, "on=", value, sizeof(value))) {
         _values.enabled = value[0] != '0';
     }
-    _line.setDelay(static_cast<size_t>(_rateHz) * _values.delayMs / 1000U);
-    _gate.setDelayMs(_values.delayMs);
-    if (_output != nullptr) {
-        _output->setStream(&_fifo, _values.gain, static_cast<size_t>(_rateHz) * kPrimeMs / 1000U);
-    }
-    configure(runtime, behavior);
+    applyValues(runtime, behavior);
     serialOut().print("WHISPER gate onset=");
     serialOut().print(_values.onset, 0);
     serialOut().print(" release=");

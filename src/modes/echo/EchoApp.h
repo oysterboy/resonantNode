@@ -17,6 +17,7 @@
 #include "../../net/NodeNet.h"
 #include "../../output/ChirpOutput.h"
 #include "../../output/SoundOutput.h"
+#include "EchoParams.h"
 #include "Whispernet.h"
 
 #ifndef ECHO_RING_MS
@@ -89,6 +90,10 @@ private:
     void runBehavior(unsigned long now);
     void startReplay(unsigned long now);
     void configureEcho();
+    void configureParams();
+    void applyParams();
+    void handleParamCommand(const char* line);
+    BehaviorGateConfig echoBehavior() const;
     void printStatus();
     void printNetStatus();
     void printHelp();
@@ -131,6 +136,8 @@ private:
         uint32_t restMs = 4000;
         uint32_t waitMs = 350;
         uint32_t jitterMs = 300;
+        uint32_t tailMs = 150;  // detection paused this long after the own replay (the room's ring-down)
+        uint32_t refractoryMs = 300;  // no answer this long after the own replay
     };
     struct EchoCounts {
         unsigned long occurrences = 0;
@@ -161,6 +168,7 @@ private:
     int32_t _envelopePeak = 0;  // since the last status
 
     Whispernet _whisper;
+    EchoParams _params;  // echo.* or whisper.* (ECHO-003)
     bool _whisperDeaf = false;  // detection paused for Whispernet's own playback
 
     Load _load;

@@ -330,7 +330,12 @@ with the echo room's own values (no idle call, the first clap answered with 3 / 
 300 ms, a rest after a level of 4); the answer is the clap itself, `pre` ms before its onset to `post` ms after, cut
 from the ring and played at `gain`. Lines: `ECHO clap valid= attack_ms= strength= duration_ms= decision=`, `ECHO replay
 onset_index= ms= gain=`; ECHO STATUS adds `level= occurrences= claps= slow= replays= clip_missing= behavior=`.
-The values are code defaults in `EchoApp.h` / `echoBehavior()` until ECHO-003's params.
+Since 2026-11-04 every value is a param (ECHO-003): `echo.*` in the echo build, `whisper.*` in the whisper build, with
+`PARAM LIST|GET|SET|DUMP|SAVE|LOAD|RESET` as on the Node (also by radio: `NET <name> PARAM ...`). The defaults are in
+`EchoApp.h` (Gate) and `Whispernet.h` (Values), the paths in `EchoApp::configureParams` and
+`Whispernet::describeParams`; `PARAM DUMP` lists the running ones. Saves share the Node's NVS namespace under the
+modes' own ids: a mode loads only its own, and PARAM RESET in any mode clears every mode's. ECHO GATE and WHISPER
+GATE stay as shorthands for the same fields.
 
 By radio from a USB Node: `NET <name|*> OTA ...` (the way back to the Node image), `NET <name> ECHO STATUS`,
 `NET <name> NET PING`. The shell is not a gateway (no NET to other boards from it). Its boot line

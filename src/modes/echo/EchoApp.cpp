@@ -33,24 +33,23 @@ uint32_t largestFreeBlock() {
 // The echo room's Behavior (roadmap-echo.md ECHO-001 item 3): no idle call, a first clap answered with 3 / 4, a short
 // rest at the top of a small level, the answer after 350 ms (the clip's 270 ms after the onset recorded by then) plus a
 // little jitter. Own-emit suppression covers the replay and a tail for the room's ring-down.
-BehaviorGateConfig echoBehavior(uint32_t levelMax, uint32_t levelOffset, uint32_t levelDecayMs, uint32_t restMs,
-                                uint32_t waitMs, uint32_t jitterMs) {
+}  // namespace
+
+BehaviorGateConfig EchoApp::echoBehavior() const {
     BehaviorGateConfig b;
     b.idleEnabled = false;
-    b.waitAfterHeardMs = waitMs;
-    b.refractoryAfterEmitMs = 300;
+    b.waitAfterHeardMs = _gate.waitMs;
+    b.refractoryAfterEmitMs = _gate.refractoryMs;
     b.behaviorSuppressSelfChirpMs = 100;
-    b.detectionSuppressTailMsOwnEmit = 150;
-    b.levelMax = levelMax;
-    b.levelOffset = levelOffset;
-    b.levelDecayMs = levelDecayMs;
-    b.restMs = restMs;
-    b.answerJitterMs = jitterMs;
+    b.detectionSuppressTailMsOwnEmit = _gate.tailMs;
+    b.levelMax = _gate.levelMax > 0 ? _gate.levelMax : 1;
+    b.levelOffset = _gate.levelOffset;
+    b.levelDecayMs = _gate.levelDecayMs;
+    b.restMs = _gate.restMs;
+    b.answerJitterMs = _gate.jitterMs;
     b.baseGlide = false;
     return b;
 }
-
-}  // namespace
 
 EchoApp::EchoApp()
     : _i2sPort(runtime::kDefaultAudioI2SSckPin, runtime::kDefaultAudioI2SWsPin, runtime::kDefaultAudioI2SDataPin,
@@ -85,6 +84,7 @@ void EchoApp::begin() {
     _follower.setShift(EnvelopeFollower::shiftForRate(_i2sPort.sampleRateHz()));  // ~1.3 ms at any rate
     _behavior.resetState();
     configureEcho();
+    configureParams();  // echo.* / whisper.*: stored values over the defaults
     const bool netUp = _net.begin();
     _netGateway.begin();
 
@@ -189,6 +189,67 @@ void EchoApp::pollAudio() {
     }
 }
 
+// The mode's params (ECHO-003): registered, the defaults captured, the stored values loaded, then applied. After
+// configureEcho (the fields hold the firmware defaults) and before the radio.
+void EchoApp::configureParams() {
+    if (kWhispernet) {
+        _whisper.describeParams(_params.registry());
+    } else {
+        param::ParamRegistry& r = _params.registry();
+        r.addFloat(param::ParamId::Echo_Onset, param::ModuleId::Detection, "echo.onset", &_gate.onset, 0.0f, 32767.0f);
+        r.addFloat(param::ParamId::Echo_Release, param::ModuleId::Detection, "echo.release", &_gate.release, 0.0f,
+                   32767.0f);
+        r.addFloat(param::ParamId::Echo_Floor, param::ModuleId::Detection, "echo.floor", &_gate.floor, 0.0f, 32767.0f);
+        r.addFloat(param::ParamId::Echo_MinPeak, param::ModuleId::Detection, "echo.min_peak", &_gate.minPeak, 0.0f,
+                   32767.0f);
+        r.addUInt32(param::ParamId::Echo_AttackMs, param::ModuleId::Detection, "echo.attack_ms", &_gate.maxAttackMs, 1U,
+                    200U);
+        r.addUInt32(param::ParamId::Echo_PreMs, param::ModuleId::Output, "echo.pre_ms", &_gate.preMs, 0U, 300U);
+        r.addUInt32(param::ParamId::Echo_PostMs, param::ModuleId::Output, "echo.post_ms", &_gate.postMs, 0U, 300U);
+        r.addFloat(param::ParamId::Echo_Gain, param::ModuleId::Output, "echo.gain", &_gate.gain, 0.0f, 512.0f);
+        r.addBool(param::ParamId::Echo_Enabled, param::ModuleId::Output, "echo.enabled", &_gate.enabled);
+        r.addUInt32(param::ParamId::Echo_LevelMax, param::ModuleId::Behavior, "echo.level_max", &_gate.levelMax, 1U,
+                    50U);
+        r.addUInt32(param::ParamId::Echo_LevelOffset, param::ModuleId::Behavior, "echo.level_offset",
+                    &_gate.levelOffset, 0U, 50U);
+        r.addUInt32(param::ParamId::Echo_LevelDecayMs, param::ModuleId::Behavior, "echo.level_decay_ms",
+                    &_gate.levelDecayMs, 0U, 60000U);
+        r.addUInt32(param::ParamId::Echo_RestMs, param::ModuleId::Behavior, "echo.rest_ms", &_gate.restMs, 0U, 60000U);
+        r.addUInt32(param::ParamId::Echo_WaitMs, param::ModuleId::Behavior, "echo.wait_ms", &_gate.waitMs, 0U, 10000U);
+        r.addUInt32(param::ParamId::Echo_JitterMs, param::ModuleId::Behavior, "echo.jitter_ms", &_gate.jitterMs, 0U,
+                    10000U);
+        r.addUInt32(param::ParamId::Echo_TailMs, param::ModuleId::Behavior, "echo.tail_ms", &_gate.tailMs, 0U, 3000U);
+        r.addUInt32(param::ParamId::Echo_RefractoryMs, param::ModuleId::Behavior, "echo.refractory_ms",
+                    &_gate.refractoryMs, 0U, 10000U);
+    }
+    _params.captureDefaults();
+    _params.loadStored(serialOut());
+    applyParams();
+}
+
+// What a PARAM or GATE write changed, into the running mode.
+void EchoApp::applyParams() {
+    if (kWhispernet) {
+        _whisper.applyValues(_runtime, _behavior);
+        return;
+    }
+    if (_gate.levelMax == 0) {
+        _gate.levelMax = 1;  // Behavior draws below it
+    }
+    if (_gate.preMs + _gate.postMs > 300) {
+        _gate.postMs = _gate.preMs < 300 ? 300 - _gate.preMs : 0;  // the clip buffer holds 300 ms
+    }
+    configureEcho();
+}
+
+// echo.* / whisper.* with the NVS store; a write applies the mode.
+void EchoApp::handleParamCommand(const char* line) {
+    const param::ParamCommandResult result = _params.handleCommand(line, serialOut());
+    if (result.effect != param::ParamCommandEffect::None) {
+        applyParams();
+    }
+}
+
 void EchoApp::configureEcho() {
     if (kWhispernet) {
         _whisper.configure(_runtime, _behavior);
@@ -217,8 +278,7 @@ void EchoApp::configureEcho() {
     m.attack.weakMaxMs = _gate.maxAttackMs * 3;
     plan.count = 1;
     _runtime.configure(d, plan);
-    _behavior.configure(echoBehavior(_gate.levelMax, _gate.levelOffset, _gate.levelDecayMs, _gate.restMs, _gate.waitMs,
-                                     _gate.jitterMs));
+    _behavior.configure(echoBehavior());
 }
 
 // One DMA block into the detection chain (EnvelopeRuntime); paused while the own replay sounds and for its tail
@@ -405,16 +465,10 @@ void EchoApp::handleGateCommand(const char* line) {
             *k.field = v;
         }
     }
-    if (_gate.levelMax == 0) {
-        _gate.levelMax = 1;  // Behavior draws below it
-    }
-    if (_gate.preMs + _gate.postMs > 300) {
-        _gate.postMs = _gate.preMs < 300 ? 300 - _gate.preMs : 0;  // the clip buffer holds 300 ms
-    }
     if (text_parse::keyValue(rest, "on=", value, sizeof(value))) {
         _gate.enabled = value[0] != '0';
     }
-    configureEcho();
+    applyParams();
     serialOut().print("ECHO gate onset=");
     serialOut().print(_gate.onset, 0);
     serialOut().print(" release=");
@@ -471,7 +525,7 @@ void EchoApp::pollNet() {
     if (equalsIgnoreCase(f.text, "NET PING")) {
         printNetStatus();
     } else if (startsWithWordIgnoreCase(f.text, "OTA") || startsWithWordIgnoreCase(f.text, "ECHO") ||
-               startsWithWordIgnoreCase(f.text, "WHISPER")) {
+               startsWithWordIgnoreCase(f.text, "WHISPER") || startsWithWordIgnoreCase(f.text, "PARAM")) {
         handleLine(f.text);
     } else {
         serialOut().println("NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)");
@@ -493,6 +547,8 @@ void EchoApp::handleLine(const char* line) {
         _whisper.handleRecCommand(line);
     } else if (kWhispernet && equalsIgnoreCase(line, "WHISPER STATUS")) {
         _whisper.printStatus();
+    } else if (startsWithWordIgnoreCase(line, "PARAM")) {
+        handleParamCommand(line);
     } else if (startsWithWordIgnoreCase(line, "ECHO LOG")) {
         handleLogCommand(line);
     } else if (startsWithWordIgnoreCase(line, "TONE")) {
@@ -668,6 +724,8 @@ void EchoApp::printHelp() {
             "ECHO CMD: WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [flatmin=] [flat=] [delay=MS 400..2000] [gain=] "
             "[on=0|1]");
     }
+    serialOut().println(kWhispernet ? "ECHO CMD: PARAM LIST|GET|SET|DUMP|SAVE|LOAD|RESET (whisper.*)"
+                                    : "ECHO CMD: PARAM LIST|GET|SET|DUMP|SAVE|LOAD|RESET (echo.*)");
     serialOut().println("ECHO CMD: TONE <hz> <ms>");
     serialOut().println("ECHO CMD: OTA url=... token=...");
     serialOut().println("ECHO CMD: NET STATUS");

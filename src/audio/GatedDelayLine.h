@@ -57,6 +57,9 @@ public:
         _open = false;
     }
 
+    // The gain's ramp at each edge, in samples (0: a hard switch).
+    void setRamp(size_t rampSamples) { _step = rampSamples > 0 ? 1.0f / static_cast<float>(rampSamples) : 1.0f; }
+
     // The delay, 1 .. the capacity (Whispernet's per-node D). A change mid-stream replays or skips a stretch once.
     void setDelay(size_t samples) {
         if (_capacity == 0) {

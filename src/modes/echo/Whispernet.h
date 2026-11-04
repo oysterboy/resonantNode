@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <ParamRegistry.h>
+
 #include "../../audio/BandFlatness.h"
 #include "../../audio/GatedDelayLine.h"
 #include "../../audio/SampleFifo.h"
@@ -52,6 +54,20 @@ public:
         // level, inaudible at a metre; 16 still was, 64 sounded about right to the owner (desk, 2026-11-01).
         float gain = 64.0f;
         bool enabled = true;
+        // Timing, set on the desk 2026-11-01 (params since 2026-11-04).
+        uint32_t preMs = 200;  // passed before the phrase's start: its soft beginning under the onset
+        uint32_t holdMs = 300;  // the line kept open after the gate shuts: the whisper's tail
+        uint32_t tailMs = 300;  // not listening this long after the own playback (the room's ring-down)
+        uint32_t rampMs = 40;  // the gain's fade at each edge (10 sounded cut off)
+        uint32_t firstCheckMs = 300;  // a running phrase is first judged this far in
+        uint32_t checkEveryMs = 100;  // and again this often
+        uint32_t minPhraseMs = 300;  // shorter is no phrase
+        uint32_t gapMs = 300;  // syllable gaps up to this are bridged (the detector's release debounce)
+        // Whispernet's Behavior (the echo room's values to start; the owner found them slow for whispers).
+        uint32_t levelMax = 4;
+        uint32_t levelOffset = 2;
+        uint32_t levelDecayMs = 3000;
+        uint32_t restMs = 4000;
     };
     struct Counts {
         unsigned long phrases = 0;  // final verdicts
@@ -95,6 +111,10 @@ public:
     // Behavior's emission: started when it asks, finished once the closed gate's last sample has played.
     void runBehavior(ResonantBehavior& behavior, unsigned long now);
 
+    // whisper.* into the registry (ECHO-003): every field of Values.
+    void describeParams(param::ParamRegistry& registry);
+    // The values into the line, the gate, the stream and the runtime (after a PARAM or WHISPER GATE write).
+    void applyValues(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior);
     // WHISPER GATE [onset=] [release=] [floor=] [loud=] [mod=] [flat=] [delay=MS] [gain=] [on=0|1]; prints them.
     void handleGateCommand(const char* line, detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior);
     void printStatus();

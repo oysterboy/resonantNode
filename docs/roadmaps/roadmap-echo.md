@@ -79,6 +79,9 @@ howl with the loop closed; a RAW capture holding the whisper and the replay; a b
 ### ECHO-003 - the switch on location: OTA in and out, params, WiFi
 
 Status: PARTIAL (2026-10-30: the shell esp32dev-echo builds, radio and OTA in it; the board part open)
+Params done 2026-11-04 (784f8dea): echo.* (17) and whisper.* (22) registered and stored as item 3 says; the round
+trip Node -> echo -> whisper -> Node on E5 with a save at each stop (bench/sessions/2026-11-04-echo003-roundtrip):
+each mode loads only its own, the Node's 50 untouched. Open: item 4 (the site's WiFi).
 (owner 2026-10-30: "on location it's just a firmware update")
 
 ```text

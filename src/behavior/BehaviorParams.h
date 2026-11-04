@@ -50,10 +50,12 @@ inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
     registry.addUInt32(ParamId::Behavior_BaseScatterBins, ModuleId::Behavior, "behavior.base_scatter_bins",
                        &b.baseScatterBins, 0U, 7U);
     registry.addBool(ParamId::Behavior_BandPerNode, ModuleId::Behavior, "behavior.band_per_node", &b.bandPerNode);
+    // Down to 250 Hz since 2026-11-04: a train on 300-1300 Hz was heard 40 / 40 on the desk, stronger than on 950-1950
+    // (bench/sessions/2026-11-04-lowband); the owner asked for 300-5000. The room's low noise is untested.
     registry.addUInt32(ParamId::Behavior_BandRangeLowHz, ModuleId::Behavior, "behavior.band_range_low_hz",
-                       &b.bandRangeLowHz, 500U, runtime::kMaxToneHz);
+                       &b.bandRangeLowHz, 250U, runtime::kMaxToneHz);
     registry.addUInt32(ParamId::Behavior_BandRangeHighHz, ModuleId::Behavior, "behavior.band_range_high_hz",
-                       &b.bandRangeHighHz, 500U, runtime::kMaxToneHz);
+                       &b.bandRangeHighHz, 250U, runtime::kMaxToneHz);
 }
 
 }  // namespace param

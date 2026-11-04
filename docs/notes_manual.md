@@ -303,6 +303,14 @@ refused with `ERR EMIT line_too_long max=95` (2026-10-29).
 The Emitter prints `EVT emitter_ready`, `EVT emitter_cmd` and the trial markers `EMIT_START`,
 `EMIT_DRIVE_ON`, `EMIT_DONE`, `EMIT_DRIVE_OFF` (each `trial=... t_ms=...`), so a log of an Emitter-driven run can be aligned with the Analyzer's trials.
 
+## What runs: the board view (2026-11-04)
+
+`python tools/bench/boardview.py --boards E1=COM8,... [--every 5] [--html page.html] [--log file]`: one row per board,
+refreshed every few seconds in the terminal and, with --html, as a page that reloads itself in the browser: the mode
+(node, echo, whisper), Behavior's state, the band (a Node's base and its train's Hz) or Whispernet's delay and room
+level, the level, the last action and its age, counters. It asks RB STATUS and ECHO STATUS (a board ignores the
+other's) and reads what the boards print. It holds the ports: stop it before nodegroup or an OTA script.
+
 ## Echo shell (esp32dev-echo, 2026-10-30)
 
 The shell the echo room and Whispernet will grow in (`src/modes/echo/`, roadmap-echo.md ECHO-003). It does not

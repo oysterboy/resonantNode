@@ -1,0 +1,453 @@
+0.01 E1 >> PARAM SET behavior.idle_enabled 0
+0.07 E1 PARAM SET path=behavior.idle_enabled module=behavior old=1 new=0 status=ok
+0.26 E1 >> PARAM SET behavior.band_per_node 0
+0.29 E1 PARAM SET path=behavior.band_per_node module=behavior old=0 new=0 status=ok
+0.51 E1 >> RB log full
+0.53 E1 RB log mode=full
+0.76 E2 >> PARAM SET behavior.idle_enabled 0
+0.77 E2 PARAM SET path=behavior.idle_enabled module=behavior old=1 new=0 status=ok
+1.01 E2 >> PARAM SET behavior.band_per_node 0
+1.07 E2 PARAM SET path=behavior.band_per_node module=behavior old=0 new=0 status=ok
+1.26 E2 >> RB log full
+1.31 E2 RB log mode=full
+1.52 E3 >> PARAM SET behavior.idle_enabled 0
+1.55 E3 PARAM SET path=behavior.idle_enabled module=behavior old=1 new=0 status=ok
+1.77 E3 >> PARAM SET behavior.band_per_node 0
+1.80 E3 PARAM SET path=behavior.band_per_node module=behavior old=0 new=0 status=ok
+2.02 E3 >> RB log full
+2.04 E3 RB log mode=full
+2.27 E4 >> PARAM SET behavior.idle_enabled 0
+2.32 E4 PARAM SET path=behavior.idle_enabled module=behavior old=1 new=0 status=ok
+2.52 E4 >> PARAM SET behavior.band_per_node 0
+2.57 E4 PARAM SET path=behavior.band_per_node module=behavior old=0 new=0 status=ok
+2.77 E4 >> RB log full
+2.81 E4 RB log mode=full
+3.02 E5 >> PARAM SET behavior.idle_enabled 0
+3.06 E5 PARAM SET path=behavior.idle_enabled module=behavior old=1 new=0 status=ok
+3.27 E5 >> PARAM SET behavior.band_per_node 0
+3.31 E5 PARAM SET path=behavior.band_per_node module=behavior old=0 new=0 status=ok
+3.52 E5 >> RB log full
+3.56 E5 RB log mode=full
+3.78 E1 >> PARAM SET output.silent 0
+3.79 E1 PARAM SET path=output.silent module=output old=1 new=0 status=ok
+3.79 E1 RB silent=0
+3.86 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+4.03 E1 >> PARAM SET detection.band_low_hz 950
+4.05 E1 PARAM SET path=detection.band_low_hz module=detection old=2950 new=950 status=ok
+4.10 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+4.10 E1 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+4.28 E1 >> PARAM SET detection.band_high_hz 1950
+4.34 E1 PARAM SET path=detection.band_high_hz module=detection old=4700 new=1950 status=ok
+4.34 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+4.34 E1 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+4.53 E2 >> PARAM SET detection.band_low_hz 950
+4.58 E2 PARAM SET path=detection.band_low_hz module=detection old=2950 new=950 status=ok
+4.58 E2 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+4.58 E2 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+4.78 E2 >> PARAM SET detection.band_high_hz 1950
+4.81 E2 PARAM SET path=detection.band_high_hz module=detection old=4700 new=1950 status=ok
+4.81 E2 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+4.87 E2 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+5.03 E3 >> PARAM SET detection.band_low_hz 950
+5.06 E3 PARAM SET path=detection.band_low_hz module=detection old=2950 new=950 status=ok
+5.06 E3 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+5.11 E3 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+5.28 E3 >> PARAM SET detection.band_high_hz 1950
+5.35 E3 PARAM SET path=detection.band_high_hz module=detection old=4700 new=1950 status=ok
+5.35 E3 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+5.35 E3 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+5.53 E4 >> PARAM SET detection.band_low_hz 950
+5.59 E4 PARAM SET path=detection.band_low_hz module=detection old=2950 new=950 status=ok
+5.59 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+5.59 E4 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+5.78 E4 >> PARAM SET detection.band_high_hz 1950
+5.83 E4 PARAM SET path=detection.band_high_hz module=detection old=4700 new=1950 status=ok
+5.83 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+5.83 E4 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+6.04 E5 >> PARAM SET detection.band_low_hz 950
+6.06 E5 PARAM SET path=detection.band_low_hz module=detection old=2950 new=950 status=ok
+6.12 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+6.12 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+6.29 E5 >> PARAM SET detection.band_high_hz 1950
+6.36 E5 PARAM SET path=detection.band_high_hz module=detection old=4700 new=1950 status=ok
+6.36 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+6.36 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+9.54 E1 >> RB CALL
+9.55 E1 RB CALL queued resting=0 state=Idle
+9.55 E1 BEH emit start now=6533892 source=call state=Chirping pattern=single
+9.62 E1 RB emit accepted source=call state=Chirping pattern=single
+9.62 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+9.79 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11630 duration_ms=166 profile=TonalPulseScalar
+9.79 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12919 duration_ms=145 profile=TonalPulseScalar
+9.79 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14260 duration_ms=168 profile=TonalPulseScalar
+9.79 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10927 duration_ms=162 profile=TonalPulseScalar
+17.79 E1 >> RB CALL
+17.84 E1 RB CALL queued resting=0 state=Idle
+17.84 E1 BEH emit start now=6542143 source=call state=Chirping pattern=single
+17.84 E1 RB emit accepted source=call state=Chirping pattern=single
+17.84 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+18.03 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12896 duration_ms=145 profile=TonalPulseScalar
+18.09 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11637 duration_ms=166 profile=TonalPulseScalar
+18.09 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10896 duration_ms=162 profile=TonalPulseScalar
+18.09 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14077 duration_ms=168 profile=TonalPulseScalar
+26.04 E1 >> RB CALL
+26.09 E1 RB CALL queued resting=0 state=Idle
+26.09 E1 BEH emit start now=6550394 source=call state=Chirping pattern=single
+26.09 E1 RB emit accepted source=call state=Chirping pattern=single
+26.09 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+26.28 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10911 duration_ms=162 profile=TonalPulseScalar
+26.28 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=13953 duration_ms=168 profile=TonalPulseScalar
+26.28 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12903 duration_ms=145 profile=TonalPulseScalar
+26.34 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11636 duration_ms=166 profile=TonalPulseScalar
+34.29 E1 >> RB CALL
+34.33 E1 RB CALL queued resting=0 state=Idle
+34.33 E1 BEH emit start now=6558644 source=call state=Chirping pattern=single
+34.33 E1 RB emit accepted source=call state=Chirping pattern=single
+34.33 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+34.51 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12850 duration_ms=145 profile=TonalPulseScalar
+34.57 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11644 duration_ms=166 profile=TonalPulseScalar
+34.57 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=13758 duration_ms=168 profile=TonalPulseScalar
+34.57 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10906 duration_ms=162 profile=TonalPulseScalar
+42.54 E1 >> RB CALL
+42.58 E1 RB CALL queued resting=0 state=Idle
+42.58 E1 BEH emit start now=6566895 source=call state=Chirping pattern=single
+42.58 E1 RB emit accepted source=call state=Chirping pattern=single
+42.58 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+42.82 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12785 duration_ms=145 profile=TonalPulseScalar
+42.82 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10839 duration_ms=162 profile=TonalPulseScalar
+42.82 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=13614 duration_ms=168 profile=TonalPulseScalar
+42.82 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11624 duration_ms=166 profile=TonalPulseScalar
+50.79 E1 >> RB CALL
+50.83 E1 RB CALL queued resting=0 state=Idle
+50.83 E1 BEH emit start now=6575146 source=call state=Chirping pattern=single
+50.83 E1 RB emit accepted source=call state=Chirping pattern=single
+50.83 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+51.06 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12675 duration_ms=145 profile=TonalPulseScalar
+51.06 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11003 duration_ms=162 profile=TonalPulseScalar
+51.06 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11653 duration_ms=166 profile=TonalPulseScalar
+51.06 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=13788 duration_ms=168 profile=TonalPulseScalar
+59.04 E1 >> RB CALL
+59.10 E1 RB CALL queued resting=0 state=Idle
+59.10 E1 BEH emit start now=6583398 source=call state=Chirping pattern=single
+59.10 E1 RB emit accepted source=call state=Chirping pattern=single
+59.10 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+59.28 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12609 duration_ms=145 profile=TonalPulseScalar
+59.34 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11680 duration_ms=166 profile=TonalPulseScalar
+59.34 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11047 duration_ms=162 profile=TonalPulseScalar
+59.34 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=13842 duration_ms=168 profile=TonalPulseScalar
+67.30 E1 >> RB CALL
+67.32 E1 RB CALL queued resting=0 state=Idle
+67.32 E1 BEH emit start now=6591650 source=call state=Chirping pattern=single
+67.32 E1 RB emit accepted source=call state=Chirping pattern=single
+67.32 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+67.56 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11682 duration_ms=166 profile=TonalPulseScalar
+67.57 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11001 duration_ms=162 profile=TonalPulseScalar
+67.57 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12556 duration_ms=145 profile=TonalPulseScalar
+67.57 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=13906 duration_ms=168 profile=TonalPulseScalar
+75.55 E1 >> RB CALL
+75.57 E1 RB CALL queued resting=0 state=Idle
+75.57 E1 BEH emit start now=6599899 source=call state=Chirping pattern=single
+75.57 E1 RB emit accepted source=call state=Chirping pattern=single
+75.57 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+75.79 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12440 duration_ms=145 profile=TonalPulseScalar
+75.79 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10920 duration_ms=162 profile=TonalPulseScalar
+75.79 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=13961 duration_ms=168 profile=TonalPulseScalar
+75.79 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11658 duration_ms=166 profile=TonalPulseScalar
+83.80 E1 >> RB CALL
+83.85 E1 RB CALL queued resting=0 state=Idle
+83.85 E1 BEH emit start now=6608150 source=call state=Chirping pattern=single
+83.85 E1 RB emit accepted source=call state=Chirping pattern=single
+83.85 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=950,1200,1450,1700,1950
+84.02 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=12321 duration_ms=145 profile=TonalPulseScalar
+84.10 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14138 duration_ms=168 profile=TonalPulseScalar
+84.10 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10788 duration_ms=162 profile=TonalPulseScalar
+84.10 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=11679 duration_ms=166 profile=TonalPulseScalar
+92.05 E1 >> PARAM SET detection.band_low_hz 500
+92.09 E1 PARAM SET path=detection.band_low_hz module=detection old=950 new=500 status=ok
+92.09 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+92.09 E1 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+92.30 E1 >> PARAM SET detection.band_high_hz 1500
+92.33 E1 PARAM SET path=detection.band_high_hz module=detection old=1950 new=1500 status=ok
+92.39 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+92.39 E1 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+92.55 E2 >> PARAM SET detection.band_low_hz 500
+92.58 E2 PARAM SET path=detection.band_low_hz module=detection old=950 new=500 status=ok
+92.64 E2 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+92.64 E2 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+92.80 E2 >> PARAM SET detection.band_high_hz 1500
+92.82 E2 PARAM SET path=detection.band_high_hz module=detection old=1950 new=1500 status=ok
+92.88 E2 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+92.88 E2 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+93.05 E3 >> PARAM SET detection.band_low_hz 500
+93.09 E3 PARAM SET path=detection.band_low_hz module=detection old=950 new=500 status=ok
+93.09 E3 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+93.15 E3 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+93.31 E3 >> PARAM SET detection.band_high_hz 1500
+93.34 E3 PARAM SET path=detection.band_high_hz module=detection old=1950 new=1500 status=ok
+93.34 E3 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+93.40 E3 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+93.56 E4 >> PARAM SET detection.band_low_hz 500
+93.57 E4 PARAM SET path=detection.band_low_hz module=detection old=950 new=500 status=ok
+93.63 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+93.63 E4 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+93.81 E4 >> PARAM SET detection.band_high_hz 1500
+93.88 E4 PARAM SET path=detection.band_high_hz module=detection old=1950 new=1500 status=ok
+93.88 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+93.88 E4 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+94.06 E5 >> PARAM SET detection.band_low_hz 500
+94.12 E5 PARAM SET path=detection.band_low_hz module=detection old=950 new=500 status=ok
+94.12 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+94.12 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+94.31 E5 >> PARAM SET detection.band_high_hz 1500
+94.37 E5 PARAM SET path=detection.band_high_hz module=detection old=1950 new=1500 status=ok
+94.37 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+94.37 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+97.56 E1 >> RB CALL
+97.60 E1 RB CALL queued resting=0 state=Idle
+97.60 E1 BEH emit start now=6621914 source=call state=Chirping pattern=single
+97.60 E1 RB emit accepted source=call state=Chirping pattern=single
+97.60 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+97.84 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21079 duration_ms=158 profile=TonalPulseScalar
+97.84 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17184 duration_ms=184 profile=TonalPulseScalar
+97.84 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18463 duration_ms=193 profile=TonalPulseScalar
+97.87 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19928 duration_ms=147 profile=TonalPulseScalar
+105.81 E1 >> RB CALL
+105.83 E1 RB CALL queued resting=0 state=Idle
+105.83 E1 BEH emit start now=6630163 source=call state=Chirping pattern=single
+105.83 E1 RB emit accepted source=call state=Chirping pattern=single
+105.89 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+106.12 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18416 duration_ms=193 profile=TonalPulseScalar
+106.12 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17146 duration_ms=184 profile=TonalPulseScalar
+106.12 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19964 duration_ms=147 profile=TonalPulseScalar
+106.12 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21061 duration_ms=157 profile=TonalPulseScalar
+114.06 E1 >> RB CALL
+114.08 E1 RB CALL queued resting=0 state=Idle
+114.08 E1 BEH emit start now=6638413 source=call state=Chirping pattern=single
+114.14 E1 RB emit accepted source=call state=Chirping pattern=single
+114.14 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+114.33 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17167 duration_ms=184 profile=TonalPulseScalar
+114.39 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19927 duration_ms=197 profile=TonalPulseScalar
+114.39 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18381 duration_ms=193 profile=TonalPulseScalar
+114.39 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21116 duration_ms=157 profile=TonalPulseScalar
+122.32 E1 >> RB CALL
+122.36 E1 RB CALL queued resting=0 state=Idle
+122.36 E1 BEH emit start now=6646666 source=call state=Chirping pattern=single
+122.36 E1 RB emit accepted source=call state=Chirping pattern=single
+122.36 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+122.61 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21080 duration_ms=157 profile=TonalPulseScalar
+122.61 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19903 duration_ms=147 profile=TonalPulseScalar
+122.61 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18440 duration_ms=193 profile=TonalPulseScalar
+122.61 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17169 duration_ms=184 profile=TonalPulseScalar
+130.57 E1 >> RB CALL
+130.62 E1 RB CALL queued resting=0 state=Idle
+130.62 E1 BEH emit start now=6654917 source=call state=Chirping pattern=single
+130.62 E1 RB emit accepted source=call state=Chirping pattern=single
+130.62 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+130.86 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19970 duration_ms=147 profile=TonalPulseScalar
+130.86 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21104 duration_ms=157 profile=TonalPulseScalar
+130.86 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18492 duration_ms=193 profile=TonalPulseScalar
+130.86 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17135 duration_ms=184 profile=TonalPulseScalar
+138.82 E1 >> RB CALL
+138.85 E1 RB CALL queued resting=0 state=Idle
+138.85 E1 BEH emit start now=6663170 source=call state=Chirping pattern=single
+138.85 E1 RB emit accepted source=call state=Chirping pattern=single
+138.85 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+139.10 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18490 duration_ms=193 profile=TonalPulseScalar
+139.10 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19932 duration_ms=147 profile=TonalPulseScalar
+139.10 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17128 duration_ms=184 profile=TonalPulseScalar
+139.10 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21133 duration_ms=157 profile=TonalPulseScalar
+147.07 E1 >> RB CALL
+147.13 E1 RB CALL queued resting=0 state=Idle
+147.13 E1 BEH emit start now=6671420 source=call state=Chirping pattern=single
+147.13 E1 RB emit accepted source=call state=Chirping pattern=single
+147.13 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+147.38 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21156 duration_ms=157 profile=TonalPulseScalar
+147.38 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17134 duration_ms=184 profile=TonalPulseScalar
+147.38 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18464 duration_ms=193 profile=TonalPulseScalar
+147.38 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19951 duration_ms=147 profile=TonalPulseScalar
+155.32 E1 >> RB CALL
+155.34 E1 RB CALL queued resting=0 state=Idle
+155.34 E1 BEH emit start now=6679670 source=call state=Chirping pattern=single
+155.34 E1 RB emit accepted source=call state=Chirping pattern=single
+155.40 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+155.58 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17135 duration_ms=184 profile=TonalPulseScalar
+155.64 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21118 duration_ms=157 profile=TonalPulseScalar
+155.64 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19897 duration_ms=147 profile=TonalPulseScalar
+155.64 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18486 duration_ms=193 profile=TonalPulseScalar
+163.57 E1 >> RB CALL
+163.61 E1 RB CALL queued resting=0 state=Idle
+163.61 E1 BEH emit start now=6687922 source=call state=Chirping pattern=single
+163.61 E1 RB emit accepted source=call state=Chirping pattern=single
+163.61 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+163.86 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18461 duration_ms=193 profile=TonalPulseScalar
+163.86 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17112 duration_ms=184 profile=TonalPulseScalar
+163.86 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21138 duration_ms=157 profile=TonalPulseScalar
+163.86 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19859 duration_ms=147 profile=TonalPulseScalar
+171.82 E1 >> RB CALL
+171.84 E1 RB CALL queued resting=0 state=Idle
+171.84 E1 BEH emit start now=6696173 source=call state=Chirping pattern=single
+171.89 E1 RB emit accepted source=call state=Chirping pattern=single
+171.89 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=500,750,1000,1250,1500
+172.14 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=19892 duration_ms=147 profile=TonalPulseScalar
+172.14 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=18464 duration_ms=192 profile=TonalPulseScalar
+172.14 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=21155 duration_ms=157 profile=TonalPulseScalar
+172.14 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17143 duration_ms=184 profile=TonalPulseScalar
+180.07 E1 >> PARAM SET detection.band_low_hz 300
+180.12 E1 PARAM SET path=detection.band_low_hz module=detection old=500 new=300 status=ok
+180.12 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+180.12 E1 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+180.32 E1 >> PARAM SET detection.band_high_hz 1300
+180.35 E1 PARAM SET path=detection.band_high_hz module=detection old=1500 new=1300 status=ok
+180.35 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+180.41 E1 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+180.58 E2 >> PARAM SET detection.band_low_hz 300
+180.60 E2 PARAM SET path=detection.band_low_hz module=detection old=500 new=300 status=ok
+180.66 E2 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+180.66 E2 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+180.83 E2 >> PARAM SET detection.band_high_hz 1300
+180.84 E2 PARAM SET path=detection.band_high_hz module=detection old=1500 new=1300 status=ok
+180.90 E2 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+180.90 E2 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+181.08 E3 >> PARAM SET detection.band_low_hz 300
+181.14 E3 PARAM SET path=detection.band_low_hz module=detection old=500 new=300 status=ok
+181.14 E3 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+181.14 E3 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+181.33 E3 >> PARAM SET detection.band_high_hz 1300
+181.37 E3 PARAM SET path=detection.band_high_hz module=detection old=1500 new=1300 status=ok
+181.37 E3 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+181.37 E3 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+181.58 E4 >> PARAM SET detection.band_low_hz 300
+181.62 E4 PARAM SET path=detection.band_low_hz module=detection old=500 new=300 status=ok
+181.62 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+181.62 E4 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+181.83 E4 >> PARAM SET detection.band_high_hz 1300
+181.86 E4 PARAM SET path=detection.band_high_hz module=detection old=1500 new=1300 status=ok
+181.92 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+181.92 E4 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+182.09 E5 >> PARAM SET detection.band_low_hz 300
+182.16 E5 PARAM SET path=detection.band_low_hz module=detection old=500 new=300 status=ok
+182.16 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+182.16 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+182.34 E5 >> PARAM SET detection.band_high_hz 1300
+182.39 E5 PARAM SET path=detection.band_high_hz module=detection old=1500 new=1300 status=ok
+182.39 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+182.39 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+185.59 E1 >> RB CALL
+185.63 E1 RB CALL queued resting=0 state=Idle
+185.63 E1 BEH emit start now=6709938 source=call state=Chirping pattern=single
+185.63 E1 RB emit accepted source=call state=Chirping pattern=single
+185.63 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+185.91 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+185.92 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17362 duration_ms=236 profile=TonalPulseScalar
+185.92 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=15120 duration_ms=171 profile=TonalPulseScalar
+185.92 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=26047 duration_ms=152 profile=TonalPulseScalar
+193.84 E1 >> RB CALL
+193.86 E1 RB CALL queued resting=0 state=Idle
+193.86 E1 BEH emit start now=6718189 source=call state=Chirping pattern=single
+193.86 E1 RB emit accepted source=call state=Chirping pattern=single
+193.86 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+194.17 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=25932 duration_ms=152 profile=TonalPulseScalar
+194.17 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+194.17 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14998 duration_ms=171 profile=TonalPulseScalar
+194.17 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17458 duration_ms=235 profile=TonalPulseScalar
+202.09 E1 >> RB CALL
+202.10 E1 RB CALL queued resting=0 state=Idle
+202.17 E1 BEH emit start now=6726439 source=call state=Chirping pattern=single
+202.17 E1 RB emit accepted source=call state=Chirping pattern=single
+202.17 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+202.39 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14905 duration_ms=171 profile=TonalPulseScalar
+202.40 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=25982 duration_ms=152 profile=TonalPulseScalar
+202.40 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+202.46 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17536 duration_ms=235 profile=TonalPulseScalar
+210.34 E1 >> RB CALL
+210.36 E1 RB CALL queued resting=0 state=Idle
+210.36 E1 BEH emit start now=6734691 source=call state=Chirping pattern=single
+210.36 E1 RB emit accepted source=call state=Chirping pattern=single
+210.36 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+210.65 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14859 duration_ms=171 profile=TonalPulseScalar
+210.67 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17540 duration_ms=235 profile=TonalPulseScalar
+210.67 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=25917 duration_ms=152 profile=TonalPulseScalar
+210.67 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+218.59 E1 >> RB CALL
+218.63 E1 RB CALL queued resting=0 state=Idle
+218.63 E1 BEH emit start now=6742942 source=call state=Chirping pattern=single
+218.63 E1 RB emit accepted source=call state=Chirping pattern=single
+218.63 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+218.88 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14869 duration_ms=171 profile=TonalPulseScalar
+218.95 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=26000 duration_ms=150 profile=TonalPulseScalar
+218.95 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+218.95 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17502 duration_ms=235 profile=TonalPulseScalar
+226.84 E1 >> RB CALL
+226.89 E1 RB CALL queued resting=0 state=Idle
+226.89 E1 BEH emit start now=6751194 source=call state=Chirping pattern=single
+226.89 E1 RB emit accepted source=call state=Chirping pattern=single
+226.89 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+227.18 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=26134 duration_ms=150 profile=TonalPulseScalar
+227.18 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+227.18 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14790 duration_ms=171 profile=TonalPulseScalar
+227.18 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17406 duration_ms=236 profile=TonalPulseScalar
+235.10 E1 >> RB CALL
+235.16 E1 RB CALL queued resting=0 state=Idle
+235.16 E1 BEH emit start now=6759445 source=call state=Chirping pattern=single
+235.16 E1 RB emit accepted source=call state=Chirping pattern=single
+235.16 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+235.40 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=26152 duration_ms=150 profile=TonalPulseScalar
+235.40 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+235.40 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14787 duration_ms=171 profile=TonalPulseScalar
+235.47 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17292 duration_ms=235 profile=TonalPulseScalar
+243.35 E1 >> RB CALL
+243.37 E1 RB CALL queued resting=0 state=Idle
+243.37 E1 BEH emit start now=6767699 source=call state=Chirping pattern=single
+243.43 E1 RB emit accepted source=call state=Chirping pattern=single
+243.43 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+243.68 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17433 duration_ms=235 profile=TonalPulseScalar
+243.68 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=26055 duration_ms=150 profile=TonalPulseScalar
+243.68 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+243.68 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14835 duration_ms=171 profile=TonalPulseScalar
+251.60 E1 >> RB CALL
+251.63 E1 RB CALL queued resting=0 state=Idle
+251.63 E1 BEH emit start now=6775951 source=call state=Chirping pattern=single
+251.63 E1 RB emit accepted source=call state=Chirping pattern=single
+251.63 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+251.92 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14882 duration_ms=171 profile=TonalPulseScalar
+251.92 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=25819 duration_ms=150 profile=TonalPulseScalar
+251.92 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+251.98 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17489 duration_ms=236 profile=TonalPulseScalar
+259.85 E1 >> RB CALL
+259.88 E1 RB CALL queued resting=0 state=Idle
+259.88 E1 BEH emit start now=6784202 source=call state=Chirping pattern=single
+259.88 E1 RB emit accepted source=call state=Chirping pattern=single
+259.88 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=300,550,800,1050,1300
+260.19 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=14974 duration_ms=142 profile=TonalPulseScalar
+260.19 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=25888 duration_ms=150 profile=TonalPulseScalar
+260.19 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=32767 duration_ms=151 profile=TonalPulseScalar
+260.19 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=17609 duration_ms=236 profile=TonalPulseScalar
+268.10 E1 >> PARAM SET output.silent 1
+268.12 E1 PARAM SET path=output.silent module=output old=0 new=1 status=ok
+268.12 E1 RB silent=1
+268.18 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+268.36 E1 >> PARAM LOAD
+268.43 E1 PARAM load path=output.silent value=1 default=0
+268.49 E1 PARAM load stored=50 applied=50 stale=0 invalid=0
+268.55 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+268.55 E1 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+268.61 E2 >> PARAM LOAD
+268.67 E2 PARAM load path=output.silent value=1 default=0
+268.74 E2 PARAM load stored=50 applied=50 stale=0 invalid=0
+268.80 E2 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+268.80 E2 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+268.86 E3 >> PARAM LOAD
+268.94 E3 PARAM load path=output.silent value=1 default=0
+269.00 E3 PARAM load stored=50 applied=50 stale=0 invalid=0
+269.00 E3 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+269.00 E3 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+269.11 E4 >> PARAM LOAD
+269.17 E4 PARAM load path=output.silent value=1 default=0
+269.23 E4 PARAM load stored=50 applied=50 stale=0 invalid=0
+269.30 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+269.30 E4 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+269.36 E5 >> PARAM LOAD
+269.48 E5 PARAM load path=output.silent value=1 default=0
+269.54 E5 PARAM load stored=50 applied=50 stale=0 invalid=0
+269.54 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+269.54 E5 RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none

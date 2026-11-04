@@ -363,6 +363,13 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         the echo room and Whispernet, stored like the Node's), then tune by ear in short desk sessions; perhaps a UI
         that shows what runs (tbd). Power for the amps first (USB ports dropped at gain 128). Work paused until
         2026-11-03 evening (owner: token budget). Session: bench/sessions/2026-11-01-desk5-bands-7e4c.
+        2026-11-04 (owner's 1, 3, 4, 5): the 41 h Node run read (2026-11-02-desk5-bands-long: no reset, no port
+        drop, chains <= 9 s, the field drifting over the range, pairs in reach median 80 %); every echo-room and
+        Whispernet knob a stored param (784f8dea, ECHO-003 round trip on E5); Whispernet's thresholds follow the
+        room (6bc29584); the band range down to 250 Hz (a 300-1300 train heard 40/40, 2026-11-04-lowband);
+        boardview.py shows what runs. Open: rustling against whispers (the click/rhythm idea did not separate on
+        Sunday's recordings; clean labelled recordings needed, a mic at the desk), the field splitting into two
+        groups, the echo chain with spread answers (after the amps' power).
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

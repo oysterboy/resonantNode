@@ -1,0 +1,89 @@
+1793817312.16 >> ECHO LOG 0
+1793817312.22 ECHO log every_s=0
+1793817312.47 >> PARAM SET echo.gain 64
+1793817312.51 PARAM SET path=echo.gain module=output old=128.000 new=64.000 status=ok
+1793817312.77 >> PARAM SET echo.enabled 1
+1793817312.81 PARAM SET path=echo.enabled module=output old=1 new=1 status=ok
+1793817319.71 >> PARAM SET echo.wait_ms 350
+1793817319.73 PARAM SET path=echo.wait_ms module=behavior old=350 new=350 status=ok
+1793817320.01 >> PARAM SET echo.jitter_ms 300
+1793817320.03 PARAM SET path=echo.jitter_ms module=behavior old=300 new=300 status=ok
+1793817320.31 >> PARAM SET echo.level_max 4
+1793817320.33 PARAM SET path=echo.level_max module=behavior old=4 new=4 status=ok
+1793817320.61 >> PARAM SET echo.level_offset 2
+1793817320.66 PARAM SET path=echo.level_offset module=behavior old=2 new=2 status=ok
+1793817320.91 >> PARAM SET echo.rest_ms 4000
+1793817320.97 PARAM SET path=echo.rest_ms module=behavior old=4000 new=4000 status=ok
+1793817321.22 >> PARAM SET echo.attack_ms 20
+1793817321.29 PARAM SET path=echo.attack_ms module=detection old=20 new=20 status=ok
+1793817321.52 >> PARAM SET echo.pre_ms 30
+1793817321.54 PARAM SET path=echo.pre_ms module=output old=30 new=30 status=ok
+1793817321.82 >> PARAM SET echo.post_ms 270
+1793817321.89 PARAM SET path=echo.post_ms module=output old=270 new=270 status=ok
+1793817322.12 >> PARAM SET echo.onset 1000
+1793817322.20 PARAM SET path=echo.onset module=detection old=1000.000 new=1000.000 status=ok
+1793817322.42 >> PARAM SET echo.release 700
+1793817322.44 PARAM SET path=echo.release module=detection old=700.000 new=700.000 status=ok
+1793817322.73 >> PARAM SET echo.min_peak 1200
+1793817322.79 PARAM SET path=echo.min_peak module=detection old=1200.000 new=1200.000 status=ok
+1793817324.47 ECHO clap valid=1 attack_ms=3 strength=2080 duration_ms=24 decision=consumed_pattern
+1793817324.98 ECHO replay onset_index=5581328 ms=300 gain=64.00
+1793817349.55 ECHO clap valid=1 attack_ms=2 strength=2116 duration_ms=24 decision=consumed_pattern
+1793817350.08 ECHO clap valid=1 attack_ms=14 strength=5127 duration_ms=77 decision=already_scheduled
+1793817350.08 ECHO replay onset_index=6782688 ms=300 gain=64.00
+1793817374.53 ECHO clap valid=1 attack_ms=3 strength=1957 duration_ms=24 decision=consumed_pattern
+1793817375.06 ECHO replay onset_index=7984144 ms=300 gain=64.00
+1793817399.60 ECHO clap valid=1 attack_ms=6 strength=2011 duration_ms=24 decision=declined_by_level
+1793817424.75 >> ECHO STATUS
+1793817424.80 ECHO status node=E1 uptime_s=216 window_s=216 rate_hz=48000 measured_mhz=47999984 samples=10398208 dropped_bufs=28 dropped_total=28 passes=216548 pass_us_mean=105 pass_us_max=38457 block_us_max=6578 env_peak=188829 tone=0 free_heap=73220 largest_block=29684 net_rx=0 net_tx=0 level=135 occurrences=11 claps=9 slow=2 replays=5 clip_missing=0 behavior=Idle level_auto=0
+1793817434.72 >> ECHO STATUS
+1793817434.77 ECHO status node=E1 uptime_s=226 window_s=226 rate_hz=48000 measured_mhz=47999936 samples=10877056 dropped_bufs=28 dropped_total=28 passes=226523 pass_us_mean=105 pass_us_max=38457 block_us_max=6578 env_peak=6140 tone=0 free_heap=73220 largest_block=29684 net_rx=0 net_tx=0 level=99 occurrences=11 claps=9 slow=2 replays=5 clip_missing=0 behavior=Idle level_auto=0
+1793817435.02 >> PARAM SET echo.wait_ms 700
+1793817435.08 PARAM SET path=echo.wait_ms module=behavior old=350 new=700 status=ok
+1793817435.33 >> PARAM SET echo.jitter_ms 1500
+1793817435.36 PARAM SET path=echo.jitter_ms module=behavior old=300 new=1500 status=ok
+1793817435.63 >> PARAM SET echo.level_max 20
+1793817435.66 PARAM SET path=echo.level_max module=behavior old=4 new=20 status=ok
+1793817435.93 >> PARAM SET echo.level_offset 20
+1793817435.96 PARAM SET path=echo.level_offset module=behavior old=2 new=20 status=ok
+1793817436.23 >> PARAM SET echo.rest_ms 2000
+1793817436.25 PARAM SET path=echo.rest_ms module=behavior old=4000 new=2000 status=ok
+1793817436.54 >> PARAM SET echo.attack_ms 40
+1793817436.56 PARAM SET path=echo.attack_ms module=detection old=20 new=40 status=ok
+1793817436.84 >> PARAM SET echo.pre_ms 100
+1793817436.87 PARAM SET path=echo.pre_ms module=output old=30 new=100 status=ok
+1793817437.14 >> PARAM SET echo.post_ms 200
+1793817437.16 PARAM SET path=echo.post_ms module=output old=200 new=200 status=ok
+1793817437.45 >> PARAM SET echo.onset 800
+1793817437.49 PARAM SET path=echo.onset module=detection old=1000.000 new=800.000 status=ok
+1793817437.76 >> PARAM SET echo.release 560
+1793817437.80 PARAM SET path=echo.release module=detection old=700.000 new=560.000 status=ok
+1793817438.06 >> PARAM SET echo.min_peak 800
+1793817438.09 PARAM SET path=echo.min_peak module=detection old=1200.000 new=800.000 status=ok
+1793817439.78 ECHO clap valid=1 attack_ms=5 strength=2150 duration_ms=24 decision=consumed_pattern
+1793817440.84 ECHO clap valid=1 attack_ms=11 strength=1680 duration_ms=59 decision=already_scheduled
+1793817441.46 ECHO clap valid=1 attack_ms=16 strength=1427 duration_ms=40 decision=already_scheduled
+1793817441.52 ECHO replay onset_index=11114000 ms=300 gain=64.00
+1793817464.80 ECHO clap valid=1 attack_ms=2 strength=2149 duration_ms=27 decision=consumed_pattern
+1793817465.76 ECHO clap valid=1 attack_ms=13 strength=4714 duration_ms=98 decision=already_scheduled
+1793817466.06 ECHO clap valid=1 attack_ms=13 strength=5767 duration_ms=101 decision=already_scheduled
+1793817466.48 ECHO clap valid=1 attack_ms=10 strength=1620 duration_ms=56 decision=already_scheduled
+1793817466.67 ECHO clap valid=1 attack_ms=16 strength=1270 duration_ms=43 decision=already_scheduled
+1793817466.84 ECHO replay onset_index=12315360 ms=300 gain=64.00
+1793817467.84 ECHO clap valid=1 attack_ms=29 strength=2617 duration_ms=96 decision=consumed_pattern
+1793817467.97 ECHO clap valid=1 attack_ms=11 strength=896 duration_ms=64 decision=already_scheduled
+1793817468.81 ECHO clap valid=1 attack_ms=16 strength=7540 duration_ms=141 decision=already_scheduled
+1793817469.43 ECHO replay onset_index=12459360 ms=300 gain=64.00
+1793817470.35 ECHO clap valid=1 attack_ms=8 strength=897 duration_ms=51 decision=consumed_pattern
+1793817471.10 ECHO replay onset_index=12582656 ms=300 gain=64.00
+1793817489.83 ECHO clap valid=1 attack_ms=3 strength=2030 duration_ms=26 decision=consumed_pattern
+1793817491.12 ECHO clap valid=1 attack_ms=10 strength=4584 duration_ms=96 decision=already_scheduled
+1793817491.25 ECHO clap valid=1 attack_ms=11 strength=1704 duration_ms=59 decision=already_scheduled
+1793817491.31 ECHO replay onset_index=13516816 ms=300 gain=64.00
+1793817514.85 ECHO clap valid=1 attack_ms=3 strength=2036 duration_ms=40 decision=consumed_pattern
+1793817515.83 ECHO clap valid=1 attack_ms=10 strength=1799 duration_ms=91 decision=already_scheduled
+1793817516.26 ECHO replay onset_index=14718224 ms=300 gain=64.00
+1793817535.37 ECHO clap valid=1 attack_ms=13 strength=901 duration_ms=38 decision=consumed_pattern
+1793817536.16 ECHO replay onset_index=15703776 ms=300 gain=64.00
+1793817539.68 >> ECHO STATUS
+1793817539.71 ECHO status node=E1 uptime_s=331 window_s=331 rate_hz=48000 measured_mhz=47999936 samples=15914752 dropped_bufs=28 dropped_total=28 passes=331415 pass_us_mean=106 pass_us_max=38457 block_us_max=6957 env_peak=960751 tone=0 free_heap=73220 largest_block=29684 net_rx=0 net_tx=0 level=340 occurrences=41 claps=27 slow=14 replays=12 clip_missing=0 behavior=Idle level_auto=1

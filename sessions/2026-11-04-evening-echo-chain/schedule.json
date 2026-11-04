@@ -1,0 +1,51 @@
+[
+ {
+  "name": "default",
+  "secs": 105,
+  "cmds": [
+   "PARAM SET echo.wait_ms 350",
+   "PARAM SET echo.jitter_ms 300",
+   "PARAM SET echo.level_max 4",
+   "PARAM SET echo.level_offset 2",
+   "PARAM SET echo.rest_ms 4000",
+   "PARAM SET echo.attack_ms 20",
+   "PARAM SET echo.pre_ms 30",
+   "PARAM SET echo.post_ms 270",
+   "PARAM SET echo.onset 1000",
+   "PARAM SET echo.release 700",
+   "PARAM SET echo.min_peak 1200"
+  ],
+  "play": "C:/Users/admin/AppData/Local/Temp/claude/c----DATA-Nodes-resonantNode/06452682-0eaa-484f-8ae6-05333f655030/scratchpad/claps_sparse.wav",
+  "start": 1793817319.6697903,
+  "end": 1793817424.6697903,
+  "cue_beeps": 0
+ },
+ {
+  "name": "pause",
+  "secs": 10,
+  "start": 1793817424.6697903,
+  "end": 1793817434.6697903,
+  "cue_beeps": 0
+ },
+ {
+  "name": "spread",
+  "secs": 105,
+  "cmds": [
+   "PARAM SET echo.wait_ms 700",
+   "PARAM SET echo.jitter_ms 1500",
+   "PARAM SET echo.level_max 20",
+   "PARAM SET echo.level_offset 20",
+   "PARAM SET echo.rest_ms 2000",
+   "PARAM SET echo.attack_ms 40",
+   "PARAM SET echo.pre_ms 100",
+   "PARAM SET echo.post_ms 200",
+   "PARAM SET echo.onset 800",
+   "PARAM SET echo.release 560",
+   "PARAM SET echo.min_peak 800"
+  ],
+  "play": "C:/Users/admin/AppData/Local/Temp/claude/c----DATA-Nodes-resonantNode/06452682-0eaa-484f-8ae6-05333f655030/scratchpad/claps_sparse.wav",
+  "start": 1793817434.6697903,
+  "end": 1793817539.6697903,
+  "cue_beeps": 0
+ }
+]

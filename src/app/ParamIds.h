@@ -175,6 +175,7 @@ enum class ParamId : uint16_t {
     Whisper_AecTrimMs,
     Whisper_ListenWhilePlaying,
     Whisper_ListenErleDb,
+    Whisper_AecDelay,  // replaces Whisper_AecTrimMs (retired 2026-11-04 with the lockstep output: not registered)
 };
 
 }  // namespace param

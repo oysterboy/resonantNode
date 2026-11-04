@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include <math.h>
 
-#include "../app/TimeBase.h"
 #include "../output/ClipEnvelope.h"
 
 namespace {
@@ -122,109 +121,6 @@ void I2sToneOutput::toneOff() {
     _clipRequested = false;
     _clipActive = false;  // the task drops a running clip at its next block
     portEXIT_CRITICAL(&_trainMux);
-}
-
-bool I2sToneOutput::enablePlayedTap(size_t frames) {
-    if (_played) {
-        return true;
-    }
-    std::unique_ptr<int16_t[]> buf(new (std::nothrow) int16_t[frames]);
-    if (!buf) {
-        return false;
-    }
-    for (size_t i = 0; i < frames; ++i) {
-        buf[i] = 0;
-    }
-    _playedFrames = frames;
-    _played = std::move(buf);  // the task checks _played after the size is set
-    return true;
-}
-
-// Task side: the block just queued, kept by TX index, and when its write returned; the sequence count makes the
-// three values one snapshot for the reader on the other core.
-void I2sToneOutput::keepPlayed(const int32_t* frames, size_t frameCount, uint64_t returnUs) {
-    if (_tapFrozen) {
-        _tapSkipped += frameCount;  // the frames still count: the TX index keeps pace with the RX index
-        return;
-    }
-    if (_tapSkipped > 0) {
-        _txWritten = _txWritten + _tapSkipped;  // their slots hold older frames until overwritten (< 170 ms)
-        _tapSkipped = 0;
-    }
-    const uint64_t first = _txWritten;
-    for (size_t i = 0; i < frameCount; ++i) {
-        _played[(first + i) % _playedFrames] = static_cast<int16_t>(frames[2 * i] >> 16);
-    }
-    ++_tapSeq;
-    _lastBlockFirst = first;
-    _lastBlockUs = returnUs;
-    _txWritten = first + frameCount;
-    ++_tapSeq;
-}
-
-bool I2sToneOutput::playedFrame(uint64_t k, int16_t& out) const {
-    if (!_played) {
-        return false;
-    }
-    const uint64_t end = _txWritten;
-    if (k >= end || k + _playedFrames <= end) {
-        return false;
-    }
-    out = _played[k % _playedFrames];
-    return true;
-}
-
-bool I2sToneOutput::lastWrite(uint64_t& firstIndex, uint64_t& atUs) const {
-    for (int tries = 0; tries < 4; ++tries) {
-        const uint32_t before = _tapSeq;
-        if (before & 1U) {
-            continue;
-        }
-        firstIndex = _lastBlockFirst;
-        atUs = _lastBlockUs;
-        if (_tapSeq == before) {
-            return atUs != 0;
-        }
-    }
-    return false;
-}
-
-void I2sToneOutput::setStream(SampleFifo* fifo, float gain, size_t primeSamples) {
-    _streamGain = gain;
-    _streamPrime = primeSamples;
-    _stream = fifo;
-}
-
-// The stream's samples, or silence while it primes; true while a stream is set (the tone and the clip wait).
-bool I2sToneOutput::renderStream(int32_t* frames, size_t frameCount) {
-    SampleFifo* fifo = _stream;
-    if (fifo == nullptr) {
-        _streamPrimed = false;
-        return false;
-    }
-    int16_t samples[kBlockFrames];
-    const size_t n = frameCount < kBlockFrames ? frameCount : kBlockFrames;
-    size_t got = 0;
-    if (!_streamPrimed && fifo->available() >= _streamPrime) {
-        _streamPrimed = true;
-    }
-    if (_streamPrimed) {
-        got = fifo->pop(samples, n);
-        _streamPrimed = got == n;  // ran dry: prime again before the next sample
-    }
-    const float gain = _streamGain;
-    for (size_t i = 0; i < frameCount; ++i) {
-        int32_t value = 0;
-        if (i < got) {
-            float f = static_cast<float>(samples[i]) / 32768.0f * gain;
-            f = f > 0.999f ? 0.999f : (f < -0.999f ? -0.999f : f);  // never past int32 (issue #31's trap)
-            value = static_cast<int32_t>(f * kFullScale);
-        }
-        frames[2 * i] = value;
-        frames[2 * i + 1] = value;
-    }
-    _envelope = 0.0f;  // a tone after the stream ramps in from silence
-    return true;
 }
 
 bool I2sToneOutput::startClip(const int16_t* samples, size_t count, float gain) {
@@ -392,11 +288,7 @@ void I2sToneOutput::run() {
         }
         renderBlock(frames, kBlockFrames);
         size_t written = 0;
-        const bool ok = _port.writeTx(frames, sizeof(frames), written, kWriteTimeoutMs);
-        if (ok && _played) {
-            keepPlayed(frames, kBlockFrames, timebase::nowUs64());
-        }
-        if (!ok) {
+        if (!_port.writeTx(frames, sizeof(frames), written, kWriteTimeoutMs)) {
             // Port not installed (yet), being reinstalled, or no TX on this
             // board: drop the block and retry shortly.
             vTaskDelay(pdMS_TO_TICKS(kIdleRetryMs));
@@ -407,7 +299,7 @@ void I2sToneOutput::run() {
 void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
     const uint32_t sampleRateHz =
         _port.sampleRateHz() > 0 ? _port.sampleRateHz() : runtime::kDefaultAudioI2SSampleRateHz;
-    if (renderStream(frames, frameCount) || renderClip(frames, frameCount, sampleRateHz)) {
+    if (renderClip(frames, frameCount, sampleRateHz)) {
         return;
     }
     takePulseTrainRequest(sampleRateHz);

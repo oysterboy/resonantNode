@@ -9,11 +9,10 @@
 #include "../../audio/EchoCanceller.h"
 #include "../../audio/GatedDelayLine.h"
 #include "../../audio/RoomLevel.h"
-#include "../../audio/SampleFifo.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../behavior/WhisperGate.h"
 #include "../../detection/EnvelopeRuntime.h"
-#include "../../hal/I2sToneOutput.h"
+#include "../../hal/DuplexStream.h"
 
 /*
 Whispernet (ECHO-002, step 20.3): the echo shell's second mode (esp32dev-whisper, 24 kHz). A whisper heard is
@@ -81,11 +80,16 @@ public:
         // Echo cancellation (2026-11-04): the node's own output taken out of its mic (EchoCanceller) before anything
         // else hears it. With listenWhilePlaying the node stops going deaf during its replay once the cancellation
         // reaches listenErleDb.
-        bool aec =
-            false;  // off until the alignment holds (2026-11-04: timestamps and indices did not give a fixed offset)
+        // On E5 with the lockstep output: ~10-11 dB of the own output taken out, the direct sound at tap 32
+        // (2026-11-04). Off by default: while the node goes deaf during its replay it gains little; on with
+        // listenWhilePlaying.
+        bool aec = false;
         uint32_t aecTaps = 128;  // 5 ms at 24 kHz: the direct sound and the first reflections (192 dropped buffers)
         float aecMu = 0.2f;
-        float aecTrimMs = 0.0f;  // added to the computed speaker -> mic delay
+        // The speaker's delay behind the mic, samples: the TX queue (DuplexStream::kQueueFrames, 512) and 554 more on
+        // the way (mic and amp pipelines, the air): 1066 measured on E5 four times alike (WHISPER AEC CAL, 2026-11-04).
+        // The canceller's auto-centring moves from here.
+        uint32_t aecDelay = static_cast<uint32_t>(DuplexStream::kQueueFrames) + 554U;
         bool listenWhilePlaying = false;
         float listenErleDb = 15.0f;
     };
@@ -100,24 +104,35 @@ public:
         unsigned long replays = 0;  // Behavior emissions
     };
 
-    // Allocates the 2 s line and a 100 ms FIFO at rateHz, D from the seed (the chip id). False when out of heap.
+    // Allocates the 2 s line at rateHz, D from the seed (the chip id). False when out of heap.
     bool begin(uint32_t rateHz, uint64_t seed);
-    // The writer streams the FIFO from here on.
-    void attachOutput(I2sToneOutput& output);
-    // Before an OTA: the stream stopped and the line and FIFO freed (~100 KB), else the download stalls with 16 KB as
-    // the largest free block (E5 on the desk, 2026-11-01). resume() after a failed update allocates them again.
+    // The lockstep output (myspec 7.3): each block's output goes there, and it keeps what it played for the canceller.
+    void attachDuplex(DuplexStream& duplex);
+    // Before an OTA: the line freed (~96 KB), else the download stalls with 16 KB as the largest free block (E5 on the
+    // desk, 2026-11-01). resume() after a failed update allocates it again.
     void release();
     bool resume();
     // Whispernet's detector config, plan and Behavior config into the shell's runtime and Behavior.
     void configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior);
 
-    // One mic sample (int16) in, the delay line's sample out to the FIFO.
-    // One mic sample (24-bit) without the node's own echo (the samples it played, aligned by beginBlock).
+    // One mic sample (24-bit) without the node's own echo (what it played, the delay back, from the DuplexStream).
     int32_t cancel(int32_t mic);
+    // One mic sample (int16) in, the delay line's sample into this block's output.
     void pushSample(int16_t in) {
-        _fifo.push(_line.process(in));
+        int16_t out = _line.process(in);
+        if (_calNoiseLeft > 0) {  // WHISPER AEC CAL: a burst of noise in place of the line
+            --_calNoiseLeft;
+            _calRng = _calRng * 1664525U + 1013904223U;
+            out = static_cast<int16_t>(static_cast<int32_t>(_calRng >> 16) % 301 - 150);  // x gain 64: ~-14 dBFS
+        }
+        if (_outCount < kMaxBlock) {
+            _out[_outCount++] = out;
+        }
         _flat.push(static_cast<float>(in));
     }
+    // The block's output, for DuplexStream::writeBlock after the block's samples.
+    const int16_t* blockOutput() const { return _out; }
+    size_t blockOutputCount() const { return _outCount; }
     // After a block's samples: its flatness into the runtime's history when the block is loud (above the onset), so
     // the phrase's timbre is read from its sound, not from the gaps between syllables.
     void endBlock(detection::EnvelopeRuntime& runtime, float level, uint32_t blockMs);
@@ -144,20 +159,27 @@ public:
     void handleRecCommand(const char* line);
     bool recordingDue(unsigned long now) const;
     void dumpRecording();
-    // WHISPER AEC CAL: at the next replay, 600 ms in, the mic (the line, raw with whisper.aec 0) and what was played (the
-    // tap, held still meanwhile) are printed with their indices and times as WHISPER_CAL lines: the PC finds the true
-    // speaker -> mic offset by cross-correlation (tools/bench/aeccal.py). Diagnostic.
-    void armCalibration() { _calArmed = true; }
+    // WHISPER AEC CAL: the board plays 0.4 s of noise through the lockstep output and, 0.25 s in, prints the mic (the
+    // line, raw with whisper.aec 0) and what was written for the same mic indices as WHISPER_CAL lines: the PC finds
+    // the speaker's delay behind the mic by cross-correlation (tools/bench/aeccal.py). Diagnostic; audible.
+    void armCalibration() {
+        _calArmed = true;
+        _calNoiseLeft = _rateHz * 4U / 10U;
+        _calStartMs = _blockMs;
+    }
+    // WHISPER AEC NOISE <ms>: the same noise, longer and without the dump (the canceller learns on it; WHISPER STATUS
+    // then shows what it takes out). Audible.
+    void playNoise(uint32_t ms) { _calNoiseLeft = _rateHz / 1000U * (ms > 20000U ? 20000U : ms); }
     bool calibrationDue(unsigned long now) const;
     void dumpCalibration();
     const Values& values() const { return _values; }
-    bool ready() const { return _line.capacity() > 0 && _fifo.capacity() > 0; }
+    bool ready() const { return _line.capacity() > 0; }
     // The node is playing its own replay (or its tail) at blockMs: the shell does not feed detection meanwhile and
     // restarts it after (owner 2026-11-01: at an audible gain the node answered itself).
     bool inputSuppressed(uint32_t blockMs);
     // Detection pauses for the own playback: the gate shuts now (the line holds no own output).
     void suppressNow();
-    size_t bytes() const { return _line.capacity() * sizeof(int16_t) + _fifo.capacity() * sizeof(int16_t); }
+    size_t bytes() const { return _line.capacity() * sizeof(int16_t); }
 
 private:
     void apply(const WhisperGate::Step& step);
@@ -171,27 +193,28 @@ private:
     BandFlatness _flat;
     RoomLevel _room;
     EchoCanceller _aec;
-    // The alignment: TX and RX run on one I2S clock, so the TX index under an RX sample is RX index + a fixed offset,
-    // estimated once (the median of 32 blocks' timestamp estimates), then moved by the auto-centring.
-    bool _refLocked = false;
-    int64_t _refOffset = 0;
-    int64_t _offsetEstimates[32] = {};
-    uint8_t _offsetCount = 0;
-    int32_t _offsetSpread = 0;  // the estimates' spread (samples): the timestamps' jitter
+    // The canceller's delay (samples) as the auto-centring has moved it, from the param's value.
+    uint32_t _aecDelayNow = 0;
+    uint32_t _aecDelaySet = 0;
     uint32_t _centreShifts = 0;
     uint32_t _nextCentreCheckMs = 0;
-    int64_t _refK = 0;  // the TX index for the next mic sample
+    uint64_t _rxCursor = 0;  // the mic index of the next sample
+    static constexpr size_t kMaxBlock = 512;
+    int16_t _out[kMaxBlock] = {};
+    size_t _outCount = 0;
     uint64_t _rxEnd = 0;  // the last block's end (RX index) and its time, for the calibration
     uint64_t _rxEndUs = 0;
     bool _calArmed = false;
+    uint32_t _calNoiseLeft = 0;
+    uint32_t _calRng = 12345;
+    uint32_t _calStartMs = 0;
     float _onsetApplied = 0.0f;
     uint32_t _lastRoomMs = 0;  // the onset the runtime holds now (configure / retune)
     float effectiveOnset() const;
     void retune(detection::EnvelopeRuntime& runtime);
     void buildConfig(detection::ScalarTransientConfig& d, detection::InspectionPlan& plan) const;
-    SampleFifo _fifo;
     WhisperGate _gate;
-    I2sToneOutput* _output = nullptr;
+    DuplexStream* _duplex = nullptr;
     uint64_t _blockIndex = 0;
     uint32_t _blockMs = 0;
     unsigned long _openedAtMs = 0;  // the gate's last opening (from), for gatedMs

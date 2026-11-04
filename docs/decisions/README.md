@@ -99,6 +99,7 @@ what replaced it.
 | 2026-10-31 | [A band per node that wanders (a 5-bin window on 950-4950 Hz, glide toward what is heard, wander when alone, scatter one bin); not OUT-006's low tone now](2026-10-31-bands-per-node.md) (step 19; range 950-4950, a mode, off by default until the desk) |
 | 2026-11-01 | [The band bank recomputes every 16 samples: half the Node's CPU for ~0.5 dB at the margin's edge](2026-11-01-band-update-16.md) (DET-020, step 22) |
 | 2026-11-01 | [Whispernet's delay is per node, between 400 ms and 2 s](2026-11-01-whispernet-delay-per-node.md) (ECHO-002, step 20.3) |
+| 2026-11-04 | [Whispernet's mic and speaker run in lockstep (one I/O owner), for the echo cancellation](2026-11-04-whispernet-duplex-lockstep.md) (ECHO-002) |
 
 ## Open
 

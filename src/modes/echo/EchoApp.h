@@ -12,6 +12,7 @@
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/EnvelopeRuntime.h"
 #include "../../hal/AudioSourceI2S.h"
+#include "../../hal/DuplexStream.h"
 #include "../../hal/I2sToneOutput.h"
 #include "../../net/NetGateway.h"
 #include "../../net/NodeNet.h"
@@ -168,6 +169,7 @@ private:
     int32_t _envelopePeak = 0;  // since the last status
 
     Whispernet _whisper;
+    DuplexStream _duplex{_i2sPort};  // the whisper build's lockstep output
     EchoParams _params;  // echo.* or whisper.* (ECHO-003)
     bool _whisperDeaf = false;  // detection paused for Whispernet's own playback
 

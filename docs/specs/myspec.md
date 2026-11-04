@@ -374,6 +374,15 @@ not stable user-facing runtime target
 
 Feature extraction turns raw/audio-domain data into explicit feature-domain values.
 
+Before it, input conditioning may clean the source-domain signal: the DC blocker, and in the echo modes the
+echo canceller (the node's own output taken out of its mic). Conditioning:
+
+```text
+stays in the source domain (canonical PCM in, canonical PCM out)
+may read what the node played, aligned to the mic by the output's I/O owner (7.3), never the decision behind it
+produces no facts, judges nothing, decides nothing
+```
+
 Important distinction:
 
 ```text
@@ -1259,6 +1268,23 @@ speaker, exciter (future)
 ```
 
 Nothing above `ChirpOutput` may know which one is active.
+
+### 7.3 Streamed Output in Lockstep (the echo modes)
+
+Whispernet's output is a stream, not a request: the mic delayed by D and gated, sample for sample. In its build the
+full-duplex port has one I/O owner below the mode (`DuplexStream`, `src/hal/`): for every mic block it reads it
+writes exactly as many output frames, so the speaker runs a fixed number of frames behind the mic, and it keeps
+what it wrote by the mic's index. That fixed offset is what the echo canceller (5.2) needs.
+
+```text
+DuplexStream     owns the port's reading and writing in that build, the lockstep, the played record and the offset
+Whispernet       computes each block's output (the delay line under the gate); it does not touch the port
+Behavior         decides whether a phrase is answered, as for every mode
+```
+
+The rule "the detection loop never writes the output" (`I2sToneOutput`: a stalled loop cannot cut a chirp) holds for
+the request-driven modes; the lockstep build trades it for the fixed offset, and a stalled loop there underruns the
+stream (decisions/2026-11-04-whispernet-duplex-lockstep.md).
 
 ---
 

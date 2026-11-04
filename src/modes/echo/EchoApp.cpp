@@ -76,10 +76,14 @@ void EchoApp::begin() {
         }
     }
     _i2sPort.begin();
-    _toneOutput.begin();
-    _chirpOutput.begin();
-    if (kWhispernet && whisperReady) {
-        _whisper.attachOutput(_toneOutput);
+    if (kWhispernet) {
+        // Whispernet writes the port in lockstep with its reads (DuplexStream, myspec 7.3): no writer task.
+        if (whisperReady && _duplex.begin(3072)) {  // 3072 frames: the ~1,180-frame delay, the canceller's window, room
+            _whisper.attachDuplex(_duplex);
+        }
+    } else {
+        _toneOutput.begin();
+        _chirpOutput.begin();
     }
     _follower.setShift(EnvelopeFollower::shiftForRate(_i2sPort.sampleRateHz()));  // ~1.3 ms at any rate
     _behavior.resetState();
@@ -176,6 +180,10 @@ void EchoApp::pollAudio() {
             } else {
                 _ring.push(static_cast<int16_t>(s >> 8));  // 24-bit canonical PCM to int16
             }
+        }
+        if (kWhispernet) {
+            // As many frames out as came in: the speaker stays a fixed number of frames behind the mic.
+            _duplex.writeBlock(block.startSampleIndex, _whisper.blockOutput(), _whisper.blockOutputCount());
         }
         if (_follower.value() > _envelopePeak) {
             _envelopePeak = _follower.value();
@@ -550,7 +558,14 @@ void EchoApp::handleLine(const char* line) {
         _whisper.handleGateCommand(line, _runtime, _behavior);
     } else if (kWhispernet && equalsIgnoreCase(line, "WHISPER AEC CAL")) {
         _whisper.armCalibration();
-        serialOut().println("WHISPER cal armed (at the next replay)");
+        serialOut().println("WHISPER cal: 0.4 s of noise, the dump 0.25 s in");
+    } else if (kWhispernet && startsWithWordIgnoreCase(line, "WHISPER AEC NOISE")) {
+        uint32_t ms = 0;
+        if (text_parse::parseUnsigned(text_parse::rest(line, "WHISPER AEC NOISE"), ms)) {
+            _whisper.playNoise(ms);
+        }
+        serialOut().print("WHISPER noise ms=");
+        serialOut().println(ms);
     } else if (kWhispernet && startsWithWordIgnoreCase(line, "WHISPER REC")) {
         _whisper.handleRecCommand(line);
     } else if (kWhispernet && equalsIgnoreCase(line, "WHISPER STATUS")) {
@@ -574,6 +589,10 @@ void EchoApp::handleLine(const char* line) {
 
 // TONE <hz> <ms>: the writer task at the echo rate, for the load numbers and an ear check of the amp.
 void EchoApp::handleToneCommand(const char* line) {
+    if (kWhispernet) {
+        serialOut().println("ECHO ERR no_tone_in_whisper (the port streams the delay line)");
+        return;
+    }
     const char* rest = text_parse::rest(line, "TONE");
     char hzText[12] = {};
     size_t n = 0;

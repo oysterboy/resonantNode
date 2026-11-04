@@ -79,7 +79,10 @@ public:
         _estPow += (est * est - _estPow) * kSmooth;
         _errRms = sqrtf(_errPow);
         const bool playing = _refPower > _refFloor * static_cast<float>(_taps);
-        const bool doubleTalk = _errPow > 4.0f * _estPow && _estPow > 0.0f && _adapted > kWarmup;
+        // Another voice only once the filter cancels (ERLE above 10 dB): the residual then jumps to near the mic's own
+        // level. Before that a poor estimate looks the same as a voice, and freezing it there froze it for good (E5,
+        // 2026-11-04: ERLE stayed at 0).
+        const bool doubleTalk = _erle > 10.0f && _errPow > 0.5f * _micPow;
         if (playing && !doubleTalk) {
             float e = err;
             const float lim = 4.0f * _errRms + 1e-9f;
@@ -122,7 +125,6 @@ private:
     static constexpr float kSmooth = 1.0f / 480.0f;
     static constexpr float kSmoothSlow = 1.0f / 24000.0f;
     static constexpr float kDelta = 1e-6f;
-    static constexpr uint32_t kWarmup = 24000;  // ~1 s of learning before double talk may freeze it
     std::unique_ptr<float[]> _w;
     std::unique_ptr<float[]> _x;
     size_t _taps = 0;

@@ -2,14 +2,10 @@
 
 #include <stdint.h>
 
-#include <memory>
-#include <new>
-
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
 #include "../app/RuntimeDefaults.h"
-#include "../audio/SampleFifo.h"
 #include "../output/ToneOutput.h"
 #include "AudioSourceI2S.h"
 
@@ -56,24 +52,6 @@ public:
     bool startClip(const int16_t* samples, size_t count, float gain) override;
     bool clipActive() const override;
 
-    // Whispernet (ECHO-002): play what the FIFO delivers, continuously, in place of the tone and the clip, until set
-    // to nullptr. The writer starts once primeSamples wait, and waits for them again after running dry (silence
-    // meanwhile), so the loop's 8 ms bursts do not tear the output. The caller keeps the FIFO alive while set.
-    void setStream(SampleFifo* fifo, float gain, size_t primeSamples);
-
-    // Echo cancellation's reference (ECHO-002, 2026-11-04): from enablePlayedTap() on, every frame written to the amp
-    // is kept (int16 of full scale) by its TX index, and the time each block's write returned. A frame k then sounds
-    // at about writeReturnUs + (k - firstIndexOfThatBlock + (dmaBuffers - 1) * bufferFrames) / rate: when writeTx
-    // returns the DMA queue is full and that block is its last. False when the tap could not be allocated.
-    bool enablePlayedTap(size_t frames);
-    // The frame with TX index k, while kept; false before it is written or after it is overwritten.
-    bool playedFrame(uint64_t k, int16_t& out) const;
-    // The last block written: its first TX index and when the write returned (timebase us). False before the first.
-    bool lastWrite(uint64_t& firstIndex, uint64_t& atUs) const;
-    // Holds the tap still (nothing kept, the index stops) while a calibration prints it; the index then jumps.
-    void setTapFrozen(bool frozen) { _tapFrozen = frozen; }
-    uint64_t playedEnd() const { return _txWritten; }
-
     // Stops the writer task (tone off first; returns once the task is gone,
     // at most ~100 ms). begin() starts it again. For a build that needs the
     // tone only briefly (the Analyzer's SELFTEST amp check) and should not
@@ -85,8 +63,6 @@ private:
     void run();
     void renderBlock(int32_t* frames, size_t frameCount);
     bool renderClip(int32_t* frames, size_t frameCount, uint32_t sampleRateHz);
-    bool renderStream(int32_t* frames, size_t frameCount);
-    void keepPlayed(const int32_t* frames, size_t frameCount, uint64_t returnUs);
     void takePulseTrainRequest(uint32_t sampleRateHz);
     uint32_t hopStep(uint32_t sampleRateHz);
     float nextGain();
@@ -122,9 +98,9 @@ private:
     // Task-only render state.
     uint32_t _phase = 0;
     float _envelope = 0.0f;
-    bool _trainRunning = false;  // pulses still to render
+    bool _trainRunning = false;   // pulses still to render
     bool _trainDraining = false;  // last pulse off, ramping to silence
-    bool _trainOn = false;  // current segment: pulse (true) or gap
+    bool _trainOn = false;        // current segment: pulse (true) or gap
     uint32_t _trainPulsesLeft = 0;
     uint32_t _trainSegmentLeft = 0;  // samples left in the current segment
     uint32_t _trainOnSamples = 0;
@@ -132,8 +108,8 @@ private:
     uint32_t _trainRampMs = 0;
     uint32_t _hopHz[kMaxHop] = {};  // frequency per pulse, cycled; none = _toneHz
     size_t _hopCount = 0;
-    size_t _hopIndex = 0;  // next hop entry
-    uint32_t _trainStep = 0;  // phase step of the current pulse; 0 = use _toneHz
+    size_t _hopIndex = 0;           // next hop entry
+    uint32_t _trainStep = 0;        // phase step of the current pulse; 0 = use _toneHz
     // Gain per pulse, cycled; none = every pulse at _amplitude. Changes between pulses only (the envelope is 0).
     float _gain[kMaxHop] = {};
     size_t _gainCount = 0;
@@ -150,20 +126,6 @@ private:
     size_t _clipCount = 0;
     size_t _clipPos = 0;
     float _clipGain = 1.0f;
-    // Stream (Whispernet): set by the caller, read by the task.
-    SampleFifo* volatile _stream = nullptr;
-    volatile float _streamGain = 1.0f;
-    volatile size_t _streamPrime = 0;
-    bool _streamPrimed = false;  // task-only
-    // The played tap: written by the task only; the indices published with a sequence count (odd while writing).
-    std::unique_ptr<int16_t[]> _played;
-    size_t _playedFrames = 0;
-    volatile uint64_t _txWritten = 0;  // frames kept so far (the next block's first index)
-    volatile uint64_t _lastBlockFirst = 0;
-    volatile uint64_t _lastBlockUs = 0;
-    volatile uint32_t _tapSeq = 0;
-    volatile bool _tapFrozen = false;
-    uint64_t _tapSkipped = 0;  // task-only: frames played while frozen
 
     // Sweep render state: samples since the tone started and the current
     // phase step as a float accumulator (one add per sample).

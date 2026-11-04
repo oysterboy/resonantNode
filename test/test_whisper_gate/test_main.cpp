@@ -1,12 +1,10 @@
 /*
-Whispernet's gate rule (WhisperGate, ECHO-002) and the FIFO to the I2S writer (SampleFifo) on the host: a phrase asks
+Whispernet's gate rule (WhisperGate, ECHO-002) on the host: a phrase asks
 once, an answered one opens from its start (at most the delay back), a failing verdict closes it and a passing one
-reopens from the closing, a phrase once too loud stays shut, a new phrase or the end closes. The FIFO keeps order,
-drops when full, counts underruns. Runs in native-test-behavior.
+reopens from the closing, a phrase once too loud stays shut, a new phrase or the end closes. Runs in native-test-behavior.
 */
 #include <unity.h>
 
-#include "../../src/audio/SampleFifo.h"
 #include "../../src/behavior/WhisperGate.h"
 
 using Event = WhisperGate::Event;
@@ -85,24 +83,6 @@ void test_end_and_new_phrase_close() {
     TEST_ASSERT_EQUAL(Event::Close, s.event);
 }
 
-void test_fifo_order_drop_underrun() {
-    SampleFifo f;
-    TEST_ASSERT_TRUE(f.begin(4));
-    for (int16_t i = 1; i <= 5; ++i) {
-        f.push(i);
-    }
-    TEST_ASSERT_EQUAL_UINT32(4, f.available());
-    TEST_ASSERT_EQUAL_UINT32(1, f.dropped());
-    int16_t out[6] = {};
-    TEST_ASSERT_EQUAL_UINT32(4, f.pop(out, 6));
-    TEST_ASSERT_EQUAL_INT16(1, out[0]);
-    TEST_ASSERT_EQUAL_INT16(4, out[3]);
-    TEST_ASSERT_EQUAL_UINT32(1, f.underruns());
-    f.push(7);  // wraps
-    TEST_ASSERT_EQUAL_UINT32(1, f.pop(out, 1));
-    TEST_ASSERT_EQUAL_INT16(7, out[0]);
-}
-
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_ask_then_open_from_the_start);
@@ -111,6 +91,5 @@ int main(int, char**) {
     RUN_TEST(test_fail_closes_and_pass_reopens);
     RUN_TEST(test_too_loud_latches_to_the_end);
     RUN_TEST(test_end_and_new_phrase_close);
-    RUN_TEST(test_fifo_order_drop_underrun);
     return UNITY_END();
 }

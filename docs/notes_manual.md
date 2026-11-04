@@ -350,6 +350,14 @@ Whispernet's thresholds follow the room (2026-11-04, `whisper.adaptive`, on by d
 falls within `whisper.room_fall_ms`, rises over `whisper.room_rise_ms`), never under `whisper.onset`; release and
 floor keep their ratio to the onset. WHISPER STATUS shows `room=` and `onset_now=`.
 
+Echo cancellation (2026-11-04, `whisper.aec`, off by default): the whisper build writes the speaker in lockstep with
+the mic (`DuplexStream`, no writer task, TONE refused), so the speaker runs a fixed `whisper.aec_delay` samples
+behind the mic (1066 on E5); `EchoCanceller` takes the board's own output out of the mic before anything else hears
+it (~10-11 dB on E5). `whisper.listen_while_playing` then lets the board keep listening during its replay once the
+cancellation reaches `whisper.listen_erle_db`. `WHISPER AEC CAL` plays 0.4 s of noise and prints mic and output for
+`tools/bench/aeccal.py` (the delay); `WHISPER AEC NOISE <ms>` plays noise to train it; WHISPER STATUS shows
+`aec_erle_db=`, `aec_peak_tap=` (32 when aligned), `aec_delay=`, `short_writes=`, `refills=`.
+
 By radio from a USB Node: `NET <name|*> OTA ...` (the way back to the Node image), `NET <name> ECHO STATUS`,
 `NET <name> NET PING`. The shell is not a gateway (no NET to other boards from it). Its boot line
 `ECHO boot ... ring_bytes=... largest_block_before_ring=... net_started=1` gives the memory numbers.

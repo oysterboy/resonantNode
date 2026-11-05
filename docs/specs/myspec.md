@@ -1288,6 +1288,14 @@ stream (decisions/2026-11-04-whispernet-duplex-lockstep.md).
 
 ---
 
+Interim (2026-11-05): the echo modes are experimental and this section and 5.2 are the only parts of the spec that
+describe them. Their contract until a chapter lands is `docs/roadmaps/roadmap-echo.md` and the decisions of
+2026-11 (the provisional verdict on an open candidate, the echo inspection targets and streams, the Clip request,
+the room-following thresholds, the mode's own deafness during playback); where those differ from 5.1, 5.4, 5.6 or
+7.2, the difference is decided, not drift. The chapter is deferred past the tryout (step 23's leftovers).
+
+---
+
 ### 7.2 OutputRequest / OutputStatus
 
 The boundary between deciding, composing and performing is three types:

@@ -415,6 +415,32 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         answered in every cycle, music 0 verdicts, no reset. Gate closed.
 
 
+23. [NEXT, PC] Review fixes 2026-11-05: CI, the OTA edges, the train unit, the echo host harness. (issue #89)
+   docs/research/architecture-and-code-review-2026-11-05.md (four reviews at afea847d after step 20's echo, whisper,
+   gateway and glide work: 2 high, 6 medium, 17 low; spec drift per item; the architecture read). Cut by the owner
+   2026-11-05: one small step now, the rest deferred with triggers ("Review leftovers" below), since the echo code
+   moves fast until the tryout.
+   23.0 CI green again: GatewayApp.cpp formatted, esp32dev-gateway in the matrix (H2); the NUL byte in
+        AnalyzerCommandParse.h (L13), a refused ParamRegistry add printed at boot (L15), the replay's comments
+        (L17); the stale lines in CLAUDE.md, implementation-status.md, notes_manual.md (D14). Gate: a green run on
+        main with 11 ESP envs built.
+   23.1 The OTA-and-emission edges: Whispernet closes its emission in release() / resume() (H1), the echo room
+        releases ring and clip before the pull and prints the largest block (M3), the Analyzer refuses OTA while a
+        SEQ run is active (M6). PC, then one remote round trip per mode. Gate: a failed OTA during a whisper replay
+        and during an echo replay leaves both boards answering (bench session cited); an Analyzer OTA refused
+        mid-run.
+   23.2 The train unit out of Behavior (M1 with D6): the Node hands Behavior the single-train duration from
+        output.hop_* (as it hands the base grid), trainsInVerdict counts in it, native-fieldsim reads the same
+        value; the 2026-11-05 overnight values reconsidered against the corrected count. PC, then a two-board chord
+        check. Gate: two answers 100 ms apart raise the level by 2 on the board; T2h byte-identical.
+   23.3 The echo chain's host harness on the boards' geometry (M5): native-echoreplay (or one env per mode) with
+        the boards' FEATURE_HISTORY flags, the echo room's and Whispernet's config builders in a header the shell
+        and the replay share, the synthetic set re-run. PC. Gate: the replay's verdicts over
+        tools/bench/synthwhisper.py's set re-recorded on the boards' geometry and compared with a board's WHISPER
+        STATUS counts on the same WAV at the desk.
+   Gate: 23.0-23.2 before the next remote update of an echo board and before the overnight values become defaults;
+   23.3 before Whispernet is tuned further.
+
 21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
    roadmap-hardware.md HW-001 (the prototype, the D-AMP pinout as wired, room for the second mic), HW-002 (ten
    boards, each nodecheck'd and in the roster), HW-003 (ten cases, one geometry), HW-004 (ten nodes in the firmware:
@@ -456,6 +482,17 @@ Per-board threshold offset                read it from 15's matrix first (unprov
 Review leftovers                          the replay binds the medium limits itself (A10); FreqBandStream and
                                           ScalarTransientDetector outside namespace detection (with step 9); the
                                           300000 "never fires" Strong threshold (no disabled class).
+Review 2026-11-05 leftovers               docs/research/architecture-and-code-review-2026-11-05.md, each with its
+                                          trigger (owner 2026-11-05). The spec chapter for the echo modes (D1-D5,
+                                          D7, D9, D10, D12, D13), WhisperGate out of src/behavior/, D11's dead
+                                          DetectorReport fields: after 20.4 (an interim line in myspec.md 7.3 until
+                                          then). The lockstep and the canceller (M2, L5, L6, L7): when whisper.aec
+                                          goes on by default. The structural cuts (Part 3 items 1, 3, 5: the echo
+                                          shell split into owners, the renderers out of I2sToneOutput, one
+                                          pending-inspection helper, one own-emit suppression, Behavior's getters
+                                          behind BehaviorStatus): after the tryout, as their own step. M4
+                                          (AmpExperimental's contrast scale): into 20.5. L1-L4, L8-L12, L14, L16:
+                                          with whichever batch touches their file.
 DET-019, ANA-010, PAR-018                 the amp class sets the margin (a tuning pass after the soak); SEQ settle
                                           against a 450 ms occurrence; PARAM SAVE pins defaults (2026-10-30).
 Platform: off Arduino, onto ESP-IDF      decisions/2026-10-30-platform-off-arduino.md (owner 2026-10-30). At the
@@ -478,6 +515,9 @@ parallel.
 
 ## Status log
 
+Status update 2026-11-05, evening: the review (docs/research/architecture-and-code-review-2026-11-05.md) cut into
+step 23 (#89, next on the PC: CI, the OTA edges, the train unit, the echo host harness) and leftovers with
+triggers; 20 running, 20.5 before 20.4.
 Status update 2026-10-31: 17 done (8-bin band, base bins, glide; desk and soak), 14.2 closed, 16.3 run (one
 mark, time to quiet, for the owner); 19 next.
 Status update 2026-10-30, late night: the owner set 17 (wider band) and 19 (range) due 2026-12-06, 17 pulled

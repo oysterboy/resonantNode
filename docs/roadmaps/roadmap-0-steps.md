@@ -370,6 +370,13 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         boardview.py shows what runs. Open: rustling against whispers (the click/rhythm idea did not separate on
         Sunday's recordings; clean labelled recordings needed, a mic at the desk), the field splitting into two
         groups, the echo chain with spread answers (after the amps' power).
+   20.5 [TODO, before 20.4; owner 2026-11-05] Param review: every param of the three modes, what it does, its unit,
+        whether it still does anything, and whether its name says so; the annotated list in notes_manual.md,
+        renames and retirements each with a decisions/ file. Issue #88, a sub-issue of #84 at the owner's request
+        (an exception to the one-issue-per-step rule). Seen on 2026-11-05: level_max acts as the chain's length,
+        start_chance_pct next to it and echo.level_offset as the old route, idle_announce_* is the call's lead-in,
+        three windows after the own sound, answer_jitter_ms without effect at level_max 0, two triggers kept until
+        retired.
    20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.

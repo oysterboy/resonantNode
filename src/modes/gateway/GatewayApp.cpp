@@ -60,8 +60,8 @@ void GatewayApp::update() {
 }
 
 void GatewayApp::pollUsb() {
-    serial_line::pollLines(Serial, _usbLine, serialOut(), "ERR line_too_long max=",
-                           [this](const char* line) { handleLine(line); });
+    serial_line::pollLines(Serial, _usbLine, serialOut(),
+                           "ERR line_too_long max=", [this](const char* line) { handleLine(line); });
 }
 
 // What the radio brought: a board's reply or a mirrored console line, printed whole. A command from another sender is
@@ -178,7 +178,8 @@ void GatewayApp::printNetStatus() {
 }
 
 void GatewayApp::printHelp() {
-    serialOut().println("GATEWAY CMD: NET <name|*> <command>   PARAM / RB / ECHO / WHISPER / SELFTEST / OTA / NET PING");
+    serialOut().println(
+        "GATEWAY CMD: NET <name|*> <command>   PARAM / RB / ECHO / WHISPER / SELFTEST / OTA / NET PING");
     serialOut().println("GATEWAY CMD: NET STATUS (the gateway's counters)");
     serialOut().println("GATEWAY CMD: OTA url=... token=... (the gateway's own update)");
     serialOut().println("GATEWAY out: NET reply from=<name> ... and NET log from=<name> <line> (node.radio_log)");

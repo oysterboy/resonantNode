@@ -8,8 +8,13 @@
 // tools/bench/rawcorpus.py) gives real levels; --level-db moves a file toward them.
 //
 //   program [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] [--release S16] [--floor S16]
-//           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--flat-max F] [--out-dir DIR] [--loop-gain G] [--verbose]
-//           <file.wav>...
+//           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--flat-min F] [--flat-max F] [--band-level]
+//           [--low-max DB] [--room FILE.wav] [--out-dir DIR] [--loop-gain G] [--verbose] <file.wav>...
+//
+// The whisper plan's band checks (2026-11-05, as Whispernet's whisper.level_band and whisper.timbre_check run them):
+// --band-level makes the level follow 1.5-4.5 kHz; --low-max DB makes the timbre module read the 200-700 Hz band's
+// excess over the room's (a phrase passes at most DB) in place of the flatness range; --room FILE.wav is played before
+// each file (the room tone the low band is learned on, 'silence.wav' of a labelrec session).
 //
 // With --plan whisper and --out-dir, each file also goes through Whispernet's delay line (GatedDelayLine, 2 s) under
 // the gate, and what it would play is written as DIR/<name>.gated.wav. --loop-gain G feeds that output back into
@@ -25,7 +30,9 @@
 #include <vector>
 
 #include "../../audio/EnvelopeFollower.h"
+#include "../../audio/BandBalance.h"
 #include "../../audio/BandFlatness.h"
+#include "../../audio/RoomLevel.h"
 #include "../../audio/GatedDelayLine.h"
 #include "../../behavior/WhisperGate.h"
 #include "../../detection/EnvelopeRuntime.h"
@@ -160,6 +167,9 @@ int main(int argc, char** argv) {
     uint32_t attackMs = 10;
     bool whisper = false;
     float loudBound = 20000.0f, modIndex = 0.3f, flatMax = 0.0f;  // flatMax 0: no timbre check
+    float flatMin = 0.0f, lowMaxDb = -1.0f;
+    bool bandLevel = false;
+    std::string roomFile;
     bool verbose = false;
     double loopGain = 0.0;
     std::string outDir;  // --plan whisper: the delay line's output per file, <name>.gated.wav
@@ -179,6 +189,14 @@ int main(int argc, char** argv) {
             loudBound = static_cast<float>(atof(next("--loud")));
         } else if (a == "--flat-max") {
             flatMax = static_cast<float>(atof(next("--flat-max")));
+        } else if (a == "--flat-min") {
+            flatMin = static_cast<float>(atof(next("--flat-min")));
+        } else if (a == "--band-level") {
+            bandLevel = true;
+        } else if (a == "--low-max") {
+            lowMaxDb = static_cast<float>(atof(next("--low-max")));
+        } else if (a == "--room") {
+            roomFile = next("--room");
         } else if (a == "--mod") {
             modIndex = static_cast<float>(atof(next("--mod")));
         } else if (a == "--out-dir") {
@@ -262,17 +280,29 @@ int main(int argc, char** argv) {
         mo.minimumStrength = detection::StrengthClass::Medium;
         mo.modulation.mediumIndex = modIndex;
         plan.count = 2;
-        if (flatMax > 0.0f) {  // the timbre (BandFlatness over the loud blocks), as Whispernet's shell runs it
+        if (flatMax > 0.0f || lowMaxDb >= 0.0f) {  // the timbre, as Whispernet's shell runs it
             detection::InspectionModuleConfig& fl = plan.modules[2];
             fl.kind = detection::InspectionModuleKind::Flatness;
             fl.target = detection::InspectionTarget::Timbre;
             fl.enabled = true;
             fl.minimumStrength = detection::StrengthClass::Strong;
-            fl.flatness.maxFlatness = flatMax;
+            if (lowMaxDb >= 0.0f) {  // the low band's excess over the room, at most lowMaxDb
+                fl.flatness.stream = detection::FeatureStreamId::LowBandExcess;
+                fl.flatness.minFlatness = -100.0f;
+                fl.flatness.maxFlatness = lowMaxDb;
+            } else {
+                fl.flatness.minFlatness = flatMin;
+                fl.flatness.maxFlatness = flatMax;
+            }
             plan.count = 3;
         }
     }
 
+    Wav roomWav;
+    if (!roomFile.empty() && !readWav(roomFile.c_str(), roomWav)) {
+        fprintf(stderr, "--room: not a PCM WAV: %s\n", roomFile.c_str());
+        return 2;
+    }
     static detection::EnvelopeRuntime runtime;  // its history is large: not on the stack
     const double scale = 8388607.0 * pow(10.0, levelDb / 20.0);
     const size_t kBlock = 128;
@@ -283,6 +313,10 @@ int main(int argc, char** argv) {
             continue;
         }
         std::vector<float> x = resample(wav.samples, wav.rate, rate);
+        if (!roomWav.samples.empty()) {  // the room tone first: the low band's room level is learned on it
+            const std::vector<float> r = resample(roomWav.samples, roomWav.rate, rate);
+            x.insert(x.begin(), r.begin(), r.end());
+        }
         x.resize(x.size() + rate / 2, 0.0f);  // 500 ms of silence so the last occurrence closes
         // Whispernet's output: the delay line under the gate below, written to --out-dir to be listened to.
         static constexpr unsigned long kDelayMs = 2000;  // Whispernet's delay line at 24 kHz
@@ -307,6 +341,11 @@ int main(int argc, char** argv) {
         EnvelopeFollower follower;
         BandFlatness flatness;
         flatness.begin(rate);
+        BandBalance balance;
+        balance.begin(rate);
+        RoomLevel lowRoom;
+        lowRoom.setTimes(10000, 500);  // Whispernet's defaults (whisper.room_rise_ms / room_fall_ms)
+        uint32_t lastLowMs = 0;
         follower.setShift(EnvelopeFollower::shiftForRate(rate));
         size_t occurrences = 0, valid = 0, slow = 0, unmeasured = 0, outOfLevel = 0, flat = 0;
         double validMs = 0.0, judgedMs = 0.0;
@@ -347,7 +386,8 @@ int main(int argc, char** argv) {
                 const double heard = x[i] + loopGain * lastOut / 32768.0;
                 double v = heard * scale;
                 v = v > 8388607.0 ? 8388607.0 : (v < -8388608.0 ? -8388608.0 : v);
-                follower.push(static_cast<int32_t>(v));
+                const float mid = balance.push(static_cast<float>(v));
+                follower.push(bandLevel ? static_cast<int32_t>(mid) : static_cast<int32_t>(v));
                 flatness.push(static_cast<float>(v));
                 if (line.delay() > 0) {
                     const double s = heard * 32767.0;
@@ -362,6 +402,21 @@ int main(int argc, char** argv) {
             if (flatness.take(flat) && whisper && flatMax > 0.0f && level >= onset) {
                 runtime.recordFeature(detection::FeatureStreamId::SpectralFlatness,
                                       static_cast<uint32_t>(blockUs / 1000U), flat);
+            }
+            if (whisper && lowMaxDb >= 0.0f) {
+                float lowRms = 0.0f;
+                const uint32_t ms = static_cast<uint32_t>(blockUs / 1000U);
+                if (balance.takeLowRms(lowRms)) {
+                    lowRoom.update(lowRms, ms > lastLowMs ? ms - lastLowMs : 0U, !runtime.candidateOpen());
+                    lastLowMs = ms;
+                    if (level >= onset && lowRoom.started()) {
+                        runtime.recordFeature(detection::FeatureStreamId::LowBandExcess, ms,
+                                              20.0f * log10f((lowRms + 1.0f) / (lowRoom.value() + 1.0f)));
+                    }
+                }
+            } else {
+                float lowRms = 0.0f;
+                balance.takeLowRms(lowRms);
             }
             runtime.onBlock(level, blockUs, static_cast<uint32_t>(blockUs / 1000U));
             detection::EnvelopeRuntime::Result r;

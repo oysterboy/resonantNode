@@ -316,6 +316,31 @@ sentences. Labelled recordings from a C920 webcam beside E3 (bench/sessions/2026
 one room, a camera with its own level processing, nothing above 8 kHz): against the room's own spectrum, a whisper
 adds 7-14 dB in 1.5-4.5 kHz and only 2-9 dB below 700 Hz; speech, typing, chair, paper and clothes add 12-21 dB
 (median) below 700 Hz. On the full band a whisper is only ~4 dB over this room, whose power is low-frequency.
+Second labelled set (bench/sessions/2026-11-05-labels-c920-2, 12 kinds, the owner's section shift fixed in the file
+names) and the band view of each recording against its room (silence.wav), median over the label's loudest windows:
+
+| label | full band | 1.5-4.5 kHz | low 200-700 Hz |
+|---|---:|---:|---:|
+| whisper soft / normal / strained 0.5 m | 1.4 / 4.5 / 9.5 dB | 6.5 / 11.4 / 16.1 | 6 / 8 / 11 |
+| whisper 1 m / 2 m / words | 5.5 / 3.8 / 2.4 | 13.2 / 14.5 / 9.2 | 9 / 6 / 6 |
+| speech soft | 11.1 | 7.7 | 13 |
+| breath | 15.2 | 27.3 | 12 |
+| paper | 13.4 | 28.3 | 9 |
+| clothes | 10.8 | 18.9 | 11 |
+| typing | 15.0 | 14.9 | 13 |
+| chair | 8.1 | 11.5 | 7 |
+
+Reading: (1) the level on the whisper band lifts a whisper 5-11 dB (4.5 -> 11.4 at normal) where the full band
+shows 1-9 dB: `whisper.level_band 1` makes whispers easier to open on, as intended. (2) But it lifts paper (28 dB),
+breath (27) and clothes (19) more: on the band the `loud` bound (whisper.loud, scaled to the band) is what takes them
+out, whispers sitting at 6-16 dB and these at 19-28. (3) Speech is weak in the band (7.7) but strong below 700 Hz (13):
+the low-band check takes it out. Typing (15 / 13) is out by the low band, the chair (11.5 / 7) is the one kind that
+sits in the whispers' range on both: only the modulation or the rhythm can separate it. So the pair to try on the
+board, live: level_band 1 with a loud bound at ~17-18 dB over the room's band level, and timbre_check 1 at 9 dB.
+A recording played through the lab speaker cannot test the timbre (the speaker colours it: flatness 0.01-0.07 against
+0.15-0.49 live; every phrase failed), and C920's room is noisier than the board's (a whisper only ~1.2x its room in
+total): the thresholds have to be set live with the owner's voice.
+
 Candidates (the owner, 2026-11-05: Whispernet "as time allows"; the first two built the same evening as params, off
 by default: whisper.level_band, whisper.timbre_check 1 with whisper.low_max_db; not yet on a board): the onset and release levels on a
 1.5-4.5 kHz band instead of the full band; a check that little is added below 700 Hz (a param) in place of or next

@@ -70,6 +70,11 @@ frequency-drift-detection.md   drift: Goertzel bank vs sliding DFT vs FFT
                                decisions/2026-10-15-signal-variation-inside-a-
                                shared-band.md, DET-013..015, OUT-005/006; the
                                bank built, DET-014 carried over)
+architecture-and-code-review-2026-11-05.md
+                               four reviews at afea847d after step 20's echo, whisper,
+                               gateway and glide work: 2 high, 6 medium, 17 low; spec
+                               drift per item (code or spec); SOLID / KISS /
+                               extensibility against the roadmap, with an order
 code-review-2026-10-30.md      deep review, six areas: no high, 15 medium, ~35 low
                                (promoted: step 14.2)
 code-review-2026-10-29.md      step 12.0's review: 1 high, 9 medium, ~25 low

@@ -5,6 +5,7 @@
 #include <new>
 
 #include "../app/SerialOut.h"
+#include "../app/Timebase.h"
 
 NetGateway::~NetGateway() {
     delete[] _join;
@@ -50,12 +51,42 @@ void NetGateway::openReply(const uint8_t mac[6], uint16_t seq, const char* name)
     memcpy(_openReply.mac, mac, 6);
     _openReply.seq = seq;
     _openReply.name = name;
-    serialOut().setTee(&Reply::tee, &_openReply);
+    serialOut().setTee(&Reply::tee, &_openReply);  // flushes first: what came before still reaches the mirror
+    _replyTeeOn = true;
+    _mirror.cut();
 }
 
 void NetGateway::endReply() {
     serialOut().setTee(nullptr, nullptr);
+    _replyTeeOn = false;
+    _mirror.cut();
     _openReply.send(true);
+}
+
+void NetGateway::setLogMirror(const char* myName, uint32_t linesPerSec) {
+    _mirrorName = myName;
+    _mirror.setRate(linesPerSec);
+    serialOut().setMirror(linesPerSec > 0 ? &NetGateway::mirrorTee : nullptr, this);
+}
+
+void NetGateway::mirrorTee(void* ctx, const uint8_t* data, size_t len) {
+    NetGateway& g = *static_cast<NetGateway*>(ctx);
+    if (g._replyTeeOn || !g._net.started()) {
+        return;
+    }
+    g._mirror.feed(data, len, timebase::nowMs(), [&](const char* line, size_t n) {
+        if (!g._net.sendLog(g._mirrorName, line, n)) {
+            ++g._mirrorOutboxFull;
+        }
+    });
+}
+
+void NetGateway::handleLogFrame(const net::Frame& f) {
+    serialOut().print("NET log from=");
+    serialOut().print(f.target);
+    serialOut().print(' ');
+    serialOut().write(reinterpret_cast<const uint8_t*>(f.text), f.textLen);
+    serialOut().println();
 }
 
 void NetGateway::closeOpenReply() {

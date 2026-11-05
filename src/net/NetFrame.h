@@ -23,7 +23,7 @@ Wire layout (little endian):
   5  seq          uint16, per sender; a receiver drops repeats (SeqFilter)
   7  part         reply part number, 0 for a command
   8  flags        bit 0: last part of the reply
-  9  target[8]    command: "*" or a node name; reply: the replying node's name
+  9  target[8]    command: "*" or a node name; reply, log: the sending node's name
  17  text         up to kMaxText bytes, no terminator on the wire
 */
 namespace net {
@@ -37,9 +37,13 @@ constexpr size_t kHeaderBytes = 9 + kTargetLen;
 constexpr size_t kMaxText = kMaxFrameBytes - kHeaderBytes;  // 233
 constexpr uint8_t kFlagLast = 0x01;
 
+// Log (2026-11-05): one console line a node printed anyway, broadcast once, lossy; a node on USB prints it as
+// "NET log from=...". A mirror of the console, not a state or event protocol (decisions/2026-10-25-vektor-replaces-
+// net.md rules that out; decisions/2026-11-05-radio-log-mirror.md). A node of an older build drops it as rejected.
 enum class FrameType : uint8_t {
     Command = 1,
     Reply = 2,
+    Log = 3,
 };
 
 struct Frame {
@@ -99,7 +103,8 @@ inline bool decode(const uint8_t* in, size_t len, Frame& f) {
     if (in[0] != kMagic0 || in[1] != kMagic1 || in[2] != kVersion) {
         return false;
     }
-    if (in[3] != static_cast<uint8_t>(FrameType::Command) && in[3] != static_cast<uint8_t>(FrameType::Reply)) {
+    if (in[3] != static_cast<uint8_t>(FrameType::Command) && in[3] != static_cast<uint8_t>(FrameType::Reply) &&
+        in[3] != static_cast<uint8_t>(FrameType::Log)) {
         return false;
     }
     f.type = static_cast<FrameType>(in[3]);
@@ -201,6 +206,81 @@ private:
     uint16_t _seq[kSenders] = {};
     bool _used[kSenders] = {};
     size_t _next = 0;
+};
+
+// The console's text cut into whole lines for Log frames, at most linesPerSec on average (a burst of as many):
+// sending ~40 frames back to back dropped audio buffers (NodeNet), and a full log runs far above that. Lines
+// starting "NET " stay home: a gateway's own "NET log from=" lines would otherwise go round between two gateways.
+// A line longer than a frame is cut at kMaxText. Pure; host-tested in test_net_frame.
+// Owns: the line being assembled and the rate budget. Does not: send (the caller's emit does).
+class LogMirror {
+public:
+    void setRate(uint32_t linesPerSec) {
+        _rate = linesPerSec;
+        _len = 0;
+        _budgetMilli = linesPerSec * 1000UL;
+        _started = false;
+    }
+    uint32_t rate() const { return _rate; }
+    uint32_t sent() const { return _sent; }
+    uint32_t dropped() const { return _dropped; }
+    // Drops the line in progress (a remote command's reply took the console).
+    void cut() { _len = 0; }
+
+    // Feeds console bytes; calls emit(line, len) for every whole line that goes out.
+    template <typename Emit>
+    void feed(const uint8_t* data, size_t len, unsigned long nowMs, Emit emit) {
+        if (_rate == 0) {
+            return;
+        }
+        refill(nowMs);
+        for (size_t i = 0; i < len; ++i) {
+            const char ch = static_cast<char>(data[i]);
+            if (ch == '\r') {
+                continue;
+            }
+            if (ch != '\n') {
+                if (_len < kMaxText) {
+                    _line[_len++] = ch;
+                }
+                continue;
+            }
+            const bool own = _len >= 4 && memcmp(_line, "NET ", 4) == 0;
+            if (_len > 0 && !own) {
+                if (_budgetMilli >= 1000UL) {
+                    _budgetMilli -= 1000UL;
+                    emit(_line, _len);
+                    ++_sent;
+                } else {
+                    ++_dropped;
+                }
+            }
+            _len = 0;
+        }
+    }
+
+private:
+    void refill(unsigned long nowMs) {
+        if (!_started) {
+            _started = true;
+            _lastMs = nowMs;
+            return;
+        }
+        const unsigned long dt = nowMs - _lastMs;
+        _lastMs = nowMs;
+        const uint32_t cap = _rate * 1000UL;
+        const uint32_t add = dt > 60000UL ? cap : static_cast<uint32_t>(dt) * _rate;
+        _budgetMilli = _budgetMilli + add > cap ? cap : _budgetMilli + add;
+    }
+
+    char _line[kMaxText];
+    size_t _len = 0;
+    uint32_t _rate = 0;
+    uint32_t _budgetMilli = 0;  // lines x 1000
+    unsigned long _lastMs = 0;
+    bool _started = false;
+    uint32_t _sent = 0;
+    uint32_t _dropped = 0;
 };
 
 }  // namespace net

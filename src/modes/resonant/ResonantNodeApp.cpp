@@ -269,6 +269,7 @@ void Node::begin() {
         serialOut().print(NET_CHANNEL);
         serialOut().print(" net_id=");
         serialOut().println(NET_ID);
+        _netGateway.setLogMirror(_nodeName, _switches.radioLog);
     } else {
         serialOut().println("RB net started=0 reason=node.radio_enabled=0");
     }

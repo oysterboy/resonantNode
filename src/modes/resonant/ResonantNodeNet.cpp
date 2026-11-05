@@ -116,6 +116,10 @@ void Node::pollNet() {
             _netGateway.handleReplyFrame(f);
             continue;
         }
+        if (f.type == net::FrameType::Log) {
+            _netGateway.handleLogFrame(f);
+            continue;
+        }
         if (!net::targetMatches(f.target, _nodeName)) {
             continue;
         }
@@ -180,5 +184,11 @@ void Node::printNetStatus() {
     serialOut().print(" outbox_full=");
     serialOut().print(st.txOutboxFull);
     serialOut().print(" commands=");
-    serialOut().println(st.commandsRun);
+    serialOut().print(st.commandsRun);
+    serialOut().print(" log=");
+    serialOut().print(_switches.radioLog);
+    serialOut().print(" log_sent=");
+    serialOut().print(_netGateway.logSent());
+    serialOut().print(" log_dropped=");
+    serialOut().println(_netGateway.logDropped());
 }

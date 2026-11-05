@@ -42,6 +42,11 @@ public:
         _tee = tee;
         _teeCtx = ctx;
     }
+    // A third sink, independent of the reply tee: the radio log mirror (NetGateway, node.radio_log). nullptr = off.
+    void setMirror(Tee mirror, void* ctx) {
+        _mirror = mirror;
+        _mirrorCtx = ctx;
+    }
 
     size_t write(uint8_t c) override {
         _buf[_len++] = c;
@@ -63,6 +68,9 @@ public:
             if (_tee != nullptr) {
                 _tee(_teeCtx, _buf, _len);
             }
+            if (_mirror != nullptr) {
+                _mirror(_mirrorCtx, _buf, _len);
+            }
             Serial.write(_buf, _len);
             _len = 0;
         }
@@ -75,6 +83,8 @@ private:
     size_t _len = 0;
     Tee _tee = nullptr;
     void* _teeCtx = nullptr;
+    Tee _mirror = nullptr;
+    void* _mirrorCtx = nullptr;
 };
 
 inline LineBufferedSerial& serialOut() {

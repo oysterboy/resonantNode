@@ -63,6 +63,8 @@ public:
     // Queues a command line to `target` ("*" or a node name), kCommandRepeats
     // broadcasts. Returns its seq, or 0 when the outbox took none of them (seq is never 0).
     uint16_t sendCommand(const char* target, const char* text);
+    // Queues one console line as a Log frame, broadcast once (lossy: no repeats, no filter). False: outbox full.
+    bool sendLog(const char* myName, const char* text, size_t len);
     // Queues one reply part, unicast to the command's sender.
     bool sendReply(const uint8_t mac[6], uint16_t seq, uint8_t part, bool last, const char* myName, const char* text,
                    size_t len);

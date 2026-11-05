@@ -56,6 +56,14 @@ public:
     // "NET reply from=..." lines, then "... done parts=N" on its last frame.
     void handleReplyFrame(const net::Frame& frame);
 
+    // The log mirror (node.radio_log, decisions/2026-11-05-radio-log-mirror.md): every console line this node
+    // prints, outside a remote command's reply, also goes out as a Log frame, at most linesPerSec; 0 is off.
+    void setLogMirror(const char* myName, uint32_t linesPerSec);
+    uint32_t logSent() const { return _mirror.sent(); }
+    uint32_t logDropped() const { return _mirror.dropped() + _mirrorOutboxFull; }
+    // Gateway side: another node's Log frame, printed as "NET log from=<name> <line>".
+    void handleLogFrame(const net::Frame& frame);
+
 private:
     // The reply of one remote command is everything it prints, as a byte stream
     // cut into frames: a newline travels as net::kLineEnd, a long line (RB STATUS)
@@ -89,9 +97,15 @@ private:
     void endReply();
     JoinSlot* joinSlotFor(const char* name, uint16_t seq);
 
+    static void mirrorTee(void* ctx, const uint8_t* data, size_t len);
+
     NodeNet& _net;
     Reply _openReply;
     bool _openReplyActive = false;
+    bool _replyTeeOn = false;  // a reply owns the console: its lines go back as the reply, not to the log
+    net::LogMirror _mirror;
+    const char* _mirrorName = nullptr;
+    uint32_t _mirrorOutboxFull = 0;
     // On the heap at the first reply (only a gateway needs them; static RAM is full).
     JoinSlot* _join = nullptr;
     size_t _joinNext = 0;

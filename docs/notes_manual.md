@@ -192,6 +192,14 @@ Operator rules (the firmware does not check these, except where noted):
 - Anyone with ESP-NOW on channel 1 and the network id can send these commands: fine for the
   installation, not for a public space (`docs/decisions/2026-10-25-remote-params-espnow.md`).
 
+The log by radio (2026-11-05, `docs/decisions/2026-11-05-radio-log-mirror.md`): `node.radio_log` N (0 off, the
+default; up to 20) makes a board send every console line it prints, outside a remote command's reply, as one radio
+frame, at most N lines per second on average (the rest counted as dropped); in all three modes, with the same path.
+Every board on USB prints the others' lines as `NET log from=E1 <line>` (lines starting `NET ` are not sent, a line
+is cut at 233 characters). Lossy by design: no repeats, nothing resent. `NET STATUS` / `NET PING` add `log=`,
+`log_sent=`, `log_dropped=`. For boards on a power-only charger: `NET * PARAM SET node.radio_log 5`, and the board
+view with `--radio`. What reaches the log is what the board prints: `RB log full` prints each verdict.
+
 ### Startup quiet gate
 
 The Node waits for the room to be quiet before it arms: `NodeBaseline::Config::quietThreshold` in
@@ -310,6 +318,8 @@ refreshed every few seconds in the terminal and, with --html, as a page that rel
 (node, echo, whisper), Behavior's state, the band (a Node's base and its train's Hz) or Whispernet's delay and room
 level, the level, the last action and its age, counters. It asks RB STATUS and ECHO STATUS (a board ignores the
 other's) and reads what the boards print. It holds the ports: stop it before nodegroup or an OTA script.
+`--radio E1,E4,E5` (2026-11-05) adds rows for boards without USB, from the `NET log from=` lines (node.radio_log) and
+NET replies the first `--boards` board prints; a Node there also sends `NET * RB STATUS` each round.
 
 ## Echo shell (esp32dev-echo, 2026-10-30)
 

@@ -2,7 +2,7 @@
 in the terminal and as a page that refreshes itself in the browser.
 
   python tools/bench/boardview.py --boards E1=COM8,E2=COM3,E3=COM4,E4=COM10,E5=COM11 [--every 5] [--html out.html]
-      [--log out.log]
+      [--log out.log] [--radio E1,E4,E5]
 
 It opens the ports without resetting the boards (DTR / RTS low), asks each board every --every seconds for its
 status (RB STATUS on a Node, ECHO STATUS on the echo shell, which adds WHISPER status in the whisper build; a
@@ -23,6 +23,8 @@ ap.add_argument("--boards", required=True)
 ap.add_argument("--every", type=float, default=5.0)
 ap.add_argument("--html", default="")
 ap.add_argument("--log", default="")
+ap.add_argument("--radio", default="", help="boards without USB, e.g. E1,E4,E5: their node.radio_log lines and "
+                "NET replies, as printed by the first --boards board (a Node there also asks NET * RB STATUS)")
 a = ap.parse_args()
 
 KV = re.compile(r"(\S+?)=(\S*)")
@@ -36,6 +38,11 @@ for spec in a.boards.split(","):
     s.open()
     boards[name] = {"s": s, "port": port, "mode": "?", "state": "?", "where": "", "level": "", "last": "",
                     "last_t": 0.0, "emits": 0, "answers": 0, "heard": 0, "extra": "", "seen": 0.0}
+gateway = next(iter(boards))
+for name in filter(None, a.radio.split(",")):
+    boards[name] = {"s": None, "port": "radio", "mode": "?", "state": "?", "where": "", "level": "", "last": "",
+                    "last_t": 0.0, "emits": 0, "answers": 0, "heard": 0, "extra": "", "seen": 0.0}
+RADIO = re.compile(r"NET (?:log from=(\S+) |reply from=(\S+) seq=\d+ part=\d+ )(.*)")
 logf = open(a.log, "a", encoding="utf-8") if a.log else None
 lock = threading.Lock()
 t0 = time.time()
@@ -47,6 +54,13 @@ def note(b, text):
 
 
 def on_line(name, line):
+    m = RADIO.match(line)
+    if m:
+        # Another board's line, by radio: only through the gateway (every board on USB prints the same frames).
+        who = m.group(1) or m.group(2)
+        if name == gateway and who in boards and boards[who]["s"] is None:
+            on_line(who, m.group(3))
+        return
     b = boards[name]
     b["seen"] = time.time()
     if logf:
@@ -124,7 +138,7 @@ def rows():
     out = []
     for name, b in boards.items():
         age = "%.0fs ago" % (now - b["last_t"]) if b["last_t"] else ""
-        alive = "" if now - b["seen"] < 3 * a.every + 5 else "  (silent port)"
+        alive = "" if now - b["seen"] < 3 * a.every + 5 else ("  (silent port)" if b["s"] else "  (no radio lines)")
         out.append((name, b["mode"], b["state"], b["where"], b["level"], "%s %s" % (b["last"], age),
                     "emits %d answers %d heard %d" % (b["emits"], b["answers"], b["heard"]), b["extra"] + alive))
     return out
@@ -156,10 +170,14 @@ for n in boards:
 try:
     while True:
         for b in boards.values():
+            if b["s"] is None:
+                continue
             try:
                 b["s"].write(b"RB STATUS\nECHO STATUS\n")
             except serial.SerialException:
                 pass
+        if a.radio and boards[gateway]["mode"] == "node":
+            boards[gateway]["s"].write(b"NET * RB STATUS\n")  # an echo board cannot send; log lines still come
         time.sleep(1.0)
         with lock:
             render()

@@ -150,6 +150,22 @@ void NodeNet::service(unsigned long nowMs) {
     }
 }
 
+bool NodeNet::sendLog(const char* myName, const char* text, size_t len) {
+    if (!_started) {
+        return false;
+    }
+    net::Frame frame;
+    frame.type = net::FrameType::Log;
+    frame.netId = NET_ID;
+    frame.seq = _nextSeq++;  // the command count: one sender's seqs stay distinct
+    if (_nextSeq == 0) {
+        _nextSeq = 1;
+    }
+    net::setTarget(frame, myName);
+    net::setText(frame, text, len);
+    return enqueue(kBroadcast, frame);
+}
+
 uint16_t NodeNet::sendCommand(const char* target, const char* text) {
     net::Frame frame;
     frame.type = net::FrameType::Command;

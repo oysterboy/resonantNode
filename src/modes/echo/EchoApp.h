@@ -176,6 +176,7 @@ private:
     Load _load;
     unsigned long _toneOffAtMs = 0;
     bool _toneOn = false;
+    uint32_t _radioLog = 0;  // node.radio_log: console lines per second mirrored to the radio, 0 off
     unsigned long _logEveryMs = 10000;
     unsigned long _nextLogMs = 0;
 };

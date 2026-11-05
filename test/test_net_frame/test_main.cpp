@@ -215,6 +215,78 @@ void test_line_joiner_flush_keeps_a_partial_line_apart() {
     TEST_ASSERT_EQUAL_INT(2, n);
 }
 
+// The Log frame: a node's console line, round trip with its name as the target.
+void test_log_frame_round_trip() {
+    net::Frame f;
+    f.type = net::FrameType::Log;
+    f.seq = 77;
+    net::setTarget(f, "E4");
+    net::setText(f, "RB emit accepted source=idle", 28);
+    uint8_t buf[net::kMaxFrameBytes];
+    const size_t len = net::encode(f, buf, sizeof(buf));
+    net::Frame g;
+    TEST_ASSERT_TRUE(net::decode(buf, len, g));
+    TEST_ASSERT_EQUAL(static_cast<int>(net::FrameType::Log), static_cast<int>(g.type));
+    TEST_ASSERT_EQUAL_STRING("E4", g.target);
+    TEST_ASSERT_EQUAL_STRING("RB emit accepted source=idle", g.text);
+}
+
+// The mirror: whole lines only, its own "NET " lines kept home, a long line cut to one frame, off at rate 0.
+void test_log_mirror_lines_and_filters() {
+    static char got[4][net::kMaxText + 1];
+    static size_t gotLen[4];
+    static int n;
+    n = 0;
+    auto emit = [](const char* line, size_t len) {
+        memcpy(got[n], line, len);
+        got[n][len] = '\0';
+        gotLen[n] = len;
+        ++n;
+    };
+    net::LogMirror m;
+    const char off[] = "RB verdict=x\n";
+    m.feed(reinterpret_cast<const uint8_t*>(off), sizeof(off) - 1, 0, emit);
+    TEST_ASSERT_EQUAL_INT(0, n);  // rate 0: off
+    m.setRate(5);
+    const char a[] = "RB emit acc";
+    const char b[] = "epted\r\nNET log from=E1 x\nRB verdict=y\n";
+    m.feed(reinterpret_cast<const uint8_t*>(a), sizeof(a) - 1, 0, emit);
+    TEST_ASSERT_EQUAL_INT(0, n);  // no newline yet
+    m.feed(reinterpret_cast<const uint8_t*>(b), sizeof(b) - 1, 0, emit);
+    TEST_ASSERT_EQUAL_INT(2, n);
+    TEST_ASSERT_EQUAL_STRING("RB emit accepted", got[0]);
+    TEST_ASSERT_EQUAL_STRING("RB verdict=y", got[1]);
+    static char longLine[400];
+    memset(longLine, 'k', sizeof(longLine) - 1);
+    longLine[sizeof(longLine) - 1] = '\n';
+    m.feed(reinterpret_cast<const uint8_t*>(longLine), sizeof(longLine), 0, emit);
+    TEST_ASSERT_EQUAL_INT(3, n);
+    TEST_ASSERT_EQUAL_UINT32(net::kMaxText, gotLen[2]);
+}
+
+// The rate: a burst of `rate` lines, then one per 1000 / rate ms; the rest counted as dropped.
+void test_log_mirror_rate() {
+    static int n;
+    n = 0;
+    auto emit = [](const char*, size_t) { ++n; };
+    net::LogMirror m;
+    m.setRate(2);
+    const char line[] = "RB x\n";
+    for (int i = 0; i < 5; ++i) {
+        m.feed(reinterpret_cast<const uint8_t*>(line), sizeof(line) - 1, 1000, emit);
+    }
+    TEST_ASSERT_EQUAL_INT(2, n);
+    TEST_ASSERT_EQUAL_UINT32(3, m.dropped());
+    m.feed(reinterpret_cast<const uint8_t*>(line), sizeof(line) - 1, 1499, emit);
+    TEST_ASSERT_EQUAL_INT(2, n);  // 499 ms: under one line's worth at 2 / s
+    m.feed(reinterpret_cast<const uint8_t*>(line), sizeof(line) - 1, 1500, emit);
+    TEST_ASSERT_EQUAL_INT(3, n);
+    m.feed(reinterpret_cast<const uint8_t*>(line), sizeof(line) - 1, 90000, emit);
+    m.feed(reinterpret_cast<const uint8_t*>(line), sizeof(line) - 1, 90000, emit);
+    m.feed(reinterpret_cast<const uint8_t*>(line), sizeof(line) - 1, 90000, emit);
+    TEST_ASSERT_EQUAL_INT(5, n);  // a long pause refills the burst, not more
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_command_round_trip);
@@ -227,5 +299,8 @@ int main(int, char**) {
     RUN_TEST(test_seq_filter_forgets_a_sender_after_ksenders_others);
     RUN_TEST(test_line_joiner_rebuilds_lines_across_frames);
     RUN_TEST(test_line_joiner_flush_keeps_a_partial_line_apart);
+    RUN_TEST(test_log_frame_round_trip);
+    RUN_TEST(test_log_mirror_lines_and_filters);
+    RUN_TEST(test_log_mirror_rate);
     return UNITY_END();
 }

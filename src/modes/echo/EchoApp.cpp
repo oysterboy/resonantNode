@@ -205,6 +205,8 @@ void EchoApp::pollAudio() {
 // The mode's params (ECHO-003): registered, the defaults captured, the stored values loaded, then applied. After
 // configureEcho (the fields hold the firmware defaults) and before the radio.
 void EchoApp::configureParams() {
+    _params.registry().addUInt32(param::ParamId::Node_RadioLog, param::ModuleId::Node, "node.radio_log", &_radioLog, 0U,
+                                 20U);
     if (kWhispernet) {
         _whisper.describeParams(_params.registry());
     } else {
@@ -242,6 +244,7 @@ void EchoApp::configureParams() {
 
 // What a PARAM or GATE write changed, into the running mode.
 void EchoApp::applyParams() {
+    _netGateway.setLogMirror(_nodeName, _radioLog);
     if (kWhispernet) {
         _whisper.applyValues(_runtime, _behavior);
         return;
@@ -532,6 +535,10 @@ void EchoApp::pollNet() {
         return;
     }
     const net::Frame& f = received.frame;
+    if (f.type == net::FrameType::Log) {
+        _netGateway.handleLogFrame(f);  // a board in echo mode on USB prints the others' lines too
+        return;
+    }
     if (f.type == net::FrameType::Reply || !net::targetMatches(f.target, _nodeName)) {
         return;
     }
@@ -734,7 +741,13 @@ void EchoApp::printNetStatus() {
     serialOut().print(" tx=");
     serialOut().print(st.txFrames);
     serialOut().print(" commands=");
-    serialOut().println(st.commandsRun);
+    serialOut().print(st.commandsRun);
+    serialOut().print(" log=");
+    serialOut().print(_radioLog);
+    serialOut().print(" log_sent=");
+    serialOut().print(_netGateway.logSent());
+    serialOut().print(" log_dropped=");
+    serialOut().println(_netGateway.logDropped());
 }
 
 void EchoApp::printHelp() {

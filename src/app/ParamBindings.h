@@ -14,6 +14,7 @@ the host replay the profile its --set flags override: same paths, same ranges, s
   behavior.*                            behavior/BehaviorParams.h
   output.hop_*, output.idle_announce_*  modes/resonant/ResonantNodeSignalComposer.h (the Node only)
   output.silent, node.radio_enabled     modes/resonant/ResonantNodeParams.h (the Node only)
+  node.radio_log                        modes/resonant/ResonantNodeParams.h; the echo modes register it too
 */
 #include "../behavior/BehaviorParams.h"
 #include "../detection/detectors/scalar/ScalarTransientParams.h"

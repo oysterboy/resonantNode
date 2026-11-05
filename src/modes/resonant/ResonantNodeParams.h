@@ -15,11 +15,13 @@
 
 class Print;
 
-// output.silent and node.radio_enabled: the Node's own switches (step 11i N7). silent holds the outputs-off gate
-// shut (detection runs, Behavior never fires); radioEnabled is read at boot (PAR-013, step 11a).
+// output.silent, node.radio_enabled and node.radio_log: the Node's own switches (step 11i N7). silent holds the
+// outputs-off gate shut (detection runs, Behavior never fires); radioEnabled is read at boot (PAR-013, step 11a);
+// radioLog is the console's lines per second mirrored to the radio, 0 off (decisions/2026-11-05-radio-log-mirror.md).
 struct NodeSwitches {
     bool silent = false;
     bool radioEnabled = true;
+    uint32_t radioLog = 0;
 };
 
 namespace param {
@@ -27,6 +29,7 @@ namespace param {
 inline void describeParams(ParamRegistry& registry, NodeSwitches& node) {
     registry.addBool(ParamId::Output_Silent, ModuleId::Output, "output.silent", &node.silent);
     registry.addBool(ParamId::Node_RadioEnabled, ModuleId::Node, "node.radio_enabled", &node.radioEnabled);
+    registry.addUInt32(ParamId::Node_RadioLog, ModuleId::Node, "node.radio_log", &node.radioLog, 0U, 20U);
 }
 
 }  // namespace param

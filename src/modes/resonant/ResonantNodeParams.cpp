@@ -150,6 +150,7 @@ void Node::applyParamModule(param::ModuleId module) {
             applyActiveBehaviorGateConfig();
             break;
         case param::ModuleId::Node:
+            _netGateway.setLogMirror(_nodeName, _switches.radioLog);
             break;
     }
 }

@@ -66,10 +66,10 @@ inline void makeClapChain(const ClapChainValues& v, ScalarTransientConfig& d, In
 // release and floor are the minimums and their ratios: the thresholds stand at roomFactor x the room's level, never
 // under these.
 struct WhisperChainValues {
-    float onset = 250.0f;     // the detector's onset: a phrase starts
-    float release = 175.0f;   // and its release
-    float floor = 190.0f;     // the level window's low bound
-    float loud = 900.0f;      // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
+    float onset = 250.0f;  // the detector's onset: a phrase starts
+    float release = 175.0f;  // and its release
+    float floor = 190.0f;  // the level window's low bound
+    float loud = 900.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
     float modulation = 0.3f;  // the modulation index a whisper reaches at least (Medium)
     // The spectrum's flatness a whisper lies within (BandFlatness, the median of the phrase's loud blocks): the
     // owner's whispers on the desk read 0.16-0.49 (median ~0.3), speech 0.04-0.41 (median ~0.07), rustling and
@@ -82,10 +82,10 @@ struct WhisperChainValues {
     // place of the flatness range.
     uint32_t timbreCheck = 0;  // 0 = flatness (flatMin .. flatMax), 1 = low band (excess <= lowMaxDb)
     float lowMaxDb = 9.0f;
-    uint32_t firstCheckMs = 300;   // a running phrase is first judged this far in (the provisional verdicts)
-    uint32_t checkEveryMs = 100;   // and again this often
-    uint32_t minPhraseMs = 300;    // shorter is no phrase
-    uint32_t gapMs = 300;          // syllable gaps up to this are bridged (the detector's release debounce)
+    uint32_t firstCheckMs = 300;  // a running phrase is first judged this far in (the provisional verdicts)
+    uint32_t checkEveryMs = 100;  // and again this often
+    uint32_t minPhraseMs = 300;  // shorter is no phrase
+    uint32_t gapMs = 300;  // syllable gaps up to this are bridged (the detector's release debounce)
     uint32_t maxPhraseMs = 20000;  // longer is no whisper phrase: closed (0: no limit)
 };
 
@@ -137,7 +137,11 @@ inline void makeWhisperChain(const WhisperChainValues& v, float onsetInForce, Sc
 }
 
 // The streams a chain records beside the envelope: what the build's FeatureHistory must hold (FEATURE_HISTORY_STREAMS).
-inline size_t clapChainStreams() { return 1; }
-inline size_t whisperChainStreams() { return 2; }
+inline size_t clapChainStreams() {
+    return 1;
+}
+inline size_t whisperChainStreams() {
+    return 2;
+}
 
 }  // namespace detection

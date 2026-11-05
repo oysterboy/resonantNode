@@ -10,7 +10,10 @@ chirptour.py (chirptour.log): the train (5 x 25 ms, gap 10, climbing 250 Hz a st
 chirpshort3.py: short and gliding shapes, PC beeps n times before variant n, each played twice.
 
 Owner's verdicts:
-- positions: "1 and [?] out" (the lowest; which second one not settled); the top end: listened again, no verdict yet
+- positions (chirplagen*.py: PC beep, then every window low to high, then high to low; numbers 1-27 = windows
+  250-1250 .. 6750-7750 Hz): 1-3 out, 4 on fine, 10 on interesting; from the top 27 and 26 out, interesting from
+  22 down. Owner's range: 2000-6500 Hz. Observation (not a range indicator): rather every 5th window stands out
+  than each in turn (likely pitch heard logarithmically against fixed 250 Hz steps)
 - shapes: 50 ms and 100 ms pulses out; gliding interesting, shorter tends to be better
 - short round: 1 (8 x 10 ms, gap 0) yes, 2 (8 x 15, 0) no, 3 (8 x 25, 0) maybe, 4 (5 x 10, 0) yes, 5 (5 x 15, 0)
   maybe, 6 (5 x 10, gap 5) yes, 7 (3 x 10, 0) maybe, 8 (3 x 15, gap 5) yes

@@ -26,3 +26,17 @@ until the session; it stays a whisper board). Images to serve (otaserve): node /
      python tools/bench/boardview.py --boards E1=COM8,E2=COM3,E3=COM4,E4=COM10,E5=COM11 --html boards.html
    The owner picks what sounds right; the field splitting into two groups (the 41 h run) is the open question
    (a wander also when only the own group is heard: a Behavior change, the owner's call).
+
+## Added 2026-11-05 evening: how complete is the radio log (a short measurement for the morning, after the night)
+
+Why: the chains' ends (what the boards decided after the last tone) come from lines the boards on the charger send by
+radio, at most node.radio_log lines per second; on the overnight run E3 (USB, complete) heard 4007 valid trains where
+the log held 2523 emits (ratio 0.59 over the first ten minutes, `logcomplete.py eval`), and 43 of 103 "ended" chains
+were still being heard by E3 after their last logged emit.
+
+1. After the night's log is saved: `python tools/bench/logcomplete.py ping COM4` (each board's log_sent / log_dropped
+   at radio_log 5).
+2. `NET * PARAM SET node.radio_log 20` (the top; not saved) and ten minutes of the same field (start chance 85) with
+   boardview.py --radio into a new log; `logcomplete.py eval` it: the ratio per minute, per board.
+3. Ratio >= 0.9: the log's chains and the ends can be read (chainlog.py). Below: a compact event line instead of the
+   five lines a tone prints at RB log full (one for an own emit, one per heard train): a small code step, then repeat.

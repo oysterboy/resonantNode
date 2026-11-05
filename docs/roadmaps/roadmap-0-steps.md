@@ -370,6 +370,20 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         boardview.py shows what runs. Open: rustling against whispers (the click/rhythm idea did not separate on
         Sunday's recordings; clean labelled recordings needed, a mic at the desk), the field splitting into two
         groups, the echo chain with spread answers (after the amps' power).
+        2026-11-05 at the desk with the owner (power: E1, E4, E5 on a power-only charger, later E2 too; E3 the
+        silent USB gateway). Whispernet on E3 (2026-11-05-whisper-listen-e3): whispers and rustle passed about
+        equally, listening while playing collapsed the canceller (ERLE ~2 dB); labelled C920 recordings
+        (2026-11-05-labels-c920): a whisper adds 7-14 dB in 1.5-4.5 kHz and little below 700 Hz, every other noise
+        12-21 dB there (research/whispernet.md; Whispernet "as time allows"). Echo room clapped by the owner
+        (2026-11-05-echo-claps): clip cut at 300 ms, a chain's distortion builds up; parked for ECHO-004 (24 kHz,
+        a damping per generation). The Node: the signal heard alone at every window and in short shapes
+        (2026-11-05-node-listen), the owner's pick a 75 ms glide on 2000-6500 Hz, detection 70 / 60 ms after a
+        two-board hit test and a false-trigger run (d03f7189, decisions/2026-11-05-short-glide-signal.md); the
+        console by radio, node.radio_log (5fde053b, decisions/2026-11-05-radio-log-mirror.md); start chance and
+        chain length apart, behavior.start_chance_pct (ca6714de, decisions/2026-11-05-start-chance-and-chain-
+        length.md), level_max up to 500. Then one knob at a time on one window (2026-11-05-radio-log-lively): at
+        start chance 85, level_max 200, jitter 1000, wait 0, chains median 25 emits, max 94; the run left on
+        overnight. Open: these values as defaults (owner, after the night), 20.5, ECHO-004, Whispernet's band check.
    20.5 [TODO, before 20.4; owner 2026-11-05] Param review: every param of the three modes, what it does, its unit,
         whether it still does anything, and whether its name says so; the annotated list in notes_manual.md,
         renames and retirements each with a decisions/ file. Issue #88, a sub-issue of #84 at the owner's request

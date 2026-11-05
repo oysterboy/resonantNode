@@ -1,0 +1,14 @@
+13:33:36 level_max 0 on all five
+13:35:15 all on one window 2500-3500 (band_range 2500-3500)
+13:37:20 answer_jitter_ms 2500 (answers came together, one round)
+13:38:27 refractory_after_emit_ms 200 (owner: shorter)
+13:41:53 E2 on the charger (PC USB dropped); E3 the silent gateway on COM4; E2 re-set by radio
+13:43:11 idle_timeout_ms 30000, variation 10000 (owner: pauses about half)
+13:56:29 E2 had rebooted (uptime 224 s); run settings re-sent and PARAM SAVE on all five
+14:14:28 image abea6bdb (start_chance); start_chance_pct 30, level_max 20, answer_jitter_ms 2000, saved; window 2500-3500 kept
+14:19:01 start_chance_pct 50 (owner), saved
+14:20:29 answer_jitter_ms 1000 (owner), saved
+14:22:14 level_max 32 (owner asked 50; the param's top is 32), saved
+14:26:53 image 0b989164 (level_max up to 500); level_max 50, saved
+14:49:43 level_max 200, wait_after_heard_ms 0 (owner: the fixed delay as short as possible), saved
+14:53:14 start_chance_pct 85 (chains ended on declined_by_level at ~50 %), saved

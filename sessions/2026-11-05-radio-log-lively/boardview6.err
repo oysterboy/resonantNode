@@ -1,0 +1,37 @@
+Exception in thread Thread-3 (reader):
+Exception in thread Thread-4 (reader)Traceback (most recent call last):
+:
+Traceback (most recent call last):
+  File "C:\Users\admin\.platformio\python3\Lib\threading.py", line 1045, in _bootstrap_inner
+Exception in thread Thread-5 (reader)  File "C:\Users\admin\.platformio\python3\Lib\threading.py", line 1045, in _bootstrap_inner
+:
+Traceback (most recent call last):
+  File "C:\Users\admin\.platformio\python3\Lib\threading.py", line 1045, in _bootstrap_inner
+        self.run()    self.run()
+self.run()
+
+  File "C:\Users\admin\.platformio\python3\Lib\threading.py", line 982, in run
+  File "C:\Users\admin\.platformio\python3\Lib\threading.py", line 982, in run
+  File "C:\Users\admin\.platformio\python3\Lib\threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+          File "C:\+ DATA\Nodes\resonantNode\tools\bench\boardview.py", line 123, in reader
+self._target(*self._args, **self._kwargs)self._target(*self._args, **self._kwargs)
+
+  File "C:\+ DATA\Nodes\resonantNode\tools\bench\boardview.py", line 123, in reader
+  File "C:\+ DATA\Nodes\resonantNode\tools\bench\boardview.py", line 123, in reader
+    d = b["s"].read(4096)
+         d = b["s"].read(4096)d = b["s"].read(4096) 
+
+              ^     ^ ^^^^ ^^^^ ^^^^^^^^^^^^^^
+^^^AttributeError^^: 
+^'NoneType' object has no attribute 'read'AttributeError^: 
+^'NoneType' object has no attribute 'read'^
+
+AttributeError: 'NoneType' object has no attribute 'read'
+Traceback (most recent call last):
+  File "C:\+ DATA\Nodes\resonantNode\tools\bench\boardview.py", line 180, in <module>
+    if a.radio and boards[gateway]["mode"] == "node":
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\.platformio\penv\Lib\site-packages\serial\serialwin32.py", line 317, in write
+    raise SerialException("WriteFile failed ({!r})".format(ctypes.WinError()))
+serial.serialutil.SerialException: WriteFile failed (PermissionError(13, 'Das Gerät erkennt den Befehl nicht.', None, 22))

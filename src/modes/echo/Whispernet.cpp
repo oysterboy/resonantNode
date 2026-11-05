@@ -62,6 +62,17 @@ void Whispernet::attachDuplex(DuplexStream& duplex) {
     duplex.setGain(_values.gain);
 }
 
+void Whispernet::closeEmission(ResonantBehavior& behavior, unsigned long now) {
+    if (_emitting) {
+        behavior.notifyChirpFinished(now);
+        _emitting = false;
+    }
+    _answerPending = false;
+    _playedOutAtMs = 0;
+    _holdPending = false;
+    _playArmed = false;
+}
+
 void Whispernet::release() {
     _line.end();
     _gate.reset();

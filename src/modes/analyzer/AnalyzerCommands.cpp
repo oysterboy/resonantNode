@@ -118,6 +118,12 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             handleSelfTestCommand(line);
             return;
         case analyzer_commands::Group::Ota:
+            // As RAW, EMIT and SELFTEST: the pull blocks the loop for seconds and a failed one would finalise the
+            // trial late with its I2S backlog (review 2026-11-05 M6).
+            if (_sequenceTest.active || _pendingSequenceStart.active) {
+                serialOut().println("OTA result=busy reason=seq_active (SEQ STOP first)");
+                return;
+            }
             ota::runCommand(line, serialOut());  // firmware over WiFi (step 11d); reboots on success
             return;
         case analyzer_commands::Group::Param:

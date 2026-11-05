@@ -124,6 +124,10 @@ public:
     // desk, 2026-11-01). resume() after a failed update allocates it again.
     void release();
     bool resume();
+    // Before release(): an emission that runs is closed (Behavior told it finished, the playback window and the
+    // pending answer dropped). release() ends the line without shutLine(), so without this the finish test in
+    // runBehavior() never passes and Behavior stays Chirping, every later verdict OutputBusy (review 2026-11-05 H1).
+    void closeEmission(ResonantBehavior& behavior, unsigned long now);
     // Whispernet's detector config, plan and Behavior config into the shell's runtime and Behavior.
     void configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior);
 

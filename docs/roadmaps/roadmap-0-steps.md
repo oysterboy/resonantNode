@@ -420,7 +420,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    gateway and glide work: 2 high, 6 medium, 17 low; spec drift per item; the architecture read). Cut by the owner
    2026-11-05: one small step now, the rest deferred with triggers ("Review leftovers" below), since the echo code
    moves fast until the tryout.
-   23.0 [DONE 2026-11-05, 0b57735; CI run 415 green, 11 ESP envs] CI green again: esp32dev-gateway in the matrix (H2; its format half landed in 7c05d78 before this step); the NUL byte in
+   23.0 [DONE 2026-11-05, a6b0fee; CI run 415 green, 11 ESP envs] CI green again: esp32dev-gateway in the matrix (H2; its format half landed in 7c05d78 before this step); the NUL byte in
         AnalyzerCommandParse.h (L13), a refused ParamRegistry add printed at boot (L15), the replay's comments
         (L17); the stale lines in CLAUDE.md, implementation-status.md, notes_manual.md (D14). Gate: a green run on
         main with 11 ESP envs built.
@@ -434,6 +434,11 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         SEQ run is active (M6). PC, then one remote round trip per mode. Gate: a failed OTA during a whisper replay
         and during an echo replay leaves both boards answering (bench session cited); an Analyzer OTA refused
         mid-run.
+        2026-11-05, PC: Whispernet::closeEmission (called before release(): Behavior told the emission finished, the
+        playback window and the pending answer dropped); the echo room stops its replay the Node's way, frees ring and
+        clip (CaptureRing::end) and prints `ECHO ota largest_block=` before the pull, allocateEchoBuffers() after a
+        failed one; the Analyzer answers `OTA result=busy reason=seq_active` while a run is active or queued. Compiled
+        in CI only; the gate's board part (a failed OTA during a whisper and an echo replay) open for the bench.
    23.2 The train unit out of Behavior (M1 with D6): the Node hands Behavior the single-train duration from
         output.hop_* (as it hands the base grid), trainsInVerdict counts in it, native-fieldsim reads the same
         value; the 2026-11-05 overnight values reconsidered against the corrected count. PC, then a two-board chord

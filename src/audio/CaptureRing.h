@@ -26,6 +26,13 @@ public:
         return _capacity > 0;
     }
 
+    // Frees the buffer (before an OTA pull: the download needs the heap); begin() again to record.
+    void end() {
+        _buffer.reset();
+        _capacity = 0;
+        _written = 0;
+    }
+
     void push(int16_t sample) {
         if (_capacity == 0) {
             return;

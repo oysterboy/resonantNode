@@ -95,6 +95,7 @@ private:
     void runBehavior(unsigned long now);
     void startReplay(unsigned long now);
     void configureEcho();
+    bool allocateEchoBuffers();  // the ring and the clip (the echo room); false when the heap has no room
     void configureParams();
     void applyParams();
     void handleParamCommand(const char* line);

@@ -163,7 +163,10 @@ The boards pull a new image over WiFi (decisions/2026-10-28-ota-firmware-pull-ov
    from its mode's loop, `OTA confirmed partition=app0|app1`. A new image that crashes, resets, or has not confirmed
    by 60 s of uptime (a hang: the deadline restarts it) falls back to its previous image (`src/app/FirmwareOta.h`).
    `OTA result=download_failed|wifi_timeout` leaves the old image running and the radio on its channel (WiFi joins
-   without auto-reconnect and without storing the credentials in NVS).
+   without auto-reconnect and without storing the credentials in NVS). A board that sounds closes its emission
+   first; the echo modes free their big buffers before the pull (`ECHO ota largest_block=`, 2026-11-05) and take
+   them back after a failed one (`ECHO ERR ring_or_clip_alloc_failed` / `whisper_alloc_failed` if the heap refuses).
+   The Analyzer refuses `OTA` during a SEQ run: `OTA result=busy reason=seq_active` (2026-11-05).
 
 ### Remote commands (radio, step 11a)
 
@@ -246,6 +249,7 @@ RAW trigger ... [sweep=END_HZ] [band=LOW-HIGH|off]          sweep the chirp; ban
                                   pre + post: at most 6,000 rows, fewer when the largest free block is smaller
                                   (RAW_ALLOC max_rows= says how many; AnalyzerRawCapture.cpp planRawCapture, 2026-10-29)
 RAW ... during a SEQ run (active or queued)                 refused: RAW_ERR busy reason=seq_active (2026-10-29)
+OTA ... during a SEQ run (active or queued)                 refused: OTA result=busy reason=seq_active (2026-11-05)
 EMIT CHIRP|MODE AUTO|MODE REMOTE|SWEEP|PULSES ...            the Analyzer drives its own output too
 SELFTEST [external | chirp n=N gap_ms=MS dur_ms=MS | help]   external: board only, external_chirp SKIP
 ```

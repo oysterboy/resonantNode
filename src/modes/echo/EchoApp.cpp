@@ -69,12 +69,7 @@ void EchoApp::begin() {
         // Before the radio takes its heap: the line is one 96 KB block at 24 kHz.
         whisperReady = _whisper.begin(runtime::kDefaultAudioI2SSampleRateHz, ESP.getEfuseMac());
     } else {
-        _ring.begin(static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_RING_MS / 1000U);
-        _clipCapacity = static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_CLIP_MS / 1000U;
-        _clip.reset(new (std::nothrow) int16_t[_clipCapacity]);
-        if (!_clip) {
-            _clipCapacity = 0;
-        }
+        allocateEchoBuffers();
     }
     _i2sPort.begin();
     if (kWhispernet) {
@@ -271,6 +266,18 @@ void EchoApp::handleParamCommand(const char* line) {
     if (result.effect != param::ParamCommandEffect::None) {
         applyParams();
     }
+}
+
+bool EchoApp::allocateEchoBuffers() {
+    _ring.begin(static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_RING_MS / 1000U);
+    _clipCapacity = static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_CLIP_MS / 1000U;
+    _clip.reset(new (std::nothrow) int16_t[_clipCapacity]);
+    if (!_clip) {
+        _clipCapacity = 0;
+    }
+    _clipWanted = false;
+    _clipReady = false;
+    return _ring.capacity() > 0 && _clipCapacity > 0;
 }
 
 void EchoApp::configureEcho() {
@@ -644,15 +651,38 @@ void EchoApp::handleOtaCommand(const char* line) {
     // its channel, pull and reboot; on failure the radio goes back to its channel.
     _toneOutput.toneOff();
     _toneOn = false;
+    const unsigned long now = timebase::nowMs();
     if (kWhispernet) {
+        _whisper.closeEmission(_behavior, now);
         _whisper.release();
+    } else {
+        // A replay that sounds is closed as the Node closes its emission (review 12.0 H1), and the ring and the
+        // clip (77 KB at 24 kHz) are freed as Whispernet frees its line: with them held the download stalled at a
+        // 16 KB largest block on the desk (2026-11-01; review 2026-11-05 M3).
+        if (_soundOutput.busy()) {
+            _soundOutput.stop();
+            _behavior.notifyChirpFinished(now);
+        }
+        _soundOutput.stop();
+        _ring.end();
+        _clip.reset();
+        _clipCapacity = 0;
+        _clipWanted = false;
+        _clipReady = false;
     }
+    serialOut().print("ECHO ota largest_block=");
+    serialOut().println(largestFreeBlock());
     if (_net.started()) {
         _net.flush(1500);
     }
     ota::runCommand(line, serialOut());
-    if (kWhispernet && !_whisper.resume()) {  // the update failed: back to listening, if the heap still allows
-        serialOut().println("ECHO ERR whisper_alloc_failed");
+    // The update failed: back to listening, if the heap still allows.
+    if (kWhispernet) {
+        if (!_whisper.resume()) {
+            serialOut().println("ECHO ERR whisper_alloc_failed");
+        }
+    } else if (!allocateEchoBuffers()) {
+        serialOut().println("ECHO ERR ring_or_clip_alloc_failed");
     }
     if (_net.started()) {
         _net.restoreChannel();

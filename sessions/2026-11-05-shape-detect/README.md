@@ -23,3 +23,6 @@ Reading: today's detection hears 3 and today's shape. With the minimum duration 
 and 4 are heard but the shape check reads no climb (10 ms a step is too fast for it: single_pulse); 6 is not heard
 at all (10 ms pulses with gaps: no island reaches scalar_min_longest_island_ms 20). Not tested: what else passes
 at 40 ms (clicks, typing, the room): a lower minimum is a detection retune and wants that check first.
+
+Owner, after hearing 3, 8, 5 again (PC beeps 1/2/3, chirp385.py): 5 (5 x 15 ms, gap 0) sounds best.
+E3 measured it at ~83 ms, under scalar_min_duration_ms 92: a minimum near 70 may be enough (less than the 40 tested).

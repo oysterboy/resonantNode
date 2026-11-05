@@ -40,7 +40,7 @@ where most of this note lands.
   - The format job fails on main since fedb3b8 (runs 406 and 407; also 403 earlier the same day, fixed by 404):
     `src/modes/gateway/GatewayApp.cpp` is not clang-formatted (two lines). While it is red, a real failure in
     any later push is one red among reds; `CLAUDE.md` tells every session to read `gh run list` after a push.
-    Fix: `python tools/ci/clang_format.py --fix`.
+    Fix: `python tools/ci/clang_format.py --fix`. -> done in 7c05d78 (2026-11-05, before this note landed on main).
   - `esp32dev-gateway` (platformio.ini, added in fedb3b8) is not in the matrix at `build.yml:14-24`; `build.yml:1`
     and `CLAUDE.md` say every env builds. A change to `src/modes/gateway/` or to its `build_src_filter` (which
     drops hal/, detection/, behavior/, audio/, output/, selftest/) pushes green. Fix: add the env to the matrix.

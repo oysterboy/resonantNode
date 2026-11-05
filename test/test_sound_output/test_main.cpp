@@ -9,6 +9,7 @@ native-test-behavior.
 #include <unity.h>
 
 #include "../../src/output/ChirpOutput.cpp"
+#include "../../src/audio/ClipShape.h"
 #include "../../src/output/ClipEnvelope.h"
 #include "../../src/output/SoundOutput.cpp"
 
@@ -300,6 +301,47 @@ void test_clip_envelope_ramps_in_and_out() {
     TEST_ASSERT_FLOAT_WITHIN(1e-6f, 1.0f / 3.0f, clipEnvelope(0, 4, 10));
 }
 
+// ECHO-004: damping 0 and fade 0 leave the clip as recorded; the fade ends at 0 and rises linearly before it.
+void test_clip_shape_fade_and_bypass() {
+    int16_t c[100];
+    for (int i = 0; i < 100; ++i) {
+        c[i] = 1000;
+    }
+    clipshape::shape(c, 100, 24000, 0, 0);
+    TEST_ASSERT_EQUAL_INT16(1000, c[0]);
+    TEST_ASSERT_EQUAL_INT16(1000, c[99]);
+    clipshape::shape(c, 100, 24000, 0, 1);  // 1 ms = 24 samples
+    TEST_ASSERT_EQUAL_INT16(0, c[99]);
+    TEST_ASSERT_EQUAL_INT16(500, c[99 - 12]);
+    TEST_ASSERT_EQUAL_INT16(1000, c[99 - 24]);
+    TEST_ASSERT_EQUAL_INT16(1000, c[0]);
+}
+
+// The damping's corner: the clip's top at 0 %, 1 kHz at 100 %, log-spaced; a 6 kHz tone loses more the more damped.
+void test_clip_shape_damping_dulls_highs() {
+    TEST_ASSERT_FLOAT_WITHIN(1.0f, 0.0f, clipshape::cornerHz(0, 24000));
+    TEST_ASSERT_FLOAT_WITHIN(1.0f, 1000.0f, clipshape::cornerHz(100, 24000));
+    TEST_ASSERT_FLOAT_WITHIN(5.0f, 3464.0f, clipshape::cornerHz(50, 24000));
+    auto tonePeak = [](uint32_t damping) {
+        static int16_t c[2400];
+        for (int i = 0; i < 2400; ++i) {
+            c[i] = static_cast<int16_t>(10000.0f * sinf(2.0f * 3.14159265f * 6000.0f * i / 24000.0f));
+        }
+        clipshape::shape(c, 2400, 24000, damping, 0);
+        int peak = 0;
+        for (int i = 1200; i < 2400; ++i) {
+            peak = c[i] > peak ? c[i] : peak;
+        }
+        return peak;
+    };
+    const int none = tonePeak(0);
+    const int some = tonePeak(30);
+    const int much = tonePeak(80);
+    TEST_ASSERT_EQUAL_INT(10000, none);
+    TEST_ASSERT_TRUE(some < none);
+    TEST_ASSERT_TRUE(much < some / 2);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_hop_train_plays_the_bins_and_finishes_after_its_span);
@@ -313,5 +355,7 @@ int main(int, char**) {
     RUN_TEST(test_clip_plays_and_finishes);
     RUN_TEST(test_clip_without_samples_is_rejected);
     RUN_TEST(test_clip_envelope_ramps_in_and_out);
+    RUN_TEST(test_clip_shape_fade_and_bypass);
+    RUN_TEST(test_clip_shape_damping_dulls_highs);
     return UNITY_END();
 }

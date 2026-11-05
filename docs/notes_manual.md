@@ -18,7 +18,7 @@ When you find a stale name here, fix the pointer, do not add another table of va
 platformio run -e esp32dev            Node (RB, the field firmware)
 platformio run -e esp32dev-analyzer   Analyzer (default env)
 platformio run -e esp32dev-emitter    Emitter (signal source only)
-platformio run -e esp32dev-echo       the echo modes' shell at 48 kHz (D-AMP only; ECHO-003, 2026-10-30)
+platformio run -e esp32dev-echo       the echo room at 24 kHz since 2026-11-05 (48 kHz before; D-AMP only; ECHO-003, ECHO-004)
 platformio run -e esp32dev-whisper    the same shell as Whispernet at 24 kHz (D-AMP only; ECHO-002, 2026-11-01)
 ```
 
@@ -335,7 +335,8 @@ ECHO RESET                the load counters
 ECHO LOG <s>              the status line every s seconds (10 at boot), 0 = on request only
 ECHO GATE [onset=] [release=] [floor=] [peak=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]
           [levelmax=] [offset=] [decay=MS] [rest=MS] [wait=MS] [jitter=MS]   (the echo room's Behavior, 2026-11-01)
-                          the echo room's values, live (Strength16 levels; the clip pre + post <= 300 ms)
+                          the echo room's values, live (Strength16 levels; the clip pre + post <= 600 ms since
+                          2026-11-05, 300 ms at 48 kHz before)
 TONE <hz> <ms>            a test tone through the amp, at the shell's rate
 OTA url=... token=...     as on the Node; the image confirms after 20 s once its radio started
 NET STATUS / NET PING     the radio's counters
@@ -346,7 +347,9 @@ inspected by the echo room's one-module plan (AttackRise: the envelope rose from
 read from a 64 ms FeatureHistory) and judged by makeVerdict; a clap goes to a ResonantBehavior
 with the echo room's own values (no idle call, the first clap answered with 3 / 4, an answer 350 ms after it plus up to
 300 ms, a rest after a level of 4); the answer is the clap itself, `pre` ms before its onset to `post` ms after, cut
-from the ring and played at `gain`. Lines: `ECHO clap valid= attack_ms= strength= duration_ms= decision=`, `ECHO replay
+from the ring and played at `gain`. Since 2026-11-05 (ECHO-004, `audio/ClipShape.h`) the copied clip is shaped
+first: `echo.damping_pct` a low-pass (0 = as recorded; the corner from the clip's top at 0 % to 1 kHz at 100 %), which
+compounds over the generations since each replay records a replay, and `echo.fade_ms` a fade over its end. Lines: `ECHO clap valid= attack_ms= strength= duration_ms= decision=`, `ECHO replay
 onset_index= ms= gain=`; ECHO STATUS adds `level= occurrences= claps= slow= replays= clip_missing= behavior=`.
 Since 2026-11-04 every value is a param (ECHO-003): `echo.*` in the echo build, `whisper.*` in the whisper build, with
 `PARAM LIST|GET|SET|DUMP|SAVE|LOAD|RESET` as on the Node (also by radio: `NET <name> PARAM ...`). The defaults are in

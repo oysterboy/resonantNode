@@ -13,6 +13,7 @@
 #include "../../app/TextParse.h"
 #include "../../app/TimeBase.h"
 #include "../../audio/AudioPcm.h"
+#include "../../audio/ClipShape.h"
 #include "../../detection/inspection/VerdictProjection.h"
 #include "../../net/RemoteCommandPolicy.h"
 
@@ -69,7 +70,7 @@ void EchoApp::begin() {
         whisperReady = _whisper.begin(runtime::kDefaultAudioI2SSampleRateHz, ESP.getEfuseMac());
     } else {
         _ring.begin(static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_RING_MS / 1000U);
-        _clipCapacity = static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * 300U / 1000U;
+        _clipCapacity = static_cast<size_t>(runtime::kDefaultAudioI2SSampleRateHz) * ECHO_CLIP_MS / 1000U;
         _clip.reset(new (std::nothrow) int16_t[_clipCapacity]);
         if (!_clip) {
             _clipCapacity = 0;
@@ -219,8 +220,13 @@ void EchoApp::configureParams() {
                    32767.0f);
         r.addUInt32(param::ParamId::Echo_AttackMs, param::ModuleId::Detection, "echo.attack_ms", &_gate.maxAttackMs, 1U,
                     200U);
-        r.addUInt32(param::ParamId::Echo_PreMs, param::ModuleId::Output, "echo.pre_ms", &_gate.preMs, 0U, 300U);
-        r.addUInt32(param::ParamId::Echo_PostMs, param::ModuleId::Output, "echo.post_ms", &_gate.postMs, 0U, 300U);
+        r.addUInt32(param::ParamId::Echo_PreMs, param::ModuleId::Output, "echo.pre_ms", &_gate.preMs, 0U, ECHO_CLIP_MS);
+        r.addUInt32(param::ParamId::Echo_PostMs, param::ModuleId::Output, "echo.post_ms", &_gate.postMs, 0U,
+                    ECHO_CLIP_MS);
+        r.addUInt32(param::ParamId::Echo_DampingPct, param::ModuleId::Output, "echo.damping_pct", &_gate.dampingPct, 0U,
+                    100U);
+        r.addUInt32(param::ParamId::Echo_FadeMs, param::ModuleId::Output, "echo.fade_ms", &_gate.fadeMs, 0U,
+                    ECHO_CLIP_MS);
         r.addFloat(param::ParamId::Echo_Gain, param::ModuleId::Output, "echo.gain", &_gate.gain, 0.0f, 512.0f);
         r.addBool(param::ParamId::Echo_Enabled, param::ModuleId::Output, "echo.enabled", &_gate.enabled);
         r.addUInt32(param::ParamId::Echo_LevelMax, param::ModuleId::Behavior, "echo.level_max", &_gate.levelMax, 1U,
@@ -252,8 +258,8 @@ void EchoApp::applyParams() {
     if (_gate.levelMax == 0) {
         _gate.levelMax = 1;  // Behavior draws below it
     }
-    if (_gate.preMs + _gate.postMs > 300) {
-        _gate.postMs = _gate.preMs < 300 ? 300 - _gate.preMs : 0;  // the clip buffer holds 300 ms
+    if (_gate.preMs + _gate.postMs > ECHO_CLIP_MS) {
+        _gate.postMs = _gate.preMs < ECHO_CLIP_MS ? ECHO_CLIP_MS - _gate.preMs : 0;  // what the clip buffer holds
     }
     configureEcho();
 }
@@ -417,6 +423,9 @@ void EchoApp::takeClip() {
     _clipWanted = false;
     _clipReady = _ring.copy(from, static_cast<size_t>(count), _clip.get());
     _clipCount = _clipReady ? static_cast<size_t>(count) : 0;
+    if (_clipReady) {
+        clipshape::shape(_clip.get(), _clipCount, static_cast<uint32_t>(rate), _gate.dampingPct, _gate.fadeMs);
+    }
 }
 
 // The answer: the clap as it was heard.

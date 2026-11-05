@@ -24,6 +24,10 @@
 #ifndef ECHO_RING_MS
 #define ECHO_RING_MS 500
 #endif
+// The clip buffer's length: pre_ms + post_ms fit in it (ECHO-004: 600 at 24 kHz, the bytes of 300 at 48 kHz).
+#ifndef ECHO_CLIP_MS
+#define ECHO_CLIP_MS 600
+#endif
 
 // esp32dev-whisper builds the shell as Whispernet (ECHO-002) instead of the echo room; both paths compile in both.
 #ifdef WHISPERNET
@@ -122,7 +126,11 @@ private:
         // the boards heard failed at 10, among it the neighbours' replays, which rise more slowly through the speaker.
         uint32_t maxAttackMs = 20;
         uint32_t preMs = 30;  // the clip from the onset back
-        uint32_t postMs = 270;  // and forward (clip <= 300 ms)
+        uint32_t postMs = 270;  // and forward (pre + post <= ECHO_CLIP_MS)
+        // The answer shaped before it plays (ECHO-004, audio/ClipShape.h): a low-pass that compounds over the
+        // generations (0 = as recorded) and a fade over the clip's end.
+        uint32_t dampingPct = 25;
+        uint32_t fadeMs = 40;
         // The replay's level over the mic's: 1 plays the clip at the mic's digital level, far too quiet at a metre; 128
         // "sounds good" (owner, 2026-11-01). Loud claps at 128 draw the amp's peak current from USB: five boards on one
         // hub dropped ports (a powered hub or a separate amp supply for the room).

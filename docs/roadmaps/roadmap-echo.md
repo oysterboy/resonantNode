@@ -110,8 +110,9 @@ unchanged after a pass through the other two), cited.
 
 ### ECHO-004 - the echo room's sound: a longer clip, a damping per generation
 
-Status: TODO (owner 2026-11-05, after clapping with all five: bench/sessions/2026-11-05-echo-claps; the echo room
-is parked until this lands)
+Status: PARTIAL (owner 2026-11-05, after clapping with all five: bench/sessions/2026-11-05-echo-claps; the echo room
+is parked until this lands). Items 1-3 built the same evening, host-tested, not yet on the boards
+(decisions/2026-11-05-echo-room-24k-damping.md); items 4 and the gate wait for the owner's round.
 
 ```text
 1. 24 kHz in the echo build ("definitely the right approach"): the clip doubles to ~600 ms in the same memory

@@ -179,6 +179,8 @@ enum class ParamId : uint16_t {
     Whisper_MaxPhraseMs,
     Node_RadioLog,  // node.radio_log, shared by every mode (a board keeps it across the switch)
     Behavior_StartChancePct,
+    Echo_DampingPct,
+    Echo_FadeMs,
 };
 
 }  // namespace param

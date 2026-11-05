@@ -1,0 +1,272 @@
+1793876707.278 P >> PARAM SET behavior.band_per_node 1
+1793876707.629 P >> PARAM SET behavior.band_range_low_hz 2000
+1793876707.980 P >> PARAM SET behavior.band_range_high_hz 3000
+1793876708.331 P >> PARAM SET output.idle_announce_hz 0
+1793876708.682 L >> PARAM SET behavior.band_per_node 1
+1793876708.698 L PARAM SET path=behavior.band_per_node module=behavior old=1 new=1 status=ok
+1793876709.033 L >> PARAM SET behavior.band_range_low_hz 2000
+1793876709.063 L PARAM SET path=behavior.band_range_low_hz module=behavior old=950 new=2000 status=ok
+1793876709.387 L >> PARAM SET behavior.band_range_high_hz 3000
+1793876709.434 L PARAM SET path=behavior.band_range_high_hz module=behavior old=4950 new=3000 status=ok
+1793876709.741 L >> PARAM SET output.idle_announce_hz 0
+1793876709.781 L PARAM SET path=output.idle_announce_hz module=output old=300 new=0 status=ok
+1793876709.781 L RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793876710.094 P >> PARAM SET output.silent 0
+1793876710.445 L >> PARAM SET output.silent 1
+1793876710.517 L PARAM SET path=output.silent module=output old=1 new=1 status=ok
+1793876710.517 L RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793876710.796 L >> RB log full
+1793876710.813 L RB log mode=full
+1793876713.147 P >> PARAM SET output.hop_steps 5
+1793876713.498 P >> PARAM SET output.hop_pulse_ms 25
+1793876713.849 P >> PARAM SET output.hop_gap_ms 10
+1793876714.199 P >> RB CALL
+1793876714.501 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7498 duration_ms=141 profile=TonalPulseScalar
+1793876715.599 P >> RB CALL
+1793876715.917 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7522 duration_ms=141 profile=TonalPulseScalar
+1793876717.000 P >> RB CALL
+1793876717.266 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7507 duration_ms=132 profile=TonalPulseScalar
+1793876718.401 P >> RB CALL
+1793876718.685 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7619 duration_ms=147 profile=TonalPulseScalar
+1793876719.802 P >> RB CALL
+1793876720.087 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7612 duration_ms=123 profile=TonalPulseScalar
+1793876721.202 P >> RB CALL
+1793876721.480 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7530 duration_ms=123 profile=TonalPulseScalar
+1793876722.603 P >> RB CALL
+1793876724.004 P >> RB CALL
+1793876725.405 P >> RB CALL
+1793876726.806 P >> RB CALL
+1793876728.207 P >> PARAM SET output.hop_steps 8
+1793876728.557 P >> PARAM SET output.hop_pulse_ms 10
+1793876728.912 P >> PARAM SET output.hop_gap_ms 0
+1793876729.262 P >> RB CALL
+1793876730.663 P >> RB CALL
+1793876732.064 P >> RB CALL
+1793876733.464 P >> RB CALL
+1793876734.864 P >> RB CALL
+1793876736.265 P >> RB CALL
+1793876737.665 P >> RB CALL
+1793876739.066 P >> RB CALL
+1793876740.467 P >> RB CALL
+1793876741.872 P >> RB CALL
+1793876743.272 P >> PARAM SET output.hop_steps 8
+1793876743.623 P >> PARAM SET output.hop_pulse_ms 25
+1793876743.974 P >> PARAM SET output.hop_gap_ms 0
+1793876744.324 P >> RB CALL
+1793876744.576 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7666 duration_ms=149 profile=TonalPulseScalar
+1793876745.086 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7622 duration_ms=151 profile=TonalPulseScalar
+1793876745.725 P >> RB CALL
+1793876745.991 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7623 duration_ms=157 profile=TonalPulseScalar
+1793876747.125 P >> RB CALL
+1793876747.406 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7638 duration_ms=151 profile=TonalPulseScalar
+1793876748.526 P >> RB CALL
+1793876748.767 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7543 duration_ms=157 profile=TonalPulseScalar
+1793876749.926 P >> RB CALL
+1793876750.151 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=8083 duration_ms=133 profile=TonalPulseScalar
+1793876751.327 P >> RB CALL
+1793876752.727 P >> RB CALL
+1793876754.128 P >> RB CALL
+1793876755.529 P >> RB CALL
+1793876756.930 P >> RB CALL
+1793876758.289 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7542 duration_ms=138 profile=TonalPulseScalar
+1793876758.330 P >> PARAM SET output.hop_steps 5
+1793876758.681 P >> PARAM SET output.hop_pulse_ms 10
+1793876759.032 P >> PARAM SET output.hop_gap_ms 0
+1793876759.383 P >> RB CALL
+1793876760.783 P >> RB CALL
+1793876762.184 P >> RB CALL
+1793876763.585 P >> RB CALL
+1793876764.986 P >> RB CALL
+1793876766.386 P >> RB CALL
+1793876767.788 P >> RB CALL
+1793876769.189 P >> RB CALL
+1793876770.590 P >> RB CALL
+1793876771.991 P >> RB CALL
+1793876773.392 P >> PARAM SET output.hop_steps 5
+1793876773.744 P >> PARAM SET output.hop_pulse_ms 15
+1793876774.094 P >> PARAM SET output.hop_gap_ms 0
+1793876774.445 P >> RB CALL
+1793876775.848 P >> RB CALL
+1793876777.249 P >> RB CALL
+1793876778.650 P >> RB CALL
+1793876780.051 P >> RB CALL
+1793876781.452 P >> RB CALL
+1793876782.852 P >> RB CALL
+1793876784.253 P >> RB CALL
+1793876785.654 P >> RB CALL
+1793876787.055 P >> RB CALL
+1793876788.457 P >> PARAM SET output.hop_steps 5
+1793876788.808 P >> PARAM SET output.hop_pulse_ms 10
+1793876789.159 P >> PARAM SET output.hop_gap_ms 5
+1793876789.510 P >> RB CALL
+1793876790.911 P >> RB CALL
+1793876792.311 P >> RB CALL
+1793876793.713 P >> RB CALL
+1793876795.114 P >> RB CALL
+1793876796.514 P >> RB CALL
+1793876797.915 P >> RB CALL
+1793876799.316 P >> RB CALL
+1793876800.717 P >> RB CALL
+1793876802.118 P >> RB CALL
+1793876803.518 P >> PARAM SET output.hop_steps 3
+1793876803.870 P >> PARAM SET output.hop_pulse_ms 15
+1793876804.220 P >> PARAM SET output.hop_gap_ms 5
+1793876804.571 P >> RB CALL
+1793876805.972 P >> RB CALL
+1793876807.372 P >> RB CALL
+1793876808.773 P >> RB CALL
+1793876810.174 P >> RB CALL
+1793876811.574 P >> RB CALL
+1793876812.975 P >> RB CALL
+1793876814.379 P >> RB CALL
+1793876815.779 P >> RB CALL
+1793876817.181 P >> RB CALL
+1793876818.582 L >> PARAM SET detection.scalar_min_duration_ms 40
+1793876818.634 L PARAM SET path=detection.scalar_min_duration_ms module=detection old=92 new=40 status=ok
+1793876818.634 L RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=40..450 issues=gap_not_below_debounce
+1793876818.634 L RB plan_check status=warn history_needed_ms=560 history_ms=576 early_window_ms=50 issues=window_after_inspection
+1793876818.933 L >> PARAM SET detection.scalar_min_release_coverage_ms 30
+1793876819.004 L PARAM SET path=detection.scalar_min_release_coverage_ms module=detection old=80 new=30 status=ok
+1793876819.004 L RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=40..450 issues=gap_not_below_debounce
+1793876819.004 L RB plan_check status=warn history_needed_ms=560 history_ms=576 early_window_ms=50 issues=window_after_inspection
+1793876819.285 P >> PARAM SET output.hop_steps 5
+1793876819.636 P >> PARAM SET output.hop_pulse_ms 25
+1793876819.987 P >> PARAM SET output.hop_gap_ms 10
+1793876820.338 P >> RB CALL
+1793876820.654 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7684 duration_ms=145 profile=TonalPulseScalar
+1793876821.739 P >> RB CALL
+1793876822.020 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7612 duration_ms=147 profile=TonalPulseScalar
+1793876823.139 P >> RB CALL
+1793876823.442 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7606 duration_ms=147 profile=TonalPulseScalar
+1793876824.540 P >> RB CALL
+1793876824.829 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7583 duration_ms=147 profile=TonalPulseScalar
+1793876825.945 P >> RB CALL
+1793876826.240 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7510 duration_ms=147 profile=TonalPulseScalar
+1793876827.346 P >> RB CALL
+1793876828.746 P >> RB CALL
+1793876830.147 P >> RB CALL
+1793876831.548 P >> RB CALL
+1793876832.948 P >> RB CALL
+1793876834.349 P >> PARAM SET output.hop_steps 8
+1793876834.381 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7508 duration_ms=147 profile=TonalPulseScalar
+1793876834.700 P >> PARAM SET output.hop_pulse_ms 10
+1793876835.050 P >> PARAM SET output.hop_gap_ms 0
+1793876835.401 P >> RB CALL
+1793876835.610 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6921 duration_ms=57 profile=TonalPulseScalar
+1793876836.801 P >> RB CALL
+1793876836.994 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6946 duration_ms=57 profile=TonalPulseScalar
+1793876838.203 P >> RB CALL
+1793876838.425 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6951 duration_ms=57 profile=TonalPulseScalar
+1793876839.604 P >> RB CALL
+1793876839.815 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6979 duration_ms=57 profile=TonalPulseScalar
+1793876841.005 P >> RB CALL
+1793876841.164 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6945 duration_ms=57 profile=TonalPulseScalar
+1793876842.405 P >> RB CALL
+1793876843.806 P >> RB CALL
+1793876845.207 P >> RB CALL
+1793876846.608 P >> RB CALL
+1793876848.009 P >> RB CALL
+1793876849.410 P >> PARAM SET output.hop_steps 8
+1793876849.762 P >> PARAM SET output.hop_pulse_ms 25
+1793876850.112 P >> PARAM SET output.hop_gap_ms 0
+1793876850.463 P >> RB CALL
+1793876850.694 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7603 duration_ms=157 profile=TonalPulseScalar
+1793876851.864 P >> RB CALL
+1793876852.136 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7547 duration_ms=157 profile=TonalPulseScalar
+1793876853.265 P >> RB CALL
+1793876853.548 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7559 duration_ms=158 profile=TonalPulseScalar
+1793876854.665 P >> RB CALL
+1793876854.898 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7587 duration_ms=158 profile=TonalPulseScalar
+1793876856.066 P >> RB CALL
+1793876856.343 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7557 duration_ms=158 profile=TonalPulseScalar
+1793876857.467 P >> RB CALL
+1793876858.867 P >> RB CALL
+1793876860.268 P >> RB CALL
+1793876861.668 P >> RB CALL
+1793876863.069 P >> RB CALL
+1793876864.470 P >> PARAM SET output.hop_steps 5
+1793876864.477 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7520 duration_ms=153 profile=TonalPulseScalar
+1793876864.820 P >> PARAM SET output.hop_pulse_ms 10
+1793876865.171 P >> PARAM SET output.hop_gap_ms 0
+1793876865.522 P >> RB CALL
+1793876865.735 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6857 duration_ms=57 profile=TonalPulseScalar
+1793876866.927 P >> RB CALL
+1793876867.118 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6902 duration_ms=57 profile=TonalPulseScalar
+1793876868.328 P >> RB CALL
+1793876868.543 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6854 duration_ms=57 profile=TonalPulseScalar
+1793876869.729 P >> RB CALL
+1793876869.924 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6862 duration_ms=57 profile=TonalPulseScalar
+1793876871.130 P >> RB CALL
+1793876871.298 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6842 duration_ms=57 profile=TonalPulseScalar
+1793876872.531 P >> RB CALL
+1793876873.932 P >> RB CALL
+1793876875.333 P >> RB CALL
+1793876876.733 P >> RB CALL
+1793876878.134 P >> RB CALL
+1793876879.351 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6800 duration_ms=57 profile=TonalPulseScalar
+1793876879.535 P >> PARAM SET output.hop_steps 5
+1793876879.891 P >> PARAM SET output.hop_pulse_ms 15
+1793876880.241 P >> PARAM SET output.hop_gap_ms 0
+1793876880.592 P >> RB CALL
+1793876881.086 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7429 duration_ms=80 profile=TonalPulseScalar
+1793876881.992 P >> RB CALL
+1793876882.159 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7520 duration_ms=80 profile=TonalPulseScalar
+1793876883.393 P >> RB CALL
+1793876883.591 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7477 duration_ms=81 profile=TonalPulseScalar
+1793876884.794 P >> RB CALL
+1793876885.016 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7428 duration_ms=81 profile=TonalPulseScalar
+1793876886.195 P >> RB CALL
+1793876887.595 P >> RB CALL
+1793876888.996 P >> RB CALL
+1793876890.397 P >> RB CALL
+1793876891.797 P >> RB CALL
+1793876893.049 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7490 duration_ms=81 profile=TonalPulseScalar
+1793876893.198 P >> RB CALL
+1793876893.540 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7472 duration_ms=81 profile=TonalPulseScalar
+1793876894.599 P >> PARAM SET output.hop_steps 5
+1793876894.950 P >> PARAM SET output.hop_pulse_ms 10
+1793876895.300 P >> PARAM SET output.hop_gap_ms 5
+1793876895.652 P >> RB CALL
+1793876897.052 P >> RB CALL
+1793876898.454 P >> RB CALL
+1793876899.855 P >> RB CALL
+1793876901.255 P >> RB CALL
+1793876902.656 P >> RB CALL
+1793876904.056 P >> RB CALL
+1793876905.457 P >> RB CALL
+1793876906.858 P >> RB CALL
+1793876908.258 P >> RB CALL
+1793876909.659 P >> PARAM SET output.hop_steps 3
+1793876910.010 P >> PARAM SET output.hop_pulse_ms 15
+1793876910.361 P >> PARAM SET output.hop_gap_ms 5
+1793876910.712 P >> RB CALL
+1793876910.913 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7735 duration_ms=54 profile=TonalPulseScalar
+1793876912.114 P >> RB CALL
+1793876912.309 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7747 duration_ms=54 profile=TonalPulseScalar
+1793876913.514 P >> RB CALL
+1793876913.679 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7802 duration_ms=54 profile=TonalPulseScalar
+1793876914.916 P >> RB CALL
+1793876915.119 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7769 duration_ms=54 profile=TonalPulseScalar
+1793876916.316 P >> RB CALL
+1793876916.497 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7780 duration_ms=54 profile=TonalPulseScalar
+1793876917.717 P >> RB CALL
+1793876919.122 P >> RB CALL
+1793876920.522 P >> RB CALL
+1793876921.923 P >> RB CALL
+1793876923.324 P >> RB CALL
+1793876924.566 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=7832 duration_ms=60 profile=TonalPulseScalar
+1793876924.725 L >> PARAM SET detection.scalar_min_duration_ms 92
+1793876924.745 L PARAM SET path=detection.scalar_min_duration_ms module=detection old=40 new=92 status=ok
+1793876924.803 L RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793876924.803 L RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+1793876925.075 L >> PARAM SET detection.scalar_min_release_coverage_ms 80
+1793876925.153 L PARAM SET path=detection.scalar_min_release_coverage_ms module=detection old=30 new=80 status=ok
+1793876925.153 L RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793876925.153 L RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+1793876925.427 P >> PARAM SET output.hop_steps 5
+1793876925.778 P >> PARAM SET output.hop_pulse_ms 25
+1793876926.129 P >> PARAM SET output.hop_gap_ms 10
+1793876926.479 P >> PARAM SET output.silent 1
+1793876926.645 L RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=6756 duration_ms=172 profile=TonalPulseScalar
+1793876926.830 L >> RB log minimal
+1793876926.874 L RB log mode=minimal

@@ -8,6 +8,7 @@
 // - ANALYZER_MODE for occurrence analysis
 // - EMITTER_MODE for the standalone output device
 // - ECHO_MODE for the echo modes' shell (ECHO-003)
+// - GATEWAY_MODE for the bare radio relay (no audio)
 // - default for the resonant node sketch
 #if defined(ANALYZER_MODE)
 #include "modes/analyzer/AnalyzerModeApp.h"
@@ -15,6 +16,8 @@
 #include "modes/emitter/EmitterApp.h"
 #elif defined(ECHO_MODE)
 #include "modes/echo/EchoApp.h"
+#elif defined(GATEWAY_MODE)
+#include "modes/gateway/GatewayApp.h"
 #else
 #include "modes/resonant/ResonantNodeApp.h"
 #endif
@@ -26,6 +29,8 @@ AnalyzerModeApp app;
 EmitterApp app(CHIRP_PIN, CHIRP_BTL_PIN, EMITTER_UART_RX_PIN, EMITTER_UART_TX_PIN, EMITTER_UART_BAUD);
 #elif defined(ECHO_MODE)
 EchoApp app;
+#elif defined(GATEWAY_MODE)
+GatewayApp app;
 #else
 Node app(STATUS_LED_PIN, CHIRP_PIN, CHIRP_BTL_PIN);
 #endif

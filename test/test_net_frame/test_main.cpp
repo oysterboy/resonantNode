@@ -86,6 +86,10 @@ void test_targets_and_allowlist() {
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("param save"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("PARAM DUMP"));  // paced by the sender since 2026-10-25
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("RB STATUS"));
+    TEST_ASSERT_TRUE(net::remoteCommandAllowed("WHISPER STATUS"));  // since the gateway board (2026-11-05)
+    TEST_ASSERT_FALSE(net::remoteCommandAllowed("WHISPERING"));
+    TEST_ASSERT_TRUE(net::remoteCommandAllowed("WHISPER STATUS"));  // since the gateway board (2026-11-05)
+    TEST_ASSERT_FALSE(net::remoteCommandAllowed("WHISPERING"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("RB CALL"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("SELFTEST"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("NET PING"));

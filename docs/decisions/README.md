@@ -104,6 +104,8 @@ what replaced it.
 | 2026-11-05 | [A board's console lines by radio (node.radio_log), a mirror, not a state protocol](2026-11-05-radio-log-mirror.md) |
 | 2026-11-05 | [The answer's start chance and the chain's length are two params (behavior.start_chance_pct)](2026-11-05-start-chance-and-chain-length.md) (BEH-008) |
 | 2026-11-05 | [The echo room runs at 24 kHz; its answer is damped and faded before it plays](2026-11-05-echo-room-24k-damping.md) (ECHO-004) |
+| 2026-11-05 | [A bare ESP32 is the bench's radio gateway (esp32dev-gateway, E0)](2026-11-05-radio-gateway-board.md) |
+| 2026-11-05 | [A bare ESP32 is the bench's radio gateway (esp32dev-gateway, E0)](2026-11-05-radio-gateway-board.md) |
 
 ## Open
 

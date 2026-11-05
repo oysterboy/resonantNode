@@ -25,7 +25,7 @@ inline bool remoteCommandAllowed(const char* text) {
         return false;
     }
     if (startsWithWord(text, "PARAM") || startsWithWord(text, "SELFTEST") || startsWithWord(text, "OTA") ||
-        startsWithWord(text, "ECHO")) {
+        startsWithWord(text, "ECHO") || startsWithWord(text, "WHISPER")) {
         return true;
     }
     if (strncasecmp(text, "RB ", 3) == 0) {

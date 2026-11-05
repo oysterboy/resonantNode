@@ -192,6 +192,23 @@ Operator rules (the firmware does not check these, except where noted):
 - Anyone with ESP-NOW on channel 1 and the network id can send these commands: fine for the
   installation, not for a public space (`docs/decisions/2026-10-25-remote-params-espnow.md`).
 
+The radio gateway board (2026-11-05, `esp32dev-gateway`, `docs/decisions/2026-11-05-radio-gateway-board.md`): a bare
+ESP32 with no mic and no amp on a USB data port, named by the roster (E0). Its console takes `NET <name|*> <command>`
+as on a Node (PARAM, RB, ECHO, WHISPER, SELFTEST, OTA, NET PING), `NET STATUS` and `OTA url=... token=...` for its
+own update; it prints `NET reply from=...` and the boards' `NET log from=...` lines. It runs no commands of the
+others and plays nothing, so every board with a mic and an amp can play in any mode. Its first flash needs the
+BOOT button held (a CH340 board without auto-reset: `esptool ... --connect-attempts 80` with BOOT down); after that
+the update goes over WiFi like the others'. A new board prints `GATEWAY efuse_mac=0x...` for its roster line.
+
+The radio gateway board (2026-11-05, `esp32dev-gateway`, `docs/decisions/2026-11-05-radio-gateway-board.md`): a bare
+ESP32 with no mic and no amp on a USB data port, named by the roster (E0). Its console takes `NET <name|*> <command>`
+as on a Node (PARAM, RB, ECHO, WHISPER, SELFTEST, OTA, NET PING), `NET STATUS` and `OTA url=... token=...` for its
+own update; it prints `NET reply from=...` and the boards' `NET log from=...` lines. It runs no commands of the
+others and plays nothing, so every board with a mic and an amp can play in any mode. Its first flash needs the
+BOOT button held (a CH340 board without auto-reset: `esptool ... --connect-attempts 80` with BOOT down); after that
+the update goes over WiFi like the others'. A new board prints `GATEWAY efuse_mac=0x...` for its roster line.
+`boardview.py --boards E0=COMx --radio E1,E2,E3,E4,E5 --poll "RB STATUS"` shows every board through it.
+
 The log by radio (2026-11-05, `docs/decisions/2026-11-05-radio-log-mirror.md`): `node.radio_log` N (0 off, the
 default; up to 20) makes a board send every console line it prints, outside a remote command's reply, as one radio
 frame, at most N lines per second on average (the rest counted as dropped); in all three modes, with the same path.

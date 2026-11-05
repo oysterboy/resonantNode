@@ -25,6 +25,8 @@ ap.add_argument("--html", default="")
 ap.add_argument("--log", default="")
 ap.add_argument("--radio", default="", help="boards without USB, e.g. E1,E4,E5: their node.radio_log lines and "
                 "NET replies, as printed by the first --boards board (a Node there also asks NET * RB STATUS)")
+ap.add_argument("--poll", default="", help="a command the gateway sends to every board each round, e.g. 'RB STATUS' "
+                "(for a bare gateway board, which has no mode of its own)")
 a = ap.parse_args()
 
 KV = re.compile(r"(\S+?)=(\S*)")
@@ -177,9 +179,9 @@ try:
                 b["s"].write(b"RB STATUS\nECHO STATUS\n")
             except serial.SerialException:
                 pass
-        if a.radio and boards[gateway]["mode"] == "node":
+        if a.radio and (a.poll or boards[gateway]["mode"] == "node"):
             try:
-                boards[gateway]["s"].write(b"NET * RB STATUS\n")  # an echo board cannot send; log lines still come
+                boards[gateway]["s"].write(("NET * %s\n" % (a.poll or "RB STATUS")).encode())
             except serial.SerialException:
                 pass
         time.sleep(1.0)

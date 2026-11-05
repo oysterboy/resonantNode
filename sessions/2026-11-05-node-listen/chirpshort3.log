@@ -1,0 +1,199 @@
+1793875856.40 >> NET * PARAM SET output.silent 1
+NET sent seq=33781 target=* text=PARAM SET output.silent 1
+PARAM SET path=output.silent module=output old=1 new=1 status=ok
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E5 seq=33781 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+NET reply from=E5 seq=33781 part=0 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E5 seq=33781 done parts=1
+NET reply from=E1 seq=33781 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+NET reply from=E1 seq=33781 part=0 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E1 seq=33781 done parts=1
+NET reply from=E3 seq=33781 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+NET reply from=E3 seq=33781 part=0 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E3 seq=33781 done parts=1
+NET reply from=E4 seq=33781 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+NET reply from=E4 seq=33781 part=0 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E4 seq=33781 done parts=1
+
+1793875856.91 >> PARAM SET output.silent 0
+PARAM SET path=output.silent module=output old=1 new=0 status=ok
+RB silent=0
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+
+1793875857.41 >> PARAM SET output.idle_announce_hz 0
+PARAM SET path=output.idle_announce_hz module=output old=0 new=0 status=ok
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+
+1793875857.92 >> PARAM SET behavior.band_per_node 1
+PARAM SET path=behavior.band_per_node module=behavior old=1 new=1 status=ok
+
+1793875858.43 >> PARAM SET behavior.base_scatter_bins 0
+PARAM SET path=behavior.base_scatter_bins module=behavior old=0 new=0 status=ok
+
+1793875858.95 >> PARAM SET behavior.band_range_low_hz 2000
+PARAM SET path=behavior.band_range_low_hz module=behavior old=2000 new=2000 status=ok
+
+1793875859.46 >> PARAM SET behavior.band_range_high_hz 3000
+PARAM SET path=behavior.band_range_high_hz module=behavior old=3000 new=3000 status=ok
+
+1793875863.57 >> PARAM SET output.hop_steps 8
+PARAM SET path=output.hop_steps module=output old=5 new=8 status=ok
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+
+1793875864.08 >> PARAM SET output.hop_pulse_ms 10
+PARAM SET path=output.hop_pulse_ms module=output old=25 new=10 status=ok
+RB hop_check status=fail train_ms=90 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island,gap_not_below_debounce
+
+1793875864.59 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=10 new=0 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875864.89 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875866.01 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875869.32 >> PARAM SET output.hop_steps 8
+PARAM SET path=output.hop_steps module=output old=8 new=8 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875869.83 >> PARAM SET output.hop_pulse_ms 15
+PARAM SET path=output.hop_pulse_ms module=output old=10 new=15 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875870.35 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=0 new=0 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875870.66 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875871.78 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875875.20 >> PARAM SET output.hop_steps 8
+PARAM SET path=output.hop_steps module=output old=8 new=8 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875875.71 >> PARAM SET output.hop_pulse_ms 25
+PARAM SET path=output.hop_pulse_ms module=output old=15 new=25 status=ok
+RB hop_check status=ok train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=none
+
+1793875876.22 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=0 new=0 status=ok
+RB hop_check status=ok train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=none
+
+1793875876.53 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875877.64 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875881.26 >> PARAM SET output.hop_steps 5
+PARAM SET path=output.hop_steps module=output old=8 new=5 status=ok
+RB hop_check status=ok train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=none
+
+1793875881.77 >> PARAM SET output.hop_pulse_ms 10
+PARAM SET path=output.hop_pulse_ms module=output old=25 new=10 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875882.28 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=0 new=0 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875882.59 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875883.71 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875887.55 >> PARAM SET output.hop_steps 5
+PARAM SET path=output.hop_steps module=output old=5 new=5 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875888.05 >> PARAM SET output.hop_pulse_ms 15
+PARAM SET path=output.hop_pulse_ms module=output old=10 new=15 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875888.56 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=0 new=0 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875888.87 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875889.98 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875894.00 >> PARAM SET output.hop_steps 5
+PARAM SET path=output.hop_steps module=output old=5 new=5 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875894.50 >> PARAM SET output.hop_pulse_ms 10
+PARAM SET path=output.hop_pulse_ms module=output old=15 new=10 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875895.01 >> PARAM SET output.hop_gap_ms 5
+PARAM SET path=output.hop_gap_ms module=output old=0 new=5 status=ok
+RB hop_check status=fail train_ms=70 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875895.32 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875896.43 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875900.71 >> PARAM SET output.hop_steps 3
+PARAM SET path=output.hop_steps module=output old=5 new=3 status=ok
+RB hop_check status=fail train_ms=40 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875901.23 >> PARAM SET output.hop_pulse_ms 10
+PARAM SET path=output.hop_pulse_ms module=output old=10 new=10 status=ok
+RB hop_check status=fail train_ms=40 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875901.74 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=5 new=0 status=ok
+RB hop_check status=fail train_ms=30 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875902.06 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875903.16 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875907.65 >> PARAM SET output.hop_steps 3
+PARAM SET path=output.hop_steps module=output old=3 new=3 status=ok
+RB hop_check status=fail train_ms=30 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875908.15 >> PARAM SET output.hop_pulse_ms 15
+PARAM SET path=output.hop_pulse_ms module=output old=10 new=15 status=ok
+RB hop_check status=fail train_ms=45 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875908.66 >> PARAM SET output.hop_gap_ms 5
+PARAM SET path=output.hop_gap_ms module=output old=0 new=5 status=ok
+RB hop_check status=fail train_ms=55 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875908.97 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875910.08 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875911.99 >> PARAM SET output.hop_steps 5
+PARAM SET path=output.hop_steps module=output old=3 new=5 status=ok
+RB hop_check status=fail train_ms=95 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=coverage,island
+
+1793875912.50 >> PARAM SET output.hop_pulse_ms 25
+PARAM SET path=output.hop_pulse_ms module=output old=15 new=25 status=ok
+RB hop_check status=ok train_ms=145 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=none
+
+1793875913.00 >> PARAM SET output.hop_gap_ms 10
+PARAM SET path=output.hop_gap_ms module=output old=5 new=10 status=ok
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+
+1793875913.51 >> PARAM SET output.silent 1
+PARAM SET path=output.silent module=output old=0 new=1 status=ok
+RB silent=1
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+

@@ -1,0 +1,208 @@
+1793875682.02 >> NET * PARAM SET output.silent 1
+NET sent seq=33779 target=* text=PARAM SET output.silent 1
+PARAM SET path=output.silent module=output old=0 new=1 status=ok
+RB silent=1
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E1 seq=33779 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+NET reply from=E1 seq=33779 part=0 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E1 seq=33779 done parts=1
+NET reply from=E3 seq=33779 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+NET reply from=E3 seq=33779 part=0 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E3 seq=33779 done parts=1
+NET reply from=E5 seq=33779 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+NET reply from=E5 seq=33779 part=0 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E5 seq=33779 done parts=1
+NET reply from=E4 seq=33779 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+NET reply from=E4 seq=33779 part=0 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+NET reply from=E4 seq=33779 done parts=1
+
+1793875682.52 >> PARAM SET output.silent 0
+PARAM SET path=output.silent module=output old=1 new=0 status=ok
+RB silent=0
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+
+1793875683.03 >> PARAM SET output.idle_announce_hz 0
+PARAM SET path=output.idle_announce_hz module=output old=0 new=0 status=ok
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+
+1793875683.55 >> PARAM SET behavior.band_per_node 1
+PARAM SET path=behavior.band_per_node module=behavior old=1 new=1 status=ok
+
+1793875684.06 >> PARAM SET behavior.base_scatter_bins 0
+PARAM SET path=behavior.base_scatter_bins module=behavior old=0 new=0 status=ok
+
+1793875684.57 >> PARAM SET behavior.band_range_low_hz 2000
+PARAM SET path=behavior.band_range_low_hz module=behavior old=2000 new=2000 status=ok
+
+1793875685.07 >> PARAM SET behavior.band_range_high_hz 3000
+PARAM SET path=behavior.band_range_high_hz module=behavior old=3000 new=3000 status=ok
+
+1793875685.58 >> PARAM SET output.hop_steps 8
+PARAM SET path=output.hop_steps module=output old=5 new=8 status=ok
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+
+1793875686.09 >> PARAM SET output.hop_pulse_ms 10
+PARAM SET path=output.hop_pulse_ms module=output old=25 new=10 status=ok
+RB hop_check status=fail train_ms=90 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island,gap_not_below_debounce
+
+1793875686.60 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=10 new=0 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875687.51 >> RB STATUS
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=72 output.done=72 output.rejected=0 output.last_reject=none output.last_start_ms=1136809 output.last_done_ms=1136973 output.span_ms=165 band=2000-3000 hop_enabled=1 hop_rotation=1 hop_steps=8 hop_pulse_ms=10 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=19296640 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=318 i2s.max_backstep_us=9999 i2s.clock_corrections=2392 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=1209401 audio.deficit_s=3.4 audio.level=210 audio.level_max=19751 audio.us_per_sample=13.95 audio.block_us_max=1864 audio.baseline=69.8 heard.valid=44 heard.strength_sum=783415 net.started=1 net.rx=194 net.tx_failed=0 heap.free=69324 heap.free_min=68780 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=1209401 audio.last_sample_ms=1209398 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=332216 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=1 behavior.base_glides=7 behavior.base_scatters=10 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=a7d6715c date=Nov  5 2026 time=10:45:12 version=0.4.0 board=damp
+
+
+1793875687.82 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875692.93 >> PARAM SET output.hop_steps 8
+PARAM SET path=output.hop_steps module=output old=8 new=8 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875693.44 >> PARAM SET output.hop_pulse_ms 15
+PARAM SET path=output.hop_pulse_ms module=output old=10 new=15 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875693.95 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=0 new=0 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875694.87 >> RB STATUS
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=73 output.done=73 output.rejected=0 output.last_reject=none output.last_start_ms=1210305 output.last_done_ms=1210357 output.span_ms=50 band=2000-3000 hop_enabled=1 hop_rotation=1 hop_steps=8 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=19414144 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=321 i2s.max_backstep_us=9999 i2s.clock_corrections=2407 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=1216749 audio.deficit_s=3.4 audio.level=59 audio.level_max=29645 audio.us_per_sample=13.83 audio.block_us_max=1849 audio.baseline=22.2 heard.valid=44 heard.strength_sum=783415 net.started=1 net.rx=194 net.tx_failed=0 heap.free=69324 heap.free_min=68780 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=1216749 audio.last_sample_ms=1216742 behavior.suppress_armed=1 behavior.suppress_until_ms=1210417 behavior.suppressed_now=0 behavior.suppressed_samples=334047 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=1 behavior.base_glides=7 behavior.base_scatters=10 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=a7d6715c date=Nov  5 2026 time=10:45:12 version=0.4.0 board=damp
+
+
+1793875695.18 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875700.29 >> PARAM SET output.hop_steps 8
+PARAM SET path=output.hop_steps module=output old=8 new=8 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875700.79 >> PARAM SET output.hop_pulse_ms 25
+PARAM SET path=output.hop_pulse_ms module=output old=15 new=25 status=ok
+RB hop_check status=ok train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=none
+
+1793875701.31 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=0 new=0 status=ok
+RB hop_check status=ok train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=none
+
+1793875702.21 >> RB STATUS
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=74 output.done=74 output.rejected=0 output.last_reject=none output.last_start_ms=1217665 output.last_done_ms=1217741 output.span_ms=75 band=2000-3000 hop_enabled=1 hop_rotation=1 hop_steps=8 hop_pulse_ms=25 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=19531776 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=324 i2s.max_backstep_us=9999 i2s.clock_corrections=2422 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=1224101 audio.deficit_s=3.4 audio.level=49 audio.level_max=29492 audio.us_per_sample=13.80 audio.block_us_max=1847 audio.baseline=25.8 heard.valid=44 heard.strength_sum=783415 net.started=1 net.rx=194 net.tx_failed=0 heap.free=69324 heap.free_min=68780 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=1224101 audio.last_sample_ms=1224094 behavior.suppress_armed=1 behavior.suppress_until_ms=1217801 behavior.suppressed_now=0 behavior.suppressed_samples=336262 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=1 behavior.base_glides=7 behavior.base_scatters=10 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=a7d6715c date=Nov  5 2026 time=10:45:12 version=0.4.0 board=damp
+
+
+1793875702.52 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875707.64 >> PARAM SET output.hop_steps 5
+PARAM SET path=output.hop_steps module=output old=8 new=5 status=ok
+RB hop_check status=ok train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=none
+
+1793875708.15 >> PARAM SET output.hop_pulse_ms 10
+PARAM SET path=output.hop_pulse_ms module=output old=25 new=10 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875708.66 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=0 new=0 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875709.57 >> RB STATUS
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=75 output.done=75 output.rejected=0 output.last_reject=none output.last_start_ms=1225009 output.last_done_ms=1225133 output.span_ms=125 band=2000-3000 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=10 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=19649536 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=327 i2s.max_backstep_us=9999 i2s.clock_corrections=2436 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=1231459 audio.deficit_s=3.4 audio.level=121 audio.level_max=30281 audio.us_per_sample=13.73 audio.block_us_max=1850 audio.baseline=33.1 heard.valid=44 heard.strength_sum=783415 net.started=1 net.rx=194 net.tx_failed=0 heap.free=69324 heap.free_min=68780 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=1231459 audio.last_sample_ms=1231454 behavior.suppress_armed=1 behavior.suppress_until_ms=1225193 behavior.suppressed_now=0 behavior.suppressed_samples=339245 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=1 behavior.base_glides=7 behavior.base_scatters=10 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=a7d6715c date=Nov  5 2026 time=10:45:12 version=0.4.0 board=damp
+
+
+1793875709.88 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875715.00 >> PARAM SET output.hop_steps 5
+PARAM SET path=output.hop_steps module=output old=5 new=5 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875715.51 >> PARAM SET output.hop_pulse_ms 15
+PARAM SET path=output.hop_pulse_ms module=output old=10 new=15 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875716.02 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=0 new=0 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875716.94 >> RB STATUS
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=76 output.done=76 output.rejected=0 output.last_reject=none output.last_start_ms=1232368 output.last_done_ms=1232421 output.span_ms=50 band=2000-3000 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=19767296 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=330 i2s.max_backstep_us=9999 i2s.clock_corrections=2451 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=1238818 audio.deficit_s=3.4 audio.level=80 audio.level_max=29683 audio.us_per_sample=13.84 audio.block_us_max=1855 audio.baseline=48.2 heard.valid=44 heard.strength_sum=783415 net.started=1 net.rx=194 net.tx_failed=0 heap.free=69324 heap.free_min=68780 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=1238818 audio.last_sample_ms=1238814 behavior.suppress_armed=1 behavior.suppress_until_ms=1232481 behavior.suppressed_now=0 behavior.suppressed_samples=341076 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=1 behavior.base_glides=7 behavior.base_scatters=10 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=a7d6715c date=Nov  5 2026 time=10:45:12 version=0.4.0 board=damp
+
+
+1793875717.25 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875722.36 >> PARAM SET output.hop_steps 5
+PARAM SET path=output.hop_steps module=output old=5 new=5 status=ok
+RB hop_check status=fail train_ms=75 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875722.88 >> PARAM SET output.hop_pulse_ms 10
+PARAM SET path=output.hop_pulse_ms module=output old=15 new=10 status=ok
+RB hop_check status=fail train_ms=50 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875723.38 >> PARAM SET output.hop_gap_ms 5
+PARAM SET path=output.hop_gap_ms module=output old=0 new=5 status=ok
+RB hop_check status=fail train_ms=70 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875724.30 >> RB STATUS
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=77 output.done=77 output.rejected=0 output.last_reject=none output.last_start_ms=1239731 output.last_done_ms=1239805 output.span_ms=75 band=2000-3000 hop_enabled=1 hop_rotation=1 hop_steps=5 hop_pulse_ms=10 hop_gap_ms=5 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=19885056 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=16000015 i2s.overflows=0 i2s.backsteps=333 i2s.max_backstep_us=9999 i2s.clock_corrections=2465 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=1246177 audio.deficit_s=3.4 audio.level=32 audio.level_max=29577 audio.us_per_sample=13.80 audio.block_us_max=1849 audio.baseline=90.8 heard.valid=44 heard.strength_sum=783415 net.started=1 net.rx=194 net.tx_failed=0 heap.free=69324 heap.free_min=68780 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=1246177 audio.last_sample_ms=1246174 behavior.suppress_armed=1 behavior.suppress_until_ms=1239865 behavior.suppressed_now=0 behavior.suppressed_samples=343291 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=1 behavior.base_glides=7 behavior.base_scatters=10 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=a7d6715c date=Nov  5 2026 time=10:45:12 version=0.4.0 board=damp
+
+
+1793875724.61 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875729.71 >> PARAM SET output.hop_steps 3
+PARAM SET path=output.hop_steps module=output old=5 new=3 status=ok
+RB hop_check status=fail train_ms=40 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875730.22 >> PARAM SET output.hop_pulse_ms 10
+PARAM SET path=output.hop_pulse_ms module=output old=10 new=10 status=ok
+RB hop_check status=fail train_ms=40 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875730.73 >> PARAM SET output.hop_gap_ms 0
+PARAM SET path=output.hop_gap_ms module=output old=5 new=0 status=ok
+RB hop_check status=fail train_ms=30 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875731.65 >> RB STATUS
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=78 output.done=78 output.rejected=0 output.last_reject=none output.last_start_ms=1247092 output.last_done_ms=1247165 output.span_ms=70 band=2250-2750 hop_enabled=1 hop_rotation=1 hop_steps=3 hop_pulse_ms=10 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=15 freq.packet_age_ms=0.937 i2s.samples_read=20002560 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=336 i2s.max_backstep_us=9999 i2s.clock_corrections=2480 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=1253523 audio.deficit_s=3.4 audio.level=317 audio.level_max=27717 audio.us_per_sample=13.59 audio.block_us_max=1815 audio.baseline=12.3 heard.valid=44 heard.strength_sum=783415 net.started=1 net.rx=194 net.tx_failed=0 heap.free=69324 heap.free_min=68780 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=1253523 audio.last_sample_ms=1253518 behavior.suppress_armed=1 behavior.suppress_until_ms=1247225 behavior.suppressed_now=0 behavior.suppressed_samples=345506 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=7 behavior.base_scatters=10 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=a7d6715c date=Nov  5 2026 time=10:45:12 version=0.4.0 board=damp
+
+
+1793875731.95 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875737.06 >> PARAM SET output.hop_steps 3
+PARAM SET path=output.hop_steps module=output old=3 new=3 status=ok
+RB hop_check status=fail train_ms=30 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875737.58 >> PARAM SET output.hop_pulse_ms 15
+PARAM SET path=output.hop_pulse_ms module=output old=10 new=15 status=ok
+RB hop_check status=fail train_ms=45 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875738.09 >> PARAM SET output.hop_gap_ms 5
+PARAM SET path=output.hop_gap_ms module=output old=0 new=5 status=ok
+RB hop_check status=fail train_ms=55 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=duration,coverage,island
+
+1793875738.99 >> RB STATUS
+RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=0 output.phase=idle output.started=79 output.done=79 output.rejected=0 output.last_reject=none output.last_start_ms=1254440 output.last_done_ms=1254469 output.span_ms=30 band=2250-2750 hop_enabled=1 hop_rotation=1 hop_steps=3 hop_pulse_ms=15 hop_gap_ms=5 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=20120320 i2s.dropped_dma_buffers=0 i2s.clock_rate_mhz=15999999 i2s.overflows=0 i2s.backsteps=339 i2s.max_backstep_us=9999 i2s.clock_corrections=2495 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=1260880 audio.deficit_s=3.4 audio.level=30 audio.level_max=27212 audio.us_per_sample=12.90 audio.block_us_max=1714 audio.baseline=9.5 heard.valid=44 heard.strength_sum=783415 net.started=1 net.rx=194 net.tx_failed=0 heap.free=69324 heap.free_min=68780 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13036 clock.now_ms=1260880 audio.last_sample_ms=1260878 behavior.suppress_armed=1 behavior.suppress_until_ms=1254529 behavior.suppressed_now=0 behavior.suppressed_samples=346953 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=1 behavior.base_heard=1 behavior.base_glides=7 behavior.base_scatters=10 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=a7d6715c date=Nov  5 2026 time=10:45:12 version=0.4.0 board=damp
+
+
+1793875739.30 >> RB CALL
+RB CALL queued resting=0 state=Idle
+
+1793875744.41 >> PARAM SET output.hop_steps 5
+PARAM SET path=output.hop_steps module=output old=3 new=5 status=ok
+RB hop_check status=fail train_ms=95 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=coverage,island
+
+1793875744.92 >> PARAM SET output.hop_pulse_ms 25
+PARAM SET path=output.hop_pulse_ms module=output old=15 new=25 status=ok
+RB hop_check status=ok train_ms=145 gap_ms=5 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=none
+
+1793875745.42 >> PARAM SET output.hop_gap_ms 10
+PARAM SET path=output.hop_gap_ms module=output old=5 new=10 status=ok
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+
+1793875745.94 >> PARAM SET output.silent 1
+PARAM SET path=output.silent module=output old=0 new=1 status=ok
+RB silent=1
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+

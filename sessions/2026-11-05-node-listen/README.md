@@ -14,6 +14,8 @@ Owner's verdicts:
 - shapes: 50 ms and 100 ms pulses out; gliding interesting, shorter tends to be better
 - short round: 1 (8 x 10 ms, gap 0) yes, 2 (8 x 15, 0) no, 3 (8 x 25, 0) maybe, 4 (5 x 10, 0) yes, 5 (5 x 15, 0)
   maybe, 6 (5 x 10, gap 5) yes, 7 (3 x 10, 0) maybe, 8 (3 x 15, gap 5) yes
+- after a second listen (same round again): 3 (8 x 25, gap 0) yes, better than 2; 7 (3 x 10, 0) out.
+  So yes: 1, 3, 4, 6, 8; maybe: 5; out: 2, 7.
 Not checked: whether the detection hears these shapes (the shape rule wants >= 3 band bins with 2 steps up; 10 ms
 pulses against the 4 ms window): a detection pass of its own before any becomes the default.
 All boards silent at the end (output.silent 1 live; stored values unchanged).

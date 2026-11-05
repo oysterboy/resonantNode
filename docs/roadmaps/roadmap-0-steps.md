@@ -420,7 +420,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    gateway and glide work: 2 high, 6 medium, 17 low; spec drift per item; the architecture read). Cut by the owner
    2026-11-05: one small step now, the rest deferred with triggers ("Review leftovers" below), since the echo code
    moves fast until the tryout.
-   23.0 CI green again: esp32dev-gateway in the matrix (H2; its format half landed in 7c05d78 before this step); the NUL byte in
+   23.0 [DONE 2026-11-05, 0b57735; CI run 415 green, 11 ESP envs] CI green again: esp32dev-gateway in the matrix (H2; its format half landed in 7c05d78 before this step); the NUL byte in
         AnalyzerCommandParse.h (L13), a refused ParamRegistry add printed at boot (L15), the replay's comments
         (L17); the stale lines in CLAUDE.md, implementation-status.md, notes_manual.md (D14). Gate: a green run on
         main with 11 ESP envs built.
@@ -428,7 +428,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         every mode (ParamRegistry::refusedAdds, test_param_registry +2 asserts); the NUL byte; the replay's two
         comments; CLAUDE.md's mode list and suite sentence, the status table's test and echo rows plus a gateway
         row, the guide's duplicate paragraph and node.radio_log. Host-checked by syntax and format only (no
-        PlatformIO in the container); gate open until the CI run on the push shows 11 ESP envs green.
+        PlatformIO in the container); CI run 415 on the push: 11 ESP envs, host suites, format, all green. Gate closed.
    23.1 The OTA-and-emission edges: Whispernet closes its emission in release() / resume() (H1), the echo room
         releases ring and clip before the pull and prints the largest block (M3), the Analyzer refuses OTA while a
         SEQ run is active (M6). PC, then one remote round trip per mode. Gate: a failed OTA during a whisper replay

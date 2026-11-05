@@ -108,6 +108,22 @@ Gate: the round trip done on the desk with the three images, PARAM load stored= 
 unchanged after a pass through the other two), cited.
 ```
 
+### ECHO-004 - the echo room's sound: a longer clip, a damping per generation
+
+Status: TODO (owner 2026-11-05, after clapping with all five: bench/sessions/2026-11-05-echo-claps; the echo room
+is parked until this lands)
+
+```text
+1. 24 kHz in the echo build ("definitely the right approach"): the clip doubles to ~600 ms in the same memory
+   (at 48 kHz the heap's largest block caps it at 300 ms, which cut the replay's begin and end by ear).
+2. A damping per generation, one param: each replay a little quieter and duller, so a chain fades like an echo
+   instead of collecting the speaker's distortion (heard as a high-pitched tone travelling toward a chain's end).
+3. A short fade-out at the clip's end (the hard stop is audible).
+4. Then the owner's next round: shorter wait spread (400 + 0..600 ms set, not yet heard), and why a new clap
+   starts nothing new in a running chain (616 of 1217 claps heard were already_scheduled).
+Gate: the owner clapping with all five, by ear, the session cited.
+```
+
 ---
 
 ## Plan to 2026-12-13 (owner's date, 2026-10-30)

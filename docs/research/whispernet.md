@@ -306,3 +306,19 @@ the replay back into the line (a loop at gain 64 x the coupling, a howl). Ways o
 on the nodes meant for long phrases; echo cancellation (the node knows exactly what it plays: an adaptive filter
 subtracting it from the mic, ~64-128 taps at 24 kHz, a few MAC/s million, the ESP32 can) which would also let the
 node hear others while it plays; or accepting the cut as part of the piece. Owner's call; the cut stays until then.
+
+## Whisper against the room's noises: what separates them (bench, 2026-11-05)
+
+The desk session on E3 (bench/sessions/2026-11-05-whisper-listen-e3): the owner found whispers and rustle passed
+about equally often. The board answers 0.3-1.4 s into a sound, before the flatness range (0.15-0.40) tells them
+apart; only 4 of 31 phrases passed at their end; phrases ran 9-18 s because the release level is not reached between
+sentences. Labelled recordings from a C920 webcam beside E3 (bench/sessions/2026-11-05-labels-c920, one speaker,
+one room, a camera with its own level processing, nothing above 8 kHz): against the room's own spectrum, a whisper
+adds 7-14 dB in 1.5-4.5 kHz and only 2-9 dB below 700 Hz; speech, typing, chair, paper and clothes add 12-21 dB
+(median) below 700 Hz. On the full band a whisper is only ~4 dB over this room, whose power is low-frequency.
+Candidates, none built (the owner, 2026-11-05: Whispernet "as time allows"): the onset and release levels on a
+1.5-4.5 kHz band instead of the full band; a check that little is added below 700 Hz (a param) in place of or next
+to the flatness range; the decision about 1 s in rather than 0.3 s. Established alternatives looked at: speech /
+non-speech features (4 Hz syllable modulation), WebRTC VAD (voiced speech, weak on a whisper), Silero VAD and
+ESP-SR (too big for the ESP32 without PSRAM), a small trained classifier on mel bands (needs 30-60 min of labelled
+audio). To check on the board's own mic first.

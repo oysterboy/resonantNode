@@ -26,3 +26,23 @@ at 40 ms (clicks, typing, the room): a lower minimum is a detection retune and w
 
 Owner, after hearing 3, 8, 5 again (PC beeps 1/2/3, chirp385.py): 5 (5 x 15 ms, gap 0) sounds best.
 E3 measured it at ~83 ms, under scalar_min_duration_ms 92: a minimum near 70 may be enough (less than the 40 tested).
+
+## Shape 5 at a lower minimum, and false triggers (shape5.py, falsepos.py)
+
+Hits, E2 plays 5 x 15 ms glide 15 times, E3 listens (shape5.log): 92/80 (scalar_min_duration_ms /
+scalar_min_release_coverage_ms, today) 10/15; 70/80 9/15; 70/60 15/15 (dur ~82 ms). The coverage is the limit.
+
+False triggers (falsepos.log): E2 at 92/80 and E3 at 70/60, both silent, window 2000-3000, side by side; the lab PC
+played bench_audio.wav (435 s: drum and bass, female and male speech, flute) through the Studio One box at its
+level. RB verdicts any / valid=1:
+
+| section | 92/80 | 70/60 |
+|---|---|---|
+| silence 0-10 s | 1 / 0 | 1 / 0 |
+| drum and bass | 1 / 0 | 1 / 0 |
+| female speech | 0 / 0 | 1 / 0 |
+| male speech | 0 / 0 | 1 / 0 |
+| flute | 1 / 0 | 5 / 0 |
+
+No valid false trigger at either; 70/60 lets more occurrences through (10 against 3), all rejected by the shape
+check as single_pulse. One window, one noise file, no clicks or typing on purpose.

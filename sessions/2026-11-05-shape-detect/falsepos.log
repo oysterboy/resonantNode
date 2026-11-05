@@ -1,0 +1,63 @@
+1793877816.044 A >> PARAM SET output.silent 1
+1793877816.095 A PARAM SET path=output.silent module=output old=1 new=1 status=ok
+1793877816.095 A RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793877816.400 A >> PARAM SET behavior.band_per_node 1
+1793877816.465 A PARAM SET path=behavior.band_per_node module=behavior old=1 new=1 status=ok
+1793877816.750 A >> PARAM SET behavior.band_range_low_hz 2000
+1793877816.778 A PARAM SET path=behavior.band_range_low_hz module=behavior old=2000 new=2000 status=ok
+1793877817.101 A >> PARAM SET behavior.band_range_high_hz 3000
+1793877817.151 A PARAM SET path=behavior.band_range_high_hz module=behavior old=3000 new=3000 status=ok
+1793877817.452 A >> RB log full
+1793877817.457 A RB log mode=full
+1793877817.803 B >> PARAM SET output.silent 1
+1793877817.824 B PARAM SET path=output.silent module=output old=1 new=1 status=ok
+1793877817.882 B RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793877818.154 B >> PARAM SET behavior.band_per_node 1
+1793877818.179 B PARAM SET path=behavior.band_per_node module=behavior old=1 new=1 status=ok
+1793877818.505 B >> PARAM SET behavior.band_range_low_hz 2000
+1793877818.548 B PARAM SET path=behavior.band_range_low_hz module=behavior old=2000 new=2000 status=ok
+1793877818.856 B >> PARAM SET behavior.band_range_high_hz 3000
+1793877818.908 B PARAM SET path=behavior.band_range_high_hz module=behavior old=3000 new=3000 status=ok
+1793877819.206 B >> RB log full
+1793877819.216 B RB log mode=full
+1793877819.558 A >> PARAM SET detection.scalar_min_duration_ms 92
+1793877819.580 A PARAM SET path=detection.scalar_min_duration_ms module=detection old=92 new=92 status=ok
+1793877819.643 A RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793877819.643 A RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+1793877819.908 A >> PARAM SET detection.scalar_min_release_coverage_ms 80
+1793877819.957 A PARAM SET path=detection.scalar_min_release_coverage_ms module=detection old=80 new=80 status=ok
+1793877819.957 A RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793877819.957 A RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+1793877820.259 B >> PARAM SET detection.scalar_min_duration_ms 70
+1793877820.330 B PARAM SET path=detection.scalar_min_duration_ms module=detection old=92 new=70 status=ok
+1793877820.330 B RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=gap_not_below_debounce
+1793877820.330 B RB plan_check status=warn history_needed_ms=560 history_ms=576 early_window_ms=20 issues=window_after_inspection
+1793877820.610 B >> PARAM SET detection.scalar_min_release_coverage_ms 60
+1793877820.641 B PARAM SET path=detection.scalar_min_release_coverage_ms module=detection old=80 new=60 status=ok
+1793877820.641 B RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=gap_not_below_debounce
+1793877820.704 B RB plan_check status=warn history_needed_ms=560 history_ms=576 early_window_ms=20 issues=window_after_inspection
+1793877822.100 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=5856 duration_ms=115 profile=TonalPulseScalar
+1793877824.514 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7000 duration_ms=149 profile=TonalPulseScalar
+1793877824.514 A RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=7502 duration_ms=145 profile=TonalPulseScalar
+1793877918.194 A RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=9398 duration_ms=110 profile=TonalPulseScalar
+1793877918.194 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=10241 duration_ms=134 profile=TonalPulseScalar
+1793877968.311 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=9870 duration_ms=80 profile=TonalPulseScalar
+1793878100.931 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=4607 duration_ms=129 profile=TonalPulseScalar
+1793878149.075 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=3368 duration_ms=128 profile=TonalPulseScalar
+1793878149.204 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=3684 duration_ms=102 profile=TonalPulseScalar
+1793878149.514 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=3326 duration_ms=187 profile=TonalPulseScalar
+1793878150.214 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=3520 duration_ms=285 profile=TonalPulseScalar
+1793878151.237 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=4168 duration_ms=394 profile=TonalPulseScalar
+1793878151.237 A RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=3534 duration_ms=166 profile=TonalPulseScalar
+1793878260.377 B >> PARAM SET detection.scalar_min_duration_ms 92
+1793878260.424 B PARAM SET path=detection.scalar_min_duration_ms module=detection old=70 new=92 status=ok
+1793878260.424 B RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793878260.424 B RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+1793878260.728 B >> PARAM SET detection.scalar_min_release_coverage_ms 80
+1793878260.766 B PARAM SET path=detection.scalar_min_release_coverage_ms module=detection old=60 new=80 status=ok
+1793878260.766 B RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=92..450 issues=gap_not_below_debounce
+1793878260.766 B RB plan_check status=ok history_needed_ms=560 history_ms=576 early_window_ms=0 issues=none
+1793878261.081 A >> RB log minimal
+1793878261.122 A RB log mode=minimal
+1793878261.433 B >> RB log minimal
+1793878261.458 B RB log mode=minimal

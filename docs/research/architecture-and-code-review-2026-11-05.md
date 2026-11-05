@@ -370,13 +370,45 @@ param review (20.5), VEKTOR later, a second detector family maybe. What the shap
    Suggestion: a pre-push format run (the tool exists), the matrix fixed, and the spec chapter for the echo modes
    written while the people who built them remember why.
 
-## Suggested order, if any of this is taken up
+## As steps (roadmap-0-steps.md shape, ready to move there as step 23 when the owner orders it)
 
-1. H2 (two lines and one matrix row), then L13, L15, L17: the cheap process fixes.
-2. H1, M3, M6: the three OTA-and-emission edges, the same class as 2026-10-29 H1, before the next remote update
-   of an echo board.
-3. M1 with D6: the train unit out of Behavior, fieldsim following, before the overnight values become defaults.
-4. M5 with Part 3 item 7: the echo host harness on the boards' geometry, before Whispernet is tuned further.
-5. M2, L5, L6: the lockstep and the canceller, when `whisper.aec` is to be on by default.
-6. The spec chapter (D1-D5, D7, D9, D10, D12, D13), the docs (D14), D11 deletion: one documentation pass.
-7. Part 3 items 1, 3, 5: the structural cuts, after the tryout room.
+```text
+23. [TODO] Review fixes 2026-11-05 and the echo modes' spec chapter. (issue: open one when the step is taken;
+    docs/research/architecture-and-code-review-2026-11-05.md holds the findings)
+   23.0 CI green again: format GatewayApp.cpp, esp32dev-gateway in the matrix (H2); the NUL byte in
+        AnalyzerCommandParse.h (L13), a refused ParamRegistry add printed at boot (L15), the replay's comments
+        (L17). PC. Gate: run green on main with 11 ESP envs built.
+   23.1 The OTA-and-emission edges: Whispernet closes its emission in release() / resume() (H1), the echo room
+        releases ring and clip before the pull and prints the largest block (M3), the Analyzer refuses OTA while
+        a SEQ run is active (M6). PC, then one remote round trip per mode. Gate: a failed OTA during a whisper
+        replay and during an echo replay leaves both boards answering (bench session cited); an Analyzer OTA
+        refused mid-run.
+   23.2 The train unit out of Behavior (M1 with D6): the Node hands Behavior the single-train duration from
+        output.hop_* (as it hands the base grid), trainsInVerdict counts in it, native-fieldsim reads the same
+        value; the 2026-11-05 overnight values reconsidered against the corrected count. PC, then a two-board
+        chord check. Gate: a chord of two answers 100 ms apart raises the level by 2 on the board; T2h
+        byte-identical (detection untouched).
+   23.3 The echo chain's host harness on the boards' geometry (M5 with Part 3 item 7): native-echoreplay (or one
+        env per mode) with the boards' FEATURE_HISTORY flags, the echo room's and Whispernet's config builders in
+        a header both the shell and the replay include, the synthetic set re-run. PC. Gate: the replay's verdicts
+        over tools/bench/synthwhisper.py's set re-recorded on the boards' geometry and compared with a board's
+        WHISPER STATUS counts on the same WAV played at the desk.
+   23.4 The lockstep and the canceller (M2, L5, L6, L7), before whisper.aec goes on by default: a short write
+        retried or marked unwritten and re-centred, counted in WHISPER STATUS; aec_delay bounded by the record;
+        _refPower recomputed periodically; the smoothing constants from the rate. PC, then E5 with aec on. Gate:
+        ERLE on E5 holds through a WHISPER REC dump (the stall that broke it) in a cited session.
+   23.5 The spec and the docs (D1-D5, D7, D9, D10, D12, D13 into myspec.md: the echo modes' chapter, the
+        provisional verdict, the two streams and four targets, Clip, offset ownership, the band-per-node
+        exception, the app/ layering rule; D14 into CLAUDE.md, implementation-status.md, notes_manual.md;
+        D11's dead fields deleted; WhisperGate moved out of src/behavior/). PC. Gate: no section of myspec.md
+        contradicts the code it names; include_direction.py checks the platform half of src/app includes
+        nothing above it.
+   23.6 [after the tryout] The structural cuts (Part 3 items 1, 3, 5): the echo shell split into owners, the
+        renderers out of I2sToneOutput, one pending-inspection helper for both runtimes, one own-emit
+        suppression, Behavior's getters behind BehaviorStatus. PC, nodecheck and analyzerab after. Gate: T2h
+        byte-identical, the echo replay unchanged, readability.py's three largest classes under 40 members.
+   Gate for 23: 23.0-23.2 before the next remote update of an echo board and before the overnight values become
+   defaults; 23.3-23.5 before Whispernet is tuned further; 23.6 after 20.4.
+   Also M4 (AmpExperimental's contrast scale): rescale or drop with 20.5's param review, whichever the owner
+   picks; L1, L2, L3, L4, L8-L12, L14, L16 in 23.0's batch or 23.6's, by size.
+```

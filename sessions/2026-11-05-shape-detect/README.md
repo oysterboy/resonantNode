@@ -46,3 +46,5 @@ level. RB verdicts any / valid=1:
 
 No valid false trigger at either; 70/60 lets more occurrences through (10 against 3), all rejected by the shape
 check as single_pulse. One window, one noise file, no clicks or typing on purpose.
+
+Host replay reference after the change: t2h_replay.d03f7189.txt (against 2026-11-01-step22.2-update16/t2h_replay.02e6a24.txt: accepted unchanged; tone2800_pos1_r0/r1 and radio_music_r1 gain one rejected candidate each).

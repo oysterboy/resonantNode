@@ -19,6 +19,7 @@ enum class FeatureStreamId {
     FrequencyTarget,
     FrequencyContrast,
     SpectralFlatness,  // ECHO-002: BandFlatness per loud block, 0 (a tone) .. 1 (white noise)
+    LowBandExcess,     // ECHO-002, 2026-11-05: dB the 200-700 Hz band stands over the room's, per loud block
 };
 
 inline bool streamRequiresFreshFrequency(FeatureStreamId stream) {
@@ -37,6 +38,8 @@ inline const char* featureStreamName(FeatureStreamId value) {
             return "frequency_contrast";
         case FeatureStreamId::SpectralFlatness:
             return "spectral_flatness";
+        case FeatureStreamId::LowBandExcess:
+            return "low_band_excess";
         case FeatureStreamId::Unknown:
         default:
             return "unknown";

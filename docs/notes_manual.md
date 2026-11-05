@@ -363,6 +363,12 @@ Whispernet's thresholds follow the room (2026-11-04, `whisper.adaptive`, on by d
 falls within `whisper.room_fall_ms`, rises over `whisper.room_rise_ms`), never under `whisper.onset`; release and
 floor keep their ratio to the onset. WHISPER STATUS shows `room=` and `onset_now=`.
 
+The whisper band (2026-11-05, off by default, `audio/BandBalance.h`): `whisper.level_band 1` makes the level (onset,
+release, the room's learning) follow 1.5-4.5 kHz instead of the full band; `whisper.timbre_check 1` makes the timbre
+module read how many dB the 200-700 Hz band stands over the room's (learned with it) and pass a phrase whose median
+is at most `whisper.low_max_db`, in place of the flatness range (`flat=` in the WHISPER phrase line then prints that
+excess). From the labelled recordings, not yet heard on a board (research/whispernet.md, 2026-11-05).
+
 Echo cancellation (2026-11-04, `whisper.aec`, off by default): the whisper build writes the speaker in lockstep with
 the mic (`DuplexStream`, no writer task, TONE refused), so the speaker runs a fixed `whisper.aec_delay` samples
 behind the mic (1066 on E5); `EchoCanceller` takes the board's own output out of the mic before anything else hears

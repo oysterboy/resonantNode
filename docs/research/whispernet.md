@@ -316,7 +316,8 @@ sentences. Labelled recordings from a C920 webcam beside E3 (bench/sessions/2026
 one room, a camera with its own level processing, nothing above 8 kHz): against the room's own spectrum, a whisper
 adds 7-14 dB in 1.5-4.5 kHz and only 2-9 dB below 700 Hz; speech, typing, chair, paper and clothes add 12-21 dB
 (median) below 700 Hz. On the full band a whisper is only ~4 dB over this room, whose power is low-frequency.
-Candidates, none built (the owner, 2026-11-05: Whispernet "as time allows"): the onset and release levels on a
+Candidates (the owner, 2026-11-05: Whispernet "as time allows"; the first two built the same evening as params, off
+by default: whisper.level_band, whisper.timbre_check 1 with whisper.low_max_db; not yet on a board): the onset and release levels on a
 1.5-4.5 kHz band instead of the full band; a check that little is added below 700 Hz (a param) in place of or next
 to the flatness range; the decision about 1 s in rather than 0.3 s. Established alternatives looked at: speech /
 non-speech features (4 Hz syllable modulation), WebRTC VAD (voiced speech, weak on a whisper), Silero VAD and

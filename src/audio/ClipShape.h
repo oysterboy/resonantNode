@@ -49,7 +49,8 @@ inline void shape(int16_t* samples, size_t count, uint32_t sampleRateHz, uint32_
     for (size_t k = 0; k < fade; ++k) {
         // The last sample ends at 0; fade samples before it the gain rises linearly to 1.
         const size_t i = count - 1 - k;
-        samples[i] = static_cast<int16_t>(static_cast<float>(samples[i]) * static_cast<float>(k) / static_cast<float>(fade));
+        samples[i] =
+            static_cast<int16_t>(static_cast<float>(samples[i]) * static_cast<float>(k) / static_cast<float>(fade));
     }
 }
 

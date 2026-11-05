@@ -175,7 +175,7 @@ void EchoApp::pollAudio() {
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             // Whispernet hears the mic without its own replay (echo cancellation), everything after it too.
             const int32_t s = kWhispernet ? _whisper.cancel(block.samples[i]) : block.samples[i];
-            _follower.push(s);
+            _follower.push(kWhispernet ? _whisper.forLevel(s) : s);  // Whispernet: the whisper band with level_band
             if (kWhispernet) {
                 _whisper.pushSample(static_cast<int16_t>(s >> 8));  // 24-bit canonical PCM to int16, D later out
             } else {

@@ -53,6 +53,7 @@ bool Whispernet::begin(uint32_t rateHz, uint64_t seed) {
     _line.setDelay(static_cast<size_t>(rateHz) * _values.delayMs / 1000U);
     _gate.setDelayMs(_values.delayMs);
     _flat.begin(rateHz);
+    _balance.begin(rateHz);
     return line;
 }
 
@@ -117,13 +118,21 @@ void Whispernet::buildConfig(detection::ScalarTransientConfig& d, detection::Ins
     timbre.target = detection::InspectionTarget::Timbre;
     timbre.enabled = true;
     timbre.minimumStrength = detection::StrengthClass::Strong;
-    timbre.flatness.minFlatness = _values.flatMin;
-    timbre.flatness.maxFlatness = _values.flatMax;
+    if (_values.timbreCheck == 1) {
+        // The low-band check through the same range module: the median excess, at most lowMaxDb.
+        timbre.flatness.stream = detection::FeatureStreamId::LowBandExcess;
+        timbre.flatness.minFlatness = -100.0f;
+        timbre.flatness.maxFlatness = _values.lowMaxDb;
+    } else {
+        timbre.flatness.minFlatness = _values.flatMin;
+        timbre.flatness.maxFlatness = _values.flatMax;
+    }
     plan.count = 3;
 }
 
 void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior) {
     _room.setTimes(_values.roomRiseMs, _values.roomFallMs);
+    _lowRoom.setTimes(_values.roomRiseMs, _values.roomFallMs);
     detection::ScalarTransientConfig d;
     detection::InspectionPlan plan;
     buildConfig(d, plan);
@@ -160,6 +169,15 @@ void Whispernet::endBlock(detection::EnvelopeRuntime& runtime, float level, uint
     float flatness = 0.0f;
     if (_flat.take(flatness) && level >= _onsetApplied) {
         runtime.recordFeature(detection::FeatureStreamId::SpectralFlatness, blockMs, flatness);
+    }
+    float lowRms = 0.0f;
+    if (_balance.takeLowRms(lowRms)) {
+        _lowRoom.update(lowRms, blockMs > _lastLowMs ? blockMs - _lastLowMs : 0U, learning);
+        _lastLowMs = blockMs;
+        if (level >= _onsetApplied && _lowRoom.started()) {
+            const float excessDb = 20.0f * log10f((lowRms + 1.0f) / (_lowRoom.value() + 1.0f));
+            runtime.recordFeature(detection::FeatureStreamId::LowBandExcess, blockMs, excessDb);
+        }
     }
 }
 
@@ -373,6 +391,12 @@ void Whispernet::describeParams(param::ParamRegistry& registry) {
                       0.0f, 1.0f);
     registry.addFloat(param::ParamId::Whisper_FlatMax, param::ModuleId::Detection, "whisper.flat_max", &_values.flatMax,
                       0.0f, 1.0f);
+    registry.addBool(param::ParamId::Whisper_LevelBand, param::ModuleId::Detection, "whisper.level_band",
+                     &_values.levelBand);
+    registry.addUInt32(param::ParamId::Whisper_TimbreCheck, param::ModuleId::Detection, "whisper.timbre_check",
+                       &_values.timbreCheck, 0U, 1U);
+    registry.addFloat(param::ParamId::Whisper_LowMaxDb, param::ModuleId::Detection, "whisper.low_max_db",
+                      &_values.lowMaxDb, 0.0f, 60.0f);
     registry.addUInt32(param::ParamId::Whisper_DelayMs, param::ModuleId::Output, "whisper.delay_ms", &_values.delayMs,
                        kDelayMinMs, kLineMs);
     registry.addFloat(param::ParamId::Whisper_Gain, param::ModuleId::Output, "whisper.gain", &_values.gain, 0.0f,

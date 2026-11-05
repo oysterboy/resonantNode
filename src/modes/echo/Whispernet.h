@@ -5,6 +5,7 @@
 
 #include <ParamRegistry.h>
 
+#include "../../audio/BandBalance.h"
 #include "../../audio/BandFlatness.h"
 #include "../../audio/EchoCanceller.h"
 #include "../../audio/GatedDelayLine.h"
@@ -52,6 +53,13 @@ public:
         // range, under test; flatmin=0 flat=1 turn the check off in effect.
         float flatMin = 0.15f;
         float flatMax = 0.40f;
+        // 2026-11-05 from the labelled recordings (BandBalance; research/whispernet.md), off by default until heard:
+        // levelBand measures the level (onset, release, the room) on 1.5-4.5 kHz instead of the full band;
+        // timbreCheck 1 makes the timbre module read the low band's excess over the room (whisper <= lowMaxDb) in
+        // place of the flatness range.
+        bool levelBand = false;
+        uint32_t timbreCheck = 0;  // 0 = flatness (flat_min .. flat_max), 1 = low band (excess <= low_max_db)
+        float lowMaxDb = 9.0f;
         uint32_t delayMs = 1000;  // D, set per node at begin()
         // The replay's level over the mic's: the amp plays the line's int16 at full scale, so gain 1 is the mic's digital
         // level, inaudible at a metre; 16 still was, 64 sounded about right to the owner (desk, 2026-11-01).
@@ -121,6 +129,11 @@ public:
 
     // One mic sample (24-bit) without the node's own echo (what it played, the delay back, from the DuplexStream).
     int32_t cancel(int32_t mic);
+    // The sample the level follows: the whisper band's with level_band on, else as heard. Feeds the low band too.
+    int32_t forLevel(int32_t s) {
+        const float y = _balance.push(static_cast<float>(s));
+        return _values.levelBand ? static_cast<int32_t>(y) : s;
+    }
     // One mic sample (int16) in, the delay line's sample into this block's output.
     void pushSample(int16_t in) {
         int16_t out = _line.process(in);
@@ -205,6 +218,8 @@ private:
     Counts _counts;
     GatedDelayLine _line;
     BandFlatness _flat;
+    BandBalance _balance;
+    RoomLevel _lowRoom;  // the low band's quiet level, learned with the room's
     RoomLevel _room;
     EchoCanceller _aec;
     // The canceller's delay (samples) as the auto-centring has moved it, from the param's value.
@@ -226,6 +241,7 @@ private:
     uint32_t _calStartMs = 0;
     float _onsetApplied = 0.0f;
     uint32_t _lastRoomMs = 0;  // the onset the runtime holds now (configure / retune)
+    uint32_t _lastLowMs = 0;
     float effectiveOnset() const;
     void retune(detection::EnvelopeRuntime& runtime);
     void buildConfig(detection::ScalarTransientConfig& d, detection::InspectionPlan& plan) const;

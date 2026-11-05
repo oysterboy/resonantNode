@@ -6,6 +6,7 @@ the reading does not depend on the level, and nothing pushed gives no reading. R
 #include <stdint.h>
 #include <unity.h>
 
+#include "../../src/audio/BandBalance.h"
 #include "../../src/audio/BandFlatness.h"
 
 namespace {
@@ -74,6 +75,39 @@ void test_nothing_pushed_no_reading() {
     TEST_ASSERT_FALSE(f.take(out));
 }
 
+// BandBalance: a 400 Hz tone sits in the low band and is mostly gone from the whisper band; a 2.6 kHz tone the reverse.
+void test_band_balance_splits_low_and_whisper_band() {
+    auto run = [](float hz, float& lowRms, float& midRms) {
+        BandBalance b;
+        b.begin(24000);
+        double mid = 0.0;
+        int n = 0;
+        for (int i = 0; i < 24000; ++i) {
+            const float y = b.push(1000.0f * sinf(6.2831853f * hz * static_cast<float>(i) / 24000.0f));
+            if (i >= 12000) {
+                mid += static_cast<double>(y) * y;
+                ++n;
+            }
+            if (i == 11999) {
+                b.takeLowRms(lowRms);  // drop the settling half
+            }
+        }
+        b.takeLowRms(lowRms);
+        midRms = static_cast<float>(sqrt(mid / n));
+    };
+    float lo = 0.0f, mi = 0.0f;
+    run(400.0f, lo, mi);
+    TEST_ASSERT_TRUE(lo > 600.0f);  // ~707 (the tone's RMS) near the band's centre
+    TEST_ASSERT_TRUE(mi < lo / 4.0f);
+    run(2600.0f, lo, mi);
+    TEST_ASSERT_TRUE(mi > 600.0f);
+    TEST_ASSERT_TRUE(lo < mi / 4.0f);
+    BandBalance none;
+    none.begin(24000);
+    float r = 1.0f;
+    TEST_ASSERT_FALSE(none.takeLowRms(r));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_white_noise_reads_flat);
@@ -81,5 +115,6 @@ int main(int, char**) {
     RUN_TEST(test_harmonics_read_low);
     RUN_TEST(test_level_does_not_matter);
     RUN_TEST(test_nothing_pushed_no_reading);
+    RUN_TEST(test_band_balance_splits_low_and_whisper_band);
     return UNITY_END();
 }

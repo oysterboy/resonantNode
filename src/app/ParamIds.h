@@ -181,6 +181,9 @@ enum class ParamId : uint16_t {
     Behavior_StartChancePct,
     Echo_DampingPct,
     Echo_FadeMs,
+    Whisper_LevelBand,
+    Whisper_TimbreCheck,
+    Whisper_LowMaxDb,
 };
 
 }  // namespace param

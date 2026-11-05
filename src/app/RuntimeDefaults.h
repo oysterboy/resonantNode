@@ -121,13 +121,13 @@ static_assert(kDefaultChirpFrequencyHz >= kDefaultNetworkBandLowHz &&
               "the chirp tone must lie inside the network band");
 static_assert((kDefaultChirpFrequencyHz - kDefaultNetworkBandLowHz) % kBandBinSpacingHz == 0,
               "the chirp tone must sit on a band bin (bandLow + k * spacing)");
-// The Node's network signal as shipped (output.hop_*): 25 ms x 5, gap 10, on the band bins
-// (decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md). Its fit to the scalar
-// detector is detection/HopGapContract.h (step 5h item 2).
-constexpr uint32_t kDefaultHopPulseMs = 25UL;
-constexpr uint32_t kDefaultHopGapMs = 10UL;
+// The Node's network signal as shipped (output.hop_*): 15 ms x 5 with no gap, a 75 ms glide up the band bins, the
+// owner's pick by ear (decisions/2026-11-05-short-glide-signal.md; was 25 ms x 5, gap 10). Its fit to the scalar
+// detector is detection/HopGapContract.h.
+constexpr uint32_t kDefaultHopPulseMs = 15UL;
+constexpr uint32_t kDefaultHopGapMs = 0UL;
 constexpr uint32_t kDefaultHopSteps = 5UL;
-static_assert(kDefaultHopSteps * kDefaultHopPulseMs + (kDefaultHopSteps - 1) * kDefaultHopGapMs == 165UL,
+static_assert(kDefaultHopSteps * kDefaultHopPulseMs + (kDefaultHopSteps - 1) * kDefaultHopGapMs == 75UL,
               "the hop train's span changed: recheck detection/HopGapContract.h and the 5b battery");
 constexpr uint32_t kDefaultAudioI2SBitsPerSample = AUDIO_I2S_BITS_PER_SAMPLE;
 constexpr int kDefaultAudioI2SSckPin = AUDIO_I2S_SCK_PIN;

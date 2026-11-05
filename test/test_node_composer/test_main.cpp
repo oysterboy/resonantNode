@@ -52,13 +52,13 @@ void test_hop_frequencies_per_base_bin() {
 }
 
 void test_five_step_train_from_a_heard_pattern() {
-    NodeSignalComposer c;  // shipped values: on, 25 ms x 5, gap 10
+    NodeSignalComposer c;  // shipped values: on, 15 ms x 5, no gap (a glide)
     const OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Single, true, 2);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::HopTrain), static_cast<int>(r.kind));
     TEST_ASSERT_EQUAL(static_cast<int>(ChirpPattern::Single), static_cast<int>(r.pattern));
     TEST_ASSERT_EQUAL_UINT32(5, r.hopSteps);
-    TEST_ASSERT_EQUAL_UINT32(25, r.pulseMs);
-    TEST_ASSERT_EQUAL_UINT32(10, r.gapMs);
+    TEST_ASSERT_EQUAL_UINT32(15, r.pulseMs);
+    TEST_ASSERT_EQUAL_UINT32(0, r.gapMs);
     const uint32_t expect[5] = {3450, 3700, 3950, 4200, 4450};
     TEST_ASSERT_EQUAL_UINT32_ARRAY(expect, r.hopHz, 5);
     TEST_ASSERT_EQUAL_UINT32(0, r.announceHz);
@@ -89,7 +89,7 @@ void test_idle_call_with_hop() {
     TEST_ASSERT_EQUAL_UINT32(NodeSignalComposer::kIdleAnnounceGapMs, r.announceGapMs);
     TEST_ASSERT_EQUAL_UINT32(5, r.hopSteps);
     TEST_ASSERT_EQUAL_UINT32(3200, r.hopHz[0]);
-    TEST_ASSERT_EQUAL_UINT32(25, r.pulseMs);
+    TEST_ASSERT_EQUAL_UINT32(15, r.pulseMs);
 }
 
 void test_idle_call_without_hop() {

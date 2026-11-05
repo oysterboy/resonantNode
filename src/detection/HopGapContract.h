@@ -15,7 +15,8 @@ Hard (the train can never be one occurrence):
   - duration: the train (steps * pulse + (steps - 1) * gap) inside
     [min duration, max duration];
   - coverage: steps * pulse >= min coverage above release;
-  - island: pulse >= min longest island;
+  - island: the longest stretch above release >= min longest island: one pulse,
+    or the whole train when gap is 0 (the pulses join into one glide);
   - max gap: gap <= max gap (the carrier-quality gap check).
 Soft (the train is one occurrence only in some rooms):
   - debounce: gap < release debounce. A dip in the band feature that lasts the
@@ -66,7 +67,8 @@ inline HopGapCheck checkHopGap(const HopTrainShape& shape, const ScalarTransient
     c.tailFits = noMax || c.trainMs + kHopRoomTailMarginMs <= scalar.maxTransientDurationMs;
     if (scalar.requireCarrierQuality) {
         c.coverageFits = shape.steps * shape.pulseMs >= scalar.minCoverageAboveReleaseMs;
-        c.islandFits = shape.pulseMs >= scalar.minLongestIslandMs;
+        const unsigned long islandMs = shape.gapMs == 0 ? c.trainMs : shape.pulseMs;  // gap 0: one glide
+        c.islandFits = islandMs >= scalar.minLongestIslandMs;
         c.gapWithinMaxGap = shape.steps < 2 || shape.gapMs <= scalar.maxGapMs;
     }
     c.gapBelowDebounce = shape.steps < 2 || shape.gapMs < scalar.releaseDebounceMs;

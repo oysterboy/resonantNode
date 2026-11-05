@@ -100,6 +100,7 @@ what replaced it.
 | 2026-11-01 | [The band bank recomputes every 16 samples: half the Node's CPU for ~0.5 dB at the margin's edge](2026-11-01-band-update-16.md) (DET-020, step 22) |
 | 2026-11-01 | [Whispernet's delay is per node, between 400 ms and 2 s](2026-11-01-whispernet-delay-per-node.md) (ECHO-002, step 20.3) |
 | 2026-11-04 | [Whispernet's mic and speaker run in lockstep (one I/O owner), for the echo cancellation](2026-11-04-whispernet-duplex-lockstep.md) (ECHO-002) |
+| 2026-11-05 | [The Node's signal is a 75 ms glide on 2000-6500 Hz; the detector's minimum follows it (70 / 60 ms)](2026-11-05-short-glide-signal.md) |
 
 ## Open
 

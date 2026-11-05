@@ -318,7 +318,8 @@ void test_release_debounce_above_the_gap_bridges_the_dry_train() {
 // Step 5h item 3, assumption 2 (one null per spacing): one deep null (1/7 in amplitude,
 // 125 Hz wide) at any of the five bins still leaves one accepted occurrence; two deep
 // nulls at 3450 + 3700 (the train's middle steps on this rotation) do not: the detector
-// splits the train into pieces under the 85 ms minimum. The contrast gate is not what
+// splits the train into pieces. Since the 70 ms minimum (decisions/2026-11-05-short-glide-signal.md) a piece can
+// reach the inspectors; it is rejected there, nothing is accepted. The contrast gate is not what
 // fails: every accepted variant's contrast P75 stays >= 31,273 (shipped 30,500), see
 // docs/lab/2026-10-20-step5h-host-checks.md for the full sweep.
 void test_one_deep_null_is_survived_two_in_the_middle_are_not() {
@@ -334,15 +335,14 @@ void test_one_deep_null_is_survived_two_in_the_middle_are_not() {
     const hostreplay::Capture two = notched(notched(cap, 3450, 1.0 / 7.0, 125.0), 3700, 1.0 / 7.0, 125.0);
     const hostreplay::Result r2 = hostreplay::replay(two, networkBand(), profile);
     TEST_ASSERT_EQUAL_UINT32(0, r2.accepted);
-    TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, r2.rejected, "the split train never reaches the inspectors");
 }
 
 // Step 5h item 2: the shipped hop train against the shipped scalar profile
 // (detection/HopGapContract.h; the Node prints the same check as RB hop_check).
-// Hard checks pass; the soft one, gap < release debounce, does not: 10 = 10, the
-// train relies on the room tail (the dry fixtures above). If this assertion
-// fails because the debounce or the gap changed, the change was a tuning pass:
-// update this test and the HopGapContract note with its bench evidence.
+// Every check passes since the 75 ms glide (decisions/2026-11-05-short-glide-signal.md): with no gap the train
+// no longer relies on the room tail to bridge a dip (the dry fixtures above were the 25 ms x 5, gap 10 train).
+// If this fails because the debounce or the signal changed, the change was a tuning pass: update this test and the
+// HopGapContract note with its bench evidence.
 void test_shipped_hop_train_fits_the_scalar_detector() {
     const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
     detection::HopTrainShape shape;
@@ -350,14 +350,15 @@ void test_shipped_hop_train_fits_the_scalar_detector() {
     shape.pulseMs = runtime::kDefaultHopPulseMs;
     shape.gapMs = runtime::kDefaultHopGapMs;
     const detection::HopGapCheck c = detection::checkHopGap(shape, profile.scalarTransient);
-    TEST_ASSERT_EQUAL_UINT32(165, c.trainMs);
+    TEST_ASSERT_EQUAL_UINT32(75, c.trainMs);
     TEST_ASSERT_TRUE(c.durationFits);
     TEST_ASSERT_TRUE(c.coverageFits);
     TEST_ASSERT_TRUE(c.islandFits);
     TEST_ASSERT_TRUE(c.gapWithinMaxGap);
     TEST_ASSERT_TRUE(c.tailFits);
     TEST_ASSERT_TRUE(c.hardOk());
-    TEST_ASSERT_FALSE_MESSAGE(c.gapBelowDebounce, "shipped gap is below the debounce now: see the comment above");
+    TEST_ASSERT_TRUE(c.gapBelowDebounce);
+    TEST_ASSERT_TRUE(c.softOk());
 }
 
 // The check names what the replay shows: a 30 ms gap is over max gap (the wet_g30
@@ -365,10 +366,10 @@ void test_shipped_hop_train_fits_the_scalar_detector() {
 // Step 8b item 2: the shipped profile's durations against its inspection plan and
 // the 576 ms history (detection/InspectionPlanContract.h; the Node prints RB
 // plan_check). The history fits (450 + 10 + 0 + 100 = 560 ms; max duration 450 since
-// decisions/2026-10-29-max-duration-450-for-chords.md, the history 576 with it). Since DET-017
-// (2026-10-23, min 92 ms) the window is complete at release too: a
-// minimum-duration occurrence is inspected at 92 + 10 = 102 ms, after its
-// 0..+100 ms window ends. Before, at 85 ms, it was inspected 5 ms early (audit 3.1).
+// decisions/2026-10-29-max-duration-450-for-chords.md, the history 576 with it). Since the 70 ms minimum
+// (decisions/2026-11-05-short-glide-signal.md) a minimum-duration occurrence is released at 70 + 10 = 80 ms, 20 ms
+// before its 0..+100 ms window ends: the soft check flags it, and the runtime waits for the window (DET-017), so
+// the verdict is not judged on a short window (the glide passed 15 / 15 on the board).
 void test_shipped_plan_fits_the_history_and_the_window() {
     const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
     const detection::InspectionPlanCheck c =
@@ -376,8 +377,8 @@ void test_shipped_plan_fits_the_history_and_the_window() {
     TEST_ASSERT_EQUAL_UINT32(560, c.historyNeededMs);
     TEST_ASSERT_EQUAL_UINT32(576, c.historySpanMs);
     TEST_ASSERT_TRUE(c.hardOk());
-    TEST_ASSERT_EQUAL_UINT32(0, c.earlyWindowMs);
-    TEST_ASSERT_TRUE(c.softOk());
+    TEST_ASSERT_EQUAL_UINT32(20, c.earlyWindowMs);
+    TEST_ASSERT_FALSE(c.softOk());
     // The class limits are ordered on the shipped plan; a medium above strong is flagged (deep review I-M-B).
     TEST_ASSERT_TRUE(c.classLimitsOrdered);
     detection::InspectionPlan unordered = profile.inspectionPlan;

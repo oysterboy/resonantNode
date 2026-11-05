@@ -140,7 +140,9 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTarget;
     profile.scalarTransient.onsetDetectionThreshold = 2000.0f;
     profile.scalarTransient.onsetReleaseThreshold = 1500.0f;
-    profile.scalarTransient.minTransientDurationMs = 92;  // decisions/2026-10-23-node-hears-the-hop-train-only.md
+    // 70, not 92: the 75 ms glide reads ~82 ms; a short beep is kept out by the shape module now, not by length
+    // (decisions/2026-11-05-short-glide-signal.md; was decisions/2026-10-23-node-hears-the-hop-train-only.md).
+    profile.scalarTransient.minTransientDurationMs = 70;
     // 450, not 300: two answers 120-220 ms apart merge into one sound past 300 and both were lost; at 450 they count
     // as one train (decisions/2026-10-29-max-duration-450-for-chords.md, lab E003). A single train reads up to
     // ~220 ms (decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md).
@@ -151,7 +153,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.minTransientPeakStrength = 3000.0f;
     profile.scalarTransient.minMatchedMeanStrength = 0.0f;
     profile.scalarTransient.requireCarrierQuality = true;
-    profile.scalarTransient.minCoverageAboveReleaseMs = 80;
+    profile.scalarTransient.minCoverageAboveReleaseMs = 60;  // 80 passed the glide 9-10 / 15, 60 15 / 15 (same file)
     profile.scalarTransient.minLongestIslandMs = 20;
     profile.scalarTransient.maxGapMs = 20;
 

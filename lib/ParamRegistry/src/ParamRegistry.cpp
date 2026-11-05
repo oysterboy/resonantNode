@@ -88,6 +88,17 @@ ParamSetStatus parseUnsigned(const char* valueText, uint32_t& out) {
 }  // namespace
 
 bool ParamRegistry::addBinding(const ParamBinding& binding) {
+    if (!bindingAddable(binding)) {
+        ++_refused;
+        _lastRefusedPath = binding.path != nullptr ? binding.path : "";
+        return false;
+    }
+
+    _bindings[_count++] = binding;
+    return true;
+}
+
+bool ParamRegistry::bindingAddable(const ParamBinding& binding) const {
     if (binding.path == nullptr || binding.field == nullptr) {
         return false;
     }
@@ -99,12 +110,7 @@ bool ParamRegistry::addBinding(const ParamBinding& binding) {
             return false;
         }
     }
-    if (_count >= kMaxParams) {
-        return false;
-    }
-
-    _bindings[_count++] = binding;
-    return true;
+    return _count < kMaxParams;
 }
 
 bool ParamRegistry::addUInt16Raw(uint16_t id, uint8_t group, const char* path, uint16_t* field, uint16_t minValue,

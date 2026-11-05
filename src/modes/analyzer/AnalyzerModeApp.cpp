@@ -1,5 +1,6 @@
 #include "AnalyzerModeApp.h"
 #include "../../app/FirmwareOta.h"
+#include "../../app/ParamCommands.h"
 
 #include <Arduino.h>
 #include <esp_system.h>
@@ -593,6 +594,7 @@ void AnalyzerApp::configureParameters() {
     _paramRegistry.setGroupNamer(param::moduleNameForGroup);
     param::describeParams(_paramRegistry, _scalarTuning);
     _paramRegistry.captureDefaults();
+    param::printRefusedAdds(_paramRegistry, serialOut());
 }
 
 void AnalyzerApp::configureI2SParameters() {

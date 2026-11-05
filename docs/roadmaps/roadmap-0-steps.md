@@ -424,6 +424,11 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         AnalyzerCommandParse.h (L13), a refused ParamRegistry add printed at boot (L15), the replay's comments
         (L17); the stale lines in CLAUDE.md, implementation-status.md, notes_manual.md (D14). Gate: a green run on
         main with 11 ESP envs built.
+        2026-11-05, PC: esp32dev-gateway in the matrix; `PARAM ERR refused_add count= last=` printed at boot by
+        every mode (ParamRegistry::refusedAdds, test_param_registry +2 asserts); the NUL byte; the replay's two
+        comments; CLAUDE.md's mode list and suite sentence, the status table's test and echo rows plus a gateway
+        row, the guide's duplicate paragraph and node.radio_log. Host-checked by syntax and format only (no
+        PlatformIO in the container); gate open until the CI run on the push shows 11 ESP envs green.
    23.1 The OTA-and-emission edges: Whispernet closes its emission in release() / resume() (H1), the echo room
         releases ring and clip before the pull and prints the largest block (M3), the Analyzer refuses OTA while a
         SEQ run is active (M6). PC, then one remote round trip per mode. Gate: a failed OTA during a whisper replay

@@ -28,6 +28,16 @@ void printUnknownPath(Print& out, const char* verb, const char* path) {
 
 }  // namespace
 
+void printRefusedAdds(const ParamRegistry& registry, Print& out) {
+    if (registry.refusedAdds() == 0) {
+        return;
+    }
+    out.print("PARAM ERR refused_add count=");
+    out.print(static_cast<unsigned long>(registry.refusedAdds()));
+    out.print(" last=");
+    out.println(registry.lastRefusedPath());
+}
+
 ParamLoadReport loadStoredParams(const ParamRegistry& registry, ParamStore& store, Print& out) {
     const ParamLoadReport report = registry.load(store, out);
     out.print("PARAM load stored=");

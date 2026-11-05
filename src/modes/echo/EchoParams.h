@@ -25,6 +25,7 @@ public:
     param::ParamRegistry& registry() { return _registry; }
     // The fields hold the firmware defaults now (the boot order of PAR-010).
     void captureDefaults() { _registry.captureDefaults(); }
+    void printRefusedAdds(Print& out) { param::printRefusedAdds(_registry, out); }
     param::ParamLoadReport loadStored(Print& out) { return param::loadStoredParams(_registry, _store, out); }
     param::ParamCommandResult handleCommand(const char* line, Print& out) {
         return param::handleParamCommand(line, _registry, &_store, out);

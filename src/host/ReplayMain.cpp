@@ -17,7 +17,7 @@ Options
                           detection.scalar_max_gap_ms, detection.contrast_medium, detection.amp_medium;
                           values are range-checked like on the board
     --preprocess none|dc|fd   force the PCM preprocessor (default: none for mode=both/feat transcripts and
-                          .wav files, the build's preprocessor for mode=i2s/pcm transcripts)
+                          .wav files, the build's preprocessor for mode=i2s transcripts)
     --tail-ms N           silence appended after the capture so the last occurrence can close (default 300)
     --skip-ms N           ignore verdicts whose occurrence starts before N ms (noise captures: the marker tone)
     --compare             with a mode=both transcript: the host amp feature against the board's column

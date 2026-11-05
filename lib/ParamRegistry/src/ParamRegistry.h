@@ -98,7 +98,10 @@ struct ParamSaveReport {
 
 class ParamRegistry {
 public:
-    static constexpr size_t kMaxParams = 64;  // 50 used by the Node (the level automaton's three since 2026-10-30)
+    // The Node registers 56 (2026-11-05), Whispernet 36. An add past the cap, or on a duplicate path or id, is
+    // refused and counted (refusedAdds), and every mode prints the count at boot: a param dropped silently from
+    // PARAM LIST is what review 2026-11-05 L15 found could happen.
+    static constexpr size_t kMaxParams = 64;
     using GroupNamer = const char* (*)(uint8_t group);
 
     // Raw registration. Rejects a null path or field, a duplicate path, a
@@ -132,6 +135,10 @@ public:
     const char* groupName(uint8_t group) const;
 
     size_t count() const { return _count; }
+    // Adds refused since construction (null path or field, duplicate path or id, a full table) and the path of
+    // the last one ("" for a null path).
+    size_t refusedAdds() const { return _refused; }
+    const char* lastRefusedPath() const { return _lastRefusedPath; }
     // The i-th binding in registration order (i < count()).
     const ParamBinding& at(size_t index) const { return _bindings[index]; }
     const ParamBinding* find(const char* path) const;
@@ -171,12 +178,15 @@ public:
 
 private:
     bool addBinding(const ParamBinding& binding);
+    bool bindingAddable(const ParamBinding& binding) const;
     bool bitsInRange(const ParamBinding& binding, uint32_t bits) const;
     void writeBits(const ParamBinding& binding, uint32_t bits) const;
     void printBits(Print& out, const ParamBinding& binding, uint32_t bits) const;
 
     ParamBinding _bindings[kMaxParams] = {};
     size_t _count = 0;
+    size_t _refused = 0;
+    const char* _lastRefusedPath = "";
     GroupNamer _groupNamer = nullptr;
 };
 

@@ -42,4 +42,8 @@ ParamCommandResult handleParamCommand(const char* line, const ParamRegistry& reg
 // line (PAR-010). Boot and PARAM LOAD share it; the caller applies.
 ParamLoadReport loadStoredParams(const ParamRegistry& registry, ParamStore& store, Print& out);
 
+// `PARAM ERR refused_add count=N last=<path>` when the registry refused an add (a duplicate path or id, or the
+// table full): a knob missing from PARAM LIST is a boot-time message, never silent (review 2026-11-05 L15).
+void printRefusedAdds(const ParamRegistry& registry, Print& out);
+
 }  // namespace param

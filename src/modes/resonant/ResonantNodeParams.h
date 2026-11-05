@@ -63,6 +63,7 @@ public:
 
     // The fields hold the firmware defaults now (PAR-010 boot order).
     void captureDefaults() { _registry.captureDefaults(); }
+    void printRefusedAdds(Print& out) { param::printRefusedAdds(_registry, out); }
     // Stored values into the fields at boot; the report says how many were applied.
     param::ParamLoadReport loadStored(Print& out);
     // PARAM LIST / GET / SET / DUMP / SAVE / LOAD / RESET (app/ParamCommands) with the NVS store.

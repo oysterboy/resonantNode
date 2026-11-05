@@ -66,6 +66,8 @@ void test_duplicate_path_and_duplicate_id_are_rejected() {
     TEST_ASSERT_FALSE(r.addUInt16(Id::Other, Group::A, "A.U16", &other, 0, 1));  // same path, any case
     TEST_ASSERT_FALSE(r.addUInt16(Id::U16, Group::A, "a.other", &other, 0, 1));  // same id
     TEST_ASSERT_EQUAL_UINT32(4, r.count());
+    TEST_ASSERT_EQUAL_UINT32(2, r.refusedAdds());
+    TEST_ASSERT_EQUAL_STRING("a.other", r.lastRefusedPath());
     TEST_ASSERT_EQUAL_STRING("b", r.groupName(r.find("b.f")->group));
 }
 

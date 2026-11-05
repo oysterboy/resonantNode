@@ -2,14 +2,19 @@
 
 ESP32 firmware (PlatformIO + Arduino framework) for an acoustic
 resonant-node device: nodes detect a tonal/chirp pattern in ambient audio
-and react by emitting their own pattern back. Three build modes share one
-codebase:
+and react by emitting their own pattern back. The modes share one codebase
+(the first three are the installation's; the rest came with step 20):
 
 - **RB / resonant node** (`src/modes/resonant/`) — live field behavior:
   detect, then react via `ResonantBehavior`.
 - **Analyzer** (`src/modes/analyzer/`) — SEQ/OBS validation and report
   inspection, no reactive output.
 - **Emitter** (`src/modes/emitter/`) — signal-source-only mode for testing.
+- **Echo room / Whispernet** (`src/modes/echo/`, envs `esp32dev-echo` and
+  `esp32dev-whisper`, experimental since 2026-10-31) — a clap answered by a
+  replay of itself; a whisper through a gated delay line. Same hardware.
+- **Gateway** (`src/modes/gateway/`, `esp32dev-gateway`, 2026-11-05) — a bare
+  ESP32 as the bench's radio relay, no audio.
 
 ## Tool migration note
 
@@ -80,9 +85,9 @@ the port yourself. Host (no board,
 NODE-006): `pio test -e native-test` replays recorded captures through the
 real detection chain (`test/test_replay_corpus`, fixtures under
 `test/fixtures`), `pio test -e native-test-behavior` runs the host unit
-suites (`test_behavior_refractory` two-node reply, `test_behavior_rest`,
-`test_shipped_profile`, `test_param_registry` incl. persistence,
-`test_sound_output`, `test_net_frame`; list in `platformio.ini`), and
+suites (27 on 2026-11-05, the list in `platformio.ini`: among them
+`test_behavior_refractory` two-node reply, `test_shipped_profile`,
+`test_param_registry` incl. persistence, `test_echo_detection`), and
 `pio run -e native-replay` builds the replay command
 line (`.pio/build/native-replay/program.exe --help`; captures live in
 `bench/sessions/*-corpus-*`, made with `tools/bench/rawcorpus.py`). Both

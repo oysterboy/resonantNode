@@ -100,6 +100,7 @@ behavior.*                wait, refractory, self-suppression, idle call, rest, t
                           (level_max, level_decay_ms, answer_jitter_ms, start_chance_pct since 2026-11-05)
 output.*                  hop train, idle announce, silent (8 params)
 node.radio_enabled        ESP-NOW on or off
+node.radio_log            console lines per second mirrored to the radio (0 off; 2026-11-05)
 ```
 
 Edge values (review 12.0, 2026-10-29): `detection.scalar_max_duration_ms 0` is no limit (the detector and RB
@@ -200,13 +201,6 @@ others and plays nothing, so every board with a mic and an amp can play in any m
 BOOT button held (a CH340 board without auto-reset: `esptool ... --connect-attempts 80` with BOOT down); after that
 the update goes over WiFi like the others'. A new board prints `GATEWAY efuse_mac=0x...` for its roster line.
 
-The radio gateway board (2026-11-05, `esp32dev-gateway`, `docs/decisions/2026-11-05-radio-gateway-board.md`): a bare
-ESP32 with no mic and no amp on a USB data port, named by the roster (E0). Its console takes `NET <name|*> <command>`
-as on a Node (PARAM, RB, ECHO, WHISPER, SELFTEST, OTA, NET PING), `NET STATUS` and `OTA url=... token=...` for its
-own update; it prints `NET reply from=...` and the boards' `NET log from=...` lines. It runs no commands of the
-others and plays nothing, so every board with a mic and an amp can play in any mode. Its first flash needs the
-BOOT button held (a CH340 board without auto-reset: `esptool ... --connect-attempts 80` with BOOT down); after that
-the update goes over WiFi like the others'. A new board prints `GATEWAY efuse_mac=0x...` for its roster line.
 `boardview.py --boards E0=COMx --radio E1,E2,E3,E4,E5 --poll "RB STATUS"` shows every board through it.
 
 The log by radio (2026-11-05, `docs/decisions/2026-11-05-radio-log-mirror.md`): `node.radio_log` N (0 off, the

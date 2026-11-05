@@ -254,6 +254,7 @@ void Node::begin() {
     // roster rotation), so capture them, then let valid stored values win
     // (decisions/2026-10-23-param-persistence-save-only.md) and apply once.
     _params.captureDefaults();
+    _params.printRefusedAdds(serialOut());
     loadStoredParams();
     if (_params.changedFromDefault("output.hop_rotation")) {
         serialOut().print("RB node rotation_source=stored rotation=");

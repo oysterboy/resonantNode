@@ -86,7 +86,7 @@ struct Options {
     // path): one `shape` line per verdict with the strongest band bin per ms over the occurrence's window,
     // as runs. Host-only probe; reads FreqBandStream::lastPeakBinHz(), which the board does not pass on.
     bool shape = false;
-    // The band bank's update interval in samples (0: the stream's default, 4, as the boards run). A host experiment
+    // The band bank's update interval in samples (0: the stream's default, FREQBAND_UPDATE_EVERY_SAMPLES = 16 since DET-020, as the boards run). A host experiment
     // (owner 2026-10-31): how far the interval can grow before the verdicts change.
     unsigned long bandUpdateEvery = 0;
 };

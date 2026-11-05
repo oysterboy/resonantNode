@@ -244,6 +244,7 @@ void EchoApp::configureParams() {
                     &_gate.refractoryMs, 0U, 10000U);
     }
     _params.captureDefaults();
+    _params.printRefusedAdds(serialOut());
     _params.loadStored(serialOut());
     applyParams();
 }

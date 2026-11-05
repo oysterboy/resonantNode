@@ -191,6 +191,7 @@ void Node::printHopGapCheck() {
     serialOut().print("RB hop_check status=");
     serialOut().print(!c.hardOk() ? "fail" : (!c.softOk() ? "warn" : "ok"));
     printKeyValue("train_ms", c.trainMs);
+    printKeyValue("heard_train_ms", _behavior.heardTrainMs());  // the unit a merged chord is counted in
     printKeyValue("gap_ms", shape.gapMs);
     printKeyValue("release_debounce_ms", sc.releaseDebounceMs);
     printKeyValue("max_gap_ms", sc.maxGapMs);

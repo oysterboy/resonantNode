@@ -19,8 +19,9 @@ namespace {
 
 using Decision = ResonantBehavior::BehaviorDecision;
 
-constexpr unsigned long kTrainMs = 165;  // the Node's hop train
-constexpr unsigned long kVerdictTrainMs = 215;  // one train as a verdict reads it
+constexpr unsigned long kTrainMs = 165;  // the hop train these cases were written on (25 ms x 5, gap 10)
+constexpr unsigned long kVerdictTrainMs = 215;  // one such train as a verdict read it; make() hands it to Behavior
+constexpr uint32_t kGlideUnitMs = 125;  // the 75 ms glide plus the 50 ms room-tail margin, as the Node hands it in
 
 // The scripted random source: returns the queued values in order (each taken modulo the bound), then 0.
 uint32_t gScript[64];
@@ -64,6 +65,7 @@ ResonantBehavior make(const BehaviorGateConfig& cfg) {
     b.configure(cfg);
     b.resetState();
     b.setRandomSource(&scripted);
+    b.setHeardTrainMs(static_cast<uint32_t>(kVerdictTrainMs));
     return b;
 }
 
@@ -74,13 +76,35 @@ void setUp() {
 }
 void tearDown() {}
 
-// A chord's answers that merged into one occurrence count by its length; one train counts 1, at most 3.
+// A chord's answers that merged into one occurrence count by its length in the unit the Node hands in; one train
+// counts 1, at most 3.
 void test_trains_counted_by_duration() {
-    TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsInVerdict(train(1000, 180)));
-    TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsInVerdict(train(1000, 220)));
-    TEST_ASSERT_EQUAL_UINT32(2, ResonantBehavior::trainsInVerdict(train(1000, 430)));  // step 14: +250 ms, merged
-    TEST_ASSERT_EQUAL_UINT32(3, ResonantBehavior::trainsInVerdict(train(1000, 2000)));
-    TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsInVerdict(train(1000, 0)));
+    TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(180, kVerdictTrainMs));
+    TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(220, kVerdictTrainMs));
+    TEST_ASSERT_EQUAL_UINT32(2, ResonantBehavior::trainsIn(430, kVerdictTrainMs));  // step 14: +250 ms, merged
+    TEST_ASSERT_EQUAL_UINT32(3, ResonantBehavior::trainsIn(2000, kVerdictTrainMs));
+    TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(0, kVerdictTrainMs));
+    ResonantBehavior b = make(automaton());
+    TEST_ASSERT_EQUAL_UINT32(2, b.trainsInVerdict(train(1000, 430)));
+}
+
+// The glide (2026-11-05): two answers 120-220 ms apart read as 202-302 ms (lab E003's chord spacing) and count 2,
+// three at 120 ms count 3; the old 215 ms constant counted every one of these as 1 (review 2026-11-05 M1).
+void test_trains_counted_in_the_glide_unit() {
+    TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(82, kGlideUnitMs));
+    TEST_ASSERT_EQUAL_UINT32(2, ResonantBehavior::trainsIn(202, kGlideUnitMs));
+    TEST_ASSERT_EQUAL_UINT32(2, ResonantBehavior::trainsIn(302, kGlideUnitMs));
+    TEST_ASSERT_EQUAL_UINT32(3, ResonantBehavior::trainsIn(322, kGlideUnitMs));
+    TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(230, 215));  // what 215 made of a two-answer chord
+}
+
+// No unit handed in (the echo modes): a verdict is one event, whatever its length (a 20 s whisper phrase).
+void test_without_a_unit_every_verdict_counts_one() {
+    TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(2000, 0));
+    ResonantBehavior b;
+    b.configure(automaton());
+    b.resetState();
+    TEST_ASSERT_EQUAL_UINT32(1, b.trainsInVerdict(train(1000, 20000)));
 }
 
 // The first train heard raises the level to 1, then draws against p = (1 + offset 0) / L, as tools/sim/fieldramp.py
@@ -257,6 +281,8 @@ void test_start_chance_sets_the_first_answer() {
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_trains_counted_by_duration);
+    RUN_TEST(test_trains_counted_in_the_glide_unit);
+    RUN_TEST(test_without_a_unit_every_verdict_counts_one);
     RUN_TEST(test_low_level_answers_with_one_in_l);
     RUN_TEST(test_answer_waits_the_jitter_draw);
     RUN_TEST(test_jitter_window_shrinks_with_the_level);

@@ -30,14 +30,18 @@
 #include <string>
 #include <vector>
 
+#include "../../app/RuntimeDefaults.h"
 #include "../../behavior/ResonantBehavior.h"
+#include "../../detection/HopGapContract.h"
 
 namespace {
 
-constexpr unsigned long kTrainMs = 165;        // the hop train (25 ms x 5, gap 10)
+// The hop train as shipped (output.hop_* defaults: 15 ms x 5, gap 0 = the 75 ms glide since 2026-11-05).
+constexpr unsigned long kTrainMs = runtime::kDefaultHopSteps * runtime::kDefaultHopPulseMs +
+    (runtime::kDefaultHopSteps - 1) * runtime::kDefaultHopGapMs;
 constexpr unsigned long kAnnounceMs = 500;     // output.idle_announce_ms
 constexpr unsigned long kAnnounceGapMs = 200;  // the idle call's gap before its train (approximate)
-constexpr unsigned long kTailMs = 50;          // a train reads ~215 ms as a verdict (step 14)
+constexpr unsigned long kTailMs = detection::kHopRoomTailMarginMs;  // a train reads this much longer as a verdict
 constexpr unsigned long kVerdictLagMs = 20;    // release debounce + inspection
 constexpr unsigned long kMergeMs = 230;        // step 14: starts closer than this merge into one occurrence
 
@@ -195,6 +199,7 @@ int main(int argc, char** argv) {
     std::vector<Node> nodes(static_cast<size_t>(n));
     for (Node& node : nodes) {
         node.behavior.configure(cfg);
+        node.behavior.setHeardTrainMs(static_cast<uint32_t>(kTrainMs + kTailMs));  // as the Node hands it in
         node.behavior.resetState();
         node.behavior.setRandomSource(&simRandom);
         node.behavior.seedIdleSchedule(0);

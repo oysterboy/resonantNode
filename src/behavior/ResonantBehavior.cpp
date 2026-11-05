@@ -43,9 +43,6 @@ unsigned long randomIdleDelayMs(ResonantBehavior::RandomFn draw, unsigned long m
     return minMs + static_cast<unsigned long>(draw(static_cast<uint32_t>(spanMs)));
 }
 
-// One hop train as a verdict reads it (~210-220 ms, step 14's captures at 79 cm): the unit a merged chord's
-// duration is counted in.
-constexpr unsigned long kSingleTrainMs = 215;
 }
 
 // The decision and, for a decision that blocks, the same value as the block reason; a go-ahead (ConsumedPattern,
@@ -65,9 +62,16 @@ void ResonantBehavior::setRandomSource(RandomFn fn) {
     _random = fn != nullptr ? fn : &ResonantBehavior::defaultRandom;
 }
 
-uint32_t ResonantBehavior::trainsInVerdict(const detection::OccurrenceVerdict& verdict) {
-    const unsigned long n = (verdict.primaryDurationMs + kSingleTrainMs / 2) / kSingleTrainMs;
+uint32_t ResonantBehavior::trainsIn(unsigned long durationMs, uint32_t unitMs) {
+    if (unitMs == 0) {
+        return 1U;
+    }
+    const unsigned long n = (durationMs + unitMs / 2) / unitMs;  // rounded to the nearest whole train
     return n < 1 ? 1U : (n > 3 ? 3U : static_cast<uint32_t>(n));
+}
+
+uint32_t ResonantBehavior::trainsInVerdict(const detection::OccurrenceVerdict& verdict) const {
+    return trainsIn(verdict.primaryDurationMs, _heardTrainMs);
 }
 
 void ResonantBehavior::decayLevel(unsigned long now) {

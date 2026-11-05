@@ -437,12 +437,20 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         2026-11-05, PC: Whispernet::closeEmission (called before release(): Behavior told the emission finished, the
         playback window and the pending answer dropped); the echo room stops its replay the Node's way, frees ring and
         clip (CaptureRing::end) and prints `ECHO ota largest_block=` before the pull, allocateEchoBuffers() after a
-        failed one; the Analyzer answers `OTA result=busy reason=seq_active` while a run is active or queued. Compiled
-        in CI only; the gate's board part (a failed OTA during a whisper and an echo replay) open for the bench.
+        failed one; the Analyzer answers `OTA result=busy reason=seq_active` while a run is active or queued. PC part
+        done (e20f4a6, CI run 420 green); the gate's board part (a failed OTA during a whisper and an echo replay)
+        open for the bench.
    23.2 The train unit out of Behavior (M1 with D6): the Node hands Behavior the single-train duration from
         output.hop_* (as it hands the base grid), trainsInVerdict counts in it, native-fieldsim reads the same
         value; the 2026-11-05 overnight values reconsidered against the corrected count. PC, then a two-board chord
         check. Gate: two answers 100 ms apart raise the level by 2 on the board; T2h byte-identical.
+        2026-11-05, PC: ResonantBehavior::setHeardTrainMs (kept by resetState like the base grid), the Node sets it in
+        syncBaseBin from output.hop_* plus HopGapContract's 50 ms room-tail margin (125 ms for the glide; `RB
+        hop_check heard_train_ms=` prints it), native-fieldsim derives the same from RuntimeDefaults; trainsIn(d,
+        unit) host-tested on the old 215 and the glide's 125 (test_behavior_level +2). A verdict without a unit
+        counts one train: the echo modes set none, so a whisper phrase now raises the level by 1, not by up to 3 as
+        the 215 ms constant made of a long phrase (owner to confirm, whisper.level_max was tuned with the old count).
+        The overnight values and the board chord check: open for the bench.
    23.3 The echo chain's host harness on the boards' geometry (M5): native-echoreplay (or one env per mode) with
         the boards' FEATURE_HISTORY flags, the echo room's and Whispernet's config builders in a header the shell
         and the replay share, the synthetic set re-run. PC. Gate: the replay's verdicts over

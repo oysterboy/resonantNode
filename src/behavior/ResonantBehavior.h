@@ -51,8 +51,15 @@ public:
     void setRandomSource(RandomFn fn);
     // The automaton's level at `now` (decay applied), 0 when it is off.
     uint32_t level(unsigned long now) const;
-    // Heard trains in one verdict: a chord's answers that merged into one occurrence count by its duration (1..3).
-    static uint32_t trainsInVerdict(const detection::OccurrenceVerdict& verdict);
+    // Heard trains in one verdict: a chord's answers that merged into one occurrence count by its duration (1..3),
+    // in units of one train as a verdict reads it. The unit is the signal's, so the Node hands it in from the
+    // output params (train length plus the room-tail margin of HopGapContract), as it hands in the base grid; a
+    // constant here went stale when the signal became the 75 ms glide (review 2026-11-05 M1 / D6). 0: every verdict
+    // counts one train (the echo modes, where a verdict is a clap or a phrase). Kept by resetState().
+    void setHeardTrainMs(uint32_t ms) { _heardTrainMs = ms; }
+    uint32_t heardTrainMs() const { return _heardTrainMs; }
+    uint32_t trainsInVerdict(const detection::OccurrenceVerdict& verdict) const;
+    static uint32_t trainsIn(unsigned long durationMs, uint32_t unitMs);
 
     // The base bin (BEH-009): where this node's network signal starts, as an index 0..count-1 into the bases the
     // Node's train fits under. The Node hands in the grid (band low edge, bin spacing, how many bases) and the seed
@@ -315,6 +322,7 @@ private:
         unsigned long wanders = 0;
     };
     Base _base = {};
+    uint32_t _heardTrainMs = 0;  // setHeardTrainMs(); kept by resetState(), like the base grid
     static uint32_t defaultRandom(uint32_t bound);  // random() on the board
     RandomFn _random = &ResonantBehavior::defaultRandom;
     void decayLevel(unsigned long now);

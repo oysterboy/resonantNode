@@ -1,0 +1,10 @@
+before: behavior/replays ('HeardPattern', 7)
+failed OTA sent 0.0 s after the decision to answer
+  NET sent seq=44296 target=E5 text=OTA url=http://192.168.178.33:9/x.bin token=***
+  NET reply from=E5 seq=44296 part=0 ECHO ota largest_block=47092
+  NET reply from=E5 seq=44296 part=0 OTA start url=http://192.168.178.33:9/x.bin
+  NET reply from=E5 seq=44296 part=0 OTA wifi ip=192.168.178.120 rssi=-47
+  NET reply from=E5 seq=44296 part=0 OTA result=download_failed error=-1 detail=HTTP error: connection refused
+after the failed OTA: behavior/replays ('Idle', 9)
+after a second play: behavior/replays ('Idle', 9)
+RESULT FAIL: the board did not come back as expected

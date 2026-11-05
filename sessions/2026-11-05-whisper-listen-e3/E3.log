@@ -1,0 +1,126 @@
+1793868546.26 >> PARAM SET whisper.enabled 1
+1793868546.31 PARAM SET path=whisper.enabled module=output old=1 new=1 status=ok
+1793868546.56 >> PARAM SET whisper.aec 1
+1793868546.62 PARAM SET path=whisper.aec module=detection old=0 new=1 status=ok
+1793868546.86 >> PARAM SET whisper.listen_erle_db 8
+1793868546.92 PARAM SET path=whisper.listen_erle_db module=detection old=15.000 new=8.000 status=ok
+1793868547.16 >> ECHO LOG 0
+1793868547.20 ECHO log every_s=0
+1793868547.46 >> WHISPER AEC NOISE 3000
+1793868547.51 WHISPER noise ms=3000
+1793868551.00 WHISPER phrase dur_ms=3845 level_p90=4811 mod=0.33 flat=0.25 valid=0 failed=loudness
+1793868551.96 WHISPER heard after_ms=427 level_p90=234 mod=0.98 flat=0.26 decision=consumed_pattern
+1793868554.14 WHISPER heard after_ms=485 level_p90=258 mod=0.45 flat=0.30 decision=resting
+1793868555.40 WHISPER phrase dur_ms=1445 level_p90=167 mod=0.64 flat=0.41 valid=0 failed=loudness
+1793868555.82 WHISPER heard after_ms=325 level_p90=214 mod=0.90 flat=0.34 decision=resting
+1793868557.08 WHISPER phrase dur_ms=1296 level_p90=144 mod=0.58 flat=na valid=0 failed=loudness
+1793868558.18 WHISPER heard after_ms=1013 level_p90=190 mod=0.76 flat=0.35 decision=consumed_pattern
+1793868560.78 WHISPER heard after_ms=1360 level_p90=201 mod=0.69 flat=0.39 decision=resting
+1793868564.29 WHISPER phrase dur_ms=4549 level_p90=145 mod=0.41 flat=na valid=0 failed=loudness
+1793868564.94 WHISPER heard after_ms=544 level_p90=199 mod=0.84 flat=0.31 decision=consumed_pattern
+1793868566.87 WHISPER heard after_ms=598 level_p90=200 mod=0.86 flat=0.38 decision=resting
+1793868569.57 WHISPER phrase dur_ms=2992 level_p90=131 mod=0.24 flat=0.32 valid=0 failed=loudness
+1793868570.75 WHISPER heard after_ms=1029 level_p90=221 mod=0.83 flat=0.28 decision=consumed_pattern
+1793868572.95 WHISPER heard after_ms=309 level_p90=270 mod=0.47 flat=0.34 decision=resting
+1793868582.30 WHISPER phrase dur_ms=9344 level_p90=179 mod=0.46 flat=0.34 valid=0 failed=loudness
+1793868583.91 WHISPER heard after_ms=1472 level_p90=227 mod=0.51 flat=0.37 decision=consumed_pattern
+1793868585.41 WHISPER heard after_ms=357 level_p90=281 mod=0.62 flat=0.36 decision=resting
+1793868588.39 WHISPER phrase dur_ms=3045 level_p90=187 mod=0.55 flat=0.31 valid=0 failed=loudness
+1793868590.86 WHISPER phrase dur_ms=2128 level_p90=181 mod=0.75 flat=na valid=0 failed=loudness
+1793868591.41 WHISPER heard after_ms=368 level_p90=217 mod=0.52 flat=0.35 decision=consumed_pattern
+1793868593.50 WHISPER heard after_ms=331 level_p90=285 mod=0.55 flat=0.29 decision=rest_level
+1793868613.82 WHISPER heard after_ms=309 level_p90=308 mod=0.71 flat=0.22 decision=consumed_pattern
+1793868614.07 >> WHISPER STATUS
+1793868614.17 WHISPER status delay_ms=787 phrases=11 whispers=0 checks=3040 asked=43 answered=21 opens=21 gated_ms=13432 replays=21 deafs=21 deaf_ms=22610 cuts=21 gate_open=0 short_writes=15 refills=3 room=47 onset_now=250 aec=1 aec_erle_db=10.1 aec_peak_tap=32 aec_delay=1066 aec_shifts=0 line_bytes=96000
+1793868615.27 >> PARAM SET whisper.listen_while_playing 0
+1793868615.30 PARAM SET path=whisper.listen_while_playing module=detection old=0 new=0 status=ok
+1793868615.54 WHISPER heard after_ms=304 level_p90=317 mod=0.38 flat=0.28 decision=consumed_pattern
+1793868617.27 WHISPER heard after_ms=309 level_p90=435 mod=0.67 flat=0.23 decision=resting
+1793868637.58 WHISPER heard after_ms=304 level_p90=459 mod=0.59 flat=0.20 decision=consumed_pattern
+1793868639.39 WHISPER heard after_ms=315 level_p90=506 mod=0.66 flat=0.19 decision=consumed_pattern
+1793868641.06 WHISPER heard after_ms=304 level_p90=574 mod=0.38 flat=0.36 decision=resting
+1793868661.40 WHISPER heard after_ms=304 level_p90=495 mod=0.44 flat=0.33 decision=consumed_pattern
+1793868663.20 WHISPER heard after_ms=346 level_p90=248 mod=0.54 flat=0.20 decision=rest_level
+1793868674.09 >> WHISPER STATUS
+1793868674.17 WHISPER status delay_ms=787 phrases=11 whispers=0 checks=3522 asked=50 answered=25 opens=25 gated_ms=15705 replays=25 deafs=25 deaf_ms=28263 cuts=25 gate_open=0 short_writes=15 refills=3 room=49 onset_now=250 aec=1 aec_erle_db=8.7 aec_peak_tap=32 aec_delay=1066 aec_shifts=0 line_bytes=96000
+1793868683.58 WHISPER heard after_ms=310 level_p90=255 mod=0.50 flat=0.35 decision=consumed_pattern
+1793868685.29 WHISPER heard after_ms=304 level_p90=212 mod=0.59 flat=0.31 decision=consumed_pattern
+1793868687.60 WHISPER heard after_ms=666 level_p90=197 mod=0.52 flat=0.35 decision=resting
+1793868694.10 >> WHISPER STATUS
+1793868694.14 WHISPER status delay_ms=787 phrases=11 whispers=0 checks=3658 asked=53 answered=27 opens=27 gated_ms=16868 replays=27 deafs=27 deaf_ms=30524 cuts=27 gate_open=0 short_writes=15 refills=3 room=49 onset_now=250 aec=1 aec_erle_db=9.8 aec_peak_tap=32 aec_delay=1066 aec_shifts=0 line_bytes=96000
+1793868695.36 >> PARAM SET whisper.listen_while_playing 1
+1793868695.40 PARAM SET path=whisper.listen_while_playing module=detection old=0 new=1 status=ok
+1793868705.71 WHISPER phrase dur_ms=18480 level_p90=134 mod=0.34 flat=na valid=0 failed=loudness
+1793868707.41 WHISPER heard after_ms=304 level_p90=402 mod=0.66 flat=0.23 decision=consumed_pattern
+1793868718.48 WHISPER phrase dur_ms=11077 level_p90=413 mod=0.39 flat=0.32 valid=1 failed=none
+1793868719.55 WHISPER heard after_ms=1013 level_p90=193 mod=0.61 flat=0.37 decision=consumed_pattern
+1793868721.33 WHISPER heard after_ms=485 level_p90=546 mod=0.39 flat=0.28 decision=resting
+1793868725.29 WHISPER phrase dur_ms=4171 level_p90=164 mod=0.28 flat=na valid=0 failed=loudness
+1793868726.01 WHISPER heard after_ms=592 level_p90=236 mod=0.52 flat=0.20 decision=consumed_pattern
+1793868729.40 WHISPER heard after_ms=837 level_p90=537 mod=0.43 flat=0.32 decision=resting
+1793868743.04 WHISPER phrase dur_ms=14176 level_p90=189 mod=0.62 flat=0.47 valid=0 failed=loudness
+1793868743.61 WHISPER heard after_ms=363 level_p90=212 mod=0.49 flat=0.38 decision=consumed_pattern
+1793868745.34 WHISPER heard after_ms=336 level_p90=190 mod=0.61 flat=0.36 decision=rest_level
+1793868754.12 >> WHISPER STATUS
+1793868754.17 WHISPER status delay_ms=787 phrases=15 whispers=1 checks=4052 asked=60 answered=31 opens=32 gated_ms=20006 replays=31 deafs=30 deaf_ms=33917 cuts=30 gate_open=0 short_writes=15 refills=3 room=51 onset_now=250 aec=1 aec_erle_db=1.9 aec_peak_tap=32 aec_delay=1066 aec_shifts=4 line_bytes=96000
+1793868755.07 WHISPER phrase dur_ms=9792 level_p90=124 mod=0.37 flat=na valid=0 failed=loudness
+1793868755.42 WHISPER heard after_ms=315 level_p90=246 mod=0.43 flat=0.30 decision=consumed_pattern
+1793868757.80 WHISPER heard after_ms=869 level_p90=356 mod=0.36 flat=0.27 decision=rest_level
+1793868759.11 WHISPER phrase dur_ms=1904 level_p90=242 mod=0.55 flat=0.38 valid=1 failed=none
+1793868759.96 WHISPER heard after_ms=309 level_p90=265 mod=0.77 flat=0.30 decision=resting
+1793868769.16 WHISPER phrase dur_ms=9216 level_p90=154 mod=0.60 flat=na valid=0 failed=loudness
+1793868772.65 WHISPER heard after_ms=309 level_p90=244 mod=0.33 flat=0.18 decision=consumed_pattern
+1793868774.12 >> WHISPER STATUS
+1793868774.20 WHISPER status delay_ms=787 phrases=18 whispers=2 checks=4141 asked=64 answered=33 opens=34 gated_ms=21180 replays=33 deafs=32 deaf_ms=35650 cuts=32 gate_open=0 short_writes=15 refills=3 room=43 onset_now=250 aec=1 aec_erle_db=8.7 aec_peak_tap=32 aec_delay=1066 aec_shifts=4 line_bytes=96000
+1793868774.65 WHISPER phrase dur_ms=677 level_p90=124 mod=0.28 flat=na valid=0 failed=loudness
+1793868775.75 >> PARAM SET whisper.listen_while_playing 0
+1793868775.79 PARAM SET path=whisper.listen_while_playing module=detection old=1 new=0 status=ok
+1793868782.81 WHISPER phrase dur_ms=7584 level_p90=204 mod=0.34 flat=0.46 valid=0 failed=timbre
+1793868784.37 WHISPER phrase dur_ms=709 level_p90=134 mod=0.40 flat=0.43 valid=0 failed=loudness
+1793868785.23 WHISPER heard after_ms=565 level_p90=382 mod=0.31 flat=0.20 decision=consumed_pattern
+1793868787.21 WHISPER heard after_ms=810 level_p90=259 mod=0.41 flat=0.39 decision=resting
+1793868796.06 WHISPER phrase dur_ms=9349 level_p90=242 mod=0.33 flat=0.41 valid=0 failed=timbre
+1793868797.07 WHISPER heard after_ms=768 level_p90=260 mod=0.59 flat=0.24 decision=consumed_pattern
+1793868799.35 WHISPER heard after_ms=683 level_p90=378 mod=0.47 flat=0.17 decision=resting
+1793868817.45 WHISPER phrase dur_ms=18496 level_p90=133 mod=0.84 flat=na valid=0 failed=loudness
+1793868818.88 WHISPER heard after_ms=304 level_p90=231 mod=0.73 flat=0.29 decision=declined_by_level
+1793868834.14 >> WHISPER STATUS
+1793868834.18 WHISPER status delay_ms=787 phrases=23 whispers=2 checks=4529 asked=69 answered=35 opens=36 gated_ms=22546 replays=35 deafs=34 deaf_ms=37910 cuts=34 gate_open=0 short_writes=15 refills=3 room=47 onset_now=250 aec=1 aec_erle_db=9.6 aec_peak_tap=32 aec_delay=1066 aec_shifts=4 line_bytes=96000
+1793868839.28 WHISPER heard after_ms=326 level_p90=233 mod=0.49 flat=0.40 decision=consumed_pattern
+1793868842.23 WHISPER heard after_ms=1130 level_p90=234 mod=0.83 flat=0.38 decision=rest_level
+1793868845.43 WHISPER phrase dur_ms=4021 level_p90=269 mod=0.67 flat=0.30 valid=1 failed=none
+1793868847.89 WHISPER phrase dur_ms=459 level_p90=154 mod=0.76 flat=na valid=0 failed=loudness
+1793868850.32 WHISPER heard after_ms=907 level_p90=232 mod=0.63 flat=0.40 decision=consumed_pattern
+1793868853.70 WHISPER heard after_ms=2144 level_p90=204 mod=0.54 flat=0.28 decision=resting
+1793868854.12 >> WHISPER STATUS
+1793868854.17 WHISPER status delay_ms=787 phrases=25 whispers=3 checks=4623 asked=73 answered=37 opens=38 gated_ms=23888 replays=37 deafs=36 deaf_ms=40172 cuts=36 gate_open=0 short_writes=15 refills=3 room=44 onset_now=250 aec=1 aec_erle_db=9.7 aec_peak_tap=32 aec_delay=1066 aec_shifts=4 line_bytes=96000
+1793868855.99 >> PARAM SET whisper.listen_while_playing 1
+1793868856.03 PARAM SET path=whisper.listen_while_playing module=detection old=0 new=1 status=ok
+1793868872.16 WHISPER heard after_ms=304 level_p90=280 mod=0.35 flat=0.32 decision=declined_by_level
+1793868883.26 WHISPER phrase dur_ms=11072 level_p90=375 mod=0.45 flat=0.51 valid=0 failed=timbre
+1793868884.88 WHISPER heard after_ms=832 level_p90=302 mod=0.38 flat=0.21 decision=consumed_pattern
+1793868905.22 WHISPER heard after_ms=816 level_p90=193 mod=0.76 flat=0.40 decision=consumed_pattern
+1793868906.79 WHISPER heard after_ms=304 level_p90=289 mod=0.48 flat=0.37 decision=resting
+1793868914.14 >> WHISPER STATUS
+1793868914.20 WHISPER status delay_ms=787 phrases=26 whispers=3 checks=5083 asked=77 answered=39 opens=40 gated_ms=26182 replays=39 deafs=37 deaf_ms=41303 cuts=37 gate_open=0 short_writes=15 refills=3 room=48 onset_now=250 aec=1 aec_erle_db=2.4 aec_peak_tap=32 aec_delay=1066 aec_shifts=6 line_bytes=96000
+1793868927.43 WHISPER heard after_ms=629 level_p90=345 mod=0.45 flat=0.33 decision=consumed_pattern
+1793868929.31 WHISPER heard after_ms=672 level_p90=322 mod=0.80 flat=0.40 decision=resting
+1793868934.15 >> WHISPER STATUS
+1793868934.22 WHISPER status delay_ms=787 phrases=26 whispers=3 checks=5248 asked=79 answered=40 opens=41 gated_ms=26817 replays=40 deafs=38 deaf_ms=42433 cuts=38 gate_open=0 short_writes=15 refills=3 room=49 onset_now=250 aec=1 aec_erle_db=0.0 aec_peak_tap=0 aec_delay=1098 aec_shifts=7 line_bytes=96000
+1793868952.26 WHISPER heard after_ms=885 level_p90=558 mod=0.37 flat=0.35 decision=consumed_pattern
+1793868954.09 WHISPER heard after_ms=310 level_p90=658 mod=0.40 flat=0.26 decision=resting
+1793868966.44 WHISPER phrase dur_ms=12315 level_p90=247 mod=0.44 flat=0.42 valid=0 failed=loudness
+1793868967.23 WHISPER heard after_ms=304 level_p90=301 mod=0.52 flat=0.37 decision=consumed_pattern
+1793868969.63 WHISPER heard after_ms=891 level_p90=267 mod=0.43 flat=0.36 decision=rest_level
+1793868973.15 WHISPER phrase dur_ms=4123 level_p90=153 mod=0.38 flat=na valid=0 failed=loudness
+1793868974.09 >> WHISPER STATUS
+1793868974.16 WHISPER status delay_ms=787 phrases=28 whispers=3 checks=5528 asked=83 answered=42 opens=43 gated_ms=28196 replays=42 deafs=40 deaf_ms=44694 cuts=40 gate_open=0 short_writes=15 refills=3 room=92 onset_now=251 aec=1 aec_erle_db=0.0 aec_peak_tap=0 aec_delay=1098 aec_shifts=9 line_bytes=96000
+1793868974.16 WHISPER heard after_ms=554 level_p90=393 mod=0.98 flat=0.34 decision=consumed_pattern
+1793868977.70 WHISPER phrase dur_ms=1984 level_p90=180 mod=0.67 flat=na valid=0 failed=loudness
+1793868979.93 WHISPER phrase dur_ms=741 level_p90=161 mod=0.42 flat=na valid=0 failed=loudness
+1793868981.84 WHISPER heard after_ms=1387 level_p90=232 mod=0.54 flat=0.38 decision=consumed_pattern
+1793868983.32 WHISPER heard after_ms=315 level_p90=237 mod=0.45 flat=0.39 decision=resting
+1793868984.02 WHISPER phrase dur_ms=747 level_p90=202 mod=0.47 flat=0.34 valid=1 failed=none
+1793868984.09 >> WHISPER STATUS
+1793868984.13 WHISPER status delay_ms=787 phrases=31 whispers=4 checks=5555 asked=86 answered=44 opens=45 gated_ms=29580 replays=44 deafs=42 deaf_ms=46955 cuts=42 gate_open=0 short_writes=15 refills=3 room=53 onset_now=251 aec=1 aec_erle_db=6.7 aec_peak_tap=32 aec_delay=1066 aec_shifts=10 line_bytes=96000
+1793868986.33 WHISPER phrase dur_ms=1829 level_p90=150 mod=0.54 flat=na valid=0 failed=loudness

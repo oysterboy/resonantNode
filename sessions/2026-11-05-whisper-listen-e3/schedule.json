@@ -1,0 +1,101 @@
+[
+ {
+  "name": "train",
+  "secs": 8,
+  "start": 1793868606.0732028,
+  "end": 1793868614.0732028,
+  "cue_beeps": 0
+ },
+ {
+  "name": "short_deaf",
+  "secs": 60,
+  "cue": true,
+  "cmds": [
+   "PARAM SET whisper.listen_while_playing 0"
+  ],
+  "say": "short whispered sentences toward E3, 0.5-1 m, 3-5 s pauses",
+  "start": 1793868614.0732028,
+  "end": 1793868674.0732028,
+  "cue_beeps": 1
+ },
+ {
+  "name": "pause",
+  "secs": 20,
+  "start": 1793868674.0732028,
+  "end": 1793868694.0732028,
+  "cue_beeps": 0
+ },
+ {
+  "name": "short_listen",
+  "secs": 60,
+  "cue": true,
+  "cmds": [
+   "PARAM SET whisper.listen_while_playing 1"
+  ],
+  "say": "the same: short sentences, 3-5 s pauses",
+  "start": 1793868694.0732028,
+  "end": 1793868754.0732028,
+  "cue_beeps": 2
+ },
+ {
+  "name": "pause",
+  "secs": 20,
+  "start": 1793868754.0732028,
+  "end": 1793868774.0732028,
+  "cue_beeps": 0
+ },
+ {
+  "name": "long_deaf",
+  "secs": 60,
+  "cue": true,
+  "cmds": [
+   "PARAM SET whisper.listen_while_playing 0"
+  ],
+  "say": "long sentences, 3-5 s each, short pauses",
+  "start": 1793868774.0732028,
+  "end": 1793868834.0732028,
+  "cue_beeps": 3
+ },
+ {
+  "name": "pause",
+  "secs": 20,
+  "start": 1793868834.0732028,
+  "end": 1793868854.0732028,
+  "cue_beeps": 0
+ },
+ {
+  "name": "long_listen",
+  "secs": 60,
+  "cue": true,
+  "cmds": [
+   "PARAM SET whisper.listen_while_playing 1"
+  ],
+  "say": "the same: long sentences",
+  "start": 1793868854.0732028,
+  "end": 1793868914.0732028,
+  "cue_beeps": 4
+ },
+ {
+  "name": "pause",
+  "secs": 20,
+  "start": 1793868914.0732028,
+  "end": 1793868934.0732028,
+  "cue_beeps": 0
+ },
+ {
+  "name": "rustle_listen",
+  "secs": 40,
+  "cue": true,
+  "say": "no whisper: type, rustle paper, roll the chair",
+  "start": 1793868934.0732028,
+  "end": 1793868974.0732028,
+  "cue_beeps": 5
+ },
+ {
+  "name": "pause",
+  "secs": 10,
+  "start": 1793868974.0732028,
+  "end": 1793868984.0732028,
+  "cue_beeps": 0
+ }
+]

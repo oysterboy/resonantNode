@@ -1,0 +1,23 @@
+{
+  "boards": {"E3": "COM4"},
+  "setup": ["PARAM SET whisper.enabled 1", "PARAM SET whisper.aec 1", "PARAM SET whisper.listen_erle_db 8",
+            "ECHO LOG 0", "WHISPER AEC NOISE 3000"],
+  "status": ["WHISPER STATUS"],
+  "sections": [
+    {"name": "train", "secs": 8},
+    {"name": "short_deaf", "secs": 60, "cue": true, "cmds": ["PARAM SET whisper.listen_while_playing 0"],
+     "say": "short whispered sentences toward E3, 0.5-1 m, 3-5 s pauses"},
+    {"name": "pause", "secs": 20},
+    {"name": "short_listen", "secs": 60, "cue": true, "cmds": ["PARAM SET whisper.listen_while_playing 1"],
+     "say": "the same: short sentences, 3-5 s pauses"},
+    {"name": "pause", "secs": 20},
+    {"name": "long_deaf", "secs": 60, "cue": true, "cmds": ["PARAM SET whisper.listen_while_playing 0"],
+     "say": "long sentences, 3-5 s each, short pauses"},
+    {"name": "pause", "secs": 20},
+    {"name": "long_listen", "secs": 60, "cue": true, "cmds": ["PARAM SET whisper.listen_while_playing 1"],
+     "say": "the same: long sentences"},
+    {"name": "pause", "secs": 20},
+    {"name": "rustle_listen", "secs": 40, "cue": true, "say": "no whisper: type, rustle paper, roll the chair"},
+    {"name": "pause", "secs": 10}
+  ]
+}

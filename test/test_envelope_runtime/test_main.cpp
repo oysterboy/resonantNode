@@ -2,14 +2,20 @@
 EnvelopeRuntime's provisional verdicts on the host (ECHO-002, step 20.3): with setProvisional on, the open candidate is
 judged by the plan (Whispernet's level window and modulation) once it is old enough and every interval after, while
 the phrase runs, so the gate can open before the phrase ends. A whispered phrase gets a valid provisional verdict
-within ~0.3 s, a steady noise only failing ones, and a clap none (its tail is in the release debounce). Runs in
-native-test-behavior.
+within ~0.3 s, a steady noise only failing ones, and a clap none (its tail is in the release debounce). The chain
+is the shell's (detection/EchoProfiles.h) on the whisper board's history geometry (64 x 8 ms x 2, pinned below;
+step 23.3). Runs in native-test-behavior.
 */
+// The whisper board's FeatureHistory geometry (platformio.ini, esp32dev-whisper), before the header reads the macros.
+#define FEATURE_HISTORY_BINS 64
+#define FEATURE_HISTORY_BIN_MS 8
+#define FEATURE_HISTORY_STREAMS 2
 // The echo modes' inspection modules are built only where ECHO_INSPECTION is defined (EchoInspection.cpp).
 #define ECHO_INSPECTION
 
 #include <unity.h>
 
+#include "../../src/detection/EchoProfiles.h"
 #include "../../src/detection/EnvelopeRuntime.h"
 
 #include "../../src/detection/EnvelopeRuntime.cpp"
@@ -25,29 +31,19 @@ using namespace detection;
 
 namespace {
 
-// As native-echoreplay --plan whisper sets it.
+// The shell's chain at the synthetic set's levels (onset 1500 / release 1000 / floor 1000, the loud bound out of
+// the way), as native-whisperreplay runs it on that set.
 void configureWhisper(EnvelopeRuntime& rt) {
+    WhisperChainValues v;
+    v.onset = 1500.0f;
+    v.release = 1000.0f;
+    v.floor = 1000.0f;
+    v.loud = 20000.0f;
     ScalarTransientConfig d;
-    d.observedStream = FeatureStreamId::AmpEnvelope;
-    d.onsetDetectionThreshold = 1500.0f;
-    d.onsetReleaseThreshold = 1000.0f;
-    d.cooldownAfterOnsetMs = 0;
-    d.maxTransientDurationMs = 0;
-    d.minTransientDurationMs = 300;
-    d.minTransientPeakStrength = 0.0f;
-    d.releaseDebounceMs = 300;
-    InspectionPlan plan = InspectionPlan{};
-    plan.modules[0].kind = InspectionModuleKind::LevelWindow;
-    plan.modules[0].target = InspectionTarget::Loudness;
-    plan.modules[0].enabled = true;
-    plan.modules[0].minimumStrength = StrengthClass::Strong;
-    plan.modules[1].kind = InspectionModuleKind::Modulation;
-    plan.modules[1].target = InspectionTarget::Modulation;
-    plan.modules[1].enabled = true;
-    plan.modules[1].minimumStrength = StrengthClass::Medium;
-    plan.count = 2;
+    InspectionPlan plan;
+    makeWhisperChain(v, v.onset, d, plan);
     rt.configure(d, plan);
-    rt.setProvisional(300, 100);
+    rt.setProvisional(v.firstCheckMs, v.checkEveryMs);
     rt.reset();
 }
 
@@ -66,6 +62,9 @@ Tally run(float (*level)(unsigned long)) {
     Tally t;
     for (uint64_t us = 0; us < 4000000ULL; us += 5333ULL) {
         const unsigned long ms = static_cast<unsigned long>(us / 1000ULL);
+        if (level(ms) >= 1500.0f) {  // the flatness per loud block, as the shell records it: a whisper's
+            rt.recordFeature(FeatureStreamId::SpectralFlatness, static_cast<uint32_t>(ms), 0.3f);
+        }
         rt.onBlock(level(ms), us, static_cast<uint32_t>(ms));
         EnvelopeRuntime::Result r;
         while (rt.popResult(r)) {

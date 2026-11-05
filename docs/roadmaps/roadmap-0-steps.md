@@ -456,6 +456,17 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         and the replay share, the synthetic set re-run. PC. Gate: the replay's verdicts over
         tools/bench/synthwhisper.py's set re-recorded on the boards' geometry and compared with a board's WHISPER
         STATUS counts on the same WAV at the desk.
+        2026-11-05, PC: src/detection/EchoProfiles.h holds both chains as values with the shipped defaults and one
+        builder each (ClapChainValues / makeClapChain, WhisperChainValues / makeWhisperChain); EchoApp's Gate and
+        Whispernet's Values embed them (the echo.* / whisper.* params bind into the same fields), the replay and the
+        suites build from them. native-echoreplay carries the echo board's history (64 x 1 ms x 1, DetectionRuntime
+        out as on the board), native-whisperreplay Whispernet's (64 x 8 ms x 2); each prints its geometry and
+        refuses the other plan by name. test_echo_detection pins the echo geometry, the whisper cases moved to
+        test_whisper_detection (64 x 8 ms x 2, the timbre module in the chain, +1 rustling case), test_envelope_runtime
+        on the whisper geometry recording the flatness per loud block as the shell does; all three green on the host
+        (15 tests). The replay's defaults are now the boards' values (they were the synthetic set's: --level-db -16
+        brings that set to them). Open: the synthetic set re-run (its source WAV is the owner's) and the desk
+        comparison with a board's WHISPER STATUS.
    Gate: 23.0-23.2 before the next remote update of an echo board and before the overnight values become defaults;
    23.3 before Whispernet is tuned further.
 

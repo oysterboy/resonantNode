@@ -207,14 +207,16 @@ void EchoApp::configureParams() {
         _whisper.describeParams(_params.registry());
     } else {
         param::ParamRegistry& r = _params.registry();
-        r.addFloat(param::ParamId::Echo_Onset, param::ModuleId::Detection, "echo.onset", &_gate.onset, 0.0f, 32767.0f);
-        r.addFloat(param::ParamId::Echo_Release, param::ModuleId::Detection, "echo.release", &_gate.release, 0.0f,
+        r.addFloat(param::ParamId::Echo_Onset, param::ModuleId::Detection, "echo.onset", &_gate.chain.onset, 0.0f,
                    32767.0f);
-        r.addFloat(param::ParamId::Echo_Floor, param::ModuleId::Detection, "echo.floor", &_gate.floor, 0.0f, 32767.0f);
-        r.addFloat(param::ParamId::Echo_MinPeak, param::ModuleId::Detection, "echo.min_peak", &_gate.minPeak, 0.0f,
+        r.addFloat(param::ParamId::Echo_Release, param::ModuleId::Detection, "echo.release", &_gate.chain.release, 0.0f,
                    32767.0f);
-        r.addUInt32(param::ParamId::Echo_AttackMs, param::ModuleId::Detection, "echo.attack_ms", &_gate.maxAttackMs, 1U,
-                    200U);
+        r.addFloat(param::ParamId::Echo_Floor, param::ModuleId::Detection, "echo.floor", &_gate.chain.floor, 0.0f,
+                   32767.0f);
+        r.addFloat(param::ParamId::Echo_MinPeak, param::ModuleId::Detection, "echo.min_peak", &_gate.chain.minPeak,
+                   0.0f, 32767.0f);
+        r.addUInt32(param::ParamId::Echo_AttackMs, param::ModuleId::Detection, "echo.attack_ms",
+                    &_gate.chain.maxAttackMs, 1U, 200U);
         r.addUInt32(param::ParamId::Echo_PreMs, param::ModuleId::Output, "echo.pre_ms", &_gate.preMs, 0U, ECHO_CLIP_MS);
         r.addUInt32(param::ParamId::Echo_PostMs, param::ModuleId::Output, "echo.post_ms", &_gate.postMs, 0U,
                     ECHO_CLIP_MS);
@@ -286,27 +288,8 @@ void EchoApp::configureEcho() {
         return;
     }
     detection::ScalarTransientConfig d;
-    d.observedStream = detection::FeatureStreamId::AmpEnvelope;
-    d.onsetDetectionThreshold = _gate.onset;
-    d.onsetReleaseThreshold = _gate.release;
-    d.cooldownAfterOnsetMs = 50;
-    d.minTransientDurationMs = 0;
-    d.maxTransientDurationMs = 300;
-    d.minTransientPeakStrength = _gate.minPeak;
-    d.releaseDebounceMs = 20;
-    // The echo room's plan: one module, the attack; Medium (within maxAttackMs) is a clap.
-    detection::InspectionPlan plan = detection::InspectionPlan{};
-    detection::InspectionModuleConfig& m = plan.modules[0];
-    m.kind = detection::InspectionModuleKind::AttackRise;
-    m.target = detection::InspectionTarget::Attack;
-    m.enabled = true;
-    m.minimumStrength = detection::StrengthClass::Medium;
-    m.attack.stream = detection::FeatureStreamId::AmpEnvelope;
-    m.attack.floorLevel = _gate.floor;
-    m.attack.mediumMaxMs = _gate.maxAttackMs;
-    m.attack.strongMaxMs = _gate.maxAttackMs / 2;
-    m.attack.weakMaxMs = _gate.maxAttackMs * 3;
-    plan.count = 1;
+    detection::InspectionPlan plan;
+    detection::makeClapChain(_gate.chain, d, plan);
     _runtime.configure(d, plan);
     _behavior.configure(echoBehavior());
 }
@@ -474,11 +457,11 @@ void EchoApp::handleGateCommand(const char* line) {
     struct FloatKey {
         const char* key;
         float* field;
-    } floats[] = {{"onset=", &_gate.onset},
-                  {"release=", &_gate.release},
-                  {"floor=", &_gate.floor},
+    } floats[] = {{"onset=", &_gate.chain.onset},
+                  {"release=", &_gate.chain.release},
+                  {"floor=", &_gate.chain.floor},
                   {"gain=", &_gate.gain},
-                  {"peak=", &_gate.minPeak}};
+                  {"peak=", &_gate.chain.minPeak}};
     char value[16] = {};
     for (const FloatKey& k : floats) {
         float v = 0.0f;
@@ -490,9 +473,15 @@ void EchoApp::handleGateCommand(const char* line) {
     struct UintKey {
         const char* key;
         uint32_t* field;
-    } uints[] = {{"attack=", &_gate.maxAttackMs}, {"pre=", &_gate.preMs},          {"post=", &_gate.postMs},
-                 {"levelmax=", &_gate.levelMax},  {"offset=", &_gate.levelOffset}, {"decay=", &_gate.levelDecayMs},
-                 {"rest=", &_gate.restMs},        {"wait=", &_gate.waitMs},        {"jitter=", &_gate.jitterMs}};
+    } uints[] = {{"attack=", &_gate.chain.maxAttackMs},
+                 {"pre=", &_gate.preMs},
+                 {"post=", &_gate.postMs},
+                 {"levelmax=", &_gate.levelMax},
+                 {"offset=", &_gate.levelOffset},
+                 {"decay=", &_gate.levelDecayMs},
+                 {"rest=", &_gate.restMs},
+                 {"wait=", &_gate.waitMs},
+                 {"jitter=", &_gate.jitterMs}};
     for (const UintKey& k : uints) {
         uint32_t v = 0;
         if (text_parse::keyValue(rest, k.key, value, sizeof(value)) && text_parse::parseUnsigned(value, v)) {
@@ -504,15 +493,15 @@ void EchoApp::handleGateCommand(const char* line) {
     }
     applyParams();
     serialOut().print("ECHO gate onset=");
-    serialOut().print(_gate.onset, 0);
+    serialOut().print(_gate.chain.onset, 0);
     serialOut().print(" release=");
-    serialOut().print(_gate.release, 0);
+    serialOut().print(_gate.chain.release, 0);
     serialOut().print(" floor=");
-    serialOut().print(_gate.floor, 0);
+    serialOut().print(_gate.chain.floor, 0);
     serialOut().print(" peak=");
-    serialOut().print(_gate.minPeak, 0);
+    serialOut().print(_gate.chain.minPeak, 0);
     serialOut().print(" attack_ms=");
-    serialOut().print(_gate.maxAttackMs);
+    serialOut().print(_gate.chain.maxAttackMs);
     serialOut().print(" pre_ms=");
     serialOut().print(_gate.preMs);
     serialOut().print(" post_ms=");

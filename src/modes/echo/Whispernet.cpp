@@ -90,55 +90,15 @@ bool Whispernet::resume() {
 // The onset in force: the set onset, or roomFactor x the room's level when that is higher (adaptive).
 float Whispernet::effectiveOnset() const {
     if (!_values.adaptive || !_room.started()) {
-        return _values.onset;
+        return _values.chain.onset;
     }
     const float byRoom = _values.roomFactor * _room.value();
-    return byRoom > _values.onset ? byRoom : _values.onset;
+    return byRoom > _values.chain.onset ? byRoom : _values.chain.onset;
 }
 
 // The detector's config and the plan at the onset in force; release and floor keep their ratio to the set onset.
 void Whispernet::buildConfig(detection::ScalarTransientConfig& d, detection::InspectionPlan& plan) const {
-    // A phrase is one occurrence: syllable gaps bridged by the release debounce, no length limit; it is judged while
-    // it runs (the provisional verdicts), its final verdict only ends it.
-    const float onset = effectiveOnset();
-    const float scale = _values.onset > 0.0f ? onset / _values.onset : 1.0f;
-    d.observedStream = detection::FeatureStreamId::AmpEnvelope;
-    d.onsetDetectionThreshold = onset;
-    d.onsetReleaseThreshold = _values.release * scale;
-    d.cooldownAfterOnsetMs = 0;
-    d.maxTransientDurationMs = _values.maxPhraseMs;  // a phrase never ending held the room's learning (154 s seen)
-    d.minTransientDurationMs = _values.minPhraseMs;
-    d.minTransientPeakStrength = 0.0f;
-    d.releaseDebounceMs = _values.gapMs;
-    plan = detection::InspectionPlan{};
-    detection::InspectionModuleConfig& level = plan.modules[0];
-    level.kind = detection::InspectionModuleKind::LevelWindow;
-    level.target = detection::InspectionTarget::Loudness;
-    level.enabled = true;
-    level.minimumStrength = detection::StrengthClass::Strong;
-    level.level.floorLevel = _values.floor * scale;
-    level.level.loudBound = _values.loud;
-    detection::InspectionModuleConfig& mod = plan.modules[1];
-    mod.kind = detection::InspectionModuleKind::Modulation;
-    mod.target = detection::InspectionTarget::Modulation;
-    mod.enabled = true;
-    mod.minimumStrength = detection::StrengthClass::Medium;
-    mod.modulation.mediumIndex = _values.modulation;
-    detection::InspectionModuleConfig& timbre = plan.modules[2];
-    timbre.kind = detection::InspectionModuleKind::Flatness;
-    timbre.target = detection::InspectionTarget::Timbre;
-    timbre.enabled = true;
-    timbre.minimumStrength = detection::StrengthClass::Strong;
-    if (_values.timbreCheck == 1) {
-        // The low-band check through the same range module: the median excess, at most lowMaxDb.
-        timbre.flatness.stream = detection::FeatureStreamId::LowBandExcess;
-        timbre.flatness.minFlatness = -100.0f;
-        timbre.flatness.maxFlatness = _values.lowMaxDb;
-    } else {
-        timbre.flatness.minFlatness = _values.flatMin;
-        timbre.flatness.maxFlatness = _values.flatMax;
-    }
-    plan.count = 3;
+    detection::makeWhisperChain(_values.chain, effectiveOnset(), d, plan);
 }
 
 void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior& behavior) {
@@ -149,7 +109,7 @@ void Whispernet::configure(detection::EnvelopeRuntime& runtime, ResonantBehavior
     buildConfig(d, plan);
     runtime.configure(d, plan);
     _onsetApplied = d.onsetDetectionThreshold;
-    runtime.setProvisional(_values.firstCheckMs, _values.checkEveryMs);
+    runtime.setProvisional(_values.chain.firstCheckMs, _values.chain.checkEveryMs);
     behavior.configure(whisperBehavior(_values));
 }
 
@@ -304,7 +264,7 @@ void Whispernet::handleResult(const detection::EnvelopeRuntime::Result& result, 
     const detection::Occurrence& oc = result.inspected.occurrence;
     if (result.provisional) {
         ++_counts.checks;
-        const bool tooLoud = oc.level.measured && oc.level.p90 > _values.loud;
+        const bool tooLoud = oc.level.measured && oc.level.p90 > _values.chain.loud;
         WhisperGate::Step step = _gate.onVerdict(oc.startMs, result.verdict.valid, tooLoud, _blockMs);
         if (step.event == WhisperGate::Event::Ask) {
             ++_counts.asked;
@@ -388,26 +348,26 @@ void Whispernet::runBehavior(ResonantBehavior& behavior, unsigned long now) {
 
 // whisper.* (ECHO-003): every Values field, in the order PARAM LIST prints them.
 void Whispernet::describeParams(param::ParamRegistry& registry) {
-    registry.addFloat(param::ParamId::Whisper_Onset, param::ModuleId::Detection, "whisper.onset", &_values.onset, 0.0f,
-                      32767.0f);
-    registry.addFloat(param::ParamId::Whisper_Release, param::ModuleId::Detection, "whisper.release", &_values.release,
+    registry.addFloat(param::ParamId::Whisper_Onset, param::ModuleId::Detection, "whisper.onset", &_values.chain.onset,
                       0.0f, 32767.0f);
-    registry.addFloat(param::ParamId::Whisper_Floor, param::ModuleId::Detection, "whisper.floor", &_values.floor, 0.0f,
-                      32767.0f);
-    registry.addFloat(param::ParamId::Whisper_Loud, param::ModuleId::Detection, "whisper.loud", &_values.loud, 0.0f,
-                      32767.0f);
+    registry.addFloat(param::ParamId::Whisper_Release, param::ModuleId::Detection, "whisper.release",
+                      &_values.chain.release, 0.0f, 32767.0f);
+    registry.addFloat(param::ParamId::Whisper_Floor, param::ModuleId::Detection, "whisper.floor", &_values.chain.floor,
+                      0.0f, 32767.0f);
+    registry.addFloat(param::ParamId::Whisper_Loud, param::ModuleId::Detection, "whisper.loud", &_values.chain.loud,
+                      0.0f, 32767.0f);
     registry.addFloat(param::ParamId::Whisper_Modulation, param::ModuleId::Detection, "whisper.modulation",
-                      &_values.modulation, 0.0f, 2.0f);
-    registry.addFloat(param::ParamId::Whisper_FlatMin, param::ModuleId::Detection, "whisper.flat_min", &_values.flatMin,
-                      0.0f, 1.0f);
-    registry.addFloat(param::ParamId::Whisper_FlatMax, param::ModuleId::Detection, "whisper.flat_max", &_values.flatMax,
-                      0.0f, 1.0f);
+                      &_values.chain.modulation, 0.0f, 2.0f);
+    registry.addFloat(param::ParamId::Whisper_FlatMin, param::ModuleId::Detection, "whisper.flat_min",
+                      &_values.chain.flatMin, 0.0f, 1.0f);
+    registry.addFloat(param::ParamId::Whisper_FlatMax, param::ModuleId::Detection, "whisper.flat_max",
+                      &_values.chain.flatMax, 0.0f, 1.0f);
     registry.addBool(param::ParamId::Whisper_LevelBand, param::ModuleId::Detection, "whisper.level_band",
                      &_values.levelBand);
     registry.addUInt32(param::ParamId::Whisper_TimbreCheck, param::ModuleId::Detection, "whisper.timbre_check",
-                       &_values.timbreCheck, 0U, 1U);
+                       &_values.chain.timbreCheck, 0U, 1U);
     registry.addFloat(param::ParamId::Whisper_LowMaxDb, param::ModuleId::Detection, "whisper.low_max_db",
-                      &_values.lowMaxDb, 0.0f, 60.0f);
+                      &_values.chain.lowMaxDb, 0.0f, 60.0f);
     registry.addUInt32(param::ParamId::Whisper_DelayMs, param::ModuleId::Output, "whisper.delay_ms", &_values.delayMs,
                        kDelayMinMs, kLineMs);
     registry.addFloat(param::ParamId::Whisper_Gain, param::ModuleId::Output, "whisper.gain", &_values.gain, 0.0f,
@@ -422,15 +382,15 @@ void Whispernet::describeParams(param::ParamRegistry& registry) {
     registry.addUInt32(param::ParamId::Whisper_RampMs, param::ModuleId::Output, "whisper.ramp_ms", &_values.rampMs, 1U,
                        500U);
     registry.addUInt32(param::ParamId::Whisper_FirstCheckMs, param::ModuleId::Detection, "whisper.first_check_ms",
-                       &_values.firstCheckMs, 100U, 2000U);
+                       &_values.chain.firstCheckMs, 100U, 2000U);
     registry.addUInt32(param::ParamId::Whisper_CheckEveryMs, param::ModuleId::Detection, "whisper.check_every_ms",
-                       &_values.checkEveryMs, 20U, 1000U);
+                       &_values.chain.checkEveryMs, 20U, 1000U);
     registry.addUInt32(param::ParamId::Whisper_MinPhraseMs, param::ModuleId::Detection, "whisper.min_phrase_ms",
-                       &_values.minPhraseMs, 0U, 5000U);
-    registry.addUInt32(param::ParamId::Whisper_GapMs, param::ModuleId::Detection, "whisper.gap_ms", &_values.gapMs, 0U,
-                       2000U);
+                       &_values.chain.minPhraseMs, 0U, 5000U);
+    registry.addUInt32(param::ParamId::Whisper_GapMs, param::ModuleId::Detection, "whisper.gap_ms",
+                       &_values.chain.gapMs, 0U, 2000U);
     registry.addUInt32(param::ParamId::Whisper_MaxPhraseMs, param::ModuleId::Detection, "whisper.max_phrase_ms",
-                       &_values.maxPhraseMs, 0U, 600000U);
+                       &_values.chain.maxPhraseMs, 0U, 600000U);
     registry.addUInt32(param::ParamId::Whisper_LevelMax, param::ModuleId::Behavior, "whisper.level_max",
                        &_values.levelMax, 1U, 50U);
     registry.addUInt32(param::ParamId::Whisper_LevelOffset, param::ModuleId::Behavior, "whisper.level_offset",
@@ -486,9 +446,10 @@ void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime&
     struct FloatKey {
         const char* key;
         float* field;
-    } floats[] = {{"onset=", &_values.onset},     {"release=", &_values.release}, {"floor=", &_values.floor},
-                  {"loud=", &_values.loud},       {"mod=", &_values.modulation},  {"flat=", &_values.flatMax},
-                  {"flatmin=", &_values.flatMin}, {"gain=", &_values.gain}};
+    } floats[] = {{"onset=", &_values.chain.onset},     {"release=", &_values.chain.release},
+                  {"floor=", &_values.chain.floor},     {"loud=", &_values.chain.loud},
+                  {"mod=", &_values.chain.modulation},  {"flat=", &_values.chain.flatMax},
+                  {"flatmin=", &_values.chain.flatMin}, {"gain=", &_values.gain}};
     char value[16] = {};
     for (const FloatKey& k : floats) {
         float v = 0.0f;
@@ -506,19 +467,19 @@ void Whispernet::handleGateCommand(const char* line, detection::EnvelopeRuntime&
     }
     applyValues(runtime, behavior);
     serialOut().print("WHISPER gate onset=");
-    serialOut().print(_values.onset, 0);
+    serialOut().print(_values.chain.onset, 0);
     serialOut().print(" release=");
-    serialOut().print(_values.release, 0);
+    serialOut().print(_values.chain.release, 0);
     serialOut().print(" floor=");
-    serialOut().print(_values.floor, 0);
+    serialOut().print(_values.chain.floor, 0);
     serialOut().print(" loud=");
-    serialOut().print(_values.loud, 0);
+    serialOut().print(_values.chain.loud, 0);
     serialOut().print(" mod=");
-    serialOut().print(_values.modulation, 2);
+    serialOut().print(_values.chain.modulation, 2);
     serialOut().print(" flatmin=");
-    serialOut().print(_values.flatMin, 2);
+    serialOut().print(_values.chain.flatMin, 2);
     serialOut().print(" flat=");
-    serialOut().print(_values.flatMax, 2);
+    serialOut().print(_values.chain.flatMax, 2);
     serialOut().print(" delay_ms=");
     serialOut().print(_values.delayMs);
     serialOut().print(" gain=");

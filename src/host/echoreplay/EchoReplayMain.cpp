@@ -2,7 +2,11 @@
 //
 // A WAV (PCM 16 / 24 / 32-bit, any rate, mono or mixed to mono) is resampled to --rate, scaled to canonical PCM
 // (24-bit; a 16-bit sample << 8, then --level-db), and fed per 128-sample block through EnvelopeFollower and
-// EnvelopeRuntime with the echo room's plan (--plan clap, as EchoApp runs them) or Whispernet's (--plan whisper: a
+// EnvelopeRuntime with the echo room's chain (--plan clap) or Whispernet's (--plan whisper), both from
+// detection/EchoProfiles.h with the boards' default values, so the flags are overrides of what the boards ship with
+// (the synthetic set of synthwhisper.py reads ~16 dB above the desk's mic: --level-db -16). Each build holds one
+// board's FeatureHistory geometry (platformio.ini: native-echoreplay the echo room's, native-whisperreplay
+// Whispernet's) and judges only that board's plan. Whispernet's (--plan whisper: a
 // phrase's level window and syllable modulation, ECHO-002). One line per judged occurrence with --verbose, a summary
 // per file. The levels a WAV reaches are not what a board's mic hears: a board's own capture (RAW mode=pcm,
 // tools/bench/rawcorpus.py) gives real levels; --level-db moves a file toward them.
@@ -35,6 +39,7 @@
 #include "../../audio/RoomLevel.h"
 #include "../../audio/GatedDelayLine.h"
 #include "../../behavior/WhisperGate.h"
+#include "../../detection/EchoProfiles.h"
 #include "../../detection/EnvelopeRuntime.h"
 
 namespace {
@@ -163,11 +168,12 @@ std::vector<float> resample(const std::vector<float>& in, uint32_t from, uint32_
 int main(int argc, char** argv) {
     uint32_t rate = 48000;
     double levelDb = 0.0;
-    float onset = 1000.0f, release = 700.0f, floorLevel = 300.0f, minPeak = 1200.0f;
-    uint32_t attackMs = 10;
-    bool whisper = false;
-    float loudBound = 20000.0f, modIndex = 0.3f, flatMax = 0.0f;  // flatMax 0: no timbre check
-    float flatMin = 0.0f, lowMaxDb = -1.0f;
+    // The chains and their defaults are the boards' (detection/EchoProfiles.h, the values echo.* / whisper.* ship
+    // with); the flags override a value. The build's FeatureHistory geometry picks the plan it can hold (below).
+    detection::ClapChainValues clap;
+    detection::WhisperChainValues wv;
+    bool whisper = FEATURE_HISTORY_STREAMS >= 2;
+    bool planGiven = false;
     bool bandLevel = false;
     std::string roomFile;
     bool verbose = false;
@@ -185,20 +191,22 @@ int main(int argc, char** argv) {
         };
         if (a == "--plan") {
             whisper = std::string(next("--plan")) == "whisper";
+            planGiven = true;
         } else if (a == "--loud") {
-            loudBound = static_cast<float>(atof(next("--loud")));
+            wv.loud = static_cast<float>(atof(next("--loud")));
         } else if (a == "--flat-max") {
-            flatMax = static_cast<float>(atof(next("--flat-max")));
+            wv.flatMax = static_cast<float>(atof(next("--flat-max")));
         } else if (a == "--flat-min") {
-            flatMin = static_cast<float>(atof(next("--flat-min")));
+            wv.flatMin = static_cast<float>(atof(next("--flat-min")));
         } else if (a == "--band-level") {
             bandLevel = true;
         } else if (a == "--low-max") {
-            lowMaxDb = static_cast<float>(atof(next("--low-max")));
+            wv.lowMaxDb = static_cast<float>(atof(next("--low-max")));
+            wv.timbreCheck = 1;
         } else if (a == "--room") {
             roomFile = next("--room");
         } else if (a == "--mod") {
-            modIndex = static_cast<float>(atof(next("--mod")));
+            wv.modulation = static_cast<float>(atof(next("--mod")));
         } else if (a == "--out-dir") {
             outDir = next("--out-dir");
         } else if (a == "--loop-gain") {
@@ -208,15 +216,15 @@ int main(int argc, char** argv) {
         } else if (a == "--level-db") {
             levelDb = atof(next("--level-db"));
         } else if (a == "--onset") {
-            onset = static_cast<float>(atof(next("--onset")));
+            clap.onset = wv.onset = static_cast<float>(atof(next("--onset")));
         } else if (a == "--release") {
-            release = static_cast<float>(atof(next("--release")));
+            clap.release = wv.release = static_cast<float>(atof(next("--release")));
         } else if (a == "--floor") {
-            floorLevel = static_cast<float>(atof(next("--floor")));
+            clap.floor = wv.floor = static_cast<float>(atof(next("--floor")));
         } else if (a == "--peak") {
-            minPeak = static_cast<float>(atof(next("--peak")));
+            clap.minPeak = static_cast<float>(atof(next("--peak")));
         } else if (a == "--attack") {
-            attackMs = static_cast<uint32_t>(strtoul(next("--attack"), nullptr, 10));
+            clap.maxAttackMs = static_cast<uint32_t>(strtoul(next("--attack"), nullptr, 10));
         } else if (a == "--verbose") {
             verbose = true;
         } else if (a == "--help" || a[0] == '-') {
@@ -232,71 +240,35 @@ int main(int argc, char** argv) {
         }
     }
 
-    // The echo room's chain, as EchoApp::configureEcho sets it.
-    detection::ScalarTransientConfig d;
-    d.observedStream = detection::FeatureStreamId::AmpEnvelope;
-    d.onsetDetectionThreshold = onset;
-    d.onsetReleaseThreshold = release;
-    d.cooldownAfterOnsetMs = 50;
-    d.maxTransientDurationMs = 300;
-    d.minTransientPeakStrength = minPeak;
-    d.releaseDebounceMs = 20;
-    detection::InspectionPlan plan = detection::InspectionPlan{};
-    detection::InspectionModuleConfig& m = plan.modules[0];
-    m.kind = detection::InspectionModuleKind::AttackRise;
-    m.target = detection::InspectionTarget::Attack;
-    m.enabled = true;
-    m.minimumStrength = detection::StrengthClass::Medium;
-    m.attack.floorLevel = floorLevel;
-    m.attack.mediumMaxMs = attackMs;
-    m.attack.strongMaxMs = attackMs / 2;
-    m.attack.weakMaxMs = attackMs * 3;
-    plan.count = 1;
-    if (whisper) {
-        // A phrase is one occurrence: syllable gaps bridged by the release debounce, no length limit (the provisional
-        // inspection of an open candidate comes later). Defaults sized on the synthetic set (synthwhisper.py).
-        onset = onset == 1000.0f ? 1500.0f : onset;
-        release = release == 700.0f ? 1000.0f : release;
-        floorLevel = floorLevel == 300.0f ? 1000.0f : floorLevel;
-        d.onsetDetectionThreshold = onset;
-        d.onsetReleaseThreshold = release;
-        d.cooldownAfterOnsetMs = 0;
-        d.maxTransientDurationMs = 0;
-        d.minTransientDurationMs = 300;
-        d.minTransientPeakStrength = 0.0f;
-        d.releaseDebounceMs = 300;
-        plan = detection::InspectionPlan{};
-        detection::InspectionModuleConfig& lw = plan.modules[0];
-        lw.kind = detection::InspectionModuleKind::LevelWindow;
-        lw.target = detection::InspectionTarget::Loudness;
-        lw.enabled = true;
-        lw.minimumStrength = detection::StrengthClass::Strong;
-        lw.level.floorLevel = floorLevel;
-        lw.level.loudBound = loudBound;
-        detection::InspectionModuleConfig& mo = plan.modules[1];
-        mo.kind = detection::InspectionModuleKind::Modulation;
-        mo.target = detection::InspectionTarget::Modulation;
-        mo.enabled = true;
-        mo.minimumStrength = detection::StrengthClass::Medium;
-        mo.modulation.mediumIndex = modIndex;
-        plan.count = 2;
-        if (flatMax > 0.0f || lowMaxDb >= 0.0f) {  // the timbre, as Whispernet's shell runs it
-            detection::InspectionModuleConfig& fl = plan.modules[2];
-            fl.kind = detection::InspectionModuleKind::Flatness;
-            fl.target = detection::InspectionTarget::Timbre;
-            fl.enabled = true;
-            fl.minimumStrength = detection::StrengthClass::Strong;
-            if (lowMaxDb >= 0.0f) {  // the low band's excess over the room, at most lowMaxDb
-                fl.flatness.stream = detection::FeatureStreamId::LowBandExcess;
-                fl.flatness.minFlatness = -100.0f;
-                fl.flatness.maxFlatness = lowMaxDb;
-            } else {
-                fl.flatness.minFlatness = flatMin;
-                fl.flatness.maxFlatness = flatMax;
-            }
-            plan.count = 3;
-        }
+    // The plan must fit the build's history: the whisper plan records a second stream (flatness or the low band).
+    if (planGiven && whisper && FEATURE_HISTORY_STREAMS < 2) {
+        fprintf(
+            stderr,
+            "--plan whisper needs the whisper geometry: build native-whisperreplay (this build holds %d x %d ms x %d)\n",
+            FEATURE_HISTORY_BINS, FEATURE_HISTORY_BIN_MS, FEATURE_HISTORY_STREAMS);
+        return 2;
     }
+    if (planGiven && !whisper && FEATURE_HISTORY_BIN_MS != 1) {
+        fprintf(
+            stderr,
+            "--plan clap needs the echo room's geometry: build native-echoreplay (this build holds %d x %d ms x %d)\n",
+            FEATURE_HISTORY_BINS, FEATURE_HISTORY_BIN_MS, FEATURE_HISTORY_STREAMS);
+        return 2;
+    }
+    printf("echoreplay plan=%s history=%dx%dmsx%d (the %s board's)\n", whisper ? "whisper" : "clap",
+           FEATURE_HISTORY_BINS, FEATURE_HISTORY_BIN_MS, FEATURE_HISTORY_STREAMS, whisper ? "whisper" : "echo");
+    // The chain, as the shell builds it (EchoApp::configureEcho / Whispernet::buildConfig at the set onset).
+    detection::ScalarTransientConfig d;
+    detection::InspectionPlan plan;
+    if (whisper) {
+        detection::makeWhisperChain(wv, wv.onset, d, plan);
+    } else {
+        detection::makeClapChain(clap, d, plan);
+    }
+    const float onset = whisper ? wv.onset : clap.onset;
+    const float loudBound = wv.loud;
+    const float flatMax = whisper && wv.timbreCheck == 0 ? wv.flatMax : 0.0f;
+    const float lowMaxDb = whisper && wv.timbreCheck == 1 ? wv.lowMaxDb : -1.0f;
 
     Wav roomWav;
     if (!roomFile.empty() && !readWav(roomFile.c_str(), roomWav)) {
@@ -336,7 +308,7 @@ int main(int argc, char** argv) {
         }
         const auto sampleAtMs = [&](unsigned long ms) { return static_cast<uint64_t>(ms) * rate / 1000U; };
         runtime.configure(d, plan);
-        runtime.setProvisional(whisper ? 300 : 0, 100);
+        runtime.setProvisional(whisper ? wv.firstCheckMs : 0, wv.checkEveryMs);
         runtime.reset();
         EnvelopeFollower follower;
         BandFlatness flatness;

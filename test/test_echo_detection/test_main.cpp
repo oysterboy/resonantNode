@@ -1,15 +1,21 @@
 /*
-The echo modes' inspection on the host. The echo room (ECHO-001, step 20.2): the AttackRise module in the inspection
-plan reads the envelope's history around an occurrence's onset (FeatureHistory::riseTimeMs), classes the rise, and
-makeVerdict judges it like any other requirement. A clap passes, a swell does not, a sound with no quiet before it is
-not measured. Whispernet (ECHO-002, step 20.3): the LevelWindow and Modulation modules over a phrase's span; a whisper
-passes, a fan fails on modulation, a loud phrase on the level window. Runs in native-test-behavior.
+The echo room's inspection on the host (ECHO-001, step 20.2): the AttackRise module in the inspection plan reads the
+envelope's history around an occurrence's onset (FeatureHistory::riseTimeMs), classes the rise, and makeVerdict judges
+it like any other requirement. A clap passes, a swell does not, a sound with no quiet before it is not measured. The
+history is the echo board's (esp32dev-echo: 64 bins x 1 ms x 1 stream, pinned below; step 23.3), the plan the shell's
+(detection/EchoProfiles.h). Whispernet's cases are test_whisper_detection, on its board's geometry. Runs in
+native-test-behavior.
 */
+// The echo board's FeatureHistory geometry (platformio.ini, esp32dev-echo), before the header reads the macros.
+#define FEATURE_HISTORY_BINS 64
+#define FEATURE_HISTORY_BIN_MS 1
+#define FEATURE_HISTORY_STREAMS 1
 // The echo modes' inspection modules are built only where ECHO_INSPECTION is defined (EchoInspection.cpp).
 #define ECHO_INSPECTION
 
 #include <unity.h>
 
+#include "../../src/detection/EchoProfiles.h"
 #include "../../src/detection/features/FeatureHistory.h"
 #include "../../src/detection/inspection/OccurrenceInspector.h"
 #include "../../src/detection/inspection/VerdictProjection.h"
@@ -23,14 +29,11 @@ using namespace detection;
 
 namespace {
 
-// The echo room's plan: one module, the attack, at least Medium (within 10 ms).
+// The echo room's plan as the shell builds it (the shipped values, attack Medium within 20 ms).
 InspectionPlan echoPlan() {
-    InspectionPlan plan = InspectionPlan{};
-    plan.modules[0].kind = InspectionModuleKind::AttackRise;
-    plan.modules[0].target = InspectionTarget::Attack;
-    plan.modules[0].enabled = true;
-    plan.modules[0].minimumStrength = StrengthClass::Medium;
-    plan.count = 1;
+    ScalarTransientConfig d;
+    InspectionPlan plan;
+    makeClapChain(ClapChainValues(), d, plan);
     return plan;
 }
 
@@ -54,7 +57,7 @@ void record(FeatureHistory& h, unsigned long fromMs, unsigned long toMs, float (
 }
 
 FeatureHistory& history() {
-    static FeatureHistory h;  // ~41 KB at the host's default size: not on the stack
+    static FeatureHistory h;  // the echo board's size (64 x 1 ms x 1): small, static all the same
     const FeatureStreamId streams[1] = {FeatureStreamId::AmpEnvelope};
     h.setActiveStreams(streams, 1);
     return h;
@@ -129,127 +132,7 @@ void test_rise_time_query() {
     TEST_ASSERT_TRUE(h.riseTimeMs(FeatureStreamId::AmpEnvelope, 0, 60, 2000.0f, 10000.0f, rise));
     TEST_ASSERT_EQUAL_UINT32(3, rise);
     TEST_ASSERT_FALSE(h.riseTimeMs(FeatureStreamId::AmpEnvelope, 40, 60, 2000.0f, 10000.0f, rise));  // no quiet in it
-    TEST_ASSERT_EQUAL_UINT32(1, FeatureHistory::kBinDurationMs);  // the host builds the Node's size
-}
-
-// Whispernet's plan (ECHO-002): the level window (Strong: inside it) and the modulation, at least Medium.
-InspectionPlan whisperPlan() {
-    InspectionPlan plan = InspectionPlan{};
-    plan.modules[0].kind = InspectionModuleKind::LevelWindow;
-    plan.modules[0].target = InspectionTarget::Loudness;
-    plan.modules[0].enabled = true;
-    plan.modules[0].minimumStrength = StrengthClass::Strong;
-    plan.modules[1].kind = InspectionModuleKind::Modulation;
-    plan.modules[1].target = InspectionTarget::Modulation;
-    plan.modules[1].enabled = true;
-    plan.modules[1].minimumStrength = StrengthClass::Medium;
-    plan.count = 2;
-    return plan;
-}
-
-// A phrase from 10000 to 11000 ms; the level from the given shape, recorded every 3 ms as a 24 kHz block would.
-OccurrenceVerdict judgePhrase(float (*level)(unsigned long), InspectedOccurrence& inspected) {
-    FeatureHistory& h = history();
-    h.reset();
-    for (unsigned long t = 9900; t <= 11000; t += 3) {
-        h.record(FeatureStreamId::AmpEnvelope, t, level(t));
-    }
-    Occurrence occ = occurrence(10000);
-    occ.durationMs = 1000;
-    occ.releaseMs = 11000;
-    OccurrenceInspector inspector;
-    inspector.configure(whisperPlan());
-    inspected = inspector.inspectWithHistory(occ, &h, 11000);
-    OccurrenceVerdict v;
-    makeVerdict(inspected, whisperPlan(), v);
-    return v;
-}
-
-// Syllables at 4 Hz between 1000 and 9000: inside the level window, strongly modulated.
-void test_a_whisper_passes() {
-    InspectedOccurrence in;
-    const OccurrenceVerdict v = judgePhrase([](unsigned long t) { return (t / 125) % 2 == 0 ? 9000.0f : 1000.0f; }, in);
-    TEST_ASSERT_TRUE(in.occurrence.level.measured);
-    TEST_ASSERT_EQUAL(StrengthClass::Strong, in.occurrence.level.levelClass);
-    TEST_ASSERT_TRUE(in.occurrence.modulation.measured);
-    TEST_ASSERT_TRUE(in.occurrence.modulation.index > 0.5f);
-    TEST_ASSERT_TRUE(v.valid);
-}
-
-// A fan: steady at 5000, inside the level window, no movement at syllable rate.
-void test_a_steady_noise_fails_on_modulation() {
-    InspectedOccurrence in;
-    const OccurrenceVerdict v = judgePhrase([](unsigned long) { return 5000.0f; }, in);
-    TEST_ASSERT_EQUAL(StrengthClass::Strong, in.occurrence.level.levelClass);
-    TEST_ASSERT_EQUAL(StrengthClass::None, in.occurrence.modulation.modulationClass);
-    TEST_ASSERT_FALSE(v.valid);
-    TEST_ASSERT_EQUAL(InspectionTarget::Modulation, v.firstFailedRequirementTarget);
-}
-
-// Speech or the own loop growing: the same syllables, too loud (P90 above the bound), the gate stays shut.
-void test_a_loud_phrase_fails_on_the_level_window() {
-    InspectedOccurrence in;
-    const OccurrenceVerdict v =
-        judgePhrase([](unsigned long t) { return (t / 125) % 2 == 0 ? 30000.0f : 3000.0f; }, in);
-    TEST_ASSERT_EQUAL(StrengthClass::None, in.occurrence.level.levelClass);
-    TEST_ASSERT_FALSE(v.valid);
-    TEST_ASSERT_EQUAL(InspectionTarget::Loudness, v.firstFailedRequirementTarget);
-}
-
-// The phrase is judged once its span has passed.
-void test_whisper_window_complete_at_the_end() {
-    OccurrenceInspector inspector;
-    inspector.configure(whisperPlan());
-    Occurrence occ = occurrence(10000);
-    occ.durationMs = 1000;
-    TEST_ASSERT_EQUAL_UINT32(11000, inspector.windowCompleteAtMs(occ));
-}
-
-// The timbre (Flatness module): the median of the span's flatness values between the bounds; too few values: Unknown.
-void test_flatness_window() {
-    FeatureHistory& h = history();
-    h.reset();
-    const FeatureStreamId streams[2] = {FeatureStreamId::AmpEnvelope, FeatureStreamId::SpectralFlatness};
-    h.setActiveStreams(streams, 2);
-    for (unsigned long t = 10000; t <= 11000; t += 16) {
-        h.record(FeatureStreamId::SpectralFlatness, t, t < 10500 ? 0.12f : 0.15f);  // a whisper's
-    }
-    InspectionPlan plan = InspectionPlan{};
-    plan.modules[0].kind = InspectionModuleKind::Flatness;
-    plan.modules[0].target = InspectionTarget::Timbre;
-    plan.modules[0].enabled = true;
-    plan.modules[0].minimumStrength = StrengthClass::Strong;
-    plan.count = 1;
-    Occurrence occ = occurrence(10000);
-    occ.durationMs = 1000;
-    OccurrenceInspector inspector;
-    inspector.configure(plan);
-    InspectedOccurrence in = inspector.inspectWithHistory(occ, &h, 11000);
-    TEST_ASSERT_TRUE(in.occurrence.timbre.measured);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.15f, in.occurrence.timbre.flatness);  // the last 512 ms
-    TEST_ASSERT_EQUAL(StrengthClass::Strong, in.occurrence.timbre.timbreClass);
-    OccurrenceVerdict v;
-    makeVerdict(in, plan, v);
-    TEST_ASSERT_TRUE(v.valid);
-
-    h.reset();
-    h.setActiveStreams(streams, 2);
-    for (unsigned long t = 10000; t <= 11000; t += 16) {
-        h.record(FeatureStreamId::SpectralFlatness, t, 0.5f);  // rustling
-    }
-    in = inspector.inspectWithHistory(occ, &h, 11000);
-    TEST_ASSERT_EQUAL(StrengthClass::None, in.occurrence.timbre.timbreClass);
-    makeVerdict(in, plan, v);
-    TEST_ASSERT_FALSE(v.valid);
-    TEST_ASSERT_EQUAL(InspectionTarget::Timbre, v.firstFailedRequirementTarget);
-
-    h.reset();
-    h.setActiveStreams(streams, 2);
-    h.record(FeatureStreamId::SpectralFlatness, 10900, 0.1f);  // one loud block only
-    in = inspector.inspectWithHistory(occ, &h, 11000);
-    TEST_ASSERT_FALSE(in.occurrence.timbre.measured);
-    TEST_ASSERT_EQUAL(StrengthClass::Unknown, in.occurrence.timbre.timbreClass);
-    h.setActiveStreams(streams, 1);  // as the other tests expect
+    TEST_ASSERT_EQUAL_UINT32(1, FeatureHistory::kBinDurationMs);  // the echo board's bin
 }
 
 // The values query averages 1 ms bins on an 8 ms grid, oldest first, and keeps the newest when out is short.
@@ -276,11 +159,6 @@ int main(int, char**) {
     RUN_TEST(test_no_quiet_before_the_onset_is_not_measured);
     RUN_TEST(test_window_complete_after_the_onset);
     RUN_TEST(test_rise_time_query);
-    RUN_TEST(test_a_whisper_passes);
-    RUN_TEST(test_a_steady_noise_fails_on_modulation);
-    RUN_TEST(test_a_loud_phrase_fails_on_the_level_window);
-    RUN_TEST(test_whisper_window_complete_at_the_end);
     RUN_TEST(test_copy_values_on_a_grid);
-    RUN_TEST(test_flatness_window);
     return UNITY_END();
 }

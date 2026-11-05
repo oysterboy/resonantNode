@@ -10,6 +10,7 @@
 #include "../../audio/CaptureRing.h"
 #include "../../audio/EnvelopeFollower.h"
 #include "../../behavior/ResonantBehavior.h"
+#include "../../detection/EchoProfiles.h"
 #include "../../detection/EnvelopeRuntime.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/DuplexStream.h"
@@ -116,16 +117,8 @@ private:
 
     // The echo room (ECHO-001): gate values (ECHO GATE sets them live; params come with ECHO-003's ids).
     struct Gate {
-        // Strength16 levels (the desk 2026-10-31: the quiet room reads 40-100, a click from the Emitter at ~1 m ~2,000)
-        float floor = 300.0f;  // the noise: the attack's low point never below it
-        float onset = 1000.0f;  // the detector's onset
-        float release = 700.0f;  // the detector's release
-        // The occurrence's peak at least this (owner 2026-10-31: permissive, "reacting to the unplanned is the point"):
-        // above most of the music's sharp onsets on the desk (1,000-1,230), below a click at ~1 m (1,750-1,940).
-        float minPeak = 1200.0f;
-        // A clap rises (10 % -> 90 % of its peak) within this. 20 since the five-board desk (2026-11-01): ~60 % of what
-        // the boards heard failed at 10, among it the neighbours' replays, which rise more slowly through the speaker.
-        uint32_t maxAttackMs = 20;
+        // The detection chain's values and defaults (detection/EchoProfiles.h; the host replay starts from the same).
+        detection::ClapChainValues chain;
         uint32_t preMs = 30;  // the clip from the onset back
         uint32_t postMs = 270;  // and forward (pre + post <= ECHO_CLIP_MS)
         // The answer shaped before it plays (ECHO-004, audio/ClipShape.h): a low-pass that compounds over the

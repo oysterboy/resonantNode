@@ -12,6 +12,7 @@
 #include "../../audio/RoomLevel.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../behavior/WhisperGate.h"
+#include "../../detection/EchoProfiles.h"
 #include "../../detection/EnvelopeRuntime.h"
 #include "../../hal/DuplexStream.h"
 
@@ -42,24 +43,17 @@ public:
         // the mic's full scale); WHISPER GATE sets them live.
         // With adaptive on (2026-11-04) these are the minimums and their ratios: the thresholds stand at roomFactor x the
         // room's level (RoomLevel), never under these; release and floor keep their ratio to the onset.
-        float onset = 250.0f;  // the detector's onset: a phrase starts
-        float release = 175.0f;  // and its release
-        float floor = 190.0f;  // the level window's low bound
-        float loud = 900.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
-        float modulation = 0.3f;  // the modulation index a whisper reaches at least (Medium)
+        // The detection chain's values and defaults (detection/EchoProfiles.h; the host replay starts from the same).
+        detection::WhisperChainValues chain;
         // The spectrum's flatness a whisper lies within (BandFlatness, the median of the phrase's loud blocks): the
         // owner's whispers on the desk read 0.16-0.49 (median ~0.3), speech 0.04-0.41 (median ~0.07), rustling and
         // typing 0.19-0.76 (median ~0.45) (2026-11-01, bench/sessions/2026-11-01-step20.3-whisper-desk). A first
         // range, under test; flatmin=0 flat=1 turn the check off in effect.
-        float flatMin = 0.15f;
-        float flatMax = 0.40f;
         // 2026-11-05 from the labelled recordings (BandBalance; research/whispernet.md), off by default until heard:
         // levelBand measures the level (onset, release, the room) on 1.5-4.5 kHz instead of the full band;
         // timbreCheck 1 makes the timbre module read the low band's excess over the room (whisper <= lowMaxDb) in
         // place of the flatness range.
         bool levelBand = false;
-        uint32_t timbreCheck = 0;  // 0 = flatness (flat_min .. flat_max), 1 = low band (excess <= low_max_db)
-        float lowMaxDb = 9.0f;
         uint32_t delayMs = 1000;  // D, set per node at begin()
         // The replay's level over the mic's: the amp plays the line's int16 at full scale, so gain 1 is the mic's digital
         // level, inaudible at a metre; 16 still was, 64 sounded about right to the owner (desk, 2026-11-01).
@@ -70,11 +64,6 @@ public:
         uint32_t holdMs = 300;  // the line kept open after the gate shuts: the whisper's tail
         uint32_t tailMs = 300;  // not listening this long after the own playback (the room's ring-down)
         uint32_t rampMs = 40;  // the gain's fade at each edge (10 sounded cut off)
-        uint32_t firstCheckMs = 300;  // a running phrase is first judged this far in
-        uint32_t checkEveryMs = 100;  // and again this often
-        uint32_t minPhraseMs = 300;  // shorter is no phrase
-        uint32_t gapMs = 300;  // syllable gaps up to this are bridged (the detector's release debounce)
-        uint32_t maxPhraseMs = 20000;  // longer is no whisper phrase: closed (0: no limit)
         // Whispernet's Behavior (the echo room's values to start; the owner found them slow for whispers).
         uint32_t levelMax = 4;
         uint32_t levelOffset = 2;

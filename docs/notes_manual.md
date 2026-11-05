@@ -405,7 +405,9 @@ syllable modulation at least `mod`; the first passing check asks Behavior (no id
 room's level and rest), and an answered phrase is passed from its start. A failing check shuts the gate, a phrase once
 louder than `loud` stays shut to its end. Detection keeps running while the board plays (it hears its own replay).
 The rule is `src/behavior/WhisperGate.h`, the values code defaults in `Whispernet.h` (from the synthetic set, to be
-tuned on the desk); `native-echoreplay --plan whisper` runs the same chain and gate on WAV files.
+tuned on the desk); `native-whisperreplay` runs the same chain and gate on WAV files, on the whisper board's history
+geometry and from the shipped `whisper.*` values (`src/detection/EchoProfiles.h`; the flags override; the synthetic set
+reads ~16 dB above the desk's mic: `--level-db -16`). `native-echoreplay` is the echo room's (step 23.3, 2026-11-05).
 
 ```text
 WHISPER STATUS            delay_ms phrases whispers checks asked answered opens gated_ms replays gate_open

@@ -420,7 +420,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    gateway and glide work: 2 high, 6 medium, 17 low; spec drift per item; the architecture read). Cut by the owner
    2026-11-05: one small step now, the rest deferred with triggers ("Review leftovers" below), since the echo code
    moves fast until the tryout.
-   23.0 CI green again: GatewayApp.cpp formatted, esp32dev-gateway in the matrix (H2); the NUL byte in
+   23.0 CI green again: esp32dev-gateway in the matrix (H2; its format half landed in 7c05d78 before this step); the NUL byte in
         AnalyzerCommandParse.h (L13), a refused ParamRegistry add printed at boot (L15), the replay's comments
         (L17); the stale lines in CLAUDE.md, implementation-status.md, notes_manual.md (D14). Gate: a green run on
         main with 11 ESP envs built.

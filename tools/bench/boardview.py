@@ -166,7 +166,8 @@ def render():
 
 
 for n in boards:
-    threading.Thread(target=reader, args=(n,), daemon=True).start()
+    if boards[n]["s"] is not None:  # a --radio board is read through the gateway
+        threading.Thread(target=reader, args=(n,), daemon=True).start()
 try:
     while True:
         for b in boards.values():
@@ -177,7 +178,10 @@ try:
             except serial.SerialException:
                 pass
         if a.radio and boards[gateway]["mode"] == "node":
-            boards[gateway]["s"].write(b"NET * RB STATUS\n")  # an echo board cannot send; log lines still come
+            try:
+                boards[gateway]["s"].write(b"NET * RB STATUS\n")  # an echo board cannot send; log lines still come
+            except serial.SerialException:
+                pass
         time.sleep(1.0)
         with lock:
             render()

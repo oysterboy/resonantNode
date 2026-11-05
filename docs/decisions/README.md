@@ -102,6 +102,7 @@ what replaced it.
 | 2026-11-04 | [Whispernet's mic and speaker run in lockstep (one I/O owner), for the echo cancellation](2026-11-04-whispernet-duplex-lockstep.md) (ECHO-002) |
 | 2026-11-05 | [The Node's signal is a 75 ms glide on 2000-6500 Hz; the detector's minimum follows it (70 / 60 ms)](2026-11-05-short-glide-signal.md) |
 | 2026-11-05 | [A board's console lines by radio (node.radio_log), a mirror, not a state protocol](2026-11-05-radio-log-mirror.md) |
+| 2026-11-05 | [The answer's start chance and the chain's length are two params (behavior.start_chance_pct)](2026-11-05-start-chance-and-chain-length.md) (BEH-008) |
 
 ## Open
 

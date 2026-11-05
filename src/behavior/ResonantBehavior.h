@@ -319,7 +319,7 @@ private:
     RandomFn _random = &ResonantBehavior::defaultRandom;
     void decayLevel(unsigned long now);
     bool raiseLevel(unsigned long now, uint32_t events);  // true: the level reached the top (and is back at 0)
-    bool drawUnderP();  // true with p = (level + 1) / levelMax
+    bool drawUnderP();  // true with the answer chance: the start chance's ramp, or (level + offset) / levelMax
 
     void scheduleNextIdle(unsigned long now);
     void rescheduleIdleFromWaitStart();

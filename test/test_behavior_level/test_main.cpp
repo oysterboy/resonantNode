@@ -214,7 +214,7 @@ void test_own_emission_raises_the_level_and_can_rest() {
 }
 
 // level_max 0 switches the automaton off: every train is answered after exactly the fixed wait (the timing before
-// step 16), whatever the draws.
+// step 16), whatever the draws and the jitter.
 void test_off_reproduces_the_fixed_answer() {
     BehaviorGateConfig cfg = automaton();
     cfg.levelMax = 0;
@@ -225,6 +225,33 @@ void test_off_reproduces_the_fixed_answer() {
     b.update(1000 + cfg.waitAfterHeardMs);
     TEST_ASSERT_TRUE(b.shouldStartChirp());
     TEST_ASSERT_EQUAL_UINT32(0, b.level(1000));
+}
+
+// The start chance: s % at level 1 (a draw over 100 x (L - 1)), evenly up the levels; with L 0 a constant s %.
+void test_start_chance_sets_the_first_answer() {
+    BehaviorGateConfig cfg = automaton();  // L 6: the draw is over 500
+    cfg.startChancePct = 30;
+    ResonantBehavior b = make(cfg);
+    script({149, 0, 0});  // 149 < 30 x 5 = 150: answered
+    TEST_ASSERT_EQUAL(Decision::ConsumedPattern, b.handleOccurrenceVerdict(train(1000), 1000));
+    ResonantBehavior c = make(cfg);
+    script({150});  // not under 150: declined, counted
+    TEST_ASSERT_EQUAL(Decision::DeclinedByLevel, c.handleOccurrenceVerdict(train(1000), 1000));
+    TEST_ASSERT_EQUAL_UINT32(1, c.level(1000));
+    // At level 2 the bar is 150 + 70 = 220.
+    script({219, 0, 0});
+    TEST_ASSERT_EQUAL(Decision::ConsumedPattern, c.handleOccurrenceVerdict(train(1100), 1100));
+    TEST_ASSERT_EQUAL_UINT32(2, c.level(1100));
+
+    BehaviorGateConfig flat = automaton();
+    flat.levelMax = 0;
+    flat.startChancePct = 40;
+    ResonantBehavior d = make(flat);
+    script({40});  // over 100: 40 is not under 40
+    TEST_ASSERT_EQUAL(Decision::DeclinedByLevel, d.handleOccurrenceVerdict(train(1000), 1000));
+    script({39, 0, 0});
+    TEST_ASSERT_EQUAL(Decision::ConsumedPattern, d.handleOccurrenceVerdict(train(2000), 2000));
+    TEST_ASSERT_EQUAL_UINT32(0, d.level(2000));  // no level with L 0
 }
 
 int main(int, char**) {
@@ -239,5 +266,6 @@ int main(int, char**) {
     RUN_TEST(test_level_decays_one_step_per_decay);
     RUN_TEST(test_own_emission_raises_the_level_and_can_rest);
     RUN_TEST(test_off_reproduces_the_fixed_answer);
+    RUN_TEST(test_start_chance_sets_the_first_answer);
     return UNITY_END();
 }

@@ -97,7 +97,7 @@ detection.band_low_hz / band_high_hz / amp_medium / contrast_medium
 detection.shape_*         the shape inspector (DET-015): look-back, tail, run and step limits (8 params;
                           its level is detection.scalar_release_threshold)
 behavior.*                wait, refractory, self-suppression, idle call, rest, the level automaton
-                          (level_max, level_decay_ms, answer_jitter_ms; 16 params since 2026-10-30)
+                          (level_max, level_decay_ms, answer_jitter_ms, start_chance_pct since 2026-11-05)
 output.*                  hop train, idle announce, silent (8 params)
 node.radio_enabled        ESP-NOW on or off
 ```

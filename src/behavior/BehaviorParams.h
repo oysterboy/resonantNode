@@ -46,6 +46,10 @@ inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
                        0U, 600000U);
     registry.addUInt32(ParamId::Behavior_AnswerJitterMs, ModuleId::Behavior, "behavior.answer_jitter_ms",
                        &b.answerJitterMs, 0U, 10000U);
+    // The start apart from the length (decisions/2026-11-05-start-chance-and-chain-length.md): the chance of
+    // answering the first train in a quiet field, rising evenly to 100 % at the top; 0 = 1 / level_max.
+    registry.addUInt32(ParamId::Behavior_StartChancePct, ModuleId::Behavior, "behavior.start_chance_pct",
+                       &b.startChancePct, 0U, 100U);
     // The base bin (BEH-009) and a band per node (step 19): the scatter's range, the mode, the range it moves on.
     registry.addUInt32(ParamId::Behavior_BaseScatterBins, ModuleId::Behavior, "behavior.base_scatter_bins",
                        &b.baseScatterBins, 0U, 7U);

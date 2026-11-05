@@ -92,6 +92,17 @@ bool ResonantBehavior::raiseLevel(unsigned long now, uint32_t events) {
 }
 
 bool ResonantBehavior::drawUnderP() {
+    const uint32_t s = _config.startChancePct > 100U ? 100U : _config.startChancePct;
+    if (s > 0) {
+        // The ramp: s % at level 1, evenly up to 100 % at levelMax - 1 (the next event rests), as an exact integer
+        // draw over 100 x (levelMax - 1); with levelMax 0 or 1 a constant s %.
+        if (_config.levelMax <= 1) {
+            return _random(100U) < s;
+        }
+        const uint32_t steps = _config.levelMax - 1U;
+        const uint32_t above = _level.count > 1U ? (_level.count - 1U > steps ? steps : _level.count - 1U) : 0U;
+        return _random(100U * steps) < s * steps + (100U - s) * above;
+    }
     // p = (level + offset) / levelMax, as an exact integer draw: a uniform r in [0, levelMax) below level + offset.
     return _random(_config.levelMax) < _level.count + _config.levelOffset;
 }
@@ -201,6 +212,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
     // The level automaton (BEH-008): every valid train heard outside a rest raises the level, whatever the gates
     // below decide; at the top the node rests and the level returns to 0.
     const bool automaton = _config.levelMax > 0;
+    const bool drawsChance = automaton || _config.startChancePct > 0;  // levelMax 0 with a start chance: constant p
     if (automaton && !resting(now) && raiseLevel(now, trainsInVerdict(result))) {
         enterRest(now + _config.restMs, BehaviorDecision::RestLevel);
         setDecision(BehaviorDecision::RestLevel);
@@ -224,7 +236,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
     } else if (_state == State::Refractory) {
         setDecision(BehaviorDecision::RefractoryAfterEmit);
         _counts.blockedRefractory++;
-    } else if (_state == State::HeardPattern && automaton && !drawUnderP()) {
+    } else if (_state == State::HeardPattern && drawsChance && !drawUnderP()) {
         // The yield: another train came while this node's answer waits; it keeps the answer with p.
         _state = State::Idle;
         _heard = {};
@@ -236,7 +248,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
     } else if (behaviorSuppressed(now)) {
         setDecision(BehaviorDecision::SelfSuppressed);
         _counts.blockedSelfSuppressed++;
-    } else if (automaton && !drawUnderP()) {
+    } else if (drawsChance && !drawUnderP()) {
         // Tentative at a low level: the train is heard (and counted) but not answered.
         setDecision(BehaviorDecision::DeclinedByLevel);
         _counts.declinedByLevel++;
@@ -251,7 +263,8 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         _last.patternHeardAtMs = _heard.ms;
         _timing.heardPatternStartedMs = now;
         _state = State::HeardPattern;
-        // The fixed wait plus the automaton's random window (0 when off or set to 0).
+        // The fixed wait plus the automaton's random window (0 when off or set to 0): levelMax 0 keeps the timing
+        // before step 16; a spread chain wants the automaton on (a start chance of 100 answers every train).
         unsigned long windowMs = _config.answerJitterMs;
         if (automaton && _config.answerJitterShrinks && _level.count < _config.levelMax) {
             windowMs = windowMs * (_config.levelMax - _level.count) / _config.levelMax;

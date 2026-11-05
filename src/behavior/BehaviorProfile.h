@@ -52,13 +52,18 @@ struct BehaviorGateConfig {
     // emission, -1 per levelDecayMs of hearing nothing; p = (level + 1) / levelMax answers a heard train and keeps a
     // pending answer when another verdict arrives (else it yields); at levelMax the node rests restMs and the level
     // returns to 0. An answer waits waitAfterHeardMs plus a uniform 0..answerJitterMs. levelMax 0 switches the
-    // automaton off (p = 1, no level rest: the behaviour before step 16).
+    // automaton off (p = 1, or a constant startChancePct; no level rest, no jitter: the timing before step 16).
     uint32_t levelMax = 6;
     uint32_t levelDecayMs = 2000;
     uint32_t answerJitterMs = 3000;  // 3 s, shrinking with the level (owner 2026-10-30, after native-fieldsim)
     // p = (level + levelOffset) / levelMax, the level counted before the draw (as tools/sim/fieldramp.py): offset 0
-    // answers the first train heard with 1 / L (owner 2026-10-30: "1 in 6"; offset 1 would be 2 / L). Not a param.
+    // answers the first train heard with 1 / L (owner 2026-10-30: "1 in 6"; offset 1 would be 2 / L). The echo modes
+    // set it (echo.level_offset); the Node uses startChancePct.
     uint32_t levelOffset = 0;
+    // The chance in % of answering the first train in a quiet field, rising evenly to 100 % at levelMax: the start
+    // set apart from the length (owner 2026-11-05, decisions/2026-11-05-start-chance-and-chain-length.md). 0 keeps
+    // the rule above; with levelMax 0 it is a constant chance.
+    uint32_t startChancePct = 0;
     // The decision's named extra rule ("revisit when the ear wants each answer sooner"): the jitter window shrinks
     // with the level, jitter * (levelMax - level) / levelMax: a quiet node answers late, one near the top quickly
     // (owner 2026-10-30, after native-fieldsim). Not a param.

@@ -1,0 +1,5 @@
+mode node, 5 boards, 60 s a phase, wav -
+phase              dropped buffers per board   log lines/s delivered
+quiet              E1 0  E2 0  E3 0  E4 0  E5 0   0.0
+log 20             E1 0  E2 0  E3 0  E4 0  E5 0   3.3
+log 20 + storm     E1 0  E2 0  E3 0  E4 0  E5 0   7.6

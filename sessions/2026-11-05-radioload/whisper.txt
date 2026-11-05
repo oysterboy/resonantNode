@@ -1,0 +1,5 @@
+mode whisper, 5 boards, 60 s a phase, wav whisper_x8.wav
+phase              dropped buffers per board   log lines/s delivered
+quiet              E1 0  E2 0  E3 0  E4 0  E5 0   0.0
+log 20             E1 0  E2 0  E3 0  E4 0  E5 0   1.0
+log 20 + storm     E1 0  E2 0  E3 0  E4 0  E5 0   1.1

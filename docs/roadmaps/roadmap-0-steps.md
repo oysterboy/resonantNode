@@ -415,7 +415,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         answered in every cycle, music 0 verdicts, no reset. Gate closed.
 
 
-23. [NEXT, PC] Review fixes 2026-11-05: CI, the OTA edges, the train unit, the echo host harness. (issue #89)
+23. [RUNNING 2026-11-05: the PC parts of 23.0-23.3 done and on main; the board parts open] Review fixes 2026-11-05: CI, the
+    OTA edges, the train unit, the echo host harness. (issue #89)
    docs/research/architecture-and-code-review-2026-11-05.md (four reviews at afea847d after step 20's echo, whisper,
    gateway and glide work: 2 high, 6 medium, 17 low; spec drift per item; the architecture read). Cut by the owner
    2026-11-05: one small step now, the rest deferred with triggers ("Review leftovers" below), since the echo code
@@ -469,6 +470,28 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         comparison with a board's WHISPER STATUS.
    Gate: 23.0-23.2 before the next remote update of an echo board and before the overnight values become defaults;
    23.3 before Whispernet is tuned further.
+   Handover 2026-11-05 (the session that did the PC parts ended here; the next one starts from this):
+   - On main: 23.0 (a6b0fee), 23.1 (e20f4a6), 23.2 (8c4cfd4), 23.3 (b8e2051, formatted in 295dba7: its subject names
+     the suite, the file was EchoProfiles.h). CI green on each push (runs 415, 420, 422, 425: 11 ESP envs, the host
+     suites under PlatformIO's Unity, both replays, format).
+   - Skipped in that session: it ran in a cloud container whose network refuses the PlatformIO registry, so no pio
+     there. The host suites it touched were run with a hand-written Unity stand-in (the five Behavior suites, 45
+     tests; test_echo_detection, test_whisper_detection, test_envelope_runtime, 15) and then for real by CI; the ESP
+     builds only in CI; nothing flashed, no board touched, no bench session.
+   - Open, the gates' board parts: 23.1 a failed OTA during a whisper replay and during an echo replay, both boards
+     answering after (`ECHO ota largest_block=` printed before the pull; a bench session). 23.2 two answers 100 ms
+     apart raise the level by 2 on a board (`RB hop_check heard_train_ms=125`); the owner's usual T2h replay run (the
+     change is in Behavior only, so T2h should be byte-identical: confirm); the 2026-11-05 overnight values
+     reconsidered against the corrected count before they become defaults. 23.3 the synthetic set re-run on
+     native-whisperreplay (`--level-db -16`; the source WAV is the owner's, tools/bench/synthwhisper.py) and the
+     comparison with a board's WHISPER STATUS on the same WAV at the desk.
+   - Behaviour changes for the owner to confirm: a whisper phrase now raises the level by 1 (was up to 3 by its
+     length; whisper.level_max was tuned with the old count); the replay's defaults are the boards' values, so the
+     research/whispernet.md command lines of 2026-11-01 need `--level-db -16` to reproduce; the echo room frees its
+     ring and clip around an OTA and takes them back after a failed one.
+   - Housekeeping: the remote branch ccr-02463034-rz5la2 holds nothing main lacks; a cloud session cannot delete it
+     (the git proxy answers 403), delete it on GitHub. The echo modes' spec chapter and the other deferred items are
+     under "Review leftovers" with their triggers; M4 (AmpExperimental's contrast scale) waits for 20.5.
 
 21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
    roadmap-hardware.md HW-001 (the prototype, the D-AMP pinout as wired, room for the second mic), HW-002 (ten
@@ -544,6 +567,8 @@ parallel.
 
 ## Status log
 
+Status update 2026-11-05, late: step 23's PC parts (23.0-23.3) on main, CI green; the board parts and the
+synthetic-set re-run open (the handover under step 23). 20 running, 20.5 before 20.4.
 Status update 2026-11-05, evening: the review (docs/research/architecture-and-code-review-2026-11-05.md) cut into
 step 23 (#89, next on the PC: CI, the OTA edges, the train unit, the echo host harness) and leftovers with
 triggers; 20 running, 20.5 before 20.4.

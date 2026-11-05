@@ -5,7 +5,7 @@
 #include <new>
 
 #include "../app/SerialOut.h"
-#include "../app/Timebase.h"
+#include "../app/TimeBase.h"
 
 NetGateway::~NetGateway() {
     delete[] _join;

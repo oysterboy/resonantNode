@@ -1,0 +1,1154 @@
+0.19 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=324436096 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7676 i2s.max_backstep_us=9999 i2s.clock_corrections=40232 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20282873 audio.deficit_s=5.6 audio.level=384 audio.level_max=32694 audio.us_per_sample=13.64 audio.block_us_max=3561 audio.baseline=-11.5 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178333 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20282873 audio.last_sample_ms=20282868 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+0.19 E3 
+0.19 E3 RB ERR unknown_command
+0.19 E4 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=213 decision=consumed_pattern
+0.19 E2 ECHO clap valid=1 attack_ms=11 strength=21013 duration_ms=214 decision=resting
+0.44 E4 ECHO replay onset_index=3176952 ms=300 gain=64.00
+1.43 E1 ECHO clap valid=1 attack_ms=64 strength=1575 duration_ms=11 decision=consumed_pattern
+1.43 E4 ECHO clap valid=1 attack_ms=6 strength=1567 duration_ms=5 decision=resting
+1.48 E5 ECHO clap valid=1 attack_ms=5 strength=840 duration_ms=6 decision=consumed_pattern
+1.54 E4 ECHO clap valid=1 attack_ms=16 strength=1065 duration_ms=6 decision=resting
+1.54 E2 ECHO clap valid=1 attack_ms=11 strength=1327 duration_ms=5 decision=already_scheduled
+1.59 E2 ECHO clap valid=1 attack_ms=5 strength=1394 duration_ms=5 decision=already_scheduled
+1.59 E1 ECHO clap valid=1 attack_ms=32 strength=1118 duration_ms=43 decision=already_scheduled
+1.90 E1 ECHO replay onset_index=4024320 ms=300 gain=64.00
+1.96 E5 ECHO replay onset_index=2711296 ms=300 gain=64.00
+2.21 E2 ECHO replay onset_index=3539968 ms=300 gain=64.00
+2.45 E1 ECHO clap valid=1 attack_ms=16 strength=1266 duration_ms=22 decision=refractory_after_emit
+2.56 E1 ECHO clap valid=1 attack_ms=27 strength=971 duration_ms=42 decision=consumed_pattern
+3.10 E1 ECHO replay onset_index=4050560 ms=300 gain=64.00
+3.41 E2 ECHO clap valid=1 attack_ms=5 strength=1764 duration_ms=11 decision=consumed_pattern
+3.47 E2 ECHO clap valid=1 attack_ms=5 strength=987 duration_ms=6 decision=already_scheduled
+3.59 E2 ECHO clap valid=1 attack_ms=6 strength=857 duration_ms=5 decision=already_scheduled
+3.96 E2 ECHO replay onset_index=3587456 ms=300 gain=64.00
+4.13 E5 ECHO clap valid=1 attack_ms=22 strength=2347 duration_ms=11 decision=consumed_pattern
+4.19 E1 ECHO clap valid=1 attack_ms=16 strength=10334 duration_ms=133 decision=consumed_pattern
+4.19 E4 ECHO clap valid=1 attack_ms=5 strength=3541 duration_ms=144 decision=consumed_pattern
+4.31 E1 ECHO clap valid=1 attack_ms=6 strength=29110 duration_ms=90 decision=already_scheduled
+4.36 E4 ECHO clap valid=1 attack_ms=5 strength=6771 duration_ms=101 decision=already_scheduled
+4.36 E5 ECHO clap valid=1 attack_ms=6 strength=3515 duration_ms=101 decision=already_scheduled
+4.48 E1 ECHO clap valid=1 attack_ms=16 strength=2414 duration_ms=37 decision=already_scheduled
+4.67 E5 ECHO replay onset_index=2775424 ms=300 gain=64.00
+4.67 E1 ECHO clap valid=1 attack_ms=5 strength=996 duration_ms=53 decision=already_scheduled
+4.78 E4 ECHO replay onset_index=3278344 ms=300 gain=64.00
+4.83 E1 ECHO replay onset_index=4088208 ms=300 gain=64.00
+6.07 E5 ECHO clap valid=1 attack_ms=11 strength=19310 duration_ms=171 decision=consumed_pattern
+6.07 E2 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=192 decision=consumed_pattern
+6.07 E1 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=203 decision=consumed_pattern
+6.07 E4 ECHO clap valid=1 attack_ms=6 strength=32767 duration_ms=197 decision=consumed_pattern
+6.13 E2 ECHO clap valid=1 attack_ms=5 strength=955 duration_ms=5 decision=already_scheduled
+6.18 E1 ECHO clap valid=1 attack_ms=5 strength=8802 duration_ms=64 decision=already_scheduled
+6.18 E4 ECHO clap valid=1 attack_ms=16 strength=2563 duration_ms=32 decision=already_scheduled
+6.18 E5 ECHO clap valid=1 attack_ms=10 strength=1814 duration_ms=32 decision=already_scheduled
+6.24 E2 ECHO clap valid=1 attack_ms=5 strength=1362 duration_ms=27 decision=already_scheduled
+6.29 E2 ECHO clap valid=1 attack_ms=6 strength=827 duration_ms=5 decision=already_scheduled
+6.41 E2 ECHO clap valid=1 attack_ms=11 strength=1045 duration_ms=5 decision=already_scheduled
+6.47 E2 ECHO clap valid=1 attack_ms=5 strength=899 duration_ms=6 decision=already_scheduled
+6.47 E1 ECHO replay onset_index=4131328 ms=300 gain=64.00
+6.53 E5 ECHO replay onset_index=2818432 ms=300 gain=64.00
+6.53 E4 ECHO replay onset_index=3321616 ms=300 gain=64.00
+7.04 E1 ECHO clap valid=1 attack_ms=6 strength=862 duration_ms=5 decision=refractory_after_emit
+7.84 E1 ECHO clap valid=1 attack_ms=5 strength=1008 duration_ms=6 decision=consumed_pattern
+7.84 E2 ECHO clap valid=1 attack_ms=5 strength=1846 duration_ms=6 decision=consumed_pattern
+8.02 E5 ECHO clap valid=1 attack_ms=21 strength=5459 duration_ms=112 decision=consumed_pattern
+8.08 E2 ECHO clap valid=1 attack_ms=5 strength=25748 duration_ms=229 decision=already_scheduled
+8.08 E1 ECHO clap valid=1 attack_ms=5 strength=24269 duration_ms=213 decision=already_scheduled
+8.13 E4 ECHO clap valid=1 attack_ms=5 strength=7705 duration_ms=224 decision=consumed_pattern
+8.31 E2 ECHO replay onset_index=3693184 ms=300 gain=64.00
+8.37 E1 ECHO replay onset_index=4177536 ms=300 gain=64.00
+8.42 E5 ECHO replay onset_index=2866696 ms=300 gain=64.00
+8.52 E4 ECHO clap valid=1 attack_ms=16 strength=1063 duration_ms=16 decision=already_scheduled
+8.83 E4 ECHO replay onset_index=3369840 ms=300 gain=64.00
+9.24 E1 ECHO clap valid=1 attack_ms=32 strength=13386 duration_ms=272 decision=consumed_pattern
+9.24 E5 ECHO clap valid=1 attack_ms=32 strength=11214 duration_ms=283 decision=consumed_pattern
+9.24 E2 ECHO clap valid=1 attack_ms=21 strength=6980 duration_ms=288 decision=consumed_pattern
+9.31 E2 ECHO clap valid=1 attack_ms=16 strength=940 duration_ms=6 decision=already_scheduled
+9.36 E2 ECHO clap valid=1 attack_ms=6 strength=1082 duration_ms=5 decision=already_scheduled
+9.43 E2 ECHO clap valid=1 attack_ms=6 strength=1125 duration_ms=5 decision=already_scheduled
+9.49 E2 ECHO clap valid=1 attack_ms=5 strength=1054 duration_ms=5 decision=already_scheduled
+9.60 E2 ECHO clap valid=1 attack_ms=5 strength=1002 duration_ms=6 decision=already_scheduled
+9.66 E1 ECHO replay onset_index=4204784 ms=300 gain=64.00
+9.66 E5 ECHO replay onset_index=2891776 ms=300 gain=64.00
+9.84 E2 ECHO replay onset_index=3720432 ms=300 gain=64.00
+10.32 E5 ECHO clap valid=1 attack_ms=11 strength=950 duration_ms=10 decision=consumed_pattern
+10.74 E5 ECHO replay onset_index=2924544 ms=300 gain=64.00
+10.95 E1 ECHO clap valid=1 attack_ms=22 strength=2377 duration_ms=133 decision=consumed_pattern
+10.95 E4 ECHO clap valid=1 attack_ms=26 strength=1849 duration_ms=133 decision=consumed_pattern
+10.95 E2 ECHO clap valid=1 attack_ms=38 strength=2287 duration_ms=139 decision=consumed_pattern
+11.02 E2 ECHO clap valid=1 attack_ms=16 strength=836 duration_ms=6 decision=already_scheduled
+11.44 E1 ECHO replay onset_index=4250256 ms=300 gain=64.00
+11.44 E2 ECHO replay onset_index=3766016 ms=300 gain=64.00
+11.68 E4 ECHO replay onset_index=3440376 ms=300 gain=64.00
+13.78 E4 ECHO clap valid=1 attack_ms=11 strength=6018 duration_ms=107 decision=consumed_pattern
+13.78 E5 ECHO clap valid=1 attack_ms=10 strength=7797 duration_ms=117 decision=consumed_pattern
+13.78 E1 ECHO clap valid=1 attack_ms=11 strength=9225 duration_ms=144 decision=consumed_pattern
+13.78 E2 ECHO clap valid=1 attack_ms=6 strength=32525 duration_ms=144 decision=consumed_pattern
+14.18 E1 ECHO replay onset_index=4317832 ms=300 gain=64.00
+14.23 E2 ECHO replay onset_index=3833480 ms=300 gain=64.00
+14.29 E4 ECHO replay onset_index=3508096 ms=300 gain=64.00
+14.42 E5 ECHO replay onset_index=3004920 ms=300 gain=64.00
+14.48 E5 ECHO status node=E5 uptime_s=126 window_s=126 rate_hz=24000 measured_mhz=24000997 samples=3025664 dropped_bufs=18 dropped_total=18 passes=125830 pass_us_mean=69 pass_us_max=37498 block_us_max=5213 env_peak=1171766 tone=0 free_heap=76
+14.55 E2 ECHO status node=E2 uptime_s=160 window_s=160 rate_hz=24000 measured_mhz=23999992 samples=3854464 dropped_bufs=18 dropped_total=18 passes=160318 pass_us_mean=69 pass_us_max=39492 block_us_max=5230 env_peak=1528297 tone=0 free_heap=77
+14.55 E1 ECHO status node=E1 uptime_s=181 window_s=180 rate_hz=24000 measured_mhz=24001069 samples=4338816 dropped_bufs=18 dropped_total=18 passes=180486 pass_us_mean=69 pass_us_max=38504 block_us_max=5169 env_peak=756552 tone=0 free_heap=773
+14.76 E2 ECHO clap valid=1 attack_ms=21 strength=1327 duration_ms=38 decision=refractory_after_emit
+15.21 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=324676352 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40262 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20297888 audio.deficit_s=5.6 audio.level=21 audio.level_max=32102 audio.us_per_sample=14.05 audio.block_us_max=1879 audio.baseline=-36.3 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178423 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20297888 audio.last_sample_ms=20297884 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+15.21 E3 
+15.21 E3 RB ERR unknown_command
+15.21 E3 NET sent seq=33003 target=* text=RB STATUS
+15.38 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=324676352 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40262 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20297891 audio.deficit_s=5.6 audio.level=21 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=-36.3 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178423 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20297891 audio.last_sample_ms=20297884 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+15.38 E3 
+15.38 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+15.38 E3 NET reply from=E2 seq=33003 done parts=1
+15.38 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+15.38 E3 NET reply from=E1 seq=33003 done parts=1
+15.38 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+15.45 E3 NET reply from=E4 seq=33003 done parts=1
+15.45 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+15.45 E3 NET reply from=E5 seq=33003 done parts=1
+15.45 E2 ECHO clap valid=1 attack_ms=5 strength=1046 duration_ms=6 decision=consumed_pattern
+15.56 E2 ECHO replay onset_index=3868672 ms=300 gain=64.00
+16.18 E1 ECHO clap valid=1 attack_ms=5 strength=15102 duration_ms=139 decision=consumed_pattern
+16.18 E4 ECHO clap valid=1 attack_ms=16 strength=11545 duration_ms=144 decision=consumed_pattern
+16.18 E5 ECHO clap valid=1 attack_ms=16 strength=6553 duration_ms=150 decision=consumed_pattern
+16.24 E2 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=160 decision=consumed_pattern
+16.62 E1 ECHO replay onset_index=4375680 ms=300 gain=64.00
+16.68 E2 ECHO replay onset_index=3891312 ms=300 gain=64.00
+16.68 E4 ECHO replay onset_index=3565832 ms=300 gain=64.00
+17.03 E5 ECHO replay onset_index=3062648 ms=300 gain=64.00
+17.37 E2 ECHO clap valid=1 attack_ms=38 strength=8240 duration_ms=197 decision=consumed_pattern
+17.37 E1 ECHO clap valid=1 attack_ms=22 strength=11345 duration_ms=224 decision=consumed_pattern
+17.79 E2 ECHO replay onset_index=3917968 ms=300 gain=64.00
+17.79 E1 ECHO replay onset_index=4402312 ms=300 gain=64.00
+20.78 E1 ECHO clap valid=1 attack_ms=5 strength=22592 duration_ms=155 decision=consumed_pattern
+20.78 E5 ECHO clap valid=1 attack_ms=16 strength=10362 duration_ms=150 decision=consumed_pattern
+20.78 E4 ECHO clap valid=1 attack_ms=11 strength=12514 duration_ms=160 decision=consumed_pattern
+20.78 E2 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=187 decision=consumed_pattern
+21.21 E2 ECHO replay onset_index=4000640 ms=300 gain=64.00
+21.21 E1 ECHO replay onset_index=4484992 ms=300 gain=64.00
+21.33 E4 ECHO replay onset_index=3675272 ms=300 gain=64.00
+21.52 E5 ECHO replay onset_index=3172088 ms=300 gain=64.00
+21.88 E4 ECHO clap valid=1 attack_ms=6 strength=1042 duration_ms=5 decision=refractory_after_emit
+22.01 E1 ECHO clap valid=1 attack_ms=5 strength=30020 duration_ms=150 decision=consumed_pattern
+22.01 E4 ECHO clap valid=1 attack_ms=6 strength=6747 duration_ms=128 decision=consumed_pattern
+22.51 E1 ECHO replay onset_index=4515064 ms=300 gain=64.00
+22.76 E4 ECHO replay onset_index=3705736 ms=300 gain=64.00
+23.06 E2 ECHO clap valid=1 attack_ms=16 strength=5965 duration_ms=229 decision=resting
+23.11 E5 ECHO clap valid=1 attack_ms=21 strength=9587 duration_ms=277 decision=consumed_pattern
+23.70 E5 ECHO replay onset_index=3224952 ms=300 gain=64.00
+23.76 E4 ECHO clap valid=1 attack_ms=11 strength=20709 duration_ms=213 decision=consumed_pattern
+23.76 E1 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=219 decision=consumed_pattern
+23.76 E2 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=219 decision=consumed_pattern
+23.82 E2 ECHO clap valid=1 attack_ms=16 strength=1068 duration_ms=5 decision=already_scheduled
+24.35 E4 ECHO replay onset_index=3745168 ms=300 gain=64.00
+24.53 E2 ECHO replay onset_index=4070656 ms=300 gain=64.00
+24.59 E1 ECHO replay onset_index=4555008 ms=300 gain=64.00
+25.49 E1 ECHO clap valid=1 attack_ms=11 strength=2584 duration_ms=16 decision=consumed_pattern
+25.49 E2 ECHO clap valid=1 attack_ms=11 strength=1686 duration_ms=10 decision=consumed_pattern
+25.60 E4 ECHO clap valid=1 attack_ms=43 strength=1339 duration_ms=58 decision=consumed_pattern
+25.60 E5 ECHO clap valid=1 attack_ms=16 strength=1070 duration_ms=5 decision=consumed_pattern
+25.60 E2 ECHO clap valid=1 attack_ms=5 strength=2844 duration_ms=85 decision=already_scheduled
+25.66 E1 ECHO clap valid=1 attack_ms=43 strength=4666 duration_ms=70 decision=already_scheduled
+25.66 E2 ECHO clap valid=1 attack_ms=5 strength=878 duration_ms=5 decision=already_scheduled
+25.78 E2 ECHO clap valid=1 attack_ms=5 strength=866 duration_ms=6 decision=already_scheduled
+25.85 E2 ECHO clap valid=1 attack_ms=6 strength=1344 duration_ms=5 decision=already_scheduled
+26.02 E1 ECHO clap valid=1 attack_ms=16 strength=2014 duration_ms=11 decision=already_scheduled
+26.02 E2 ECHO clap valid=1 attack_ms=5 strength=1240 duration_ms=6 decision=already_scheduled
+26.08 E4 ECHO clap valid=1 attack_ms=5 strength=1116 duration_ms=6 decision=already_scheduled
+26.08 E5 ECHO replay onset_index=3291008 ms=300 gain=64.00
+26.08 E1 ECHO clap valid=1 attack_ms=5 strength=2996 duration_ms=75 decision=already_scheduled
+26.14 E4 ECHO replay onset_index=3793920 ms=300 gain=64.00
+26.14 E2 ECHO clap valid=1 attack_ms=5 strength=3178 duration_ms=107 decision=already_scheduled
+26.14 E1 ECHO replay onset_index=4601472 ms=300 gain=64.00
+26.37 E2 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=203 decision=already_scheduled
+26.44 E2 ECHO replay onset_index=4117248 ms=300 gain=64.00
+26.75 E5 ECHO clap valid=1 attack_ms=16 strength=8560 duration_ms=133 decision=consumed_pattern
+27.52 E5 ECHO replay onset_index=3315960 ms=300 gain=64.00
+27.94 E1 ECHO clap valid=1 attack_ms=11 strength=1153 duration_ms=10 decision=consumed_pattern
+28.31 E2 ECHO clap valid=1 attack_ms=10 strength=1538 duration_ms=32 decision=consumed_pattern
+28.31 E4 ECHO clap valid=1 attack_ms=5 strength=1814 duration_ms=32 decision=consumed_pattern
+28.36 E5 ECHO clap valid=1 attack_ms=16 strength=1243 duration_ms=43 decision=consumed_pattern
+28.36 E1 ECHO clap valid=1 attack_ms=5 strength=1890 duration_ms=48 decision=already_scheduled
+28.41 E2 ECHO clap valid=1 attack_ms=5 strength=1423 duration_ms=54 decision=already_scheduled
+28.41 E1 ECHO clap valid=1 attack_ms=16 strength=1322 duration_ms=32 decision=already_scheduled
+28.47 E1 ECHO replay onset_index=4659584 ms=300 gain=64.00
+28.76 E5 ECHO replay onset_index=3356288 ms=300 gain=64.00
+28.82 E4 ECHO replay onset_index=3859456 ms=300 gain=64.00
+28.94 E2 ECHO replay onset_index=4184960 ms=300 gain=64.00
+30.19 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=324916352 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40292 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20312892 audio.deficit_s=5.6 audio.level=168 audio.level_max=32664 audio.us_per_sample=14.05 audio.block_us_max=1874 audio.baseline=45.4 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178496 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20312892 audio.last_sample_ms=20312884 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+30.19 E3 
+30.19 E3 RB ERR unknown_command
+30.24 E3 NET sent seq=33007 target=* text=RB STATUS
+30.37 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=324916352 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40292 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20312895 audio.deficit_s=5.6 audio.level=168 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=45.4 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178496 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20312895 audio.last_sample_ms=20312884 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+30.37 E3 
+30.37 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+30.37 E3 NET reply from=E2 seq=33007 done parts=1
+30.43 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+30.43 E3 NET reply from=E5 seq=33007 done parts=1
+30.43 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+30.43 E3 NET reply from=E1 seq=33007 done parts=1
+30.43 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+30.43 E3 NET reply from=E4 seq=33007 done parts=1
+30.43 E2 ECHO clap valid=1 attack_ms=5 strength=1202 duration_ms=5 decision=consumed_pattern
+30.43 E2 ECHO clap valid=1 attack_ms=5 strength=1702 duration_ms=6 decision=already_scheduled
+30.49 E2 ECHO clap valid=1 attack_ms=5 strength=957 duration_ms=5 decision=already_scheduled
+30.60 E2 ECHO replay onset_index=4228736 ms=300 gain=64.00
+34.12 E4 ECHO clap valid=1 attack_ms=10 strength=816 duration_ms=6 decision=consumed_pattern
+34.18 E5 ECHO clap valid=1 attack_ms=22 strength=1236 duration_ms=58 decision=consumed_pattern
+34.23 E5 ECHO clap valid=1 attack_ms=10 strength=1151 duration_ms=69 decision=already_scheduled
+34.29 E1 ECHO clap valid=1 attack_ms=10 strength=874 duration_ms=32 decision=consumed_pattern
+34.29 E4 ECHO clap valid=1 attack_ms=11 strength=847 duration_ms=26 decision=already_scheduled
+34.35 E5 ECHO clap valid=1 attack_ms=11 strength=845 duration_ms=5 decision=already_scheduled
+34.47 E1 ECHO status node=E1 uptime_s=201 window_s=200 rate_hz=24000 measured_mhz=23999968 samples=4818816 dropped_bufs=18 dropped_total=18 passes=200446 pass_us_mean=69 pass_us_max=38504 block_us_max=5169 env_peak=325390 tone=0 free_heap=773
+34.54 E2 ECHO status node=E2 uptime_s=180 window_s=180 rate_hz=24000 measured_mhz=23999968 samples=4334464 dropped_bufs=18 dropped_total=18 passes=180278 pass_us_mean=69 pass_us_max=39492 block_us_max=5230 env_peak=1821221 tone=0 free_heap=77
+34.54 E4 ECHO status node=E4 uptime_s=167 window_s=167 rate_hz=24000 measured_mhz=23999992 samples=4008960 dropped_bufs=18 dropped_total=18 passes=166744 pass_us_mean=69 pass_us_max=41491 block_us_max=5218 env_peak=1604025 tone=0 free_heap=77
+34.54 E2 ECHO clap valid=1 attack_ms=6 strength=2299 duration_ms=5 decision=consumed_pattern
+34.65 E2 ECHO clap valid=1 attack_ms=5 strength=883 duration_ms=5 decision=already_scheduled
+34.70 E2 ECHO clap valid=1 attack_ms=5 strength=1215 duration_ms=6 decision=already_scheduled
+34.70 E4 ECHO replay onset_index=3998848 ms=300 gain=64.00
+34.76 E5 ECHO clap valid=1 attack_ms=11 strength=815 duration_ms=5 decision=already_scheduled
+34.76 E2 ECHO clap valid=1 attack_ms=6 strength=1166 duration_ms=5 decision=already_scheduled
+34.82 E2 ECHO clap valid=1 attack_ms=5 strength=1481 duration_ms=5 decision=already_scheduled
+34.94 E2 ECHO clap valid=1 attack_ms=5 strength=1481 duration_ms=6 decision=already_scheduled
+34.94 E5 ECHO replay onset_index=3495552 ms=300 gain=64.00
+34.94 E1 ECHO replay onset_index=4811904 ms=300 gain=64.00
+38.64 E5 ECHO clap valid=1 attack_ms=11 strength=915 duration_ms=11 decision=consumed_pattern
+38.64 E1 ECHO clap valid=1 attack_ms=11 strength=831 duration_ms=11 decision=consumed_pattern
+38.99 E5 ECHO replay onset_index=3603200 ms=300 gain=64.00
+39.30 E1 ECHO replay onset_index=4916992 ms=300 gain=64.00
+39.94 E5 ECHO clap valid=1 attack_ms=6 strength=991 duration_ms=5 decision=consumed_pattern
+40.01 E1 ECHO clap valid=1 attack_ms=5 strength=1093 duration_ms=5 decision=consumed_pattern
+40.01 E2 ECHO clap valid=1 attack_ms=5 strength=869 duration_ms=5 decision=consumed_pattern
+40.07 E4 ECHO clap valid=1 attack_ms=6 strength=1010 duration_ms=5 decision=consumed_pattern
+40.07 E5 ECHO clap valid=1 attack_ms=5 strength=1385 duration_ms=32 decision=already_scheduled
+40.07 E2 ECHO clap valid=1 attack_ms=26 strength=2293 duration_ms=32 decision=already_scheduled
+40.07 E1 ECHO clap valid=1 attack_ms=21 strength=1135 duration_ms=64 decision=already_scheduled
+40.13 E2 ECHO clap valid=1 attack_ms=6 strength=824 duration_ms=5 decision=already_scheduled
+40.19 E5 ECHO clap valid=1 attack_ms=37 strength=1380 duration_ms=64 decision=already_scheduled
+40.24 E1 ECHO clap valid=1 attack_ms=22 strength=1164 duration_ms=85 decision=already_scheduled
+40.24 E2 ECHO clap valid=1 attack_ms=16 strength=1062 duration_ms=11 decision=already_scheduled
+40.24 E5 ECHO clap valid=1 attack_ms=16 strength=989 duration_ms=6 decision=already_scheduled
+40.42 E5 ECHO replay onset_index=3634560 ms=300 gain=64.00
+40.49 E2 ECHO replay onset_index=4465280 ms=300 gain=64.00
+40.49 E1 ECHO clap valid=1 attack_ms=22 strength=11942 duration_ms=165 decision=already_scheduled
+40.49 E4 ECHO clap valid=1 attack_ms=21 strength=7947 duration_ms=160 decision=already_scheduled
+40.54 E4 ECHO replay onset_index=4141056 ms=300 gain=64.00
+40.54 E1 ECHO replay onset_index=4949632 ms=300 gain=64.00
+42.69 E5 ECHO clap valid=1 attack_ms=48 strength=2975 duration_ms=85 decision=consumed_pattern
+42.69 E4 ECHO clap valid=1 attack_ms=16 strength=4200 duration_ms=101 decision=consumed_pattern
+42.75 E2 ECHO clap valid=1 attack_ms=6 strength=11711 duration_ms=138 decision=consumed_pattern
+42.75 E1 ECHO clap valid=1 attack_ms=6 strength=10099 duration_ms=160 decision=consumed_pattern
+42.75 E5 ECHO clap valid=1 attack_ms=11 strength=887 duration_ms=32 decision=already_scheduled
+42.81 E2 ECHO clap valid=1 attack_ms=11 strength=1029 duration_ms=5 decision=already_scheduled
+42.87 E2 ECHO clap valid=1 attack_ms=21 strength=1340 duration_ms=11 decision=already_scheduled
+42.93 E2 ECHO clap valid=1 attack_ms=5 strength=931 duration_ms=6 decision=already_scheduled
+43.18 E5 ECHO replay onset_index=3699856 ms=300 gain=64.00
+43.18 E4 ECHO replay onset_index=4203000 ms=300 gain=64.00
+43.24 E2 ECHO replay onset_index=4528512 ms=300 gain=64.00
+43.41 E1 ECHO replay onset_index=5012872 ms=300 gain=64.00
+44.59 E2 ECHO clap valid=1 attack_ms=11 strength=902 duration_ms=43 decision=consumed_pattern
+44.59 E1 ECHO clap valid=1 attack_ms=11 strength=954 duration_ms=11 decision=consumed_pattern
+44.65 E5 ECHO clap valid=1 attack_ms=6 strength=808 duration_ms=5 decision=consumed_pattern
+44.65 E1 ECHO clap valid=1 attack_ms=10 strength=831 duration_ms=6 decision=already_scheduled
+44.65 E2 ECHO clap valid=1 attack_ms=10 strength=1702 duration_ms=6 decision=already_scheduled
+44.71 E2 ECHO clap valid=1 attack_ms=16 strength=1577 duration_ms=5 decision=already_scheduled
+44.77 E2 ECHO clap valid=1 attack_ms=5 strength=971 duration_ms=5 decision=already_scheduled
+44.83 E2 ECHO clap valid=1 attack_ms=5 strength=921 duration_ms=6 decision=rest_level
+45.24 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=325156480 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40321 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20327899 audio.deficit_s=5.6 audio.level=281 audio.level_max=14685 audio.us_per_sample=14.04 audio.block_us_max=1889 audio.baseline=47.1 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178565 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20327899 audio.last_sample_ms=20327892 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+45.24 E3 
+45.24 E3 RB ERR unknown_command
+45.24 E3 NET sent seq=33011 target=* text=RB STATUS
+45.42 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=325156480 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40321 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20327902 audio.deficit_s=5.6 audio.level=281 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=47.1 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178565 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20327902 audio.last_sample_ms=20327892 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+45.42 E3 
+45.42 E1 ECHO replay onset_index=5059456 ms=300 gain=64.00
+45.42 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+45.42 E3 NET reply from=E5 seq=33011 done parts=1
+45.42 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+45.42 E3 NET reply from=E4 seq=33011 done parts=1
+45.42 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+45.42 E3 NET reply from=E1 seq=33011 done parts=1
+45.42 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+45.42 E3 NET reply from=E2 seq=33011 done parts=1
+45.48 E5 ECHO replay onset_index=3747840 ms=300 gain=64.00
+45.48 E2 ECHO clap valid=1 attack_ms=16 strength=11793 duration_ms=150 decision=resting
+45.48 E4 ECHO clap valid=1 attack_ms=26 strength=5535 duration_ms=122 decision=consumed_pattern
+45.71 E4 ECHO replay onset_index=4264320 ms=300 gain=64.00
+46.07 E2 ECHO clap valid=1 attack_ms=21 strength=6273 duration_ms=267 decision=resting
+46.07 E5 ECHO clap valid=1 attack_ms=26 strength=8906 duration_ms=251 decision=consumed_pattern
+46.65 E5 ECHO replay onset_index=3776768 ms=300 gain=64.00
+47.86 E2 ECHO clap valid=1 attack_ms=10 strength=2718 duration_ms=22 decision=consumed_pattern
+47.86 E1 ECHO clap valid=1 attack_ms=11 strength=1184 duration_ms=5 decision=consumed_pattern
+48.36 E1 ECHO replay onset_index=5138816 ms=300 gain=64.00
+48.42 E4 ECHO clap valid=1 attack_ms=16 strength=31191 duration_ms=197 decision=consumed_pattern
+48.42 E5 ECHO clap valid=1 attack_ms=16 strength=24585 duration_ms=198 decision=consumed_pattern
+48.48 E2 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=251 decision=already_scheduled
+48.53 E2 ECHO clap valid=1 attack_ms=5 strength=1007 duration_ms=6 decision=already_scheduled
+48.59 E2 ECHO clap valid=1 attack_ms=6 strength=948 duration_ms=5 decision=already_scheduled
+48.72 E2 ECHO replay onset_index=4654336 ms=300 gain=64.00
+48.84 E1 ECHO clap valid=1 attack_ms=5 strength=1624 duration_ms=22 decision=refractory_after_emit
+48.91 E4 ECHO replay onset_index=4337680 ms=300 gain=64.00
+48.91 E5 ECHO replay onset_index=3834488 ms=300 gain=64.00
+53.98 E1 ECHO clap valid=1 attack_ms=6 strength=12508 duration_ms=106 decision=consumed_pattern
+53.98 E5 ECHO clap valid=1 attack_ms=16 strength=5009 duration_ms=112 decision=consumed_pattern
+53.98 E2 ECHO clap valid=1 attack_ms=6 strength=8750 duration_ms=122 decision=consumed_pattern
+53.98 E4 ECHO clap valid=1 attack_ms=16 strength=5508 duration_ms=133 decision=consumed_pattern
+54.03 E2 ECHO clap valid=1 attack_ms=5 strength=1388 duration_ms=5 decision=already_scheduled
+54.21 E2 ECHO clap valid=1 attack_ms=16 strength=3072 duration_ms=48 decision=already_scheduled
+54.21 E5 ECHO clap valid=1 attack_ms=27 strength=1233 duration_ms=27 decision=already_scheduled
+54.21 E4 ECHO clap valid=1 attack_ms=26 strength=1469 duration_ms=27 decision=already_scheduled
+54.39 E4 ECHO replay onset_index=4472952 ms=300 gain=64.00
+54.45 E5 ECHO clap valid=1 attack_ms=16 strength=2642 duration_ms=165 decision=already_scheduled
+54.45 E1 ECHO replay onset_index=5282816 ms=300 gain=64.00
+54.45 E5 ECHO replay onset_index=3969800 ms=300 gain=64.00
+54.52 E2 ECHO replay onset_index=4798464 ms=300 gain=64.00
+54.52 E4 ECHO status node=E4 uptime_s=187 window_s=187 rate_hz=24000 measured_mhz=23999992 samples=4488960 dropped_bufs=18 dropped_total=18 passes=186719 pass_us_mean=68 pass_us_max=41491 block_us_max=5218 env_peak=1427793 tone=0 free_heap=77
+54.52 E1 ECHO status node=E1 uptime_s=221 window_s=220 rate_hz=24000 measured_mhz=24001021 samples=5298816 dropped_bufs=18 dropped_total=18 passes=220416 pass_us_mean=69 pass_us_max=38504 block_us_max=5169 env_peak=608831 tone=0 free_heap=773
+54.57 E2 ECHO status node=E2 uptime_s=200 window_s=200 rate_hz=24000 measured_mhz=23999992 samples=4814464 dropped_bufs=18 dropped_total=18 passes=200248 pass_us_mean=69 pass_us_max=39492 block_us_max=5230 env_peak=916468 tone=0 free_heap=770
+54.57 E5 ECHO status node=E5 uptime_s=166 window_s=166 rate_hz=24000 measured_mhz=23999968 samples=3985664 dropped_bufs=18 dropped_total=18 passes=165760 pass_us_mean=69 pass_us_max=37498 block_us_max=5223 env_peak=1282438 tone=0 free_heap=76
+55.06 E2 ECHO clap valid=1 attack_ms=6 strength=848 duration_ms=5 decision=refractory_after_emit
+55.06 E4 ECHO clap valid=1 attack_ms=11 strength=880 duration_ms=5 decision=consumed_pattern
+55.13 E2 ECHO clap valid=1 attack_ms=11 strength=832 duration_ms=5 decision=consumed_pattern
+55.18 E2 ECHO clap valid=1 attack_ms=5 strength=1298 duration_ms=6 decision=already_scheduled
+55.43 E4 ECHO replay onset_index=4500224 ms=300 gain=64.00
+55.79 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=27731 duration_ms=104 profile=TonalPulseScalar
+55.79 E2 ECHO replay onset_index=4827392 ms=300 gain=64.00
+55.91 E5 ECHO clap valid=1 attack_ms=16 strength=30712 duration_ms=213 decision=consumed_pattern
+55.91 E1 ECHO clap valid=1 attack_ms=10 strength=32767 duration_ms=219 decision=consumed_pattern
+56.30 E1 ECHO replay onset_index=5326720 ms=300 gain=64.00
+56.30 E5 ECHO replay onset_index=4013688 ms=300 gain=64.00
+56.66 E4 ECHO clap valid=1 attack_ms=37 strength=10407 duration_ms=235 decision=resting
+56.66 E2 ECHO clap valid=1 attack_ms=53 strength=8447 duration_ms=240 decision=consumed_pattern
+57.38 E2 ECHO replay onset_index=4860808 ms=300 gain=64.00
+60.22 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=325396608 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40351 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20342905 audio.deficit_s=5.6 audio.level=25 audio.level_max=32658 audio.us_per_sample=14.09 audio.block_us_max=3450 audio.baseline=6.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178619 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20342905 audio.last_sample_ms=20342900 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+60.22 E3 
+60.22 E3 RB ERR unknown_command
+60.22 E3 NET sent seq=33016 target=* text=RB STATUS
+60.40 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=325396608 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40351 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20342908 audio.deficit_s=5.6 audio.level=25 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=6.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178619 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20342908 audio.last_sample_ms=20342900 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+60.40 E3 
+60.40 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+60.40 E3 NET reply from=E2 seq=33016 done parts=1
+60.40 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+60.40 E3 NET reply from=E5 seq=33016 done parts=1
+60.40 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+60.45 E3 NET reply from=E1 seq=33016 done parts=1
+60.45 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+60.45 E3 NET reply from=E4 seq=33016 done parts=1
+60.45 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=29062 duration_ms=106 profile=TonalPulseScalar
+60.45 E4 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=234 decision=consumed_pattern
+60.45 E2 ECHO clap valid=1 attack_ms=6 strength=32767 duration_ms=234 decision=consumed_pattern
+60.50 E5 ECHO clap valid=1 attack_ms=11 strength=32767 duration_ms=234 decision=consumed_pattern
+60.50 E1 ECHO clap valid=1 attack_ms=6 strength=32767 duration_ms=256 decision=consumed_pattern
+60.72 E5 ECHO replay onset_index=4119936 ms=300 gain=64.00
+60.78 E4 ECHO replay onset_index=4622976 ms=300 gain=64.00
+60.78 E1 ECHO replay onset_index=5432816 ms=300 gain=64.00
+61.00 E2 ECHO replay onset_index=4948608 ms=300 gain=64.00
+62.47 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=32767 duration_ms=148 profile=TonalPulseScalar
+62.52 E2 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=235 decision=consumed_pattern
+62.58 E4 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=235 decision=consumed_pattern
+62.58 E1 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=251 decision=consumed_pattern
+62.58 E5 ECHO clap valid=1 attack_ms=10 strength=32767 duration_ms=251 decision=consumed_pattern
+62.63 E2 ECHO clap valid=1 attack_ms=5 strength=998 duration_ms=6 decision=already_scheduled
+62.99 E5 ECHO replay onset_index=4173056 ms=300 gain=64.00
+62.99 E1 ECHO replay onset_index=5486080 ms=300 gain=64.00
+63.05 E4 ECHO replay onset_index=4676224 ms=300 gain=64.00
+63.29 E2 ECHO replay onset_index=5001728 ms=300 gain=64.00
+63.54 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=5531 duration_ms=147 profile=TonalPulseScalar
+64.32 E5 ECHO clap valid=1 attack_ms=5 strength=6305 duration_ms=107 decision=resting
+64.32 E4 ECHO clap valid=1 attack_ms=5 strength=10614 duration_ms=112 decision=consumed_pattern
+64.32 E2 ECHO clap valid=1 attack_ms=10 strength=8738 duration_ms=117 decision=consumed_pattern
+64.32 E1 ECHO clap valid=1 attack_ms=5 strength=15852 duration_ms=123 decision=consumed_pattern
+64.75 E1 ECHO replay onset_index=5531392 ms=300 gain=64.00
+64.87 E2 ECHO replay onset_index=5047032 ms=300 gain=64.00
+64.87 E4 ECHO replay onset_index=4721520 ms=300 gain=64.00
+65.17 E5 ECHO clap valid=1 attack_ms=48 strength=8311 duration_ms=230 decision=resting
+65.83 E2 ECHO clap valid=1 attack_ms=5 strength=9301 duration_ms=80 decision=consumed_pattern
+65.89 E4 ECHO clap valid=1 attack_ms=16 strength=4513 duration_ms=85 decision=consumed_pattern
+65.89 E5 ECHO clap valid=1 attack_ms=16 strength=3997 duration_ms=80 decision=consumed_pattern
+65.89 E1 ECHO clap valid=1 attack_ms=11 strength=5701 duration_ms=90 decision=consumed_pattern
+66.24 E1 ECHO replay onset_index=5568896 ms=300 gain=64.00
+66.35 E2 ECHO clap valid=1 attack_ms=11 strength=1673 duration_ms=27 decision=already_scheduled
+66.35 E4 ECHO clap valid=1 attack_ms=11 strength=1419 duration_ms=26 decision=already_scheduled
+66.35 E4 ECHO replay onset_index=4759032 ms=300 gain=64.00
+66.35 E5 ECHO clap valid=1 attack_ms=16 strength=1132 duration_ms=11 decision=already_scheduled
+66.41 E2 ECHO replay onset_index=5084680 ms=300 gain=64.00
+66.48 E5 ECHO replay onset_index=4256008 ms=300 gain=64.00
+67.27 E5 ECHO clap valid=1 attack_ms=11 strength=9497 duration_ms=101 decision=consumed_pattern
+67.27 E4 ECHO clap valid=1 attack_ms=11 strength=6423 duration_ms=112 decision=consumed_pattern
+67.27 E1 ECHO clap valid=1 attack_ms=11 strength=31054 duration_ms=133 decision=resting
+67.86 E2 ECHO replay onset_index=5118336 ms=300 gain=64.00
+67.91 E4 ECHO replay onset_index=4792712 ms=300 gain=64.00
+68.23 E5 ECHO replay onset_index=4289680 ms=300 gain=64.00
+68.23 E1 ECHO clap valid=1 attack_ms=21 strength=18259 duration_ms=256 decision=resting
+68.48 E1 ECHO clap valid=1 attack_ms=43 strength=10257 duration_ms=181 decision=resting
+69.07 E1 ECHO clap valid=1 attack_ms=11 strength=32767 duration_ms=171 decision=consumed_pattern
+69.07 E4 ECHO clap valid=1 attack_ms=5 strength=27952 duration_ms=160 decision=consumed_pattern
+69.07 E5 ECHO clap valid=1 attack_ms=6 strength=12898 duration_ms=160 decision=consumed_pattern
+69.07 E2 ECHO clap valid=1 attack_ms=6 strength=32767 duration_ms=170 decision=consumed_pattern
+69.14 E2 ECHO clap valid=1 attack_ms=11 strength=837 duration_ms=5 decision=already_scheduled
+69.50 E5 ECHO replay onset_index=4331144 ms=300 gain=64.00
+69.56 E1 ECHO replay onset_index=5643904 ms=300 gain=64.00
+69.62 E2 ECHO replay onset_index=5159808 ms=300 gain=64.00
+69.62 E4 ECHO replay onset_index=4834312 ms=300 gain=64.00
+69.85 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=5459 duration_ms=116 profile=TonalPulseScalar
+70.62 E1 ECHO clap valid=1 attack_ms=11 strength=8608 duration_ms=48 decision=consumed_pattern
+70.68 E4 ECHO clap valid=1 attack_ms=5 strength=2131 duration_ms=27 decision=consumed_pattern
+70.68 E2 ECHO clap valid=1 attack_ms=6 strength=2900 duration_ms=48 decision=consumed_pattern
+70.68 E5 ECHO clap valid=1 attack_ms=16 strength=1698 duration_ms=48 decision=consumed_pattern
+71.06 E5 ECHO replay onset_index=4371848 ms=300 gain=64.00
+71.06 E4 ECHO clap valid=1 attack_ms=5 strength=6128 duration_ms=86 decision=already_scheduled
+71.12 E1 ECHO clap valid=1 attack_ms=11 strength=30520 duration_ms=96 decision=already_scheduled
+71.12 E2 ECHO clap valid=1 attack_ms=5 strength=12135 duration_ms=91 decision=already_scheduled
+71.12 E4 ECHO replay onset_index=4875008 ms=300 gain=64.00
+71.12 E2 ECHO replay onset_index=5200520 ms=300 gain=64.00
+71.28 E1 ECHO replay onset_index=5684720 ms=300 gain=64.00
+72.80 E2 ECHO clap valid=1 attack_ms=10 strength=4914 duration_ms=48 decision=consumed_pattern
+72.80 E4 ECHO clap valid=1 attack_ms=11 strength=2890 duration_ms=54 decision=consumed_pattern
+72.80 E5 ECHO clap valid=1 attack_ms=16 strength=2598 duration_ms=48 decision=consumed_pattern
+72.80 E1 ECHO clap valid=1 attack_ms=10 strength=13045 duration_ms=64 decision=consumed_pattern
+73.17 E2 ECHO replay onset_index=5252104 ms=300 gain=64.00
+73.23 E4 ECHO clap valid=1 attack_ms=6 strength=5391 duration_ms=48 decision=already_scheduled
+73.23 E5 ECHO clap valid=1 attack_ms=5 strength=3707 duration_ms=54 decision=already_scheduled
+73.23 E1 ECHO clap valid=1 attack_ms=5 strength=22346 duration_ms=75 decision=already_scheduled
+73.29 E1 ECHO clap valid=1 attack_ms=21 strength=810 duration_ms=5 decision=already_scheduled
+73.36 E4 ECHO replay onset_index=4926584 ms=300 gain=64.00
+73.41 E5 ECHO clap valid=1 attack_ms=21 strength=6018 duration_ms=107 decision=already_scheduled
+73.41 E1 ECHO clap valid=1 attack_ms=21 strength=9017 duration_ms=117 decision=already_scheduled
+73.52 E1 ECHO replay onset_index=5736456 ms=300 gain=64.00
+73.52 E5 ECHO replay onset_index=4423536 ms=300 gain=64.00
+74.44 E1 ECHO clap valid=1 attack_ms=5 strength=22351 duration_ms=134 decision=consumed_pattern
+74.44 E2 ECHO clap valid=1 attack_ms=11 strength=13985 duration_ms=134 decision=consumed_pattern
+74.44 E4 ECHO clap valid=1 attack_ms=16 strength=12983 duration_ms=138 decision=consumed_pattern
+74.44 E5 ECHO clap valid=1 attack_ms=16 strength=8798 duration_ms=144 decision=consumed_pattern
+74.49 E1 ECHO status node=E1 uptime_s=241 window_s=240 rate_hz=24000 measured_mhz=23999992 samples=5778816 dropped_bufs=18 dropped_total=18 passes=240376 pass_us_mean=69 pass_us_max=38504 block_us_max=5222 env_peak=1415386 tone=0 free_heap=77
+74.55 E4 ECHO status node=E4 uptime_s=207 window_s=207 rate_hz=24000 measured_mhz=23999992 samples=4968960 dropped_bufs=18 dropped_total=18 passes=206674 pass_us_mean=69 pass_us_max=41491 block_us_max=5218 env_peak=995134 tone=0 free_heap=770
+74.55 E2 ECHO status node=E2 uptime_s=220 window_s=220 rate_hz=24000 measured_mhz=23999992 samples=5294464 dropped_bufs=18 dropped_total=18 passes=220198 pass_us_mean=69 pass_us_max=39492 block_us_max=5230 env_peak=1636734 tone=0 free_heap=77
+74.79 E2 ECHO replay onset_index=5288696 ms=300 gain=64.00
+74.92 E5 ECHO replay onset_index=4460016 ms=300 gain=64.00
+75.21 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=325636736 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40381 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20357912 audio.deficit_s=5.6 audio.level=2160 audio.level_max=32341 audio.us_per_sample=14.18 audio.block_us_max=3407 audio.baseline=-1.1 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178710 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20357912 audio.last_sample_ms=20357908 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+75.21 E3 
+75.21 E3 RB ERR unknown_command
+75.27 E3 NET sent seq=33024 target=* text=RB STATUS
+75.38 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=325636736 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40381 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20357915 audio.deficit_s=5.6 audio.level=2160 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=-1.1 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178710 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20357915 audio.last_sample_ms=20357908 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+75.38 E3 
+75.44 E4 ECHO replay onset_index=4963200 ms=300 gain=64.00
+75.44 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+75.44 E3 NET reply from=E5 seq=33024 done parts=1
+75.44 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+75.44 E3 NET reply from=E1 seq=33024 done parts=1
+75.44 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+75.44 E3 NET reply from=E2 seq=33024 done parts=1
+75.44 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+75.44 E3 NET reply from=E4 seq=33024 done parts=1
+75.44 E1 ECHO replay onset_index=5773048 ms=300 gain=64.00
+75.96 E1 ECHO clap valid=1 attack_ms=26 strength=833 duration_ms=6 decision=consumed_pattern
+76.19 E5 ECHO clap valid=1 attack_ms=6 strength=893 duration_ms=58 decision=consumed_pattern
+76.19 E1 ECHO clap valid=1 attack_ms=10 strength=822 duration_ms=27 decision=already_scheduled
+76.19 E4 ECHO clap valid=1 attack_ms=16 strength=909 duration_ms=26 decision=consumed_pattern
+76.50 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 strength=17302 duration_ms=72 profile=TonalPulseScalar
+76.61 E5 ECHO clap valid=1 attack_ms=21 strength=20638 duration_ms=197 decision=already_scheduled
+76.61 E2 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=203 decision=consumed_pattern
+76.61 E4 ECHO clap valid=1 attack_ms=21 strength=29281 duration_ms=219 decision=already_scheduled
+76.61 E1 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=224 decision=already_scheduled
+76.66 E4 ECHO replay onset_index=5008512 ms=300 gain=64.00
+76.78 E1 ECHO replay onset_index=5812992 ms=300 gain=64.00
+76.78 E5 ECHO replay onset_index=4504704 ms=300 gain=64.00
+76.84 E2 ECHO clap valid=1 attack_ms=54 strength=1646 duration_ms=96 decision=already_scheduled
+77.01 E2 ECHO replay onset_index=5339648 ms=300 gain=64.00
+78.10 E5 ECHO clap valid=1 attack_ms=16 strength=12216 duration_ms=171 decision=consumed_pattern
+78.10 E2 ECHO clap valid=1 attack_ms=5 strength=32767 duration_ms=176 decision=rest_level
+78.10 E4 ECHO clap valid=1 attack_ms=16 strength=15801 duration_ms=181 decision=consumed_pattern
+78.16 E1 ECHO clap valid=1 attack_ms=5 strength=32321 duration_ms=192 decision=consumed_pattern
+78.56 E1 ECHO replay onset_index=5860976 ms=300 gain=64.00
+78.56 E5 ECHO replay onset_index=4547968 ms=300 gain=64.00
+78.67 E4 ECHO replay onset_index=5051152 ms=300 gain=64.00
+79.91 E2 ECHO clap valid=1 attack_ms=42 strength=3282 duration_ms=91 decision=resting
+79.91 E1 ECHO clap valid=1 attack_ms=38 strength=3667 duration_ms=106 decision=consumed_pattern
+79.96 E2 ECHO clap valid=1 attack_ms=10 strength=1087 duration_ms=32 decision=resting
+79.96 E1 ECHO clap valid=1 attack_ms=5 strength=1041 duration_ms=21 decision=already_scheduled
+80.60 E1 ECHO replay onset_index=5906048 ms=300 gain=64.00
+81.61 E2 ECHO clap valid=1 attack_ms=11 strength=849 duration_ms=6 decision=consumed_pattern
+81.67 E1 ECHO clap valid=1 attack_ms=5 strength=1630 duration_ms=11 decision=consumed_pattern
+81.67 E2 ECHO clap valid=1 attack_ms=11 strength=2581 duration_ms=16 decision=already_scheduled
+81.74 E2 ECHO clap valid=1 attack_ms=5 strength=1141 duration_ms=6 decision=already_scheduled
+82.11 E1 ECHO replay onset_index=5949568 ms=300 gain=64.00
+82.47 E2 ECHO replay onset_index=5463808 ms=300 gain=64.00
+82.64 E1 ECHO clap valid=1 attack_ms=26 strength=1544 duration_ms=32 decision=refractory_after_emit
+82.69 E4 ECHO clap valid=1 attack_ms=6 strength=1354 duration_ms=16 decision=consumed_pattern
+83.28 E4 ECHO replay onset_index=5164416 ms=300 gain=64.00
+83.51 E2 ECHO clap valid=1 attack_ms=32 strength=2282 duration_ms=117 decision=consumed_pattern
+83.51 E1 ECHO clap valid=1 attack_ms=38 strength=2463 duration_ms=155 decision=consumed_pattern
+84.12 E1 ECHO replay onset_index=5991424 ms=300 gain=64.00
+84.36 E2 ECHO replay onset_index=5507448 ms=300 gain=64.00
+84.71 E5 ECHO clap valid=1 attack_ms=32 strength=5363 duration_ms=272 decision=consumed_pattern
+84.71 E4 ECHO clap valid=1 attack_ms=53 strength=10709 duration_ms=294 decision=consumed_pattern
+85.19 E4 ECHO replay onset_index=5206904 ms=300 gain=64.00
+85.37 E5 ECHO replay onset_index=4703856 ms=300 gain=64.00
+85.85 E4 ECHO clap valid=1 attack_ms=16 strength=1140 duration_ms=59 decision=consumed_pattern
+86.07 E5 ECHO clap valid=1 attack_ms=22 strength=1242 duration_ms=5 decision=consumed_pattern
+86.07 E4 ECHO clap valid=1 attack_ms=10 strength=812 duration_ms=6 decision=already_scheduled
+86.14 E4 ECHO clap valid=1 attack_ms=21 strength=851 duration_ms=5 decision=already_scheduled
+86.14 E2 ECHO clap valid=1 attack_ms=10 strength=844 duration_ms=6 decision=consumed_pattern
+86.25 E5 ECHO clap valid=1 attack_ms=11 strength=804 duration_ms=5 decision=already_scheduled
+86.32 E4 ECHO replay onset_index=5239808 ms=300 gain=64.00
+86.50 E5 ECHO clap valid=1 attack_ms=16 strength=3994 duration_ms=123 decision=already_scheduled
+86.57 E1 ECHO clap valid=1 attack_ms=32 strength=5426 duration_ms=192 decision=consumed_pattern
+86.62 E2 ECHO clap valid=1 attack_ms=64 strength=4359 duration_ms=192 decision=already_scheduled
+86.62 E5 ECHO replay onset_index=4742016 ms=300 gain=64.00
+86.68 E2 ECHO clap valid=1 attack_ms=5 strength=873 duration_ms=5 decision=already_scheduled
+86.73 E2 ECHO clap valid=1 attack_ms=6 strength=1298 duration_ms=5 decision=already_scheduled
+86.85 E2 ECHO replay onset_index=5572864 ms=300 gain=64.00
+86.98 E1 ECHO replay onset_index=6064112 ms=300 gain=64.00
+87.89 E1 ECHO clap valid=1 attack_ms=16 strength=995 duration_ms=32 decision=consumed_pattern
+87.89 E2 ECHO clap valid=1 attack_ms=11 strength=1076 duration_ms=5 decision=consumed_pattern
+87.94 E4 ECHO clap valid=1 attack_ms=11 strength=1171 duration_ms=70 decision=consumed_pattern
+87.94 E5 ECHO clap valid=1 attack_ms=27 strength=1520 duration_ms=106 decision=consumed_pattern
+87.94 E2 ECHO clap valid=1 attack_ms=16 strength=948 duration_ms=5 decision=already_scheduled
+88.00 E5 ECHO clap valid=1 attack_ms=27 strength=957 duration_ms=5 decision=already_scheduled
+88.07 E5 ECHO clap valid=1 attack_ms=16 strength=873 duration_ms=6 decision=already_scheduled
+88.38 E1 ECHO replay onset_index=6098816 ms=300 gain=64.00
+88.43 E4 ECHO replay onset_index=5289080 ms=300 gain=64.00
+88.50 E2 ECHO replay onset_index=5614464 ms=300 gain=64.00
+88.50 E5 ECHO replay onset_index=4785024 ms=300 gain=64.00
+90.24 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=325876736 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40411 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20372916 audio.deficit_s=5.6 audio.level=275 audio.level_max=31178 audio.us_per_sample=14.08 audio.block_us_max=3416 audio.baseline=-36.9 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178784 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20372916 audio.last_sample_ms=20372908 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+90.24 E3 
+90.24 E3 RB ERR unknown_command
+90.24 E3 NET sent seq=33029 target=* text=RB STATUS
+90.42 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=325876736 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40411 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20372919 audio.deficit_s=5.6 audio.level=275 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=-36.9 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178784 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20372919 audio.last_sample_ms=20372908 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+90.42 E3 
+90.42 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+90.42 E3 NET reply from=E5 seq=33029 done parts=1
+90.42 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+90.42 E3 NET reply from=E1 seq=33029 done parts=1
+90.42 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+90.42 E3 NET reply from=E4 seq=33029 done parts=1
+90.42 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+90.48 E3 NET reply from=E2 seq=33029 done parts=1
+90.48 E2 ECHO clap valid=1 attack_ms=11 strength=1241 duration_ms=10 decision=consumed_pattern
+90.65 E2 ECHO replay onset_index=5669376 ms=300 gain=64.00
+94.52 E1 ECHO status node=E1 uptime_s=261 window_s=260 rate_hz=24000 measured_mhz=23999992 samples=6258816 dropped_bufs=18 dropped_total=18 passes=260336 pass_us_mean=69 pass_us_max=38504 block_us_max=5222 env_peak=311649 tone=0 free_heap=773
+94.52 E5 ECHO status node=E5 uptime_s=206 window_s=206 rate_hz=24000 measured_mhz=23999968 samples=4945664 dropped_bufs=18 dropped_total=18 passes=205690 pass_us_mean=69 pass_us_max=37498 block_us_max=5223 env_peak=1264304 tone=0 free_heap=76
+94.58 E4 ECHO status node=E4 uptime_s=227 window_s=227 rate_hz=24000 measured_mhz=23999992 samples=5448960 dropped_bufs=18 dropped_total=18 passes=226639 pass_us_mean=69 pass_us_max=41491 block_us_max=5223 env_peak=1688257 tone=0 free_heap=77
+94.58 E2 ECHO status node=E2 uptime_s=240 window_s=240 rate_hz=24000 measured_mhz=23999968 samples=5774464 dropped_bufs=18 dropped_total=18 passes=240163 pass_us_mean=69 pass_us_max=39492 block_us_max=5230 env_peak=788373 tone=0 free_heap=773
+94.58 E2 ECHO clap valid=1 attack_ms=5 strength=2061 duration_ms=5 decision=consumed_pattern
+94.65 E2 ECHO clap valid=1 attack_ms=5 strength=910 duration_ms=6 decision=already_scheduled
+95.18 E2 ECHO replay onset_index=5774720 ms=300 gain=64.00
+105.24 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=326116864 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40441 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20387922 audio.deficit_s=5.6 audio.level=83 audio.level_max=846 audio.us_per_sample=14.03 audio.block_us_max=1876 audio.baseline=8.0 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178797 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20387922 audio.last_sample_ms=20387916 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+105.24 E3 
+105.24 E3 RB ERR unknown_command
+105.24 E3 NET sent seq=33033 target=* text=RB STATUS
+105.43 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=326116864 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40441 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20387925 audio.deficit_s=5.6 audio.level=83 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=8.0 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178797 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20387925 audio.last_sample_ms=20387916 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+105.43 E3 
+105.43 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+105.43 E3 NET reply from=E5 seq=33033 done parts=1
+105.43 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+105.43 E3 NET reply from=E1 seq=33033 done parts=1
+105.43 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+105.43 E3 NET reply from=E2 seq=33033 done parts=1
+105.43 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+105.48 E3 NET reply from=E4 seq=33033 done parts=1
+114.52 E1 ECHO status node=E1 uptime_s=281 window_s=280 rate_hz=24000 measured_mhz=23999992 samples=6738816 dropped_bufs=18 dropped_total=18 passes=280336 pass_us_mean=69 pass_us_max=38504 block_us_max=5222 env_peak=3146 tone=0 free_heap=77324
+114.52 E2 ECHO status node=E2 uptime_s=260 window_s=260 rate_hz=24000 measured_mhz=23999992 samples=6254464 dropped_bufs=18 dropped_total=18 passes=260158 pass_us_mean=69 pass_us_max=39492 block_us_max=5230 env_peak=16492 tone=0 free_heap=7732
+114.52 E4 ECHO status node=E4 uptime_s=247 window_s=247 rate_hz=24000 measured_mhz=23999968 samples=5928960 dropped_bufs=18 dropped_total=18 passes=246639 pass_us_mean=68 pass_us_max=41491 block_us_max=5223 env_peak=4325 tone=0 free_heap=77044
+114.59 E5 ECHO status node=E5 uptime_s=226 window_s=226 rate_hz=24000 measured_mhz=23999992 samples=5425664 dropped_bufs=18 dropped_total=18 passes=225690 pass_us_mean=69 pass_us_max=37498 block_us_max=5223 env_peak=5829 tone=0 free_heap=76904
+114.59 E2 ECHO clap valid=1 attack_ms=6 strength=2054 duration_ms=5 decision=consumed_pattern
+114.65 E2 ECHO clap valid=1 attack_ms=5 strength=1490 duration_ms=6 decision=already_scheduled
+114.71 E2 ECHO clap valid=1 attack_ms=6 strength=1211 duration_ms=5 decision=already_scheduled
+115.17 E2 ECHO replay onset_index=6254592 ms=300 gain=64.00
+120.25 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=326356992 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40470 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20402928 audio.deficit_s=5.6 audio.level=7 audio.level_max=464 audio.us_per_sample=14.03 audio.block_us_max=1878 audio.baseline=-28.8 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178809 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20402928 audio.last_sample_ms=20402924 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+120.25 E3 
+120.25 E3 RB ERR unknown_command
+120.25 E3 NET sent seq=33037 target=* text=RB STATUS
+120.43 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=326356992 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40470 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20402931 audio.deficit_s=5.6 audio.level=7 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=-28.8 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178809 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20402931 audio.last_sample_ms=20402924 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+120.43 E3 
+120.43 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+120.43 E3 NET reply from=E1 seq=33037 done parts=1
+120.43 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+120.43 E3 NET reply from=E2 seq=33037 done parts=1
+120.43 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+120.43 E3 NET reply from=E4 seq=33037 done parts=1
+120.49 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+120.49 E3 NET reply from=E5 seq=33037 done parts=1
+134.49 E2 ECHO status node=E2 uptime_s=280 window_s=280 rate_hz=24000 measured_mhz=23999992 samples=6734464 dropped_bufs=18 dropped_total=18 passes=280153 pass_us_mean=69 pass_us_max=39492 block_us_max=5230 env_peak=16437 tone=0 free_heap=7732
+134.56 E5 ECHO status node=E5 uptime_s=246 window_s=246 rate_hz=24000 measured_mhz=23999968 samples=5905664 dropped_bufs=18 dropped_total=18 passes=245690 pass_us_mean=68 pass_us_max=37498 block_us_max=5223 env_peak=4516 tone=0 free_heap=76904
+134.56 E1 ECHO status node=E1 uptime_s=301 window_s=300 rate_hz=24000 measured_mhz=23999992 samples=7218816 dropped_bufs=18 dropped_total=18 passes=300336 pass_us_mean=69 pass_us_max=38504 block_us_max=5222 env_peak=3283 tone=0 free_heap=77324
+134.56 E4 ECHO status node=E4 uptime_s=267 window_s=267 rate_hz=24000 measured_mhz=23999992 samples=6408960 dropped_bufs=18 dropped_total=18 passes=266639 pass_us_mean=68 pass_us_max=41491 block_us_max=5223 env_peak=3160 tone=0 free_heap=77044
+134.56 E2 ECHO clap valid=1 attack_ms=6 strength=844 duration_ms=5 decision=consumed_pattern
+134.97 E2 ECHO replay onset_index=6734592 ms=300 gain=64.00
+135.27 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=326597120 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40500 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20417939 audio.deficit_s=5.6 audio.level=111 audio.level_max=453 audio.us_per_sample=14.03 audio.block_us_max=1879 audio.baseline=4.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178819 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20417939 audio.last_sample_ms=20417932 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+135.27 E3 
+135.27 E3 RB ERR unknown_command
+135.27 E3 NET sent seq=33041 target=* text=RB STATUS
+135.46 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=326597120 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40500 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20417942 audio.deficit_s=5.6 audio.level=111 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=4.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178819 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20417942 audio.last_sample_ms=20417932 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+135.46 E3 
+135.46 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+135.46 E3 NET reply from=E4 seq=33041 done parts=1
+135.46 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+135.46 E3 NET reply from=E1 seq=33041 done parts=1
+135.46 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+135.46 E3 NET reply from=E2 seq=33041 done parts=1
+135.46 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+135.46 E3 NET reply from=E5 seq=33041 done parts=1
+150.28 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=326837248 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40530 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20432946 audio.deficit_s=5.6 audio.level=49 audio.level_max=386 audio.us_per_sample=14.03 audio.block_us_max=1875 audio.baseline=-50.1 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178823 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20432946 audio.last_sample_ms=20432940 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+150.28 E3 
+150.28 E3 RB ERR unknown_command
+150.28 E3 NET sent seq=33045 target=* text=RB STATUS
+150.47 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=326837248 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40530 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20432949 audio.deficit_s=5.6 audio.level=49 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=-50.1 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178823 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20432949 audio.last_sample_ms=20432940 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+150.47 E3 
+150.47 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+150.47 E3 NET reply from=E1 seq=33045 done parts=1
+150.47 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+150.47 E3 NET reply from=E2 seq=33045 done parts=1
+150.47 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+150.47 E3 NET reply from=E5 seq=33045 done parts=1
+150.47 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+150.47 E3 NET reply from=E4 seq=33045 done parts=1
+154.48 E1 ECHO status node=E1 uptime_s=321 window_s=320 rate_hz=24000 measured_mhz=23999992 samples=7698816 dropped_bufs=18 dropped_total=18 passes=320336 pass_us_mean=68 pass_us_max=38504 block_us_max=5222 env_peak=4599 tone=0 free_heap=77324
+154.53 E4 ECHO status node=E4 uptime_s=287 window_s=287 rate_hz=24000 measured_mhz=23999992 samples=6888960 dropped_bufs=18 dropped_total=18 passes=286639 pass_us_mean=68 pass_us_max=41491 block_us_max=5223 env_peak=4331 tone=0 free_heap=77044
+154.53 E2 ECHO status node=E2 uptime_s=300 window_s=300 rate_hz=24000 measured_mhz=23999968 samples=7214464 dropped_bufs=18 dropped_total=18 passes=300148 pass_us_mean=69 pass_us_max=39492 block_us_max=5230 env_peak=13907 tone=0 free_heap=7732
+159.33 E5 ECHO clap valid=1 attack_ms=6 strength=1027 duration_ms=10 decision=consumed_pattern
+159.33 E1 ECHO clap valid=1 attack_ms=11 strength=1020 duration_ms=11 decision=consumed_pattern
+159.33 E4 ECHO clap valid=1 attack_ms=10 strength=976 duration_ms=32 decision=consumed_pattern
+159.89 E5 ECHO clap valid=1 attack_ms=16 strength=931 duration_ms=5 decision=already_scheduled
+159.96 E5 ECHO replay onset_index=6499968 ms=300 gain=64.00
+159.96 E1 ECHO clap valid=1 attack_ms=11 strength=935 duration_ms=37 decision=already_scheduled
+159.96 E4 ECHO clap valid=1 attack_ms=11 strength=1119 duration_ms=32 decision=already_scheduled
+160.08 E1 ECHO replay onset_index=7813120 ms=300 gain=64.00
+160.08 E2 ECHO clap valid=1 attack_ms=16 strength=897 duration_ms=43 decision=consumed_pattern
+160.14 E4 ECHO replay onset_index=7003264 ms=300 gain=64.00
+160.14 E2 ECHO clap valid=1 attack_ms=11 strength=1237 duration_ms=37 decision=already_scheduled
+160.21 E2 ECHO clap valid=1 attack_ms=5 strength=1812 duration_ms=6 decision=already_scheduled
+160.27 E2 ECHO clap valid=1 attack_ms=16 strength=1108 duration_ms=5 decision=already_scheduled
+160.58 E2 ECHO replay onset_index=7346432 ms=300 gain=64.00
+160.64 E5 ECHO clap valid=1 attack_ms=16 strength=822 duration_ms=32 decision=consumed_pattern
+161.12 E5 ECHO replay onset_index=6531328 ms=300 gain=64.00
+161.48 E1 ECHO clap valid=1 attack_ms=11 strength=910 duration_ms=43 decision=consumed_pattern
+161.48 E2 ECHO clap valid=1 attack_ms=27 strength=958 duration_ms=10 decision=consumed_pattern
+161.54 E2 ECHO clap valid=1 attack_ms=16 strength=984 duration_ms=5 decision=already_scheduled
+161.61 E2 ECHO clap valid=1 attack_ms=5 strength=958 duration_ms=6 decision=already_scheduled
+161.73 E5 ECHO clap valid=1 attack_ms=5 strength=851 duration_ms=38 decision=refractory_after_emit
+161.79 E5 ECHO clap valid=1 attack_ms=11 strength=1334 duration_ms=16 decision=consumed_pattern
+161.86 E2 ECHO clap valid=1 attack_ms=11 strength=1026 duration_ms=112 decision=already_scheduled
+161.92 E5 ECHO clap valid=1 attack_ms=16 strength=1388 duration_ms=54 decision=already_scheduled
+161.92 E1 ECHO clap valid=1 attack_ms=11 strength=1298 duration_ms=123 decision=already_scheduled
+161.92 E4 ECHO clap valid=1 attack_ms=16 strength=1200 duration_ms=128 decision=consumed_pattern
+161.98 E2 ECHO clap valid=1 attack_ms=11 strength=1135 duration_ms=5 decision=already_scheduled
+161.98 E1 ECHO clap valid=1 attack_ms=22 strength=1038 duration_ms=43 decision=already_scheduled
+161.98 E1 ECHO replay onset_index=7864960 ms=300 gain=64.00
+161.98 E4 ECHO clap valid=1 attack_ms=16 strength=911 duration_ms=5 decision=already_scheduled
+161.98 E2 ECHO replay onset_index=7380864 ms=300 gain=64.00
+162.23 E5 ECHO clap valid=1 attack_ms=43 strength=3321 duration_ms=144 decision=already_scheduled
+162.23 E4 ECHO clap valid=1 attack_ms=58 strength=2210 duration_ms=170 decision=already_scheduled
+162.29 E4 ECHO clap valid=1 attack_ms=11 strength=1256 duration_ms=37 decision=already_scheduled
+162.29 E5 ECHO clap valid=1 attack_ms=16 strength=1534 duration_ms=59 decision=already_scheduled
+162.42 E4 ECHO replay onset_index=7062664 ms=300 gain=64.00
+162.42 E5 ECHO clap valid=1 attack_ms=21 strength=1034 duration_ms=75 decision=already_scheduled
+162.48 E5 ECHO replay onset_index=6559360 ms=300 gain=64.00
+162.67 E1 ECHO clap valid=1 attack_ms=16 strength=834 duration_ms=6 decision=consumed_pattern
+162.67 E2 ECHO clap valid=1 attack_ms=16 strength=886 duration_ms=6 decision=consumed_pattern
+162.79 E1 ECHO clap valid=1 attack_ms=11 strength=1337 duration_ms=118 decision=already_scheduled
+162.79 E2 ECHO clap valid=1 attack_ms=11 strength=1896 duration_ms=112 decision=already_scheduled
+162.85 E2 ECHO clap valid=1 attack_ms=5 strength=1166 duration_ms=6 decision=already_scheduled
+162.91 E2 ECHO clap valid=1 attack_ms=6 strength=915 duration_ms=5 decision=already_scheduled
+163.03 E2 ECHO clap valid=1 attack_ms=5 strength=922 duration_ms=5 decision=already_scheduled
+163.09 E2 ECHO clap valid=1 attack_ms=5 strength=860 duration_ms=6 decision=already_scheduled
+163.09 E2 ECHO replay onset_index=7408768 ms=300 gain=64.00
+163.09 E1 ECHO replay onset_index=7893120 ms=300 gain=64.00
+163.15 E4 ECHO clap valid=1 attack_ms=11 strength=821 duration_ms=32 decision=consumed_pattern
+163.21 E5 ECHO clap valid=1 attack_ms=11 strength=902 duration_ms=64 decision=consumed_pattern
+163.64 E5 ECHO replay onset_index=6592264 ms=300 gain=64.00
+163.83 E4 ECHO replay onset_index=7095552 ms=300 gain=64.00
+163.95 E2 ECHO clap valid=1 attack_ms=64 strength=1232 duration_ms=54 decision=consumed_pattern
+164.01 E1 ECHO clap valid=1 attack_ms=53 strength=1323 duration_ms=112 decision=consumed_pattern
+164.20 E1 ECHO clap valid=1 attack_ms=48 strength=1917 duration_ms=144 decision=already_scheduled
+164.50 E2 ECHO replay onset_index=7439480 ms=300 gain=64.00
+164.62 E1 ECHO replay onset_index=7923720 ms=300 gain=64.00
+164.93 E5 ECHO clap valid=1 attack_ms=37 strength=4605 duration_ms=277 decision=consumed_pattern
+164.99 E5 ECHO clap valid=1 attack_ms=43 strength=1139 duration_ms=43 decision=already_scheduled
+164.99 E4 ECHO clap valid=1 attack_ms=16 strength=832 duration_ms=16 decision=consumed_pattern
+165.31 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=327077376 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40560 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20447954 audio.deficit_s=5.6 audio.level=37 audio.level_max=30922 audio.us_per_sample=14.04 audio.block_us_max=1878 audio.baseline=24.5 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178890 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20447954 audio.last_sample_ms=20447948 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+165.31 E3 
+165.31 E3 RB ERR unknown_command
+165.31 E3 NET sent seq=33049 target=* text=RB STATUS
+165.43 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=327077376 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40560 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20447957 audio.deficit_s=5.6 audio.level=37 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=24.5 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178890 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20447957 audio.last_sample_ms=20447948 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+165.43 E3 
+165.43 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+165.49 E3 NET reply from=E4 seq=33049 done parts=1
+165.49 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+165.49 E3 NET reply from=E1 seq=33049 done parts=1
+165.49 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+165.49 E3 NET reply from=E5 seq=33049 done parts=1
+165.49 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+165.49 E3 NET reply from=E2 seq=33049 done parts=1
+165.49 E2 ECHO clap valid=1 attack_ms=6 strength=1539 duration_ms=5 decision=consumed_pattern
+165.49 E4 ECHO replay onset_index=7140096 ms=300 gain=64.00
+165.49 E5 ECHO replay onset_index=6628344 ms=300 gain=64.00
+165.74 E2 ECHO replay onset_index=7470336 ms=300 gain=64.00
+171.47 E1 ECHO clap valid=1 attack_ms=11 strength=1376 duration_ms=16 decision=consumed_pattern
+171.47 E2 ECHO clap valid=1 attack_ms=11 strength=1401 duration_ms=10 decision=consumed_pattern
+171.89 E2 ECHO replay onset_index=7620480 ms=300 gain=64.00
+172.07 E1 ECHO replay onset_index=8104832 ms=300 gain=64.00
+173.19 E1 ECHO clap valid=1 attack_ms=16 strength=1865 duration_ms=6 decision=consumed_pattern
+173.19 E2 ECHO clap valid=1 attack_ms=16 strength=1132 duration_ms=6 decision=consumed_pattern
+173.32 E2 ECHO clap valid=1 attack_ms=6 strength=804 duration_ms=5 decision=already_scheduled
+173.55 E1 ECHO clap valid=1 attack_ms=5 strength=1413 duration_ms=11 decision=already_scheduled
+173.55 E2 ECHO clap valid=1 attack_ms=5 strength=1444 duration_ms=11 decision=already_scheduled
+173.61 E2 ECHO clap valid=1 attack_ms=5 strength=1040 duration_ms=6 decision=already_scheduled
+173.80 E2 ECHO replay onset_index=7662208 ms=300 gain=64.00
+173.80 E1 ECHO replay onset_index=8146560 ms=300 gain=64.00
+174.54 E5 ECHO status node=E5 uptime_s=286 window_s=286 rate_hz=24000 measured_mhz=23999992 samples=6865664 dropped_bufs=18 dropped_total=18 passes=285665 pass_us_mean=68 pass_us_max=37498 block_us_max=5223 env_peak=1277087 tone=0 free_heap=76
+174.54 E1 ECHO status node=E1 uptime_s=341 window_s=340 rate_hz=24000 measured_mhz=23999872 samples=8178816 dropped_bufs=18 dropped_total=18 passes=340306 pass_us_mean=68 pass_us_max=38504 block_us_max=5222 env_peak=187905 tone=0 free_heap=773
+174.54 E4 ECHO status node=E4 uptime_s=307 window_s=307 rate_hz=24000 measured_mhz=23999968 samples=7368960 dropped_bufs=18 dropped_total=18 passes=306619 pass_us_mean=68 pass_us_max=41491 block_us_max=5223 env_peak=258382 tone=0 free_heap=770
+174.85 E1 ECHO clap valid=1 attack_ms=11 strength=1475 duration_ms=10 decision=consumed_pattern
+175.41 E1 ECHO replay onset_index=8186240 ms=300 gain=64.00
+176.76 E1 ECHO clap valid=1 attack_ms=16 strength=910 duration_ms=6 decision=consumed_pattern
+177.07 E1 ECHO clap valid=1 attack_ms=21 strength=1037 duration_ms=16 decision=already_scheduled
+177.19 E1 ECHO replay onset_index=8231808 ms=300 gain=64.00
+180.30 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=327317504 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40589 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20462959 audio.deficit_s=5.6 audio.level=249 audio.level_max=29402 audio.us_per_sample=14.03 audio.block_us_max=1875 audio.baseline=77.7 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178918 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20462959 audio.last_sample_ms=20462956 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+180.30 E3 
+180.30 E3 RB ERR unknown_command
+180.30 E3 NET sent seq=33053 target=* text=RB STATUS
+180.48 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=327317504 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7684 i2s.max_backstep_us=9999 i2s.clock_corrections=40589 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20462962 audio.deficit_s=5.6 audio.level=249 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=77.7 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178918 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20462962 audio.last_sample_ms=20462956 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+180.48 E3 
+180.48 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+180.48 E3 NET reply from=E5 seq=33053 done parts=1
+180.48 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+180.48 E3 NET reply from=E2 seq=33053 done parts=1
+180.48 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+180.48 E3 NET reply from=E4 seq=33053 done parts=1
+180.48 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+180.48 E3 NET reply from=E1 seq=33053 done parts=1
+186.91 E1 ECHO clap valid=1 attack_ms=16 strength=2995 duration_ms=48 decision=consumed_pattern
+186.91 E2 ECHO clap valid=1 attack_ms=11 strength=1642 duration_ms=48 decision=consumed_pattern
+187.34 E1 ECHO replay onset_index=8474480 ms=300 gain=64.00
+187.46 E2 ECHO replay onset_index=7990280 ms=300 gain=64.00
+187.71 E4 ECHO clap valid=1 attack_ms=21 strength=2602 duration_ms=91 decision=consumed_pattern
+187.71 E5 ECHO clap valid=1 attack_ms=11 strength=2015 duration_ms=117 decision=consumed_pattern
+188.26 E5 ECHO replay onset_index=7179664 ms=300 gain=64.00
+188.26 E2 ECHO clap valid=1 attack_ms=5 strength=1273 duration_ms=32 decision=consumed_pattern
+188.33 E4 ECHO clap valid=1 attack_ms=16 strength=1459 duration_ms=32 decision=already_scheduled
+188.33 E1 ECHO clap valid=1 attack_ms=22 strength=1095 duration_ms=26 decision=consumed_pattern
+188.39 E2 ECHO clap valid=1 attack_ms=37 strength=1445 duration_ms=5 decision=already_scheduled
+188.39 E4 ECHO replay onset_index=7682816 ms=300 gain=64.00
+188.63 E2 ECHO clap valid=1 attack_ms=11 strength=835 duration_ms=27 decision=already_scheduled
+188.69 E2 ECHO replay onset_index=8023936 ms=300 gain=64.00
+188.75 E1 ECHO replay onset_index=8508416 ms=300 gain=64.00
+189.10 E5 ECHO clap valid=1 attack_ms=42 strength=7644 duration_ms=213 decision=consumed_pattern
+189.16 E4 ECHO clap valid=1 attack_ms=48 strength=8036 duration_ms=283 decision=consumed_pattern
+189.66 E5 ECHO replay onset_index=7211256 ms=300 gain=64.00
+189.84 E4 ECHO replay onset_index=7714048 ms=300 gain=64.00
+190.34 E1 ECHO clap valid=1 attack_ms=27 strength=825 duration_ms=5 decision=consumed_pattern
+190.78 E1 ECHO replay onset_index=8558080 ms=300 gain=64.00
+190.90 E4 ECHO clap valid=1 attack_ms=5 strength=1098 duration_ms=37 decision=consumed_pattern
+190.90 E5 ECHO clap valid=1 attack_ms=11 strength=2164 duration_ms=48 decision=consumed_pattern
+190.90 E2 ECHO clap valid=1 attack_ms=16 strength=1175 duration_ms=32 decision=consumed_pattern
+191.09 E5 ECHO clap valid=1 attack_ms=21 strength=1324 duration_ms=27 decision=already_scheduled
+191.15 E4 ECHO clap valid=1 attack_ms=11 strength=900 duration_ms=27 decision=already_scheduled
+191.21 E4 ECHO clap valid=1 attack_ms=16 strength=808 duration_ms=5 decision=already_scheduled
+191.27 E5 ECHO replay onset_index=7257456 ms=300 gain=64.00
+191.34 E4 ECHO replay onset_index=7760768 ms=300 gain=64.00
+191.40 E2 ECHO replay onset_index=8086784 ms=300 gain=64.00
+191.70 E1 ECHO clap valid=1 attack_ms=37 strength=958 duration_ms=59 decision=consumed_pattern
+191.87 E5 ECHO clap valid=1 attack_ms=10 strength=1030 duration_ms=6 decision=refractory_after_emit
+191.94 E5 ECHO clap valid=1 attack_ms=11 strength=951 duration_ms=5 decision=consumed_pattern
+192.11 E5 ECHO clap valid=1 attack_ms=11 strength=924 duration_ms=5 decision=already_scheduled
+192.17 E1 ECHO replay onset_index=8589696 ms=300 gain=64.00
+192.47 E5 ECHO replay onset_index=7283072 ms=300 gain=64.00
+194.50 E5 ECHO status node=E5 uptime_s=306 window_s=306 rate_hz=24000 measured_mhz=23999848 samples=7345664 dropped_bufs=18 dropped_total=18 passes=305645 pass_us_mean=68 pass_us_max=37498 block_us_max=5223 env_peak=1803892 tone=0 free_heap=76
+194.56 E2 ECHO status node=E2 uptime_s=340 window_s=340 rate_hz=24000 measured_mhz=23999992 samples=8174464 dropped_bufs=18 dropped_total=18 passes=340098 pass_us_mean=69 pass_us_max=39492 block_us_max=5230 env_peak=1198559 tone=0 free_heap=77
+194.56 E1 ECHO status node=E1 uptime_s=361 window_s=360 rate_hz=24000 measured_mhz=23999992 samples=8658816 dropped_bufs=18 dropped_total=18 passes=360276 pass_us_mean=68 pass_us_max=38504 block_us_max=5222 env_peak=227349 tone=0 free_heap=773
+194.56 E4 ECHO status node=E4 uptime_s=327 window_s=327 rate_hz=24000 measured_mhz=23999992 samples=7848960 dropped_bufs=18 dropped_total=18 passes=326604 pass_us_mean=68 pass_us_max=41491 block_us_max=5223 env_peak=1868350 tone=0 free_heap=77
+194.56 E2 ECHO clap valid=1 attack_ms=6 strength=2300 duration_ms=5 decision=consumed_pattern
+194.99 E2 ECHO replay onset_index=8174592 ms=300 gain=64.00
+195.31 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=327557504 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40619 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20477961 audio.deficit_s=5.6 audio.level=167 audio.level_max=31369 audio.us_per_sample=14.04 audio.block_us_max=1877 audio.baseline=67.3 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178964 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20477961 audio.last_sample_ms=20477956 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+195.31 E3 
+195.31 E3 RB ERR unknown_command
+195.31 E3 NET sent seq=33057 target=* text=RB STATUS
+195.43 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=327557504 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40619 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20477964 audio.deficit_s=5.6 audio.level=167 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=67.3 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=178964 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20477964 audio.last_sample_ms=20477956 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+195.43 E3 
+195.50 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+195.50 E3 NET reply from=E2 seq=33057 done parts=1
+195.50 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+195.50 E3 NET reply from=E4 seq=33057 done parts=1
+195.50 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+195.50 E3 NET reply from=E1 seq=33057 done parts=1
+195.50 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+195.50 E3 NET reply from=E5 seq=33057 done parts=1
+198.20 E2 ECHO clap valid=1 attack_ms=5 strength=926 duration_ms=6 decision=consumed_pattern
+198.26 E2 ECHO clap valid=1 attack_ms=6 strength=805 duration_ms=5 decision=already_scheduled
+198.32 E2 ECHO clap valid=1 attack_ms=27 strength=1532 duration_ms=5 decision=already_scheduled
+198.61 E2 ECHO replay onset_index=8262016 ms=300 gain=64.00
+198.80 E5 ECHO clap valid=1 attack_ms=21 strength=2096 duration_ms=32 decision=consumed_pattern
+198.80 E4 ECHO clap valid=1 attack_ms=11 strength=2749 duration_ms=80 decision=consumed_pattern
+198.86 E4 ECHO clap valid=1 attack_ms=5 strength=849 duration_ms=6 decision=already_scheduled
+198.93 E1 ECHO clap valid=1 attack_ms=16 strength=4436 duration_ms=165 decision=consumed_pattern
+199.30 E5 ECHO replay onset_index=7447296 ms=300 gain=64.00
+199.36 E4 ECHO replay onset_index=7950344 ms=300 gain=64.00
+199.42 E1 ECHO replay onset_index=8760056 ms=300 gain=64.00
+199.67 E2 ECHO clap valid=1 attack_ms=37 strength=13005 duration_ms=262 decision=resting
+199.74 E2 ECHO clap valid=1 attack_ms=5 strength=1318 duration_ms=6 decision=resting
+199.80 E2 ECHO clap valid=1 attack_ms=6 strength=837 duration_ms=5 decision=resting
+199.93 E2 ECHO clap valid=1 attack_ms=5 strength=1295 duration_ms=5 decision=resting
+201.76 E4 ECHO clap valid=1 attack_ms=5 strength=1850 duration_ms=48 decision=consumed_pattern
+201.76 E2 ECHO clap valid=1 attack_ms=22 strength=1528 duration_ms=53 decision=consumed_pattern
+201.76 E5 ECHO clap valid=1 attack_ms=11 strength=2751 duration_ms=48 decision=consumed_pattern
+201.76 E1 ECHO clap valid=1 attack_ms=16 strength=2685 duration_ms=59 decision=consumed_pattern
+202.13 E1 ECHO replay onset_index=8831104 ms=300 gain=64.00
+202.25 E4 ECHO replay onset_index=8021128 ms=300 gain=64.00
+202.25 E5 ECHO replay onset_index=7517960 ms=300 gain=64.00
+202.44 E2 ECHO replay onset_index=8346640 ms=300 gain=64.00
+205.85 E1 ECHO clap valid=1 attack_ms=11 strength=808 duration_ms=21 decision=consumed_pattern
+205.85 E5 ECHO clap valid=1 attack_ms=21 strength=963 duration_ms=16 decision=consumed_pattern
+206.29 E1 ECHO replay onset_index=8929280 ms=300 gain=64.00
+206.29 E5 ECHO replay onset_index=7616384 ms=300 gain=64.00
+206.48 E2 ECHO clap valid=1 attack_ms=21 strength=1621 duration_ms=58 decision=consumed_pattern
+206.48 E4 ECHO clap valid=1 attack_ms=27 strength=2338 duration_ms=86 decision=consumed_pattern
+206.59 E4 ECHO clap valid=1 attack_ms=27 strength=1223 duration_ms=21 decision=already_scheduled
+206.66 E2 ECHO clap valid=1 attack_ms=10 strength=809 duration_ms=5 decision=already_scheduled
+206.97 E2 ECHO replay onset_index=8459904 ms=300 gain=64.00
+206.97 E4 ECHO replay onset_index=8134136 ms=300 gain=64.00
+207.33 E5 ECHO clap valid=1 attack_ms=48 strength=10315 duration_ms=282 decision=consumed_pattern
+207.75 E5 ECHO replay onset_index=7646976 ms=300 gain=64.00
+208.25 E2 ECHO clap valid=1 attack_ms=11 strength=1013 duration_ms=21 decision=consumed_pattern
+208.31 E2 ECHO clap valid=1 attack_ms=16 strength=876 duration_ms=6 decision=already_scheduled
+209.04 E2 ECHO replay onset_index=8503040 ms=300 gain=64.00
+209.34 E4 ECHO clap valid=1 attack_ms=59 strength=6849 duration_ms=176 decision=consumed_pattern
+209.34 E1 ECHO clap valid=1 attack_ms=21 strength=7664 duration_ms=192 decision=consumed_pattern
+209.78 E4 ECHO replay onset_index=8199792 ms=300 gain=64.00
+209.78 E1 ECHO replay onset_index=9009672 ms=300 gain=64.00
+210.28 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=327797504 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40649 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20492963 audio.deficit_s=5.6 audio.level=999 audio.level_max=32227 audio.us_per_sample=14.04 audio.block_us_max=1876 audio.baseline=1.8 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179010 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20492963 audio.last_sample_ms=20492956 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+210.28 E3 
+210.28 E3 RB ERR unknown_command
+210.28 E3 NET sent seq=33061 target=* text=RB STATUS
+210.46 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=327797504 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40649 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20492966 audio.deficit_s=5.6 audio.level=999 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=1.8 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179010 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20492966 audio.last_sample_ms=20492956 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+210.46 E3 
+210.46 E2 ECHO clap valid=1 attack_ms=42 strength=31180 duration_ms=272 decision=consumed_pattern
+210.46 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+210.46 E3 NET reply from=E1 seq=33061 done parts=1
+210.46 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+210.46 E3 NET reply from=E4 seq=33061 done parts=1
+210.52 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+210.52 E3 NET reply from=E2 seq=33061 done parts=1
+210.52 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+210.52 E3 NET reply from=E5 seq=33061 done parts=1
+210.52 E5 ECHO clap valid=1 attack_ms=26 strength=19133 duration_ms=288 decision=consumed_pattern
+210.52 E2 ECHO clap valid=1 attack_ms=16 strength=1233 duration_ms=38 decision=already_scheduled
+210.59 E5 ECHO replay onset_index=7714184 ms=300 gain=64.00
+210.71 E2 ECHO replay onset_index=8542704 ms=300 gain=64.00
+214.49 E1 ECHO status node=E1 uptime_s=381 window_s=380 rate_hz=24000 measured_mhz=23999968 samples=9138816 dropped_bufs=18 dropped_total=18 passes=380256 pass_us_mean=68 pass_us_max=38504 block_us_max=5222 env_peak=293160 tone=0 free_heap=773
+214.55 E4 ECHO status node=E4 uptime_s=347 window_s=347 rate_hz=24000 measured_mhz=23999992 samples=8328960 dropped_bufs=18 dropped_total=18 passes=346584 pass_us_mean=68 pass_us_max=41491 block_us_max=5223 env_peak=1496416 tone=0 free_heap=77
+214.55 E2 ECHO clap valid=1 attack_ms=6 strength=1641 duration_ms=5 decision=consumed_pattern
+215.37 E2 ECHO replay onset_index=8654592 ms=300 gain=64.00
+220.27 E4 ECHO clap valid=1 attack_ms=11 strength=2294 duration_ms=59 decision=consumed_pattern
+220.27 E1 ECHO clap valid=1 attack_ms=11 strength=1764 duration_ms=58 decision=consumed_pattern
+220.27 E5 ECHO clap valid=1 attack_ms=11 strength=1267 duration_ms=59 decision=consumed_pattern
+220.65 E5 ECHO clap valid=1 attack_ms=16 strength=853 duration_ms=5 decision=already_scheduled
+220.71 E4 ECHO replay onset_index=8465792 ms=300 gain=64.00
+220.71 E1 ECHO replay onset_index=9275648 ms=300 gain=64.00
+220.83 E5 ECHO replay onset_index=7962496 ms=300 gain=64.00
+220.89 E2 ECHO clap valid=1 attack_ms=16 strength=1912 duration_ms=69 decision=already_scheduled
+220.95 E2 ECHO replay onset_index=8791416 ms=300 gain=64.00
+222.75 E2 ECHO clap valid=1 attack_ms=10 strength=3109 duration_ms=192 decision=consumed_pattern
+222.75 E1 ECHO clap valid=1 attack_ms=10 strength=3101 duration_ms=213 decision=consumed_pattern
+222.81 E4 ECHO clap valid=1 attack_ms=32 strength=4145 duration_ms=251 decision=consumed_pattern
+222.81 E5 ECHO clap valid=1 attack_ms=11 strength=3551 duration_ms=256 decision=consumed_pattern
+222.87 E5 ECHO clap valid=1 attack_ms=11 strength=838 duration_ms=5 decision=already_scheduled
+223.12 E1 ECHO replay onset_index=9331064 ms=300 gain=64.00
+223.22 E5 ECHO replay onset_index=8017928 ms=300 gain=64.00
+223.22 E4 ECHO replay onset_index=8521216 ms=300 gain=64.00
+223.41 E2 ECHO replay onset_index=8846832 ms=300 gain=64.00
+225.31 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328037632 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40679 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20507968 audio.deficit_s=5.6 audio.level=170 audio.level_max=32725 audio.us_per_sample=14.03 audio.block_us_max=1870 audio.baseline=21.7 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179041 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20507968 audio.last_sample_ms=20507964 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+225.31 E3 
+225.31 E3 RB ERR unknown_command
+225.31 E3 NET sent seq=33065 target=* text=RB STATUS
+225.49 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328037632 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40679 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20507971 audio.deficit_s=5.6 audio.level=170 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=21.7 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179041 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20507971 audio.last_sample_ms=20507964 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+225.49 E3 
+225.49 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+225.49 E3 NET reply from=E2 seq=33065 done parts=1
+225.49 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+225.49 E3 NET reply from=E5 seq=33065 done parts=1
+225.49 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+225.49 E3 NET reply from=E4 seq=33065 done parts=1
+225.49 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+225.49 E3 NET reply from=E1 seq=33065 done parts=1
+225.49 E1 ECHO clap valid=1 attack_ms=11 strength=1628 duration_ms=42 decision=consumed_pattern
+225.55 E5 ECHO clap valid=1 attack_ms=16 strength=1139 duration_ms=38 decision=consumed_pattern
+225.55 E4 ECHO clap valid=1 attack_ms=16 strength=1593 duration_ms=48 decision=consumed_pattern
+225.55 E2 ECHO clap valid=1 attack_ms=16 strength=1227 duration_ms=37 decision=consumed_pattern
+225.68 E1 ECHO replay onset_index=9396224 ms=300 gain=64.00
+225.68 E4 ECHO replay onset_index=8586248 ms=300 gain=64.00
+225.68 E5 ECHO replay onset_index=8083072 ms=300 gain=64.00
+225.80 E2 ECHO replay onset_index=8911872 ms=300 gain=64.00
+228.81 E1 ECHO clap valid=1 attack_ms=5 strength=957 duration_ms=6 decision=consumed_pattern
+229.35 E1 ECHO replay onset_index=9480576 ms=300 gain=64.00
+234.49 E1 ECHO status node=E1 uptime_s=401 window_s=400 rate_hz=24000 measured_mhz=23999992 samples=9618816 dropped_bufs=18 dropped_total=18 passes=400236 pass_us_mean=68 pass_us_max=38504 block_us_max=5222 env_peak=53081 tone=0 free_heap=7732
+234.55 E4 ECHO status node=E4 uptime_s=367 window_s=367 rate_hz=24000 measured_mhz=23999968 samples=8808960 dropped_bufs=18 dropped_total=18 passes=366568 pass_us_mean=68 pass_us_max=41491 block_us_max=5402 env_peak=291002 tone=0 free_heap=770
+234.55 E5 ECHO status node=E5 uptime_s=346 window_s=346 rate_hz=24000 measured_mhz=23999968 samples=8305664 dropped_bufs=18 dropped_total=18 passes=345605 pass_us_mean=68 pass_us_max=37498 block_us_max=5223 env_peak=358873 tone=0 free_heap=769
+234.55 E2 ECHO status node=E2 uptime_s=380 window_s=380 rate_hz=24000 measured_mhz=23999992 samples=9134464 dropped_bufs=18 dropped_total=18 passes=380047 pass_us_mean=69 pass_us_max=39492 block_us_max=5408 env_peak=269078 tone=0 free_heap=773
+234.55 E2 ECHO clap valid=1 attack_ms=5 strength=2002 duration_ms=5 decision=consumed_pattern
+234.61 E2 ECHO clap valid=1 attack_ms=5 strength=933 duration_ms=6 decision=already_scheduled
+234.80 E2 ECHO clap valid=1 attack_ms=21 strength=1393 duration_ms=42 decision=already_scheduled
+234.86 E4 ECHO clap valid=1 attack_ms=21 strength=2115 duration_ms=48 decision=consumed_pattern
+234.86 E1 ECHO clap valid=1 attack_ms=16 strength=1386 duration_ms=64 decision=consumed_pattern
+234.86 E5 ECHO clap valid=1 attack_ms=27 strength=1683 duration_ms=64 decision=consumed_pattern
+235.11 E2 ECHO replay onset_index=9134720 ms=300 gain=64.00
+235.24 E4 ECHO replay onset_index=8815112 ms=300 gain=64.00
+235.30 E5 ECHO replay onset_index=8311920 ms=300 gain=64.00
+235.55 E1 ECHO clap valid=1 attack_ms=21 strength=3547 duration_ms=192 decision=already_scheduled
+235.67 E1 ECHO replay onset_index=9624944 ms=300 gain=64.00
+240.29 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328277632 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40709 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20522972 audio.deficit_s=5.6 audio.level=270 audio.level_max=6860 audio.us_per_sample=14.03 audio.block_us_max=1869 audio.baseline=-59.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179070 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20522972 audio.last_sample_ms=20522964 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+240.29 E3 
+240.29 E3 RB ERR unknown_command
+240.29 E3 NET sent seq=33069 target=* text=RB STATUS
+240.47 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328277632 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40709 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20522975 audio.deficit_s=5.6 audio.level=270 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=-59.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179070 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20522975 audio.last_sample_ms=20522964 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+240.47 E3 
+240.47 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+240.47 E3 NET reply from=E2 seq=33069 done parts=1
+240.47 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+240.47 E3 NET reply from=E4 seq=33069 done parts=1
+240.47 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+240.47 E3 NET reply from=E1 seq=33069 done parts=1
+240.54 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+240.54 E3 NET reply from=E5 seq=33069 done parts=1
+240.54 E2 ECHO clap valid=1 attack_ms=5 strength=995 duration_ms=5 decision=consumed_pattern
+240.85 E2 ECHO replay onset_index=9270656 ms=300 gain=64.00
+244.23 E2 ECHO clap valid=1 attack_ms=48 strength=2904 duration_ms=107 decision=consumed_pattern
+244.29 E4 ECHO clap valid=1 attack_ms=54 strength=1821 duration_ms=171 decision=consumed_pattern
+244.29 E1 ECHO clap valid=1 attack_ms=32 strength=2294 duration_ms=213 decision=consumed_pattern
+244.35 E5 ECHO clap valid=1 attack_ms=32 strength=1601 duration_ms=219 decision=consumed_pattern
+244.35 E2 ECHO clap valid=1 attack_ms=10 strength=834 duration_ms=6 decision=already_scheduled
+244.41 E1 ECHO clap valid=1 attack_ms=11 strength=853 duration_ms=5 decision=already_scheduled
+244.41 E2 ECHO clap valid=1 attack_ms=6 strength=860 duration_ms=5 decision=already_scheduled
+244.79 E4 ECHO replay onset_index=9039104 ms=300 gain=64.00
+244.79 E5 ECHO replay onset_index=8536064 ms=300 gain=64.00
+244.85 E2 ECHO replay onset_index=9364480 ms=300 gain=64.00
+245.23 E1 ECHO replay onset_index=9848976 ms=300 gain=64.00
+246.09 E5 ECHO clap valid=1 attack_ms=32 strength=1259 duration_ms=106 decision=consumed_pattern
+246.09 E1 ECHO clap valid=1 attack_ms=58 strength=1994 duration_ms=112 decision=consumed_pattern
+246.09 E4 ECHO clap valid=1 attack_ms=42 strength=1458 duration_ms=112 decision=consumed_pattern
+246.09 E2 ECHO clap valid=1 attack_ms=64 strength=1793 duration_ms=138 decision=consumed_pattern
+246.15 E2 ECHO clap valid=1 attack_ms=11 strength=828 duration_ms=5 decision=already_scheduled
+246.27 E2 ECHO clap valid=1 attack_ms=5 strength=910 duration_ms=6 decision=already_scheduled
+246.51 E5 ECHO replay onset_index=8580480 ms=300 gain=64.00
+246.51 E4 ECHO replay onset_index=9083760 ms=300 gain=64.00
+246.51 E1 ECHO replay onset_index=9893512 ms=300 gain=64.00
+246.70 E2 ECHO replay onset_index=9409152 ms=300 gain=64.00
+247.12 E4 ECHO clap valid=1 attack_ms=48 strength=1905 duration_ms=91 decision=consumed_pattern
+247.54 E4 ECHO replay onset_index=9109504 ms=300 gain=64.00
+247.72 E5 ECHO clap valid=1 attack_ms=21 strength=1419 duration_ms=54 decision=consumed_pattern
+247.72 E2 ECHO clap valid=1 attack_ms=42 strength=1342 duration_ms=91 decision=consumed_pattern
+247.72 E1 ECHO clap valid=1 attack_ms=48 strength=1552 duration_ms=107 decision=consumed_pattern
+248.07 E5 ECHO replay onset_index=8620664 ms=300 gain=64.00
+248.14 E2 ECHO replay onset_index=9449344 ms=300 gain=64.00
+248.44 E1 ECHO replay onset_index=9933696 ms=300 gain=64.00
+251.11 E2 ECHO clap valid=1 attack_ms=16 strength=1214 duration_ms=16 decision=consumed_pattern
+251.17 E1 ECHO clap valid=1 attack_ms=22 strength=1017 duration_ms=58 decision=consumed_pattern
+251.59 E2 ECHO replay onset_index=9532032 ms=300 gain=64.00
+251.78 E4 ECHO clap valid=1 attack_ms=37 strength=1014 duration_ms=53 decision=consumed_pattern
+251.96 E1 ECHO replay onset_index=10016384 ms=300 gain=64.00
+252.08 E5 ECHO clap valid=1 attack_ms=16 strength=1221 duration_ms=6 decision=consumed_pattern
+252.20 E4 ECHO replay onset_index=9222160 ms=300 gain=64.00
+252.51 E5 ECHO clap valid=1 attack_ms=38 strength=3933 duration_ms=203 decision=already_scheduled
+252.56 E2 ECHO clap valid=1 attack_ms=53 strength=4567 duration_ms=256 decision=consumed_pattern
+252.56 E5 ECHO clap valid=1 attack_ms=10 strength=968 duration_ms=11 decision=already_scheduled
+252.74 E5 ECHO clap valid=1 attack_ms=43 strength=2434 duration_ms=149 decision=already_scheduled
+252.79 E2 ECHO clap valid=1 attack_ms=26 strength=4586 duration_ms=182 decision=already_scheduled
+252.79 E1 ECHO clap valid=1 attack_ms=59 strength=4872 duration_ms=187 decision=consumed_pattern
+252.97 E5 ECHO replay onset_index=8726272 ms=300 gain=64.00
+253.03 E2 ECHO replay onset_index=9561456 ms=300 gain=64.00
+253.22 E1 ECHO replay onset_index=10052736 ms=300 gain=64.00
+253.53 E5 ECHO clap valid=1 attack_ms=11 strength=1477 duration_ms=69 decision=refractory_after_emit
+254.37 E2 ECHO clap valid=1 attack_ms=48 strength=1591 duration_ms=54 decision=consumed_pattern
+254.37 E4 ECHO clap valid=1 attack_ms=38 strength=1304 duration_ms=90 decision=rest_level
+254.37 E1 ECHO clap valid=1 attack_ms=32 strength=1953 duration_ms=96 decision=consumed_pattern
+254.37 E5 ECHO clap valid=1 attack_ms=38 strength=1365 duration_ms=85 decision=consumed_pattern
+254.50 E4 ECHO status node=E4 uptime_s=387 window_s=387 rate_hz=24000 measured_mhz=23999992 samples=9288960 dropped_bufs=18 dropped_total=18 passes=386543 pass_us_mean=68 pass_us_max=41491 block_us_max=5402 env_peak=288297 tone=0 free_heap=770
+254.56 E2 ECHO status node=E2 uptime_s=400 window_s=400 rate_hz=24000 measured_mhz=23999992 samples=9614464 dropped_bufs=18 dropped_total=18 passes=400012 pass_us_mean=69 pass_us_max=39492 block_us_max=5408 env_peak=1630240 tone=0 free_heap=77
+254.56 E1 ECHO status node=E1 uptime_s=421 window_s=420 rate_hz=24000 measured_mhz=23999992 samples=10098816 dropped_bufs=18 dropped_total=18 passes=420206 pass_us_mean=69 pass_us_max=38504 block_us_max=5222 env_peak=133357 tone=0 free_heap=77
+254.74 E5 ECHO clap valid=1 attack_ms=53 strength=4530 duration_ms=186 decision=already_scheduled
+254.74 E2 ECHO clap valid=1 attack_ms=27 strength=3221 duration_ms=208 decision=already_scheduled
+254.81 E2 ECHO replay onset_index=9609080 ms=300 gain=64.00
+254.81 E4 ECHO clap valid=1 attack_ms=32 strength=3563 duration_ms=267 decision=resting
+254.81 E5 ECHO clap valid=1 attack_ms=16 strength=857 duration_ms=48 decision=already_scheduled
+254.87 E1 ECHO clap valid=1 attack_ms=43 strength=3652 duration_ms=298 decision=already_scheduled
+254.87 E1 ECHO replay onset_index=10093424 ms=300 gain=64.00
+254.93 E5 ECHO replay onset_index=8780560 ms=300 gain=64.00
+255.31 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328517760 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40738 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20537978 audio.deficit_s=5.6 audio.level=3272 audio.level_max=32620 audio.us_per_sample=14.04 audio.block_us_max=1889 audio.baseline=-28.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179137 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20537978 audio.last_sample_ms=20537972 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+255.31 E3 
+255.31 E3 RB ERR unknown_command
+255.31 E3 NET sent seq=33073 target=* text=RB STATUS
+255.50 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328517760 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40738 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20537981 audio.deficit_s=5.6 audio.level=3272 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=-28.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179137 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20537981 audio.last_sample_ms=20537972 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+255.50 E3 
+255.50 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+255.50 E3 NET reply from=E2 seq=33073 done parts=1
+255.50 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+255.50 E3 NET reply from=E1 seq=33073 done parts=1
+255.50 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+255.50 E3 NET reply from=E5 seq=33073 done parts=1
+255.50 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+255.50 E3 NET reply from=E4 seq=33073 done parts=1
+255.56 E4 ECHO clap valid=1 attack_ms=27 strength=989 duration_ms=22 decision=resting
+255.75 E2 ECHO clap valid=1 attack_ms=37 strength=1164 duration_ms=54 decision=consumed_pattern
+255.88 E1 ECHO clap valid=1 attack_ms=37 strength=1561 duration_ms=160 decision=consumed_pattern
+255.88 E2 ECHO clap valid=1 attack_ms=6 strength=822 duration_ms=5 decision=already_scheduled
+256.13 E4 ECHO clap valid=1 attack_ms=32 strength=3792 duration_ms=197 decision=resting
+256.19 E2 ECHO replay onset_index=9642872 ms=300 gain=64.00
+256.19 E5 ECHO clap valid=1 attack_ms=69 strength=4362 duration_ms=213 decision=consumed_pattern
+256.49 E5 ECHO clap valid=1 attack_ms=37 strength=6899 duration_ms=246 decision=already_scheduled
+256.49 E4 ECHO clap valid=1 attack_ms=32 strength=7394 duration_ms=245 decision=consumed_pattern
+256.49 E1 ECHO replay onset_index=10127112 ms=300 gain=64.00
+256.86 E5 ECHO replay onset_index=8820496 ms=300 gain=64.00
+257.21 E1 ECHO clap valid=1 attack_ms=64 strength=7835 duration_ms=224 decision=consumed_pattern
+257.21 E2 ECHO clap valid=1 attack_ms=42 strength=4914 duration_ms=224 decision=resting
+257.21 E4 ECHO clap valid=1 attack_ms=59 strength=7078 duration_ms=251 decision=already_scheduled
+257.39 E4 ECHO replay onset_index=9329784 ms=300 gain=64.00
+257.81 E2 ECHO clap valid=1 attack_ms=48 strength=7851 duration_ms=293 decision=resting
+257.81 E5 ECHO clap valid=1 attack_ms=21 strength=8341 duration_ms=299 decision=consumed_pattern
+257.87 E1 ECHO replay onset_index=10157936 ms=300 gain=64.00
+258.29 E5 ECHO replay onset_index=8857984 ms=300 gain=64.00
+259.36 E1 ECHO clap valid=1 attack_ms=22 strength=927 duration_ms=21 decision=consumed_pattern
+259.36 E5 ECHO clap valid=1 attack_ms=5 strength=875 duration_ms=22 decision=consumed_pattern
+259.86 E1 ECHO replay onset_index=10214528 ms=300 gain=64.00
+259.99 E5 ECHO replay onset_index=8901376 ms=300 gain=64.00
+262.86 E1 ECHO clap valid=1 attack_ms=5 strength=848 duration_ms=5 decision=consumed_pattern
+263.28 E1 ECHO replay onset_index=10297984 ms=300 gain=64.00
+264.31 E5 ECHO clap valid=1 attack_ms=22 strength=837 duration_ms=5 decision=consumed_pattern
+264.37 E1 ECHO clap valid=1 attack_ms=64 strength=1472 duration_ms=133 decision=consumed_pattern
+264.68 E5 ECHO replay onset_index=9019008 ms=300 gain=64.00
+264.87 E1 ECHO replay onset_index=10332048 ms=300 gain=64.00
+265.25 E2 ECHO clap valid=1 attack_ms=21 strength=1561 duration_ms=171 decision=consumed_pattern
+265.25 E4 ECHO clap valid=1 attack_ms=27 strength=2142 duration_ms=176 decision=consumed_pattern
+265.69 E2 ECHO replay onset_index=9867392 ms=300 gain=64.00
+266.00 E4 ECHO replay onset_index=9541872 ms=300 gain=64.00
+266.06 E1 ECHO clap valid=1 attack_ms=37 strength=1930 duration_ms=250 decision=consumed_pattern
+266.30 E5 ECHO clap valid=1 attack_ms=48 strength=1899 duration_ms=186 decision=consumed_pattern
+266.55 E1 ECHO replay onset_index=10369280 ms=300 gain=64.00
+266.85 E5 ECHO replay onset_index=9063552 ms=300 gain=64.00
+268.00 E4 ECHO clap valid=1 attack_ms=5 strength=980 duration_ms=32 decision=consumed_pattern
+268.06 E2 ECHO clap valid=1 attack_ms=11 strength=1974 duration_ms=43 decision=consumed_pattern
+268.06 E1 ECHO clap valid=1 attack_ms=5 strength=1854 duration_ms=53 decision=consumed_pattern
+268.06 E5 ECHO clap valid=1 attack_ms=10 strength=868 duration_ms=32 decision=consumed_pattern
+268.42 E4 ECHO replay onset_index=9612160 ms=300 gain=64.00
+268.53 E2 ECHO replay onset_index=9937664 ms=300 gain=64.00
+268.59 E1 ECHO replay onset_index=10422008 ms=300 gain=64.00
+268.65 E5 ECHO clap valid=1 attack_ms=21 strength=2125 duration_ms=53 decision=already_scheduled
+268.65 E5 ECHO replay onset_index=9109120 ms=300 gain=64.00
+270.33 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328757888 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40768 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20552983 audio.deficit_s=5.6 audio.level=242 audio.level_max=25690 audio.us_per_sample=14.05 audio.block_us_max=1880 audio.baseline=-11.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179187 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20552983 audio.last_sample_ms=20552980 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+270.33 E3 
+270.33 E3 RB ERR unknown_command
+270.33 E3 NET sent seq=33077 target=* text=RB STATUS
+270.45 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328757888 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999999 i2s.overflows=105 i2s.backsteps=7692 i2s.max_backstep_us=9999 i2s.clock_corrections=40768 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20552986 audio.deficit_s=5.6 audio.level=242 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=-11.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179187 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20552986 audio.last_sample_ms=20552980 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+270.45 E3 
+270.51 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+270.51 E3 NET reply from=E1 seq=33077 done parts=1
+270.51 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+270.51 E3 NET reply from=E5 seq=33077 done parts=1
+270.51 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+270.51 E3 NET reply from=E2 seq=33077 done parts=1
+270.51 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+270.51 E3 NET reply from=E4 seq=33077 done parts=1
+270.70 E1 ECHO clap valid=1 attack_ms=21 strength=2736 duration_ms=53 decision=consumed_pattern
+270.70 E5 ECHO clap valid=1 attack_ms=27 strength=1395 duration_ms=26 decision=consumed_pattern
+270.70 E4 ECHO clap valid=1 attack_ms=26 strength=1963 duration_ms=64 decision=consumed_pattern
+271.18 E4 ECHO replay onset_index=9676168 ms=300 gain=64.00
+271.24 E1 ECHO replay onset_index=10486032 ms=300 gain=64.00
+271.31 E5 ECHO replay onset_index=9173376 ms=300 gain=64.00
+271.37 E2 ECHO clap valid=1 attack_ms=37 strength=1815 duration_ms=91 decision=consumed_pattern
+272.27 E2 ECHO replay onset_index=10017280 ms=300 gain=64.00
+272.65 E5 ECHO clap valid=1 attack_ms=48 strength=4255 duration_ms=288 decision=consumed_pattern
+273.07 E5 ECHO replay onset_index=9214320 ms=300 gain=64.00
+273.94 E5 ECHO clap valid=1 attack_ms=16 strength=3412 duration_ms=128 decision=consumed_pattern
+273.94 E4 ECHO clap valid=1 attack_ms=16 strength=3469 duration_ms=134 decision=consumed_pattern
+274.00 E2 ECHO clap valid=1 attack_ms=21 strength=2345 duration_ms=134 decision=consumed_pattern
+274.00 E1 ECHO clap valid=1 attack_ms=21 strength=3402 duration_ms=155 decision=consumed_pattern
+274.36 E2 ECHO replay onset_index=10077944 ms=300 gain=64.00
+274.36 E1 ECHO replay onset_index=10562176 ms=300 gain=64.00
+274.42 E5 ECHO replay onset_index=9249032 ms=300 gain=64.00
+274.48 E4 ECHO replay onset_index=9752312 ms=300 gain=64.00
+274.48 E1 ECHO status node=E1 uptime_s=441 window_s=440 rate_hz=24000 measured_mhz=23999968 samples=10578816 dropped_bufs=18 dropped_total=18 passes=440155 pass_us_mean=69 pass_us_max=38504 block_us_max=5402 env_peak=173873 tone=0 free_heap=77
+274.54 E2 ECHO status node=E2 uptime_s=420 window_s=420 rate_hz=24000 measured_mhz=23999992 samples=10094464 dropped_bufs=18 dropped_total=18 passes=419982 pass_us_mean=69 pass_us_max=39492 block_us_max=5408 env_peak=457336 tone=0 free_heap=77
+274.54 E5 ECHO status node=E5 uptime_s=386 window_s=386 rate_hz=24000 measured_mhz=23999992 samples=9265664 dropped_bufs=18 dropped_total=18 passes=385528 pass_us_mean=68 pass_us_max=37498 block_us_max=5400 env_peak=1273292 tone=0 free_heap=76
+274.54 E4 ECHO status node=E4 uptime_s=407 window_s=407 rate_hz=24000 measured_mhz=23999992 samples=9768960 dropped_bufs=18 dropped_total=18 passes=406517 pass_us_mean=68 pass_us_max=41491 block_us_max=5402 env_peak=638403 tone=0 free_heap=770
+277.05 E4 ECHO clap valid=1 attack_ms=10 strength=933 duration_ms=22 decision=consumed_pattern
+277.66 E4 ECHO replay onset_index=9827968 ms=300 gain=64.00
+278.01 E2 ECHO clap valid=1 attack_ms=22 strength=1809 duration_ms=112 decision=consumed_pattern
+278.07 E5 ECHO clap valid=1 attack_ms=11 strength=1811 duration_ms=181 decision=consumed_pattern
+278.07 E1 ECHO clap valid=1 attack_ms=11 strength=3125 duration_ms=197 decision=consumed_pattern
+278.43 E2 ECHO replay onset_index=10175240 ms=300 gain=64.00
+278.49 E5 ECHO replay onset_index=9346296 ms=300 gain=64.00
+278.55 E1 ECHO replay onset_index=10659320 ms=300 gain=64.00
+278.86 E4 ECHO clap valid=1 attack_ms=26 strength=5467 duration_ms=277 decision=consumed_pattern
+279.53 E4 ECHO replay onset_index=9865848 ms=300 gain=64.00
+280.16 E1 ECHO clap valid=1 attack_ms=11 strength=1599 duration_ms=53 decision=consumed_pattern
+280.22 E2 ECHO clap valid=1 attack_ms=16 strength=863 duration_ms=6 decision=consumed_pattern
+280.34 E1 ECHO clap valid=1 attack_ms=16 strength=1079 duration_ms=5 decision=already_scheduled
+280.66 E1 ECHO replay onset_index=10713360 ms=300 gain=64.00
+280.66 E2 ECHO replay onset_index=10229632 ms=300 gain=64.00
+285.32 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328998016 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999984 i2s.overflows=105 i2s.backsteps=7699 i2s.max_backstep_us=9999 i2s.clock_corrections=40798 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20567996 audio.deficit_s=5.6 audio.level=2 audio.level_max=26305 audio.us_per_sample=14.04 audio.block_us_max=1879 audio.baseline=-24.5 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179228 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20567996 audio.last_sample_ms=20567988 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+285.32 E3 
+285.32 E3 RB ERR unknown_command
+285.32 E3 NET sent seq=33081 target=* text=RB STATUS
+285.51 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=328998016 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999984 i2s.overflows=105 i2s.backsteps=7699 i2s.max_backstep_us=9999 i2s.clock_corrections=40798 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20567999 audio.deficit_s=5.6 audio.level=2 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=-24.5 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179228 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20567999 audio.last_sample_ms=20567988 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+285.51 E3 
+285.51 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+285.51 E3 NET reply from=E4 seq=33081 done parts=1
+285.51 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+285.51 E3 NET reply from=E1 seq=33081 done parts=1
+285.51 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+285.51 E3 NET reply from=E2 seq=33081 done parts=1
+285.51 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+285.51 E3 NET reply from=E5 seq=33081 done parts=1
+285.57 E2 ECHO clap valid=1 attack_ms=5 strength=1347 duration_ms=6 decision=consumed_pattern
+285.57 E2 ECHO clap valid=1 attack_ms=6 strength=946 duration_ms=5 decision=already_scheduled
+285.57 E2 ECHO clap valid=1 attack_ms=5 strength=1049 duration_ms=5 decision=already_scheduled
+285.57 E2 ECHO clap valid=1 attack_ms=5 strength=1112 duration_ms=6 decision=already_scheduled
+285.57 E2 ECHO clap valid=1 attack_ms=6 strength=922 duration_ms=5 decision=already_scheduled
+286.07 E2 ECHO replay onset_index=10351360 ms=300 gain=64.00
+294.52 E1 ECHO status node=E1 uptime_s=461 window_s=460 rate_hz=24000 measured_mhz=23999992 samples=11058816 dropped_bufs=18 dropped_total=18 passes=460145 pass_us_mean=69 pass_us_max=38504 block_us_max=5402 env_peak=133421 tone=0 free_heap=77
+294.52 E2 ECHO status node=E2 uptime_s=440 window_s=440 rate_hz=24000 measured_mhz=23999992 samples=10574464 dropped_bufs=18 dropped_total=18 passes=439967 pass_us_mean=69 pass_us_max=39492 block_us_max=5408 env_peak=237202 tone=0 free_heap=77
+294.52 E5 ECHO status node=E5 uptime_s=406 window_s=406 rate_hz=24000 measured_mhz=23999992 samples=9745664 dropped_bufs=18 dropped_total=18 passes=405523 pass_us_mean=68 pass_us_max=37498 block_us_max=5400 env_peak=265611 tone=0 free_heap=769
+294.59 E4 ECHO status node=E4 uptime_s=427 window_s=427 rate_hz=24000 measured_mhz=23999968 samples=10248960 dropped_bufs=18 dropped_total=18 passes=426506 pass_us_mean=68 pass_us_max=41491 block_us_max=5402 env_peak=1319248 tone=0 free_heap=7
+294.59 E2 ECHO clap valid=1 attack_ms=6 strength=1551 duration_ms=5 decision=consumed_pattern
+295.09 E2 ECHO replay onset_index=10574592 ms=300 gain=64.00
+296.88 E1 ECHO clap valid=1 attack_ms=5 strength=1659 duration_ms=22 decision=consumed_pattern
+297.00 E1 ECHO clap valid=1 attack_ms=11 strength=1293 duration_ms=107 decision=already_scheduled
+297.31 E1 ECHO replay onset_index=11114496 ms=300 gain=64.00
+297.43 E4 ECHO clap valid=1 attack_ms=11 strength=1687 duration_ms=90 decision=consumed_pattern
+297.43 E2 ECHO clap valid=1 attack_ms=21 strength=2223 duration_ms=118 decision=consumed_pattern
+297.43 E5 ECHO clap valid=1 attack_ms=43 strength=2022 duration_ms=112 decision=consumed_pattern
+297.49 E2 ECHO clap valid=1 attack_ms=21 strength=1590 duration_ms=22 decision=already_scheduled
+297.91 E5 ECHO replay onset_index=9813256 ms=300 gain=64.00
+297.91 E2 ECHO replay onset_index=10641656 ms=300 gain=64.00
+297.97 E4 ECHO replay onset_index=10316160 ms=300 gain=64.00
+298.28 E1 ECHO clap valid=1 attack_ms=58 strength=3770 duration_ms=240 decision=consumed_pattern
+298.70 E1 ECHO replay onset_index=11143048 ms=300 gain=64.00
+298.95 E2 ECHO clap valid=1 attack_ms=11 strength=810 duration_ms=5 decision=consumed_pattern
+299.43 E2 ECHO replay onset_index=10680192 ms=300 gain=64.00
+299.43 E1 ECHO clap valid=1 attack_ms=10 strength=1547 duration_ms=27 decision=consumed_pattern
+299.68 E1 ECHO clap valid=1 attack_ms=5 strength=1480 duration_ms=85 decision=already_scheduled
+299.86 E1 ECHO replay onset_index=11176320 ms=300 gain=64.00
+300.30 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=329238144 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999984 i2s.overflows=105 i2s.backsteps=7699 i2s.max_backstep_us=9999 i2s.clock_corrections=40828 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20582999 audio.deficit_s=5.6 audio.level=246 audio.level_max=8333 audio.us_per_sample=14.03 audio.block_us_max=1889 audio.baseline=26.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179261 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20582999 audio.last_sample_ms=20582996 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+300.30 E3 
+300.36 E3 RB ERR unknown_command
+300.36 E3 NET sent seq=33085 target=* text=RB STATUS
+300.49 E3 RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=contrast+amp+shape has_requirement=1 required_label=contrast behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 silent=1 output.phase=idle output.started=102 output.done=102 output.rejected=0 output.last_reject=none output.last_start_ms=20261871 output.last_done_ms=20262171 output.span_ms=295 band=2500-3500 hop_enabled=1 hop_rotation=2 hop_steps=5 hop_pulse_ms=15 hop_gap_ms=0 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=16 freq.update_period_ms=1.000 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=9 freq.packet_age_ms=0.562 i2s.samples_read=329238144 i2s.dropped_dma_buffers=105 i2s.clock_rate_mhz=15999984 i2s.overflows=105 i2s.backsteps=7699 i2s.max_backstep_us=9999 i2s.clock_corrections=40828 i2s.max_clock_correction_us=32000 i2s.read_errors=0 audio.uptime_ms=20583002 audio.deficit_s=5.6 audio.level=246 audio.level_max=0 audio.us_per_sample=0.00 audio.block_us_max=0 audio.baseline=26.6 heard.valid=23163 heard.strength_sum=210690897 net.started=1 net.rx=179261 net.tx_failed=0 heap.free=69160 heap.free_min=66976 detection.verdict_queue_overflows=0 loop.stack_free_min_bytes=13020 clock.now_ms=20583002 audio.last_sample_ms=20582996 behavior.suppress_armed=0 behavior.suppress_until_ms=0 behavior.suppressed_now=0 behavior.suppressed_samples=250002 chirp_active=0 field.patterns=0 behavior.resting=0 behavior.rest_until_ms=0 behavior.rests=0 behavior.level=0 behavior.declined=0 behavior.yielded=0 behavior.base_bin=0 behavior.base_heard=0 behavior.base_glides=0 behavior.base_scatters=0 behavior.base_wanders=0 behavior.last_rest=none behavior.blocked_resting=0 BUILD role=node git=0b989164 date=Nov  5 2026 time=14:24:20 version=0.4.0 board=damp
+300.49 E3 
+300.49 E1 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+300.49 E3 NET reply from=E1 seq=33085 done parts=1
+300.49 E4 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+300.49 E3 NET reply from=E4 seq=33085 done parts=1
+300.55 E5 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+300.55 E3 NET reply from=E5 seq=33085 done parts=1
+300.55 E2 NET ERR not_in_echo (OTA, ECHO STATUS, NET PING)
+300.55 E3 NET reply from=E2 seq=33085 done parts=1
+300.55 E2 ECHO clap valid=1 attack_ms=5 strength=1908 duration_ms=5 decision=consumed_pattern
+300.55 E2 ECHO clap valid=1 attack_ms=5 strength=1174 duration_ms=6 decision=already_scheduled
+300.55 E2 ECHO clap valid=1 attack_ms=6 strength=997 duration_ms=5 decision=already_scheduled
+300.55 E1 ECHO clap valid=1 attack_ms=6 strength=2522 duration_ms=16 decision=resting
+300.62 E2 ECHO clap valid=1 attack_ms=5 strength=858 duration_ms=5 decision=already_scheduled
+300.62 E2 ECHO clap valid=1 attack_ms=5 strength=1346 duration_ms=6 decision=already_scheduled
+300.62 E2 ECHO clap valid=1 attack_ms=6 strength=1219 duration_ms=5 decision=already_scheduled
+300.68 E2 ECHO clap valid=1 attack_ms=5 strength=1472 duration_ms=5 decision=already_scheduled
+300.79 E1 ECHO clap valid=1 attack_ms=37 strength=2207 duration_ms=48 decision=resting
+301.80 E1 ECHO clap valid=1 attack_ms=11 strength=1787 duration_ms=43 decision=resting
+301.80 E2 ECHO clap valid=1 attack_ms=22 strength=1053 duration_ms=11 decision=consumed_pattern
+301.86 E2 ECHO clap valid=1 attack_ms=6 strength=1270 duration_ms=5 decision=already_scheduled
+302.23 E2 ECHO replay onset_index=10748032 ms=300 gain=64.00

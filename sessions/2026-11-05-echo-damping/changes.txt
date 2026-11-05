@@ -1,0 +1,6 @@
+20:36:17 echo.damping_pct 60 on E1, E2, E4, E5 via E0 (owner listening); 25 before
+20:38:38 echo.damping_pct back to 25 (owner: distortion still there at 60)
+20:50:28 owner away; all five back to the Node image by radio from E0 (E3 silent listener), then radio_log 20 for a ten-minute log completeness measurement
+20:52:44 node.radio_log 20 (live, not saved) on all five for the completeness measurement, ten minutes
+20:56:43 RB log full on all (after the reflash they were minimal: no verdict lines in the first 212 s of log20.log)
+21:08:34 node.radio_log 20 saved on all five (log complete, no dropped buffers)

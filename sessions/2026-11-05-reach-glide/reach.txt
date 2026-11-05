@@ -1,0 +1,7 @@
+start silent: {'E1': False, 'E2': False, 'E3': True, 'E4': False, 'E5': False}
+E1 called 10 x: E2 0/10 (mean 0)  E3 0/10 (mean 0)  E4 0/10 (mean 0)  E5 0/10 (mean 0)
+E2 called 10 x: E1 10/10 (mean 8133)  E3 10/10 (mean 10402)  E4 10/10 (mean 8191)  E5 10/10 (mean 5720)
+E3 called 10 x: E1 8/10 (mean 4442)  E2 10/10 (mean 6448)  E4 10/10 (mean 13088)  E5 10/10 (mean 7529)
+E4 called 10 x: E1 7/10 (mean 5872)  E2 10/10 (mean 3830)  E3 10/10 (mean 11638)  E5 10/10 (mean 8419)
+E5 called 10 x: E1 0/10 (mean 0)  E2 0/10 (mean 0)  E3 0/10 (mean 0)  E4 10/10 (mean 8893)
+restored: silent only on ['E3'], idle on

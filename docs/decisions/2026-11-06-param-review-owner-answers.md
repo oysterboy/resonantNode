@@ -38,6 +38,13 @@ start_chance_pct, base_scatter_bins, band_per_node, band_range_*. The code field
 `answerJitterMs`, `idleEnabled`); only the public paths change. Bench session headers and logs before 2026-11-06 name
 the old paths; read them through this table. `PARAM SET` with an old path answers `unknown_param`.
 
+## Built 2026-11-06
+
+- `behavior.plateau_pct` (1..100, default 100 = the old full ramp): the chance reaches 100 % after that share of the
+  ramp's steps (chain_length - 1), certain beyond. Only with `start_chance_pct` > 0.
+- `behavior.spread_shrinks` (bool, default 1): the answer spread shrinks with the level; 0 keeps the full window.
+- `chain_length 0` still ignores the spread (automaton off). The first test levels: `test_behavior_level`.
+
 ## Why
 
 - Renaming is cheap on the board (the store keys by id), costs only old tools and bench headers, and is done for

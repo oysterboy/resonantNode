@@ -278,6 +278,42 @@ void test_start_chance_sets_the_first_answer() {
     TEST_ASSERT_EQUAL_UINT32(0, d.level(2000));  // no level with L 0
 }
 
+// The plateau: with a start chance of 30 % and the ramp ending half way (L 6: 3 of the 5 steps), the chance is 100 %
+// from the fourth train on, where the full ramp would still ask for less.
+void test_plateau_ends_the_ramp_early() {
+    BehaviorGateConfig cfg = automaton();
+    cfg.startChancePct = 30;
+    cfg.plateauPct = 50;
+    ResonantBehavior b = make(cfg);
+    script({299, 299, 299, 299, 0, 0});  // the draw is over 100 x 3; the bars are 90, 160, 230, then 300 = certain
+    TEST_ASSERT_EQUAL(Decision::DeclinedByLevel, b.handleOccurrenceVerdict(train(1000), 1000));
+    TEST_ASSERT_EQUAL(Decision::DeclinedByLevel, b.handleOccurrenceVerdict(train(1100), 1100));
+    TEST_ASSERT_EQUAL(Decision::DeclinedByLevel, b.handleOccurrenceVerdict(train(1200), 1200));
+    TEST_ASSERT_EQUAL(Decision::ConsumedPattern, b.handleOccurrenceVerdict(train(1300), 1300));
+    // 100 (the default) is the old full ramp: at level 4 the bar is 30 x 5 + 70 x 3 = 360 of 500.
+    BehaviorGateConfig full = automaton();
+    full.startChancePct = 30;
+    ResonantBehavior c = make(full);
+    script({499, 499, 499, 499});
+    for (unsigned long t = 1000; t < 1400; t += 100) {
+        TEST_ASSERT_EQUAL(Decision::DeclinedByLevel, c.handleOccurrenceVerdict(train(t), t));
+    }
+}
+
+// spread_shrinks off: the window stays at the full answer_spread_ms whatever the level.
+void test_spread_without_shrink_keeps_the_full_window() {
+    BehaviorGateConfig cfg = automaton();
+    cfg.answerJitterShrinks = false;
+    ResonantBehavior b = make(cfg);
+    script({0, 2900, 0});  // answer at level 1; 2900 fits the full 3000 window (it would wrap at 2501 shrunk)
+    b.handleOccurrenceVerdict(train(1000), 1000);
+    b.update(1000);
+    b.update(1000 + 100 + 2899);
+    TEST_ASSERT_FALSE(b.shouldStartChirp());
+    b.update(1000 + 100 + 2900);
+    TEST_ASSERT_TRUE(b.shouldStartChirp());
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_trains_counted_by_duration);
@@ -293,5 +329,7 @@ int main(int, char**) {
     RUN_TEST(test_own_emission_raises_the_level_and_can_rest);
     RUN_TEST(test_off_reproduces_the_fixed_answer);
     RUN_TEST(test_start_chance_sets_the_first_answer);
+    RUN_TEST(test_plateau_ends_the_ramp_early);
+    RUN_TEST(test_spread_without_shrink_keeps_the_full_window);
     return UNITY_END();
 }

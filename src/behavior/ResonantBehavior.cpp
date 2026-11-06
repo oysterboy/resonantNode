@@ -103,7 +103,11 @@ bool ResonantBehavior::drawUnderP() {
         if (_config.levelMax <= 1) {
             return _random(100U) < s;
         }
-        const uint32_t steps = _config.levelMax - 1U;
+        // The plateau shortens the ramp: it ends after ceil(steps x plateau / 100) steps, the chance stays 100 % beyond.
+        const uint32_t full = _config.levelMax - 1U;
+        const uint32_t plateau = _config.plateauPct < 1U ? 1U : (_config.plateauPct > 100U ? 100U : _config.plateauPct);
+        uint32_t steps = (full * plateau + 99U) / 100U;
+        steps = steps < 1U ? 1U : steps;
         const uint32_t above = _level.count > 1U ? (_level.count - 1U > steps ? steps : _level.count - 1U) : 0U;
         return _random(100U * steps) < s * steps + (100U - s) * above;
     }

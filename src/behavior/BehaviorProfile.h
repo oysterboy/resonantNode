@@ -52,9 +52,12 @@ struct BehaviorGateConfig {
     // set apart from the length (decisions/2026-11-05-start-chance-and-chain-length.md). 0 keeps
     // the rule above; with levelMax 0 it is a constant chance.
     uint32_t startChancePct = 0;
+    // Where the ramp ends: the chance reaches 100 % at this share of the way from level 1 to the top (100 = at the
+    // level before the top, 50 = half way, then a plateau of certain answers). Only with startChancePct > 0.
+    uint32_t plateauPct = 100;
     // The decision's named extra rule ("revisit when the ear wants each answer sooner"): the jitter window shrinks
     // with the level, jitter * (levelMax - level) / levelMax: a quiet node answers late, one near the top quickly
-    // (chosen 2026-10-30 after native-fieldsim). Not a param.
+    // (chosen 2026-10-30 after native-fieldsim). behavior.spread_shrinks.
     bool answerJitterShrinks = true;
     // BEH-009 (decisions/2026-10-29-wider-band-base-bin-per-node.md): on each own answer the base bin moves one bin
     // toward the base last heard (the glide), and at the automaton's rest it scatters to a random

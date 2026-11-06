@@ -182,6 +182,8 @@ enum class ParamId : uint16_t {
     Whisper_LevelBand,
     Whisper_TimbreCheck,
     Whisper_LowMaxDb,
+    Behavior_PlateauPct,
+    Behavior_SpreadShrinks,
 };
 
 }  // namespace param

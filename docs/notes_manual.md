@@ -97,7 +97,8 @@ detection.band_low_hz / band_high_hz / amp_medium / contrast_medium
 detection.shape_*         the shape inspector (DET-015): look-back, tail, run and step limits (8 params;
                           its level is detection.scalar_release_threshold)
 behavior.*                wait, refractory, self-suppression, idle call, rest, the level automaton
-                          (chain_length, level_fall_ms, answer_spread_ms, start_chance_pct since 2026-11-05; the Behavior paths were renamed on
+                          (chain_length, level_fall_ms, answer_spread_ms, start_chance_pct since 2026-11-05, plateau_pct and spread_shrinks
+                          since 2026-11-06; the Behavior paths were renamed on
                           2026-11-06, the old-to-new table is in decisions/2026-11-06-param-review-owner-answers.md)
 output.*                  hop train, idle announce, silent (8 params)
 node.radio_enabled        ESP-NOW on or off
@@ -439,7 +440,7 @@ The first four are verdict fields, decided in detection. `behaviorEligible` is d
 `src/behavior/ResonantBehavior.*` from the verdict and the behavior timing (wait, refractory,
 self-suppression, idle, rest) and, since 2026-10-30 (BEH-008), the level automaton: a level counted from the
 verdicts (FieldState is no longer read); a heard train is answered with p = level / chain_length (counted first)
-after the 100 ms wait plus a random window of answer_spread_ms that shrinks as the level rises
+after the 100 ms wait plus a random window of answer_spread_ms that shrinks as the level rises (`behavior.spread_shrinks 0` keeps it full)
 (`decision=declined_by_level` otherwise), a pending answer is dropped with 1 - p when another train comes
 (`yielded`), at chain_length the node rests (`rest_level`). RB STATUS shows `behavior.level`, `behavior.declined`,
 `behavior.yielded`. `behavior.chain_length 0` switches it off. Since 2026-10-30 (BEH-009) Behavior also owns the

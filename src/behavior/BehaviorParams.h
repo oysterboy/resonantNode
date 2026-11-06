@@ -45,6 +45,12 @@ inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
     // answering the first train in a quiet field, rising evenly to 100 % at the top; 0 = 1 / level_max.
     registry.addUInt32(ParamId::Behavior_StartChancePct, ModuleId::Behavior, "behavior.start_chance_pct",
                        &b.startChancePct, 0U, 100U);
+    // The ramp's end (a plateau of certain answers from this share of the way up) and the spread's shrink with the
+    // level (decisions/2026-11-06-param-review-owner-answers.md, 4); chain_length 0 still ignores the spread.
+    registry.addUInt32(ParamId::Behavior_PlateauPct, ModuleId::Behavior, "behavior.plateau_pct", &b.plateauPct, 1U,
+                       100U);
+    registry.addBool(ParamId::Behavior_SpreadShrinks, ModuleId::Behavior, "behavior.spread_shrinks",
+                     &b.answerJitterShrinks);
     // The base bin (BEH-009) and a band per node (decisions/2026-10-31-bands-per-node.md): the scatter's range, the
     // mode, the range it moves on.
     registry.addUInt32(ParamId::Behavior_BaseScatterBins, ModuleId::Behavior, "behavior.base_scatter_bins",

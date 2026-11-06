@@ -11,6 +11,9 @@ pass closes, and a pass doc quotes them dated, the way bench numbers are quoted.
   E  headers with an owns / does-not block, among the headers that define a class or struct
   F  mean CCN, src/modes vs the rest
   G  lines over 120 columns (clang-format leaves string literals)
+  H  comment lines that age: naming a step number / naming the owner. CLAUDE.md, "Comments in code": a comment
+     says why; a step number ages out when the steps file is archived and renumbered, and "owner" is not a reason.
+     Path-like names (2026-11-01-step22.1-...) do not count, nor do an issue or a dated review reference.
 
 lizard is pinned so CI and the developer's machine count alike: `python -m pip install lizard==1.24.3`.
 
@@ -68,6 +71,29 @@ def strip_code(text):
 
 CLASS_HEAD = re.compile(r"(?<!enum )\b(class|struct)\s+(\w+)\s*(?:final\s*)?(?::[^{;()]*)?\{")
 NOT_MEMBER = re.compile(r"^(using|typedef|friend|static|enum|struct|class|union|template)\b")
+
+
+STEP_NUMBER = re.compile(r"(?<![-\w/.])steps? ?\d", re.I)
+OWNER_WORD = re.compile(r"\bowner", re.I)
+
+
+def comment_lines(text):
+    """The comment text of every line: after // , and the lines of /* */ blocks (strings are not parsed)."""
+    out, in_block = [], False
+    for line in text.splitlines():
+        if in_block:
+            end = line.find("*/")
+            out.append(line if end < 0 else line[:end])
+            in_block = end < 0
+            continue
+        slash, star = line.find("//"), line.find("/*")
+        if star >= 0 and (slash < 0 or star < slash):
+            end = line.find("*/", star + 2)
+            out.append(line[star + 2:] if end < 0 else line[star + 2:end])
+            in_block = end < 0
+        elif slash >= 0:
+            out.append(line[slash + 2:])
+    return out
 
 
 def match_brace(code, i):
@@ -135,8 +161,12 @@ def main():
     all_classes = []
     headers_with_class = headers_with_owns = 0
     long_lines = 0
+    aging = [0, 0]
     for p in files:
         text = open(p, encoding="utf-8", errors="replace").read()
+        for note in comment_lines(text):
+            aging[0] += 1 if STEP_NUMBER.search(note) else 0
+            aging[1] += 1 if OWNER_WORD.search(note) else 0
         long_lines += sum(1 for line in text.splitlines() if len(line) > 120)
         code = strip_code(text)
         found = list(classes(p, code))
@@ -162,6 +192,7 @@ def main():
     print("E  headers with an owns block              %d of %d" % (headers_with_owns, headers_with_class))
     print("F  mean CCN, src/modes vs the rest         %.1f / %.1f" % (mean(modes), mean(rest)))
     print("G  lines over 120                          %d" % long_lines)
+    print("H  comment lines: step number / owner      %d / %d" % tuple(aging))
     print()
     print("tail (CCN > 20 or NLOC > 100), by CCN:")
     tail = sorted({(p, f.start_line): (p, f) for p, f in a + [x for x in b if x[1].nloc > 100]}.values(),

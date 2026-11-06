@@ -85,7 +85,7 @@ the port yourself. Host (no board,
 NODE-006): `pio test -e native-test` replays recorded captures through the
 real detection chain (`test/test_replay_corpus`, fixtures under
 `test/fixtures`), `pio test -e native-test-behavior` runs the host unit
-suites (27 on 2026-11-05, the list in `platformio.ini`: among them
+suites (28 on 2026-11-06, the list in `platformio.ini`: among them
 `test_behavior_refractory` two-node reply, `test_shipped_profile`,
 `test_param_registry` incl. persistence, `test_echo_detection`), and
 `pio run -e native-replay` builds the replay command

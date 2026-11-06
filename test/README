@@ -1,16 +1,18 @@
 Unit tests (PlatformIO / Unity). Which env runs which suite is set in platformio.ini (test_ignore,
 test_filter; tools/ci/test_lists.py checks that they agree), and CLAUDE.md "Build & verify" has the
-commands. As of 2026-10-28:
+commands. The lists in platformio.ini are the truth; this file only says what each env is for:
 
   pio test -e native-test              test_replay_corpus: recorded captures through the real detection chain
-  pio test -e native-test-behavior     test_behavior_refractory, test_behavior_rest, test_shipped_profile,
-                                       test_param_registry, test_sound_output, test_net_frame,
-                                       test_shape_inspector, test_text_parse, test_param_commands,
-                                       test_timebase, test_analyzer_pass_rules, test_ring_queue,
-                                       test_report_printers
+  pio test -e native-test-behavior     the host unit suites: each includes the src/ files it tests itself,
+                                       no src build (test_filter in platformio.ini)
   pio test -e native-test-diag         test_detection_diagnostics (ANALYZER_MODE side channel)
   on-device (upload --without-testing, then reset and read the port):
                                        test_analyzer_pass_rules, test_timebase, test_shipped_profile
+                                       (they also run in native-test-behavior, so host and board answer the
+                                       same cases)
+
+A new suite goes into one native env's test_filter and every ESP env's test_ignore, unless it is on-device
+(tools/ci/test_lists.py ON_DEVICE).
 
 Fixtures: test/fixtures (RAW captures, see test_replay_corpus/test_main.cpp for their provenance).
 native_shim/Arduino.h stands in for <Arduino.h> on the host.

@@ -56,7 +56,7 @@ public:
         unsigned long pulseGapMs = 0;
         char hop[40] = {};
         unsigned long sweepToHz = 0;  // CHIRP sweep=: glide from f= to this over dur=
-        // band=LO-HI|off (step 7b): the detector's band for this capture only,
+        // band=LO-HI|off: the detector's band for this capture only,
         // so a transcript carries the frequency path the Node runs (the
         // network band) and not the Analyzer's idle setting.
         bool bandSet = false;
@@ -112,7 +112,7 @@ private:
         }
     };
 
-    // SEQ run state, by lifetime (AnalyzerSequenceTypes.h, step 11g C4).
+    // SEQ run state, by lifetime (AnalyzerSequenceTypes.h).
     using RunConfig = analyzer_seq::RunConfig;
     using TrialState = analyzer_seq::TrialState;
     using TrialDiagnostics = analyzer_seq::TrialDiagnostics;
@@ -166,7 +166,7 @@ private:
     void refreshCapturedDetectorReportAggregates();
     bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs,
                        unsigned long decim, RawCaptureMode mode, const RawTriggerShape& shape);
-    // runRawTrigger's stages (step 12.4.5); RawCaptureRun is defined in AnalyzerRawCapture.cpp.
+    // runRawTrigger's stages; RawCaptureRun is defined in AnalyzerRawCapture.cpp.
     struct RawCaptureRun;
     void planRawCapture(RawCaptureRun& run) const;
     void captureRawWindow(RawCaptureRun& run);
@@ -292,7 +292,7 @@ private:
     AudioSignal _audioSignal; // Audio framing for detector input packets (the same class the Node runs).
     detection::DetectionRuntime _detection; // Canonical detector runtime and feature history.
     FreqBandStream _freqBandStream; // Live frequency-band stream used by analyzer diagnostics.
-    // SEQ tuning (PAR-003, step 11e item 9): the TonalPulseScalar profile's
+    // SEQ tuning (PAR-003): the TonalPulseScalar profile's
     // detection.scalar_* values on the registry with the Node's paths; a SEQ
     // start copies them into the profile (effectiveSequenceProfile).
     detection::ScalarTransientConfig _scalarTuning = {};

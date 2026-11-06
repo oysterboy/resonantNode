@@ -539,7 +539,7 @@ AnalyzerApp::AnalyzerApp()
 
 // The selected profile with the registry's detection.scalar_* values on top
 // (TonalPulseScalar only; AmpExperimental runs as defined). The observed
-// stream stays the profile's: it is not a param (owner 2026-10-25). The values
+// stream stays the profile's: it is not a param (chosen 2026-10-25). The values
 // are the ones the current (or last) run started with (review 12.0 L16); before
 // any run, the live ones.
 detection::DetectionProfile const& AnalyzerApp::effectiveSequenceProfile() const {
@@ -574,9 +574,8 @@ void AnalyzerApp::begin() {
     _loopHealth.reset();
     _usbLine.reset();
     _emitterLine.reset();
-    // ANA-005 (step 7a): the boot claim was announced ("scheduled") but never
-    // queued, so the Emitter kept chirping in AUTO until the first EMIT/SEQ.
-    // Send MODE REMOTE half a second after boot.
+    // ANA-005: claim the Emitter at boot, or it keeps chirping in AUTO until the
+    // first EMIT/SEQ. Send MODE REMOTE half a second after boot.
     _controlClaimPending = true;
     _controlClaimSent = false;
     _controlClaimAcked = false;
@@ -815,9 +814,8 @@ AnalyzerReport* AnalyzerApp::sequenceReportScratch() {
     return &_sequenceReportScratch;
 }
 
-// The report builder, one function per report section (step 12.4.4). The selection is the one finalizeSequenceTrial
-// made (review 12.0 L18: it was selected twice per trial); the trial's counts and the run's config come from
-// _sequenceTest.
+// The report builder, one function per report section. The selection is the one finalizeSequenceTrial made, not
+// a second one (review 12.0 L18); the trial's counts and the run's config come from _sequenceTest.
 void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report, const SequenceTrialSelection& selectedTrial,
                                               bool bufferOverrun, const TrialDiagnostics& diagnostics) const {
     report = makeEmptyAnalyzerReport();
@@ -1004,7 +1002,7 @@ void AnalyzerApp::fillSequenceReportOccurrences(AnalyzerReport& report, const Se
         report.occurrences.primaryDurationMs = in.selection.durationMs;
         report.occurrences.primaryStrength = in.selection.strength;
         report.occurrences.strength = in.selection.strength;
-        report.occurrences.shape = occurrence.shape;  // step 13.0: SEQ_EXPLAIN shape.*
+        report.occurrences.shape = occurrence.shape;  // SEQ_EXPLAIN shape.*
         report.occurrences.mainRejectReason = in.inspected->decision == detection::OccurrenceDecision::Rejected
             ? detection::occurrenceRejectReasonName(in.inspected->rejectReason)
             : "none";
@@ -1099,8 +1097,7 @@ void AnalyzerApp::fillSequenceReportProfileDetail(AnalyzerReport& report, const 
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
-    // The plan's last module's observation (the Amp module on TonalPulseScalar),
-    // as before step 11e item 6, when it rode on the occurrence itself.
+    // The plan's last module's observation (the Amp module on TonalPulseScalar).
     const detection::MagnitudeInspectionObservation emptyMagnitudeObservation{};
     const detection::MagnitudeInspectionObservation* lastObservation =
         in.pipelineEvidence && in.inspected != nullptr && in.inspected->magnitudeObservationCount > 0

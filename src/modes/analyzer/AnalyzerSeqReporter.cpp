@@ -92,7 +92,7 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     printKeyValue("result", analyzerResultName(report.classification.result));
     printKeyValue("stage", analyzerStageName(report.classification.primaryStage));
     printKeyValue("reject_reason", trialRejectReason);
-    serialOut().print(" emit_marker_seen=");  // moved from SEQ_HISTDBG (11g C3b)
+    serialOut().print(" emit_marker_seen=");
     serialOut().print(_sequenceTest.trial.diagnostics.emitStartSeen ? 1 : 0);
     printKeyValue("source_selection", report.sourceSelection != nullptr ? report.sourceSelection : "none");
     printKeyValue("source_reason", report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
@@ -150,9 +150,9 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         printKeyValue("inspect.requested_start_ms", observation != nullptr ? observation->requestedStartMs : 0UL);
         printKeyValue("inspect.requested_end_ms", observation != nullptr ? observation->requestedEndMs : 0UL);
         printKeyValue("inspect.inspection_now_ms", observation != nullptr ? observation->inspectionNowMs : 0UL);
-        // ANA-009 (step 7a): the history fills the available range only from
+        // ANA-009: the history fills the available range only from
         // values inside the requested window; with none (future window,
-        // missing stream, empty edge) it stayed 0/0 and read as "empty
+        // missing stream, empty edge) 0/0 would read as "empty
         // history". Print na then; inspect.reject_reason keeps the cause.
         const bool rangeKnown = observation != nullptr && observation->hasValues;
         serialOut().print(" inspect.available_start_ms=");
@@ -300,7 +300,7 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
                   report.primaryPattern.firstFailedRequiredStrength != nullptr
                       ? report.primaryPattern.firstFailedRequiredStrength
                       : "unknown");
-    // The inspected occurrence's shape (DET-015, step 13.0): bins visited, steps up, other steps, runs, the first and
+    // The inspected occurrence's shape (DET-015): bins visited, steps up, other steps, runs, the first and
     // last bin, the class; applicable=0 without band bins or an inspected occurrence.
     const detection::OccurrenceShape& shape = report.occurrences.shape;
     printKeyValue("shape.applicable", shape.applicable ? 1 : 0);
@@ -346,7 +346,7 @@ void AnalyzerApp::printSequenceSummaryClean() const {
         serialOut().print(-1);
     }
     printKeyValue("avg_strength", avgStrength, 1);
-    // The run's dropped DMA buffers (cumulative since SEQ start; soak.py reads the last value), moved from SEQ_HISTDBG.
+    // The run's dropped DMA buffers (cumulative since SEQ start; soak.py reads the last value).
     printKeyValue("dropped_dma_buffers", _audioSource.stats().droppedDmaBuffers);
     serialOut().println();
 }
@@ -368,7 +368,7 @@ void AnalyzerApp::printSequenceReport() const {
 }
 
 void AnalyzerApp::printSequenceStatus() const {
-    // One config (review D1.4): the running one during a run, the one the next start copies otherwise.
+    // One config: the running one during a run, the one the next start copies otherwise.
     const SeqOutputConfig& config = _sequenceTest.active ? _sequenceTest.config.outputConfig : _seqOutputConfig;
     serialOut().print("SEQ_STATUS mode=");
     serialOut().print(sequenceOutputModeName(config.mode));

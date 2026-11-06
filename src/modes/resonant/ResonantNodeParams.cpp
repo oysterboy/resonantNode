@@ -1,5 +1,5 @@
-// Node configuration (owner 2026-10-25 split by role): NodeParams (the registry, the NVS store, the
-// owners' param descriptions in PARAM LIST order; step 11i N7), and the Node's side: live apply per
+// Node configuration: NodeParams (the registry, the NVS store, the
+// owners' param descriptions in PARAM LIST order), and the Node's side: live apply per
 // module through the owners' setters, persistence at boot, the profile switch.
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
@@ -15,7 +15,7 @@
 
 // --- NodeParams ---
 
-// The PARAM LIST / DUMP order since step 11g B2; a new param goes at the end of its owner's describeParams or here.
+// The PARAM LIST / DUMP order stays as listed: a new param goes at the end of its owner's describeParams or here.
 void NodeParams::describe(const Fields& f) {
     _registry.setGroupNamer(param::moduleNameForGroup);
     param::describeParams(_registry, f.scalar);      // detection.scalar_* (13)
@@ -80,7 +80,7 @@ void Node::configureParameters() {
                                         _activeBehaviorProfile, _inspectionLimits});
 }
 
-// The inspectors' medium limits and the shape settings as live params (step 10 item 7, step 11g B2), read from the
+// The inspectors' medium limits and the shape settings as live params, read from the
 // active profile's plan by target (detection::inspectionLimitsFromPlan).
 void Node::loadInspectionLimitsFromProfile() {
     _inspectionLimits = detection::inspectionLimitsFromPlan(_activeDetectionProfile.inspectionPlan);
@@ -89,7 +89,7 @@ void Node::loadInspectionLimitsFromProfile() {
 // The registered detection params (detection.scalar_*, detection.band_*) applied
 // in place: scalar thresholds through the detector's setters, the band through
 // FreqBandStream. No detector reset and no FeatureHistory wipe, so a live PARAM
-// SET does not drop an occurrence in flight (step 10 item 2, issue #14,
+// SET does not drop an occurrence in flight (issue #14,
 // decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md D2). A profile
 // switch still goes through applyActiveDetectionProfile().
 void Node::applyLiveDetectionParams() {
@@ -100,10 +100,9 @@ void Node::applyLiveDetectionParams() {
 }
 
 // PARAM LIST / GET / SET / DUMP / SAVE / LOAD / RESET: the shared handler
-// (app/ParamCommands, step 11e item 9) with the Node's NVS store. The one
-// command path for every registered knob since step 10 (RB PARAM and RB BEHAV
-// were removed; docs/roadmaps/roadmap-param-config.md PAR-015). What it wrote,
-// the owning module applies here.
+// (app/ParamCommands) with the Node's NVS store. The one command path for
+// every registered knob (PAR-015, docs/roadmaps/roadmap-param-config.md).
+// What it wrote, the owning module applies here.
 void Node::handleParamCommand(const char* line) {
     const param::ParamCommandResult result = _params.handleCommand(line, serialOut());
     switch (result.effect) {

@@ -1,6 +1,6 @@
 #pragma once
 
-// The Analyzer's SEQ / OBS run state, split by lifetime (step 11g C4, review A8):
+// The Analyzer's SEQ / OBS run state, split by lifetime:
 //   RunConfig   what SEQ start parses, copied once when the run activates;
 //   TrialState  one trial, reset to TrialState{} (resetToDefaults) at each trial start;
 //   RunTotals   the run's tallies (SEQ_SUMMARY, the run-health lines), reset once at start.
@@ -88,8 +88,8 @@ struct RunConfig {
     bool pulseRampSet = false;
     unsigned long pulseRampMs = 0;
     char pulseHop[40] = {};  // hop=F1,F2,... forwarded to PULSES; empty = none
-    char pulseLevel[8] = {};  // level=FS forwarded to PULSES (step 13); empty = the Emitter's level
-    char pulseAtt[24] = {};   // att=DB1,DB2,... forwarded to PULSES (step 13); empty = none
+    char pulseLevel[8] = {};  // level=FS forwarded to PULSES; empty = the Emitter's level
+    char pulseAtt[24] = {};   // att=DB1,DB2,... forwarded to PULSES; empty = none
     unsigned long sweepToHz = 0;  // sweep=HZ forwarded to CHIRP (glide from toneHz over durationMs); 0 = steady
     unsigned long bandLowHz = 0;   // band=LOW-HIGH: FrequencyTarget = strongest bin in the band; 0 = off
     unsigned long bandHighHz = 0;
@@ -131,7 +131,7 @@ struct TrialDiagnostics {
     float audioRms = 0.0f;
     const char* audioHealth = "unknown";
 
-    uint32_t rawFrames = 0;  // 32 / 64 bits: the samples are 24-bit (deep review L5; 16-bit fields truncated)
+    uint32_t rawFrames = 0;  // 32 / 64 bits: the samples are 24-bit (16-bit fields truncate)
     int32_t rawMin = 0;
     int32_t rawMax = 0;
     int64_t rawSum = 0;
@@ -159,7 +159,7 @@ struct TrialDiagnostics {
 struct TrialState {
     unsigned long number = 0;  // 1-based; 0 = no trial started in this run
     unsigned long scheduledAtMs = 0;
-    // ANA-007 (step 7a): when this trial's CHIRP/PULSES command left for
+    // ANA-007: when this trial's CHIRP/PULSES command left for
     // the Emitter; the dt anchor (the EMIT_START marker is read after the
     // sample loop, 21-37 ms late and jittery).
     unsigned long commandSentMs = 0;
@@ -177,14 +177,14 @@ struct TrialState {
     detection::OccurrenceVerdict primaryValidPattern = {};
     detection::InspectedOccurrence primaryValidInspectedOccurrence = {};
     detection::DetectorReport primaryValidDetectorReport = {};
-    // The valid verdict's own source record (review 12.0 L12: it was the first accepted event's).
+    // The valid verdict's own source record, not the first accepted event's (review 12.0 L12).
     bool primaryValidSourceRecordCaptured = false;
     detection::SourceDiagnosticRecord primaryValidSourceRecord = {};
     bool primaryAcceptedOccurrenceCaptured = false;
     detection::InspectedOccurrence primaryAcceptedInspectedOccurrence = {};
     detection::DetectorReport primaryAcceptedDetectorReport = {};
     detection::SourceDiagnosticRecord primaryAcceptedSourceRecord = {};
-    // The accepted occurrence's own verdict (review 12.0 M5: it was looked up through bestRejectedInWindow).
+    // The accepted occurrence's own verdict, not one looked up through bestRejectedInWindow (review 12.0 M5).
     bool primaryAcceptedVerdictCaptured = false;
     detection::OccurrenceVerdict primaryAcceptedVerdict = {};
     unsigned long rejectedInWindowCount = 0;

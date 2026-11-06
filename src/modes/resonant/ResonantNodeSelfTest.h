@@ -7,7 +7,7 @@
 #include "ResonantNodeBaseline.h"
 
 /*
-NodeSelfTest (NODE-015; step 11i N4, docs/refactors/node-split.md)
+NodeSelfTest (NODE-015)
 
 The Node's SELFTEST: the command, its phases and the runtime smoke checks.
 It is handed what the Node already sees (verdicts popped from

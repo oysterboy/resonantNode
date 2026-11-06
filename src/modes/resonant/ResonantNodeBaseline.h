@@ -5,7 +5,7 @@
 #include "../../app/RuntimeDefaults.h"
 
 /*
-NodeBaseline (step 11i N2, docs/refactors/node-split.md)
+NodeBaseline
 
 The Node's quiet-gated rebase machine: at boot the mic warmup, then listen for
 a quiet hold, rebase, settle, outputs on (or give up after a timeout and run
@@ -49,7 +49,7 @@ public:
 #endif
         unsigned long micWarmupMs = runtime::kDefaultAudioSignalStartupWarmupMs;
         unsigned long quietHoldMs = 1000;
-        // 20 s, not 8 (owner 2026-10-29, step 12.1.1): boots in a noisy moment (all boards rebooting together after an
+        // 20 s, not 8 (chosen 2026-10-29): boots in a noisy moment (all boards rebooting together after an
         // OTA) missed 1 s below the threshold within 8 s; the threshold itself stays.
         unsigned long timeoutMs = 20000;
         // Settle after a rebase before outputs come back (quiet-gated and forced).

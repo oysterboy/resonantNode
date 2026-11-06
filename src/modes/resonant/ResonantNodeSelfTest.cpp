@@ -30,7 +30,7 @@ Observes only what the Node already receives: verdicts popped from
 DetectionRuntime and its own chirp start/finish events. No thresholds are
 changed; the board keeps running normally between and after the phases.
 The hardware checks (mic, amp) and the restore after them are Node glue
-(Node::runSelfTestHardware in ResonantNodeApp.cpp, step 11i N4).
+(Node::runSelfTestHardware in ResonantNodeApp.cpp).
 */
 
 namespace {
@@ -43,8 +43,8 @@ constexpr unsigned long kOpenChirpSpanMs = 2000;   // own chirp still sounding: 
 // the mic through again; a margin covers the room tail. Another node's answer
 // starts later: its verdict, its wait (waitAfterHeardMs) and its train come
 // first. Judging by the occurrence's start, not when it was heard, keeps
-// other Nodes' answers out of the own count (2026-10-17: with five Nodes on
-// the bench they landed inside the 300 ms echo window and failed the check).
+// other Nodes' answers out of the own count (observed 2026-10-17 with five Nodes on
+// the bench: their answers landed inside the 300 ms echo window and failed the check).
 constexpr unsigned long kOwnEchoStartMarginMs = 50;
 constexpr unsigned long kOwnTailMs = 1000;
 constexpr unsigned long kResponseWaitMs = 1500;    // after the first external verdict
@@ -137,8 +137,8 @@ NodeSelfTest::Request NodeSelfTest::update(unsigned long now, const Inputs& in) 
             // it to stop and for kEchoWindowMs after.
             const bool ownChirpEcho = in.chirpActive || !timing::elapsedSince(now, in.lastOwnChirpEndMs, kEchoWindowMs);
             if (in.silent && st.command.kind != selftest::Command::Kind::External) {
-                // A silent node never sounds: the own-chirp check cannot run, which is not a failure (step 12.2;
-                // it used to wait for outputs and report FAIL chirp_not_started).
+                // A silent node never sounds: the own-chirp check cannot run, which is not a failure (it would
+                // otherwise wait for outputs and report FAIL chirp_not_started).
                 if (st.command.kind == selftest::Command::Kind::Chirp) {
                     serialOut().println("SELFTEST_CHIRP skip reason=silent (PARAM SET output.silent 0 to sound)");
                 } else {

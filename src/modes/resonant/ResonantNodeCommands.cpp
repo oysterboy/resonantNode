@@ -1,6 +1,6 @@
-// Node command dispatch (owner 2026-10-25 split by role): serial line assembly and the one
+// Node command dispatch: serial line assembly and the one
 // dispatch every transport feeds (serial here, the radio in ResonantNodeNet.cpp, VEKTOR
-// later; a CommandRouter class is NODE-005): the kCommands table (step 11i N8) and its handlers.
+// later; a CommandRouter class is NODE-005): the kCommands table and its handlers.
 #include "ResonantNodeApp.h"
 #include "../../app/FirmwareOta.h"
 #include <Arduino.h>
@@ -20,9 +20,9 @@ void Node::pollSerialCommands() {
                            "RB ERR line_too_long max=", [this](const char* line) { handleSerialLine(line); });
 }
 
-// The Node's commands, one row per verb (step 11i N8): the first row whose verb matches handles the line. Word: the
+// The Node's commands, one row per verb: the first row whose verb matches handles the line. Word: the
 // verb is a prefix ending on a token boundary (text_parse::startsWithWordIgnoreCase); Exact: the whole line, any
-// case. The order is the old if-ladder's and matters where verbs share a prefix ("RB rebase force" before
+// case. The order matters where verbs share a prefix ("RB rebase force" before
 // "RB rebase"). Shaped for the later CommandRouter (NODE-005): a move of the rows, not a redesign.
 const Node::Command Node::kCommands[] = {
     {"NET", Command::Match::Word, &Node::handleNetCommand},
@@ -51,14 +51,15 @@ void Node::handleSerialLine(const char* line) {
             return;
         }
     }
-    // Anything else gets one line, so a typo is not mistaken for a lost command (review D1.9).
+    // Anything else gets one line, so a typo is not mistaken for a lost command.
     serialOut().println("RB ERR unknown_command");
 }
 
 void Node::handleOtaCommand(const char* line) {
-    // Firmware over WiFi (step 11d): silence, pull, reboot; on failure the old image runs on and the radio goes
-    // back to its channel. A sounding emission is closed as runSelfTestHardware closes it (review 12.0 H1): Behavior
-    // leaves Chirping, the own-chirp time and the self-test see the end, so a failed OTA does not leave the Node deaf.
+    // Firmware over WiFi (decisions/2026-10-28-ota-firmware-pull-over-http.md): silence, pull, reboot; on failure
+    // the old image runs on and the radio goes back to its channel. A sounding emission is closed as
+    // runSelfTestHardware closes it (review 12.0 H1): Behavior leaves Chirping, the own-chirp time and the self-test
+    // see the end, so a failed OTA does not leave the Node deaf.
     if (_soundOutput.busy() || _chirpOutput.isActive()) {
         _soundOutput.stop();
         const unsigned long now = timebase::nowMs();
@@ -113,7 +114,7 @@ void Node::refuseRbParam(const char* line) {
 
 void Node::refuseRbBehav(const char* line) {
     (void)line;
-    // RB BEHAV was removed in step 10 (decisions/2026-10-22-live-params-
+    // RB BEHAV is gone (decisions/2026-10-22-live-params-
     // profile-reset-no-rb-behav.md): Behavior's values are behavior.*
     // params; PARAM DUMP shows them, PARAM SET changes them.
     serialOut().println("RB BEHAV ERR removed; use PARAM SET behavior.<key> <value> (PARAM LIST shows the keys)");
@@ -154,7 +155,7 @@ void Node::handleRebaseCommand(const char* line) {
 
 void Node::handleCallCommand(const char* line) {
     (void)line;
-    // Step 5g: play the node's network signal now, through Behavior (kick).
+    // Play the node's network signal now, through Behavior (kick).
     if (_switches.silent) {
         serialOut().println("RB CALL ignored silent=1");
         return;

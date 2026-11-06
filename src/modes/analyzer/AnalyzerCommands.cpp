@@ -42,7 +42,7 @@ bool parseTokenValue(const char* token, T& out, const char* badValuePrefix) {
 
 }  // namespace
 
-// SEQ DIAG / FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE: one rule (step 11g C4).
+// SEQ DIAG / FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE: one rule.
 // The change goes to the next start's output settings and, while a run is active, to the running
 // run's copy as well. TRIES and PROFILE change the next start only.
 template <typename Change>
@@ -107,8 +107,8 @@ void AnalyzerApp::pollUsbConsole() {
                            "ERR line_too_long max=", [this](const char* line) { handleUsbLine(line); });
 }
 
-// The console, one handler per group (step 11j item 6; the group order is analyzer_commands::groupOf's). A SEQ or
-// EMIT line whose sub-command none of its handlers knows ends as analyzer_unknown_cmd, as before the split.
+// The console, one handler per group (the group order is analyzer_commands::groupOf's). A SEQ or EMIT line whose
+// sub-command none of its handlers knows ends as analyzer_unknown_cmd.
 void AnalyzerApp::handleUsbLine(const char* line) {
     switch (analyzer_commands::groupOf(line)) {
         case analyzer_commands::Group::Help:
@@ -124,12 +124,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 serialOut().println("OTA result=busy reason=seq_active (SEQ STOP first)");
                 return;
             }
-            ota::runCommand(line, serialOut());  // firmware over WiFi (step 11d); reboots on success
+            ota::runCommand(line, serialOut());  // firmware over WiFi; reboots on success
             return;
         case analyzer_commands::Group::Param:
-            // The registry's grammar and the Node's lines (app/ParamCommands, step
-            // 11e item 9). No store: the tuning is per run. A value takes effect at
-            // the next SEQ start (effectiveSequenceProfile), so nothing applies here.
+            // The registry's grammar and the Node's lines (app/ParamCommands). No store: the tuning is per run.
+            // A value takes effect at the next SEQ start (effectiveSequenceProfile), so nothing applies here.
             param::handleParamCommand(line, _paramRegistry, nullptr, serialOut());
             return;
         case analyzer_commands::Group::Raw:
@@ -239,7 +238,7 @@ void AnalyzerApp::handleRawCommand(const char* line) {
             } else if (equalsIgnoreCase(modeValue, "both")) {
                 rawMode = AnalyzerApp::RawCaptureMode::Both;
             } else {
-                printBadValue(kRawBadValue, token);  // was taken as feat (deep review L8)
+                printBadValue(kRawBadValue, token);  // an unknown mode= value is refused, not read as feat
                 ok = false;
             }
         }
@@ -277,8 +276,7 @@ bool AnalyzerApp::handleSeqCommand(const char* line) {
     return handleSeqOutputSetting(token, savePtr) || handleSeqRunCommand(token, savePtr);
 }
 
-// SEQ DIAG / FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE (changeSeqOutputConfig's rule). SEQ FREQBAND, a no-op,
-// was removed with its freqband= key (owner 2026-10-29, review 12.0 L13).
+// SEQ DIAG / FREQUPDATEEVERYSAMPLES / MODE / WHEN / VERBOSE (changeSeqOutputConfig's rule).
 bool AnalyzerApp::handleSeqOutputSetting(const char* verb, char*& savePtr) {
     if (equalsIgnoreCase(verb, "DIAG") || equalsIgnoreCase(verb, "DIAGNOSTICS")) {
         const char* enabledToken = strtok_r(nullptr, " ", &savePtr);
@@ -329,7 +327,7 @@ bool AnalyzerApp::handleSeqOutputSetting(const char* verb, char*& savePtr) {
             }
         });
         if (_sequenceTest.active && mode == AnalyzerApp::SeqOutputMode::Quiet) {
-            // The running run only (C1): a later SEQ WHEN must not re-enable its diagnostics.
+            // The running run only: a later SEQ WHEN must not re-enable its diagnostics.
             _sequenceTest.config.outputConfig.diagnosticsEnabled = false;
         }
         serialOut().print("OK SEQ MODE ");
@@ -432,7 +430,7 @@ bool AnalyzerApp::handleSeqRunCommand(const char* verb, char*& savePtr) {
     if (equalsIgnoreCase(verb, "STOP")) {
         printSequenceSummaryClean();
         stopSequenceTest();
-        _pendingSequenceStart.active = false;  // a start + stop in one buffer does not start (review D1.4)
+        _pendingSequenceStart.active = false;  // a start + stop in one buffer does not start
         serialOut().println("OK SEQ STOP");
         return true;
     }
@@ -440,8 +438,8 @@ bool AnalyzerApp::handleSeqRunCommand(const char* verb, char*& savePtr) {
     return false;
 }
 
-// SEQ START / OBS [tokens]. Parsed into a copy and handed to the pending start only when every token is valid
-// (issue #31): on an ERR the run used to start anyway, and the output settings parsed before the bad token stuck.
+// SEQ START / OBS [tokens]. Parsed into a copy and handed to the pending start only when every token is valid, so
+// an ERR neither starts the run nor keeps the output settings parsed before the bad token (issue #31).
 // RunConfig's defaults are the start's defaults.
 void AnalyzerApp::handleSeqStart(const char* verb, char*& savePtr) {
     // A run in progress (or one already queued) is not discarded by a second start: its trial in flight
@@ -482,7 +480,7 @@ void AnalyzerApp::handleSeqStart(const char* verb, char*& savePtr) {
         serialOut().println("]");
         return;
     }
-    // Keys that only a pulse train uses, and a sweep with one, were dropped without a word (deep review L3).
+    // Keys that only a pulse train uses, and a sweep with one, are refused: they would be dropped without a word.
     if ((request.pulseCount == 0 &&
          (request.pulseHop[0] != '\0' || request.pulseLevel[0] != '\0' || request.pulseAtt[0] != '\0')) ||
         (request.pulseCount > 0 && request.sweepToHz != 0)) {
@@ -570,14 +568,14 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
         const char* list = text_parse::tokenValue(token);
         if (!analyzer_commands::validHopList(list, sizeof(request.pulseHop)) ||
             !analyzer_commands::hopListInRange(list, runtime::kMaxToneHz) ||
-            analyzer_commands::listEntryCount(list) > 8) {  // the Emitter takes 8 (deep review L2)
+            analyzer_commands::listEntryCount(list) > 8) {  // the Emitter takes 8
             printBadValue(kSeqBadValue, token);
             return false;
         }
         strncpy(request.pulseHop, list, sizeof(request.pulseHop) - 1);
         request.pulseHop[sizeof(request.pulseHop) - 1] = '\0';
     } else if (startsWithIgnoreCase(token, "level=")) {
-        // The Emitter's train level in full scale (step 13); the Emitter checks the range.
+        // The Emitter's train level in full scale; the Emitter checks the range.
         const char* value = text_parse::tokenValue(token);
         float level = 0.0f;
         if (!text_parse::parseFiniteFloat(value, level) || level <= 0.0f || level > 0.999f ||
@@ -587,7 +585,7 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
         }
         strcpy(request.pulseLevel, value);
     } else if (startsWithIgnoreCase(token, "att=")) {
-        // dB per pulse below the level, cycled (step 13): digits and commas, as hop=.
+        // dB per pulse below the level, cycled: digits and commas, as hop=.
         const char* list = text_parse::tokenValue(token);
         if (!analyzer_commands::validHopList(list, sizeof(request.pulseAtt)) ||
             !analyzer_commands::attListInRange(list, 8, 60)) {
@@ -700,7 +698,7 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
     } else if (equalsIgnoreCase(token, "start")) {
         // "SEQ OBS start ..." (tools/bench/soak.py): the verb after OBS.
     } else {
-        // Unknown keys used to be ignored, so "perod=3000" ran on
+        // An unknown key is refused: ignored, "perod=3000" would run on
         // defaults with OK SEQ (issue #31 R2-19).
         serialOut().print("ERR SEQ unknown token=");
         serialOut().println(token);
@@ -712,7 +710,7 @@ bool AnalyzerApp::applySeqStartToken(const char* token, RunConfig& request, SeqO
 // EMIT <command> to the Emitter. False for a command the Analyzer does not forward.
 bool AnalyzerApp::handleEmitCommand(const char* line) {
     // A forwarded EMIT during a run cut the trial's train (MODE REMOTE stops it) or, with MODE AUTO, planted stray
-    // chirps in later trials: refused like RAW and SELFTEST (deep review A-M2).
+    // chirps in later trials: refused like RAW and SELFTEST.
     if ((startsWithIgnoreCase(line, "EMIT CHIRP") || startsWithIgnoreCase(line, "EMIT PULSES") ||
          startsWithIgnoreCase(line, "EMIT MODE") || startsWithIgnoreCase(line, "EMIT SWEEP")) &&
         (_sequenceTest.active || _pendingSequenceStart.active)) {
@@ -757,7 +755,7 @@ bool AnalyzerApp::handleEmitCommand(const char* line) {
 void AnalyzerApp::sendClaimedEmitterCommand(const char* line, const char* name) {
     sendEmitterCommand("MODE REMOTE");
     const bool acked = waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs);
-    _emitterLine.reset();  // the wait read Serial2 with its own reader: no half line left to glue onto (deep review L7)
+    _emitterLine.reset();  // the wait read Serial2 with its own reader: no half line left to glue onto
     if (!acked) {
         serialOut().print("ERR EMIT ");
         serialOut().print(name);

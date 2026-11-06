@@ -15,8 +15,8 @@
 
 class Print;
 
-// output.silent, node.radio_enabled and node.radio_log: the Node's own switches (step 11i N7). silent holds the
-// outputs-off gate shut (detection runs, Behavior never fires); radioEnabled is read at boot (PAR-013, step 11a);
+// output.silent, node.radio_enabled and node.radio_log: the Node's own switches. silent holds the
+// outputs-off gate shut (detection runs, Behavior never fires); radioEnabled is read at boot (PAR-013);
 // radioLog is the console's lines per second mirrored to the radio, 0 off (decisions/2026-11-05-radio-log-mirror.md).
 struct NodeSwitches {
     bool silent = false;
@@ -35,7 +35,7 @@ inline void describeParams(ParamRegistry& registry, NodeSwitches& node) {
 }  // namespace param
 
 /*
-NodeParams (step 11i N7, review A10, docs/refactors/node-split.md)
+NodeParams
 
 The Node's param registry and its NVS store. `describe()` registers each owner's params (each config struct
 describes its own, `param::describeParams`, app/ParamBindings.h lists where) in the one order PARAM LIST / DUMP
@@ -79,5 +79,5 @@ public:
 private:
     param::ParamRegistry _registry;
     NvsParamStore _store;
-    double _remembered[param::ParamRegistry::kMaxParams] = {};  // not on the loop stack (3.4 KB headroom, step 8b)
+    double _remembered[param::ParamRegistry::kMaxParams] = {};  // not on the loop stack (3.4 KB headroom)
 };

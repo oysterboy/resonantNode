@@ -12,7 +12,7 @@
 class FreqBandStream;
 
 /*
-NodeSignalComposer (step 11i N5, docs/refactors/node-split.md)
+NodeSignalComposer
 
 The Node's half of an emission (myspec 6.2 / 7.1, decisions/2026-10-23-soundoutput-executes-node-composes.md):
 Behavior names the kind of emission, this part turns it into one OutputRequest from the band grid and the
@@ -36,11 +36,12 @@ public:
         size_t bins = 0;
     };
 
-    // output.hop_* and output.idle_announce_*: the node's network signal and its idle call. Shape from the
-    // 2026-10-16 battery (25 ms x 5, gap 10); hopRotation seeds the train's base bin, where it starts climbing (from
-    // the roster or the MAC at boot, PARAM SET output.hop_rotation overrides). Behavior owns the base from there
-    // (the glide, the scatter; BEH-009) and the Node passes it in; no wrap since the 8-bin band. Idle call (owner 2026-10-17): announcement tone below
-    // the band, a gap, then the node's call (its hop train); 0 Hz = plain idle chirp pattern.
+    // output.hop_* and output.idle_announce_*: the node's network signal and its idle call. The train's shape is
+    // runtime::kDefaultHop* (decisions/2026-11-05-short-glide-signal.md); hopRotation seeds the train's base bin,
+    // where it starts climbing (from the roster or the MAC at boot, PARAM SET output.hop_rotation overrides).
+    // Behavior owns the base from there (the glide, the scatter; BEH-009) and the Node passes it in; no wrap with
+    // the 8-bin band. Idle call (chosen 2026-10-17): announcement tone below the band, a gap, then the node's call
+    // (its hop train); 0 Hz = plain idle chirp pattern.
     // decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md
     struct Values {
         bool hopEnabled = true;

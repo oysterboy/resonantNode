@@ -64,7 +64,7 @@ private:
     void handleParamCommand(const char* line);
     void applyParamModule(param::ModuleId module);
     void loadStoredParams();
-    // Remote params over the radio (PAR-013, step 11a).
+    // Remote params over the radio (PAR-013).
     void handleNetCommand(const char* line);
     void pollNet();
     void runRemoteCommand(const NodeNet::Received& received);
@@ -77,7 +77,7 @@ private:
     void updateRbBaselineState(unsigned long now);
     bool rbOutputsEnabled() const;
     void pollSerialCommands();
-    // The text dispatch (step 11i N8, ResonantNodeCommands.cpp): kCommands, verb -> handler, first match wins.
+    // The text dispatch (ResonantNodeCommands.cpp): kCommands, verb -> handler, first match wins.
     void handleSerialLine(const char* line);
     struct Command {
         enum class Match : uint8_t {
@@ -135,12 +135,12 @@ private:
     NodeSignalComposer::BandGrid trainGrid() const;  // the base's grid: bandGrid(), or the range with a band per node
     void printHopShape(const OutputRequest& request);
     void printSignalConfig();
-    void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)
-    void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history (step 8b item 2)
+    void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_*
+    void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history
     // Behavior's chirp request into a SoundOutput request; a request that does not start ends the emission at once.
     void startEmission(unsigned long now);
     void updateEmissions(unsigned long now);  // the output tick; the emission's end goes to Behavior and SELFTEST
-    void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset (step 10 item 2)
+    void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset
     void loadInspectionLimitsFromProfile();  // detection.contrast_medium / amp_medium / shape_* from the plan
 
     // Hardware wiring.
@@ -154,10 +154,10 @@ private:
     I2sToneOutput _toneOutput;
 #endif
     ChirpOutput _chirpOutput;
-    // Executes the Node's emissions and keeps their status (OUT-002/003, step 10f).
+    // Executes the Node's emissions and keeps their status (OUT-002/003).
     SoundOutput _soundOutput{_chirpOutput};
     NodeNet _net;
-    NetGateway _netGateway{_net};  // reply tee and reply reassembly (step 11i N3)
+    NetGateway _netGateway{_net};  // reply tee and reply reassembly
     const char* _nodeName = "unknown";  // from the roster (app/NodeRoster.h)
     // The output.hop_rotation last seeded into Behavior's base bin and the bases then (syncBaseBin); re-seeded only
     // when either changes.
@@ -171,15 +171,15 @@ private:
     detection::DetectionRuntime _detection;
     detection::DetectionProfile _activeDetectionProfile = detection::makeTonalPulseScalarProfile();
     ResonantBehavior _behavior;
-    NodeParams _params;  // registry + NVS store; each owner describes its params (step 11i N7)
+    NodeParams _params;  // registry + NVS store; each owner describes its params
 
     // Network band the detector listens to (detection.band_*, applied to the
     // FreqBandStream bank; 0 = single target at the chirp tone). Band
-    // 2950-3950 so the 3,200 Hz chirp sits on a bin (2950/3200/3450/3700/3950),
-    // owner 2026-10-16. decisions/2026-10-16-network-band-2950-3950.md
-    NetworkBand _band;  // detection.band_* (step 11i N7: NetworkBand::applyTo)
+    // 2950-3950 so the 3,200 Hz chirp sits on a bin (2950/3200/3450/3700/3950);
+    // decisions/2026-10-16-network-band-2950-3950.md
+    NetworkBand _band;  // detection.band_* (NetworkBand::applyTo)
     // The node's network signal and idle call (output.hop_*, output.idle_announce_*) on the band's grid
-    // -> OutputRequest (step 11i N5).
+    // -> OutputRequest.
     NodeSignalComposer _composer;
     // output.silent and node.radio_enabled. silent holds the outputs-off gate
     // shut (rbOutputsEnabled()), so detection runs and verdicts are counted,
@@ -201,8 +201,8 @@ private:
     // 256 like the Analyzer's USB line; a longer line is refused, never run
     // cut (issue #31; app/SerialLine.h). Also the command scratch size.
     serial_line::LineReader<serial_line::kCommandLineMax> _serialLine;
-    NodeCounters _counters;  // RB tallies since boot or rebase (step 11i N1)
-    int _rbLevelMaxSinceStatus = 0;  // loudest smoothed level since the last RB STATUS (room notes, 10c)
+    NodeCounters _counters;  // RB tallies since boot or rebase
+    int _rbLevelMaxSinceStatus = 0;  // loudest smoothed level since the last RB STATUS (room notes)
     // The per-sample path's time since the last RB STATUS (DET-020): microseconds, samples, the longest block.
     struct AudioCost {
         uint64_t us = 0;
@@ -212,8 +212,8 @@ private:
     AudioCost _audioCost;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;
-    BehaviorGateConfig _activeBehaviorProfile = {};  // the behavior.* params bind into it (step 10 item 4)
-    // detection.contrast_medium / amp_medium / shape_* (step 10 item 7, step 11g B2): the active plan's limits.
+    BehaviorGateConfig _activeBehaviorProfile = {};  // the behavior.* params bind into it
+    // detection.contrast_medium / amp_medium / shape_*: the active plan's limits.
     detection::InspectionLimits _inspectionLimits = {};
     // When the last own chirp stopped; SELFTEST Settle waits out its echo.
     unsigned long _lastOwnChirpEndMs = 0;
@@ -221,10 +221,10 @@ private:
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
 
     // Baseline / startup state.
-    // The quiet-gated rebase machine, its timers and results (step 11i N2).
+    // The quiet-gated rebase machine, its timers and results.
     NodeBaseline _baseline;
 
-    // SELFTEST and its phases (step 11i N4); asks Behavior for test chirps through the callbacks.
+    // SELFTEST and its phases; asks Behavior for test chirps through the callbacks.
     NodeSelfTest _selfTest{_baseline,
                            NodeSelfTest::Chirps{this, &Node::selfTestRequestChirp, &Node::selfTestCancelChirp}};
 };

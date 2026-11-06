@@ -7,7 +7,7 @@
 #include "../../app/TextParse.h"
 
 /*
-The Analyzer console's pure parsing (step 11j item 6): which handler a line goes to, and the token checks the
+The Analyzer console's pure parsing: which handler a line goes to, and the token checks the
 RAW and SEQ handlers share. No Arduino and no AnalyzerApp, so the host test (test/test_analyzer_commands) reaches
 it; the handlers themselves are AnalyzerApp members (AnalyzerCommands.cpp).
 */

@@ -9,7 +9,7 @@ NodeCounters
 
 The RB tallies the Node prints in RB summary and RB STATUS (heard.*):
 cumulative since boot or the last rebase, reset by assignment
-(`counters = NodeCounters{}`). Step 11i N1 (docs/refactors/node-split.md).
+(`counters = NodeCounters{}`).
 */
 struct NodeCounters {
     unsigned long pending = 0;           // every verdict popped

@@ -1,7 +1,5 @@
-// Node status output (step 10 item 9, NODE-004): RB STATUS, the RB summaries, the
-// boot-time signal config, and the hop_check / plan_check lines. Moved verbatim
-// from ResonantNodeApp.cpp; handleDetectCommand is now printRbStatus (it was
-// RB STATUS under the wrong name, boundary map docs/refactors/archive/step10-boundary-map.md).
+// Node status output (NODE-004): RB STATUS, the RB summaries, the
+// boot-time signal config, and the hop_check / plan_check lines.
 #include "ResonantNodeApp.h"
 #include <Arduino.h>
 #include <esp_system.h>
@@ -55,7 +53,7 @@ void Node::printRbStatus(const char* line) {
     printKeyValue("has_requirement", supportRequired ? 1 : 0);
     printKeyValue("required_label",
                   supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
-    // Behavior's snapshot (step 11i N6, review A9); its time fields are taken at uptimeMs.
+    // Behavior's snapshot; its time fields are taken at uptimeMs.
     const unsigned long uptimeMs = timebase::nowMs();
     const BehaviorStatus b = _behavior.status(uptimeMs);
     printKeyValue("behavior_state", b.stateName);
@@ -64,7 +62,7 @@ void Node::printRbStatus(const char* line) {
     printKeyValue("behavior_detectionSuppressTailMsOwnEmit", b.config.detectionSuppressTailMsOwnEmit);
     printKeyValue("output_busy", b.outputBusy ? 1 : 0);
     printKeyValue("silent", _switches.silent ? 1 : 0);
-    // OutputStatus (OUT-002, step 10f): what SoundOutput is doing and has done.
+    // OutputStatus (OUT-002): what SoundOutput is doing and has done.
     {
         const OutputStatus& out = _soundOutput.status();
         printKeyValue("output.phase", outputPhaseName(out.phase));
@@ -112,11 +110,11 @@ void Node::printRbStatus(const char* line) {
     printKeyValue("i2s.read_errors", audioStats.readErrors);
     printKeyValue("audio.uptime_ms", uptimeMs);
     printKeyValue("audio.deficit_s", deficitS, 1);
-    // Step 8b: verdicts the 4-slot queue dropped (was Analyzer-only), and the
-    // loop task's lowest free stack since boot (bytes; getWindow() puts 2 KB
-    // on it per inspection module, audit 3.7).
+    // Verdicts the 4-slot queue dropped, and the loop task's lowest free
+    // stack since boot (bytes; getWindow() puts 2 KB on it per inspection
+    // module, audit 3.7).
     // Cumulative since boot or rebase (NodeCounters, reset by assignment): the mean over a span is
-    // the difference of two STATUS lines (step 10c, per-board strength drift).
+    // the difference of two STATUS lines (per-board strength drift).
     // The room as the mic hears it (smoothed magnitude, the same value the
     // quiet baseline watches): now, the loudest since the last STATUS, and the
     // baseline. Shows whether a run had noise at all (2026-10-23 drilling log).
@@ -131,7 +129,7 @@ void Node::printRbStatus(const char* line) {
     printKeyValue("audio.baseline", _audioSignal.baseline(), 1);
     printKeyValue("heard.valid", _counters.validPatterns);
     printKeyValue("heard.strength_sum", static_cast<unsigned long long>(_counters.validStrengthSum));
-    // The radio's cost (step 11a): frames, and the heap it took.
+    // The radio's cost: frames, and the heap it took.
     printKeyValue("net.started", _net.started() ? 1 : 0);
     printKeyValue("net.rx", _net.stats().rxFrames);
     printKeyValue("net.tx_failed", _net.stats().txFailed);
@@ -173,8 +171,7 @@ void Node::printRbStatus(const char* line) {
 
 // One line on the fit between the network signal and the scalar detector
 // (detection/HopGapContract.h). status=fail: the train can never be one
-// occurrence; status=warn: only where the room tail bridges the gaps (the
-// shipped 10 ms gap against release debounce 10 is warn, step 5h item 1).
+// occurrence; status=warn: only where the room tail bridges the gaps.
 void Node::printHopGapCheck() {
     const NodeSignalComposer::Values& hop = _composer.values();
     if (!hop.hopEnabled) {
@@ -222,8 +219,8 @@ void Node::printHopGapCheck() {
 }
 
 // RB plan_check: detection.scalar_* durations against the inspection plan's
-// windows and the FeatureHistory depth (detection/InspectionPlanContract.h,
-// step 8b item 2). status=fail: inspection reads past the history;
+// windows and the FeatureHistory depth (detection/InspectionPlanContract.h).
+// status=fail: inspection reads past the history;
 // status=warn: occurrences near the min duration are inspected before their
 // window has arrived (shipped: early_window_ms=5, audit 3.1, DET-017).
 void Node::printInspectionPlanCheck() {
@@ -261,7 +258,7 @@ void Node::printInspectionPlanCheck() {
         sep = ",";
     }
     if (!c.classLimitsOrdered) {
-        // A medium limit above its strong limit is ignored (deep review I-M-B).
+        // A medium limit above its strong limit is ignored.
         serialOut().print(sep);
         serialOut().print("class_limits_unordered");
     }
@@ -299,7 +296,7 @@ void Node::printRbSummary() const {
 }
 
 void Node::printRbBehaviorSummary() const {
-    const BehaviorStatus b = _behavior.status(timebase::nowMs());  // step 11i N6
+    const BehaviorStatus b = _behavior.status(timebase::nowMs());
     serialOut().print("RB behavior idle=");
     serialOut().print(b.config.idleEnabled ? 1 : 0);
     printKeyValue("wait", b.config.waitAfterHeardMs);

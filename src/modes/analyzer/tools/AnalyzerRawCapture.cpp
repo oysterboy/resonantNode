@@ -37,7 +37,7 @@ struct RawCaptureFeatureSample {
     uint8_t targetFresh : 1;
 };
 
-// mode=both (step 7b): PCM plus the features the shipped gates decide on, so
+// mode=both: PCM plus the features the shipped gates decide on, so
 // the host replay can compare its frequency path with the board's: amp
 // (Strength16), freq (the target-band FrequencyScore16 the scalar detector
 // observes), contrast (the band contrast the contrast inspector reads) and
@@ -104,8 +104,8 @@ bool rawCaptureUsesPcmRows(AnalyzerApp::RawCaptureMode mode) {
 
 // The capture rows of one row type, one block: before the emitter starts, the first preWanted rows are the pre
 // ring; at the start it is rotated in place, oldest first, and the post rows follow it. One allocation, not a ring
-// beside the rows: with both in mode=both, pre= split the heap and the 6,000 rows did not fit (step 12.4.10).
-// Freed on every way out of runRawTrigger (step 12.4.5; it was six manual malloc / free pairs).
+// beside the rows: with both in mode=both, pre= split the heap and the 6,000 rows did not fit.
+// Freed on every way out of runRawTrigger.
 template <typename Row>
 struct RawRows {
     Row* rows = nullptr;
@@ -278,7 +278,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, 
                                 unsigned long preMs, unsigned long decim, RawCaptureMode mode,
                                 const RawTriggerShape& shape) {
     stopSequenceTest();
-    // band= (step 7b): set for this capture, restored on every way out.
+    // band=: set for this capture, restored on every way out.
     struct BandRestore {
         FreqBandStream& band;
         unsigned long low;
@@ -290,7 +290,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, 
     }
     // Start the band bank from rest, as the host replay does, so its round-
     // robin bin updates run in the same phase and the freq/contrast columns
-    // compare sample for sample (step 7b). The pre window fills the 64-sample
+    // compare sample for sample. The pre window fills the 64-sample
     // Goertzel window long before the trigger.
     _freqBandStream.resetState();
     resetAudioSignalState();
@@ -337,7 +337,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, 
 
     sendEmitterCommand("MODE REMOTE");
     const bool acked = waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs);
-    _emitterLine.reset();  // the wait read Serial2 with its own reader: no half line left to glue onto (deep review L7)
+    _emitterLine.reset();  // the wait read Serial2 with its own reader: no half line left to glue onto
     if (!acked) {
         serialOut().println("RAW_ERR emitter_remote_claim_timeout");
         printRawMemoryState("emitter_timeout");
@@ -395,9 +395,9 @@ void AnalyzerApp::planRawCapture(RawCaptureRun& run) const {
     }
     run.progress.preWanted = preWanted;
     run.progress.postWanted = postWanted;
-    // ANA-008 (step 7a): the capture buffer was always maxSamples rows,
-    // whatever was asked; size it to the request (the pre window is copied
-    // in front of the post samples, so pre + post rows are enough).
+    // ANA-008: size the capture buffer to the request, not to maxSamples rows
+    // (the pre window is copied in front of the post samples, so pre + post
+    // rows are enough).
     run.captureRows = preWanted + postWanted;
 }
 

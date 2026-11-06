@@ -8,7 +8,7 @@
 #include "../../detection/DetectionProfile.h"
 
 /*
-Helpers the Node's files share (owner 2026-10-25 split by role). Internal to
+Helpers the Node's files share. Internal to
 src/modes/resonant/; nothing outside includes it. The text helpers are app/TextParse.h's
 (text_parse::startsWithWordIgnoreCase: the Node's verbs end on a token boundary).
 */

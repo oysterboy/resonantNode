@@ -57,7 +57,7 @@ bool detectorReportMatchesOccurrence(const detection::DetectorReport* detectorRe
 } // namespace
 
 // The run's config, copied once from the accepted start and clamped here; the
-// run reads it unchanged afterwards (step 11g C4).
+// run reads it unchanged afterwards.
 void AnalyzerApp::initializeSequenceTest(const RunConfig& requested) {
     _sequenceTest.active = true;
     RunConfig& config = _sequenceTest.config;
@@ -141,7 +141,7 @@ void AnalyzerApp::configureSequenceDetection() {
     }
 }
 
-// Run start: no trial yet, the run's tallies at zero (step 11g C4).
+// Run start: no trial yet, the run's tallies at zero.
 void AnalyzerApp::resetSequenceTestRunState() {
     analyzer_seq::resetToDefaults(_sequenceTest.trial);
     analyzer_seq::resetToDefaults(_sequenceTest.totals);
@@ -222,7 +222,7 @@ void AnalyzerApp::startSequenceTest(const RunConfig& requested) {
         const unsigned long sequenceClaimSendMs = timebase::nowMs();
         sendEmitterCommand("MODE REMOTE");
         const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", kEmitterModeAckTimeoutMs);
-        _emitterLine.reset();  // see AnalyzerCommands (deep review L7)
+        _emitterLine.reset();  // see AnalyzerCommands
         const unsigned long sequenceClaimAckMs = timebase::nowMs();
         if (_sequenceTest.config.showDetails && !_sequenceTest.config.quiet) {
             serialOut().print("SEQ remote claim: send=");
@@ -352,7 +352,7 @@ void AnalyzerApp::startSequenceTest(const RunConfig& requested) {
             } else {
                 serialOut().print("default");
             }
-            // Step 13: only when set, so a run at the Emitter's level keeps its old header.
+            // Only when set: a run at the Emitter's level prints no level=.
             if (_sequenceTest.config.pulseLevel[0] != '\0') {
                 printKeyValue("level", _sequenceTest.config.pulseLevel);
             }
@@ -625,7 +625,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
     const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
 
-    // The trial result is decided once, by classifySequenceTrial inside the report builder (11g C5).
+    // The trial result is decided once, by classifySequenceTrial inside the report builder.
     AnalyzerReport* finalizedReport = sequenceReportScratch();
     buildSequenceAnalyzerReport(*finalizedReport, selectedTrial, bufferOverrunTrial, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
@@ -756,11 +756,11 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
     summary.completed = detection::analyzer::completedPrimaryTrialCount(summary);
 }
 
-// dt anchor (ANA-007, step 7a): the time the trial's command was sent when
+// dt anchor (ANA-007): the time the trial's command was sent when
 // this Analyzer drives the Emitter (SEQ); otherwise (OBS, external emitter)
 // the EMIT_START marker as polled, else the scheduled trigger. The marker
 // branch only fires when an Emitter on the link prints markers for this
-// trial's number during OBS, which no current setup does (review 12.0 L18):
+// trial's number during OBS, which review 12.0 L18 found no setup doing:
 // in practice OBS anchors on the scheduled trigger. dt from the
 // command contains the Emitter's command handling and the D-AMP TX queue, a
 // constant (59 ms on 2026-10-22, E2/E3, against 22-38 ms of marker jitter).

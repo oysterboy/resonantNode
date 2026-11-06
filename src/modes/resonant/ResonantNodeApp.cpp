@@ -45,7 +45,7 @@ File structure:
 - baseline / startup
 - main update loop
 - logging and summary helpers
-Split by role (owner 2026-10-25): configuration in ResonantNodeParams.cpp, command dispatch
+Split by role: configuration in ResonantNodeParams.cpp, command dispatch
 in ResonantNodeCommands.cpp, the radio transport in ResonantNodeNet.cpp, diagnostics in
 ResonantNodeStatus.cpp + ResonantNodeSelfTest.cpp; shared helpers in ResonantNodeInternal.h.
 */
@@ -262,7 +262,7 @@ void Node::begin() {
         serialOut().println(_composer.values().hopRotation);
     }
     // The radio comes up after the stored values, so node.radio_enabled saved
-    // as 0 keeps it off (PAR-013, step 11a).
+    // as 0 keeps it off (PAR-013).
     if (_switches.radioEnabled) {
         const bool up = _net.begin();
         serialOut().print("RB net started=");
@@ -284,8 +284,7 @@ void Node::begin() {
     _audioSource.resetStats();
     _counters = NodeCounters{};
     // Boot: the mic warmup first (NodeBaseline::Config::micWarmupMs, the loop keeps running), then the floor is
-    // rebased and the quiet gate starts (decisions/2026-10-26-node-boot-warmup-runs.md; it had been skipped since
-    // begin(false)).
+    // rebased and the quiet gate starts (decisions/2026-10-26-node-boot-warmup-runs.md).
     _baseline.begin(timebase::nowMs());
     _rbLogMode = RbLogMode::Minimal;
     _rbLastWouldEmitHeardMs = 0;
@@ -318,7 +317,7 @@ void Node::begin() {
 // (the behavior.* params) is kept; performRbRebase does the same plus the audio reset
 // (issue #31 R2-3).
 void Node::quiesceBehaviorForOutputsOff() {
-    // Also an idle call waiting in its gap (before step 10f its train still started later).
+    // Also an idle call waiting in its gap: stopping it keeps its train from starting later.
     if (_soundOutput.busy() || _chirpOutput.isActive()) {
         _soundOutput.stop();
         _lastOwnChirpEndMs = timebase::nowMs();
@@ -349,7 +348,7 @@ void Node::performRbRebase() {
     if (!_audioSignal.rebase()) {
         serialOut().println("RB WARN rebase_timeout no_audio baseline_unchanged");
     }
-    // quiesceBehaviorForOutputsOff already reset Behavior (review 12.0 L11: a second reset here).
+    // quiesceBehaviorForOutputsOff already reset Behavior, so there is no second reset here (review 12.0 L11).
     resetDetectionState();
     _audioSignal.resetStats();
     _audioSource.resetStats();
@@ -436,7 +435,7 @@ void Node::updateRbBaselineState(unsigned long now) {
     }
 }
 
-// --- SELFTEST glue (NodeSelfTest runs the phases; step 11i N4) ---
+// --- SELFTEST glue (NodeSelfTest runs the phases) ---
 
 void Node::selfTestRequestChirp(void* ctx) {
     static_cast<Node*>(ctx)->_behavior.requestTestChirp();
@@ -515,7 +514,7 @@ void Node::restoreAfterSelfTestHardware() {
 
 void Node::applyBandParams() {
     if (_activeBehaviorProfile.bandPerNode) {
-        // A band per node (step 19, decisions/2026-10-31-bands-per-node.md): Behavior's base is the position of this
+        // A band per node (decisions/2026-10-31-bands-per-node.md): Behavior's base is the position of this
         // node's window on behavior.band_range_*; the detector listens on that window only, detection.band_* aside.
         syncBaseBin();
         const NodeSignalComposer::BandGrid grid = trainGrid();
@@ -570,7 +569,7 @@ NodeSignalComposer::BandGrid Node::bandGrid() const {
     return NodeSignalComposer::gridOf(_freqBandStream);
 }
 
-// The grid the base moves on and the train is composed from: the detector's band (step 17), or with a band per node
+// The grid the base moves on and the train is composed from: the detector's band, or with a band per node
 // the whole range on the same bin spacing, so an answer composed right after a glide already sits on the new window
 // before the detector follows it at the next applyBandParams().
 NodeSignalComposer::BandGrid Node::trainGrid() const {
@@ -626,7 +625,7 @@ void Node::update() {
 
     pollSerialCommands();
     pollNet();
-    // The outputs-off gate (output.silent, the baseline machine) as Behavior's block reason (step 11i N6): set here
+    // The outputs-off gate (output.silent, the baseline machine) as Behavior's block reason: set here
     // for the verdicts of this tick's samples, again below after the baseline step.
     _behavior.setOutputsEnabled(rbOutputsEnabled());
 
@@ -659,7 +658,7 @@ void Node::update() {
                 // Detection resumes after the Node's own emission: no occurrence carries over the gap, and the own
                 // ring-down cannot open one (review 14.1).
                 _detection.restartAfterInputGap();
-                _freqBandStream.resetState();  // no Goertzel window mixing pre-gap samples (deep review D-M2)
+                _freqBandStream.resetState();  // no Goertzel window mixing pre-gap samples
             }
             _detectionWasSuppressed = ownEmitSuppressed;
             if (!ownEmitSuppressed) {
@@ -753,8 +752,7 @@ void Node::update() {
     }
 }
 
-// Behavior asked for a chirp: start the emission it asked for (step 10 item 9:
-// out of update(), unchanged). A heard pattern is answered with the network
+// Behavior asked for a chirp: start the emission it asked for. A heard pattern is answered with the network
 // signal (the hop train); the idle call is an announcement tone, then the call.
 void Node::startEmission(unsigned long now) {
     const auto chirpPattern = _behavior.chirpPattern();
@@ -777,15 +775,15 @@ void Node::startEmission(unsigned long now) {
         serialOut().println(chirpPatternName(chirpPattern));
     }
     _led.flash(now, 2);
-    // The request from Behavior's ask, the band grid and output.* (NodeSignalComposer, step 11i N5): a heard
+    // The request from Behavior's ask, the band grid and output.* (NodeSignalComposer): a heard
     // pattern is answered with the hop train, the idle call is announcement, gap, then the call. SoundOutput plays
-    // it (step 10f); own-emit suppression covers its span.
+    // it; own-emit suppression covers its span.
     OutputRequest request =
         _composer.compose(trainGrid(), chirpPattern,
                           _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal, _behavior.baseBin());
     bool started = _soundOutput.start(request);
     if (!started && request.kind != OutputRequest::Kind::Pattern) {
-        // As before step 10f: a train or call that does not start falls back to the pattern.
+        // A train or call that does not start falls back to the pattern.
         serialOut().print("RB emit rejected reason=");
         serialOut().print(outputRejectName(_soundOutput.status().lastReject));
         serialOut().println(" fallback=pattern");
@@ -822,8 +820,7 @@ void Node::startEmission(unsigned long now) {
 }
 
 // The output tick, the idle call's second half (the train after the
-// announcement) and the end of an emission (step 10 item 9: out of update(),
-// unchanged).
+// announcement) and the end of an emission.
 void Node::updateEmissions(unsigned long now) {
     const uint8_t events = _soundOutput.update();
     if ((events & SoundOutput::kEventCallStarted) != 0 && _soundOutput.callIsHop()) {
@@ -835,7 +832,7 @@ void Node::updateEmissions(unsigned long now) {
         const unsigned long finishedMs = _soundOutput.finishedAtMs();
         _lastOwnChirpEndMs = finishedMs;
         _behavior.notifyChirpFinished(finishedMs);
-        _selfTest.noteChirpFinished(finishedMs);  // review 12.0 L9: was the loop-start now
+        _selfTest.noteChirpFinished(finishedMs);  // the actual end, not the loop's now (review 12.0 L9)
     }
 }
 
@@ -849,7 +846,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket, uns
     detection::OccurrenceVerdict verdict;
     while (_detection.popOccurrenceVerdict(verdict)) {
         // Outputs off (Settle, ListenForQuiet, silent): Behavior notes the
-        // pattern as heard and decides nothing (setOutputsEnabled, step 11i N6).
+        // pattern as heard and decides nothing (setOutputsEnabled).
         const bool behaviorSeesVerdict = _behavior.outputsEnabled();
         const auto behaviorDecision = _behavior.handleOccurrenceVerdict(verdict, _detection.fieldState(), now);
         if (behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
@@ -882,7 +879,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket, uns
             serialOut().print(behaviorSeesVerdict ? b.lastDecisionName : "outputs_off");
             serialOut().print(" valid=");
             serialOut().print(verdict.valid ? 1 : 0);
-            // Step 10c: per-board strength drift, attributed to a sender by nodegroup.py.
+            // Per-board strength drift, attributed to a sender by nodegroup.py.
             serialOut().print(" strength=");
             serialOut().print(static_cast<unsigned long>(verdict.primaryStrength + 0.5f));
             serialOut().print(" duration_ms=");

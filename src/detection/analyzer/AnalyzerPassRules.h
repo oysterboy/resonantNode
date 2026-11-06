@@ -16,8 +16,8 @@ inline const char* sourceReportReason(bool sourceReportMatched, bool hasDetector
     return sourceReportMatched ? "none" : (hasDetectorReport ? "id_mismatch" : "none");
 }
 
-// Moved to occurrences/OccurrenceIds.h (step 10, ANA-003); kept visible here
-// for the Analyzer code and tests that name it detection::analyzer::.
+// Lives in occurrences/OccurrenceIds.h (ANA-003); re-exported here for the Analyzer code and tests that
+// name it detection::analyzer::.
 using ::detection::nextOccurrenceId;
 
 inline unsigned int completedPrimaryTrialCount(const AnalyzerCleanSummary& summary) {

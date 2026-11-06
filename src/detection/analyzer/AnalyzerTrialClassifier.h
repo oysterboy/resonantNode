@@ -11,13 +11,13 @@ AnalyzerReason / AnalyzerStage values only.
 Detector-specific, occurrence-specific, and pattern-specific reject detail
 must stay on DetectorReport, Occurrence/InspectedOccurrence, and OccurrenceVerdict.
 */
-// A valid verdict this long after the trigger is Late, not Expected. One
-// definition since step 10 (it was a constant in three Analyzer files).
+// A valid verdict this long after the trigger is Late, not Expected. The one definition, shared by every
+// Analyzer file.
 constexpr long kAnalyzerLateOnsetMinMs = 200L;
 
 struct AnalyzerSequenceClassificationInput {
-    // The trial's selection (what the Analyzer's trial selection found in the window; 11g C5 moved the result ladder
-    // that turns it into the trial result from finalizeSequenceTrial into sequenceTrialResult() below).
+    // The trial's selection: what the Analyzer's trial selection found in the window. sequenceTrialResult() below
+    // turns it into the trial result.
     AnalyzerResult selectedResult = AnalyzerResult::Unknown;
     // The selection is of a kind that needs a verdict (a valid pattern or an accepted occurrence).
     bool selectionNeedsVerdict = false;
@@ -48,8 +48,8 @@ struct AnalyzerSequenceClassificationInput {
 };
 
 AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassificationInput& input);
-// The trial result from the selection (review A8 / 11g C5: the one ladder; it was in finalizeSequenceTrial).
+// The trial result from the selection: the one result ladder.
 AnalyzerResult sequenceTrialResult(const AnalyzerSequenceClassificationInput& input);
 // The whole classification, once: the result ladder, the reason and stage, and an invalid verdict as
-// Rejected / PatternRejected / Evaluator (it was a second override in buildSequenceAnalyzerReport).
+// Rejected / PatternRejected / Evaluator.
 AnalyzerClassification classifySequenceTrial(const AnalyzerSequenceClassificationInput& input);

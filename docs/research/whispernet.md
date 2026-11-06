@@ -378,3 +378,15 @@ there, live (the same finding as the band session above). Nothing was changed in
 Limits: one speaker, one room, a
 camera with its own level processing, section labels only (no frame labels), nothing above 8 kHz. On the ESP32 only
 WebRTC's GMM fits (a few KB, fixed point); Silero (~2 MB, recurrent) and ESP-SR need PSRAM.
+
+### A small decision tree on the same recordings (way 4, feasibility, 2026-11-06)
+
+`tools/bench/treetest.py`: per phrase the replay opens (level window and timbre check open), the band excess over the
+room in five bands, flatness, modulation, centroid and zero crossings; a depth-3 tree, whisper kinds against the
+others, leave-one-kind-out (37 whisper and 75 other phrases). Held out, 57 % of the whisper phrases are recognised
+and 17 % of the others flagged (typing 7 of 16, chair, clothes and paper 2 each, speech and breath none), where the
+chain as it stands passes none of the whispers. The tree leans on the 200-700 Hz excess (a whisper adds
+little there: <= ~12 dB), then flatness and zero crossings: the same cue the band session found, now as a rule the
+data chose. Read it as "there is something in these features", not as a result: one speaker, one room, a camera;
+the whisper kinds are siblings (soft / normal / strained / distances) so a held-out whisper kind still has
+whispers in training. The board's own recordings (RAW mode=pcm) are the data to train on.

@@ -584,7 +584,7 @@ including a returning frequency detector, joins as a family on these terms.
 They are agreed terms for the second family, not code yet: `DetectionFamily.h`,
 `ActiveDetector`, the shims and the `DETECTOR_FAMILY_*` flag below do not exist
 while Scalar is the only family; `DetectionRuntime` holds a
-`ScalarTransientDetector` directly (2026-10-26). Step 9 builds them.
+`ScalarTransientDetector` directly (2026-10-26). They are built when a second family joins.
 
 ```text
 Boundary
@@ -636,7 +636,7 @@ Evidence before it ships
 ```
 
 The removed FrequencyMatch implementation is in git history: the parent of
-the step 7d removal commit.
+commit 3a11d801 (2026-10-22), which removed it.
 
 ---
 
@@ -697,7 +697,7 @@ SelectedRejectSummary
 neutral tooling output
 ```
 
-The inspection evidence left the Occurrence in step 11e (2026-10-25): an
+The inspection evidence left the Occurrence on 2026-10-25: an
 `Occurrence` carries the accepted-event facts and the per-target
 `StrengthClass` the inspector assigns; the observations themselves (windows,
 percentiles, coverage) are on `InspectedOccurrence` only.
@@ -754,7 +754,7 @@ Occurrence is for accepted-event transport.
 
 Clean Analyzer output must read DetectorReport / SelectedRejectSummary.
 
-`DetectionDiagnostics` (`src/detection/DetectionDiagnostics.h`, step 11e item 7)
+`DetectionDiagnostics` (`src/detection/DetectionDiagnostics.h`)
 is the Analyzer's side channel out of `DetectionRuntime`: the per-frame
 counters, the pipeline event queue SEQ_SOURCE / SEQ_INSPECT read, the detector
 report captured with each occurrence, the incomplete-window history snapshot.
@@ -844,7 +844,7 @@ the inspected occurrence and the detector report in the same scope.
 
 Until 2026-10-22 this was the `OccurrenceEvaluator` class with its own input
 queue, and the Analyzer re-associated verdicts with their inspections through
-a correlation queue. Both were removed in roadmap step 8
+a correlation queue. Both were removed on 2026-10-22
 (decisions/2026-09-21-fold-evaluator-into-inspector.md). Older docs that say
 `OccurrenceEvaluator` mean this function.
 
@@ -1292,7 +1292,8 @@ Interim (2026-11-05): the echo modes are experimental and this section and 5.2 a
 describe them. Their contract until a chapter lands is `docs/roadmaps/roadmap-echo.md` and the decisions of
 2026-11 (the provisional verdict on an open candidate, the echo inspection targets and streams, the Clip request,
 the room-following thresholds, the mode's own deafness during playback); where those differ from 5.1, 5.4, 5.6 or
-7.2, the difference is decided, not drift. The chapter is deferred past the tryout (step 23's leftovers).
+7.2, the difference is decided, not drift. The chapter is deferred past the tryout (the review leftovers,
+docs/research/architecture-and-code-review-2026-11-05.md).
 
 ---
 

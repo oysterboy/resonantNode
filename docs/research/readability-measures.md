@@ -210,6 +210,8 @@ E  headers with an owns / does-not block,
    among the 61 that declare a class or struct   today 21   up
 F  mean CCN, src/modes vs the rest               6.3 / 3.7  closer
 G  lines > 120 (clang-format leaves literals)    today 12   flat
+H  comment lines naming a step number / the
+   owner, in src/ (added 2026-11-06)              38 / 14    down (208 / 53 before the comment pass)
 ```
 
 Not in the set, with the reason:

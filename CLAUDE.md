@@ -75,6 +75,19 @@ for Analyzer output, `tools/bench/analyzerab.py` against the last A/B set.
 CI (`.github/workflows/build.yml`, NODE-007) builds every env and runs the host suites on every push; check
 `gh run list` after pushing. A green run is compile plus host tests, not hardware.
 
+Before you commit, the checks CI runs (scripts in `tools/ci/`; each exits 1 with one line per problem):
+
+```
+python tools/ci/clang_format.py --fix          # C/C++ format; CI runs --check
+python tools/ci/include_direction.py --strict  # src/detection includes no src/modes; ParamRegistry nothing from src
+python tools/ci/test_lists.py                  # ESP test_ignore and the native test_filter lists agree
+python tools/ci/roadmap_ids.py                 # no finished item in an active roadmap; every cited ID resolves
+pio test -e native-test-behavior               # host suites; also native-test and native-test-diag
+python tools/ci/readability.py                 # counts, never fails; H = comment lines that age
+```
+
+`roadmap_ids.py` runs in the `include-direction` job of `build.yml` (with `--selftest` first).
+
 Unit tests live under `test/` (PlatformIO/Unity). On-device:
 `test/test_analyzer_pass_rules`, `test/test_timebase`, and
 `test/test_shipped_profile`, which runs the shipped scalar profile over the
@@ -201,6 +214,19 @@ multi-item pass or plan doc closes out, not for every commit — `git log
 active pass/plan doc you're closing out is the kind of unit that's gotten a
 changelog entry before (look at the latest entries for the shape) before
 deciding to add one.
+
+### Closing a step (one commit where it fits)
+
+1. The gate results go into the step's text in `roadmap-0-steps.md`, dated, with a `bench/sessions/...` path for
+   anything a board did; the header becomes `[DONE <date>]`.
+2. Every roadmap item the step finished moves whole to `docs/roadmaps/roadmap archive/roadmap-changelog.md`
+   (`tools/ci/roadmap_ids.py` fails on one left behind). The active roadmaps hold what is not true yet.
+3. A fork taken inside the step gets a `docs/decisions/` file and a row in its index.
+4. A pass doc, if one was opened, gets its `Archived: ...` header and moves to `docs/refactors/archive/`.
+5. The step's GitHub issue is closed with a one-line comment naming the commit.
+6. A pointer to something the step renamed (a command, a param path, a config site) is fixed in
+   `notes_manual.md` and `implementation-status.md` in the same commit.
+7. Comments written in the step say why and cite a roadmap ID or a decisions file, never the step number.
 
 ### Active work: pass / plan docs (`docs/refactors/`)
 
@@ -360,6 +386,19 @@ roadmap ID (`DET-015`, `OUT-005`) rather than a step. Classes open with an owns 
 counts (step 12.4); read them when closing a pass, never gate on them.
 The same holds for the guide (`notes_manual.md`): say what changed and when
 (a date), not only "since step N".
+
+What stays and what goes (applied to `src/`, `lib/` and `test/` in the 2026-11-06 pass; the roadmap half of the same
+idea is `docs/decisions/2026-11-06-finished-items-leave-the-roadmaps.md`):
+
+- Out: a step number or a review label as the only content; change history ("was 20 s", "as before step 10f",
+  "X was removed"); a snapshot in the present tense ("with five boards on the desk"); "owner" as the only reason.
+- Stays: the reason; a measurement with its date and `bench/sessions/...` path; a roadmap ID, a `docs/decisions/` file,
+  an issue number or a dated review pointer after a reason; "used to" only where it explains a trap that is still there.
+- A value the owner chose: point at its decisions file, or write "chosen <date>" and the reason. A value that depends
+  on how many nodes share the room says so, instead of naming today's count.
+- The test: read the sentence without `git log`. Is it still true and still useful? Then it stays.
+- `tools/ci/readability.py` line H counts the comment lines in `src/` that name a step number or the owner
+  (38 / 14 on 2026-11-06, from 208 / 53); a rise after a pass is the signal to look.
 
 ## Commit style
 

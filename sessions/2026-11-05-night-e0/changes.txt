@@ -4,3 +4,6 @@
 21:42:32 all back: E5 Node, silent 0 on E1/E2/E4/E5, RB log full; logger restarted (night2.log)
 22:25:02 logger stopped for the radio load measurement (node phase, then echo, whisper, back to node)
 22:44:07 all five back to the Node image after the radio load measurement (echo, whisper phases done)
+23:09:18 night logger stopped: pulling 23.1-23.3, new images, the board gates of 23.1 / 23.2 by radio from E0
+23:48:32 step 23 board gates done (chord, failed OTA echo / whisper); all five Node 7d8c4dfa; server stopped; logger restarted as night4.log
+09:52:43 2026-11-06: PC was down (scheduled Windows restart 03:55 ended the logger; unexpected power loss 09:15-09:44); boards ran on without a reset (uptime ~37.9k s); logger restarted as night5.log

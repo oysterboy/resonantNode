@@ -16,7 +16,8 @@ Where does a concept belong?    docs/specs/myspec.md
 How does it work / how do I run
 or change it?                   docs/notes_manual.md (the operator guide)
 What next, in what order?       roadmap-0-steps.md
-What exactly is item X?         the domain roadmap that owns its ID
+What exactly is item X?         the domain roadmap that owns its ID; once the item is
+                                finished, the roadmap archive (same ID, same text)
 How is a big item executed?     its pass / plan doc in docs/refactors/
 Why was it built this way?      docs/decisions/ (forks taken, and open ones)
 How could X be done?            docs/research/ (options, designs; marks what got promoted)
@@ -148,7 +149,15 @@ Keep roadmap-0-steps.md lean: order and gates only, detail stays in the
 domain roadmap for that area.
 Give an item executed through docs/refactors/ a roadmap ID that points at its
 pass / plan doc.
-Move fully landed items to docs/roadmaps/roadmap archive/roadmap-changelog.md.
+Close an item by moving its whole section to docs/roadmaps/roadmap archive/roadmap-changelog.md,
+under its domain, when its Status is finished (DONE, LANDED, CLOSED, PLAN ARCHIVED, REMOVED). The active
+roadmaps hold what is not true yet: TODO, PARTIAL, DEFERRED, PLANNED, RESCOPED. The step that closes the
+item does the move in the same commit.
+An ID is never reused and stays citable: code, tests and decisions cite IDs, and an ID resolves to a heading
+in an active roadmap or in the archive. A pointer "roadmap-X.md ID" in an older note may lead to the
+archive now; look the ID up.
+tools/ci/roadmap_ids.py checks all of this in CI (finished item in an active roadmap, missing Status,
+duplicate ID, cited ID without a heading).
 Keep myspec.md and implementation-status.md aligned with the current code.
 ```
 

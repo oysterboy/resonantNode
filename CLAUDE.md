@@ -252,7 +252,13 @@ archived without the next unit of work being started.
   `docs/refactors/` orders *within* its item (when one exists). On conflict, the steps file decides
   whether and when, the pass doc decides how.
 - Per-subsystem roadmap files (`roadmap-detection.md`, `roadmap-behavior.md`,
-  etc.) are edited in place as plans change.
+  etc.) are edited in place as plans change. They hold what is not true yet:
+  when a step closes an item (Status DONE, LANDED, CLOSED, PLAN ARCHIVED),
+  move its whole section to `docs/roadmaps/roadmap archive/roadmap-changelog.md`
+  in the same commit. IDs are cited from code and decisions, never reused, and
+  resolve in an active roadmap or the archive; `tools/ci/roadmap_ids.py` (CI)
+  fails on a finished item left in an active roadmap, a missing Status, a
+  duplicate ID or a cited ID without a heading.
 - `implementation-status.md` is a **live table**, not history — edit it in
   place to reflect current state (stable/experimental/planned/deferred); it
   should never accumulate dated entries.

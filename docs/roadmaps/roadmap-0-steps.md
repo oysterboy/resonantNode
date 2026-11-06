@@ -229,8 +229,9 @@ substeps marked "on site" wait for those days.
         Progress 2026-11-06: owner answers in decisions/2026-11-06-param-review-owner-answers.md; the two old rest
         triggers and scalar_min_strength are gone (decisions/2026-11-06-retire-the-old-rest-triggers.md). The Behavior
         renames are built (the mapping table in the same decision). The plateau and the shrink
-        are params (plateau_pct, spread_shrinks). Open: the echo modes' vocabulary and start_chance_pct, the
-        annotated list in notes_manual.md.
+        are params (plateau_pct, spread_shrinks). The echo modes take the Node's names and start_chance_pct (built
+        2026-11-06, mapping in the param-review decision; on the boards after a listening test). Open: the annotated
+        list in notes_manual.md.
    20.6 [TODO, by 2026-11-27] Which mode the performance's demo puts first, Whispernet or the echo room (owner
         2026-11-06: open). Criterion: the one that triggers reliably and does not false-trigger in the room's
         November measurement (20.4); the other stays a demo if it passes too (both are an OTA apart). A

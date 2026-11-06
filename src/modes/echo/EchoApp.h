@@ -38,7 +38,7 @@ constexpr bool kWhispernet = false;
 #endif
 
 /*
-EchoApp (ECHO-003, step 20.1; the echo room ECHO-001, step 20.2): the echo modes' shell on the Node hardware, and
+EchoApp (ECHO-003; the echo room ECHO-001): the echo modes' shell on the Node hardware, and
 the echo room in it: a clap (a fast-rising transient) is answered by a replay of the sound itself, cut from the
 capture ring around its onset.
 

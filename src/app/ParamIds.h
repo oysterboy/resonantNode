@@ -6,8 +6,7 @@
 The Node's param vocabulary for lib/ParamRegistry (PAR-016): which module owns a
 param (ModuleId, the registry's opaque group tag) and each param's stable id
 (ParamId, the registry's opaque id). Paths are the public identity; ids are
-internal, never reused once removed. Moved here from src/param/ParamTypes.h
-when the registry became an in-repo library (step 10 item 3).
+internal, never reused once removed.
 */
 namespace param {
 

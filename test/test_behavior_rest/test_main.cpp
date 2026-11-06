@@ -1,7 +1,7 @@
 /*
 ResonantBehavior on the host: a busy network makes a node rest.
 
-decisions/2026-10-17-two-node-exchange-chain-length.md (owner 2026-10-17): above a
+decisions/2026-10-17-two-node-exchange-chain-length.md: above a
 level of network traffic the node pauses hard, no answers and no idle voice, for
 restMs. Two triggers: the field (valid network patterns heard in the field
 window, FieldState::recentPatternCount) and the node's own budget (emissions

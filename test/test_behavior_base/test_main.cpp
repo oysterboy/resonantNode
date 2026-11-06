@@ -1,5 +1,5 @@
 /*
-The base bin on the host (BEH-009 part 2, step 17.2; decisions/2026-10-29-wider-band-base-bin-per-node.md): the Node
+The base bin on the host (BEH-009 part 2; decisions/2026-10-29-wider-band-base-bin-per-node.md): the Node
 hands Behavior the grid and a seed, the verdict carries the heard train's lowest bin, each own answer moves the base
 one bin toward the base last heard (the glide), the automaton's rest scatters it. Runs in native-test-behavior.
 */

@@ -1,5 +1,5 @@
 /*
-SoundOutput on the host (OUT-002/003, step 10f): the request paths the Node
+SoundOutput on the host (OUT-002/003): the request paths the Node
 uses (hop train, idle call with its announcement and gap, plain pattern), the
 physical-limit checks, and stop() during the idle call's gap. The real
 ChirpOutput drives a fake ToneOutput that times a pulse train like the I2S

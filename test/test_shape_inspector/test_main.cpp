@@ -1,5 +1,5 @@
 /*
-The ShapeInspector on the host (DET-015, step 11b; decisions/2026-10-26-det015-bin-track-inspector.md): the
+The ShapeInspector on the host (DET-015; decisions/2026-10-26-det015-bin-track-inspector.md): the
 BinTrack plus the BinShape module over synthetic bin sequences, and makeVerdict's shape requirement. Pins the
 rule: a steady tone is one bin (None), a hop train visits the band's bins rising (Strong), a train cut to three
 steps is still Medium (the height-offset case, E002), a rotation that wraps counts as rising, and single-target

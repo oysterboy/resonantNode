@@ -7,7 +7,7 @@
 #include <new>
 
 /*
-CaptureRing (ECHO-001, step 20.2)
+CaptureRing (ECHO-001)
 
 The last N samples of the mic as int16, addressed by the absolute sample index (the count of samples pushed since
 begin()), so a clip around an onset can be cut out later by the index the detector reported, as long as it has not

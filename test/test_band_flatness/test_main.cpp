@@ -1,5 +1,5 @@
 /*
-BandFlatness on the host (ECHO-002, step 20.3): white noise reads flat (near 1), a tone and a narrow band read near 0,
+BandFlatness on the host (ECHO-002): white noise reads flat (near 1), a tone and a narrow band read near 0,
 the reading does not depend on the level, and nothing pushed gives no reading. Runs in native-test-behavior.
 */
 #include <math.h>

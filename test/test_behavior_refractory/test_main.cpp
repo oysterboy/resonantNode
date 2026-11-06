@@ -1,8 +1,7 @@
 /*
 ResonantBehavior on the host: can a node answer the reply to its own signal?
 
-Step 5d of roadmap-0-steps.md (docs/research/unproven-assumptions-audit.md
-section 1.1). Two nodes A and B on the shipped BehaviorGateConfig: A answers
+docs/research/unproven-assumptions-audit.md section 1.1. Two nodes A and B on the shipped BehaviorGateConfig: A answers
 a heard pattern with its hop train, B answers that train, and B's reply
 closes on A's detector about 300-370 ms after A's own train ended:
 
@@ -15,7 +14,7 @@ closes on A's detector about 300-370 ms after A's own train ended:
 
 A's refractory after its own emission is refractoryAfterEmitMs = 400, and a
 verdict that arrives in Refractory is dropped (RefractoryAfterEmit), not
-queued. These tests pin that arithmetic down so the bench run of step 5d
+queued. These tests pin that arithmetic down so the bench run
 (nodepair.py with refractory 0 vs 400) has a stated expectation, and so a
 later change to the defaults, the train shape or the state machine shows
 up here before a board sees it.

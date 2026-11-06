@@ -9,12 +9,12 @@
 #include "FreqBandStream.h"
 
 /*
-NetworkBand (step 11i N7, review A10; DET-013)
+NetworkBand (DET-013)
 
 The band the detector listens to, as the detection.band_* params set it: FreqBandStream's bank over lowHz..highHz
 on its bin grid. An empty or inverted band (lowHz 0, highHz < lowHz) means "single target at the chirp tone".
 Band 2950-4700 (8 bins, 2026-10-30; decisions/2026-10-29-wider-band-base-bin-per-node.md), from 2950-3950 so the
-3,200 Hz chirp sits on a bin (owner 2026-10-16, decisions/2026-10-16-network-band-2950-3950.md). The Node's hop train reads the applied grid back from
+3,200 Hz chirp sits on a bin (decisions/2026-10-16-network-band-2950-3950.md). The Node's hop train reads the applied grid back from
 FreqBandStream (NodeSignalComposer::gridOf), never from these values.
 */
 struct NetworkBand {

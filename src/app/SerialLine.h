@@ -5,8 +5,8 @@
 /*
 SerialLine
 
-The line reader every serial port in every mode uses (step 11e item 8;
-decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md), and
+The line reader every serial port in every mode uses
+(decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md), and
 its byte filter.
 
 Byte filter: a reset or reflash of one board leaves its TX pin floating or
@@ -19,8 +19,7 @@ still ends a line.
 
 Overflow policy: a line longer than the buffer is dropped whole and reported
 (tooLong()), never run cut: a cut "PARAM SET x 1200" is "PARAM SET x 12"
-(issue #31 A3 on the Node; the Analyzer and the Emitter ran cut lines until
-step 11e).
+(issue #31 A3).
 */
 namespace serial_line {
 

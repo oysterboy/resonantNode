@@ -1,6 +1,6 @@
 /*
-ResonantBehavior's snapshot and outputs gate on the host (step 11i N6, review
-A9, docs/refactors/node-split.md). status(now) copies exactly what the getters
+ResonantBehavior's snapshot and outputs gate on the host
+(docs/refactors/archive/node-split.md). status(now) copies exactly what the getters
 return (the Node prints the snapshot in place of them), and
 setOutputsEnabled(false) does what the Node's gate did around Behavior: a
 verdict is only noted as heard (decision None, no HeardPattern, the field

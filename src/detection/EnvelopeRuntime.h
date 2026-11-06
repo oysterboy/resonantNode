@@ -11,7 +11,7 @@
 namespace detection {
 
 /*
-EnvelopeRuntime (ECHO-001 / ECHO-002, step 20)
+EnvelopeRuntime (ECHO-001 / ECHO-002)
 
 The echo modes' detection chain, myspec's order on the amplitude envelope alone (no band, no DetectionRuntime): per
 block the envelope's Strength16 level into a FeatureHistory and the ScalarTransientDetector; an occurrence it finishes

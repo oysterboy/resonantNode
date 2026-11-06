@@ -9,7 +9,7 @@
 namespace detection {
 
 /*
-BinTrack (DET-015, step 11b; decisions/2026-10-26-det015-bin-track-inspector.md)
+BinTrack (DET-015; decisions/2026-10-26-det015-bin-track-inspector.md)
 
 The strongest band bin per millisecond, with its level, for the ShapeInspector:
 which bins an occurrence visited and in what order. FreqBandStream knows the

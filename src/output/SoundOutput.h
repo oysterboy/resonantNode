@@ -7,7 +7,7 @@
 #include "OutputRequest.h"
 
 /*
-SoundOutput (OUT-002/003, step 10f; myspec 7.2)
+SoundOutput (OUT-002/003; myspec 7.2)
 
 Executes one OutputRequest at a time on the ChirpOutput and keeps an
 OutputStatus. It owns the sequencing of a request: a hop train, a chirp

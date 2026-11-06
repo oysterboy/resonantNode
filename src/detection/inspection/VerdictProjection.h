@@ -21,8 +21,8 @@ scalar occurrence, or it is empty (no duration, no strength).
 No temporal or multi-occurrence logic. Pattern matching over several
 occurrences, if it comes, sits downstream of the verdict.
 
-Replaces the OccurrenceEvaluator stage (roadmap step 8, cleanup-0-plan Phase 7c;
-decisions/2026-09-21-fold-evaluator-into-inspector.md): same rule, same fields,
+Replaces the OccurrenceEvaluator stage that older docs name
+(decisions/2026-09-21-fold-evaluator-into-inspector.md): same rule, same fields,
 no queue.
 */
 bool makeVerdict(const InspectedOccurrence& inspected, const InspectionPlan& plan, OccurrenceVerdict& out);

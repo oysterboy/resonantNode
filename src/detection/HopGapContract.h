@@ -3,7 +3,7 @@
 #include "DetectionProfile.h"
 
 /*
-HopGapContract (step 5h item 2, DET-011)
+HopGapContract (DET-011)
 
 The Node's network signal (a train of steps x pulse ms with gap ms between,
 output.hop_*) and the scalar detector that has to read it as one occurrence

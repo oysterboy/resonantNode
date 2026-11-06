@@ -3,7 +3,7 @@
 #include <Print.h>
 
 /*
-FirmwareOta (step 11d, FWOTA; decisions/2026-10-28-ota-firmware-pull-over-http.md)
+FirmwareOta (FWOTA; decisions/2026-10-28-ota-firmware-pull-over-http.md)
 
 A board pulls a new firmware image over WiFi: `OTA url=http://<host>:<port>/<file>.bin token=<t>` joins the
 network named in include/wifi_secrets.h (local, git-ignored; WIFI_SSID / WIFI_PASSWORD), streams the image into the
@@ -12,7 +12,7 @@ untouched until the new one is written and checked, so a failed or interrupted d
 firmware. WiFi is joined without auto-reconnect and without writing the credentials to NVS (review 12.0 M1,
 L-OTA4); a failed attempt puts the WiFi mode back as it was, and the Node then restores its ESP-NOW channel.
 
-Token (owner 2026-10-29, review 12.0 M4): the command must carry token= equal to OTA_TOKEN from the same secrets
+Token (review 12.0 M4): the command must carry token= equal to OTA_TOKEN from the same secrets
 header. A missing or wrong token answers `OTA result=bad_token` and changes nothing; a build without OTA_TOKEN (or
 without the WiFi credentials) refuses every OTA with `no_credentials`. The token keeps a stray ESP32 on the radio
 from reflashing the Nodes; it is not encryption (the radio frames and the HTTP image are plain).
@@ -21,7 +21,7 @@ The new image starts unconfirmed (the bootloader's rollback, CONFIG_APP_ROLLBACK
 from esp_timer (not timebase::nowMs, which a wrap-test build offsets; review 12.0 L-OTA1):
 - confirm: confirmRunningImage, called from each mode's loop, marks the image valid once uptime reaches
   kConfirmAfterMs. It runs from the loop, so an image whose loop never runs never confirms.
-- deadline (owner 2026-10-29, L-OTA2): armRebootDeadline, called first thing in setup(), starts a one-shot esp_timer
+- deadline (review 12.0 L-OTA2): armRebootDeadline, called first thing in setup(), starts a one-shot esp_timer
   when the running image is still pending verify. If the image has not confirmed by kRebootDeadlineMs of uptime, the
   timer restarts the board and the bootloader rolls back to the previous image: this catches an image that hangs
   without crashing.

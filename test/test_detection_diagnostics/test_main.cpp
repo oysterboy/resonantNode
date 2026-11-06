@@ -1,13 +1,13 @@
 /*
-Step 11e item 7 follow-up: DetectionDiagnostics describes what DetectionRuntime decided.
+DetectionDiagnostics describes what DetectionRuntime decided.
 
-Item 7 moved the Analyzer's recording (per-frame counters, the 4-slot pipeline event queue, the
-detector report capture, the history-incomplete snapshot) out of DetectionRuntime into a side
+The Analyzer's recording (per-frame counters, the 4-slot pipeline event queue, the
+detector report capture, the history-incomplete snapshot) sits outside DetectionRuntime, in a side
 channel. The Analyzer's SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN lines and its trial classifier
 read that channel, not the verdict queue the Node reads, so a hook called at the wrong point, a
 report captured too late or a reset that clears one side and not the other would make the
-Analyzer describe a different trial than the detector decided (owner's concern,
-docs/refactors/review-fixes-2026-10-25.md, "Handoff 2026-10-26"). The replay and every other
+Analyzer describe a different trial than the detector decided
+(docs/refactors/archive/review-fixes-2026-10-25.md, "Handoff 2026-10-26"). The replay and every other
 host suite build the Null variant; this one is built with -D ANALYZER_MODE (env native-test-diag)
 and pins down:
 

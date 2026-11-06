@@ -1,10 +1,9 @@
 /*
-NodeSignalComposer on the host (step 11i N5, docs/refactors/node-split.md):
+NodeSignalComposer on the host (docs/refactors/archive/node-split.md):
 the Node's half of an emission. Hop frequencies per base bin (no wrap, the
 8-bin band since 2026-10-30), the shipped 5-step train, the idle call with and without the hop, the grid read from a
 real FreqBandStream after the band moved, and the span bound the output.*
-ranges keep (8 x 250 + 7 x 250 fits OutputLimits, step 11g B2 / review
-D1.2). Runs in native-test-behavior.
+ranges keep (8 x 250 + 7 x 250 fits OutputLimits). Runs in native-test-behavior.
 */
 #include <unity.h>
 

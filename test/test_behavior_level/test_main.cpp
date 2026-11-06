@@ -1,5 +1,5 @@
 /*
-The level automaton on the host (BEH-008, step 16; decisions/2026-10-29-answers-follow-the-field-level-automaton.md):
+The level automaton on the host (BEH-008; decisions/2026-10-29-answers-follow-the-field-level-automaton.md):
 one integer level per node (+1 per heard valid train, a chord's merged occurrence counted by its duration; +1 per own
 emission; -1 per level_decay_ms of hearing nothing), p = (level + 1) / level_max for answering and for keeping a
 pending answer (else the yield), a rest at the top, an answer after the fixed wait plus a random 0..jitter window.

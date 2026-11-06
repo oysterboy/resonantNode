@@ -13,7 +13,6 @@ it: Behavior names the kind of emission it wants, the Node composes one
 OutputRequest from that and the output.* params, SoundOutput executes it and
 keeps the OutputStatus. ChirpOutput and the ToneOutput devices are not
 included here on purpose; Behavior must compile without them (myspec 7.1).
-Moved out of SoundOutput.h / ChirpOutput.h in step 11e item 1.
 */
 
 // The ChirpOutput patterns Behavior can ask for (Idle: the two-part idle

@@ -4,7 +4,7 @@
 #include <strings.h>
 
 /*
-Which Node commands the radio carries (PAR-013, step 11a). Kept out of NetFrame.h, the wire format, which
+Which Node commands the radio carries (PAR-013). Kept out of NetFrame.h, the wire format, which
 should not know the Node's command names. Pure; host-tested in test/test_net_frame.
 */
 namespace net {

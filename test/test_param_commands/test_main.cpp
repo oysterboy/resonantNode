@@ -1,6 +1,6 @@
 /*
-Host test for the shared PARAM command handler (app/ParamCommands, step 11e
-item 9): the grammar every mode answers, what a line writes and what it tells
+Host test for the shared PARAM command handler (app/ParamCommands):
+the grammar every mode answers, what a line writes and what it tells
 the caller to apply, with and without a store. Output goes to stdout as on
 the board; the assertions are on the fields and the result. Runs in
 native-test-behavior; includes the sources it tests directly, like

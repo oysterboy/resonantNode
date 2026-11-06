@@ -7,9 +7,9 @@
 #include "NodeNet.h"
 
 /*
-NetGateway (step 11i N3, docs/refactors/archive/node-split.md; moved to src/net/ 2026-10-30 for the echo modes)
+NetGateway (docs/refactors/archive/node-split.md; in src/net/ so the echo modes link it too)
 
-The text layer of the radio on the Node (PAR-013, step 11a): the reply of a
+The text layer of the radio on the Node (PAR-013): the reply of a
 remote command run here (the console tee, cut into reply frames) and, on the
 gateway node, the reassembly of other nodes' replies into whole printed lines.
 Owns what used to be file-scope state in ResonantNodeNet.cpp; the Node keeps

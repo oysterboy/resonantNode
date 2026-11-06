@@ -7,7 +7,7 @@
 #include <new>
 
 /*
-GatedDelayLine (ECHO-002, step 20.3)
+GatedDelayLine (ECHO-002)
 
 Whispernet's output path: the mic delayed by D samples (up to the capacity allocated), passed only where a gate bit is set. The bits are per block
 of input samples and can be set after the samples came in, as long as they have not been played yet: the gate opens

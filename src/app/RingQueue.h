@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 /*
-RingQueue (step 11e item 4)
+RingQueue
 
 A fixed-capacity FIFO over inline storage, for the single-threaded loop: no
 allocation, no exceptions, no iterators to invalidate. It replaces the

@@ -5,7 +5,7 @@
 #include "AudioPcm.h"
 
 /*
-EnvelopeFollower (ECHO-001 / ECHO-002, step 20)
+EnvelopeFollower (ECHO-001 / ECHO-002)
 
 The amplitude envelope the echo modes detect on: |sample| through a one-pole smoother, as a shift (2^shift samples:
 ~1.3 ms at 48 kHz with shift 6, the same at 24 kHz with shift 5). Samples are canonical PCM (24-bit, DC already

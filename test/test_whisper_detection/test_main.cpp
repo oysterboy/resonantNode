@@ -1,8 +1,8 @@
 /*
-Whispernet's inspection on the host (ECHO-002, step 20.3): the LevelWindow, Modulation and Flatness modules over a
+Whispernet's inspection on the host (ECHO-002): the LevelWindow, Modulation and Flatness modules over a
 phrase's span, the plan as the shell builds it (detection/EchoProfiles.h, at the synthetic set's levels); a whisper
 passes, a fan fails on modulation, a loud phrase on the level window, rustling on the timbre. The history is the
-whisper board's (esp32dev-whisper: 64 bins x 8 ms x 2 streams, pinned below; step 23.3), so the P90, the median and
+whisper board's (esp32dev-whisper: 64 bins x 8 ms x 2 streams, pinned below), so the P90, the median and
 the modulation grid read the bins the board averages, not the Node's 1 ms ones. Runs in native-test-behavior.
 */
 // The whisper board's FeatureHistory geometry (platformio.ini, esp32dev-whisper), before the header reads the macros.

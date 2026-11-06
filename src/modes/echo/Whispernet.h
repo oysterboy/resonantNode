@@ -17,7 +17,7 @@
 #include "../../hal/DuplexStream.h"
 
 /*
-Whispernet (ECHO-002, step 20.3): the echo shell's second mode (esp32dev-whisper, 24 kHz). A whisper heard is
+Whispernet (ECHO-002): the echo shell's second mode (esp32dev-whisper, 24 kHz). A whisper heard is
 whispered back by the room's nodes, each after its own delay D (400 ms .. 2 s, from the chip id;
 decisions/2026-11-01-whispernet-delay-per-node.md).
 

@@ -1,5 +1,5 @@
 /*
-RingQueue on the host (step 11e item 4; critique D4.3, the radio outbox): the FIFO NodeNet's outbox,
+RingQueue on the host (the radio outbox): the FIFO NodeNet's outbox,
 DetectionRuntime's queues and Behavior's own-emit history sit on. NodeNet.cpp itself only builds for the
 ESP32 (ESP-NOW, FreeRTOS queue), so its pacing (kTxSpacingMs, reply parts kReplySpacingMs apart) is not
 reachable here; what the outbox relies on is: order kept across the wrap, emplace() refusing when full (the

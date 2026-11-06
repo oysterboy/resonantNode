@@ -7,7 +7,7 @@
 #include "BehaviorProfile.h"
 
 /*
-BehaviorGateConfig's params (step 11i N7, review A10): the config describes its own fields as behavior.* paths, ids
+BehaviorGateConfig's params: the config describes its own fields as behavior.* paths, ids
 and ranges. The Node binds its live copy (a PARAM SET applies through ResonantBehavior::configure()).
 */
 namespace param {

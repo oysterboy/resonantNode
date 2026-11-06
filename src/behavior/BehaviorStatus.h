@@ -3,7 +3,7 @@
 #include "BehaviorProfile.h"
 
 /*
-BehaviorStatus (step 11i N6, review A9, docs/refactors/node-split.md)
+BehaviorStatus (docs/refactors/archive/node-split.md)
 
 One snapshot of Behavior's state at `nowMs`, filled by ResonantBehavior::status(now) and printed by the Node
 (RB STATUS, RB summary's behavior line, the BEH verdict and RB rest start lines, the boot "RB behavior" block,

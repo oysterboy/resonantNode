@@ -7,11 +7,11 @@
 class Print;
 
 /*
-ParamCommands (step 11e item 9)
+ParamCommands
 
 The PARAM command surface, one handler for every mode: PARAM LIST | GET <path>
-| SET <path> <value> | DUMP | SAVE | LOAD | RESET, printing the lines the Node
-has printed since step 10 (`PARAM SET path=... old=... new=... status=...`;
+| SET <path> <value> | DUMP | SAVE | LOAD | RESET, printing the Node's
+lines (`PARAM SET path=... old=... new=... status=...`;
 tools/bench parses them). The Node calls it with its NVS store, the Analyzer
 with no store (its tuning is per run).
 

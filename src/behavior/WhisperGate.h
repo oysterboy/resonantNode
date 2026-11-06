@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 /*
-WhisperGate (ECHO-002, step 20.3)
+WhisperGate (ECHO-002)
 
 Whispernet's gate rule over the verdicts on a running phrase: when the delay line passes the mic. Detection judges the
 open phrase every ~100 ms (EnvelopeRuntime's provisional verdicts); this class turns those verdicts into the gate's

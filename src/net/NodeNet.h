@@ -7,7 +7,7 @@
 #include "NetFrame.h"
 
 /*
-NodeNet (PAR-013, step 11a): the ESP-NOW transport of the Node's remote
+NodeNet (PAR-013): the ESP-NOW transport of the Node's remote
 command path. No router: every node listens on one fixed channel. Commands are
 broadcast (sent kCommandRepeats times; receivers drop repeats by seq), replies
 go back unicast to the sender, which gets MAC-level retries.

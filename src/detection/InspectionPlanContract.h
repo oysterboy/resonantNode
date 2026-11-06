@@ -5,7 +5,7 @@
 #include "features/BinTrack.h"
 
 /*
-InspectionPlanContract (step 8b item 2; audit 3.1, 3.7; #32 P4)
+InspectionPlanContract (docs/research/unproven-assumptions-audit.md 3.1, 3.7; issue #32 P4)
 
 The scalar detector's durations (detection.scalar_*) and the inspection plan's
 windows are set independently, and so is the FeatureHistory depth. This is

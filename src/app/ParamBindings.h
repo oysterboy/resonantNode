@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-ParamBindings (step 11e item 9, PAR-003; step 11i N7)
+ParamBindings (PAR-003)
 
 The shared param descriptions in one include: each config struct describes its own fields as param paths, ids and
 ranges next to its header (`param::describeParams(registry, config)`, review A10). The Node registers them all

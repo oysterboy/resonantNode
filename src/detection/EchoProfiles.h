@@ -6,7 +6,7 @@
 #include "inspection/InspectorTypes.h"
 
 /*
-EchoProfiles (step 23.3, review 2026-11-05 M5)
+EchoProfiles (review 2026-11-05 M5)
 
 The echo modes' detection chains as data: the echo room's (a clap: ScalarTransientDetector on the envelope, the
 AttackRise module) and Whispernet's (a phrase: the detector with syllable gaps bridged, the LevelWindow, Modulation and

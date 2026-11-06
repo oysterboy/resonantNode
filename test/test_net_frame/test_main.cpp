@@ -1,5 +1,5 @@
 /*
-NetFrame on the host (PAR-013, step 11a): encode/decode round trip, rejects,
+NetFrame on the host (PAR-013): encode/decode round trip, rejects,
 target matching, the remote command allowlist and the repeat filter. The filter
 across a sender's reboot (critique D1.3 / D4.3): it remembers only the last seq
 per sender, so a sender that restarts its count drops exactly the first command

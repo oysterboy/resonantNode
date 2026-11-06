@@ -1,5 +1,5 @@
 /*
-CaptureRing on the host (ECHO-001, step 20.2): samples addressed by their absolute index, a clip copied only while it
+CaptureRing on the host (ECHO-001): samples addressed by their absolute index, a clip copied only while it
 is whole in the ring. Runs in native-test-behavior.
 */
 #include <unity.h>

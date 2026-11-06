@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 /*
-BandFlatness (ECHO-002, step 20.3)
+BandFlatness (ECHO-002)
 
 How flat the spectrum is over a stretch of samples, 0 (one tone) .. 1 (white noise): eight bandpass biquads spaced
 evenly in log frequency (300 .. 10,000 Hz, Q 2.5), each band's energy divided by its centre (energy per Hz, so white

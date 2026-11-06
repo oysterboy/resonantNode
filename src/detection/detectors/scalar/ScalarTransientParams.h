@@ -6,12 +6,12 @@
 #include "ScalarTransientConfig.h"
 
 /*
-ScalarTransientConfig's params (step 11i N7, review A10): the config describes its own fields as param paths, ids
+ScalarTransientConfig's params: the config describes its own fields as param paths, ids
 and ranges; the Node, the Analyzer and the host replay register them through this one function (app/ParamBindings.h
 gathers the shared ones). A field that gets a new path or range changes here and nowhere else.
 
 ScalarTransientConfig::observedStream (an enum) is not a param: the profile sets it (SEQ PROFILE on the Analyzer;
-the Node ships TonalPulseScalar), owner decision 2026-10-25 (decisions/2026-10-25-analyzer-params-on-registry-and-
+the Node ships TonalPulseScalar), decided 2026-10-25 (decisions/2026-10-25-analyzer-params-on-registry-and-
 line-policy.md).
 */
 namespace param {

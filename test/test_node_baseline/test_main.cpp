@@ -1,5 +1,5 @@
 /*
-NodeBaseline on the host (step 11i N2, docs/refactors/node-split.md): the
+NodeBaseline on the host (docs/refactors/archive/node-split.md): the
 Node's quiet-gated rebase machine, driven with a fake level and explicit
 times. Boot warmup and its log cadence, the quiet hold, a noisy room timing
 out, Settle -> Active, forced rebase, `RB rebase` restarting the gate, and

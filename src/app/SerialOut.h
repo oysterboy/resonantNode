@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 /*
-SerialOut (step 7a, ANA-004)
+SerialOut (ANA-004)
 
 All console output goes through serialOut(), which collects a line in RAM and
 hands it to Serial in one write at the newline (or when 1 KB is full).

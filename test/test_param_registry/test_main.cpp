@@ -1,5 +1,5 @@
 /*
-lib/ParamRegistry on the host (step 10 item 3, PAR-016): registration rules and
+lib/ParamRegistry on the host (PAR-016): registration rules and
 the parse rules a PARAM SET goes through, and persistence (PAR-010/011):
 save, load with stale and invalid entries, restore defaults. Runs in
 native-test-behavior.

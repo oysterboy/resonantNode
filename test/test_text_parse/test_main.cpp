@@ -1,5 +1,5 @@
 /*
-Host test for the shared console helpers (step 11e item 8): the LineReader every
+Host test for the shared console helpers: the LineReader every
 serial port uses (app/SerialLine.h) and the number / token parsing in
 app/TextParse.h. Runs in native-test-behavior.
 */

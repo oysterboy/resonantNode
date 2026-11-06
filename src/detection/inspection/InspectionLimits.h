@@ -7,7 +7,7 @@
 namespace detection {
 
 /*
-InspectionLimits (step 11i N7, review A10; step 10 item 7, step 11g B2)
+InspectionLimits
 
 The inspection plan's live limits as one value: the Contrast and Amp modules' medium peak thresholds and the
 BinShape module's settings. Read from a plan with inspectionLimitsFromPlan() (a plan without such a module gives

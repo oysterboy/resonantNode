@@ -10,7 +10,7 @@ ClipShape (ECHO-004): the echo room's answer shaped before it plays, in place on
 - damping 0..100 %: a one-pole low-pass, its corner from the clip's top (rate / 2) at 0 % down to 1 kHz at 100 %
   (log-spaced). Every replay is a recording of a replay, so the low-pass compounds: each generation duller and, with
   a broadband clap's energy mostly high, quieter; a chain fades like an echo instead of collecting the speaker's
-  distortion (the owner, 2026-11-05: a high tone travelling towards a chain's end). 0 leaves the clip as recorded.
+  distortion (heard 2026-11-05 as a high tone travelling towards a chain's end). 0 leaves the clip as recorded.
 - fadeMs: a linear fade over the clip's last fadeMs (the hard stop was audible); the output's short ramps against
   clicks stay (clipEnvelope).
 

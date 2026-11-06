@@ -1,6 +1,6 @@
 /*
-Host test for the Analyzer console's dispatch and token checks (step 11j item 6,
-src/modes/analyzer/AnalyzerCommandParse.h). The handlers are AnalyzerApp members
+Host test for the Analyzer console's dispatch and token checks
+(src/modes/analyzer/AnalyzerCommandParse.h). The handlers are AnalyzerApp members
 that need the board (I2S, Serial2, the Emitter link), so the host reaches the pure
 part: which handler a line goes to, and the on/off, band and hop checks RAW and SEQ
 share. Runs in native-test-behavior.

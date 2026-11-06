@@ -6,7 +6,7 @@
 #include <strings.h>
 
 /*
-NetFrame (PAR-013, step 11a): the radio frame of the Node's remote command path.
+NetFrame (PAR-013): the radio frame of the Node's remote command path.
 
 One ESP-NOW frame (<= 250 bytes) carries one command line or one part of a
 reply. A command goes to every node (broadcast) with a target: "*" or a node

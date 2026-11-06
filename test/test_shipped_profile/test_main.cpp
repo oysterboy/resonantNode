@@ -1,5 +1,5 @@
 /*
-Step 7b (audit 4.1, 4.3): the shipped scalar profile on the board.
+The shipped scalar profile on the board (docs/research/unproven-assumptions-audit.md 4.1, 4.3).
 
 test_analyzer_pass_rules and test_timebase drive the scalar detector with every shipped gate off.
 This test runs makeTonalPulseScalarProfile() unchanged, through the real chain the Node runs

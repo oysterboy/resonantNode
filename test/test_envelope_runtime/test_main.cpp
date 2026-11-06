@@ -1,10 +1,10 @@
 /*
-EnvelopeRuntime's provisional verdicts on the host (ECHO-002, step 20.3): with setProvisional on, the open candidate is
+EnvelopeRuntime's provisional verdicts on the host (ECHO-002): with setProvisional on, the open candidate is
 judged by the plan (Whispernet's level window and modulation) once it is old enough and every interval after, while
 the phrase runs, so the gate can open before the phrase ends. A whispered phrase gets a valid provisional verdict
 within ~0.3 s, a steady noise only failing ones, and a clap none (its tail is in the release debounce). The chain
-is the shell's (detection/EchoProfiles.h) on the whisper board's history geometry (64 x 8 ms x 2, pinned below;
-step 23.3). Runs in native-test-behavior.
+is the shell's (detection/EchoProfiles.h) on the whisper board's history geometry (64 x 8 ms x 2, pinned below).
+Runs in native-test-behavior.
 */
 // The whisper board's FeatureHistory geometry (platformio.ini, esp32dev-whisper), before the header reads the macros.
 #define FEATURE_HISTORY_BINS 64

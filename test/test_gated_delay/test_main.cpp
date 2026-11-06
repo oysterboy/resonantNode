@@ -1,5 +1,5 @@
 /*
-GatedDelayLine on the host (ECHO-002, step 20.3): Whispernet's delay line passes the mic D samples late, only where
+GatedDelayLine on the host (ECHO-002): Whispernet's delay line passes the mic D samples late, only where
 the gate bits are set; bits set after the samples came in still pass them while they are unplayed (the gate opens on
 a provisional verdict and passes the phrase from its start), the gain ramps at each edge. Runs in
 native-test-behavior.

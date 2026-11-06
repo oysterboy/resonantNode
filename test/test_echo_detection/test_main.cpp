@@ -1,8 +1,8 @@
 /*
-The echo room's inspection on the host (ECHO-001, step 20.2): the AttackRise module in the inspection plan reads the
+The echo room's inspection on the host (ECHO-001): the AttackRise module in the inspection plan reads the
 envelope's history around an occurrence's onset (FeatureHistory::riseTimeMs), classes the rise, and makeVerdict judges
 it like any other requirement. A clap passes, a swell does not, a sound with no quiet before it is not measured. The
-history is the echo board's (esp32dev-echo: 64 bins x 1 ms x 1 stream, pinned below; step 23.3), the plan the shell's
+history is the echo board's (esp32dev-echo: 64 bins x 1 ms x 1 stream, pinned below), the plan the shell's
 (detection/EchoProfiles.h). Whispernet's cases are test_whisper_detection, on its board's geometry. Runs in
 native-test-behavior.
 */

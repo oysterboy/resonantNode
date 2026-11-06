@@ -15,7 +15,7 @@
 namespace detection {
 
 /*
-DetectionDiagnostics (step 11e item 7)
+DetectionDiagnostics
 
 Everything DetectionRuntime records for the Analyzer and nothing the Node
 needs: the per-frame counters, the pipeline event queue (one event per

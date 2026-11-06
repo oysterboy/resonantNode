@@ -366,9 +366,15 @@ Neither answers the question. WebRTC mode 0 flags everything, mode 3 loses the w
 Silero is a clean speech detector and deaf to a whisper (no voiced excitation), so it rejects the rustle and the
 whisper alike. Whispernet's chain, adaptive and at the board's room level (-32 dB on the C920 files), opens phrases
 on the whispers (up to 12 per file) but the level window refuses most of them (out_of_level): in all 22 files a
-phrase passed only on paper and clothes (1-2 per file), on none of the whisper files. The cause is the level window (loud bound and floor ratio
-against this camera's level processing), not the flatness or the timbre check. Reading: a speech detector off the
-shelf does not do this job, and the chain's level window is the first thing to look at when Whispernet is tuned (a
-tuning pass of its own, `DetectionProfile`-style rules apply: not a side effect). Limits: one speaker, one room, a
+phrase passed only on paper and clothes (1-2 per file), on none of the whisper files. A host grid over the level window and the timbre checks (96 settings: room factor 1.5 / 2.5, floor 60 / 100 / 190,
+loud 900 / 2500, timbre off / flatness / low band at 9 and 12 dB, band level on / off; 9 whisper and 11 other files)
+corrects the first reading: the level window is not what fails alone. With the window wide open and the timbre
+check off, 13 of 40 whisper phrases pass (in 4 of 9 files), but so do 43 phrases of the other files (10 of 11 files):
+the level separates nothing. With the flatness range or the low-band check on, the noises drop out and so do the
+whispers (1-2 of 40 pass): this camera reads a whisper at flatness ~0.08 (the range starts at 0.15, set on the
+board's mic) and its low band does not sit where the desk's recordings did. So on these files nothing in the chain
+separates a whisper from rustle at the phrase level; the thresholds are for the board's mic and have to be found
+there, live (the same finding as the band session above). Nothing was changed in the defaults.
+Limits: one speaker, one room, a
 camera with its own level processing, section labels only (no frame labels), nothing above 8 kHz. On the ESP32 only
 WebRTC's GMM fits (a few KB, fixed point); Silero (~2 MB, recurrent) and ESP-SR need PSRAM.

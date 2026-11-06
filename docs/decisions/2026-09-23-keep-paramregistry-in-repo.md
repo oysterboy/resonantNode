@@ -40,6 +40,6 @@ landed.
 
 ## Source
 
-- `docs/roadmaps/roadmap-param-config.md`, PAR-016 / PAR-017, "Decision
-  (2026-09-23)".
+- PAR-016 (`docs/roadmaps/roadmap archive/roadmap-changelog.md`) and PAR-017
+  (`docs/roadmaps/roadmap-param-config.md`), "Decision (2026-09-23)".
 - Commit `7a398b9` ("record decision to keep ParamRegistry in-repo").

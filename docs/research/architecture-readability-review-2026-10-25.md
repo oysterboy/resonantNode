@@ -29,7 +29,7 @@ Calibration first: the repo is in better shape than its biggest files suggest. T
 are listed at the end and should not be undone while fixing the rest.
 
 Known already-open items this overlaps with: DET-018 (vestigial verdict vocabulary), DET-016 (verdict
-boundary rule), NODE-004 (Node file split, "a file split, not separate classes" in roadmap-node.md), step 9
+boundary rule), NODE-004 (Node file split, "a file split, not separate classes" in roadmap archive/roadmap-changelog.md), step 9
 (detector family build flag). Where a finding is covered by one of them it says so.
 
 ---

@@ -115,7 +115,7 @@ Done:
 Deferred, with their place:
 - `accepted == valid` in makeVerdict (Behavior's support branches never run): with DET-016, the verdict boundary
   rule, which touches the same fields.
-- FieldState's tumbling 4 s windows: before BEH-008 builds on the counts (step 16, roadmap-behavior.md).
+- FieldState's tumbling 4 s windows: before BEH-008 builds on the counts (step 16, roadmap archive/roadmap-changelog.md).
 - resetStats() re-anchoring the sample clock; per-sample 64-bit divides (AudioSignal, TimeBase), FreqBandStream's
   per-update cost: NODE-019 and a measured performance pass (only with a loop-budget reason).
 - Behavior L1 (a rejected emission arms the own-emit tail), L2 (RB CALL during the quiet gate dropped without a

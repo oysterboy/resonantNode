@@ -49,4 +49,4 @@ that must pass.
 
 ## Source
 
-Owner, 2026-10-23; DET-017 in docs/roadmaps/roadmap-detection.md.
+Owner, 2026-10-23; DET-017 in docs/roadmaps/roadmap archive/roadmap-changelog.md.

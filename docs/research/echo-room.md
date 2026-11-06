@@ -27,7 +27,7 @@ EchoRoom (echoSpace) ran into shrill feedback or died off, so selectiveness migh
   feedback, and the ring's output goes to both amp slots. Always on, nothing decides anything.
 - **The Node** runs the same board at 16 kHz. Its per-sample path costs about 37 us of the 62.5 us a sample allows
   (decisions/2026-10-22-serial-lines-and-iram-hot-path.md); at 48 kHz it would not keep up. The largest free heap
-  block with ESP-NOW up is about 110 KB (roadmap-detection.md, ANA-008). The DevKit's WROOM module has no PSRAM.
+  block with ESP-NOW up is about 110 KB (roadmap archive/roadmap-changelog.md, ANA-008). The DevKit's WROOM module has no PSRAM.
 - The pieces the idea names are all in the Node, and all behind the spec's boundaries (myspec.md: Detection
   produces facts, Behavior decides, SoundOutput performs):
   - `ScalarTransientDetector` (`src/detection/detectors/scalar/`) gates one scalar stream with an onset threshold,

@@ -2,7 +2,7 @@
 
 ```text
 Status:  promoted (2026-10-29); candidate 2 conditional, carried over
-Became:  ANA-004 fix direction: Analyzer report task (roadmap-detection.md,
+Became:  ANA-004 fix direction: Analyzer report task (roadmap archive/roadmap-changelog.md,
          2026-10-10); ANA-004 closed 2026-10-22 (step 7a) without the task:
          whole-line serial output and the per-sample path in IRAM, 0 drops
          on detail + diagnostics trials (decisions/2026-10-22-serial-lines-
@@ -56,7 +56,7 @@ FreeRTOS task); step 2 added the first task of our own.
 
 ## Candidate 1: Analyzer report task
 
--> promoted to ANA-004 (roadmap-detection.md), 2026-10-10
+-> promoted to ANA-004 (roadmap archive/roadmap-changelog.md), 2026-10-10
 -> ANA-004 done 2026-10-22 (step 7a) by whole-line output and the IRAM hot path; no report task was needed
 
 Today a detected trial's report (~6.9 KB with diagnostics + mode=detail)

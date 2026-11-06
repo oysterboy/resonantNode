@@ -23,7 +23,7 @@ creates, not as another rewrite of the Node.
 
 - `Node` (src/modes/resonant/ResonantNodeApp.h) has 35 data members plus the 25-field `SelfTestState`. All seven
   Node TUs include the header and touch members across roles: the split of 2026-10-25 is by file, not by owner
-  (roadmap-node.md NODE-004: "a file split, not separate classes").
+  (roadmap archive/roadmap-changelog.md NODE-004: "a file split, not separate classes").
 - Radio reply / join state is in file-scope globals in ResonantNodeNet.cpp that `begin()` never resets; the
   serial tee is set and cleared by hand around a flag.
 - ResonantNodeCommands.cpp runs the baseline state machine directly, the same steps `updateRbBaselineState` runs.

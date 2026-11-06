@@ -102,21 +102,6 @@ behavior modulation / intended drift config.
 OutputRequest / BehaviorAction.
 ```
 
-### BEH-005 - per-node signal variation
-
-Status: DONE 2026-10-21 (step 5b's gate: per-node rotation on every board; five distinct rotations from the
-roster, step 5g; BEH-009 moves the start to a base bin per Node, step 17). Was: in code (step 5b, 155211e),
-Node battery pending. Behavior reports `SignalShape` (NetworkSignal for a
-heard-pattern response, Chirp for idle/self-test); the Node plays the hop train over the band bins starting
-on `output.hop_rotation`, from the MAC at boot. Shape and order are static per node; variation over time is BEH-006.
-
-```text
-Each node plays its own shape and centre inside the network band
-(e.g. derived from the node id, or a param): hop set or sweep.
-Static per node; enough for the field trial to test nodes hearing
-signals that differ from their own.
-```
-
 ### BEH-006 - signal variation over time
 
 Status: TODO (step 8a; the "behavior modulation / intended drift" line of BEH-004). 2026-10-29: 8a is carried over
@@ -135,31 +120,6 @@ Status: DEFERRED (after DET-015; DET-015 done 2026-10-26, step 11b; carried over
 Behavior reads shape facts (steady / sweep / hop) from the verdict and
 answers artistically: imitate, contrast, hand on.
 ```
-
-### BEH-008 - answers that follow the field: the level automaton
-
-Status: LANDED (2026-10-31, step 16: host-tested, native-fieldsim, the desk with five Nodes; decided 2026-10-29)
-Decision: docs/decisions/2026-10-29-answers-follow-the-field-level-automaton.md
-Research: docs/research/field-activity-response.md (the automaton, its values, the set-aside mechanisms,
-the desk model tools/sim/fieldramp.py)
-
-```text
-One integer level per node (+1 heard valid pattern, +1 own emission, -1 per decay_ms of silence);
-p = (level + 1) / L; a heard pattern is answered with probability p after the fixed wait plus a
-fixed random jitter; a verdict while an answer is pending drops it with probability 1 - p (yield);
-at L the node rests and the level returns to zero. Four behavior.* params: L, decay, jitter, rest.
-Behavior counts the level from the verdicts; FieldState is no longer the rest gate.
-```
-
-Order inside (host first): `test_behavior_level` (the rules, the yield, the rest, the shipped timing reproduced
-with jitter 0 and p forced to 1); `native-fieldsim` (N real Behaviors through a fake channel with the measured
-hearing matrix, nodegroup.py's metrics plus the interval and chord profile along each chain); the hearing matrix
-in the tryout room at 1 m spacing (tools/bench/hearmatrix.py, strict and lenient cells from the same logs) to set
-L and decide the lenient grade; five nodes free on the bench, step 6's protocol, compared against
-2026-10-22-step6-trial and 2026-10-26-soak24-shape-b. Gate: every chain ends (3 s silence within 30 s in 80 % of
-starts, no minute over M = 100); chords under 25 % of rounds in a chain's first half and above it in its last;
-the first answer to a call later than 1 s in most chains; speech and music neither start nor lengthen chains.
-Moves the field baseline: its own field session is the gate, as 8a was told to.
 
 ### BEH-009 - the base frequency per node: a wider band and a base bin, then the range experiments
 

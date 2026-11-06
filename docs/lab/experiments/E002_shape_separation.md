@@ -2,7 +2,7 @@
 
 Status: phase 1 logged 2026-10-26 (host replay over the recorded corpus). Step 11b (#59): the owner asked to
 verify that shape separates the signals before the data path for DET-015 is chosen.
-This file holds observations only; the decision it feeds is DET-015's data path (docs/roadmaps/roadmap-detection.md).
+This file holds observations only; the decision it feeds is DET-015's data path (docs/roadmaps/roadmap archive/roadmap-changelog.md).
 
 ## Question
 

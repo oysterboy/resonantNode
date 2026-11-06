@@ -170,7 +170,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    NODE-012's next cell. On today's band; the band of 17 is measured again in 18.
 
 16. [DONE 2026-10-31] Build BEH-008: answers follow the field level (the level automaton). (issue #78)
-   roadmap-behavior.md BEH-008, decisions/2026-10-29-answers-follow-the-field-level-automaton.md,
+   roadmap archive/roadmap-changelog.md BEH-008, decisions/2026-10-29-answers-follow-the-field-level-automaton.md,
    field-activity-response.md. PC first (test_behavior_level; native-fieldsim with the matrix from 15), then the desk
    (step 6's protocol against 2026-10-22-step6-trial and 2026-10-26-soak24-shape-b). Changes what the nodes do: the
    baseline moves with it. A chord counts as several heard trains (owner 2026-10-29).
@@ -396,7 +396,7 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    session per firmware.
 
 22. [DONE 2026-11-01] DET-020: the band bank's update interval. (issue #87)
-   roadmap-detection.md DET-020. The bank recomputes every 4 samples; one compute on the 8-bin band costs ~108 us,
+   roadmap archive/roadmap-changelog.md DET-020. The bank recomputes every 4 samples; one compute on the 8-bin band costs ~108 us,
    ~43 % of the CPU (bench/sessions/2026-10-31-band-update-board); the replay keeps every verdict at 8 / 16 / 32
    (2026-10-31-band-update-replay). 22.1 the Node's loop at 4 and 16 (a profiling build); 22.2 N = 16 as the default,
    T2h re-recorded; 22.3 the edge cases on the board (margin ladder, chord cell, music); 22.4 a soak.
@@ -561,7 +561,8 @@ This file stays lean.
 Detailed rationale belongs in the specific roadmap file for each domain.
 Every step points at a roadmap ID or research note; an item executed through docs/refactors/ points on to its
 pass doc.
-Update the order here when a step's gate closes; don't let two steps both read [NEXT] unless they are marked as
+Update the order here when a step's gate closes, and move the items it finished to the roadmap archive
+(README, Procedure); don't let two steps both read [NEXT] unless they are marked as
 parallel.
 ```
 

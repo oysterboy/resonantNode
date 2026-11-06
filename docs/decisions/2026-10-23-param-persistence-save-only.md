@@ -34,4 +34,4 @@ A remote transport (PAR-013) needs to save without a serial operator, or the sta
 
 ## Source
 
-Owner answers 2026-10-23 (after "Persistence first okay?"); roadmap-param-config.md PAR-010/011.
+Owner answers 2026-10-23 (after "Persistence first okay?"); roadmap archive/roadmap-changelog.md PAR-010/011.

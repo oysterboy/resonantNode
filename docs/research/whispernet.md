@@ -48,7 +48,7 @@ Sample rate: whisper fricatives live above 8 kHz, so 16 kHz sampling dulls exact
 
 The echo room freezes a short clip and plays it after a wait. A whisper is a phrase of unknown length, half a
 second to several seconds: a clip of it needs a ring plus a copy (at 48 kHz int16, 96 KB per second: a 2 s clip
-alone outgrows the ~110 KB heap block, roadmap-detection.md ANA-008) and a wait after the phrase ends. A gated
+alone outgrows the ~110 KB heap block, roadmap archive/roadmap-changelog.md ANA-008) and a wait after the phrase ends. A gated
 delay line handles it with one buffer of fixed size and no wait: the ring holds D ms of audio, the output is the
 ring read D ms back, multiplied by a gate with ramps, and the detector decides per block whether the input is a
 whisper.

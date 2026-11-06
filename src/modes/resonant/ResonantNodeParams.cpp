@@ -101,7 +101,7 @@ void Node::applyLiveDetectionParams() {
 
 // PARAM LIST / GET / SET / DUMP / SAVE / LOAD / RESET: the shared handler
 // (app/ParamCommands) with the Node's NVS store. The one command path for
-// every registered knob (PAR-015, docs/roadmaps/roadmap-param-config.md).
+// every registered knob (PAR-015, docs/roadmaps/roadmap archive/roadmap-changelog.md).
 // What it wrote, the owning module applies here.
 void Node::handleParamCommand(const char* line) {
     const param::ParamCommandResult result = _params.handleCommand(line, serialOut());

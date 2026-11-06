@@ -35,7 +35,7 @@ Behavior variants (OUT-004) or a second output device need Behavior to state the
 
 ## Source
 
-Step 10f (owner change order 2026-10-23), issue #57; roadmap-output.md OUT-002/003.
+Step 10f (owner change order 2026-10-23), issue #57; roadmap archive/roadmap-changelog.md OUT-002/003.
 
 Also fixed by the move: an idle call stopped during its gap (rebase, outputs off, self-test) used to start its
 train afterwards; `SoundOutput::stop()` cancels the whole request.

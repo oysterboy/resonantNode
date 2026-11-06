@@ -3,7 +3,7 @@
 ```text
 Status:  promoted (2026-10-29): the automaton is BEH-008; Part 2's first step (the wider band, a base bin per
          node) is BEH-009; the two range experiments (bands per node, the musical tone) stay exploring
-Became:  docs/decisions/2026-10-29-answers-follow-the-field-level-automaton.md; BEH-008 (roadmap-behavior.md),
+Became:  docs/decisions/2026-10-29-answers-follow-the-field-level-automaton.md; BEH-008 (roadmap archive/roadmap-changelog.md),
          2026-10-29; docs/decisions/2026-10-29-wider-band-base-bin-per-node.md; BEH-009, 2026-10-29
 Lab:     bench/sessions/2026-10-22-step6-trial and 2026-10-22-group5-pacing (chains end in 2.9-7.7 s, max 48 per
          minute); 2026-10-21-pair-state-header (a pair chains 7 turns, then rests); 2026-10-26-soak24-shape-b

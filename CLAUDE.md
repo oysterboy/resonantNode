@@ -3,7 +3,7 @@
 ESP32 firmware (PlatformIO + Arduino framework) for an acoustic
 resonant-node device: nodes detect a tonal/chirp pattern in ambient audio
 and react by emitting their own pattern back. The modes share one codebase
-(the first three are the installation's; the rest came with step 20):
+(the first three are the installation's; the rest came on 2026-10-31 and 2026-11-05):
 
 - **RB / resonant node** (`src/modes/resonant/`) — live field behavior:
   detect, then react via `ResonantBehavior`.
@@ -61,7 +61,7 @@ Which surface you're on decides what you can verify:
   uploading; the owner's go for a step that names board checks covers that
   step's OTA updates.
 
-Over the air (since step 11d, the bench's normal path when the owner is away):
+Over the air (since 2026-10-28, the bench's normal path when the owner is away):
 `tools/bench/otaserve.py` serves the built images on this PC and prints the
 commands; `NET * OTA url=... token=...` on a USB Node updates every Node, the
 Analyzer and the Emitter take `OTA url=... token=...` on their own port. The
@@ -111,7 +111,7 @@ shell: prepend it); in a cloud container, whatever `g++` is installed.
 Parameters: every tunable knob is a registered param (`detection.*`, `behavior.*`, `output.*`), set with
 `PARAM SET <path> <value>` and listed by `PARAM DUMP`. The registry is the in-repo library
 `lib/ParamRegistry/`, which must include nothing from `src/` (CI checks it). RB PARAM and RB BEHAV are gone since
-step 10; old session headers map through `docs/decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md`.
+2026-10-22; old session headers map through `docs/decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md`.
 The Analyzer's code lives in `src/modes/analyzer/`; `src/detection/analyzer/` keeps only pure Analyzer types
 and rules, and nothing under `src/detection/` may include `src/modes/` (CI, strict).
 `src/host/` is excluded from every ESP env and `<Arduino.h>` is stood in
@@ -147,13 +147,13 @@ no temporal logic; "Pattern" is reserved for a future downstream stage). If
 you see `PatternMatcher`/`PatternResult` in an older doc, branch, or note,
 it means "what is now `OccurrenceEvaluator`/`OccurrenceVerdict`" — the class
 itself was not left as an alias. `OccurrenceEvaluator` itself was folded into
-inspection on 2026-10-22 (step 8): the verdict comes from `makeVerdict()` in
+inspection on 2026-10-22: the verdict comes from `makeVerdict()` in
 `src/detection/inspection/VerdictProjection.h`, and an older note that names
 the evaluator means that function.
 
 Detector families: `FrequencyMatchDetector` and the `TonalPulseFreq` profile
-were removed on 2026-10-22 (step 7d,
-`docs/decisions/2026-10-22-remove-frequencymatch.md`). `ScalarTransientDetector`
+were removed on 2026-10-22
+(`docs/decisions/2026-10-22-remove-frequencymatch.md`). `ScalarTransientDetector`
 is the only family. Older docs and bench sessions that mention Freq describe
 removed code. A new detector joins on the terms in `myspec.md` 5.3, "Adding a
 detector family".
@@ -244,12 +244,13 @@ in `archive/` while active):
   architectural area it spans. The model is the 2026-09 detection cleanup
   set, archived 2026-10-25 (`docs/refactors/archive/cleanup-0-plan.md`, the
   master, and its topic docs `cleanup*.md`; read its `Archived:` line). Its
-  open parts live on as roadmap items: Phases 5d + 6 (detector family as a
-  build flag; design in `archive/cleanup-detector-family-build.md`) are step
-  9, Phase 7a/7b is DET-018, step 8's Part B is DET-016.
+  open parts live on: Phases 5d + 6 (detector family as a build flag; design
+  in `archive/cleanup-detector-family-build.md`) wait for a second detector
+  family (`myspec.md` 5.3), Phase 7a/7b is DET-018, the verdict boundary
+  rule (Part B) is DET-016.
 - Since 2026-10-22 most steps have run without a pass doc: the step's text in
   `roadmap-0-steps.md` carries its plan, progress lines and gate results, and
-  a pass doc is opened only for a step too big for that (step 10's were
+  a pass doc is opened only for a step too big for that (the mode layer's were
   `archive/step10-mode-layer.md` and `archive/step10-boundary-map.md`).
 
 **Closing one out:** prepend a short header — `Archived: <date> — <what
@@ -408,7 +409,7 @@ Short, imperative subject lines, often prefixed with the affected area
 --oneline` for examples. No enforced footer format beyond what your
 current session's attribution instructions require.
 
-Formatting (step 11j): `.clang-format` (120 columns) with clang-format 18.1.8
+Formatting (since 2026-10-28): `.clang-format` (120 columns) with clang-format 18.1.8
 from PyPI (`python -m pip install clang-format==18.1.8`, e.g. into a venv);
 `python tools/ci/clang_format.py --fix` before committing C/C++, CI runs
 `--check` and fails on drift.

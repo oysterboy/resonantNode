@@ -58,7 +58,7 @@ on the Node's and the Analyzer's USB console, 95 on both Emitter ports, USB and 
 link from the Analyzer; 2026-10-26) is refused whole with
 `ERR line_too_long max=N` (`RB ERR ...` on the Node), never run cut. A number
 in a command that is not a plain decimal is refused with `... bad value
-token=<token>`; nothing is read as 0 (since 2026-10-26, step 11e;
+token=<token>`; nothing is read as 0 (since 2026-10-26;
 decisions/2026-10-25-analyzer-params-on-registry-and-line-policy.md).
 
 ## Node (RB)
@@ -80,7 +80,7 @@ SELFTEST [external wait_ms=N | chirp n=N gap_ms=MS dur_ms=MS | help]
 
 A line the Node does not know gets `RB ERR unknown_command` (since 2026-10-28; before, no reply).
 
-`RB PARAM` and `RB BEHAV` are gone since step 10 (2026-10-22). Old session headers map through
+`RB PARAM` and `RB BEHAV` are gone since 2026-10-22. Old session headers map through
 `docs/decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md`.
 
 ### Params
@@ -142,7 +142,7 @@ silent (`RB silent=1` at boot) until `PARAM SET output.silent 0` plus SAVE, or `
 goes through Behavior and is skipped on a silent node (`own_chirp_suppressed result=SKIP reason=silent`), and
 `SELFTEST chirp` answers `SELFTEST_CHIRP skip reason=silent`: set `output.silent 0` first to run them.
 
-### Firmware over WiFi (OTA, step 11d)
+### Firmware over WiFi (OTA)
 
 The boards pull a new image over WiFi (decisions/2026-10-28-ota-firmware-pull-over-http.md):
 
@@ -168,7 +168,7 @@ The boards pull a new image over WiFi (decisions/2026-10-28-ota-firmware-pull-ov
    them back after a failed one (`ECHO ERR ring_or_clip_alloc_failed` / `whisper_alloc_failed` if the heap refuses).
    The Analyzer refuses `OTA` during a SEQ run: `OTA result=busy reason=seq_active` (2026-11-05).
 
-### Remote commands (radio, step 11a)
+### Remote commands (radio)
 
 Any Node on USB is the gateway: `NET <target> <command>`, target `*` (all) or a roster name
 (`E1`..`E5`). Every Node command goes (PARAM, RB, SELFTEST, OTA) plus `NET PING`; each node answers with
@@ -231,7 +231,7 @@ SEQ start ... band=LOW-HIGH|off                              score the strongest
 SEQ OBS start ...               passive observe mode for an external emitter already running
 SEQ start ... pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]      pulse train per trial (DET-011)
 SEQ start ... pulses=N ... [level=FS] [att=DB1,DB2,...]       the train at FS (0-0.999) and each pulse
-                                                             DB below it, cycled (step 13; D-AMP only)
+                                                             DB below it, cycled (the margin test; D-AMP only)
 SEQ start ... freq=START_HZ dur=MS sweep=END_HZ              sweep inside the chirp (OUT-005)
 SEQ stop | SEQ STATUS | SEQ SUMMARY | SEQ REPORT | SEQ TRIES N
 SEQ REPORT                                                   the detection values the current (or last) run
@@ -254,7 +254,7 @@ EMIT CHIRP|MODE AUTO|MODE REMOTE|SWEEP|PULSES ...            the Analyzer drives
 SELFTEST [external | chirp n=N gap_ms=MS dur_ms=MS | help]   external: board only, external_chirp SKIP
 ```
 
-The Analyzer's `PARAM` is the Node's since step 11e (2026-10-26, `src/app/ParamCommands`): the 13
+The Analyzer's `PARAM` is the Node's since 2026-10-26 (`src/app/ParamCommands`): the 13
 `detection.scalar_*` knobs of the TonalPulseScalar profile are on a `ParamRegistry` through the same
 description the Node uses (`param::describeParams` in `src/detection/detectors/scalar/ScalarTransientParams.h`,
 gathered by `src/app/ParamBindings.h`), so `PARAM SET detection.scalar_onset_threshold 2000`
@@ -407,7 +407,7 @@ louder than `loud` stays shut to its end. Detection keeps running while the boar
 The rule is `src/behavior/WhisperGate.h`, the values code defaults in `Whispernet.h` (from the synthetic set, to be
 tuned on the desk); `native-whisperreplay` runs the same chain and gate on WAV files, on the whisper board's history
 geometry and from the shipped `whisper.*` values (`src/detection/EchoProfiles.h`; the flags override; the synthetic set
-reads ~16 dB above the desk's mic: `--level-db -16`). `native-echoreplay` is the echo room's (step 23.3, 2026-11-05).
+reads ~16 dB above the desk's mic: `--level-db -16`). `native-echoreplay` is the echo room's (2026-11-05).
 
 ```text
 WHISPER STATUS            delay_ms phrases whispers checks asked answered opens gated_ms replays gate_open
@@ -493,7 +493,7 @@ src/modes/resonant/  the Node, split by role: ResonantNodeApp.cpp (boot, loop, p
                      ResonantNodeParams (NodeParams: registry, NVS store, registration order; the Node's
                      apply per module, persistence, profile), ResonantNodeCommands.cpp
                      (serial and the command dispatch), ResonantNodeNet.cpp (radio), ResonantNodeStatus.cpp
-                     (diagnostics); its parts (step 11i): ResonantNodeCounters.h (RB tallies),
+                     (diagnostics); its parts: ResonantNodeCounters.h (RB tallies),
                      ResonantNodeBaseline (quiet-gated rebase), NetGateway (radio replies, src/net/),
                      ResonantNodeSelfTest (SELFTEST phases), ResonantNodeSignalComposer (band grid,
                      output.hop_* / idle call -> OutputRequest)

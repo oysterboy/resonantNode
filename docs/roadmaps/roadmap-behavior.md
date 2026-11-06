@@ -123,8 +123,11 @@ answers artistically: imitate, contrast, hand on.
 
 ### BEH-009 - the base frequency per node: a wider band and a base bin, then the range experiments
 
-Status: PARTIAL (parts 1-2 landed 2026-10-31, step 17: the 8-bin band, base bins, the glide and scatter;
-part 3, the range experiments, is step 19)
+Status: PARTIAL. Parts 1-2 landed 2026-10-31: the 8-bin band, base bins, the base's glide toward the one heard and
+the scatter at rest. Part 3 decided and built 2026-10-31: bands per node (decisions/2026-10-31-bands-per-node.md,
+`behavior.band_per_node`, off in the shipped profile; OUT-006's low tone not now). Open: the mode's default, the
+range's low edge and a wander inside a group, judged in the room (roadmap-0-steps.md, the room trial of BEH-008 and
+BEH-009); close this item when that sets them.
 Decision: docs/decisions/2026-10-29-wider-band-base-bin-per-node.md
 Research: docs/research/field-activity-response.md, Part 2
 

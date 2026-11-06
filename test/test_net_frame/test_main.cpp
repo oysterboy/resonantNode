@@ -204,13 +204,13 @@ void test_line_joiner_flush_keeps_a_partial_line_apart() {
     int n = 0;
     auto emit = [&](const char* line, size_t len) {
         memcpy(got[n], line, len);
-        got[n][len] = ' ';
+        got[n][len] = '\0';
         ++n;
     };
     const char f1[] = "value=1 then-cut";
     j.feed(f1, sizeof(f1) - 1, false, emit);
     j.flush(emit);  // the next frame was lost
-    const char f3[] = "PARAM path=x";
+    const char f3[] = "PARAM path=x\x1f";
     j.feed(f3, sizeof(f3) - 1, true, emit);
     TEST_ASSERT_EQUAL_INT(2, n);
     TEST_ASSERT_EQUAL_STRING("value=1 then-cut", got[0]);

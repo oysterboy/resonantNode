@@ -1,18 +1,31 @@
 Unit tests (PlatformIO / Unity). Which env runs which suite is set in platformio.ini (test_ignore,
-test_filter; tools/ci/test_lists.py checks that they agree), and CLAUDE.md "Build & verify" has the
-commands. The lists in platformio.ini are the truth; this file only says what each env is for:
+test_filter; tools/ci/test_lists.py checks that they agree). The lists in platformio.ini are the truth;
+this file says what each env is for and how to run it.
+
+Host, no board (CI runs all three on every push):
 
   pio test -e native-test              test_replay_corpus: recorded captures through the real detection chain
-  pio test -e native-test-behavior     the host unit suites: each includes the src/ files it tests itself,
-                                       no src build (test_filter in platformio.ini)
-  pio test -e native-test-diag         test_detection_diagnostics (ANALYZER_MODE side channel)
-  on-device (upload --without-testing, then reset and read the port):
-                                       test_analyzer_pass_rules, test_timebase, test_shipped_profile
-                                       (they also run in native-test-behavior, so host and board answer the
-                                       same cases)
+                                       (fixtures under test/fixtures; their provenance is in its test_main.cpp)
+  pio test -e native-test-behavior     the host unit suites (28 on 2026-11-06): each includes the src/ files it
+                                       tests itself, no src build
+  pio test -e native-test-diag         test_detection_diagnostics (the ANALYZER_MODE side channel)
+
+  pio run -e native-replay             the replay command line: .pio/build/native-replay/program.exe --help;
+                                       captures live in bench/sessions/*-corpus-*, made with tools/bench/rawcorpus.py
+                                       (also native-fieldsim, native-echoreplay, native-whisperreplay: platformio.ini)
+
+On the board: test_analyzer_pass_rules, test_timebase, test_shipped_profile (they also run in
+native-test-behavior, so host and board answer the same cases). The ESP envs set monitor_dtr/rts = 0, so
+`pio test` cannot reset the board and misses its output: upload with --without-testing, reset the board and
+read the port yourself. Uploading touches the owner's bench: ask first (CLAUDE.md).
 
 A new suite goes into one native env's test_filter and every ESP env's test_ignore, unless it is on-device
 (tools/ci/test_lists.py ON_DEVICE).
 
-Fixtures: test/fixtures (RAW captures, see test_replay_corpus/test_main.cpp for their provenance).
-native_shim/Arduino.h stands in for <Arduino.h> on the host.
+Host compiler: every native env needs a C++ compiler on PATH. On the developer's Windows machine that is WinLibs
+GCC from winget (%LOCALAPPDATA%\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_*\mingw64\bin), not on
+PATH in every shell: prepend it, or the replay fails with 0xC0000135 (its MinGW runtime DLLs not found). In a
+cloud container, whatever g++ is installed.
+
+src/host/ is excluded from every ESP env, and test/native_shim/Arduino.h stands in for <Arduino.h> on the host:
+a detection file that grows a new Arduino dependency fails the host build, which is intended.

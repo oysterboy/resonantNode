@@ -10,20 +10,7 @@ one style, and explain how landed items move into the archive changelog.
 
 ## Who answers what
 
-```text
-What exists right now?          the code, then implementation-status.md
-Where does a concept belong?    docs/specs/myspec.md
-How does it work / how do I run
-or change it?                   docs/notes_manual.md (the operator guide)
-What next, in what order?       roadmap-0-steps.md
-What exactly is item X?         the domain roadmap that owns its ID; once the item is
-                                finished, the roadmap archive (same ID, same text)
-How is a big item executed?     its pass / plan doc in docs/refactors/
-Why was it built this way?      docs/decisions/ (forks taken, and open ones)
-How could X be done?            docs/research/ (options, designs; marks what got promoted)
-What did we observe?            docs/lab/, bench/ sessions
-What happened?                  docs/changelog.md, git log
-```
+The map of every doc, by question, is in `docs/README.md`, "Who answers what".
 
 The chain, top to bottom:
 

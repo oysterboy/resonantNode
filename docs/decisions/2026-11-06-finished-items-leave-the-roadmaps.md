@@ -35,5 +35,5 @@ under its domain, in the commit of the step that closes it. Its heading and ID s
 
 ## Source
 
-The session of 2026-11-06 (commits 2f4de86, 5aa44e4); `docs/roadmaps/README.md`, Procedure; CLAUDE.md, "Closing a
-step" and "Roadmaps".
+The session of 2026-11-06 (commits 2f4de86, 5aa44e4); `docs/roadmaps/README.md`, Procedure; `docs/README.md`, "Closing a
+step"; CLAUDE.md, "Docs".

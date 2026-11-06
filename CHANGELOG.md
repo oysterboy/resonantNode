@@ -5,10 +5,10 @@ Version-level summary of firmware behavior, keyed to `BUILD_VERSION` in
 
 This is **not** the engineering record. Architecture reasoning, refactor
 detail, and evidence live in `docs/refactors/` (active/archived pass and
-plan docs) and `docs/specs/myspec.md` — see `CLAUDE.md` for how those work.
+plan docs) and `docs/specs/myspec.md` — see `docs/README.md` for how those work.
 This repo's older, pre-version prose log lives at `docs/changelog.md`; it's
-a dated pass-level summary, not a per-commit log (see `CLAUDE.md`'s "Docs
-system" section), and it is a separate thing from this file. This file
+a dated pass-level summary, not a per-commit log (see `docs/README.md`, "The two
+changelogs"), and it is a separate thing from this file. This file
 answers one question only: *what does a given `BUILD_VERSION` actually do
 differently, at runtime, from the last one.*
 

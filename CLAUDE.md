@@ -16,66 +16,48 @@ and react by emitting their own pattern back. The modes share one codebase
 - **Gateway** (`src/modes/gateway/`, `esp32dev-gateway`, 2026-11-05) — a bare
   ESP32 as the bench's radio relay, no audio.
 
-## Tool migration note
+This file holds the rules for changing the repo; people follow them too. Where else to look:
 
-This repo's history and docs (`docs/refactors/archive/current-pass.md`,
-`docs/changelog.md`, `tools/logging/`) were built primarily with **Codex**,
-not Claude Code — "Codex Pass", "Codex-run" / "User-run" are Codex-era
-vocabulary baked into the existing docs, not a live dependency on Codex.
-There was no `AGENTS.md` at the repo root, so nothing needs to be merged or
-reconciled — this file is the first agent-onboarding file for the project.
-Treat "pass" as this repo's generic term for a scoped unit of work
-regardless of which agent runs it.
+- `docs/README.md` — the docs system: which file answers which question, how work flows from a roadmap item to
+  a closed step, the issue rules. Read it before changing anything under `docs/`.
+- `docs/notes_manual.md` — the operator guide: builds and boards, commands per mode, params, OTA, bench workflow.
+- `test/README` — the test envs, on the host and on the board, and the host compiler.
 
-## Build & verify
+## Working rules
 
-```
-platformio run -e esp32dev-analyzer   # default env
-platformio run -e esp32dev            # RB / resonant node
-platformio run -e esp32dev-emitter
-```
+- **Boards:** never flash a piezo build onto a D-AMP board or the reverse: the pinouts collide on GPIO 25/26. The
+  D-AMP board (MAX98357A + I2S mic on one full-duplex port) is the node hardware since 2026-10-09; the piezo envs
+  (`esp32dev-piezo*`, `-D BOARD_PIEZO`) stay compiling as the fallback. Pins and I2S slots: `src/app/BoardConfig.h`.
+- **The owner's bench:** uploading, opening a serial port or an OTA update touches it. Ask first, and confirm which
+  board build (D-AMP or piezo) and mode goes on which port. The owner's go for a step that names board checks covers
+  that step's OTA updates.
+- **Secrets:** the WiFi credentials and the OTA token are in the git-ignored `include/wifi_secrets.h`: never print
+  or commit them. Stop `tools/bench/otaserve.py` once the boards are updated: the image holds the WiFi password.
+- **Stored params:** boards keep their saved params (NVS) across a reflash. A board that was `PARAM SAVE`d (e.g.
+  `output.silent 1`) boots with that until `PARAM RESET`; check `PARAM load stored=` in the boot output before
+  reading a run.
+- **Tuning:** don't retune detection or behavior thresholds (`DetectionProfile.h`, `BehaviorProfile.h`) as a side
+  effect of other work. Tuning is its own deliberate pass, usually logged with the `tools/logging/` LOG-001 workflow.
 
-These build the D-AMP board (MAX98357A + I2S mic on one full-duplex port),
-the node hardware since 2026-10-09. The discontinued piezo nodes build as
-`esp32dev-piezo`, `esp32dev-piezo-analyzer`, `esp32dev-piezo-emitter`
-(`-D BOARD_PIEZO`), kept compiling as the fallback. Pins and I2S slot
-setup per board: `src/app/BoardConfig.h`. Never flash a piezo build onto a
-D-AMP board or the reverse: the pinouts collide on GPIO 25/26.
+## What you can verify where
 
-Which surface you're on decides what you can verify:
+- **Web / cloud container:** no ESP32 attached. Compilation and the host tests are the verification
+  (`platformio run -e ...`, `test/README`). Don't claim a change "works" on hardware from there: say what passed
+  and that live validation is pending.
+- **Developer's Windows machine (VS Code extension):** boards may or may not be attached, and which ones varies.
+  Check with `pio device list` (CP210x USB-UART bridges; COM numbers vary) before assuming any hardware; with none,
+  the compile-only rule holds. `pio` is not on PATH there: call
+  `"$env:USERPROFILE\.platformio\penv\Scripts\pio.exe"` (PowerShell), the same path under
+  `~/.platformio/penv/Scripts/` (Bash), or the PlatformIO IDE terminal.
+- **CI** (`.github/workflows/build.yml`, NODE-007) builds every env and runs the host suites on every push; check
+  `gh run list` after pushing. A green run is compile plus host tests, not hardware.
 
-- **Web / cloud container** — no attached ESP32 hardware; compilation is the
-  available verification (`platformio run -e ...`). Don't claim a change
-  "works" on real hardware from there — say compilation passed and that
-  live validation is still pending.
-- **Developer's Windows machine (VS Code extension)** — boards may or may
-  not be attached, and which ones varies by session. Check with
-  `pio device list` (CP210x USB-UART bridges; COM numbers vary by board and
-  port) before assuming any hardware is there; with none attached, fall
-  back to the compile-only rule above. `pio`/`platformio` is not on PATH
-  here: call `"$env:USERPROFILE\.platformio\penv\Scripts\pio.exe"`
-  (PowerShell) or the same path under `~/.platformio/penv/Scripts/` (Bash),
-  or use the PlatformIO IDE terminal. Flashing or opening a serial port
-  touches the owner's bench — ask before uploading, and confirm which board
-  build (D-AMP vs piezo) and mode goes on which port. An OTA update counts as
-  uploading; the owner's go for a step that names board checks covers that
-  step's OTA updates.
+The standard builds: `platformio run -e esp32dev` (the Node), `-e esp32dev-analyzer` (the default env),
+`-e esp32dev-emitter`; every env is listed in the guide, "Builds and boards".
 
-Over the air (since 2026-10-28, the bench's normal path when the owner is away):
-`tools/bench/otaserve.py` serves the built images on this PC and prints the
-commands; `NET * OTA url=... token=...` on a USB Node updates every Node, the
-Analyzer and the Emitter take `OTA url=... token=...` on their own port. The
-token and WiFi credentials are in the git-ignored `include/wifi_secrets.h`
-(never print or commit them); a new image rolls back unless it runs 20 s
-(decisions/2026-10-28-ota-firmware-pull-over-http.md). Stop otaserve once the
-boards are updated: the image holds the WiFi password. The standing board
-check after a change is `tools/bench/nodecheck.py` (Nodes, 26-27 checks) and,
-for Analyzer output, `tools/bench/analyzerab.py` against the last A/B set.
+## Before you commit
 
-CI (`.github/workflows/build.yml`, NODE-007) builds every env and runs the host suites on every push; check
-`gh run list` after pushing. A green run is compile plus host tests, not hardware.
-
-Before you commit, the checks CI runs (scripts in `tools/ci/`; each exits 1 with one line per problem):
+The checks CI runs (scripts in `tools/ci/`; each exits 1 with one line per problem):
 
 ```
 python tools/ci/clang_format.py --fix          # C/C++ format; CI runs --check
@@ -86,42 +68,15 @@ pio test -e native-test-behavior               # host suites; also native-test a
 python tools/ci/readability.py                 # counts, never fails; H = comment lines that age
 ```
 
-`roadmap_ids.py` runs in the `include-direction` job of `build.yml` (with `--selftest` first).
+`roadmap_ids.py` runs in the `include-direction` job of `build.yml` (with `--selftest` first). Formatting is
+`.clang-format` (120 columns) with clang-format 18.1.8 from PyPI (`python -m pip install clang-format==18.1.8`).
 
-Unit tests live under `test/` (PlatformIO/Unity). On-device:
-`test/test_analyzer_pass_rules`, `test/test_timebase`, and
-`test/test_shipped_profile`, which runs the shipped scalar profile over the
-host fixtures. It also runs on the host in `native-test-behavior`. The ESP
-envs set `monitor_dtr/rts = 0`, so `pio test` can't reset the board and
-misses its output. Upload with `--without-testing`, then reset and read
-the port yourself. Host (no board,
-NODE-006): `pio test -e native-test` replays recorded captures through the
-real detection chain (`test/test_replay_corpus`, fixtures under
-`test/fixtures`), `pio test -e native-test-behavior` runs the host unit
-suites (28 on 2026-11-06, the list in `platformio.ini`: among them
-`test_behavior_refractory` two-node reply, `test_shipped_profile`,
-`test_param_registry` incl. persistence, `test_echo_detection`), and
-`pio run -e native-replay` builds the replay command
-line (`.pio/build/native-replay/program.exe --help`; captures live in
-`bench/sessions/*-corpus-*`, made with `tools/bench/rawcorpus.py`). Both
-need a host C++ compiler on PATH: on the developer's Windows machine that is
-WinLibs GCC from winget (`%LOCALAPPDATA%\Microsoft\WinGet\Packages\
-BrechtSanders.WinLibs.POSIX.UCRT_*\mingw64\bin`, not on PATH in every
-shell: prepend it); in a cloud container, whatever `g++` is installed.
-Parameters: every tunable knob is a registered param (`detection.*`, `behavior.*`, `output.*`), set with
-`PARAM SET <path> <value>` and listed by `PARAM DUMP`. The registry is the in-repo library
-`lib/ParamRegistry/`, which must include nothing from `src/` (CI checks it). RB PARAM and RB BEHAV are gone since
-2026-10-22; old session headers map through `docs/decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md`.
-The Analyzer's code lives in `src/modes/analyzer/`; `src/detection/analyzer/` keeps only pure Analyzer types
-and rules, and nothing under `src/detection/` may include `src/modes/` (CI, strict).
-`src/host/` is excluded from every ESP env and `<Arduino.h>` is stood in
-by `test/native_shim/Arduino.h`; a detection file that grows a new Arduino
-dependency fails the host build, which is intended.
+Commit subjects are short and imperative, often prefixed with the area (`Analyzer:`, `Detection:`, `Docs:`); see
+`git log --oneline`. No footer format beyond what the session's attribution instructions require.
 
-## Architecture spec (read this first for anything touching module boundaries)
+## Architecture
 
-`docs/specs/myspec.md` is the canonical current architecture spec (v0.3.0),
-not just informal notes. Core rule:
+`docs/specs/myspec.md` is the canonical architecture spec (v0.3.0). Core rule:
 
 ```
 Detection produces facts.
@@ -130,252 +85,76 @@ Behavior decides.
 SoundOutput performs output.
 ```
 
-It defines strict per-module "owns / must not own" boundaries (Detector,
-Occurrence, DetectorReport, Inspector (ending in `makeVerdict()`), FieldState,
-Analyzer, Behavior, SoundOutput) and a numeric-domain contract for feature
-values (`Strength16`, `FrequencyScore16`, contrast as a float quality
-domain) that must not be rescaled downstream. `DetectionRuntime` coordinates
-but must never reconstruct detector truth. Read the relevant section before
-changing anything that crosses one of these boundaries — most refactor docs
-in `docs/refactors/` exist because a boundary was violated and had to be
-walked back.
+It defines strict per-module "owns / must not own" boundaries (Detector, Occurrence, DetectorReport, Inspector
+(ending in `makeVerdict()`), FieldState, Analyzer, Behavior, SoundOutput) and a numeric-domain contract for feature
+values (`Strength16`, `FrequencyScore16`, contrast as a float quality domain) that must not be rescaled downstream.
+`DetectionRuntime` coordinates but must never reconstruct detector truth. Read the relevant section before changing
+anything that crosses one of these boundaries: most refactor docs in `docs/refactors/` exist because a boundary was
+violated and had to be walked back. Check `docs/decisions/` before proposing a change to detector interfaces, param
+ownership or the inspector: it may be decided already.
 
-Naming note: the evaluation-stage class was `PatternMatcher`/`PatternResult`
-until a 2026-09-21 rename to `OccurrenceEvaluator`/`OccurrenceVerdict` (the
-stage judges one occurrence against the plan's support requirements and has
-no temporal logic; "Pattern" is reserved for a future downstream stage). If
-you see `PatternMatcher`/`PatternResult` in an older doc, branch, or note,
-it means "what is now `OccurrenceEvaluator`/`OccurrenceVerdict`" — the class
-itself was not left as an alias. `OccurrenceEvaluator` itself was folded into
-inspection on 2026-10-22: the verdict comes from `makeVerdict()` in
-`src/detection/inspection/VerdictProjection.h`, and an older note that names
-the evaluator means that function.
+Boundaries CI enforces: nothing under `src/detection/` includes `src/modes/` (the Analyzer's code is in
+`src/modes/analyzer/`; `src/detection/analyzer/` keeps only pure Analyzer types and rules), and the in-repo library
+`lib/ParamRegistry/` includes nothing from `src/`. Every tunable knob is a registered param (`detection.*`,
+`behavior.*`, `output.*`, ...), set with `PARAM SET <path> <value>` and listed by `PARAM DUMP`. `src/host/` is
+excluded from every ESP env, and a detection file that grows a new Arduino dependency fails the host build, which
+is intended.
 
-Detector families: `FrequencyMatchDetector` and the `TonalPulseFreq` profile
-were removed on 2026-10-22
-(`docs/decisions/2026-10-22-remove-frequencymatch.md`). `ScalarTransientDetector`
-is the only family. Older docs and bench sessions that mention Freq describe
-removed code. A new detector joins on the terms in `myspec.md` 5.3, "Adding a
-detector family".
+`ScalarTransientDetector` is the only detector family (`FrequencyMatchDetector` and `TonalPulseFreq` were removed
+on 2026-10-22, `docs/decisions/2026-10-22-remove-frequencymatch.md`); a new one joins on the terms in `myspec.md`
+5.3, "Adding a detector family". Older docs and bench sessions that mention Freq describe removed code.
 
-`docs/notes_manual.md` is the operator guide (rewritten 2026-10-25): builds
-and boards, the command surface of each mode, param groups and their config
-sites, apply points in boot order, and the
-`accepted -> proposalMatched -> supportMatched -> valid -> behaviorEligible`
-runtime gate chain. Use it for "how does it work" and "where do I change this
-knob," use `myspec.md` for "where does this concept belong."
+Naming note: older docs, branches and notes name `PatternMatcher` / `PatternResult` (renamed 2026-09-21) or
+`OccurrenceEvaluator` / `OccurrenceVerdict`. The evaluator was folded into inspection on 2026-10-22: the verdict
+comes from `makeVerdict()` in `src/detection/inspection/VerdictProjection.h`, and an older note that names either
+means that function. "Pattern" is reserved for a future stage downstream of the verdict.
 
-**Spec / guide / roadmap split** (rule, stated in full in
-`docs/roadmaps/README.md`, "Spec, guide, roadmap"): the spec holds what must
-stay true for the code to be correct, the guide holds how to run and change
-what is built, the roadmap holds what is not true yet, and the code holds
-today's values. Never add a default, a knob list or a command syntax to
-`myspec.md`; put it in the guide, as a pointer to the code site or `PARAM DUMP`
-rather than a copied table, dated when a number is quoted. When a change
-renames a command, a param path or a config site, fix the pointer in
-`notes_manual.md` in the same commit.
+Spec, guide, roadmap: the spec holds what must stay true, the guide how to run and change what is built, the
+roadmaps what is not true yet, the code today's values. Never add a default, a knob list or a command syntax to
+`myspec.md`. When a change renames a command, a param path or a config site, fix the pointer in `notes_manual.md`
+in the same commit (`docs/README.md`, "Three tenses").
 
 ## Source layout
 
-Short map (see the two docs above for the real architecture):
+- `src/detection/` — profiles, detectors, occurrence inspection, field-state tracking.
+- `src/behavior/` — the reaction policy and its timing.
+- `src/modes/` — per-mode wiring and command handling (`resonant`, `analyzer`, `emitter`, `echo`, `gateway`).
+- `src/hal/`, `src/audio/`, `src/output/` — I2S input, signal processing, tone and chirp output (`SoundOutput`
+  executes the Node's emission requests).
+- `src/net/` — the radio (ESP-NOW): `NetFrame.h` (pure, host-tested) and `NodeNet` (transport). `NET <target|*>
+  <command>` on a USB Node runs a Node command on others by radio, through the same command path as serial
+  (operator rules: `notes_manual.md`, "Remote commands"). VEKTOR replaces it later
+  (`docs/decisions/2026-10-25-vektor-replaces-net.md`).
+- `src/app/` — shared app code: params, serial lines, OTA, the node roster, runtime defaults.
+- `lib/ParamRegistry/` — the param registry, app-agnostic.
+- `src/host/`, `test/` — the host replay programs and the unit tests (`test/README`).
 
-- `src/detection/` — profiles, detectors, occurrence inspection, pattern
-  matching, field-state tracking.
-- `src/behavior/` — RB reaction policy and timing.
-- `src/modes/resonant|analyzer|emitter/` — per-mode command handling and
-  wiring.
-- `src/hal/`, `src/audio/`, `src/output/` — I2S input, signal processing,
-  tone/chirp output (`SoundOutput` executes the Node's emission requests).
-- `src/net/` — the radio (ESP-NOW): `NetFrame.h` (pure, host-tested) and
-  `NodeNet` (transport, Node build only). `NET <target|*> <command>` on any
-  USB Node runs a Node command on others by radio, through the same command
-  path as serial (operator rules: `notes_manual.md`, Remote commands).
-  Interim: VEKTOR replaces it (`docs/decisions/2026-10-25-vektor-replaces-net.md`).
+## Docs
 
-Boards keep their stored params (NVS) across a reflash: a board that was
-`PARAM SAVE`d (e.g. `output.silent 1`) boots with that until `PARAM RESET`.
-Check `PARAM load stored=` in the boot output before reading a run.
+The whole system is in `docs/README.md`. The rules that hold in every session:
 
-Don't retune detection/behavior profile thresholds (`DetectionProfile.h`,
-`BehaviorProfile.h`) as a side effect of unrelated work — this repo treats
-tuning as its own deliberate pass, usually logged via the `tools/logging/`
-LOG-001 workflow.
+- **Starting a step:** read its GitHub issue first and fold what is not yet in the docs into them.
+- **Closing a step:** follow the checklist in `docs/README.md`, "Closing a step": gate results in the steps file,
+  finished roadmap items moved to the archive (CI checks), decisions filed, the issue closed with the commit.
+- **Nothing is decided in an issue.** A decision gets a `docs/decisions/` file.
+- **Dates, not step numbers,** in the guide, the spec, the status table and code: a step number ages out when the
+  steps file is archived and renumbered.
 
-## Docs system (read before large changes, update after)
+## Across sessions
 
-`docs/changelog.md` is a dated "what happened" log, not the current
-implementation contract — that's `myspec.md`. It went quiet between
-2026-06-22 and 2026-09-21 while the actual record of work moved into the
-pass/plan docs below, then picked back up with a same-day entry summarizing
-a whole cleanup pass rather than per-commit. Treat it as a periodic
-pass-level summary, not a per-commit log: worth a dated entry when a
-multi-item pass or plan doc closes out, not for every commit — `git log
---oneline -- <path>` is the reliable per-commit record. Check whether the
-active pass/plan doc you're closing out is the kind of unit that's gotten a
-changelog entry before (look at the latest entries for the shape) before
-deciding to add one.
+Work happens from the VS Code extension and from Claude Code on the web: separate sessions with no shared
+transcript, and parallel web sessions can each branch from the same point in `main`. That has produced divergent,
+unmerged `claude/*` branches with their own copies of the same plan docs. `main`, this file and `git log` are the
+shared memory, not a branch's transcript:
 
-### Closing a step (one commit where it fits)
-
-1. The gate results go into the step's text in `roadmap-0-steps.md`, dated, with a `bench/sessions/...` path for
-   anything a board did; the header becomes `[DONE <date>]`.
-2. Every roadmap item the step finished moves whole to `docs/roadmaps/roadmap archive/roadmap-changelog.md`
-   (`tools/ci/roadmap_ids.py` fails on one left behind). The active roadmaps hold what is not true yet.
-3. A fork taken inside the step gets a `docs/decisions/` file and a row in its index.
-4. A pass doc, if one was opened, gets its `Archived: ...` header and moves to `docs/refactors/archive/`.
-5. The step's GitHub issue is closed with a one-line comment naming the commit.
-6. A pointer to something the step renamed (a command, a param path, a config site) is fixed in
-   `notes_manual.md` and `implementation-status.md` in the same commit.
-7. Comments written in the step say why and cite a roadmap ID or a decisions file, never the step number.
-
-### Active work: pass / plan docs (`docs/refactors/`)
-
-This is where "what's being worked on right now" actually lives and gets
-edited commit-by-commit — check here before starting related work, not the
-changelog. Two accepted shapes, both directly under `docs/refactors/` (never
-in `archive/` while active):
-
-- **Single-thread work** — one file (the old `current-pass.md` pattern):
-  goal, current evidence, decisions, open/closed status, edited in place as
-  the work progresses.
-- **Multi-phase or multi-topic work** — a master executable plan (goal,
-  ordered items, a standing test/verification battery, explicit
-  don't-touch-this-without-saying-so constraints) plus one file per
-  architectural area it spans. The model is the 2026-09 detection cleanup
-  set, archived 2026-10-25 (`docs/refactors/archive/cleanup-0-plan.md`, the
-  master, and its topic docs `cleanup*.md`; read its `Archived:` line). Its
-  open parts live on: Phases 5d + 6 (detector family as a build flag; design
-  in `archive/cleanup-detector-family-build.md`) wait for a second detector
-  family (`myspec.md` 5.3), Phase 7a/7b is DET-018, the verdict boundary
-  rule (Part B) is DET-016.
-- Since 2026-10-22 most steps have run without a pass doc: the step's text in
-  `roadmap-0-steps.md` carries its plan, progress lines and gate results, and
-  a pass doc is opened only for a step too big for that (the mode layer's were
-  `archive/step10-mode-layer.md` and `archive/step10-boundary-map.md`).
-
-**Closing one out:** prepend a short header — `Archived: <date> — <what
-landed, what's still open, what wasn't re-verified>` — to the master file
-(this is the one habit from the old system that actually worked; see the
-existing header on `docs/refactors/archive/current-pass.md` for the model
-to follow). Then move the whole file or file set into
-`docs/refactors/archive/`. That header line is the durable record of what
-happened on that unit of work — write it honestly, including caveats, every
-time.
-
-If `docs/refactors/` has no active file at the top level, that is normal while
-a step runs from the steps file. Flag it only when `roadmap-0-steps.md` also
-has no step marked RUNNING or NEXT: then nothing is in flight, or a pass was
-archived without the next unit of work being started.
-
-### Roadmaps (`docs/roadmaps/`)
-
-- `README.md` is the index (it absorbed the old `roadmap-master.md`): which
-  file answers which question, and the ordering rule between roadmaps and
-  `docs/refactors/`.
-- `roadmap-0-steps.md` (formerly `roadmap-general.md`) is the ordered
-  cross-roadmap sequence, one gate per step, each pointing at a roadmap ID or
-  research note and carrying its plan, progress lines and gate results.
-  Check it before picking up roadmap work, and update the order there when a
-  step's gate closes. It orders *between* items; an active pass/plan doc in
-  `docs/refactors/` orders *within* its item (when one exists). On conflict, the steps file decides
-  whether and when, the pass doc decides how.
-- Per-subsystem roadmap files (`roadmap-detection.md`, `roadmap-behavior.md`,
-  etc.) are edited in place as plans change. They hold what is not true yet:
-  when a step closes an item (Status DONE, LANDED, CLOSED, PLAN ARCHIVED),
-  move its whole section to `docs/roadmaps/roadmap archive/roadmap-changelog.md`
-  in the same commit. IDs are cited from code and decisions, never reused, and
-  resolve in an active roadmap or the archive; `tools/ci/roadmap_ids.py` (CI)
-  fails on a finished item left in an active roadmap, a missing Status, a
-  duplicate ID or a cited ID without a heading.
-- `implementation-status.md` is a **live table**, not history — edit it in
-  place to reflect current state (stable/experimental/planned/deferred); it
-  should never accumulate dated entries.
-- A roadmap file that's fully superseded or completed moves to
-  `docs/roadmaps/roadmap archive/` (yes, space in the name — leave it,
-  don't rename it as a drive-by fix since other docs may reference the
-  literal path) with the same one-line `Archived: ...` header used for
-  refactor passes.
-
-### Decisions (`docs/decisions/`)
-
-One short file per deliberate fork (what was chosen, why, what it rules
-out, when to revisit), plus an index with the still-open ones. Pass docs
-get archived; the decisions made inside them live on here. Check the index
-before proposing something that touches detector interfaces, param
-ownership or the evaluator/inspector split — it may already be decided.
-When a pass doc records a new decision, add a file here in the same
-commit; when a pass closes, its decisions are already safe.
-
-### GitHub issues: bench log and inbox, not the record
-
-One issue per step of `roadmap-0-steps.md` (the step links its issue
-number). Issues exist because the owner logs board sessions and drops notes
-from the phone; nothing is written *only* there. Three rules:
-
-1. **Starting a step: read its issue first**, body and comments, and fold
-   anything not yet in the pass doc into it — ticked checkboxes become a
-   dated results line, a comment becomes a sentence in the doc or a
-   `docs/decisions/` file. Then work from the doc.
-2. **Closing a step: close its issue in the same cycle** that writes the
-   gate results into the pass doc, with a one-line comment naming the
-   commit.
-3. **Nothing is decided in an issue.** A thread that reaches a decision
-   gets a `docs/decisions/` file; the issue links to it.
-
-Titles carry `[Step N]`; retitle when the steps file is reordered. Don't
-open issues below step granularity (7a/7b, DET-003..006 live in the
-roadmaps; a dot substep such as 12.4 belongs to its step's issue, and one
-opened anyway is folded in and closed), and don't add Projects boards or
-milestones.
-
-### Other docs
-
-- `docs/specs/myspec.md` — canonical architecture spec; see above.
-- `docs/specs/vektor-spec.md`, `docs/roadmaps/roadmap-vektor-later.md` —
-  future VEKTOR exposure surface; not active runtime behavior.
-- `docs/lab/` — observations, append-only: `notes_lab.md` running
-  notebook, `experiments/ENNN_<topic>.md` one file per study (dated log
-  citing bench sessions), raw notes as `YYYY-MM-DD-<slug>.md`. See
-  `docs/lab/README.md`.
-- `docs/research/` — how a topic could be addressed (options, test
-  designs, plans). When part of a note becomes a roadmap item or decision,
-  mark it there (`Became:` line + `-> promoted to ...` under the section)
-  and link back from the item. See `docs/research/README.md`.
-- `bench/` — committed hardware-run evidence (SEQ logs + setup + firmware
-  hash per session, `baselines.csv`, generated `index.csv`). It is the
-  orphan branch `bench`, checked out as a worktree at `bench/` (gitignored
-  on `main`): `git fetch origin bench && git worktree add bench bench`;
-  commit there with `git -C bench`, never bench data on `main`. See its
-  `README.md`. Run SEQ tests with `tools/bench/seqrun.py`, compare
-  with `tools/bench/seqcmp.py`. A gate result or lab finding cites a
-  `bench/sessions/...` path, never a run that only exists in gitignored
-  `logs/`.
-
-## Cross-session / cross-surface continuity
-
-Work on this repo happens from both the VS Code extension and Claude Code
-on the web/chat — those are separate sessions with no shared transcript,
-and multiple parallel web sessions can each branch from the same point in
-`main` independently. That has already produced divergent, unmerged
-`claude/*` branches carrying their own copies of the same pass/plan docs;
-`main` plus this file plus `git log` is the actual shared memory, not any
-one branch's transcript or working tree:
-
-- Before starting nontrivial work, check `docs/refactors/` for an active
-  pass/plan doc and `docs/roadmaps/implementation-status.md` for current
-  subsystem state — that's the in-flight context from a previous
-  session/surface, not this conversation's transcript. If you're on a
-  `claude/*` branch, also check whether `main` has moved past your branch's
-  fork point (`git log --oneline <merge-base>..origin/main`) before writing
-  new plan-doc content from scratch — it may already exist upstream.
-- After nontrivial work, update the active pass/plan doc in place (or start
-  one if none exists) and commit with a clear message — the next session,
-  on either surface, picks up from the doc plus `git log`, not from here.
-- When a pass/plan closes, write its `Archived: ...` header before moving it
-  — that one line is what the next session (or the next person) will
-  actually read to find out what happened.
-- Keep this file updated if project-wide conventions change; it's what
-  every new session reads first, regardless of which surface started it.
+- Before nontrivial work, check `docs/roadmaps/roadmap-0-steps.md` for the running step, `docs/refactors/` for an
+  active pass doc and `docs/roadmaps/implementation-status.md` for the current state. On a `claude/*` branch, check
+  whether `main` moved past the fork point (`git log --oneline <merge-base>..origin/main`) before writing new plan
+  content: it may exist upstream.
+- After nontrivial work, update the running step's text or the active pass doc in place and commit with a clear
+  message: the next session picks up from the docs and `git log`.
+- When a pass closes, write its `Archived: ...` line before moving it: that line is what the next session reads.
+- Keep this file current when a project-wide convention changes; every new session reads it first.
 
 ## Comments in code
 
@@ -386,8 +165,6 @@ and renumbered, and means nothing to a reader who does not know the roadmap. For
 `docs/decisions/` file or the stable roadmap ID (`DET-015`, `OUT-005`). Classes open with an owns / does-not block
 (`docs/specs/myspec.md` vocabulary); plain data structs need none. `tools/ci/readability.py` prints the tracked
 counts; read them when closing a pass, never gate on them.
-The same holds for the guide (`notes_manual.md`): say what changed and when
-(a date), not only "since step N".
 
 What stays and what goes (applied to `src/`, `lib/` and `test/` in the 2026-11-06 pass; the roadmap half of the same
 idea is `docs/decisions/2026-11-06-finished-items-leave-the-roadmaps.md`):
@@ -401,15 +178,3 @@ idea is `docs/decisions/2026-11-06-finished-items-leave-the-roadmaps.md`):
 - The test: read the sentence without `git log`. Is it still true and still useful? Then it stays.
 - `tools/ci/readability.py` line H counts the comment lines in `src/` that name a step number or the owner as a
   person (0 / 0 on 2026-11-06, from 208 / 42); a rise after a pass is the signal to look.
-
-## Commit style
-
-Short, imperative subject lines, often prefixed with the affected area
-(`Analyzer:`, `DetectionCleanup:`, `AnalyzerDiag:`) — see `git log
---oneline` for examples. No enforced footer format beyond what your
-current session's attribution instructions require.
-
-Formatting (since 2026-10-28): `.clang-format` (120 columns) with clang-format 18.1.8
-from PyPI (`python -m pip install clang-format==18.1.8`, e.g. into a venv);
-`python tools/ci/clang_format.py --fix` before committing C/C++, CI runs
-`--check` and fails on drift.

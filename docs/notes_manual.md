@@ -37,7 +37,7 @@ Build-time knobs (not params, they need a rebuild): `platformio.ini` build flags
 `src/app/RuntimeDefaults.h`, the node roster (name and the hop train's base bin per board MAC; 0..3 on the 8-bin band since 2026-10-30) in
 `src/app/NodeRoster.h`.
 
-Host-side builds and tests (no board): see "Build & verify" in `CLAUDE.md`.
+Host-side builds and tests (no board): `test/README`.
 
 ## The three modes
 
@@ -477,6 +477,9 @@ Run SEQ tests with `tools/bench/seqrun.py`, compare runs with `tools/bench/seqcm
 replay corpora from RAW captures with `tools/bench/rawcorpus.py`. Hardware evidence is committed
 on the `bench` branch, checked out as a worktree at `bench/` (its `README.md` has the session
 layout). A gate result cites a `bench/sessions/...` path, never a run that only exists in `logs/`.
+
+The standing board check after a change is `tools/bench/nodecheck.py` (the Nodes, 26-27 checks on 2026-11-06) and,
+for Analyzer output, `tools/bench/analyzerab.py` against the last A/B set.
 
 ## Source map
 

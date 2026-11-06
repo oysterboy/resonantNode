@@ -67,7 +67,7 @@ def run(path, medium=None):
         cmd += ["--set", "detection.contrast_medium=%d" % medium]
     proc = subprocess.run(cmd + [path], capture_output=True, text=True)
     if proc.returncode != 0:
-        # 0xC0000135 on Windows: the replay's MinGW runtime DLLs are not on PATH (CLAUDE.md, host build).
+        # 0xC0000135 on Windows: the replay's MinGW runtime DLLs are not on PATH (test/README, host compiler).
         sys.exit("replay failed (exit %d) on %s: is the host compiler's bin directory on PATH?" % (proc.returncode, path))
     out = proc.stdout
     verdicts = [l for l in out.splitlines() if l.strip().startswith("verdict ")]

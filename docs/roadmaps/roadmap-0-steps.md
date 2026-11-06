@@ -234,8 +234,8 @@ substeps marked "on site" wait for those days.
         list in notes_manual.md.
    20.6 [TODO, by 2026-11-27] Which mode the performance's demo puts first, Whispernet or the echo room (owner
         2026-11-06: open). Criterion: the one that triggers reliably and does not false-trigger in the room's
-        November measurement (20.4); the other stays a demo if it passes too (both are an OTA apart). A
-        decisions/ file.
+        November measurement (20.4) and in the whisper evaluation (27); the other stays a demo if it passes too (both
+        are an OTA apart). A decisions/ file.
    20.4 The room, in two parts. November: the room's noise for both modes' thresholds, one board, a session per
         firmware. From 2026-12-07: the demo set up beside the field (18), the Node image back on every field node at
         the end. On site.
@@ -324,6 +324,23 @@ substeps marked "on site" wait for those days.
    - Housekeeping: the remote branch ccr-02463034-rz5la2 holds nothing main lacks; a cloud session cannot delete it
      (the git proxy answers 403), delete it on GitHub. The echo modes' spec chapter and the other deferred items are
      under "Review leftovers" with their triggers; M4 (AmpExperimental's contrast scale) waits for 20.5.
+
+26. [TODO, by 2026-11-20] Whisper corpus: long recordings of several voices on the board's own mic. (issue #92) At the lab PC.
+   ECHO-005 items 1-2. The firmware is built (REC, LongRecorder, tools/bench/longrec.py; compiled and host-tested
+   2026-11-06, never run on a board), so the first thing on the bench is one board on USB and one test recording:
+   frames complete, no dropped buffers, the baud back after. Then the sections for each voice (the list in
+   ECHO-005), the noises, the room alone; a reference mic beside it if an audio interface is at hand. Owner and
+   voices needed; I (Claude) prepare the plan, the cues and the labelling.
+   Gate: a test recording with under 1 % of the samples missing; at least four voices, each with the same sections,
+   and the room's noises, in a bench session cited.
+
+27. [TODO, 2026-11-20 .. 11-26] Whisper evaluation: the detectors compared, a classifier tried, held out by voice. (issue #93) PC.
+   ECHO-005 items 3-4. The chain with the room-following onset, WebRTC VAD and Silero on the corpus; a small tree
+   or logistic regression trained on some voices and judged on the others; the level window and the timbre checks
+   re-tuned only if the corpus says where (a tuning pass of its own, logged). Feeds 20.6 (by 2026-11-27): does
+   Whispernet trigger on whispers and stay quiet for the room's noises on the board's mic.
+   Gate: the held-out table in docs/research/whispernet.md; a decisions/ file for the classifier (landed as a
+   module with params, or dropped); 20.6 can name its mode.
 
 21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
    roadmap-hardware.md HW-001 (the prototype, the D-AMP pinout as wired, room for the second mic), HW-002 (ten
@@ -443,6 +460,8 @@ parallel.
 
 ## Status log
 
+Status update 2026-11-06, later: steps 26 (whisper corpus, issue #92) and 27 (whisper evaluation, issue #93) added with
+ECHO-005 (owner): the long-recording firmware is built (REC over USB), the first host findings are in whispernet.md.
 Status update 2026-11-06: the plan to the performance on 2026-12-13, set with the owner: the tryout room is the
 performance room, open before 2026-12-07 for a few nodes and from then for all; ten nodes on stripboard, breadboard
 as the fallback (21.4, 2026-11-30); 20.5 with PAR-018, 20.6 the demo's mode by 2026-11-27, 20.4 in two parts; new 24

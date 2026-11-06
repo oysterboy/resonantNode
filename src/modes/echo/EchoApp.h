@@ -9,6 +9,7 @@
 #include "../../app/SerialLine.h"
 #include "../../audio/CaptureRing.h"
 #include "../../audio/EnvelopeFollower.h"
+#include "../../audio/LongRecorder.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/EchoProfiles.h"
 #include "../../detection/EnvelopeRuntime.h"
@@ -91,6 +92,8 @@ private:
     void handleOtaCommand(const char* line);
     void handleLogCommand(const char* line);
     void handleGateCommand(const char* line);
+    void handleRecCommand(const char* line);  // REC <secs> | REC STOP: the mic over USB, framed (LongRecorder)
+    void recService(unsigned long now);
     void detectBlock(const AudioBlock& block, uint64_t ringIndex, uint32_t blockMs);
     void handleResult(const detection::EnvelopeRuntime::Result& result);
     void runBehavior(unsigned long now);
@@ -183,4 +186,10 @@ private:
     uint32_t _radioLog = 0;  // node.radio_log: console lines per second mirrored to the radio, 0 off
     unsigned long _logEveryMs = 10000;
     unsigned long _nextLogMs = 0;
+    // The long recording: the baud rises for the stream and returns at its end; the ring is heap, only while it runs.
+    LongRecorder _rec;
+    uint8_t* _recBuf = nullptr;
+    bool _recActive = false;
+    unsigned long _recFirstFrameMs = 0;  // the PC needs a moment to follow the baud
+    unsigned long _recLastWriteMs = 0;
 };

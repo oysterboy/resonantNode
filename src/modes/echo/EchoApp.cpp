@@ -125,6 +125,7 @@ void EchoApp::update() {
     pollAudio();
     pollUsb();
     pollNet();
+    recService(timebase::nowMs());
 
     const unsigned long now = timebase::nowMs();
     runBehavior(now);
@@ -132,7 +133,7 @@ void EchoApp::update() {
         _toneOutput.toneOff();
         _toneOn = false;
     }
-    if (_logEveryMs > 0 && static_cast<long>(now - _nextLogMs) >= 0) {
+    if (_logEveryMs > 0 && static_cast<long>(now - _nextLogMs) >= 0 && !_recActive) {
         printStatus();
         _nextLogMs = now + _logEveryMs;
     }
@@ -160,6 +161,9 @@ void EchoApp::pollAudio() {
     size_t processed = 0;
     AudioBlock block;
     while (processed < maxSamples && _i2sPort.readBlock(block)) {
+        if (_recActive) {
+            _rec.push(block.samples, block.sampleCount);  // the mic as it heard, before any cancelling
+        }
         const uint32_t startUs = micros();
         // The ring's own index of this block's first sample: the clip is cut by it. Not block.startSampleIndex, which
         // also counts the DMA buffers the driver dropped (the ring never saw them; found on the desk 2026-10-31).
@@ -596,6 +600,8 @@ void EchoApp::handleLine(const char* line) {
         handleParamCommand(line);
     } else if (startsWithWordIgnoreCase(line, "ECHO LOG")) {
         handleLogCommand(line);
+    } else if (startsWithWordIgnoreCase(line, "REC")) {
+        handleRecCommand(line);
     } else if (startsWithWordIgnoreCase(line, "TONE")) {
         handleToneCommand(line);
     } else if (startsWithWordIgnoreCase(line, "OTA")) {
@@ -606,6 +612,84 @@ void EchoApp::handleLine(const char* line) {
         printHelp();
     } else {
         serialOut().println("ECHO ERR unknown_command (HELP)");
+    }
+}
+
+// REC <secs>: the mic, framed (LongRecorder), over the USB cable at 921600 baud (115200 carries a fifth of 24 kHz 16-bit).
+// The line "REC start" goes out at the old baud, then the port switches; the stream ends with a "REC end" line at the
+// new baud and the port returns. The stream is the raw mic (no cancelling), so run the node with its own playback off.
+// Status lines pause meanwhile; a line that still goes out (a radio command) shows as a bad frame the tool skips.
+void EchoApp::handleRecCommand(const char* line) {
+    const char* rest = text_parse::rest(line, "REC");
+    if (equalsIgnoreCase(rest, "STOP")) {
+        if (_recActive) {
+            _rec.stop();
+        } else {
+            serialOut().println("REC ERR not_recording");
+        }
+        return;
+    }
+    uint32_t secs = 0;
+    if (!text_parse::parseUnsigned(rest, secs) || secs < 1 || secs > 600) {
+        serialOut().println("REC ERR usage=REC <secs 1..600>|STOP");
+        return;
+    }
+    if (_recActive) {
+        serialOut().println("REC ERR busy");
+        return;
+    }
+    constexpr size_t kRingBytes = 12288;  // ~0.25 s at 24 kHz: the port at 921600 drains twice what the mic fills
+    _recBuf = static_cast<uint8_t*>(heap_caps_malloc(kRingBytes, MALLOC_CAP_8BIT));
+    if (_recBuf == nullptr) {
+        serialOut().println("REC ERR no_heap");
+        return;
+    }
+    const uint32_t rate = _i2sPort.sampleRateHz();
+    _rec.begin(_recBuf, kRingBytes, static_cast<uint64_t>(secs) * rate);
+    serialOut().print("REC start rate=");
+    serialOut().print(rate);
+    serialOut().print(" bits=16 secs=");
+    serialOut().print(secs);
+    serialOut().println(" baud=921600");
+    serialOutFlush();
+    Serial.flush();  // the line leaves at the old baud
+    Serial.updateBaudRate(921600);
+    const unsigned long now = timebase::nowMs();
+    _recFirstFrameMs = now + 400;
+    _recLastWriteMs = now;
+    _recActive = true;
+}
+
+// The ring to the port without ever blocking the audio loop: only what the port's buffer takes now.
+void EchoApp::recService(unsigned long now) {
+    if (!_recActive || static_cast<long>(now - _recFirstFrameMs) < 0) {
+        return;
+    }
+    for (;;) {
+        const size_t room = static_cast<size_t>(Serial.availableForWrite());
+        size_t contiguous = 0;
+        const uint8_t* p = _rec.peek(contiguous);
+        const size_t n = contiguous < room ? contiguous : room;
+        if (n == 0) {
+            break;
+        }
+        Serial.write(p, n);
+        _rec.consume(n);
+        _recLastWriteMs = now;
+    }
+    // Done: drained, or the cable took nothing for 3 s after the last sample (the PC went away).
+    const bool stalled = _rec.complete() && static_cast<long>(now - _recLastWriteMs) > 3000;
+    if (_rec.drained() || stalled) {
+        Serial.print("\nREC end samples=");
+        Serial.print(static_cast<unsigned long>(_rec.position()));
+        Serial.print(" dropped=");
+        Serial.print(static_cast<unsigned long>(_rec.droppedSamples()));
+        Serial.print("\n");
+        Serial.flush();
+        Serial.updateBaudRate(115200);
+        heap_caps_free(_recBuf);
+        _recBuf = nullptr;
+        _recActive = false;
     }
 }
 
@@ -805,6 +889,8 @@ void EchoApp::printHelp() {
     }
     serialOut().println(kWhispernet ? "ECHO CMD: PARAM LIST|GET|SET|DUMP|SAVE|LOAD|RESET (whisper.*)"
                                     : "ECHO CMD: PARAM LIST|GET|SET|DUMP|SAVE|LOAD|RESET (echo.*)");
+    serialOut().println(
+        "ECHO CMD: REC <secs 1..600>|STOP (the mic as framed PCM at 921600 baud; tools/bench/longrec.py)");
     serialOut().println("ECHO CMD: TONE <hz> <ms>");
     serialOut().println("ECHO CMD: OTA url=... token=...");
     serialOut().println("ECHO CMD: NET STATUS");

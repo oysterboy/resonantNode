@@ -125,6 +125,30 @@ is parked until this lands). Items 1-3 built the same evening, host-tested, not 
 Gate: the owner clapping with all five, by ear, the session cited.
 ```
 
+### ECHO-005 - whisper against the room's noises: a recorded corpus and a classifier feature
+
+Status: TODO (owner 2026-11-06: "one step for recordings, one for the evaluation"). The first host findings are in
+`docs/research/whispernet.md` ("Whisper detection against other detectors", "A small decision tree"): off-the-shelf
+speech detectors do not do this job, the chain's level window and timbre checks separate nothing on the C920
+recordings, a depth-3 tree on band excess, flatness and zero crossings recognises 57 % of held-out whisper phrases
+at 17 % false flags. One speaker, one room, one camera: the corpus is what is missing.
+
+```text
+1. The mic as a long recording over USB: REC <secs> on the echo and whisper firmware (src/audio/LongRecorder.h,
+   tools/bench/longrec.py). Built 2026-11-06, compiled and host-tested (test_long_recorder); never run on a board.
+2. A corpus on the board's own mic: several voices (the owner's "other voices would be good"), each through the same
+   sections (whisper soft / normal / strained, 0.5 / 1 / 2 m, words, speech, breath, throat) and the noises of the
+   room (typing, paper, clothes, chair), plus the room alone; labelled by section, bench/sessions/<date>-whisper-corpus.
+   Optionally a reference mic on an audio interface at the same time.
+3. The evaluation held out by voice: the chain (native-whisperreplay --adaptive), WebRTC VAD, Silero VAD
+   (tools/bench/vadcmp.py) and a small tree or logistic regression (tools/bench/treetest.py), trained on some voices
+   and judged on the others.
+4. If it holds: the classifier as one inspection module ("timbre: whisper-like"), its few numbers as params, off by
+   default until heard; if not: the chain's checks stay as they are and the demo's mode (20.6) rests on the room.
+Gate: the corpus on main (or its path cited), the held-out table in whispernet.md, and either the module landed
+or the decision not to, as a decisions/ file.
+```
+
 ---
 
 ## Plan to 2026-12-13 (owner's date, 2026-10-30)

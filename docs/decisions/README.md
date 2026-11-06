@@ -107,6 +107,7 @@ what replaced it.
 | 2026-11-05 | [A bare ESP32 is the bench's radio gateway (esp32dev-gateway, E0)](2026-11-05-radio-gateway-board.md) |
 | 2026-11-05 | [A bare ESP32 is the bench's radio gateway (esp32dev-gateway, E0)](2026-11-05-radio-gateway-board.md) |
 | 2026-11-06 | [Finished roadmap items move to the archive; IDs stay citable (tools/ci/roadmap_ids.py)](2026-11-06-finished-items-leave-the-roadmaps.md) |
+| 2026-11-06 | [A finished step folds to a Result line; its full text moves to the phase archive](2026-11-06-finished-steps-fold-to-a-line.md) |
 
 ## Open
 

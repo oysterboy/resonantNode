@@ -135,8 +135,9 @@ Non-goals
 Use short project-wide IDs in the active roadmaps.
 roadmap-0-steps.md holds the order and, per step, its gate, plan, progress lines and gate results (dated,
 citing bench/sessions/... for board work); a pass doc in docs/refactors/ only when a step is too big for that.
-What an item is stays in its domain roadmap, why a fork was taken in docs/decisions/. When the phase ends,
-the whole file is archived to roadmap archive/ and the numbering continues.
+What an item is stays in its domain roadmap, why a fork was taken in docs/decisions/. A finished step keeps
+its header, a Result line and a Full text pointer; its whole text moves to roadmap archive/roadmap-0-steps-<phase>.md.
+When the phase ends, the rest of the file joins that archive and the numbering continues.
 Give an item executed through docs/refactors/ a roadmap ID that points at its
 pass / plan doc.
 Close an item by moving its whole section to docs/roadmaps/roadmap archive/roadmap-changelog.md,

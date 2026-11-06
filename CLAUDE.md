@@ -135,7 +135,8 @@ The whole system is in `docs/README.md`. The rules that hold in every session:
 
 - **Starting a step:** read its GitHub issue first and fold what is not yet in the docs into them.
 - **Closing a step:** follow the checklist in `docs/README.md`, "Closing a step": gate results in the steps file,
-  finished roadmap items moved to the archive (CI checks), decisions filed, the issue closed with the commit.
+  then the step folded to a Result line with its full text in the phase archive, finished roadmap items moved to
+  the archive (CI checks both), decisions filed, the issue closed with the commit.
 - **Nothing is decided in an issue.** A decision gets a `docs/decisions/` file.
 - **Dates, not step numbers,** in the guide, the spec, the status table and code: a step number ages out when the
   steps file is archived and renumbered.

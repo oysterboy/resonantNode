@@ -46,13 +46,18 @@ a sentence, is in `docs/roadmaps/README.md`, "Spec, guide, roadmap". Two consequ
 4. While the step runs, each new fact goes to its place: a board run to `bench/sessions/...`, an observation to
    `docs/lab/`, a choice to `docs/decisions/`, a new problem to a new roadmap item, the reason for a value to a
    code comment that cites an ID or a decisions file.
-5. The step closes (below). When the phase ends, the whole steps file is archived to `roadmap archive/` and the
+5. The step closes (below): its full text moves to the phase archive, and the steps file keeps a header, a
+   Result line and a pointer. When the phase ends, the rest of the steps file joins the phase archive and the
    numbering continues; code and docs cite IDs, never step numbers, so nothing breaks.
 
 ## Closing a step (one commit where it fits)
 
 1. The gate results go into the step's text in `roadmap-0-steps.md`, dated, with a `bench/sessions/...` path for
    anything a board did; the header becomes `[DONE <date>]`.
+   Then the step's whole text moves, unchanged, to the phase archive (`docs/roadmaps/roadmap archive/
+   roadmap-0-steps-<phase>.md`, today `-2`), and the steps file keeps the header, a `Result:` line and
+   `Full text: roadmap archive/roadmap-0-steps-<phase>.md, step N.` (`tools/ci/roadmap_ids.py` fails on a longer
+   finished step; docs/decisions/2026-11-06-finished-steps-fold-to-a-line.md).
 2. Every roadmap item the step finished moves whole to `docs/roadmaps/roadmap archive/roadmap-changelog.md`
    (`tools/ci/roadmap_ids.py` fails on one left behind; the procedure is in `docs/roadmaps/README.md`).
 3. A fork taken inside the step gets a `docs/decisions/` file and a row in its index.

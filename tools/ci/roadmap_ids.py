@@ -10,7 +10,9 @@ findable after the item is finished. The rule that keeps the active roadmaps poi
   - every item has a Status line near its heading, in the archive too, and the archive holds finished
     items only;
   - an ID heading exists once across the active roadmaps and the archive (an ID is never reused);
-  - every ID cited in code, tests, tools and docs resolves to a heading in one of the two places.
+  - every ID cited in code, tests, tools and docs resolves to a heading in one of the two places;
+  - a finished step in the steps file is folded to its header, a Result line and a "Full text:" pointer to the
+    phase archive in roadmap archive/ (that file must exist): its plan and progress lines live there.
 
 Exits 1 with one line per problem. Usage: python3 tools/ci/roadmap_ids.py [--selftest]
 """
@@ -29,6 +31,9 @@ HEADING = re.compile(r"^#{2,4} ([A-Z]{2,5}-\d{3}[a-z]?)\b")
 TEXT_SUFFIXES = (".h", ".hpp", ".c", ".cpp", ".py", ".md", ".ini", ".yml", ".txt")
 SCAN_DIRS = ("src", "lib", "test", "include", "tools", "docs")
 STATUS_WINDOW = 8  # lines after the heading in which the Status line must stand
+STEP = re.compile(r"^(\d+)\. \[([A-Z]+)")
+DONE_STEP_MAX_LINES = 6  # header, a Result line wrapped once or twice, the pointer
+FULL_TEXT = re.compile(r"Full text: (roadmap archive/[\w.-]+\.md)")
 
 
 def files_to_scan(root):
@@ -65,6 +70,32 @@ def items_of(root, name):
     return items
 
 
+def check_steps(root):
+    """A DONE step in the steps file's Order section is a short stub pointing at its full text."""
+    lines = read_lines(root, STEPS)
+    problems = []
+    if "## Order" not in lines:
+        return problems
+    start = lines.index("## Order") + 1
+    end = next((i for i in range(start, len(lines)) if lines[i].startswith("## ")), len(lines))
+    heads = [i for i in range(start, end) if STEP.match(lines[i])]
+    for k, i in enumerate(heads):
+        block = [l for l in lines[i : heads[k + 1] if k + 1 < len(heads) else end] if l.strip()]
+        number, status = STEP.match(lines[i]).groups()
+        if status != "DONE":
+            continue
+        where = f"{STEPS}:{i + 1}"
+        pointer = next((FULL_TEXT.search(l) for l in block if FULL_TEXT.search(l)), None)
+        if len(block) > DONE_STEP_MAX_LINES:
+            problems.append(f"{where}: step {number} is DONE with {len(block)} lines; move its text to the phase archive "
+                            f"in {ROADMAPS}/roadmap archive/ and keep the header, a Result line and a Full text pointer")
+        elif pointer is None:
+            problems.append(f"{where}: step {number} is DONE without a 'Full text: roadmap archive/<file>.md' pointer")
+        elif not os.path.isfile(os.path.join(root, ROADMAPS, pointer.group(1))):
+            problems.append(f"{where}: step {number} points at {pointer.group(1)}, which does not exist")
+    return problems
+
+
 def is_finished(status):
     return status.upper().startswith(FINISHED)
 
@@ -91,6 +122,7 @@ def check(root):
                 problems.append(f"{where}: {item_id} is finished ({status.split(' ')[0]}); move the section to {ARCHIVE}")
             elif archived and not is_finished(status):
                 problems.append(f"{where}: {item_id} is archived but not finished (Status: {status[:40]})")
+    problems += check_steps(root)
     prefixes = sorted({i.split("-")[0] for i in seen})
     cite = re.compile(r"\b(?:" + "|".join(prefixes) + r")-\d{3}[a-z]?\b")
     cited = 0
@@ -120,6 +152,10 @@ def selftest():
     act = "### DET-001 - open item\n\nStatus: TODO\n\nbody\n"
     arc = "# Archive\n\n## Detection\n\n### DET-002 - done item\n\nStatus: DONE 2026-01-01\n"
     base = {f"{ROADMAPS}/roadmap-detection.md": act, ARCHIVE: arc, "src/a.cpp": "// DET-001 and DET-002\n"}
+    PHASE = f"{ROADMAPS}/roadmap archive/roadmap-0-steps-9.md"
+    steps = "# Steps\n\n## Order\n\n{done}\n2. [TODO] next (DET-001)\n   plan\n\n## Notes\n"
+    stub = "1. [DONE 2026-01-01] first (DET-002)\n   Result: done.\n   Full text: roadmap archive/roadmap-0-steps-9.md, step 1.\n"
+    long_text = "".join(f"   line {n}\n" for n in range(6))
     cases = [
         ("clean tree passes", base, 0),
         ("finished item in an active roadmap", {**base, f"{ROADMAPS}/roadmap-detection.md": act.replace("TODO", "LANDED 2026")}, 1),
@@ -127,6 +163,10 @@ def selftest():
         ("unfinished item in the archive", {**base, ARCHIVE: arc.replace("DONE 2026-01-01", "PARTIAL")}, 1),
         ("ID used twice", {**base, ARCHIVE: arc.replace("DET-002", "DET-001")}, 1),
         ("cited ID without heading", {**base, "src/a.cpp": "// DET-001 DET-099\n"}, 1),
+        ("finished step folded", {**base, STEPS: steps.format(done=stub), PHASE: "# phase\n"}, 0),
+        ("finished step left long", {**base, STEPS: steps.format(done=stub + long_text), PHASE: "# phase\n"}, 1),
+        ("finished step without pointer", {**base, STEPS: steps.format(done="1. [DONE 2026-01-01] x\n   Result: y\n")}, 1),
+        ("pointer to a missing archive", {**base, STEPS: steps.format(done=stub)}, 1),
     ]
     for label, files, want in cases:
         got = len(check(tree(files))[0])

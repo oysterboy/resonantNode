@@ -135,7 +135,8 @@ private:
         // of boards in the room: five on the desk rested together after a few claps (2026-11-01), ending the chain
         // too soon.
         uint32_t levelMax = 4;
-        uint32_t levelOffset = 2;
+        uint32_t startChancePct = 50;  // the chance of answering the first clap, rising to 100 % at the top
+        uint32_t plateauPct = 100;  // where the ramp ends, as behavior.plateau_pct
         uint32_t levelDecayMs = 3000;
         uint32_t restMs = 4000;
         uint32_t waitMs = 350;

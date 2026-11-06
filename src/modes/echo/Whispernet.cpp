@@ -28,7 +28,8 @@ BehaviorGateConfig whisperBehavior(const Whispernet::Values& v) {
     b.behaviorSuppressSelfChirpMs = 0;
     b.detectionSuppressTailMsOwnEmit = 0;
     b.levelMax = v.levelMax > 0 ? v.levelMax : 1;
-    b.levelOffset = v.levelOffset;
+    b.startChancePct = v.startChancePct;
+    b.plateauPct = v.plateauPct;
     b.levelDecayMs = v.levelDecayMs;
     b.restMs = v.restMs;
     b.answerJitterMs = 0;
@@ -391,11 +392,13 @@ void Whispernet::describeParams(param::ParamRegistry& registry) {
                        &_values.chain.gapMs, 0U, 2000U);
     registry.addUInt32(param::ParamId::Whisper_MaxPhraseMs, param::ModuleId::Detection, "whisper.max_phrase_ms",
                        &_values.chain.maxPhraseMs, 0U, 600000U);
-    registry.addUInt32(param::ParamId::Whisper_LevelMax, param::ModuleId::Behavior, "whisper.level_max",
+    registry.addUInt32(param::ParamId::Whisper_LevelMax, param::ModuleId::Behavior, "whisper.chain_length",
                        &_values.levelMax, 1U, 50U);
-    registry.addUInt32(param::ParamId::Whisper_LevelOffset, param::ModuleId::Behavior, "whisper.level_offset",
-                       &_values.levelOffset, 0U, 50U);
-    registry.addUInt32(param::ParamId::Whisper_LevelDecayMs, param::ModuleId::Behavior, "whisper.level_decay_ms",
+    registry.addUInt32(param::ParamId::Whisper_StartChancePct, param::ModuleId::Behavior, "whisper.start_chance_pct",
+                       &_values.startChancePct, 0U, 100U);
+    registry.addUInt32(param::ParamId::Whisper_PlateauPct, param::ModuleId::Behavior, "whisper.plateau_pct",
+                       &_values.plateauPct, 1U, 100U);
+    registry.addUInt32(param::ParamId::Whisper_LevelDecayMs, param::ModuleId::Behavior, "whisper.level_fall_ms",
                        &_values.levelDecayMs, 0U, 60000U);
     registry.addUInt32(param::ParamId::Whisper_RestMs, param::ModuleId::Behavior, "whisper.rest_ms", &_values.restMs,
                        0U, 60000U);

@@ -45,6 +45,23 @@ the old paths; read them through this table. `PARAM SET` with an old path answer
 - `behavior.spread_shrinks` (bool, default 1): the answer spread shrinks with the level; 0 keeps the full window.
 - `chain_length 0` still ignores the spread (automaton off). The first test levels: `test_behavior_level`.
 
+## Built 2026-11-06: the echo modes' vocabulary
+
+| old path | new path |
+|---|---|
+| echo.level_max, whisper.level_max | echo.chain_length, whisper.chain_length |
+| echo.level_offset, whisper.level_offset | echo.start_chance_pct, whisper.start_chance_pct (new ids; the old ones retired, so a stored offset is ignored) |
+| (new) | echo.plateau_pct, whisper.plateau_pct |
+| echo.level_decay_ms, whisper.level_decay_ms | echo.level_fall_ms, whisper.level_fall_ms |
+| echo.wait_ms | echo.wait_after_heard_ms |
+| echo.jitter_ms | echo.answer_spread_ms |
+| echo.tail_ms, echo.refractory_ms | echo.after_own_tail_ms, echo.after_own_no_answer_ms |
+
+`BehaviorProfile::levelOffset` stays in the code (the host tests and fieldsim use it) but no mode sets it. Defaults:
+start 50 %, plateau 100: the ramp from 50 % to 100 % at the level before the top (the old offset 2 of 4 gave 50, 75,
+100 %; the new curve is evenly spaced, so a listening test decides whether it feels the same). `ECHO GATE` takes
+`start=` and `plateau=` in place of `offset=`.
+
 ## Why
 
 - Renaming is cheap on the board (the store keys by id), costs only old tools and bench headers, and is done for

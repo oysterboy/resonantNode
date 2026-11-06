@@ -44,7 +44,8 @@ BehaviorGateConfig EchoApp::echoBehavior() const {
     b.behaviorSuppressSelfChirpMs = 100;
     b.detectionSuppressTailMsOwnEmit = _gate.tailMs;
     b.levelMax = _gate.levelMax > 0 ? _gate.levelMax : 1;
-    b.levelOffset = _gate.levelOffset;
+    b.startChancePct = _gate.startChancePct;
+    b.plateauPct = _gate.plateauPct;
     b.levelDecayMs = _gate.levelDecayMs;
     b.restMs = _gate.restMs;
     b.answerJitterMs = _gate.jitterMs;
@@ -226,18 +227,22 @@ void EchoApp::configureParams() {
                     ECHO_CLIP_MS);
         r.addFloat(param::ParamId::Echo_Gain, param::ModuleId::Output, "echo.gain", &_gate.gain, 0.0f, 512.0f);
         r.addBool(param::ParamId::Echo_Enabled, param::ModuleId::Output, "echo.enabled", &_gate.enabled);
-        r.addUInt32(param::ParamId::Echo_LevelMax, param::ModuleId::Behavior, "echo.level_max", &_gate.levelMax, 1U,
+        r.addUInt32(param::ParamId::Echo_LevelMax, param::ModuleId::Behavior, "echo.chain_length", &_gate.levelMax, 1U,
                     50U);
-        r.addUInt32(param::ParamId::Echo_LevelOffset, param::ModuleId::Behavior, "echo.level_offset",
-                    &_gate.levelOffset, 0U, 50U);
-        r.addUInt32(param::ParamId::Echo_LevelDecayMs, param::ModuleId::Behavior, "echo.level_decay_ms",
+        r.addUInt32(param::ParamId::Echo_StartChancePct, param::ModuleId::Behavior, "echo.start_chance_pct",
+                    &_gate.startChancePct, 0U, 100U);
+        r.addUInt32(param::ParamId::Echo_PlateauPct, param::ModuleId::Behavior, "echo.plateau_pct", &_gate.plateauPct,
+                    1U, 100U);
+        r.addUInt32(param::ParamId::Echo_LevelDecayMs, param::ModuleId::Behavior, "echo.level_fall_ms",
                     &_gate.levelDecayMs, 0U, 60000U);
         r.addUInt32(param::ParamId::Echo_RestMs, param::ModuleId::Behavior, "echo.rest_ms", &_gate.restMs, 0U, 60000U);
-        r.addUInt32(param::ParamId::Echo_WaitMs, param::ModuleId::Behavior, "echo.wait_ms", &_gate.waitMs, 0U, 10000U);
-        r.addUInt32(param::ParamId::Echo_JitterMs, param::ModuleId::Behavior, "echo.jitter_ms", &_gate.jitterMs, 0U,
-                    10000U);
-        r.addUInt32(param::ParamId::Echo_TailMs, param::ModuleId::Behavior, "echo.tail_ms", &_gate.tailMs, 0U, 3000U);
-        r.addUInt32(param::ParamId::Echo_RefractoryMs, param::ModuleId::Behavior, "echo.refractory_ms",
+        r.addUInt32(param::ParamId::Echo_WaitMs, param::ModuleId::Behavior, "echo.wait_after_heard_ms", &_gate.waitMs,
+                    0U, 10000U);
+        r.addUInt32(param::ParamId::Echo_JitterMs, param::ModuleId::Behavior, "echo.answer_spread_ms", &_gate.jitterMs,
+                    0U, 10000U);
+        r.addUInt32(param::ParamId::Echo_TailMs, param::ModuleId::Behavior, "echo.after_own_tail_ms", &_gate.tailMs, 0U,
+                    3000U);
+        r.addUInt32(param::ParamId::Echo_RefractoryMs, param::ModuleId::Behavior, "echo.after_own_no_answer_ms",
                     &_gate.refractoryMs, 0U, 10000U);
     }
     _params.captureDefaults();
@@ -477,7 +482,8 @@ void EchoApp::handleGateCommand(const char* line) {
                  {"pre=", &_gate.preMs},
                  {"post=", &_gate.postMs},
                  {"levelmax=", &_gate.levelMax},
-                 {"offset=", &_gate.levelOffset},
+                 {"start=", &_gate.startChancePct},
+                 {"plateau=", &_gate.plateauPct},
                  {"decay=", &_gate.levelDecayMs},
                  {"rest=", &_gate.restMs},
                  {"wait=", &_gate.waitMs},
@@ -510,8 +516,10 @@ void EchoApp::handleGateCommand(const char* line) {
     serialOut().print(_gate.gain, 2);
     serialOut().print(" levelmax=");
     serialOut().print(_gate.levelMax);
-    serialOut().print(" offset=");
-    serialOut().print(_gate.levelOffset);
+    serialOut().print(" start=");
+    serialOut().print(_gate.startChancePct);
+    serialOut().print(" plateau=");
+    serialOut().print(_gate.plateauPct);
     serialOut().print(" decay=");
     serialOut().print(_gate.levelDecayMs);
     serialOut().print(" rest=");
@@ -785,7 +793,8 @@ void EchoApp::printHelp() {
     serialOut().println("ECHO CMD: ECHO LOG <seconds> (status every n s, 0 = off)");
     serialOut().println(
         "ECHO CMD: ECHO GATE [onset=] [release=] [floor=] [peak=] [attack=MS] [pre=MS] [post=MS] [gain=] [on=0|1]");
-    serialOut().println("ECHO CMD:   Behavior: [levelmax=] [offset=] [decay=MS] [rest=MS] [wait=MS] [jitter=MS]");
+    serialOut().println(
+        "ECHO CMD:   Behavior: [levelmax=] [start=] [plateau=] [decay=MS] [rest=MS] [wait=MS] [jitter=MS]");
     if (kWhispernet) {
         serialOut().println("ECHO CMD: WHISPER STATUS");
         serialOut().println(

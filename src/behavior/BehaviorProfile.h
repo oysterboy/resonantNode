@@ -45,8 +45,8 @@ struct BehaviorGateConfig {
     uint32_t levelDecayMs = 2000;
     uint32_t answerJitterMs = 3000;  // 3 s, shrinking with the level (chosen 2026-10-30 after native-fieldsim)
     // p = (level + levelOffset) / levelMax, the level counted before the draw (as tools/sim/fieldramp.py): offset 0
-    // answers the first train heard with 1 / L (chosen 2026-10-30: "1 in 6"; offset 1 would be 2 / L). The echo modes
-    // set it (echo.level_offset); the Node uses startChancePct.
+    // answers the first train heard with 1 / L (chosen 2026-10-30: "1 in 6"; offset 1 would be 2 / L). Not a param
+    // since 2026-11-06 (decisions/2026-11-06-param-review-owner-answers.md): every mode sets startChancePct.
     uint32_t levelOffset = 0;
     // The chance in % of answering the first train in a quiet field, rising evenly to 100 % at levelMax: the start
     // set apart from the length (decisions/2026-11-05-start-chance-and-chain-length.md). 0 keeps

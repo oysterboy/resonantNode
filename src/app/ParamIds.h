@@ -134,7 +134,7 @@ enum class ParamId : uint16_t {
     Echo_Gain,
     Echo_Enabled,
     Echo_LevelMax,
-    Echo_LevelOffset,
+    Echo_LevelOffset,  // retired 2026-11-06, not registered (echo.start_chance_pct is Echo_StartChancePct)
     Echo_LevelDecayMs,
     Echo_RestMs,
     Echo_WaitMs,
@@ -160,7 +160,7 @@ enum class ParamId : uint16_t {
     Whisper_MinPhraseMs,
     Whisper_GapMs,
     Whisper_LevelMax,
-    Whisper_LevelOffset,
+    Whisper_LevelOffset,  // retired 2026-11-06, not registered (whisper.start_chance_pct is Whisper_StartChancePct)
     Whisper_LevelDecayMs,
     Whisper_RestMs,
     Whisper_Adaptive,
@@ -184,6 +184,10 @@ enum class ParamId : uint16_t {
     Whisper_LowMaxDb,
     Behavior_PlateauPct,
     Behavior_SpreadShrinks,
+    Echo_StartChancePct,
+    Echo_PlateauPct,
+    Whisper_StartChancePct,
+    Whisper_PlateauPct,
 };
 
 }  // namespace param

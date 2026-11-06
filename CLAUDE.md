@@ -378,20 +378,20 @@ one branch's transcript or working tree:
 
 ## Comments in code
 
-A comment says why (the reason, the trap, the unit), and a citation may follow it as a pointer: "close the
-candidate now, not at the sound's end, so one continuous tone gives one reject (step 8b item 3)". Never a bare
-citation: a step number ages out when `roadmap-0-steps.md` is archived and renumbered, and means nothing to a
-reader who does not know the roadmap. For a deliberate choice, point at the `docs/decisions/` file or the stable
-roadmap ID (`DET-015`, `OUT-005`) rather than a step. Classes open with an owns / does-not block
+A comment says why (the reason, the trap, the unit), and a citation may follow it as a pointer: "inspect when
+the window is complete, not at release, so the look-back has its data (docs/decisions/2026-10-22-inspect-when-
+window-complete.md)". Never a step number, not even after a reason: it ages out when `roadmap-0-steps.md` is archived
+and renumbered, and means nothing to a reader who does not know the roadmap. For a deliberate choice, point at the
+`docs/decisions/` file or the stable roadmap ID (`DET-015`, `OUT-005`). Classes open with an owns / does-not block
 (`docs/specs/myspec.md` vocabulary); plain data structs need none. `tools/ci/readability.py` prints the tracked
-counts (step 12.4); read them when closing a pass, never gate on them.
+counts; read them when closing a pass, never gate on them.
 The same holds for the guide (`notes_manual.md`): say what changed and when
 (a date), not only "since step N".
 
 What stays and what goes (applied to `src/`, `lib/` and `test/` in the 2026-11-06 pass; the roadmap half of the same
 idea is `docs/decisions/2026-11-06-finished-items-leave-the-roadmaps.md`):
 
-- Out: a step number or a review label as the only content; change history ("was 20 s", "as before step 10f",
+- Out: a step number anywhere; a review label as the only content; change history ("was 20 s", "as before step 10f",
   "X was removed"); a snapshot in the present tense ("with five boards on the desk"); "owner" as the only reason.
 - Stays: the reason; a measurement with its date and `bench/sessions/...` path; a roadmap ID, a `docs/decisions/` file,
   an issue number or a dated review pointer after a reason; "used to" only where it explains a trap that is still there.

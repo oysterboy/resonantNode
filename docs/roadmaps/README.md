@@ -28,7 +28,8 @@ What happened?                  docs/changelog.md, git log
 The chain, top to bottom:
 
 ```text
-roadmap-0-steps.md    orders items across areas. Points at IDs, holds no detail.
+roadmap-0-steps.md    orders items across areas. Each step carries its gate, plan, progress lines
+                      and gate results, and points at the IDs or research notes it serves.
 domain roadmaps       own the items: ID, detail, status.
 docs/refactors/       executes an item too big for one commit: phases, test
                       battery, gates. Temporary; archived with an
@@ -71,7 +72,7 @@ the active pass / plan doc  orders WITHIN its item (e.g. cleanup-0-plan.md's
 
 If they conflict, `roadmap-0-steps.md` wins on whether and when an item runs;
 the pass doc wins on how it runs. Every step in `roadmap-0-steps.md`
-references a roadmap ID, and an item executed through a pass doc says so in
+references a roadmap ID or a research note, and an item executed through a pass doc says so in
 its roadmap entry (e.g. DET-008 -> `docs/refactors/archive/cleanup-0-plan.md`), so
 the chain never skips the domain roadmap.
 
@@ -145,8 +146,10 @@ Non-goals
 
 ```text
 Use short project-wide IDs in the active roadmaps.
-Keep roadmap-0-steps.md lean: order and gates only, detail stays in the
-domain roadmap for that area.
+roadmap-0-steps.md holds the order and, per step, its gate, plan, progress lines and gate results (dated,
+citing bench/sessions/... for board work); a pass doc in docs/refactors/ only when a step is too big for that.
+What an item is stays in its domain roadmap, why a fork was taken in docs/decisions/. When the phase ends,
+the whole file is archived to roadmap archive/ and the numbering continues.
 Give an item executed through docs/refactors/ a roadmap ID that points at its
 pass / plan doc.
 Close an item by moving its whole section to docs/roadmaps/roadmap archive/roadmap-changelog.md,

@@ -272,7 +272,8 @@ archived without the next unit of work being started.
   file answers which question, and the ordering rule between roadmaps and
   `docs/refactors/`.
 - `roadmap-0-steps.md` (formerly `roadmap-general.md`) is the ordered
-  cross-roadmap sequence, one gate per step, each pointing at a roadmap ID.
+  cross-roadmap sequence, one gate per step, each pointing at a roadmap ID or
+  research note and carrying its plan, progress lines and gate results.
   Check it before picking up roadmap work, and update the order there when a
   step's gate closes. It orders *between* items; an active pass/plan doc in
   `docs/refactors/` orders *within* its item (when one exists). On conflict, the steps file decides

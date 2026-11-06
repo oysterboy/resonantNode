@@ -2,8 +2,8 @@
 
 Status: active roadmap (opened 2026-10-29 at the installation-ready milestone's cut-over).
 Scope: next steps across the active roadmaps, in order.
-Purpose: keep the short-term plan visible without repeating the detailed roadmap text that belongs in the
-domain-specific files.
+Purpose: the order of the next steps, each with its gate, plan, progress lines and gate results; what an item is
+stays in its domain roadmap, why a choice was made in docs/decisions/.
 
 The previous phase (steps 1-11, 2026-09 to 2026-10-29) is archived as it stood:
 `docs/roadmaps/roadmap archive/roadmap-0-steps-1.md`. Step numbers continue from 12, so
@@ -557,8 +557,9 @@ Second mic per Node                       docs/research/second-mic-diversity.md.
 ## Notes
 
 ```text
-This file stays lean.
-Detailed rationale belongs in the specific roadmap file for each domain.
+Each step carries its gate, plan, progress lines and gate results (dated, bench sessions cited); a pass doc only
+when a step is too big for that.
+What an item is belongs in its domain roadmap, why a fork was taken in docs/decisions/.
 Every step points at a roadmap ID or research note; an item executed through docs/refactors/ points on to its
 pass doc.
 Update the order here when a step's gate closes, and move the items it finished to the roadmap archive

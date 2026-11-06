@@ -24,3 +24,12 @@ night4.log (4.1 h, 23:48-03:54): E3 heard 7033 valid trains in 481 chains (gap 4
 over 50, the longest 37 s; chainlog.py on the emits (540 chains, median 20, max 184, 57 chains of one). What followed a chain's
 last emit (the playing boards' decisions, 3 s): declined_by_level 96, invalid 93, resting 49, yielded 31, refractory 15,
 rest_level 9. With radio_log 20 these lines are complete (2026-11-05-logcomplete-e0).
+
+## Who hears whom (2026-11-06, 12:30, night6.log, 13 min of the lively field)
+
+`heard_by.txt` (script `heard_by.py`): per emitter, the share of its emits that a listener logged as a valid verdict
+within 0.4 s, emits that overlap a third board's emit left out. Small samples (2-7 per cell), so a direction, not a rate.
+E1 is heard (by E2 and E4) and hears (E2 6/7). Weak links: E4 -> E1 0/3, E5 -> E1 0/2, E5 -> E2 0/2; E5 is heard by
+E3 and E4. E3 is silent (no emits). The earlier "E1 heard by no one" (reach matrix) was a different, quieter test;
+the owner checked E1's speaker by ear at 09:30 on 2026-11-06 and it plays.
+Logger note: night5.log stopped at 09:53 with two loggers on COM12; night6.log is the single logger since 12:28.

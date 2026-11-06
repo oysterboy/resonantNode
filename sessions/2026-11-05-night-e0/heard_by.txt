@@ -1,0 +1,9 @@
+emits per board: {'E1': 47, 'E2': 53, 'E3': 0, 'E4': 55, 'E5': 37}
+rows = emitter, cols = listener: share of emits followed by a VALID verdict (any verdict) within 0.4 s
+                  E1            E2            E3            E4            E5
+E1                 -       4/5 (4)       0/1 (0)       3/3 (3)       0/1 (0)
+E2           7/8 (7)             -       2/3 (2)       4/5 (4)       4/5 (4)
+E3                 -             -             -             -             -
+E4           0/3 (1)           n/a           n/a             -       5/5 (5)
+E5           0/2 (0)       0/2 (0)       2/2 (2)       6/6 (6)             -
+(valid/clean emits (any verdict))

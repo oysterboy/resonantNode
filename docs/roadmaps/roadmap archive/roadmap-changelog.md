@@ -316,6 +316,17 @@ hold (or "na") and keep inspect.reject_reason as the cause.
 Source: docs/refactors/archive/i2s-sample-clock.md "Symptom".
 ```
 
+### DET-012 - lower edge of the network band
+
+Status: CLOSED 2026-11-06, answered (rescoped 2026-10-15 from "lower chirp frequencies", step 5b). The lower edge stays:
+measured with the band stream in the 11h sweep (E004), decisions/2026-10-28-band-stays-after-the-sweep.md, which also
+says when to reopen it. The band was later widened upward to 2950-4700 for a base bin per node (BEH-009); since
+2026-11-05 the per-node windows may move on 2000-6500 Hz (decisions/2026-11-05-short-glide-signal.md).
+
+Below 1 kHz is wanted for aesthetics, not detection: it moves to the aesthetic layer of a two-layer signal (OUT-006, `docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md`). What stays here: where the network band's lower edge can sit. 2026-10-14 single tones: speech/music valid 0/0 at 3200, 4/1 at 2800, 3/4 at 2600, 3/4 at 2000, 1/30 at 1500 Hz (50 windows each, `bench/sessions/2026-10-14-lowfreq-90cm-noise`, `-midfreq-90cm-noise`). So 2500-3000 needs DET-014 first; otherwise the band sits around 3000-3600. Re-measure with the band stream of DET-013, not a single bin.
+
+Depends on step 5a item 2b (DC blocker, landed bfbe0c8).
+
 ## Behavior / Output
 
 ```text

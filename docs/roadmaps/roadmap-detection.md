@@ -67,21 +67,11 @@ detector report detail definition/printer
 
 but not in Analyzer core report assembly.
 
-### DET-012 - lower edge of the network band
-
-Status: RESCOPED 2026-10-15 (was "lower chirp frequencies"; step 5b). 2026-10-29: measured with the band stream in
-the 11h sweep (E004): the band stays at 2950-3950 (decisions/2026-10-28-band-stays-after-the-sweep.md); a wider band
-2950-4700 is BEH-009 (step 17).
-
-Below 1 kHz is wanted for aesthetics, not detection: it moves to the aesthetic layer of a two-layer signal (OUT-006, `docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md`). What stays here: where the network band's lower edge can sit. 2026-10-14 single tones: speech/music valid 0/0 at 3200, 4/1 at 2800, 3/4 at 2600, 3/4 at 2000, 1/30 at 1500 Hz (50 windows each, `bench/sessions/2026-10-14-lowfreq-90cm-noise`, `-midfreq-90cm-noise`). So 2500-3000 needs DET-014 first; otherwise the band sits around 3000-3600. Re-measure with the band stream of DET-013, not a single bin.
-
-Depends on step 5a item 2b (DC blocker, landed bfbe0c8).
-
 ### DET-014 - tonality inspector
 
 Status: TODO, carried over (roadmap-0-steps.md "Carried over", 2026-10-29; not needed in 5b: OBS did not get worse)
 
-Peak-bin power vs total window energy over the occurrence. Pays for the noise a wider band admits; the first candidate before a lower band edge (DET-012) is tried. Data path: per-occurrence accumulation in the detector first, a `FeatureHistory` slot only if needed (3 slots, ~5 KB each).
+Peak-bin power vs total window energy over the occurrence. Pays for the noise a wider band admits; the first candidate before the band is lowered or widened further (when to reopen: decisions/2026-10-28-band-stays-after-the-sweep.md). Data path: per-occurrence accumulation in the detector first, a `FeatureHistory` slot only if needed (3 slots, ~5 KB each).
 
 Research: docs/research/frequency-drift-detection.md (Inspectors that help)
 

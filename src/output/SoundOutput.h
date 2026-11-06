@@ -61,8 +61,8 @@ private:
     OutputRequest _request;
     OutputStatus _status;
     unsigned long _callAtMs = 0;
-    // The chirp setup an IdleCall's announcement replaces, put back after it (review A12: it used to restore
-    // the build defaults, resetting a caller that had configured the chirp differently).
+    // The chirp setup an IdleCall's announcement replaces, put back after it (not the build defaults, which would
+    // reset a caller that had configured the chirp differently).
     uint32_t _savedToneHz = 0;
     unsigned long _savedOnMs = 0;
     unsigned long _savedPauseMs = 0;

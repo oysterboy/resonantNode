@@ -38,15 +38,15 @@ public:
     struct Values {
         // Strength16 levels from the desk, 2026-11-01 (E5, the synthetic set through the lab PC's speaker): the quiet
         // room reads 40-100, a whisper (-35 dBFS file) 160-570 (level P90), speech (-20 / -25 dBFS) 1,100-4,400.
-        // The owner's whispers: 300-860 from 0.5-1 m, ~150-200 from 2 m; in the afternoon the room sat at 150-260, so
-        // the thresholds went up (2.5x the room): 2 m whispers are lost. Not the replay tool's scale (its files map to
-        // the mic's full scale); WHISPER GATE sets them live.
+        // Live whispers the same day: 300-860 from 0.5-1 m, ~150-200 from 2 m; in the afternoon the room sat at
+        // 150-260, so the thresholds stand at 2.5x the room: 2 m whispers are lost. Not the replay tool's scale (its
+        // files map to the mic's full scale); WHISPER GATE sets them live.
         // With adaptive on (2026-11-04) these are the minimums and their ratios: the thresholds stand at roomFactor x the
         // room's level (RoomLevel), never under these; release and floor keep their ratio to the onset.
         // The detection chain's values and defaults (detection/EchoProfiles.h; the host replay starts from the same).
         detection::WhisperChainValues chain;
         // The spectrum's flatness a whisper lies within (BandFlatness, the median of the phrase's loud blocks): the
-        // owner's whispers on the desk read 0.16-0.49 (median ~0.3), speech 0.04-0.41 (median ~0.07), rustling and
+        // whispers on the desk read 0.16-0.49 (median ~0.3), speech 0.04-0.41 (median ~0.07), rustling and
         // typing 0.19-0.76 (median ~0.45) (2026-11-01, bench/sessions/2026-11-01-step20.3-whisper-desk). A first
         // range, under test; flatmin=0 flat=1 turn the check off in effect.
         // 2026-11-05 from the labelled recordings (BandBalance; research/whispernet.md), off by default until heard:
@@ -56,15 +56,15 @@ public:
         bool levelBand = false;
         uint32_t delayMs = 1000;  // D, set per node at begin()
         // The replay's level over the mic's: the amp plays the line's int16 at full scale, so gain 1 is the mic's digital
-        // level, inaudible at a metre; 16 still was, 64 sounded about right to the owner (desk, 2026-11-01).
+        // level, inaudible at a metre; 16 still was, 64 sounded about right by ear (desk, 2026-11-01).
         float gain = 64.0f;
         bool enabled = true;
-        // Timing, set on the desk 2026-11-01 (params since 2026-11-04).
+        // Timing, set on the desk 2026-11-01.
         uint32_t preMs = 200;  // passed before the phrase's start: its soft beginning under the onset
         uint32_t holdMs = 300;  // the line kept open after the gate shuts: the whisper's tail
         uint32_t tailMs = 300;  // not listening this long after the own playback (the room's ring-down)
         uint32_t rampMs = 40;  // the gain's fade at each edge (10 sounded cut off)
-        // Whispernet's Behavior (the echo room's values to start; the owner found them slow for whispers).
+        // Whispernet's Behavior (the echo room's values to start; found slow for whispers).
         uint32_t levelMax = 4;
         uint32_t levelOffset = 2;
         uint32_t levelDecayMs = 3000;
@@ -185,7 +185,7 @@ public:
     const Values& values() const { return _values; }
     bool ready() const { return _line.capacity() > 0; }
     // The node is playing its own replay (or its tail) at blockMs: the shell does not feed detection meanwhile and
-    // restarts it after (owner 2026-11-01: at an audible gain the node answered itself).
+    // restarts it after (observed 2026-11-01: at an audible gain the node answered itself).
     bool inputSuppressed(uint32_t blockMs);
     // Detection pauses for the own playback: the gate shuts now (the line holds no own output).
     void suppressNow();

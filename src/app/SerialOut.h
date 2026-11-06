@@ -35,7 +35,7 @@ inline void serialOutFlush() {}
 class LineBufferedSerial : public Print {
 public:
     // A copy of every flushed line (or partial line) for a second sink: the
-    // radio reply of a remote command (PAR-013, step 11a). nullptr = off.
+    // radio reply of a remote command (PAR-013). nullptr = off.
     using Tee = void (*)(void* ctx, const uint8_t* data, size_t len);
     void setTee(Tee tee, void* ctx) {
         flush();  // what was printed before belongs to no reply

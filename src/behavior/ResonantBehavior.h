@@ -84,7 +84,7 @@ public:
     void update(unsigned long now);
     void seedIdleSchedule(unsigned long now);
 
-    // Outputs off (step 11i N6, review A9; myspec 6.1 lists blocking reasons under Behavior): the Node's gate
+    // Outputs off (myspec 6.1 lists blocking reasons under Behavior): the Node's gate
     // (output.silent, the baseline's Settle / ListenForQuiet) handed in. While off, update() does nothing,
     // shouldStartChirp() is false, and a verdict goes to notePatternHeardWhileOutputsOff() (decision None, the
     // field state not taken). resetState() keeps it; default on.
@@ -96,7 +96,7 @@ public:
 
     // The gate timing as configured (configure() applies it in place; the
     // idle wait already running is rescheduled from its start when the idle
-    // timing changes, step 10e).
+    // timing changes).
     const BehaviorGateConfig& config() const { return _config; }
     // Rest state: whether the node is resting at `now`, until when, how many
     // rests it has entered, what started the last one, and how many valid
@@ -163,7 +163,7 @@ public:
     void requestTestChirp();
     void cancelTestChirp();
     bool testChirpPending() const;
-    // Operator-requested network call (RB CALL, step 5g): the node plays its
+    // Operator-requested network call (RB CALL): the node plays its
     // network signal (the hop train) as if answering, through the normal
     // request -> Chirping -> notifyChirpFinished path with own-emit
     // suppression and the own budget; taken in Idle like the test chirp. A
@@ -263,7 +263,7 @@ private:
     // --- idle schedule ---
     struct IdleSchedule {
         unsigned long nextAtMs = 0;
-        unsigned long scheduledFromMs = 0;  // when the current idle wait started (step 10e); kept by resetState()
+        unsigned long scheduledFromMs = 0;  // when the current idle wait started; kept by resetState()
     };
     IdleSchedule _idle = {};
 

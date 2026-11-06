@@ -21,15 +21,15 @@ struct BehaviorGateConfig {
     // queue + room; #19 latency measurement), so detection stays off a bit
     // longer than that.
     uint32_t detectionSuppressTailMsOwnEmit = 60;
-    // 60 s +- 20 s since 2026-10-22 (was 20 s +- 5 s): with five nodes at 0.5 FS
-    // every idle call wakes the whole group (decisions/2026-10-22-network-pacing.md).
+    // 60 s +- 20 s: every idle call wakes the whole group, so the interval scales with the number of nodes (measured
+    // with five nodes at 0.5 FS, decisions/2026-10-22-network-pacing.md).
     uint32_t idleTimeoutMs = 60000;
     uint32_t idleTimeVariationMs = 20000;
     uint32_t idleBlockedAfterHeardMs = 1000;
     uint32_t idleBlockedAfterOwnEmitMs = 500;
 
     // Rest when the network gets busy (decisions/2026-10-17-two-node-
-    // exchange-chain-length.md, owner 2026-10-17): a hard pause, no answers
+    // exchange-chain-length.md): a hard pause, no answers
     // and no idle voice, for restMs. Two triggers, either one:
     //  - the field: this many valid network patterns heard in the field
     //    window (FieldStateConfig::patternWindowMs; only accepted, valid
@@ -37,14 +37,14 @@ struct BehaviorGateConfig {
     //  - the node's own budget: this many own emissions inside
     //    ownEmitBudgetWindowMs (a node that hears only one loud neighbour
     //    sees a thin field but keeps answering).
-    // Same values on every node (no per-node variation, owner's choice).
+    // Same values on every node, no per-node variation (decisions/2026-10-17-two-node-exchange-chain-length.md).
     // 0 switches a trigger off.
-    // Since BEH-008 (step 16) both triggers default to 0 (off): the level automaton below rests the node. They stay
-    // as params for the reproducibility rule until retired.
+    // Both triggers default to 0 (off): the level automaton below rests the node (BEH-008). They stay as params for
+    // the reproducibility rule until retired.
     uint32_t restAfterFieldPatterns = 0;
     uint32_t ownEmitBudget = 0;
     uint32_t ownEmitBudgetWindowMs = 10000;
-    // 8 s with the level automaton (BEH-008's first guess; 5 s since 2026-10-22 with the old triggers).
+    // 8 s with the level automaton (BEH-008's first guess).
     uint32_t restMs = 8000;
 
     // The level automaton (BEH-008, decisions/2026-10-29-answers-follow-the-field-level-automaton.md): an integer
@@ -52,34 +52,35 @@ struct BehaviorGateConfig {
     // emission, -1 per levelDecayMs of hearing nothing; p = (level + 1) / levelMax answers a heard train and keeps a
     // pending answer when another verdict arrives (else it yields); at levelMax the node rests restMs and the level
     // returns to 0. An answer waits waitAfterHeardMs plus a uniform 0..answerJitterMs. levelMax 0 switches the
-    // automaton off (p = 1, or a constant startChancePct; no level rest, no jitter: the timing before step 16).
+    // automaton off (p = 1, or a constant startChancePct; no level rest, no jitter).
     uint32_t levelMax = 6;
     uint32_t levelDecayMs = 2000;
-    uint32_t answerJitterMs = 3000;  // 3 s, shrinking with the level (owner 2026-10-30, after native-fieldsim)
+    uint32_t answerJitterMs = 3000;  // 3 s, shrinking with the level (chosen 2026-10-30 after native-fieldsim)
     // p = (level + levelOffset) / levelMax, the level counted before the draw (as tools/sim/fieldramp.py): offset 0
-    // answers the first train heard with 1 / L (owner 2026-10-30: "1 in 6"; offset 1 would be 2 / L). The echo modes
+    // answers the first train heard with 1 / L (chosen 2026-10-30: "1 in 6"; offset 1 would be 2 / L). The echo modes
     // set it (echo.level_offset); the Node uses startChancePct.
     uint32_t levelOffset = 0;
     // The chance in % of answering the first train in a quiet field, rising evenly to 100 % at levelMax: the start
-    // set apart from the length (owner 2026-11-05, decisions/2026-11-05-start-chance-and-chain-length.md). 0 keeps
+    // set apart from the length (decisions/2026-11-05-start-chance-and-chain-length.md). 0 keeps
     // the rule above; with levelMax 0 it is a constant chance.
     uint32_t startChancePct = 0;
     // The decision's named extra rule ("revisit when the ear wants each answer sooner"): the jitter window shrinks
     // with the level, jitter * (levelMax - level) / levelMax: a quiet node answers late, one near the top quickly
-    // (owner 2026-10-30, after native-fieldsim). Not a param.
+    // (chosen 2026-10-30 after native-fieldsim). Not a param.
     bool answerJitterShrinks = true;
     // BEH-009 (decisions/2026-10-29-wider-band-base-bin-per-node.md): on each own answer the base bin moves one bin
-    // toward the base last heard (the glide, owner 2026-10-29), and at the automaton's rest it scatters to a random
+    // toward the base last heard (the glide), and at the automaton's rest it scatters to a random
     // base. Off: the base stays where the Node seeded it. Not a param.
     bool baseGlide = true;
-    // The scatter's range: 0 = a random base anywhere; k = 1..k bins from where it was (step 19.2: a band per node
+    // The scatter's range: 0 = a random base anywhere; k = 1..k bins from where it was (a band per node
     // needs 1, decisions/2026-10-31-bands-per-node.md).
     uint32_t baseScatterBins = 0;
-    // A band per node (step 19): the base is the position of the node's own window on bandRangeLowHz..HighHz (the
-    // Node applies the window to the detector), and a node that heard nothing since its last idle call wanders to a
-    // random position before the next. Off: the shared band with base bins (step 17).
+    // A band per node (decisions/2026-10-31-bands-per-node.md): the base is the position of the node's own window on
+    // bandRangeLowHz..HighHz (the Node applies the window to the detector), and a node that heard nothing since its
+    // last idle call wanders to a random position before the next. Off: the shared band with base bins
+    // (decisions/2026-10-29-wider-band-base-bin-per-node.md).
     bool bandPerNode = false;
-    // The owner's range by ear, 2026-11-05 (decisions/2026-11-05-short-glide-signal.md; was 950-4950 since 2026-10-31).
+    // The range picked by ear (decisions/2026-11-05-short-glide-signal.md).
     uint32_t bandRangeLowHz = 2000;
     uint32_t bandRangeHighHz = 6500;
 };

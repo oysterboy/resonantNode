@@ -12,7 +12,7 @@ and ranges. The Node binds its live copy (a PARAM SET applies through ResonantBe
 */
 namespace param {
 
-// behavior.*: one param per BehaviorGateConfig field (PAR-006, step 10 item 4).
+// behavior.*: one param per BehaviorGateConfig field (PAR-006).
 // The paths are the snake_case field names; the RB BEHAV keys they replaced
 // are mapped in decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md.
 inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
@@ -36,12 +36,12 @@ inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
     registry.addUInt32(ParamId::Behavior_RestAfterFieldPatterns, ModuleId::Behavior,
                        "behavior.rest_after_field_patterns", &b.restAfterFieldPatterns, 0U, 100U);
     registry.addUInt32(ParamId::Behavior_OwnEmitBudget, ModuleId::Behavior, "behavior.own_emit_budget",
-                       &b.ownEmitBudget, 0U, 16U);  // the emission ring holds 16 (deep review L3)
+                       &b.ownEmitBudget, 0U, 16U);  // the emission ring holds 16
     registry.addUInt32(ParamId::Behavior_OwnEmitBudgetWindowMs, ModuleId::Behavior,
                        "behavior.own_emit_budget_window_ms", &b.ownEmitBudgetWindowMs, 0U, 600000U);
     registry.addUInt32(ParamId::Behavior_RestMs, ModuleId::Behavior, "behavior.rest_ms", &b.restMs, 0U, 600000U);
     // The level automaton (BEH-008): L, the forgetting, the answer's random window. level_max 0 = off.
-    // 500, not 32 (owner 2026-11-05): the level counts every train heard, so four players pass 20 events in ~5 s.
+    // 500, not 32 (chosen 2026-11-05): the level counts every train heard, so four players pass 20 events in ~5 s.
     registry.addUInt32(ParamId::Behavior_LevelMax, ModuleId::Behavior, "behavior.level_max", &b.levelMax, 0U, 500U);
     registry.addUInt32(ParamId::Behavior_LevelDecayMs, ModuleId::Behavior, "behavior.level_decay_ms", &b.levelDecayMs,
                        0U, 600000U);
@@ -51,12 +51,13 @@ inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
     // answering the first train in a quiet field, rising evenly to 100 % at the top; 0 = 1 / level_max.
     registry.addUInt32(ParamId::Behavior_StartChancePct, ModuleId::Behavior, "behavior.start_chance_pct",
                        &b.startChancePct, 0U, 100U);
-    // The base bin (BEH-009) and a band per node (step 19): the scatter's range, the mode, the range it moves on.
+    // The base bin (BEH-009) and a band per node (decisions/2026-10-31-bands-per-node.md): the scatter's range, the
+    // mode, the range it moves on.
     registry.addUInt32(ParamId::Behavior_BaseScatterBins, ModuleId::Behavior, "behavior.base_scatter_bins",
                        &b.baseScatterBins, 0U, 7U);
     registry.addBool(ParamId::Behavior_BandPerNode, ModuleId::Behavior, "behavior.band_per_node", &b.bandPerNode);
-    // Down to 250 Hz since 2026-11-04: a train on 300-1300 Hz was heard 40 / 40 on the desk, stronger than on 950-1950
-    // (bench/sessions/2026-11-04-lowband); the owner asked for 300-5000. The room's low noise is untested.
+    // Down to 250 Hz: measured 2026-11-04, a train on 300-1300 Hz was heard 40 / 40 on the desk, stronger than on
+    // 950-1950 (bench/sessions/2026-11-04-lowband); 300-5000 is the range asked for. The room's low noise is untested.
     registry.addUInt32(ParamId::Behavior_BandRangeLowHz, ModuleId::Behavior, "behavior.band_range_low_hz",
                        &b.bandRangeLowHz, 250U, runtime::kMaxToneHz);
     registry.addUInt32(ParamId::Behavior_BandRangeHighHz, ModuleId::Behavior, "behavior.band_range_high_hz",

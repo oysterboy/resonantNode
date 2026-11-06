@@ -30,7 +30,7 @@ public:
     // Emitter's PULSES, DET-011). Timed by the ToneOutput when it can
     // (I2S: per sample, rampMs edges); otherwise from update(), with the
     // device's own edges and the loop's millisecond resolution.
-    // The ramp is the device's envelope (I2S); callers above the device leave it at the default (review A12).
+    // The ramp is the device's envelope (I2S); callers above the device leave it at the default.
     void startPulseTrain(uint32_t count, unsigned long onMs, unsigned long gapMs,
                          uint32_t rampMs = runtime::kDefaultI2sToneRampMs);
     // Frequency per pulse for the next startPulseTrain() (hop); n = 0 clears.

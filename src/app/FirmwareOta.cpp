@@ -227,7 +227,8 @@ void confirmRunningImage(Print& out, bool ready) {
     const unsigned long nowMs = uptimeMs();
 #if defined(OTA_TEST_CRASH)
     // Rollback test build only (-D OTA_TEST_CRASH): crash 5 s after boot, before the image confirms itself, so the
-    // bootloader must fall back to the previous image on the next boot (step 11d's gate).
+    // bootloader must fall back to the previous image on the next boot
+    // (decisions/2026-10-28-ota-firmware-pull-over-http.md).
     if (nowMs > 5000UL) {
         out.println("OTA test_crash aborting before confirm");
         out.flush();
@@ -246,7 +247,7 @@ void confirmRunningImage(Print& out, bool ready) {
     }
 #endif
     // Not ready (the Node's radio did not start): no confirm, so the reboot deadline rolls the image back instead of
-    // leaving a Node that NET * OTA can no longer reach (deep review N-M-A, the owner's L-OTA2 rule).
+    // leaving a Node that NET * OTA can no longer reach (review 12.0 L-OTA2).
     if (gConfirmChecked || nowMs < kConfirmAfterMs || !ready) {
         return;
     }

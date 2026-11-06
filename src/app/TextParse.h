@@ -9,15 +9,14 @@
 #include <string.h>
 
 // Text helpers for console commands, shared by the Node, the Analyzer and the
-// Emitter (step 11e item 8): numbers are parsed whole or refused, a key's value
+// Emitter: numbers are parsed whole or refused, a key's value
 // is found at its '=', and a command's rest is found after its verb, so no
 // parser counts key lengths by hand (that got four wrong once).
 namespace text_parse {
 
 // A finite number with nothing after it. On anything else the value is left
 // unchanged: strtof(..., nullptr) turned "x" into 0 (the node then triggered
-// on noise) and accepted "nan" (detection off) (issue #31 R2-4). Moved here
-// from FrequencyMatchCriteria when that detector was removed (step 7d).
+// on noise) and accepted "nan" (detection off) (issue #31 R2-4).
 inline bool parseFiniteFloat(const char* text, float& out) {
     if (text == nullptr || *text == '\0') {
         return false;
@@ -42,7 +41,7 @@ inline bool parseUnsigned(const char* text, T& out) {
     char* end = nullptr;
     errno = 0;
     const unsigned long parsed = strtoul(text, &end, 10);
-    // Overlong numbers saturated to ULONG_MAX, and a value beyond T wrapped in the cast (deep review L9).
+    // Refused: an overlong number saturates to ULONG_MAX, and a value beyond T would wrap in the cast.
     if (*end != '\0' || errno == ERANGE || parsed > static_cast<unsigned long>(std::numeric_limits<T>::max())) {
         return false;
     }

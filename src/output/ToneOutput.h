@@ -37,8 +37,8 @@ public:
         (void)n;
     }
     // Optional: a gain per pulse for the NEXT startPulseTrain() (1.0 = the device's level), cycled like the hop;
-    // n = 0 clears it. For the Emitter's level ladder and per-hop attenuation (step 13); a device that can't scale
-    // ignores it and plays every pulse at its level.
+    // n = 0 clears it. For the Emitter's level ladder and per-hop attenuation (the margin test); a device that can't
+    // scale ignores it and plays every pulse at its level.
     virtual void setPulseGains(const float* gain, size_t n) {
         (void)gain;
         (void)n;

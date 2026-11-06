@@ -74,13 +74,12 @@ enum class ParamId : uint16_t {
     Output_HopPulseMs,
     Output_HopGapMs,
     Output_HopSteps,
-    // The idle call (owner 2026-10-17): an announcement tone outside the band,
+    // The idle call (decisions/2026-10-17-idle-call-wakes-the-network.md): an announcement tone outside the band,
     // then the node's own call (the hop train), so an idle call wakes the network.
     Output_IdleAnnounceHz,
     Output_IdleAnnounceMs,
-    // Behavior's BehaviorGateConfig, one param per field (PAR-006, step 10
-    // item 4; they replace the RB BEHAV command, decisions/2026-10-22-live-
-    // params-profile-reset-no-rb-behav.md).
+    // Behavior's BehaviorGateConfig, one param per field (PAR-006,
+    // decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md).
     Behavior_IdleEnabled,
     Behavior_WaitAfterHeardMs,
     Behavior_RefractoryAfterEmitMs,
@@ -94,19 +93,18 @@ enum class ParamId : uint16_t {
     Behavior_OwnEmitBudget,
     Behavior_OwnEmitBudgetWindowMs,
     Behavior_RestMs,
-    // The inspectors' medium limits, live (step 10 item 7; build overrides
-    // SCALAR_CONTRAST/AMP_MEDIUM_THRESHOLD before). Applied to the plan's
-    // module with the matching target.
+    // The inspectors' medium limits, live. Applied to the plan's module with the
+    // matching target.
     Detection_ContrastMedium,
     Detection_AmpMedium,
     // Silent (2026-10-23): the node listens and reports but never sounds;
     // PARAM SAVE keeps it across a reboot.
     Output_Silent,
-    // The radio for remote params (PAR-013, step 11a): on by default, read at
+    // The radio for remote params (PAR-013): on by default, read at
     // boot only (PARAM SET + SAVE, then a reboot, turns it off).
     Node_RadioEnabled,
-    // The shape inspector's settings, live (step 11g B2, review D2.7; DET-015). Applied to the plan's BinShape
-    // module. Its level is the scalar release threshold, not a param of its own (review D1.5).
+    // The shape inspector's settings, live (DET-015). Applied to the plan's BinShape module. Its level is the
+    // scalar release threshold, not a param of its own.
     Detection_ShapePreMs,
     Detection_ShapeTailMs,
     Detection_ShapeMaxRisingStepBins,
@@ -115,11 +113,11 @@ enum class ParamId : uint16_t {
     Detection_ShapeMediumMinRisingSteps,
     Detection_ShapeStrongMinBins,
     Detection_ShapeStrongMinRisingSteps,
-    // The level automaton (BEH-008, step 16).
+    // The level automaton (BEH-008).
     Behavior_LevelMax,
     Behavior_LevelDecayMs,
     Behavior_AnswerJitterMs,
-    // The base bin and a band per node (BEH-009, step 19).
+    // The base bin and a band per node (BEH-009).
     Behavior_BaseScatterBins,
     Behavior_BandPerNode,
     Behavior_BandRangeLowHz,

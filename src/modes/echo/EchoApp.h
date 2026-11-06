@@ -126,13 +126,14 @@ private:
         uint32_t dampingPct = 25;
         uint32_t fadeMs = 40;
         // The replay's level over the mic's: 1 plays the clip at the mic's digital level, far too quiet at a metre; 128
-        // "sounds good" (owner, 2026-11-01). Loud claps at 128 draw the amp's peak current from USB: five boards on one
-        // hub dropped ports (a powered hub or a separate amp supply for the room).
+        // sounded good by ear (2026-11-01). Loud claps at 128 draw the amp's peak current from USB, so several boards
+        // on one hub drop ports (seen with five, 2026-11-01): a powered hub or a separate amp supply for the room.
         float gain = 128.0f;
         bool enabled = true;
         // The echo room's Behavior (echoBehavior()), live too: the level that brings the rest, the first answers'
-        // head start, the level's decay, the rest, the wait before an answer and its jitter. Five boards on the desk
-        // (2026-11-01) rested together after a few claps: the owner found the chain ending too soon.
+        // head start, the level's decay, the rest, the wait before an answer and its jitter. They depend on the number
+        // of boards in the room: five on the desk rested together after a few claps (2026-11-01), ending the chain
+        // too soon.
         uint32_t levelMax = 4;
         uint32_t levelOffset = 2;
         uint32_t levelDecayMs = 3000;

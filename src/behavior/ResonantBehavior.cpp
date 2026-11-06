@@ -46,7 +46,7 @@ unsigned long randomIdleDelayMs(ResonantBehavior::RandomFn draw, unsigned long m
 }
 
 // The decision and, for a decision that blocks, the same value as the block reason; a go-ahead (ConsumedPattern,
-// WouldEmit, Emitted) and None clear the block reason. One place for the pair (step 11j).
+// WouldEmit, Emitted) and None clear the block reason. One place for the pair.
 void ResonantBehavior::setDecision(BehaviorDecision decision) {
     _last.decision = decision;
     const bool goAhead = decision == BehaviorDecision::None || decision == BehaviorDecision::ConsumedPattern ||
@@ -147,9 +147,9 @@ void ResonantBehavior::resetState() {
 
 void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
     // A live change of the idle timing (PARAM SET behavior.idle_timeout*_ms)
-    // applies to the wait already running, counted from when it started: before
-    // step 10e an idle call scheduled under a 60 s timeout still came at 60 s
-    // after the timeout was set to 5 s.
+    // applies to the wait already running, counted from when it started, so a call
+    // scheduled under a 60 s timeout does not still come at 60 s after the
+    // timeout was set to 5 s.
     const bool idleChanged =
         profile.idleTimeoutMs != _config.idleTimeoutMs || profile.idleTimeVariationMs != _config.idleTimeVariationMs;
     _config = profile;
@@ -194,7 +194,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
 
     if (result.valid) {
         // Heard, whatever the gates below decide: the idle call waits after any valid pattern, as on the outputs-off
-        // path (deep review B-M3: blocked verdicts did not count, and an idle call could follow one at once).
+        // path (blocked verdicts must count too, or an idle call could follow one at once).
         _timing.lastHeardPatternMs = result.primaryAcceptedMs != 0 ? result.primaryAcceptedMs : now;
         noteHeardBase(result);
     }
@@ -267,8 +267,8 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
         _last.patternHeardAtMs = _heard.ms;
         _timing.heardPatternStartedMs = now;
         _state = State::HeardPattern;
-        // The fixed wait plus the automaton's random window (0 when off or set to 0): levelMax 0 keeps the timing
-        // before step 16; a spread chain wants the automaton on (a start chance of 100 answers every train).
+        // The fixed wait plus the automaton's random window (0 when off or set to 0): levelMax 0 keeps the plain
+        // fixed wait; a spread chain wants the automaton on (a start chance of 100 answers every train).
         unsigned long windowMs = _config.answerJitterMs;
         if (automaton && _config.answerJitterShrinks && _level.count < _config.levelMax) {
             windowMs = windowMs * (_config.levelMax - _level.count) / _config.levelMax;
@@ -288,7 +288,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
 
 void ResonantBehavior::update(unsigned long now) {
     if (!_outputsEnabled) {
-        return;  // as when the Node skipped the call (before step 11i N6)
+        return;  // as when the Node skips the call
     }
     const bool heardPatternDetected = _heard.detected;
     const float heardPatternStrength = _heard.strength;
@@ -482,7 +482,7 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitS
     if (_config.ownEmitBudget > 0 && ownEmitsInWindow(now) >= _config.ownEmitBudget) {
         enterRest(now + emitSpanMs + _config.restMs, BehaviorDecision::RestOwnBudget);
         // The emissions that caused this rest are paid for: without the clear the first answer after it found them
-        // still in the window and rested again, ~10 s with one answer inside (deep review B-M2).
+        // still in the window and rested again, ~10 s with one answer inside.
         _emitTimes.clear();
     }
     // The level automaton: an own emission is one event; at the top the node rests from the end of this emission.
@@ -513,7 +513,7 @@ void ResonantBehavior::enterRest(unsigned long untilMs, BehaviorDecision reason)
         _base.heard = -1;
         _base.scatters++;
     }
-    // Rest means no answers: one already scheduled is dropped, not played during the rest (deep review B-M1).
+    // Rest means no answers: one already scheduled is dropped, not played during the rest.
     if (_state == State::HeardPattern) {
         _state = State::Idle;
         _heard = {};
@@ -597,7 +597,7 @@ unsigned long ResonantBehavior::behaviorSuppressRemainingMs(unsigned long now) c
 }
 
 bool ResonantBehavior::outputBusy() const {
-    return _state == State::Chirping;  // the one busy state (review D2.9; SoundOutput's own phase is output.phase)
+    return _state == State::Chirping;  // the one busy state (SoundOutput's own phase is output.phase)
 }
 
 bool ResonantBehavior::takeWouldEmit() {

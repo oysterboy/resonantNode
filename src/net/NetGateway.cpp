@@ -1,4 +1,3 @@
-// Moved from ResonantNodeNet.cpp's file-scope state (step 11i N3); the lines it prints are unchanged.
 #include "NetGateway.h"
 
 #include <string.h>
@@ -148,7 +147,7 @@ void NetGateway::handleReplyFrame(const net::Frame& f) {
     const unsigned part = static_cast<unsigned>(f.part);
     if (part != slot->nextPart) {
         // Lost frames (a full queue or outbox, a failed send): the line in progress is cut there, marked, rather
-        // than spliced onto the next frame's text into one plausible wrong line (deep review N-M-B).
+        // than spliced onto the next frame's text into one plausible wrong line.
         slot->missing += part > slot->nextPart ? part - slot->nextPart : 1U;
         slot->joiner.flush([&](const char* line, size_t n) {
             serialOut().print("NET reply from=");

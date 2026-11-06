@@ -120,7 +120,7 @@ void EmitterApp::pollUsbSerial() {
         if (strncmp(line, "SELFTEST", 8) == 0 || strncmp(line, "selftest", 8) == 0) {
             handleSelfTestCommand(line);
         } else if (strncmp(line, "OTA", 3) == 0 || strncmp(line, "ota", 3) == 0) {
-            // Firmware over WiFi (step 11d); reboots on success. No tone through the join and the download
+            // Firmware over WiFi; reboots on success. No tone through the join and the download
             // (review 12.0 M2); after a failure AUTO resumes one interval from now.
             if (_chirpOutput.isActive()) {
                 _chirpOutput.stop();
@@ -150,7 +150,7 @@ void EmitterApp::handleSelfTestCommand(const char* line) {
         _activeTrialId = 0;
     }
 
-    _chirpOutput.setSweep(0, 0);  // the self-test's chirps are plain (deep review A-M3)
+    _chirpOutput.setSweep(0, 0);  // the self-test's chirps are plain
 #if defined(BOARD_PIEZO)
     AudioSourceI2S* mic = nullptr;  // the piezo Emitter build does not own the mic port
 #else
@@ -233,7 +233,7 @@ static bool emitterToneHzPlayable(unsigned long toneHz) {
 #endif
 }
 
-// A value that is not a plain number is refused, not read as 0 (step 11e item 8).
+// A value that is not a plain number is refused, not read as 0.
 static void printBadValue(const char* command, const char* token) {
     serialOut().print("ERR ");
     serialOut().print(command);
@@ -346,7 +346,7 @@ void EmitterApp::handlePulsesCommand(const char* line) {
                 }
             }
         } else if (startsWith(token, "level=")) {
-            // The train's peak in full scale (step 13's level ladder), in place of the board's built level.
+            // The train's peak in full scale (the margin test's level ladder), in place of the board's built level.
             if (!text_parse::parseFiniteFloat(findValue(token), level) || level <= 0.0f || level > 0.999f ||
                 strlen(findValue(token)) >= sizeof(_pulseLevelText)) {
                 printBadValue("PULSES", token);
@@ -354,10 +354,10 @@ void EmitterApp::handlePulsesCommand(const char* line) {
             }
             strcpy(_pulseLevelText, findValue(token));
         } else if (startsWith(token, "att=")) {
-            // dB below the train's level per pulse, cycled like hop= (step 13's margin test).
+            // dB below the train's level per pulse, cycled like hop= (the margin test).
             const char* list = findValue(token);
             const size_t listLen = strlen(list);
-            // Not empty, no empty entry at the end (review 14.1: "att=" and "att=0," were taken).
+            // Not empty, no empty entry at the end ("att=" and "att=0," would be accepted otherwise).
             if (listLen == 0 || listLen >= sizeof(_pulseAttText) || list[listLen - 1] == ',') {
                 printBadValue("PULSES", token);
                 return;
@@ -655,7 +655,7 @@ void EmitterApp::startPulses(unsigned long toneHz, unsigned long count, unsigned
         const size_t used = strlen(ackLine);
         snprintf(ackLine + used, sizeof(ackLine) - used, " att=%s", _pulseAttText);
         if (strlen(ackLine) > serial_line::kEmitterLineMax) {
-            // The Analyzer's reader takes 95 characters: the count, not the list (review 14.1).
+            // The Analyzer's reader takes 95 characters: the count, not the list.
             snprintf(ackLine + used, sizeof(ackLine) - used, " att_n=%u", static_cast<unsigned>(_pulseGainCount));
         }
     }
@@ -689,7 +689,7 @@ void EmitterApp::configureAuto(unsigned long intervalMs, unsigned long toneHz, u
     _autoIntervalMs = intervalMs;
     _autoToneHz = toneHz;
     _autoDurationMs = durationMs;
-    _chirpOutput.setSweep(0, 0);  // plain AUTO chirps (deep review A-M3)
+    _chirpOutput.setSweep(0, 0);  // plain AUTO chirps
     _chirpOutput.setToneHz(static_cast<uint32_t>(_autoToneHz));
     _chirpOutput.setTiming(_autoDurationMs, 0);
 }
@@ -711,7 +711,7 @@ void EmitterApp::configureSweep(unsigned long startHz, unsigned long stopHz, uns
     _sweepDurationMs = durationMs;
     _sweepPauseMs = pauseMs;
     _sweepCurrentHz = _sweepStartHz;
-    _chirpOutput.setSweep(0, 0);  // a CHIRP's sweep= stays set on the tone output until cleared (deep review A-M3)
+    _chirpOutput.setSweep(0, 0);  // a CHIRP's sweep= stays set on the tone output until cleared
     _chirpOutput.setToneHz(static_cast<uint32_t>(_sweepCurrentHz));
     _chirpOutput.setTiming(_sweepDurationMs, 0);
 }

@@ -87,7 +87,7 @@ private:
     struct JoinSlot {
         char name[net::kTargetLen + 1] = {};
         uint16_t seq = 0;
-        unsigned nextPart = 0;  // the part expected next; a jump means lost frames (deep review N-M-B)
+        unsigned nextPart = 0;  // the part expected next; a jump means lost frames
         unsigned missing = 0;
         net::LineJoiner<2560> joiner;
     };

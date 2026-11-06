@@ -57,8 +57,8 @@ These are defaults, not live profile state.
 
 // Sine peak of the D-AMP tone as a fraction of full scale (see
 // kDefaultI2sToneAmplitude below); a build flag so a bench run can try
-// another level without editing the default. 0.5 since 2026-10-21 (was 0.3):
-// decisions/2026-10-21-damp-tone-level-0p5.md (hearing matrix, step 5e).
+// another level without editing the default. 0.5: decisions/2026-10-21-damp-tone-level-0p5.md
+// (hearing matrix).
 #ifndef I2S_TONE_AMPLITUDE
 #define I2S_TONE_AMPLITUDE 0.5f
 #endif
@@ -68,7 +68,7 @@ These are defaults, not live profile state.
 #endif
 
 // PCM preprocessor, set at build time: 0 None, 1 FirstDifference, 2 DcBlocker.
-// DcBlocker since step 5a (decisions/2026-10-14-dc-blocker-before-5a-baseline.md);
+// DcBlocker (decisions/2026-10-14-dc-blocker-before-5a-baseline.md);
 // -D PCM_PREPROCESS_MODE_VALUE=1 builds the old First Difference for A/B.
 #ifndef PCM_PREPROCESS_MODE_VALUE
 #define PCM_PREPROCESS_MODE_VALUE 2
@@ -108,7 +108,7 @@ constexpr uint32_t kDefaultAudioI2SSampleRateHz = AUDIO_I2S_SAMPLE_RATE_HZ;
 constexpr unsigned long kFreqBandWindowSamples = kDefaultAudioI2SSampleRateHz / 250UL;
 constexpr unsigned long kBandBinSpacingHz = kDefaultAudioI2SSampleRateHz / kFreqBandWindowSamples;
 constexpr unsigned long kDefaultNetworkBandLowHz = 2950UL;
-// 8 bins since 2026-10-30 (decisions/2026-10-29-wider-band-base-bin-per-node.md): room for a base bin per node
+// 8 bins (decisions/2026-10-29-wider-band-base-bin-per-node.md): room for a base bin per node
 // (0..3 under a 5-step train), upward only, the bank's limit (FreqBandStream::kMaxBandBins).
 constexpr unsigned long kDefaultNetworkBandHighHz = 4700UL;
 static_assert(kBandBinSpacingHz * kFreqBandWindowSamples == kDefaultAudioI2SSampleRateHz,
@@ -121,9 +121,9 @@ static_assert(kDefaultChirpFrequencyHz >= kDefaultNetworkBandLowHz &&
               "the chirp tone must lie inside the network band");
 static_assert((kDefaultChirpFrequencyHz - kDefaultNetworkBandLowHz) % kBandBinSpacingHz == 0,
               "the chirp tone must sit on a band bin (bandLow + k * spacing)");
-// The Node's network signal as shipped (output.hop_*): 15 ms x 5 with no gap, a 75 ms glide up the band bins, the
-// owner's pick by ear (decisions/2026-11-05-short-glide-signal.md; was 25 ms x 5, gap 10). Its fit to the scalar
-// detector is detection/HopGapContract.h.
+// The Node's network signal as shipped (output.hop_*): 15 ms x 5 with no gap, a 75 ms glide up the band bins,
+// picked by ear (decisions/2026-11-05-short-glide-signal.md). Its fit to the scalar detector is
+// detection/HopGapContract.h.
 constexpr uint32_t kDefaultHopPulseMs = 15UL;
 constexpr uint32_t kDefaultHopGapMs = 0UL;
 constexpr uint32_t kDefaultHopSteps = 5UL;
@@ -137,9 +137,7 @@ constexpr int kDefaultAudioI2SDataOutPin = AUDIO_I2S_DOUT_PIN;
 constexpr PcmPreprocessMode kPcmPreprocessMode = static_cast<PcmPreprocessMode>(PCM_PREPROCESS_MODE_VALUE);
 constexpr unsigned long kDefaultAudioSignalStartupWarmupMs = 2000UL;
 // I2S tone output (D-AMP): sine peak as a fraction of full scale (the
-// I2S_TONE_AMPLITUDE flag above: 0.5 since 2026-10-21, 0.3 before; the 0.1 ->
-// 0.3 history is in docs/refactors/archive/damp-bench-check.md section 5) and
-// the on/off ramp.
+// I2S_TONE_AMPLITUDE flag above) and the on/off ramp.
 constexpr float kDefaultI2sToneAmplitude = I2S_TONE_AMPLITUDE;
 constexpr uint32_t kDefaultI2sToneRampMs = 5UL;
 

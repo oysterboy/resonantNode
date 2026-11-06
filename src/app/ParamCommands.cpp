@@ -168,7 +168,7 @@ ParamCommandResult handleParamCommand(const char* line, const ParamRegistry& reg
     }
 
     if (strchr(token, '=') != nullptr) {
-        // The Analyzer's key=value grammar, removed in step 11e (decisions/
+        // The Analyzer's former key=value grammar is gone (decisions/
         // 2026-10-25-analyzer-params-on-registry-and-line-policy.md).
         out.println("ERR PARAM unknown; use PARAM SET detection.scalar_* <value>");
         return result;

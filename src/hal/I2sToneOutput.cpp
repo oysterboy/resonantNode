@@ -193,19 +193,19 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
     if (_trainCancelRequested) {
         _trainCancelRequested = false;
         // A train cut short ramps out at its own gain and frequency; the drain below then clears gain and step
-        // (14.1 cleared them at once: up to 5 ms at the board's level over an attenuated pulse, deep review O-M1).
+        // (clearing them at once would put up to 5 ms at the board's level over an attenuated pulse).
         const bool sounding = (_trainRunning || _trainDraining) && _envelope > 0.0f;
         _trainRunning = false;
         _trainDraining = sounding;
         if (!sounding) {
             _trainStep = 0;
-            _gainCount = 0;  // a train cut short must not leave its gain on the next plain tone (review 14.1)
+            _gainCount = 0;  // a train cut short must not leave its gain on the next plain tone
             _trainGain = 1.0f;
         }
     }
     if (_trainRequested && _envelope > 0.0f) {
         // Something still sounds (a train being replaced, or a tone startPulseTrain just switched off): let it ramp
-        // to silence first, so the new train starts with its onset ramp at phase 0 (deep review O-M1).
+        // to silence first, so the new train starts with its onset ramp at phase 0.
         if (_trainRunning) {
             _trainRunning = false;
             _trainDraining = true;
@@ -371,7 +371,7 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
         int32_t value = 0;
         if (_envelope > 0.0f) {
             const float s = sinf(static_cast<float>(_phase) * kPhaseToRadians);
-            // Without a gain list the product is _amplitude itself, so a Node's output is bit for bit as before.
+            // Without a gain list the product is _amplitude itself, bit for bit the plain tone.
             const float amplitude = _gainCount > 0 ? _amplitude * _trainGain : _amplitude;
             value = static_cast<int32_t>(s * amplitude * _envelope * kFullScale);
             uint32_t step = phaseStep;

@@ -87,7 +87,7 @@ private:
     bool _ready = false;
 };
 
-// One poll of a port, the loop every console runs (step 11j): reads what the port holds; a finished line goes to
+// One poll of a port, the loop every console runs: reads what the port holds; a finished line goes to
 // handle(line), an empty one is skipped, an overflowed one is refused with `tooLongReply` and the capacity
 // ("ERR line_too_long max=255"). Port: available() / read(); Out: print() / println() (Serial, serialOut()).
 template <size_t Capacity, typename Port, typename Out, typename Handler>

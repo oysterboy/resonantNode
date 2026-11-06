@@ -9,7 +9,7 @@ should not know the Node's command names. Pure; host-tested in test/test_net_fra
 */
 namespace net {
 
-// What travels by radio (owner 2026-10-25): every Node command, PARAM, RB and
+// What travels by radio (decisions/2026-10-25-remote-params-espnow.md): every Node command, PARAM, RB and
 // SELFTEST, plus NET PING; ECHO for the echo modes' shell (ECHO-003: ECHO STATUS on a
 // board running it; a Node answers it as an unknown command). Not the other NET commands (the radio does not
 // address itself). Large replies are paced by the sender (NodeNet), so they
@@ -35,8 +35,8 @@ inline bool remoteCommandAllowed(const char* text) {
 }
 
 // SELFTEST blocks its node for seconds and plays tones: by radio one named
-// node at a time, never "*" (owner 2026-10-25; the others silent is the
-// operator's part).
+// node at a time, never "*" (decisions/2026-10-25-remote-params-espnow.md; the
+// others silent is the operator's part).
 inline bool remoteCommandNeedsOneTarget(const char* text) {
     return text != nullptr && startsWithWord(text, "SELFTEST");
 }

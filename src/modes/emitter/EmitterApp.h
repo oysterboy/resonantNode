@@ -78,7 +78,7 @@ private:
     // PULSES hop=F1,F2,...: a frequency per pulse, cycled (DET-013 / OUT-005).
     static constexpr size_t kPulseHopMax = 8;
     uint32_t _pulseHopHz[kPulseHopMax] = {};
-    // PULSES level=FS att=DB,DB,... (step 13): the gain per pulse handed to the tone output; none = its level.
+    // PULSES level=FS att=DB,DB,...: the gain per pulse handed to the tone output; none = its level.
     float _pulseGain[kPulseHopMax] = {};
     size_t _pulseGainCount = 0;
     char _pulseLevelText[8] = {};

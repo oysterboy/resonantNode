@@ -13,7 +13,7 @@
 //
 //   program [--plan clap|whisper] [--rate 48000|24000] [--level-db DB] [--onset S16] [--release S16] [--floor S16]
 //           [--peak S16] [--attack MS] [--loud S16] [--mod INDEX] [--flat-min F] [--flat-max F] [--band-level]
-//           [--low-max DB] [--room FILE.wav] [--out-dir DIR] [--loop-gain G] [--verbose] <file.wav>...
+//           [--low-max DB] [--adaptive [--room-factor F]] [--room FILE.wav] [--out-dir DIR] [--loop-gain G] [--verbose] <file.wav>...
 //
 // The whisper plan's band checks (2026-11-05, as Whispernet's whisper.level_band and whisper.timbre_check run them):
 // --band-level makes the level follow 1.5-4.5 kHz; --low-max DB makes the timbre module read the 200-700 Hz band's
@@ -175,6 +175,8 @@ int main(int argc, char** argv) {
     bool whisper = FEATURE_HISTORY_STREAMS >= 2;
     bool planGiven = false;
     bool bandLevel = false;
+    bool adaptive = false;
+    float roomFactor = 2.5f;  // Whispernet's whisper.room_factor
     std::string roomFile;
     bool verbose = false;
     double loopGain = 0.0;
@@ -203,6 +205,10 @@ int main(int argc, char** argv) {
         } else if (a == "--low-max") {
             wv.lowMaxDb = static_cast<float>(atof(next("--low-max")));
             wv.timbreCheck = 1;
+        } else if (a == "--adaptive") {
+            adaptive = true;
+        } else if (a == "--room-factor") {
+            roomFactor = static_cast<float>(atof(next("--room-factor")));
         } else if (a == "--room") {
             roomFile = next("--room");
         } else if (a == "--mod") {
@@ -265,7 +271,7 @@ int main(int argc, char** argv) {
     } else {
         detection::makeClapChain(clap, d, plan);
     }
-    const float onset = whisper ? wv.onset : clap.onset;
+    const float setOnset = whisper ? wv.onset : clap.onset;
     const float loudBound = wv.loud;
     const float flatMax = whisper && wv.timbreCheck == 0 ? wv.flatMax : 0.0f;
     const float lowMaxDb = whisper && wv.timbreCheck == 1 ? wv.lowMaxDb : -1.0f;
@@ -307,6 +313,9 @@ int main(int argc, char** argv) {
             continue;
         }
         const auto sampleAtMs = [&](unsigned long ms) { return static_cast<uint64_t>(ms) * rate / 1000U; };
+        static constexpr uint32_t kRoomWarmupMs = 500;
+        float onset = setOnset;  // the onset in force: with --adaptive it follows the room, as Whispernet::retune
+        float onsetApplied = onset;
         runtime.configure(d, plan);
         runtime.setProvisional(whisper ? wv.firstCheckMs : 0, wv.checkEveryMs);
         runtime.reset();
@@ -318,6 +327,9 @@ int main(int argc, char** argv) {
         RoomLevel lowRoom;
         lowRoom.setTimes(10000, 500);  // Whispernet's defaults (whisper.room_rise_ms / room_fall_ms)
         uint32_t lastLowMs = 0;
+        RoomLevel room;
+        room.setTimes(10000, 500);
+        uint32_t lastRoomMs = 0;
         follower.setShift(EnvelopeFollower::shiftForRate(rate));
         size_t occurrences = 0, valid = 0, slow = 0, unmeasured = 0, outOfLevel = 0, flat = 0;
         double validMs = 0.0, judgedMs = 0.0;
@@ -371,7 +383,7 @@ int main(int argc, char** argv) {
             const float level = follower.strength();
             peakLevel = level > peakLevel ? level : peakLevel;
             float flat = 0.0f;
-            if (flatness.take(flat) && whisper && flatMax > 0.0f && level >= onset) {
+            if (flatness.take(flat) && whisper && flatMax > 0.0f && level >= onsetApplied) {
                 runtime.recordFeature(detection::FeatureStreamId::SpectralFlatness,
                                       static_cast<uint32_t>(blockUs / 1000U), flat);
             }
@@ -381,7 +393,7 @@ int main(int argc, char** argv) {
                 if (balance.takeLowRms(lowRms)) {
                     lowRoom.update(lowRms, ms > lastLowMs ? ms - lastLowMs : 0U, !runtime.candidateOpen());
                     lastLowMs = ms;
-                    if (level >= onset && lowRoom.started()) {
+                    if (level >= onsetApplied && lowRoom.started()) {
                         runtime.recordFeature(detection::FeatureStreamId::LowBandExcess, ms,
                                               20.0f * log10f((lowRms + 1.0f) / (lowRoom.value() + 1.0f)));
                     }
@@ -389,6 +401,26 @@ int main(int argc, char** argv) {
             } else {
                 float lowRms = 0.0f;
                 balance.takeLowRms(lowRms);
+            }
+            if (whisper && adaptive) {
+                // Whispernet::endBlock: the room is learned while no phrase is open; the onset is roomFactor x the room
+                // when that is above the set onset, and the chain is retuned when it moved by more than 5 %.
+                const uint32_t ms = static_cast<uint32_t>(blockUs / 1000U);
+                const bool learning = !runtime.candidateOpen();
+                if (ms < kRoomWarmupMs) {
+                    room.reset(level);  // the follower's start-up ramp: a board has been listening since boot
+                }
+                room.update(level, ms > lastRoomMs ? ms - lastRoomMs : 0U, learning);
+                lastRoomMs = ms;
+                const float byRoom = roomFactor * room.value();
+                onset = byRoom > setOnset ? byRoom : setOnset;
+                if (learning && (onset <= onsetApplied * 0.95f || onset >= onsetApplied * 1.05f)) {
+                    detection::ScalarTransientConfig dd;
+                    detection::InspectionPlan pp;
+                    detection::makeWhisperChain(wv, onset, dd, pp);
+                    runtime.retune(dd, pp);
+                    onsetApplied = dd.onsetDetectionThreshold;
+                }
             }
             runtime.onBlock(level, blockUs, static_cast<uint32_t>(blockUs / 1000U));
             detection::EnvelopeRuntime::Result r;

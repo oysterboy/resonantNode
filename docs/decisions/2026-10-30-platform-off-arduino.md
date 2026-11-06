@@ -39,3 +39,8 @@ component) as the target. If the move is ever split into stages, Arduino 3.x may
 When it is sequenced: confirm the D-AMP full-duplex I2S timing on IDF 5's channel API (the 2026-10-09 clock
 backsteps, NODE-019), ESP-NOW with the OTA's STA channel switch, and whether the host shim still covers what it
 stands in for.
+
+## Source
+
+Added in commit 70706ec7 (2026-10-30, "Decision: platform off Arduino, onto ESP-IDF (owner 2026-10-30); not scheduled,
+carried over at the end"); the Status line above gives the owner's words.

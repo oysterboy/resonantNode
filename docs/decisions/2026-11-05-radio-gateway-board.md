@@ -30,3 +30,12 @@ pollNet already ran it; the Node-side gateway refused it).
 - A new board needs a roster line (the eFuse MAC is printed at boot) or it names itself "unknown".
 - Not a protocol change: the frames and the allowlist stay (VEKTOR still replaces NET, decisions/2026-10-25-vektor-
   replaces-net.md).
+
+## Revisit when
+
+VEKTOR replaces NET: the gateway speaks the NET frames and allowlist (Costs and what it rules out, last point).
+
+## Source
+
+Added in commit fedb3b8d (2026-11-05, "Gateway: esp32dev-gateway, a bare ESP32 as the bench's radio relay (E0);
+WHISPER by radio; board view --poll"); the Status line above gives the owner's words.

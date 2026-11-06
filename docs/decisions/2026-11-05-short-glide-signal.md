@@ -32,3 +32,13 @@ Date: 2026-11-05
 - A short beep with a climb now passes by length; tested only against one noise file and one window, not clicks,
   typing or a room. Revisit if the field shows false starts.
 - The 25 ms x 5 train stays playable by PARAM SET (output.hop_*), and passes the new minimum.
+
+## Revisit when
+
+The field shows false starts from a short beep with a climb, which now passes by length (Costs and what it rules
+out, second point).
+
+## Source
+
+Added in commit d03f7189 (2026-11-05, "Node: the signal is a 75 ms glide (5 x 15 ms, no gap) on 2000-6500 Hz; detector
+minimum 70 ms, coverage 60"); the Status line above gives the owner's words.

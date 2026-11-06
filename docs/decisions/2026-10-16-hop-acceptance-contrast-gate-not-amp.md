@@ -99,3 +99,8 @@ Measured the same evening with these values and the band 2950-3950 (`bench/sessi
 maxdur300`): speech 0 valid false in 50 windows, music 0 in 50 with 16 occurrences at the inspectors, all contrast
 weak, the highest 30,085. Still the condition of the confirmation: the battery on another day with the shipped
 build. If a later OBS gets worse, the first lever is the contrast limit, not the amp limit.
+
+## Source
+
+Added in commit 162c8478 (2026-10-16, "Decision (provisional): hop acceptance via the contrast inspector (about
+30,500), amp medium limit 1,500; waits for the gate battery"); the Status line above gives the owner's words.

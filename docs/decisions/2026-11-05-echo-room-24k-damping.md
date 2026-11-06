@@ -26,3 +26,16 @@ Date: 2026-11-05
 - The echo room's clap detection now sees 24 kHz blocks (5.3 ms of 128 frames instead of 2.7 ms); the attack is
   read in ms and the envelope's time constant follows the rate, so the gate should hold; not yet heard on the boards.
 - 48 kHz stays a build flag away.
+
+## Rules out
+
+Not stated when decided; 48 kHz stays a build flag away (Costs).
+
+## Revisit when
+
+The clap gate at 24 kHz is heard on the boards: it was not yet when this was decided (Costs).
+
+## Source
+
+Added in commit c52d29f2 (2026-11-05, "Echo: 24 kHz with a 600 ms clip; echo.damping_pct and echo.fade_ms shape the
+answer (ECHO-004 items 1-3)"); the Status line above gives the owner's words.

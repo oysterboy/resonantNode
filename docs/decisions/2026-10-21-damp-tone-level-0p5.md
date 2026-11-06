@@ -40,3 +40,9 @@ and its noise OBS ran with signals at 0.5 FS from the Emitter, without false tri
 - If the trial room needs more range than this layout.
 - If the noise OBS at 0.5 FS between Nodes (not Emitter to Analyzer) shows false triggers from neighbours' tails.
 - If SELFTEST amp limits need rescaling: tones are now about 1.67x higher, and SNR and spread are the pass criteria.
+
+## Source
+
+Added in commit faaa8143 (2026-10-21, "Output: D-AMP tone level 0.5 FS (was 0.3), owner decision after the step 5e
+hearing matrix (0.3: 7/20 cells at 10/10, 0.5: 19/20); 5e done; decision file supersedes 2026-10-09 0.3"); the Status
+line above gives the owner's words.

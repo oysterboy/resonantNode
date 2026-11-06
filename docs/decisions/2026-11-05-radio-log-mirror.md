@@ -31,3 +31,8 @@ register the param under one id and path, so a board keeps it across the switch.
 ## Revisit when
 
 VEKTOR's node binding lands, or a run needs every line (then raise the rate, or USB).
+
+## Source
+
+Added in commit 5fde053b (2026-11-05, "Net: a board's console lines by radio (node.radio_log), printed as NET log
+from=; board view --radio"); the Status line above gives the owner's words.

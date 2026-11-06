@@ -31,3 +31,9 @@ announcement free as an aesthetic layer.
 
 The rest tuning shows the group never falls quiet because of idle calls (2026-10-17 tuning: idle was 39 % of all
 emissions at the quietest setting), or OUT-006 (two-layer signal) gives the announcement its own design.
+
+## Source
+
+Added in commit 8fb29d0b (2026-10-17, "Decision: the idle call wakes the network (300 Hz announcement, then the node's
+hop train); reproduces the old pattern with output.idle_announce_hz 0"); the Status line above gives the owner's
+words.

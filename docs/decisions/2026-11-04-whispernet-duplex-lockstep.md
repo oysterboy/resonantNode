@@ -27,3 +27,8 @@ speaker then runs a fixed number of frames behind the mic; the echo canceller (a
 
 - A stalled loop audibly underruns the stream in the room (then a deeper TX queue, or the loop's stalls removed).
 - The echo room or the Node want the canceller too.
+
+## Source
+
+Added in commit ea2a890f (2026-11-04, "Whispernet: lockstep output (DuplexStream) for the echo cancellation; ~11 dB on
+E5"); the Status line above gives the owner's words.

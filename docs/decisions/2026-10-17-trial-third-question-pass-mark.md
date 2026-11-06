@@ -36,3 +36,17 @@ idle call and prints PASS/FAIL against 80 % within 30 s (`--quiet-gap`, `--quiet
 ## Open
 
 M (emissions per minute ceiling), from the first five-node session.
+
+## Rules out
+
+See docs/decisions/2026-10-22-network-pacing.md, which amends this pass mark and sets M.
+
+## Revisit when
+
+As in docs/decisions/2026-10-22-network-pacing.md, Revisit.
+
+## Source
+
+Added in commit 02cdd662 (2026-10-17, "Step 5f: the third question as counts and a proposed pass mark (time to quiet
+after a kick, N = 30 s in 4 of 5 kicks; owner sets N, M); nodegroup.py --kick sends RB CALL and reports time to
+quiet"); the Status line above gives the owner's words.

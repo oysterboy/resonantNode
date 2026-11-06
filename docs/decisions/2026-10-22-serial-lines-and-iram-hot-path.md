@@ -41,3 +41,9 @@ IRAM use is 67.5 KB of 128 KB at most. The Node runs the same functions and gain
 
 - If IRAM gets tight (WiFi or other IRAM users).
 - If the framework is upgraded: a later core may batch writes itself.
+
+## Source
+
+Added in commit 5bc99f3b (2026-10-22, "Steps: 7a done (0 drops in 40 detail+diag trials, dt on the sent command,
+RAW_ALLOC, na windows, boot claim acked); ANA-004/005/007/008/009 done; decision: console output in whole lines, per-
+sample path in IRAM"); the Status line above gives the owner's words.

@@ -27,3 +27,8 @@ note.
 
 - The desk or the room shows the first opening later than ~400 ms on real whispers (the floor of the range moves up),
   or the heap on the 24 kHz build cannot hold 2 s.
+
+## Source
+
+Added in commit efbf9820 (2026-11-01, "Decision: Whispernet's delay per node, 400 ms .. 2 s (owner, ECHO-002)"); the
+Status line above gives the owner's words.

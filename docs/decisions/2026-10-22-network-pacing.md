@@ -41,3 +41,9 @@ network.
 
 After the first session on these values: if chains get longer with the 5 s rest, or the network feels dead at
 60 s idle.
+
+## Source
+
+Added in commit 908dc9aa (2026-10-22, "Behavior: network pacing (owner 2026-10-22): rest 5 s (was 10), idle call 60 s
++- 20 (was 20 +- 5); 5f pass mark is 'the chain ends within 30 s in 80 %' with M = 100/min; nodegroup.py prints chain
+and M verdicts"); the Status line above gives the owner's words.

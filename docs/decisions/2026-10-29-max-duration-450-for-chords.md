@@ -40,3 +40,8 @@ Avoiding the window by timing alone (keeping every answer spread under 100 ms or
 
 If the tryout room (step 15) has reverberation that lengthens a single train toward 450, or if the shape rule is
 loosened: the long-sound filter is then the duration limit again.
+
+## Source
+
+Added in commit 8c8cdf52 (2026-10-29, "Detection: max duration 450 ms (was 300), feature history 640 ms, bin track
+1024 ms, so a chord of answers 120-220 ms apart is not lost"); the Status line above gives the owner's words.

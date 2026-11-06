@@ -26,3 +26,17 @@ behaviour is unchanged.
   spread, eager field is the automaton with a high start chance, not level_max 0. Found on the way: with level_max 0
   the jitter set live had no effect, which is why five answers came together and the chain ended after one round.
 - The jitter still shrinks with the level when the automaton runs (not a param).
+
+## Rules out
+
+An offset param on the Node (p = (level + offset) / L, as echo.level_offset): two named values say what they do
+(Why).
+
+## Revisit when
+
+Not stated when decided. The param review (docs/research/param-review.md) asks about a third value, the ramp's end.
+
+## Source
+
+Added in commit ca6714de (2026-11-05, "Behavior: behavior.start_chance_pct sets the first answer's chance apart from
+level_max (the chain's length)"); the Status line above gives the owner's words.

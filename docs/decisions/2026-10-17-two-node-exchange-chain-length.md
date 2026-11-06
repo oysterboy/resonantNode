@@ -35,7 +35,7 @@ Three timers decide it today, all Behavior's: `refractoryAfterEmitMs` (400), `wa
 own-emit suppression (whole train plus 60 ms). Tuning any of them without this decision tunes a loop nobody
 has defined.
 
-## What was measured (bench 2026-10-16-nodepair-70cm, two Node builds, 70 cm)
+## Why: what was measured (bench 2026-10-16-nodepair-70cm, two Node builds, 70 cm)
 
 - Hop train 25 ms x 5, gap 10: 165 ms. A node's own-emit suppression ends 60 ms after its train, at +225 ms
   from its start.

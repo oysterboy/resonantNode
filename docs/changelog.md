@@ -1,3 +1,49 @@
+# 2026-11-06 - Steps 16, 17, 19 and 22 closed (level automaton, base bin, bands per node, band update 16); docs pass: comments, roadmap archive, rules
+
+### Context
+
+Four steps closed on 2026-10-31 and 2026-11-01 without an entry here; steps 13 (its on-site part), 20 (the echo
+room and Whispernet) and 23 (review fixes, PC parts on main) are running. On 2026-11-06 a docs pass followed the
+question whether comments and docs hold up over time.
+
+### Changed
+
+- 16: answers follow the field level (BEH-008, decisions/2026-10-29-answers-follow-the-field-level-automaton.md),
+  host-tested and in native-fieldsim. Five Nodes free on the desk: every chain ended within 30 s (80 / 80 quiet,
+  88 / 88 with speech and music), at most 19-21 per minute, no answer without a call before it
+  (bench/sessions/2026-10-31-step17-desk5). The pass mark is now "every chain ends"
+  (decisions/2026-10-31-chains-end-replaces-time-to-quiet.md).
+- 17: BEH-009 parts 1-2: the band 2950-4700 Hz in 8 bins, a base bin per Node, the base gliding toward the one heard.
+  Analyzer hop10 10 / 10 at every base, chirps rejected; long chains end on one base in 92 % quiet, 74 % with music
+  (bench/sessions/2026-10-30-step17-band8, 2026-10-31-step17-desk5).
+- 19: the hearing radius is +-2 bins (bench/sessions/2026-10-31-step19-hearing-radius); bands per node decided and
+  built (decisions/2026-10-31-bands-per-node.md, `behavior.band_per_node`, off by default). On the desk every chain
+  ended; quiet, the field split into a low and a high group, and one speech verdict started a chain on 950-1950 in
+  2.5 node-hours (bench/sessions/2026-10-31-step19-desk5-bands). Both are to be judged in the room.
+- 22: DET-020, the band bank recomputes every 16 samples: the Node's per-sample path 34.6 -> 15.7 us, about 0.5 dB
+  lost at the margin's very edge, accepted (decisions/2026-11-01-band-update-16.md); 8 h soak
+  (bench/sessions/2026-11-01-step22.4-soak8).
+- Decided since, in the running steps: the 75 ms glide signal on 2000-6500 Hz
+  (decisions/2026-11-05-short-glide-signal.md), a bare ESP32 as the radio gateway
+  (decisions/2026-11-05-radio-gateway-board.md), the echo room at 24 kHz with a damped answer
+  (decisions/2026-11-05-echo-room-24k-damping.md).
+- Docs pass 2026-11-06: comments in src/, lib/ and test/ say why, without step numbers, change history or "owner"
+  as a reason (readability.py line H: 208 / 42 -> 0 / 0 in src/); the 50 finished roadmap items moved to the archive
+  and tools/ci/roadmap_ids.py checks it in CI (decisions/2026-11-06-finished-items-leave-the-roadmaps.md); CLAUDE.md
+  lists the checks before a commit and the closing of a step; every decisions file has its Source; DET-012 closed;
+  issue #88 (step 20.5) folded into #84.
+
+### Verification
+
+Steps 16, 17, 19 and 22: the board sessions cited above. The docs pass changed comment text only: the code with
+comments stripped is identical in every changed file; CI green on the branch. The host suites were not run in the
+container (the PlatformIO registry is blocked there); CI runs them.
+
+### Next
+
+20 (the echo modes in the tryout room; 20.5, the param review, before 20.4), 23's board parts, 13.1 on site, then
+15 and 18 in the room.
+
 # 2026-10-30 - Steps 12 and 14 closed (check, readability, chords, max duration 450); 13 partly; 47 h soak running
 
 ### Context

@@ -45,7 +45,8 @@ struct InspectionPlanCheck {
     bool windowCompleteAtRelease = true;
     bool shapeLevelInDomain = true;  // the shape level is a FrequencyTarget value in 0..32767 (L4)
     // Every module's medium limit is at or below its strong one: the class tests Strong first, so a medium limit
-    // above strong is silently ignored (e.g. amp_medium 8000 with strong 5000 passes from 5000; deep review I-M-B).
+    // above strong is silently ignored (e.g. amp_medium 8000 with strong 5000 passes from 5000;
+    // code-review-2026-10-30 I-M-B).
     bool classLimitsOrdered = true;
 
     bool hardOk() const { return historyFits && shapeFits; }

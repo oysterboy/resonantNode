@@ -7,14 +7,14 @@
 #include "InspectorTypes.h"
 
 /*
-The inspection plan's params (step 11i N7, review A10): the BinShape module's settings (detection.shape_*) and the
+The inspection plan's params: the BinShape module's settings (detection.shape_*) and the
 Node's live inspection limits (detection.contrast_medium / amp_medium, then the shape settings). The host replay
 binds the shape settings straight into the plan's module; the Node binds its InspectionLimits and writes them into
 the plan with applyInspectionLimits().
 */
 namespace param {
 
-// detection.shape_*: the BinShape module's settings (DET-015; step 11g B2, review D2.7). The window must fit the
+// detection.shape_*: the BinShape module's settings (DET-015; review D2.7). The window must fit the
 // BinTrack (preMs + max duration + tailMs <= BinTrack::kMs): RB plan_check prints shape_window_too_long if not.
 inline void describeParams(ParamRegistry& registry, detection::ShapeInspectionConfig& shape) {
     registry.addUInt32(ParamId::Detection_ShapePreMs, ModuleId::Detection, "detection.shape_pre_ms", &shape.preMs, 0U,

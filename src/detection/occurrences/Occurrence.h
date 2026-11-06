@@ -45,8 +45,8 @@ struct MagnitudeOccurrenceDetail {
     StrengthClass strengthClass = StrengthClass::Unknown;
 };
 
-// The band inspection's classes (the inspector writes them; makeVerdict reads them). Only the classes: the score,
-// contrast and measurement packet that sat here were assigned nowhere (review D2.1, 2026-10-26; myspec 5.4).
+// The band inspection's classes (the inspector writes them; makeVerdict reads them). Only the classes: a score,
+// contrast and measurement packet here would be assigned nowhere (review D2.1, 2026-10-26; myspec 5.4).
 struct FrequencyBandOccurrenceDetail {
     StrengthClass scoreStrength = StrengthClass::Unknown;
     StrengthClass contrastQuality = StrengthClass::Unknown;
@@ -64,7 +64,7 @@ struct OccurrenceShape {
     uint16_t firstBinHz = 0;
     uint16_t lastBinHz = 0;
     uint16_t lowestBinHz = 0;  // the lowest kept bin: a rising train's base (BEH-009), also when its start was cut
-    uint16_t highestBinHz = 0;  // the highest kept bin: below the window's top, the sender sits lower (step 19)
+    uint16_t highestBinHz = 0;  // the highest kept bin: below the window's top, the sender sits lower
     StrengthClass shapeClass = StrengthClass::Unknown;
 };
 

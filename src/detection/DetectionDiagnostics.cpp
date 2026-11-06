@@ -1,8 +1,7 @@
 #include "DetectionDiagnostics.h"
 
 // The Analyzer's variant only; the Node's NullDetectionDiagnostics is all
-// inline in the header. Moved out of DetectionRuntime.cpp in step 11e item 7,
-// bodies unchanged except for the member names.
+// inline in the header.
 #ifdef ANALYZER_MODE
 
 namespace detection {

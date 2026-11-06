@@ -1,8 +1,9 @@
 #pragma once
 
-// The bank's update interval in samples (DET-020, step 22): 16 (1 ms at 16 kHz) since 2026-11-01, was 4; the Node
-// spent 34.6 us a sample at 4, 15.7 at 16 (bench/sessions/2026-11-01-step22.1-node-cpu). A build flag so a measurement build
-// can run another without changing the default.
+// The bank's update interval in samples (DET-020, decisions/2026-11-01-band-update-16.md): 16 (1 ms at 16 kHz), not 4;
+// measured 2026-11-01, the Node spent 34.6 us a sample at 4 and 15.7 at 16
+// (bench/sessions/2026-11-01-step22.1-node-cpu). A build flag so a measurement build can run another without
+// changing the default.
 #ifndef FREQBAND_UPDATE_EVERY_SAMPLES
 #define FREQBAND_UPDATE_EVERY_SAMPLES 16
 #endif
@@ -54,7 +55,7 @@ public:
     // Band mode (DET-013): FrequencyTarget becomes the strongest bin between
     // lowHz and highHz (bins one bandSpacingHz() apart, plus a guard bin
     // each side so the edge bins still have neighbours for the contrast).
-    // lowHz == 0 switches it off: the single configured target, as before.
+    // lowHz == 0 switches it off: the single configured target.
     // A band wider than the bank holds (kMaxBandBins bins) is clamped at
     // its high edge, so bandHighHz() always names the last bin that is
     // actually watched; the Node derives its hop grid from these getters.

@@ -46,13 +46,13 @@ detection::FieldState fieldWith(unsigned long patterns) {
 }
 
 BehaviorGateConfig config() {
-    BehaviorGateConfig cfg;  // the two rest triggers as they shipped until step 16, the level automaton off
+    BehaviorGateConfig cfg;  // the two rest triggers (restAfterFieldPatterns, ownEmitBudget), the level automaton off
     cfg.idleEnabled = false;
     cfg.levelMax = 0;
     cfg.restAfterFieldPatterns = 4;
     cfg.ownEmitBudget = 6;
     cfg.restMs = 5000;
-    cfg.refractoryAfterEmitMs = 0;  // isolate the rest rule from the refractory question (step 5d)
+    cfg.refractoryAfterEmitMs = 0;  // isolate the rest rule from the refractory question
     return cfg;
 }
 
@@ -77,7 +77,7 @@ unsigned long answer(ResonantBehavior& b, unsigned long heardAt, unsigned long f
 void setUp() {}
 void tearDown() {}
 
-// Since step 16 the shipped defaults rest by the level automaton; the two old triggers are off (0).
+// The shipped defaults rest by the level automaton; the two old triggers are off (0).
 void test_shipped_defaults_rest_by_the_level() {
     const BehaviorGateConfig cfg;
     TEST_ASSERT_TRUE(cfg.levelMax > 0);
@@ -102,7 +102,7 @@ void test_dense_field_starts_a_rest_instead_of_an_answer() {
     TEST_ASSERT_FALSE(b.shouldStartChirp());
 }
 
-// Deep review B-M1: a rest that starts while an answer is scheduled drops it.
+// A rest that starts while an answer is scheduled drops it (code-review-2026-10-30 B-M1).
 void test_rest_drops_a_scheduled_answer() {
     ResonantBehavior b;
     b.configure(config());
@@ -119,7 +119,7 @@ void test_rest_drops_a_scheduled_answer() {
     TEST_ASSERT_FALSE(b.shouldStartChirp());
 }
 
-// Deep review B-M2: after an own-budget rest the next answer does not rest again at once.
+// After an own-budget rest the next answer does not rest again at once (code-review-2026-10-30 B-M2).
 void test_budget_rest_does_not_rearm_on_the_next_answer() {
     ResonantBehavior b;
     b.configure(config());
@@ -140,8 +140,8 @@ void test_budget_rest_does_not_rearm_on_the_next_answer() {
     TEST_ASSERT_EQUAL_UINT32(entered, b.restsEntered());
 }
 
-// Deep review B-M3: a valid verdict blocked by a rest still counts as heard: an idle call due when the rest ends
-// waits idleBlockedAfterHeardMs after it instead of firing at once.
+// A valid verdict blocked by a rest still counts as heard: an idle call due when the rest ends waits
+// idleBlockedAfterHeardMs after it instead of firing at once (code-review-2026-10-30 B-M3).
 void test_blocked_verdict_holds_the_idle_call() {
     ResonantBehavior b;
     BehaviorGateConfig cfg = config();
@@ -280,7 +280,7 @@ void test_no_idle_while_resting() {
     TEST_ASSERT_TRUE_MESSAGE(idled, "idle voice back after the rest");
 }
 
-// Step 10e: a live idle_timeout change applies to the wait already running, from when it started.
+// A live idle_timeout change applies to the wait already running, from when it started.
 bool idlesBy(ResonantBehavior& b, unsigned long from, unsigned long until) {
     for (unsigned long t = from; t <= until; t += 10) {
         b.update(t);
@@ -328,7 +328,7 @@ void test_longer_idle_timeout_extends_the_running_wait_and_same_value_keeps_it()
     TEST_ASSERT_TRUE(idlesBy(b, 5000, 5100));
 }
 
-// RB CALL (step 5g): the operator call plays the network signal, and is not taken while resting.
+// RB CALL: the operator call plays the network signal, and is not taken while resting.
 void test_network_call_plays_the_network_signal() {
     ResonantBehavior b;
     b.configure(config());

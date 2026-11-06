@@ -49,8 +49,7 @@ New profile checklist:
 */
 
 enum class DetectorSelection {
-    // The one detector family. FrequencyMatch was removed 2026-10-22
-    // (docs/decisions/2026-10-22-remove-frequencymatch.md).
+    // The one detector family (why only one: docs/decisions/2026-10-22-remove-frequencymatch.md).
     ScalarTransient,
 };
 
@@ -141,7 +140,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.onsetDetectionThreshold = 2000.0f;
     profile.scalarTransient.onsetReleaseThreshold = 1500.0f;
     // 70, not 92: the 75 ms glide reads ~82 ms; a short beep is kept out by the shape module now, not by length
-    // (decisions/2026-11-05-short-glide-signal.md; was decisions/2026-10-23-node-hears-the-hop-train-only.md).
+    // (decisions/2026-11-05-short-glide-signal.md).
     profile.scalarTransient.minTransientDurationMs = 70;
     // 450, not 300: two answers 120-220 ms apart merge into one sound past 300 and both were lost; at 450 they count
     // as one train (decisions/2026-10-29-max-duration-450-for-chords.md, lab E003). A single train reads up to
@@ -159,7 +158,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
 
     // Inspection: contrast (the gate), amp (a floor), shape (the hop train). The P75 windows start at the
     // occurrence. The contrast Strong limit sits above the 0..32,767 range on purpose: Strong is unused there, the
-    // requirement is Medium (step 8b item 4, owner 2026-10-22); the inspector has no disabled class.
+    // requirement is Medium; the inspector has no disabled class.
     profile.inspectionPlan = InspectionPlan{};  // not "= {}": g++ 13 rejects a brace list on this aggregate (NODE-007)
     profile.inspectionPlan.modules[0] = magnitudeModule(InspectionTarget::Contrast, FeatureStreamId::FrequencyContrast,
                                                         MagnitudeInspectionAnchor::Start, MagnitudeInspectionMode::P75,
@@ -170,7 +169,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     // Shape (decisions/2026-10-26-det015-bin-track-inspector.md, E002; the Node hears the hop train only,
     // decisions/2026-10-23-node-hears-the-hop-train-only.md): 3 distinct band bins with 2 steps up; a steady tone
     // is one bin and is rejected. Band mode only: with no band bins the module does not apply and passes. preMs 120
-    // and a step over one missing bin keep a train the detector split at a deep null (E002, step 11b); tailMs is a
+    // and a step over one missing bin keep a train the detector split at a deep null (E002); tailMs is a
     // tuning question for the board. The bin level is the detector's release threshold, read live (review D1.5).
     profile.inspectionPlan.modules[2] = binShapeModule(120, 0, 2);
     profile.inspectionPlan.count = 3;

@@ -34,7 +34,7 @@ struct Capture {
     std::string name;
     std::vector<int32_t> pcm;
     std::vector<int32_t> boardAmp;  // mode=both transcripts: the board's audioMagnitudeValue per sample
-    // mode=both transcripts since step 7b: the board's frequency path per
+    // mode=both transcripts carry the board's frequency path per
     // sample (the target-band FrequencyScore16, the band contrast, and
     // whether a fresh Goertzel packet came with this sample).
     std::vector<int32_t> boardFreq;
@@ -81,13 +81,13 @@ struct Options {
     unsigned long skipMs = 0;    // ignore verdicts whose occurrence starts earlier (marker tone)
     bool compare = false;        // amp feature vs the board's column (mode=both transcripts)
     bool verbose = false;        // one line per verdict
-    std::string dumpFreqPath;    // if set: per-sample host vs board frequency path as CSV (step 7b)
-    // DET-015 verification (step 11b, owner: verify that shape separates the signals before choosing a data
-    // path): one `shape` line per verdict with the strongest band bin per ms over the occurrence's window,
+    std::string dumpFreqPath;    // if set: per-sample host vs board frequency path as CSV
+    // DET-015 verification (does the shape separate the signals, before a data path is chosen):
+    // one `shape` line per verdict with the strongest band bin per ms over the occurrence's window,
     // as runs. Host-only probe; reads FreqBandStream::lastPeakBinHz(), which the board does not pass on.
     bool shape = false;
-    // The band bank's update interval in samples (0: the stream's default, FREQBAND_UPDATE_EVERY_SAMPLES = 16 since DET-020, as the boards run). A host experiment
-    // (owner 2026-10-31): how far the interval can grow before the verdicts change.
+    // The band bank's update interval in samples (0: the stream's default, FREQBAND_UPDATE_EVERY_SAMPLES = 16, as
+    // the boards run; DET-020). A host experiment: how far the interval can grow before the verdicts change.
     unsigned long bandUpdateEvery = 0;
 };
 
@@ -100,7 +100,7 @@ struct Result {
     size_t ampCompared = 0;
     double ampMeanAbsDiff = 0.0;
     double ampMaxAbsDiff = 0.0;
-    // Frequency path vs the board (step 7b), compared on samples where the
+    // Frequency path vs the board, compared on samples where the
     // board had a fresh packet: target FrequencyScore16 absolute, contrast
     // relative to the board's value, on samples where |board| >= 1000 (the
     // gate's range; the medium limit is 30,500).

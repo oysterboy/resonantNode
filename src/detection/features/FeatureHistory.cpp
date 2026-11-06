@@ -159,7 +159,7 @@ float FeatureHistory::representativeValueForStream(FeatureStreamId stream, const
 // Every StreamBuffer member defaults to zero, so clearing the bytes is the same
 // as `buffer = {}`, without the 12 KB temporary GCC built on the stack for it:
 // that took the Node's loop stack from 14.2 KB to 3.6 KB free at boot and on
-// every detection reset (step 10e, bench/sessions/2026-10-23-step10e-loose-ends).
+// every detection reset (bench/sessions/2026-10-23-step10e-loose-ends).
 void FeatureHistory::resetStream(StreamBuffer& buffer) {
     static_assert(std::is_trivially_copyable<StreamBuffer>::value, "resetStream clears StreamBuffer bytewise");
     memset(&buffer, 0, sizeof(buffer));
@@ -379,9 +379,9 @@ MagnitudeWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long 
         return out;
     }
 
-    // Scratch for the window's values: a member since step 8b (was 2 KB on the
-    // loop stack per call; the Node had 3,640 B of its 16 KB left after ten
-    // detections). Only the first valueCount entries are read.
+    // Scratch for the window's values: a member, not a local (2 KB on the loop
+    // stack per call left the Node 3,640 B of its 16 KB after ten detections).
+    // Only the first valueCount entries are read.
     float* values = _windowValues;
     size_t valueCount = 0;
     size_t totalInputCount = 0;

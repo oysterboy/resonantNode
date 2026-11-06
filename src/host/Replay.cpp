@@ -305,7 +305,7 @@ namespace {
 // The strongest band bin per millisecond over the whole capture (0 = quiet or not in band), with its target value
 // and the broadband energy for the dips. A whole-capture log, not the runtime's 512 ms BinTrack: --shape also
 // prints a capture's active stretch after the end. It is read through the same at() as BinTrack, by the same rule
-// (BinShape.h; review D2.3, 2026-10-26: this file had its own copy of the rule, and it had drifted).
+// (BinShape.h; a private copy of the rule here had drifted from it, review D2.3, 2026-10-26).
 struct ReplayBinLog {
     std::vector<uint32_t> peakHz;   // per ms: the bin with the largest target value in that ms
     std::vector<float> value;       // per ms: that largest target value
@@ -460,7 +460,7 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
         band.setFrequencyUpdateEverySamples(opt.bandUpdateEvery);
     } else if (opt.compare && cap.hasBandLead && cap.bandUpdateEvery > 0) {
         // Compared sample for sample with the board's recorded columns: run the bank at the board's interval then
-        // (RAW_BEGIN band_update_every; 4 before 2026-11-01, DET-020), not today's default.
+        // (RAW_BEGIN band_update_every: captures made before 2026-11-01 ran at 4, DET-020), not the shipped default.
         band.setFrequencyUpdateEverySamples(cap.bandUpdateEvery);
     }
     detection::DetectionRuntime runtime;
@@ -492,7 +492,7 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
     band.setTargetFrequencyHz(opt.targetHz);
     band.setBand(opt.bandLow, opt.bandHigh);
     track.bins = static_cast<uint32_t>(band.bandBinCount());
-    // Same band-update phase as the board (RAW band_lead=, step 7b). The pad
+    // Same band-update phase as the board (RAW band_lead=). The pad
     // zeros sit in the 64-sample window for its first pass, so --compare
     // skips the first window of samples.
     if (cap.hasBandLead && cap.bandUpdateEvery > 0) {

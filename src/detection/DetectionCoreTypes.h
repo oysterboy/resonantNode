@@ -37,9 +37,8 @@ namespace detection {
 // OccurrenceType or in DetectorReport.
 //
 // ScalarTransientDetector is the one detector family: it emits the accepted
-// Occurrences and its DetectorReport. FrequencyMatchDetector was removed
-// 2026-10-22 (decisions/2026-10-22-remove-frequencymatch.md); a new family
-// joins on the terms of myspec 5.3, "Adding a detector family".
+// Occurrences and its DetectorReport (why only one: decisions/2026-10-22-remove-frequencymatch.md). A new
+// family joins on the terms of myspec 5.3, "Adding a detector family".
 
 /*
 DetectionCoreTypes

@@ -27,7 +27,7 @@ which ones are worth keeping, based on what will actually be read back.
 // Each ms costs 72 bytes (three streams), taken from the Analyzer's RAW block.
 #define FEATURE_HISTORY_BINS 576
 #endif
-// The bin length in ms and the stream slots, per build (step 20.2, 2026-10-31): the Node keeps 1 ms x 3 slots; the echo
+// The bin length in ms and the stream slots, per build: the Node keeps 1 ms x 3 slots; the echo
 // modes size theirs to what their one or two inspectors read (the heap holds their audio rings; at the Node's size the
 // history alone took 44 KB of static RAM). platformio.ini sets them per env.
 #ifndef FEATURE_HISTORY_BIN_MS
@@ -91,7 +91,7 @@ public:
     unsigned long latestTimeMs(FeatureStreamId stream) const;
 
 private:
-    // getWindow()'s value scratch (step 8b item 5): one window at a time, the
+    // getWindow()'s value scratch: one window at a time, the
     // detection loop is single-threaded.
     mutable float _windowValues[kBinsPerStream + 1U];
 

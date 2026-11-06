@@ -61,11 +61,11 @@ public:
 
     bool popOccurrenceVerdict(OccurrenceVerdict& out);
     const FieldState& fieldState() const;
-    // Verdicts dropped because the 4-slot queue was full (every build since
-    // step 8b; the Node prints it in RB STATUS). Reset with the queues.
+    // Verdicts dropped because the 4-slot queue was full (counted in every build; the Node prints it in
+    // RB STATUS). Reset with the queues.
     unsigned long verdictQueueOverflowCount() const;
     // Occurrences inspected early because the 2-slot wait queue was full
-    // (step 8b item 1; 0 on the shipped values).
+    // (0 on the shipped values).
     unsigned long pendingInspectionOverflowCount() const;
 
     // The Analyzer's side (SEQ trials): the detector's per-trial summaries and
@@ -80,8 +80,8 @@ private:
     static constexpr size_t kResultQueueCapacity = 4;
     static constexpr size_t kPendingInspectionCapacity = 2;
 
-    // Occurrences waiting for their inspection window to complete (step 8b
-    // item 1), with what the diagnostics keep for their event.
+    // Occurrences waiting for their inspection window to complete, with what the diagnostics keep for their
+    // event.
     struct PendingInspection {
         Occurrence occurrence = {};
         unsigned long readyAtMs = 0;
@@ -104,7 +104,7 @@ private:
     FieldStateTracker _fieldStateTracker;
     FeatureHistory _featureHistory;
     BinTrack _binTrack;  // the strongest band bin per ms, for the ShapeInspector (DET-015)
-    // The previous inspected occurrence's release: the shape look-back's floor (deep review I-M-A).
+    // The previous inspected occurrence's release: the shape look-back's floor (code-review-2026-10-30 I-M-A).
     bool _haveLastInspectedRelease = false;
     uint32_t _lastInspectedReleaseMs = 0;
     ActiveDetectionDiagnostics _diagnostics;

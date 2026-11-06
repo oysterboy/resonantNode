@@ -1,4 +1,4 @@
-// native-echoreplay (step 20): the echo modes' detection chain on WAV files, the board's classes on the PC.
+// native-echoreplay: the echo modes' detection chain on WAV files, the board's classes on the PC.
 //
 // A WAV (PCM 16 / 24 / 32-bit, any rate, mono or mixed to mono) is resampled to --rate, scaled to canonical PCM
 // (24-bit; a 16-bit sample << 8, then --level-db), and fed per 128-sample block through EnvelopeFollower and

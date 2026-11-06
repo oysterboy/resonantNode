@@ -81,7 +81,7 @@ void tearDown() {}
 void test_trains_counted_by_duration() {
     TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(180, kVerdictTrainMs));
     TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(220, kVerdictTrainMs));
-    TEST_ASSERT_EQUAL_UINT32(2, ResonantBehavior::trainsIn(430, kVerdictTrainMs));  // step 14: +250 ms, merged
+    TEST_ASSERT_EQUAL_UINT32(2, ResonantBehavior::trainsIn(430, kVerdictTrainMs));  // +250 ms, merged
     TEST_ASSERT_EQUAL_UINT32(3, ResonantBehavior::trainsIn(2000, kVerdictTrainMs));
     TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(0, kVerdictTrainMs));
     ResonantBehavior b = make(automaton());
@@ -89,7 +89,7 @@ void test_trains_counted_by_duration() {
 }
 
 // The glide (2026-11-05): two answers 120-220 ms apart read as 202-302 ms (lab E003's chord spacing) and count 2,
-// three at 120 ms count 3; the old 215 ms constant counted every one of these as 1 (review 2026-11-05 M1).
+// three at 120 ms count 3; a fixed 215 ms unit would count every one of these as 1 (review 2026-11-05 M1).
 void test_trains_counted_in_the_glide_unit() {
     TEST_ASSERT_EQUAL_UINT32(1, ResonantBehavior::trainsIn(82, kGlideUnitMs));
     TEST_ASSERT_EQUAL_UINT32(2, ResonantBehavior::trainsIn(202, kGlideUnitMs));
@@ -237,8 +237,8 @@ void test_own_emission_raises_the_level_and_can_rest() {
     TEST_ASSERT_EQUAL(Decision::RestLevel, b.lastRestReason());
 }
 
-// level_max 0 switches the automaton off: every train is answered after exactly the fixed wait (the timing before
-// step 16), whatever the draws and the jitter.
+// level_max 0 switches the automaton off: every train is answered after exactly the fixed wait, whatever the draws
+// and the jitter.
 void test_off_reproduces_the_fixed_answer() {
     BehaviorGateConfig cfg = automaton();
     cfg.levelMax = 0;

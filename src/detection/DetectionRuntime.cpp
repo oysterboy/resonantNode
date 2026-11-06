@@ -109,8 +109,8 @@ void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
         }
     }
     // Rebinding the streams clears every buffer. Only do it when the set of
-    // streams changes: a threshold-only plan change (a live PARAM SET, step 10
-    // item 7) keeps the history, so inspections stay complete.
+    // streams changes: a threshold-only plan change (a live PARAM SET) keeps the
+    // history, so inspections stay complete.
     bool sameStreams = _featureHistory.activeStreamCount() == streamCount;
     for (size_t i = 0; sameStreams && i < streamCount; ++i) {
         sameStreams = _featureHistory.activeStream(i) == streams[i];
@@ -194,7 +194,7 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
         _diagnostics.onOccurrencePopped(occurrence);
         _fieldStateTracker.observeOccurrence(occurrence, nowMs);
 
-        // Step 8b item 1 (decisions/2026-10-22-inspect-when-window-complete.md):
+        // Inspect when the window is complete (decisions/2026-10-22-inspect-when-window-complete.md):
         // an occurrence whose inspection window ends after now waits until it
         // has; one that is ready goes straight through, unless an earlier one is
         // still waiting (order is kept).

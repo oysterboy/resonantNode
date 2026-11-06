@@ -239,8 +239,8 @@ void test_scalar_detector_accepted_report_clears_stale_reject_reason() {
     TEST_ASSERT_EQUAL_STRING("none", acceptedReport.scalar.inspect.gateReason);
 }
 
-// The trial classification, decided once (11g C5, review A8): the result ladder that was in finalizeSequenceTrial and
-// the invalid-verdict override that was in buildSequenceAnalyzerReport, as one pure function.
+// The trial classification, decided once: the result ladder and the invalid-verdict override as one pure
+// function.
 static AnalyzerSequenceClassificationInput withVerdict(AnalyzerResult selected, bool valid) {
     AnalyzerSequenceClassificationInput in;
     in.selectedResult = selected;

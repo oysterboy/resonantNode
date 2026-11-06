@@ -134,9 +134,9 @@ void test_rotation_that_wraps_counts_as_rising() {
     TEST_ASSERT_EQUAL(StrengthClass::Strong, in.occurrence.shape.shapeClass);
 }
 
-// Review 12.0 L3: the wrap is the drop from the band's top bin to its bottom one, from the band's bin count. In an
-// 8-bin band (2950-4700) that is 7 bins down; a drop of 4 bins is a jump, which the old rule (more than 3 bins
-// down) counted as rising.
+// The wrap is the drop from the band's top bin to its bottom one, from the band's bin count. In an 8-bin band
+// (2950-4700) that is 7 bins down; a drop of 4 bins is a jump, which the old rule (more than 3 bins down) counted
+// as rising (review 12.0 L3).
 void test_wrap_rule_from_the_band_bin_count() {
     BinTrack wrapped;
     wrapped.setBandBins(8);
@@ -247,8 +247,8 @@ void test_train_split_by_a_middle_null_passes_with_the_look_back() {
     TEST_ASSERT_TRUE(in.occurrence.shape.shapeClass >= StrengthClass::Medium);
 }
 
-// Deep review I-M-A: a steady tone that starts right after a train does not borrow the train's bins once the
-// look-back stops at the train's release (the runtime sets that floor before each inspection).
+// A steady tone that starts right after a train does not borrow the train's bins once the look-back stops at
+// the train's release (the runtime sets that floor before each inspection; code-review-2026-10-30 I-M-A).
 void test_tone_after_a_train_borrows_no_bins_past_the_floor() {
     BinTrack track;
     playSteps(track, 300, kHop, 5, 25, 10);  // the train: 300..465
@@ -310,8 +310,9 @@ void test_shape_holds_across_the_ms_wrap() {
     TEST_ASSERT_FALSE(v.accepted);
 }
 
-// Review D1.5: the level a bin must reach is the detector's release threshold, handed to the inspector live
-// (DetectionRuntime::setScalarTransientConfig), not a copy in the plan. Above the train's level nothing counts.
+// The level a bin must reach is the detector's release threshold, handed to the inspector live
+// (DetectionRuntime::setScalarTransientConfig), not a copy in the plan. Above the train's level nothing counts
+// (review D1.5).
 void test_shape_level_follows_the_release_threshold() {
     BinTrack track;
     playSteps(track, 100, kHop, 5, 25, 10, 9000);

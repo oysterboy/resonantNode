@@ -184,7 +184,7 @@ void test_chirp_is_accepted_once_on_the_single_target() {
     TEST_ASSERT_TRUE(r.first.primaryDurationMs >= 85 && r.first.primaryDurationMs <= 300);
 }
 
-// Band mode: the on-bin 3,200 Hz chirp is rejected by shape (one bin; DET-015, until 2026-10-26 accepted).
+// Band mode: the on-bin 3,200 Hz chirp is rejected by shape (one bin; DET-015).
 void test_on_bin_tone_is_rejected_by_shape_in_band_mode() {
     const Outcome r = replay(FIXTURE(Chirp), kNetworkBand);
     TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
@@ -222,8 +222,8 @@ void test_radio_speech_is_not_accepted() {
     TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
 }
 
-// Step 8b item 3 (audit 3.7): a continuous in-band tone is closed as too long once it passes
-// max duration + debounce (460 ms on the shipped profile since 2026-10-29), not when it ends, and no new
+// A continuous in-band tone is closed as too long once it passes
+// max duration + debounce (460 ms on the shipped profile), not when it ends, and no new
 // candidate opens until the signal drops below release. A normal pulse afterwards is accepted.
 namespace {
 ScalarTransientDetector gScalar;
@@ -247,7 +247,7 @@ void configureShippedScalar() {
     gScalar.setConfig(c);
 }
 
-// Review 14.1: after an input gap the open candidate is dropped (no reject, no occurrence), a signal still above
+// After an input gap the open candidate is dropped (no reject, no occurrence), a signal still above
 // release cannot open a new one, and a normal pulse after a quiet moment is accepted.
 void test_restart_after_input_gap_drops_the_open_candidate() {
     configureShippedScalar();
@@ -286,10 +286,9 @@ void test_continuous_tone_is_closed_at_max_duration() {
     TEST_ASSERT_TRUE(occurrence.durationMs >= 115 && occurrence.durationMs <= 135);
 }
 
-// Step 8b item 7 (#32 13 / B11, decisions/2026-10-13-one-reject-event-per-new-best-reject.md):
-// every reject counts in the report's rejected count; only a new best reject (longer, then
-// stronger) bumps the generation that makes a reject event. 40, 30 and 60 ms pulses, all too
-// short: 3 rejects, 2 new best (the 30 ms one does not beat the 40 ms one).
+// Every reject counts in the report's rejected count; only a new best reject (longer, then stronger) bumps the
+// generation that makes a reject event (decisions/2026-10-13-one-reject-event-per-new-best-reject.md). 40, 30 and
+// 60 ms pulses, all too short: 3 rejects, 2 new best (the 30 ms one does not beat the 40 ms one).
 void test_every_reject_counts_only_a_new_best_makes_an_event() {
     configureShippedScalar();
     unsigned long ms = 1000;

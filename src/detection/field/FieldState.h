@@ -19,9 +19,8 @@ struct FieldStateConfig {
     unsigned long quietOccurrenceCountThreshold = 0;
 };
 
-// noiseFloor, avgAmbientLevel and chatter were removed 2026-10-22: two copies of
-// an occurrence count per window and one of the count itself, read by nothing
-// (decisions/2026-10-22-fieldstate-is-the-rest-gate.md).
+// Only what the rest gate reads: no noise floor, ambient level or chatter, which would be
+// copies of an occurrence count that nothing reads (decisions/2026-10-22-fieldstate-is-the-rest-gate.md).
 struct FieldState {
     float activity = 0.0f;
     float density = 0.0f;

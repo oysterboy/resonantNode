@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
             printf("%s samples=%zu sr=%u mode=%s %s\n", cap.name.c_str(), cap.pcm.size(), cap.sampleRateHz,
                    cap.mode.c_str(), cap.shape.c_str());
         }
-        // A transcript that records the board's band (RAW band=, step 7b) is
+        // A transcript that records the board's band (RAW band=) is
         // replayed on that band unless --band says otherwise, so --compare
         // compares like with like.
         Options capOpt = opt;

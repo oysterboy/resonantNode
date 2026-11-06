@@ -55,7 +55,7 @@ const char* kChirpCsv = "test/fixtures/chirp3200_90cm_2026-10-16.csv";
 const char* kTone3300Csv = "test/fixtures/tone3300_90cm_2026-10-16.csv";
 const char* kSpeechWav = "test/fixtures/radio_speech_110cm_2026-10-16.wav";
 const char* kHopCsv = "test/fixtures/hop5_25x5g10_70cm_2026-10-16.csv";
-// Step 7b: mode=both with the board's frequency path (freq, contrast, fresh), captured on the network band
+// mode=both with the board's frequency path (freq, contrast, fresh), captured on the network band
 // (RAW band=2950-3950, band stream reset at capture start, band_lead in RAW_BEGIN), E2 Analyzer / E3 Emitter
 // 0.5 FS at 110 cm (bench/sessions/2026-10-22-corpus-freqcols-aligned-110cm).
 const char* kChirpFreqColsCsv = "test/fixtures/chirp3200_band_freqcols_110cm_2026-10-22.csv";
@@ -66,7 +66,7 @@ std::string hopVariant(const char* kind, int gapMs) {
 }
 
 // Peaking-EQ notch (RBJ biquad) at f0, amplitude gain `gain` at f0, bandwidth bwHz:
-// the same filter as tools/bench/notchsweep.py (step 5h item 3), a stand-in for a comb null.
+// the same filter as tools/bench/notchsweep.py, a stand-in for a comb null.
 hostreplay::Capture notched(const hostreplay::Capture& in, double f0, double gain, double bwHz) {
     hostreplay::Capture out = in;
     const double a = sqrt(gain);
@@ -143,8 +143,7 @@ void test_chirp_is_accepted_once_on_the_single_target() {
 }
 
 // Band mode: the on-bin 3,200 Hz chirp passes contrast and amp and is rejected by shape: one bin, a steady
-// tone, not the hop train (DET-015, decisions/2026-10-26-det015-bin-track-inspector.md; until 2026-10-26 it
-// was accepted).
+// tone, not the hop train (DET-015, decisions/2026-10-26-det015-bin-track-inspector.md).
 void test_on_bin_tone_is_rejected_by_shape_in_band_mode() {
     hostreplay::Capture cap;
     TEST_ASSERT_TRUE(hostreplay::loadCapture(kChirpCsv, cap));
@@ -182,7 +181,7 @@ void test_host_amp_feature_matches_the_board() {
     TEST_ASSERT_TRUE_MESSAGE(r.ampMaxAbsDiff <= 1.0, "max |host amp - board amp| (Strength16)");
 }
 
-// Step 7b: the frequency path that decides (the target-band FrequencyScore16
+// The frequency path that decides (the target-band FrequencyScore16
 // the scalar detector observes, and the band contrast the contrast inspector
 // reads; both float Goertzel) is the board's, sample for sample, on the
 // network band: target within rounding, contrast within 2 % where it is
@@ -249,7 +248,7 @@ void test_hop_train_is_accepted_once_in_band_mode() {
     TEST_ASSERT_TRUE_MESSAGE(duration >= 150 && duration <= 300, "hop train duration outside 150..300 ms");
 }
 
-// Step 5h, assumption 1: the room tail, not the detector, bridges the 10 ms gaps.
+// The room tail, not the detector, bridges the 10 ms gaps (assumption 1 of docs/lab/2026-10-20-step5h-host-checks.md).
 // Shipped scalar values: release debounce 10, max gap 20, cooldown 50, min duration 85.
 // Without the tail a 10 ms gap reads as a dip of about the debounce: the candidate
 // closes after the first step (25 ms, too short) and the 50 ms onset cooldown keeps the
@@ -300,7 +299,7 @@ void test_room_tail_bridges_15_ms_but_not_30_ms() {
 
 // The lever, measured, not shipped: a release debounce above the gap (20 against 10/15)
 // reads the dry train as one occurrence from its first step, at every onset 54..59 ms.
-// Changing the shipped value is a tuning pass of its own (CLAUDE.md; step 5h "Levers").
+// Changing the shipped value is a tuning pass of its own (CLAUDE.md).
 void test_release_debounce_above_the_gap_bridges_the_dry_train() {
     detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
     TEST_ASSERT_EQUAL_STRING("ok", hostreplay::applyProfileSet(profile, "detection.scalar_release_debounce_ms", "20"));
@@ -315,7 +314,7 @@ void test_release_debounce_above_the_gap_bridges_the_dry_train() {
     }
 }
 
-// Step 5h item 3, assumption 2 (one null per spacing): one deep null (1/7 in amplitude,
+// Assumption 2 of the same note (one null per spacing): one deep null (1/7 in amplitude,
 // 125 Hz wide) at any of the five bins still leaves one accepted occurrence; two deep
 // nulls at 3450 + 3700 (the train's middle steps on this rotation) do not: the detector
 // splits the train into pieces. Since the 70 ms minimum (decisions/2026-11-05-short-glide-signal.md) a piece can
@@ -337,10 +336,10 @@ void test_one_deep_null_is_survived_two_in_the_middle_are_not() {
     TEST_ASSERT_EQUAL_UINT32(0, r2.accepted);
 }
 
-// Step 5h item 2: the shipped hop train against the shipped scalar profile
+// The shipped hop train against the shipped scalar profile
 // (detection/HopGapContract.h; the Node prints the same check as RB hop_check).
-// Every check passes since the 75 ms glide (decisions/2026-11-05-short-glide-signal.md): with no gap the train
-// no longer relies on the room tail to bridge a dip (the dry fixtures above were the 25 ms x 5, gap 10 train).
+// Every check passes with the 75 ms glide (decisions/2026-11-05-short-glide-signal.md): with no gap the train
+// does not rely on the room tail to bridge a dip (the dry fixtures above are the 25 ms x 5, gap 10 train).
 // If this fails because the debounce or the signal changed, the change was a tuning pass: update this test and the
 // HopGapContract note with its bench evidence.
 void test_shipped_hop_train_fits_the_scalar_detector() {
@@ -363,10 +362,10 @@ void test_shipped_hop_train_fits_the_scalar_detector() {
 
 // The check names what the replay shows: a 30 ms gap is over max gap (the wet_g30
 // fixture is not heard), and a short train is under the minimum duration.
-// Step 8b item 2: the shipped profile's durations against its inspection plan and
+// The shipped profile's durations against its inspection plan and
 // the 576 ms history (detection/InspectionPlanContract.h; the Node prints RB
-// plan_check). The history fits (450 + 10 + 0 + 100 = 560 ms; max duration 450 since
-// decisions/2026-10-29-max-duration-450-for-chords.md, the history 576 with it). Since the 70 ms minimum
+// plan_check). The history fits (450 + 10 + 0 + 100 = 560 ms; max duration 450,
+// decisions/2026-10-29-max-duration-450-for-chords.md; the history is 576 with it). With the 70 ms minimum
 // (decisions/2026-11-05-short-glide-signal.md) a minimum-duration occurrence is released at 70 + 10 = 80 ms, 20 ms
 // before its 0..+100 ms window ends: the soft check flags it, and the runtime waits for the window (DET-017), so
 // the verdict is not judged on a short window (the glide passed 15 / 15 on the board).
@@ -379,7 +378,8 @@ void test_shipped_plan_fits_the_history_and_the_window() {
     TEST_ASSERT_TRUE(c.hardOk());
     TEST_ASSERT_EQUAL_UINT32(20, c.earlyWindowMs);
     TEST_ASSERT_FALSE(c.softOk());
-    // The class limits are ordered on the shipped plan; a medium above strong is flagged (deep review I-M-B).
+    // The class limits are ordered on the shipped plan; a medium above strong is flagged
+    // (code-review-2026-10-30 I-M-B).
     TEST_ASSERT_TRUE(c.classLimitsOrdered);
     detection::InspectionPlan unordered = profile.inspectionPlan;
     unordered.modules[1].magnitude.supportStrength.mediumPeakThreshold = 8000.0f;  // the amp module, strong 5000
@@ -436,14 +436,14 @@ void test_hop_train_is_not_heard_on_the_single_target() {
 // Grid consistency (docs/research/unproven-assumptions-audit.md 3.6): the
 // detector's bank, the Node's hop train and the chirp all sit on one grid
 // defined in RuntimeDefaults.h; the band stream reports the same bin count
-// the static checks assume (8 since 2026-10-30; the hop fixtures, recorded at 5 bins, use the lower five).
+// the static checks assume (8; the hop fixtures, recorded at 5 bins, use the lower five).
 void test_band_grid_is_shared_by_detector_and_hop_train() {
     FreqBandStream band;
     band.resetState();
     band.setSampleRateHz(runtime::kDefaultAudioI2SSampleRateHz);
     band.setBand(runtime::kDefaultNetworkBandLowHz, runtime::kDefaultNetworkBandHighHz);
     TEST_ASSERT_FLOAT_WITHIN(0.01f, static_cast<float>(runtime::kBandBinSpacingHz), band.bandSpacingHz());
-    TEST_ASSERT_EQUAL_UINT32(8, band.bandBinCount());  // 2950-4700 since 2026-10-30 (the fixtures were recorded at 5)
+    TEST_ASSERT_EQUAL_UINT32(8, band.bandBinCount());  // 2950-4700 (the fixtures were recorded at 5)
     TEST_ASSERT_EQUAL_UINT32(runtime::kDefaultNetworkBandHighHz, band.bandHighHz());
     // A band wider than the bank is clamped at the high edge, and says so.
     band.setBand(1000, 7000);
@@ -460,9 +460,8 @@ void test_dc_blocker_scale_is_the_first_difference_gain_at_the_chirp() {
     TEST_ASSERT_FLOAT_WITHIN(0.001f, static_cast<float>(expected), runtime::kDcBlockerOutputScale);
 }
 
-// Step 11e item 7 follow-up (test_detection_diagnostics, handoff item 7): this suite is the
-// Null build the replay and the Node run; print the Node variant's sizeof(DetectionRuntime)
-// next to the Analyzer variant's, which test_detection_diagnostics prints. Recorded, not
+// This suite is the Null build the replay and the Node run; it prints the Node variant's
+// sizeof(DetectionRuntime) next to the Analyzer variant's, which test_detection_diagnostics prints. Recorded, not
 // asserted: a byte count in a static_assert is too brittle.
 static_assert(std::is_same<detection::ActiveDetectionDiagnostics, detection::NullDetectionDiagnostics>::value,
               "native-test builds the Null diagnostics variant");

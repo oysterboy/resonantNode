@@ -1,9 +1,9 @@
-// native-fieldsim (BEH-008, step 16.2): N real ResonantBehaviors (the firmware's, not a model) through a fake room.
+// native-fieldsim (BEH-008): N real ResonantBehaviors (the firmware's, not a model) through a fake room.
 //
 // Each node ticks at 1 ms. When its Behavior asks for a chirp the node sounds for the train's span (an idle call:
 // its announcement, a gap, then the train); every node that hears it (the hearing matrix) gets a verdict after the
 // train ends, unless it was sounding or inside its own-emit suppression while the train played. Several trains
-// heard by one node are merged by step 14's rule (bench/sessions/2026-10-29-step14-rotations): starts less than
+// heard by one node are merged by the detector's rule (bench/sessions/2026-10-29-step14-rotations): starts less than
 // 230 ms apart are one occurrence, counted by its duration (ResonantBehavior::trainsInVerdict); 230 ms or more apart
 // are separate verdicts. The verdict comes 20 ms after the occurrence ends (release debounce plus inspection).
 //
@@ -11,7 +11,7 @@
 // chains end (3 s silence within 30 s in 80 % of starts), no minute over 100 emissions, chords under 25 % of rounds
 // in a chain's first half and above in its last, the first answer to a call later than 1 s in most chains.
 //
-// --bands on|none (step 19, decisions/2026-10-31-bands-per-node.md): a band per node instead of the shared one. Each
+// --bands on|none (decisions/2026-10-31-bands-per-node.md): a band per node instead of the shared one. Each
 // node's 5-bin window sits at one of 8 positions on 2200-4950 Hz (12 bins); its Behavior's base bin is the
 // position (BehaviorGateConfig::bandPerNode, setBaseGrid with a 5-bin window). A listener hears a train when the
 // acoustic matrix lets it and the windows are at most 2 bins apart (bench/sessions/2026-10-31-step19-hearing-radius);
@@ -36,14 +36,14 @@
 
 namespace {
 
-// The hop train as shipped (output.hop_* defaults: 15 ms x 5, gap 0 = the 75 ms glide since 2026-11-05).
+// The hop train as shipped (output.hop_* defaults: 15 ms x 5, gap 0 = the 75 ms glide).
 constexpr unsigned long kTrainMs = runtime::kDefaultHopSteps * runtime::kDefaultHopPulseMs +
     (runtime::kDefaultHopSteps - 1) * runtime::kDefaultHopGapMs;
 constexpr unsigned long kAnnounceMs = 500;     // output.idle_announce_ms
 constexpr unsigned long kAnnounceGapMs = 200;  // the idle call's gap before its train (approximate)
 constexpr unsigned long kTailMs = detection::kHopRoomTailMarginMs;  // a train reads this much longer as a verdict
 constexpr unsigned long kVerdictLagMs = 20;    // release debounce + inspection
-constexpr unsigned long kMergeMs = 230;        // step 14: starts closer than this merge into one occurrence
+constexpr unsigned long kMergeMs = 230;        // starts closer than this merge into one occurrence
 
 uint64_t gRng = 88172645463325252ULL;
 uint32_t simRandom(uint32_t bound) {
@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
     if (scatter >= 0) {
         cfg.baseScatterBins = static_cast<uint32_t>(scatter);
     }
-    if (old) {  // the behaviour until step 16: fixed answer, the two rest triggers
+    if (old) {  // --old: the fixed answer with the two rest triggers, to compare with the level automaton
         cfg.levelMax = 0;
         cfg.restAfterFieldPatterns = 4;
         cfg.ownEmitBudget = 6;

@@ -224,7 +224,7 @@ void test_pattern_is_timed_by_chirp_output() {
     TEST_ASSERT_EQUAL_UINT32(1100, runUntil(out, 1001, 2000, SoundOutput::kEventFinished));
 }
 
-// Review A12 (step 11f): an idle call puts back the chirp setup it found, not the build defaults; a caller
+// An idle call puts back the chirp setup it found, not the build defaults; a caller
 // that configured the chirp (tone, beep and pause length) keeps its setup after the announcement.
 void test_idle_call_restores_the_callers_chirp_setup() {
     FakeTone tone;

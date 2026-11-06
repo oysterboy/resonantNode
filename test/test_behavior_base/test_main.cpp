@@ -147,7 +147,7 @@ void test_rest_scatters_the_base() {
     TEST_ASSERT_EQUAL_UINT32(1, b.status(1300).baseScatters);
 }
 
-// A scatter range k moves the base 1..k bins, folded back at the grid's edges (step 19.2's variant).
+// A scatter range k moves the base 1..k bins, folded back at the grid's edges.
 void test_rest_scatter_within_a_range() {
     BehaviorGateConfig cfg;
     cfg.idleEnabled = false;
@@ -170,7 +170,7 @@ void test_outputs_off_hears_and_reset_keeps_the_base() {
     TEST_ASSERT_EQUAL_UINT32(2, b.baseBin());
 }
 
-// A band per node (step 19): the listener's window is 5 bins from its base on the range 2200-4950 (8 bases). A
+// A band per node: the listener's window is 5 bins from its base on the range 2200-4950 (8 bases). A
 // sender above shows its lowest bin above the window's bottom; one below shows only its highest bin under the
 // window's top; one level with it fills the window.
 void test_band_per_node_reads_the_sender_from_lowest_and_highest() {

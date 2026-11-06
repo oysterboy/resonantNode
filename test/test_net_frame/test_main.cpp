@@ -84,11 +84,11 @@ void test_targets_and_allowlist() {
     TEST_ASSERT_FALSE(net::targetMatches("", "E2"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("PARAM SET output.silent 1"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("param save"));
-    TEST_ASSERT_TRUE(net::remoteCommandAllowed("PARAM DUMP"));  // paced by the sender since 2026-10-25
+    TEST_ASSERT_TRUE(net::remoteCommandAllowed("PARAM DUMP"));  // its reply is paced by the sender
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("RB STATUS"));
-    TEST_ASSERT_TRUE(net::remoteCommandAllowed("WHISPER STATUS"));  // since the gateway board (2026-11-05)
+    TEST_ASSERT_TRUE(net::remoteCommandAllowed("WHISPER STATUS"));  // the WHISPER family is remote-allowed like ECHO
     TEST_ASSERT_FALSE(net::remoteCommandAllowed("WHISPERING"));
-    TEST_ASSERT_TRUE(net::remoteCommandAllowed("WHISPER STATUS"));  // since the gateway board (2026-11-05)
+    TEST_ASSERT_TRUE(net::remoteCommandAllowed("WHISPER STATUS"));  // the WHISPER family is remote-allowed like ECHO
     TEST_ASSERT_FALSE(net::remoteCommandAllowed("WHISPERING"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("RB CALL"));
     TEST_ASSERT_TRUE(net::remoteCommandAllowed("SELFTEST"));
@@ -159,7 +159,7 @@ void test_seq_filter_random_start_runs_the_first_command() {
 }
 
 // kSenders slots, oldest replaced: after eight other senders a repeat is no longer
-// recognized and runs twice. Five nodes plus a gateway stay well inside.
+// recognized and runs twice. Fewer senders than that stay inside, e.g. five nodes plus a gateway.
 void test_seq_filter_forgets_a_sender_after_ksenders_others() {
     net::SeqFilter filter;
     const uint8_t a[6] = {0xA, 0, 0, 0, 0, 1};
@@ -197,7 +197,8 @@ void test_line_joiner_rebuilds_lines_across_frames() {
     TEST_ASSERT_EQUAL_STRING("third", got[2]);
 }
 
-// Deep review N-M-B: after a lost frame the gateway flushes the partial line instead of gluing it to the next one.
+// After a lost frame the gateway flushes the partial line instead of gluing it to the next one
+// (code-review-2026-10-30 N-M-B).
 void test_line_joiner_flush_keeps_a_partial_line_apart() {
     net::LineJoiner<64> j;
     char got[4][65];

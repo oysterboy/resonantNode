@@ -26,11 +26,12 @@ struct ClapChainValues {
     float floor = 300.0f;    // the noise: the attack's low point never below it
     float onset = 1000.0f;   // the detector's onset
     float release = 700.0f;  // the detector's release
-    // The occurrence's peak at least this (owner 2026-10-31: permissive, "reacting to the unplanned is the point"):
-    // above most of the music's sharp onsets on the desk (1,000-1,230), below a click at ~1 m (1,750-1,940).
+    // The occurrence's peak at least this (chosen 2026-10-31 to be permissive: "reacting to the unplanned is the
+    // point"): above most of the music's sharp onsets on the desk (1,000-1,230), below a click at ~1 m (1,750-1,940).
     float minPeak = 1200.0f;
-    // A clap rises (10 % -> 90 % of its peak) within this. 20 since the five-board desk (2026-11-01): ~60 % of what
-    // the boards heard failed at 10, among it the neighbours' replays, which rise more slowly through the speaker.
+    // A clap rises (10 % -> 90 % of its peak) within this. 20, not 10: measured 2026-11-01 with five boards on the
+    // desk, ~60 % of what the boards heard failed at 10, among it the neighbours' replays, which rise more slowly
+    // through the speaker.
     uint32_t maxAttackMs = 20;
 };
 
@@ -60,9 +61,9 @@ inline void makeClapChain(const ClapChainValues& v, ScalarTransientConfig& d, In
     plan.count = 1;
 }
 
-// Whispernet (ECHO-002). The owner's whispers: 300-860 from 0.5-1 m, ~150-200 from 2 m; in the afternoon the room
-// sat at 150-260, so the thresholds went up (2.5x the room): 2 m whispers are lost. Not the replay tool's scale (a
-// WAV maps to the mic's full scale; the synthetic set reads ~16 dB above these). With adaptive on (2026-11-04) onset,
+// Whispernet (ECHO-002). Whispers measured on the desk: 300-860 from 0.5-1 m, ~150-200 from 2 m; in the afternoon
+// the room sat at 150-260, so the thresholds went up (2.5x the room): 2 m whispers are lost. Not the replay tool's
+// scale (a WAV maps to the mic's full scale; the synthetic set reads ~16 dB above these). With adaptive on, onset,
 // release and floor are the minimums and their ratios: the thresholds stand at roomFactor x the room's level, never
 // under these.
 struct WhisperChainValues {
@@ -72,7 +73,7 @@ struct WhisperChainValues {
     float loud = 900.0f;  // the loud bound: above it never a whisper (speech, a clap, the own loop growing)
     float modulation = 0.3f;  // the modulation index a whisper reaches at least (Medium)
     // The spectrum's flatness a whisper lies within (BandFlatness, the median of the phrase's loud blocks): the
-    // owner's whispers on the desk read 0.16-0.49 (median ~0.3), speech 0.04-0.41 (median ~0.07), rustling and
+    // whispers on the desk read 0.16-0.49 (median ~0.3), speech 0.04-0.41 (median ~0.07), rustling and
     // typing 0.19-0.76 (median ~0.45) (2026-11-01, bench/sessions/2026-11-01-step20.3-whisper-desk). A first
     // range, under test; flatMin 0 flatMax 1 turn the check off in effect.
     float flatMin = 0.15f;

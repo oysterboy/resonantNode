@@ -25,8 +25,9 @@ public:
     void setShapeMinLevel(float level) { _shapeMinLevel = level; }
     // The shape's look-back (preMs) reaches back no further than this: the release of the previous inspected
     // occurrence, so a sound already judged lends no bins to the next one (a steady tone right after a train
-    // passed on the train's last bins; deep review I-M-A). A train the detector split keeps its look-back: its
-    // first piece was a reject, not an inspected occurrence. Set by DetectionRuntime before each inspection.
+    // passed on the train's last bins; code-review-2026-10-30 I-M-A). A train the detector split keeps its
+    // look-back: its first piece was a reject, not an inspected occurrence. Set by DetectionRuntime before each
+    // inspection.
     void setShapeLookBackFloor(bool set, uint32_t releaseMs) {
         _lookBackFloorSet = set;
         _lookBackFloorMs = releaseMs;
@@ -39,8 +40,8 @@ public:
 
     // When the latest window the plan inspects for this occurrence ends (ms,
     // the occurrence's time axis); 0 when the plan inspects no window. The
-    // runtime holds an occurrence until then (step 8b item 1,
-    // decisions/2026-10-22-inspect-when-window-complete.md).
+    // runtime holds an occurrence until then
+    // (decisions/2026-10-22-inspect-when-window-complete.md).
     unsigned long windowCompleteAtMs(const Occurrence& occurrence) const;
 
 private:

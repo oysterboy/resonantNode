@@ -9,7 +9,7 @@
 namespace {
 // Time elapsed from `then` to `now`, 0 when the sample clock stepped back (AudioSourceI2S re-anchors its stamps;
 // steps of up to 10 ms seen on the Nodes, 2026-10-30). An unsigned difference wrapped there and closed the open
-// candidate as too long, losing the whole train (deep review D-M1).
+// candidate as too long, losing the whole train (code-review-2026-10-30 D-M1).
 inline uint64_t elapsedUs(uint64_t now, uint64_t then) {
     return now > then ? now - then : 0;
 }
@@ -216,7 +216,7 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
     // Close the peak only after the occurrence has stayed below the release
     // threshold for long enough to count as a real end of burst.
     const unsigned long releaseDebounceUs = _config.releaseDebounceMs * 1000UL;
-    // Step 8b item 3 (audit 3.7): a candidate still open past max duration plus
+    // A candidate still open past max duration plus
     // the debounce can only be rejected as too long, so close it now instead of
     // when the sound ends, and open no new one until the signal has dropped
     // below release (one reject per continuous tone, not one per max duration).

@@ -85,7 +85,8 @@ void test_parse_unsigned_takes_whole_numbers_only() {
     uint8_t small = 0;
     TEST_ASSERT_TRUE(text_parse::parseUnsigned("2", small));
     TEST_ASSERT_EQUAL_UINT(2, small);
-    // Deep review L9: a value beyond the field and an overlong number are refused, not wrapped or saturated.
+    // A value beyond the field and an overlong number are refused, not wrapped or saturated
+    // (code-review-2026-10-30 L9).
     TEST_ASSERT_FALSE(text_parse::parseUnsigned("300", small));
     TEST_ASSERT_EQUAL_UINT(2, small);
     TEST_ASSERT_FALSE(text_parse::parseUnsigned("99999999999999999999999", v));
@@ -123,7 +124,7 @@ void test_parse_finite_float_refuses_junk_and_nan() {
     TEST_ASSERT_EQUAL_FLOAT(2000.0f, f);
 }
 
-// Review B7 (step 11f): the three prefix kinds, defined once, with their different meanings pinned.
+// The three prefix kinds, defined once, with their different meanings pinned.
 void test_prefix_kinds() {
     TEST_ASSERT_TRUE(text_parse::startsWith("PULSES 5", "PULSES"));
     TEST_ASSERT_FALSE(text_parse::startsWith("pulses 5", "PULSES"));  // case-sensitive: the Emitter's link

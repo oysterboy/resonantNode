@@ -162,7 +162,7 @@ struct ShapeInspectionConfig {
     uint16_t strongMinRisingSteps = 3;
 };
 
-// ECHO-001 (step 20.2): the rise into the onset, over [start - preMs, start + postMs] of the stream's history, as a
+// ECHO-001: the rise into the onset, over [start - preMs, start + postMs] of the stream's history, as a
 // rise time relative to the window's peak: from the last bin at or below lowFraction of it (never below floorLevel,
 // the noise) to the first at or above highFraction of it (10 % -> 90 %), so a loud swell is as slow as a quiet one
 // (an absolute floor-to-threshold time was not: a loud slow ramp crossed low thresholds fast; desk 2026-10-31). The
@@ -180,7 +180,7 @@ struct AttackInspectionConfig {
     uint32_t weakMaxMs = 30;
 };
 
-// ECHO-002 (step 20.3): the occurrence's level, P90 of the stream over its span (the last maxWindowMs of it), must lie
+// ECHO-002: the occurrence's level, P90 of the stream over its span (the last maxWindowMs of it), must lie
 // between floorLevel and loudBound: Strong inside, None below (too quiet to be meant) or above (speech, a clap, a door,
 // the own loop growing: the howl guard). Unknown without values.
 struct LevelWindowInspectionConfig {
@@ -190,7 +190,7 @@ struct LevelWindowInspectionConfig {
     float loudBound = 20000.0f;
 };
 
-// ECHO-002 (step 20.3): the envelope's movement at syllable rate over the occurrence's span (its last maxWindowMs):
+// ECHO-002: the envelope's movement at syllable rate over the occurrence's span (its last maxWindowMs):
 // the bins minus their moving mean over slowMs, RMS against the window's mean (a modulation index). Strong from
 // strongIndex, Medium from mediumIndex, Weak from weakIndex, None below (a fan, HVAC, a steady tone). The synthetic set
 // (tools/bench/synthwhisper.py, 2026-11-01) reads whispers ~0.6, speech ~0.3, music ~0.1, a fan ~0.09.
@@ -204,7 +204,7 @@ struct ModulationInspectionConfig {
     float strongIndex = 0.5f;
 };
 
-// ECHO-002 (step 20.3): the spectrum's flatness over the occurrence's span (its last maxWindowMs), the median of the
+// ECHO-002: the spectrum's flatness over the occurrence's span (its last maxWindowMs), the median of the
 // SpectralFlatness stream (BandFlatness, recorded for the loud blocks only). Strong between minFlatness and
 // maxFlatness, None outside, Unknown with fewer than minValues values. The desk (2026-11-01) read the room's false
 // passes (rustling, typing) 0.32-0.60, a whisper through the speaker 0.06-0.16, speech 0.02-0.05; a real whisper's

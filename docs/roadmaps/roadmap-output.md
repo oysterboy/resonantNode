@@ -69,8 +69,9 @@ Connect later to ResonantProgram.
 
 ### OUT-006 - two-layer signal: aesthetic layer + detection layer
 
-Status: TODO (step 8a); 2026-10-29: carried over in roadmap-0-steps.md, after step 19's decision between it and
-BEH-009 part 3
+Status: TODO; sequenced 2026-11-06 as the sound layer before the performance (roadmap-0-steps.md step 24,
+2026-12-01 .. 12-06): the aesthetic layer only, detection unchanged (decisions/2026-11-06-sound-layer-before-the-
+performance.md)
 
 ```text
 Renderer sums two oscillators: an aesthetic layer free in frequency
@@ -91,7 +92,7 @@ OUT-002/003 done in step 10f (2026-10-23); OUT-004 is deferred (step 11). OUT-00
 over I2S) is NODE-009, step 2: hardware, not output architecture.
 Now (2026-10-26): no output step is sequenced; OUT-006 waits on step 8a, OUT-004 on step 11.
 Now (2026-10-29, 12.3): OUT-005 done (5b); OUT-004 and OUT-006 (8a, after step 19's decision) are in
-roadmap-0-steps.md "Carried over".
+roadmap-0-steps.md "After the performance".
 ```
 
 ## Spec candidates

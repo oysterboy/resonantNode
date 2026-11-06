@@ -3,7 +3,7 @@
 ```text
 Status:  promoted (2026-10-30)
 Became:  decisions/2026-10-30-platform-off-arduino.md (option 4, pure ESP-IDF; owner "off arduino"); not
-         scheduled, roadmap-0-steps.md "Carried over" at the end
+         scheduled, roadmap-0-steps.md "After the performance" at the end
 Lab:     none; a reading of platformio.ini, src/ (main 2405b9e5 + 12.0.1) and the 12.0 review
          (docs/research/code-review-2026-10-29.md)
 ```

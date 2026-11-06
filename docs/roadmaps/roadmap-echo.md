@@ -129,6 +129,11 @@ Gate: the owner clapping with all five, by ear, the session cited.
 
 ## Plan to 2026-12-13 (owner's date, 2026-10-30)
 
+2026-11-06 (owner): the performance is on 2026-12-13 in the tryout room. The field of nodes is the performance,
+Whispernet and the echo room are a demo; which one first is decided by 2026-11-27 (roadmap-0-steps.md 20.6). The
+room's noise is measured in November with one board, the demo set up from 2026-12-07. Where the table below
+differs, the steps file decides.
+
 Feasible for both modes, with one open-ended item (the whisper detector's tuning) and two conditions on the
 calendar. Estimates are working days of build plus bench at the pace of the last three weeks (D-AMP support landed
 in a step, OTA firmware took three days with review, the level automaton with its simulator one day).

@@ -104,8 +104,9 @@ OutputRequest / BehaviorAction.
 
 ### BEH-006 - signal variation over time
 
-Status: TODO (step 8a; the "behavior modulation / intended drift" line of BEH-004). 2026-10-29: 8a is carried over
-(roadmap-0-steps.md, after step 19's decision); BEH-009's glide (step 17) is the first variation over time.
+Status: TODO (the "behavior modulation / intended drift" line of BEH-004); sequenced 2026-11-06 with OUT-006 in the
+sound layer before the performance (roadmap-0-steps.md step 24), as far as the detection layer stays unchanged.
+BEH-009's glide of the base is the first variation over time.
 
 ```text
 Behavior varies centre, span, shape, pulse count and the aesthetic
@@ -114,7 +115,7 @@ layer across reactions (myspec 6.2). Detection layer stays in the band.
 
 ### BEH-007 - respond to signal shape
 
-Status: DEFERRED (after DET-015; DET-015 done 2026-10-26, step 11b; carried over in roadmap-0-steps.md, 2026-10-29)
+Status: DEFERRED (after DET-015, done 2026-10-26); after the performance (roadmap-0-steps.md, "After the performance", D2)
 
 ```text
 Behavior reads shape facts (steady / sweep / hop) from the verdict and
@@ -158,7 +159,7 @@ busy mirror (D2.9) goes with step 11g batch D.
 cut-over; BEH-009 (the base frequency per node: the band widens to 8 bins, a base bin per node, then the
 range experiments) is decided after it. Both move the field baseline and get their own field sessions.
 Now (2026-10-29, 12.3): D2.9 done (11g D); BEH-008 is step 16, BEH-009 parts 1-2 step 17, part 3 step 19;
-BEH-003 / BEH-004 / BEH-007 are in roadmap-0-steps.md "Carried over".
+BEH-003 / BEH-004 / BEH-007 are in roadmap-0-steps.md "After the performance".
 ```
 
 ## Spec candidates

@@ -69,7 +69,7 @@ but not in Analyzer core report assembly.
 
 ### DET-014 - tonality inspector
 
-Status: TODO, carried over (roadmap-0-steps.md "Carried over", 2026-10-29; not needed in 5b: OBS did not get worse)
+Status: TODO, after the performance (roadmap-0-steps.md, "After the performance", D2; 2026-11-06); not needed in 5b: OBS did not get worse
 
 Peak-bin power vs total window energy over the occurrence. Pays for the noise a wider band admits; the first candidate before the band is lowered or widened further (when to reopen: decisions/2026-10-28-band-stays-after-the-sweep.md). Data path: per-occurrence accumulation in the detector first, a `FeatureHistory` slot only if needed (3 slots, ~5 KB each).
 
@@ -94,7 +94,8 @@ Pick up with DET-016 (the verdict boundary rule touches the same names).
 
 ### DET-019 - the amp class is the first gate to fail as the level drops
 
-Status: PLANNED (2026-10-30, from lab E005; a tuning pass, not a side change)
+Status: PLANNED (2026-10-30, from lab E005; a tuning pass, not a side change); after the performance (roadmap-0-steps.md,
+"After the performance", A); in the room only params
 
 ```text
 E005 (level ladder at 79 cm): 20 / 20 down to -3 dB, 11 / 20 at -6 dB, and every reject at -6 dB is the amp
@@ -119,7 +120,7 @@ trial strength, the replay lines, the behavior suites). Open before it starts:
 what `confidence` means, the `EventClass` vocabulary (it may grow with
 DET-015's shape facts), and whether it waits for a second detector family. The
 mismatch it was written against (one slot holding Freq and Scalar quantities)
-is gone since step 7d. Sequenced in roadmap-0-steps.md step 11; since 2026-10-29 in its "Carried over" list.
+is gone since step 7d. Sequenced in roadmap-0-steps.md step 11; since 2026-10-29 in its "After the performance" list.
 
 ### DET-003 - inspection target / payload split
 
@@ -181,7 +182,7 @@ Keep the analyzer display layer on canonical report fields.
 
 ### ANA-010 - SEQ report settle against the longest occurrence
 
-Status: PLANNED (2026-10-30, review 14.1; low)
+Status: PLANNED (2026-10-30, review 14.1; low); after the performance (roadmap-0-steps.md, "After the performance", A)
 
 ```text
 With max duration 450 an occurrence that starts at the trial window's end gives its verdict at end + 460 ms,
@@ -211,7 +212,7 @@ unsequenced.
 Now (2026-10-26): DET-015 done (11b); step 11g batches B (detection: Occurrence.band,
 RawSampleHistory, the shape knobs as params) and C (Analyzer, with A8's TrialState split).
 Now (2026-10-29, 12.3): 11g done (2026-10-28), the band stays after the 11h sweep; detection work next is
-measurement (steps 13-15); DET-014, DET-016, DET-018 7a, DET-003..006 are in roadmap-0-steps.md "Carried over".
+measurement (steps 13-15); DET-014, DET-016, DET-018 7a, DET-003..006 are in roadmap-0-steps.md "After the performance".
 ```
 
 ## Spec candidates

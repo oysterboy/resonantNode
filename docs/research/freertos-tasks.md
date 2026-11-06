@@ -8,7 +8,7 @@ Became:  ANA-004 fix direction: Analyzer report task (roadmap archive/roadmap-ch
          on detail + diagnostics trials (decisions/2026-10-22-serial-lines-
          and-iram-hot-path.md). Candidate 3: the radio (11a, ESP-NOW) keeps
          the rule, its receive callback feeds a queue the loop drains.
-         Candidate 2: roadmap-0-steps.md "Carried over" (FreeRTOS audio
+         Candidate 2: roadmap-0-steps.md "After the performance" (FreeRTOS audio
          task), only if the loop budget runs out (2026-10-29)
 Lab:     docs/lab/notes_lab.md 2026-10-09 (D-AMP bring-up);
          bench:sessions/2026-10-09-issue20-damp-110cm-b (g_drops_*: drops

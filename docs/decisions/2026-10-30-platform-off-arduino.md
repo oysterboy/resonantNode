@@ -12,7 +12,7 @@ writer, WiFi becomes esp_wifi + esp_netif, HTTPUpdate becomes esp_https_ota, Pre
 `millis` become vTaskDelay / esp_timer, and `setup()` / `loop()` become app_main and its task. The legacy I2S driver
 moves to IDF 5's channel API on the way.
 
-When: not now. It stays at the end of roadmap-0-steps.md's "Carried over" list with no step until the owner
+When: not now. It stays in roadmap-0-steps.md's "After the performance" list (block G) with no step until the owner
 sequences it; it needs every board flashed over USB (bootloader and partition table), so the owner on site.
 
 ## Why

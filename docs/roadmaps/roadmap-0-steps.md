@@ -19,6 +19,23 @@ about what the nodes do together and where: answers that follow the field level 
 network measured in the tryout room (5 x 6 m, 1 m spacing; who hears whom, reach and margin), and the bench kept
 honest by a standing sanity check.
 
+Owner 2026-11-06: the phase ends with the performance on 2026-12-13 in the tryout room, which is the performance
+room. The field of nodes is the performance; Whispernet and the echo room are a demo (which one first: 20.6, by
+2026-11-27). The room is open before 2026-12-07 for measuring and preparing with a few nodes; from 2026-12-07 with
+all of them, ten on stripboard, breadboard nodes as the fallback
+(decisions/2026-11-06-ten-stripboard-nodes-breadboard-fallback.md). In the first week of December a sound layer
+that leaves detection as it is (24; decisions/2026-11-06-sound-layer-before-the-performance.md), then the code is
+frozen: params and fixes for real faults only.
+
+```text
+until 11-30     23's board parts; 20.5 with PAR-018; the echo modes on the desk; 21, every board over the bench
+November        13.1 and 15 in the room with a few nodes; the room's noise for 20.4
+by 11-27        20.6 the demo's mode first
+12-01 .. 12-06  24 the sound layer; then the code freeze
+12-07 .. 12-12  18 the field with all nodes; 20.4 the demo set up; 25 the rehearsal
+12-13           25 the performance
+```
+
 ## Status legend
 
 ```text
@@ -38,8 +55,9 @@ Owner 2026-10-29: whole numbers per step in run order; dot substeps (12.1, 12.2,
 debugging found on the way, inserted without renumbering; the parent's gate waits for its substeps. Order "human
 logic": check, understand what we have, build, then take it into the room.
 
-Access: the bench is reachable remotely only; no physical resets or moves until Sunday 2026-11-01, then Tuesday
-2026-11-03. Steps and substeps marked "on site" wait for those days; the rest runs remotely or on the PC.
+Access (2026-11-06): the bench is the owner's, reached remotely between the owner's desk sessions. The room before
+2026-12-07 on single days with a few nodes, to measure and prepare; from 2026-12-07 with all nodes. Steps and
+substeps marked "on site" wait for those days.
 
 ## Order
 
@@ -55,7 +73,8 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    13.0 [DONE 2026-10-29, a9b7e99] The Analyzer prints the shape facts: SEQ_EXPLAIN shape.applicable / distinct / up /
         other / runs / first_hz / last_hz / class (the docs pass found no step carried it). Checked on E2 by OTA: hop10
         5 bins, 4 up, strong; a 3450 Hz chirp 1 bin, class none, rejected by shape.
-   13.1 Speaker or mic: the 3500-4500 Hz hump with the Emitter swapped (room-comb open questions). On site.
+   13.1 Speaker or mic: the 3500-4500 Hz hump with the Emitter swapped (room-comb open questions). On site, on a
+        November room day with a few nodes.
    13.2 [DONE 2026-10-29, 0e8b3bd] Level ladder at 79 cm (one spot): 20/20 to -3 dB, 11/20 at -6, 0 at -7.5; the amp
         class fails first. Emitter PULSES level= / att= added for it (forwarded by SEQ start).
    13.3 [DONE 2026-10-29] Per-hop attenuation at 0.5 FS: any one hop lost costs nothing; two lost pass only at an
@@ -76,6 +95,9 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    self-echo against the suppression windows (test 3), the
    per-pair acceptance check (room-comb-and-margin.md "Consequences"). Takes over step 5h's open cells and
    NODE-012's next cell. On today's band; the band of 17 is measured again in 18.
+   Owner 2026-11-06: on November room days with the Emitter, the Analyzer and two or three Nodes, not all of them;
+   one breadboard node among them, so the fallback's level against a stripboard node is known. The matrix and the
+   margins per position are what 18 sets its params from.
 
 16. [DONE 2026-10-31] Build BEH-008: answers follow the field level (the level automaton). (issue #78)
    Result: five Nodes free on the desk, every chain ended within 30 s (80 / 80 quiet, 88 / 88 with noise); the pass
@@ -86,13 +108,6 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    Result: hop10 10 / 10 at every base bin, chirps rejected; long chains end on one base in 92 % quiet, 74 % with
    music (bench/sessions/2026-10-30-step17-band8, 2026-10-31-step17-desk5).
    Full text: roadmap archive/roadmap-0-steps-2.md, step 17.
-
-18. [TODO] Try BEH-008 and BEH-009 in the room: the network as a field, the new baseline. (issue #80) On site.
-   The hearing matrix on the new band, step 6's pass marks, the chains' shape.
-   With a band per node too (behavior.band_per_node 1, base_scatter_bins 1; decisions/2026-10-31-bands-per-node.md):
-   does the field split into groups that never meet (the desk: low and high, 66 % of pairs in reach), and does the
-   room's speech or music start chains on the lowest windows (the desk: once in 2.5 node-hours on 950-1950)? Then
-   the owner sets the mode's default, the range's low edge, or a wander inside a group.
 
 19. [DONE 2026-10-31. Was due 2026-12-06 (owner 2026-10-30)] Explore range: frequency hearing radius, a band per Node. (issue #81)
    Result: hearing radius +-2 bins; bands per node decided and built, off by default
@@ -209,8 +224,15 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
         (an exception to the one-issue-per-step rule). Seen on 2026-11-05: level_max acts as the chain's length,
         start_chance_pct next to it and echo.level_offset as the old route, idle_announce_* is the call's lead-in,
         three windows after the own sound, answer_jitter_ms without effect at level_max 0, two triggers kept until
-        retired.
-   20.4 The room (12-05 .. 12-12): a session per firmware, the Node image back at the end. On site.
+        retired. With PAR-018 (owner 2026-11-06): PARAM SAVE must not pin defaults it never changed, so the
+        boards' stored params do not hide new defaults before the room.
+   20.6 [TODO, by 2026-11-27] Which mode the performance's demo puts first, Whispernet or the echo room (owner
+        2026-11-06: open). Criterion: the one that triggers reliably and does not false-trigger in the room's
+        November measurement (20.4); the other stays a demo if it passes too (both are an OTA apart). A
+        decisions/ file.
+   20.4 The room, in two parts. November: the room's noise for both modes' thresholds, one board, a session per
+        firmware. From 2026-12-07: the demo set up beside the field (18), the Node image back on every field node at
+        the end. On site.
    Gate: 20.1-20.3 cited; on site each mode heard in the room, RAW captures and nodegroup's chain metrics in a bench
    session per firmware.
 
@@ -303,59 +325,101 @@ Access: the bench is reachable remotely only; no physical resets or moves until 
    roster entries, the field measured at five). Handmade, hands-bound (owner 2026-10-30); runs beside 13-20 on the
    owner's bench hours; the plan to 2026-12-13 in roadmap-hardware.md.
    21.1 HW-001 the prototype (11-02 .. 11-13); parts for ten ordered. Owner's bench.
-   21.2 HW-002 ten boards and HW-003 ten cases (11-16 .. 12-04). Owner's bench.
+   21.2 HW-002 ten boards and HW-003 ten cases (11-16 .. 11-30). Owner's bench.
    21.3 HW-004: ten roster entries, the fieldsim at ten, step 18's node count named. PC.
-   Gate: ten checked nodes in cases, in the roster, a bench session cited; the room steps in December run on them.
+   21.4 Every board over the bench, one at a time, stripboard and breadboard alike (owner 2026-11-06): USB flash, a
+        roster line with its MAC, the stored params checked (PARAM load stored=), tools/bench/nodecheck.py; one or
+        two checked spares. 2026-11-30 is the fallback date: a stripboard node not checked by then is replaced by a
+        checked breadboard node for the performance (decisions/2026-11-06-ten-stripboard-nodes-breadboard-fallback.md).
+   Gate: ten checked nodes in the roster by 2026-11-30, on stripboard in cases or a checked breadboard node in place
+   of one that missed the date; a bench session cited; the room steps in December run on them.
 
-## Carried over, not sequenced
+24. [TODO, 2026-12-01 .. 12-06] The sound layer: OUT-006's aesthetic layer and BEH-006's variation over time, detection unchanged. (issue #90)
+   roadmap-output.md OUT-006, roadmap-behavior.md BEH-006, PAR-009 for the params they need; docs/research/polyphony.md.
+   Before the field with all nodes, in the first week of December (owner 2026-11-06), as a layer that changes the
+   sound and leaves the detection layer as it is (decisions/2026-11-06-sound-layer-before-the-performance.md).
+   DET-014 and BEH-007 change detection: after the performance. PC, then the desk with the nodes at hand.
+   Gate: on the desk every node hears the others as before (hop10 10 / 10 per base bin, nodecheck green on every
+   board), T2h byte-identical; then the code freeze until the performance.
+
+18. [TODO, 2026-12-07 .. 12-12] The field with all nodes in the room: BEH-008 and BEH-009 with up to ten, the new baseline. (issue #80) On site.
+   The hearing matrix on the new band, step 6's pass marks, the chains' shape.
+   With a band per node too (behavior.band_per_node 1, base_scatter_bins 1; decisions/2026-10-31-bands-per-node.md):
+   does the field split into groups that never meet (the desk: low and high, 66 % of pairs in reach), and does the
+   room's speech or music start chains on the lowest windows (the desk: once in 2.5 node-hours on 950-1950)? Then
+   the owner sets the mode's default, the range's low edge, or a wander inside a group.
+   Owner 2026-11-06: the room with all nodes opens 2026-12-07, so this is the step with every node of the
+   performance (21): the baseline at ten, the margins set by PARAM only from 15's matrix (DET-019 as a tuning pass
+   comes after the performance), the code frozen since 24.
+   Gate: every chain ends in the room with all nodes; the band-per-node default and the range's low edge set, which
+   closes BEH-009; a bench session cited.
+
+25. [TODO, 2026-12-07 .. 12-13] The performance: the demo set up, a rehearsal, the evening of 2026-12-13. (issue #91) On site.
+   The field (18; BEH-008, BEH-009) is the performance; Whispernet and the echo room (ECHO-002, ECHO-001) are a demo,
+   20.6's choice first. A rehearsal of the whole evening with every board on its final image and its params saved
+   (PARAM load stored= read at boot); the spares at hand.
+   Gate: the rehearsal ran through in the room; the performance on 2026-12-13.
+
+## After the performance (2026-12-13), tentative
+
+Owner 2026-11-06: nothing below runs before the performance; each block becomes a step after it, in this order
+unless the performance shows otherwise. Items placed before the performance are in the steps above: OUT-006,
+BEH-006 and PAR-009 in 24, PAR-018 in 20.5.
 
 ```text
-Signal variation, part 2: aesthetics      8a (OUT-006): after 19's decision; a signal change moves the baseline.
-  and polyphony                             docs/research/polyphony.md, E003 phase 1.
+A tuning pass                             DET-019 (the amp class sets the margin; a tuning pass after the soak),
+                                          ANA-010 (SEQ settle against a 450 ms occurrence), the per-board threshold
+                                          offset (read it from 15's and 18's matrix first, unproven-assumptions-
+                                          audit.md).
+C structure                               Review 2026-11-05 leftovers: docs/research/architecture-and-code-review-
+                                          2026-11-05.md, each with its trigger (owner 2026-11-05). The spec chapter
+                                          for the echo modes (D1-D5, D7, D9, D10, D12, D13), WhisperGate out of
+                                          src/behavior/, D11's dead DetectorReport fields: after 20.4 (an interim
+                                          line in myspec.md 7.3 until then). The lockstep and the canceller (M2, L5,
+                                          L6, L7): when whisper.aec goes on by default. The structural cuts (Part 3
+                                          items 1, 3, 5: the echo shell split into owners, the renderers out of
+                                          I2sToneOutput, one pending-inspection helper, one own-emit suppression,
+                                          Behavior's getters behind BehaviorStatus): after the tryout, as their own
+                                          step. M4 (AmpExperimental's contrast scale): into 20.5. L1-L4, L8-L12,
+                                          L14, L16: with whichever batch touches their file.
+                                          Older review leftovers: the replay binds the medium limits itself (A10);
+                                          FreqBandStream and ScalarTransientDetector outside namespace detection
+                                          (with step 9); the 300000 "never fires" Strong threshold (no disabled
+                                          class).
+D2 detection after the sound layer        DET-014 the tonality inspector (roadmap-detection.md), BEH-007
+                                          (roadmap-behavior.md), min_island_count (scalar-detector-extensions.md's
+                                          parked idea; with OUT-006 or a lower band), polyphony
+                                          (docs/research/polyphony.md, E003 phase 1).
+E small cleanup                           DET-016 (the verdict boundary rule, step 8's Part B), DET-018,
+                                          DET-003..006 and ANA-001 (detection / analyzer follow-ups, or when 9
+                                          touches the code), BEH-001, BEH-002, OUT-001 (small visibility items; fold
+                                          into NODE-001).
+F seams                                   OutputProfile / ResonantProgram: OUT-004 with PAR-008 (output params),
+                                          NODE-005 (CommandRouter): the Node split (11i) left the seams.
+                                          BehaviorRuntime / BehaviorHost: BEH-003 / BEH-004; BEH-008 may bring the
+                                          input struct first.
+G platform                                Off Arduino, onto ESP-IDF: decisions/2026-10-30-platform-off-arduino.md
+                                          (owner 2026-10-30), a USB flash of every board when it comes; until then
+                                          new code stays off Arduino where that costs nothing. With it: NODE-019
+                                          (sample-clock backsteps; known, no effect seen), P2b, D21 (audio source
+                                          stall vs overflow counters; AudioSourceI2S has no regression test),
+                                          NODE-006's open part.
+H VEKTOR                                  VEK-*; replaces NET (decisions/2026-10-25-vektor-replaces-net.md);
+                                          docs/research/vektor-lessons-from-11a.md. After G, so the radio is not
+                                          built twice.
+I second mic per node                     docs/research/second-mic-diversity.md. Owner 2026-10-30: at the end
+                                          (diversity against room nulls; a desk test first when it comes).
+
+Only with a trigger:
 Detector family as a build flag           step 9 (Phases 5d, 6): waits for a second detector family. Done before it
                                           (2026-11-01, owner): each mode's image built from its own sources (the
                                           echo shell and EchoInspection.cpp only in the echo builds, the band bank
                                           not in them); the family itself stays one (ScalarTransient).
-DET-016                                   the verdict boundary rule (step 8's Part B).
-OutputProfile / ResonantProgram           OUT-004, NODE-005 (CommandRouter): the Node split (11i) left the seams.
-BehaviorRuntime / BehaviorHost            BEH-003 / BEH-004; BEH-008 may bring the input struct first.
-VEKTOR                                    VEK-*; replaces NET (decisions/2026-10-25-vektor-replaces-net.md);
-                                          docs/research/vektor-lessons-from-11a.md.
-Params                                    PAR-008 output params, PAR-009 drift params, PAR-014 config separate,
-                                          PAR-017 ParamRegistry as its own repo.
-ANA-002                                   multi-occurrence patterns.
-DET-003..006, ANA-001                     detection / analyzer follow-ups, when 9 touches the code.
-BEH-001, BEH-002, OUT-001                 small visibility items; fold into NODE-001.
-P2b, D21                                  audio source stall vs overflow counters; AudioSourceI2S has no
-                                          regression test.
-NODE-019                                  sample-clock backsteps; known, no effect seen.
-DET-014                                   the tonality inspector (roadmap-detection.md).
-BEH-007                                   (roadmap-behavior.md).
-min_island_count                          scalar-detector-extensions.md's parked idea; with OUT-006 or a lower band.
+Params                                    PAR-014 config separate (when config grows), PAR-017 ParamRegistry as its
+                                          own repo (a second consumer).
+ANA-002                                   multi-occurrence patterns (a pattern stage after BEH-007).
 FreeRTOS audio task                       only if the loop budget runs out (BEH-009's bins, VEKTOR's radio);
                                           docs/research/freertos-tasks.md.
-Per-board threshold offset                read it from 15's matrix first (unproven-assumptions-audit.md).
-Review leftovers                          the replay binds the medium limits itself (A10); FreqBandStream and
-                                          ScalarTransientDetector outside namespace detection (with step 9); the
-                                          300000 "never fires" Strong threshold (no disabled class).
-Review 2026-11-05 leftovers               docs/research/architecture-and-code-review-2026-11-05.md, each with its
-                                          trigger (owner 2026-11-05). The spec chapter for the echo modes (D1-D5,
-                                          D7, D9, D10, D12, D13), WhisperGate out of src/behavior/, D11's dead
-                                          DetectorReport fields: after 20.4 (an interim line in myspec.md 7.3 until
-                                          then). The lockstep and the canceller (M2, L5, L6, L7): when whisper.aec
-                                          goes on by default. The structural cuts (Part 3 items 1, 3, 5: the echo
-                                          shell split into owners, the renderers out of I2sToneOutput, one
-                                          pending-inspection helper, one own-emit suppression, Behavior's getters
-                                          behind BehaviorStatus): after the tryout, as their own step. M4
-                                          (AmpExperimental's contrast scale): into 20.5. L1-L4, L8-L12, L14, L16:
-                                          with whichever batch touches their file.
-DET-019, ANA-010, PAR-018                 the amp class sets the margin (a tuning pass after the soak); SEQ settle
-                                          against a 450 ms occurrence; PARAM SAVE pins defaults (2026-10-30).
-Platform: off Arduino, onto ESP-IDF      decisions/2026-10-30-platform-off-arduino.md (owner 2026-10-30). At the
-                                          end, no step yet (a USB flash of every board when it comes); until then
-                                          new code stays off Arduino where that costs nothing.
-Second mic per Node                       docs/research/second-mic-diversity.md. Owner 2026-10-30: at the end, no step
-                                          yet (diversity against room nulls; a desk test first when it comes).
 ```
 
 ## Notes
@@ -373,6 +437,11 @@ parallel.
 
 ## Status log
 
+Status update 2026-11-06: the plan to the performance on 2026-12-13, set with the owner: the tryout room is the
+performance room, open before 2026-12-07 for a few nodes and from then for all; ten nodes on stripboard, breadboard
+as the fallback (21.4, 2026-11-30); 20.5 with PAR-018, 20.6 the demo's mode by 2026-11-27, 20.4 in two parts; new 24
+the sound layer (#90), 18 the field with all nodes (#80 retitled), new 25 the performance (#91); "Carried over"
+became "After the performance", tentative blocks A to I. Finished steps fold to a Result line (the phase archive).
 Status update 2026-11-05, late: step 23's PC parts (23.0-23.3) on main, CI green; the board parts and the
 synthetic-set re-run open (the handover under step 23). 20 running, 20.5 before 20.4.
 Status update 2026-11-05, evening: the review (docs/research/architecture-and-code-review-2026-11-05.md) cut into

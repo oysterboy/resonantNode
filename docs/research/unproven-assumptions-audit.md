@@ -14,7 +14,7 @@ Became:  section 1.1 -> step 5d of roadmap-0-steps.md (2026-10-16);
          (robustness against other physical conditions, #47)
          2026-10-29 (step 12.3 triage): done 1.1, 1.2, 1.4, 3.3, 4.1, 4.3, 4.4; superseded 1.3 (BEH-009);
          open and placed: 2.3 and 3.5 -> step 15 (the tryout room), 2.4 -> OUT-006, 3.7's rest -> "Review
-         leftovers", 1.5 -> "Per-board threshold offset" (both in roadmap-0-steps.md "Carried over")
+         leftovers", 1.5 -> "Per-board threshold offset" (both in roadmap-0-steps.md "After the performance")
 Lab:     docs/lab/2026-10-15-bench-day.md, docs/lab/2026-10-16-bench-day.md,
          docs/lab/notes_lab.md (2026-05-26 slow circle, 2026-10-12 soak),
          docs/refactors/archive/code-review-fixes.md (P4, R2-1, tier C)

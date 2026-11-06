@@ -48,7 +48,8 @@ photo or a drawing in bench/, cited) so the batch is a repeat.
 
 ### HW-002 - ten boards
 
-Status: TODO (owner 2026-10-30)
+Status: TODO (owner 2026-10-30); by 2026-11-30, with a checked breadboard node as the fallback for a board not done by
+then (decisions/2026-11-06-ten-stripboard-nodes-breadboard-fallback.md)
 
 ```text
 1. Parts for ten ordered now (the breakouts are the only wait); the layout from HW-001 repeated.
@@ -93,9 +94,9 @@ hands in total, movable to any week, shared with the bench checks and the site d
 ```text
 week            work                                               decision point
 11-02 .. 11-13  HW-001 the prototype; parts for ten ordered        layout on paper; geometry fixed with HW-003
-11-16 .. 12-04  HW-002 ten boards, HW-003 ten cases, beside the    ten checked boards in the roster
-                firmware steps
-12-05 .. 12-12  the room on ten nodes (18, 20)                     the installation hardware in the room
+11-16 .. 11-30  HW-002 ten boards, HW-003 ten cases, beside the    ten checked boards in the roster; a checked
+                firmware steps                                     breadboard for one that missed 11-30
+12-07 .. 12-12  the room on ten nodes (18, 20.4, 25)               the installation hardware in the room
 ```
 
 The three tracks (the resonant room: steps 13-19; the hardware: 21; the echo modes: 20) share one resource, the

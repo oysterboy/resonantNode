@@ -178,7 +178,7 @@ output.duration_ms
 
 ### PAR-009 - Behavior drift params
 
-Status: DEFERRED
+Status: DEFERRED, except the params BEH-006 needs in the sound layer (roadmap-0-steps.md step 24, 2026-11-06)
 
 ```text
 Add BehaviorDriftTuning as a typed struct and register flat params under
@@ -252,7 +252,7 @@ of it.
 
 ### PAR-018 - PARAM SAVE pins defaults it never changed
 
-Status: PLANNED (2026-10-30, found in step 14)
+Status: PLANNED (2026-10-30, found in step 14); with the param review before the room (roadmap-0-steps.md 20.5, 2026-11-06)
 
 ```text
 PARAM SAVE writes every registered param, so a param the board never had changed is stored at today's
@@ -271,7 +271,7 @@ Order: roadmap-0-steps.md. Done: PAR-015 (step 10), PAR-010 / PAR-011 (10d),
 PAR-013 (11a), PAR-003 (11e). Next on the steps file: the nine shape knobs as
 registered params (review D2.7, step 11g batch B2). The rest waits in step 11.
 Now (2026-10-29, 12.3): D2.7 done (8 detection.shape_* params, 11g B2); PAR-008, PAR-009, PAR-014, PAR-017
-are in roadmap-0-steps.md "Carried over".
+are in roadmap-0-steps.md "After the performance".
 ```
 
 (2026-10-26: SAVE / LOAD / RESET and the ESP-NOW transport below "Non-goals now"

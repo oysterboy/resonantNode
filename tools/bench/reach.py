@@ -4,7 +4,7 @@ trains heard and their mean strength. Runs through a radio gateway board (E0) or
 
   python tools/bench/reach.py COM12 [--boards E1,E2,E3,E4,E5] [--n 10] [--gap 3.5] [--out FILE]
 
-It sets output.silent 1 and behavior.idle_enabled 0 on every board live, lets one board play at a time and puts
+It sets output.silent 1 and behavior.call_enabled 0 on every board live, lets one board play at a time and puts
 silent / idle back as the boards had them (silent 1 only on the ones that reported 1; idle 1 everywhere). Needs the
 Node image on every board (RB CALL / RB STATUS); not saved, a reboot restores the stored values.
 """
@@ -60,7 +60,7 @@ was_silent = {b: (start[b][2] == "1") if start[b] else False for b in boards}
 out = []
 log = lambda t: (print(t, flush=True), out.append(t))
 log("start silent: %s" % was_silent)
-setv("*", "behavior.idle_enabled", 0)
+setv("*", "behavior.call_enabled", 0)
 setv("*", "output.silent", 1)
 matrix = {}
 for caller in boards:
@@ -83,7 +83,7 @@ for caller in boards:
     matrix[caller] = row
     log("%s called %d x: %s" % (caller, a.n, "  ".join(
         "%s %s" % (b, ("%d/%d (mean %.0f)" % (v[0], a.n, v[1])) if v else "no reading") for b, v in row.items())))
-setv("*", "behavior.idle_enabled", 1)
+setv("*", "behavior.call_enabled", 1)
 for b in boards:
     setv(b, "output.silent", 1 if was_silent[b] else 0)
 log("restored: silent only on %s, idle on" % [b for b in boards if was_silent[b]])

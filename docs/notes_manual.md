@@ -97,7 +97,8 @@ detection.band_low_hz / band_high_hz / amp_medium / contrast_medium
 detection.shape_*         the shape inspector (DET-015): look-back, tail, run and step limits (8 params;
                           its level is detection.scalar_release_threshold)
 behavior.*                wait, refractory, self-suppression, idle call, rest, the level automaton
-                          (level_max, level_decay_ms, answer_jitter_ms, start_chance_pct since 2026-11-05)
+                          (chain_length, level_fall_ms, answer_spread_ms, start_chance_pct since 2026-11-05; the Behavior paths were renamed on
+                          2026-11-06, the old-to-new table is in decisions/2026-11-06-param-review-owner-answers.md)
 output.*                  hop train, idle announce, silent (8 params)
 node.radio_enabled        ESP-NOW on or off
 node.radio_log            console lines per second mirrored to the radio (0 off; 2026-11-05)
@@ -437,11 +438,11 @@ behaviorEligible  ResonantBehavior lets it trigger a reaction now
 The first four are verdict fields, decided in detection. `behaviorEligible` is decided in
 `src/behavior/ResonantBehavior.*` from the verdict and the behavior timing (wait, refractory,
 self-suppression, idle, rest) and, since 2026-10-30 (BEH-008), the level automaton: a level counted from the
-verdicts (FieldState is no longer read); a heard train is answered with p = level / level_max (counted first)
-after the 100 ms wait plus a random window of answer_jitter_ms that shrinks as the level rises
+verdicts (FieldState is no longer read); a heard train is answered with p = level / chain_length (counted first)
+after the 100 ms wait plus a random window of answer_spread_ms that shrinks as the level rises
 (`decision=declined_by_level` otherwise), a pending answer is dropped with 1 - p when another train comes
-(`yielded`), at level_max the node rests (`rest_level`). RB STATUS shows `behavior.level`, `behavior.declined`,
-`behavior.yielded`. `behavior.level_max 0` switches it off. Since 2026-10-30 (BEH-009) Behavior also owns the
+(`yielded`), at chain_length the node rests (`rest_level`). RB STATUS shows `behavior.level`, `behavior.declined`,
+`behavior.yielded`. `behavior.chain_length 0` switches it off. Since 2026-10-30 (BEH-009) Behavior also owns the
 hop train's base bin (0..3 on the 8-bin band): seeded from `output.hop_rotation` (the roster at boot, a stored or
 set value over it), it moves one bin toward the base last heard on each answer (the verdict's heard lowest bin) and
 jumps to a random base at the level's rest; RB STATUS `behavior.base_bin` / `base_heard` / `base_glides` /

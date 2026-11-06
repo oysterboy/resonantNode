@@ -95,7 +95,7 @@ for n in nodes:
     found = [re.search(r"RB log mode=(\w+)", l) for _, l in log[n][m0:]]
     modes[n] = next((m.group(1) for m in found if m), "minimal")
     cmd(n, "RB log full")
-    cmd(n, "PARAM SET behavior.idle_enabled 0")
+    cmd(n, "PARAM SET behavior.call_enabled 0")
     cmd(n, "PARAM SET output.silent 1")
     if n != REF:
         cmd(n, "PARAM SET detection.scalar_max_duration_ms %d" % a.candidate)

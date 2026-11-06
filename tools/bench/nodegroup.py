@@ -49,10 +49,10 @@ held = {n: serial.Serial(p, 115200, timeout=0.05) for n, p in silent}
 time.sleep(6)
 setup_log = []
 for n, s in held.items():
-    s.write(b"PARAM SET behavior.idle_enabled 0\n"); time.sleep(0.4)
+    s.write(b"PARAM SET behavior.call_enabled 0\n"); time.sleep(0.4)
     s.write(b"PARAM SET detection.scalar_onset_threshold 200000\n"); time.sleep(0.4)
     out = [s.readline().decode("ascii", errors="replace").strip() for _ in range(60)]
-    ok = any("behavior.idle_enabled" in l and "status=ok" in l for l in out) and any("new=200000" in l for l in out)
+    ok = any("behavior.call_enabled" in l and "status=ok" in l for l in out) and any("new=200000" in l for l in out)
     setup_log.append("%s silent %s" % (n, "ok" if ok else "NOT CONFIRMED"))
 state_log = []
 for n, s in ports.items():

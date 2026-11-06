@@ -62,8 +62,8 @@ out = []
 log = lambda t: (print(t, flush=True), out.append(t))
 for b in allb:
     setv(b, "behavior.start_chance_pct", 1)
-    setv(b, "behavior.idle_enabled", 0)
-    setv(b, "behavior.level_decay_ms", 600000)
+    setv(b, "behavior.call_enabled", 0)
+    setv(b, "behavior.level_fall_ms", 600000)
     setv(b, "output.silent", 0 if (b in callers or b == listener) else 1)  # the listener must see verdicts: not silent
 send("NET %s RB log full" % listener, 1.5)
 time.sleep(2)
@@ -89,8 +89,8 @@ log("level +2 or more in %d of %d pairs; +1 in %d; +0 in %d" % (
     sum(1 for r in ok if r[0] >= 2), len(ok), sum(1 for r in ok if r[0] == 1), sum(1 for r in ok if r[0] <= 0)))
 for b in allb:
     setv(b, "behavior.start_chance_pct", 85)
-    setv(b, "behavior.idle_enabled", 1)
-    setv(b, "behavior.level_decay_ms", 5000)
+    setv(b, "behavior.call_enabled", 1)
+    setv(b, "behavior.level_fall_ms", 5000)
     setv(b, "output.silent", 1 if was_silent[b] else 0)
 log("restored (start chance 85, decay 5000, idle on, silent as before: %s)" % [b for b in allb if was_silent[b]])
 s.close()

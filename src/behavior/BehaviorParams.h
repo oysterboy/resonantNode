@@ -16,30 +16,30 @@ namespace param {
 // The paths are the snake_case field names; the RB BEHAV keys they replaced
 // are mapped in decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md.
 inline void describeParams(ParamRegistry& registry, BehaviorGateConfig& b) {
-    registry.addBool(ParamId::Behavior_IdleEnabled, ModuleId::Behavior, "behavior.idle_enabled", &b.idleEnabled);
+    registry.addBool(ParamId::Behavior_IdleEnabled, ModuleId::Behavior, "behavior.call_enabled", &b.idleEnabled);
     registry.addUInt32(ParamId::Behavior_WaitAfterHeardMs, ModuleId::Behavior, "behavior.wait_after_heard_ms",
                        &b.waitAfterHeardMs, 0U, 10000U);
-    registry.addUInt32(ParamId::Behavior_RefractoryAfterEmitMs, ModuleId::Behavior, "behavior.refractory_after_emit_ms",
+    registry.addUInt32(ParamId::Behavior_RefractoryAfterEmitMs, ModuleId::Behavior, "behavior.after_own_no_answer_ms",
                        &b.refractoryAfterEmitMs, 0U, 60000U);
-    registry.addUInt32(ParamId::Behavior_SuppressSelfChirpMs, ModuleId::Behavior, "behavior.suppress_self_chirp_ms",
+    registry.addUInt32(ParamId::Behavior_SuppressSelfChirpMs, ModuleId::Behavior, "behavior.after_own_deaf_ms",
                        &b.behaviorSuppressSelfChirpMs, 0U, 10000U);
-    registry.addUInt32(ParamId::Behavior_DetectionSuppressTailMs, ModuleId::Behavior,
-                       "behavior.detection_suppress_tail_ms", &b.detectionSuppressTailMsOwnEmit, 0U, 5000U);
-    registry.addUInt32(ParamId::Behavior_IdleTimeoutMs, ModuleId::Behavior, "behavior.idle_timeout_ms",
+    registry.addUInt32(ParamId::Behavior_DetectionSuppressTailMs, ModuleId::Behavior, "behavior.after_own_tail_ms",
+                       &b.detectionSuppressTailMsOwnEmit, 0U, 5000U);
+    registry.addUInt32(ParamId::Behavior_IdleTimeoutMs, ModuleId::Behavior, "behavior.call_after_silence_ms",
                        &b.idleTimeoutMs, 0U, 3600000U);
     registry.addUInt32(ParamId::Behavior_IdleTimeoutVariationMs, ModuleId::Behavior,
-                       "behavior.idle_timeout_variation_ms", &b.idleTimeVariationMs, 0U, 3600000U);
+                       "behavior.call_after_silence_spread_ms", &b.idleTimeVariationMs, 0U, 3600000U);
     registry.addUInt32(ParamId::Behavior_IdleBlockedAfterHeardMs, ModuleId::Behavior,
-                       "behavior.idle_blocked_after_heard_ms", &b.idleBlockedAfterHeardMs, 0U, 600000U);
+                       "behavior.call_blocked_after_heard_ms", &b.idleBlockedAfterHeardMs, 0U, 600000U);
     registry.addUInt32(ParamId::Behavior_IdleBlockedAfterOwnEmitMs, ModuleId::Behavior,
-                       "behavior.idle_blocked_after_own_emit_ms", &b.idleBlockedAfterOwnEmitMs, 0U, 600000U);
+                       "behavior.call_blocked_after_own_ms", &b.idleBlockedAfterOwnEmitMs, 0U, 600000U);
     registry.addUInt32(ParamId::Behavior_RestMs, ModuleId::Behavior, "behavior.rest_ms", &b.restMs, 0U, 600000U);
     // The level automaton (BEH-008): L, the forgetting, the answer's random window. level_max 0 = off.
     // 500, not 32 (chosen 2026-11-05): the level counts every train heard, so four players pass 20 events in ~5 s.
-    registry.addUInt32(ParamId::Behavior_LevelMax, ModuleId::Behavior, "behavior.level_max", &b.levelMax, 0U, 500U);
-    registry.addUInt32(ParamId::Behavior_LevelDecayMs, ModuleId::Behavior, "behavior.level_decay_ms", &b.levelDecayMs,
+    registry.addUInt32(ParamId::Behavior_LevelMax, ModuleId::Behavior, "behavior.chain_length", &b.levelMax, 0U, 500U);
+    registry.addUInt32(ParamId::Behavior_LevelDecayMs, ModuleId::Behavior, "behavior.level_fall_ms", &b.levelDecayMs,
                        0U, 600000U);
-    registry.addUInt32(ParamId::Behavior_AnswerJitterMs, ModuleId::Behavior, "behavior.answer_jitter_ms",
+    registry.addUInt32(ParamId::Behavior_AnswerJitterMs, ModuleId::Behavior, "behavior.answer_spread_ms",
                        &b.answerJitterMs, 0U, 10000U);
     // The start apart from the length (decisions/2026-11-05-start-chance-and-chain-length.md): the chance of
     // answering the first train in a quiet field, rising evenly to 100 % at the top; 0 = 1 / level_max.

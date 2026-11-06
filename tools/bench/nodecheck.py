@@ -6,7 +6,7 @@ PING and PARAM SET, SELFTEST, SELFTEST external, SELFTEST by radio. Writes one t
       [--ref-log bench/sessions/<soak>/soak.log]
 
 Leaves every Node as found: output.silent 1 (stored), the changed param restored and saved, RB log as it was; the
-gateway gets PARAM LOAD at the end (idle_enabled, level_max and the RB PROFILE reset undone) and its RB log mode back (review
+gateway gets PARAM LOAD at the end (call_enabled, chain_length and the RB PROFILE reset undone) and its RB log mode back (review
 12.0 L21). A PARAM GET that answers no value is a FAIL, not a skipped check (M9).
 """
 import argparse
@@ -56,7 +56,7 @@ def put_back():
         return
     try:
         if pending["a_param"] is not None:
-            cmd(A, "PARAM SET behavior.idle_timeout_ms " + pending["a_param"], 0.8)
+            cmd(A, "PARAM SET behavior.call_after_silence_ms " + pending["a_param"], 0.8)
             cmd(A, "PARAM SAVE", 2.0)
         if pending["b_unsilenced"]:
             cmd(B, "PARAM SET output.silent 1", 0.5)
@@ -160,7 +160,7 @@ check("cmd: RB PROFILE (reset lines)", "PROFILE" in prof, (prof.strip().splitlin
 # 4. outputs off (silent stored) then answering
 for n in (GW,):
     cmd(n, "RB log full", 0.5)
-    cmd(n, "PARAM SET behavior.idle_enabled 0", 0.5)
+    cmd(n, "PARAM SET behavior.call_enabled 0", 0.5)
 m = len(buf[GW])
 for i in range(3):
     ports["EM"].write(b"EMIT PULSES 5 25 10 trial=%d freq=3300 hop=2950,3200,3450,3700,3950\n" % (i + 1))
@@ -182,7 +182,7 @@ def ten_trains(first_trial):
 
 
 # The level automaton (BEH-008) answers a lone train with (level + offset) / L, so with it on every valid train is
-# decided (answered, or declined / yielded / a rest by the level) rather than answered; with level_max 0 (live, put
+# decided (answered, or declined / yielded / a rest by the level) rather than answered; with chain_length 0 (live, put
 # back by the gateway's PARAM LOAD) the answer path itself is checked, every train answered.
 t = ten_trains(10)
 valid = len(re.findall(r"^RB verdict=.*valid=1", t, re.M))
@@ -190,7 +190,7 @@ emits = len(re.findall(r"BEH emit start .*source=heard_pattern", t))
 by_level = len(re.findall(r"decision=(?:declined_by_level|yielded|rest_level)", t))
 check("10 hop trains, level on: decided", valid == 10 and emits + by_level == 10,
       "valid %d answers %d by_level %d" % (valid, emits, by_level))
-cmd(GW, "PARAM SET behavior.level_max 0", 0.5)
+cmd(GW, "PARAM SET behavior.chain_length 0", 0.5)
 t = ten_trains(20)
 valid = len(re.findall(r"^RB verdict=.*valid=1", t, re.M))
 emits = len(re.findall(r"BEH emit start .*source=heard_pattern", t))
@@ -200,24 +200,24 @@ check("10 hop trains, level off: answered", valid == 10 and emits == 10,
 cmd(GW, "PARAM SET output.silent 1", 0.5)
 
 # 5. PARAM SAVE / reboot / load on A
-cur = re.findall(r"value=(\d+)", cmd(A, "PARAM GET behavior.idle_timeout_ms", 1.0))
+cur = re.findall(r"value=(\d+)", cmd(A, "PARAM GET behavior.call_after_silence_ms", 1.0))
 cur = cur[0] if cur else None
 if cur:
     new = str(int(cur) + 1234)
     pending["a_param"] = cur
-    cmd(A, "PARAM SET behavior.idle_timeout_ms " + new, 0.8)
+    cmd(A, "PARAM SET behavior.call_after_silence_ms " + new, 0.8)
     cmd(A, "PARAM SAVE", 2.0)
     bootA, _ = reset(A)
-    got = re.findall(r"value=(\d+)", cmd(A, "PARAM GET behavior.idle_timeout_ms", 1.0))
+    got = re.findall(r"value=(\d+)", cmd(A, "PARAM GET behavior.call_after_silence_ms", 1.0))
     check("PARAM SAVE / reboot / load", got[:1] == [new], "set %s, after reboot %s" % (new, got[:1]))
-    cmd(A, "PARAM SET behavior.idle_timeout_ms " + cur, 0.8)
+    cmd(A, "PARAM SET behavior.call_after_silence_ms " + cur, 0.8)
     cmd(A, "PARAM SAVE", 2.0)
-    back = re.findall(r"value=(\d+)", cmd(A, "PARAM GET behavior.idle_timeout_ms", 1.0))
+    back = re.findall(r"value=(\d+)", cmd(A, "PARAM GET behavior.call_after_silence_ms", 1.0))
     check("param restored", back[:1] == [cur], "%s" % back[:1])
     if back[:1] == [cur]:
         pending["a_param"] = None
 else:
-    check("PARAM SAVE / reboot / load", False, "PARAM GET behavior.idle_timeout_ms answered no value")
+    check("PARAM SAVE / reboot / load", False, "PARAM GET behavior.call_after_silence_ms answered no value")
 
 # 6. radio
 r = cmd(GW, "NET * NET PING", 4.0)
@@ -255,7 +255,7 @@ r = cmd(GW, "NET %s SELFTEST" % B, 30.0)
 radio = re.findall(r"NET reply from=%s .*SELFTEST check=(\w+) result=(\w+)" % B, r)
 check("SELFTEST by radio (NET %s)" % B, len(radio) >= 3, str(radio[:5]))
 
-# the gateway as found (L21): its stored params (idle_enabled, the profile reset), its RB log mode
+# the gateway as found (L21): its stored params (call_enabled, the profile reset), its RB log mode
 put_back()
 
 for n in ports:

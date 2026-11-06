@@ -76,7 +76,7 @@ void test_bindings_register_every_field_once() {
     TEST_ASSERT_NOT_NULL(r.find("behavior.rest_ms"));
     TEST_ASSERT_NULL(r.find("detection.scalar_observed_stream"));  // the profile's, not a param
     TEST_ASSERT_EQUAL_STRING("detection", r.groupName(r.find("detection.scalar_cooldown_ms")->group));
-    TEST_ASSERT_EQUAL_STRING("behavior", r.groupName(r.find("behavior.idle_enabled")->group));
+    TEST_ASSERT_EQUAL_STRING("behavior", r.groupName(r.find("behavior.call_enabled")->group));
 }
 
 void test_set_writes_the_field_and_names_the_group() {

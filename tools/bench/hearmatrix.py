@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Hearing matrix: each node calls in turn (RB CALL), the others log; listener x caller cells (step 6, 5e).
 
-All boards are opened together (a port open resets a D-AMP board) and set to idle off, behavior.level_max=0 with behavior.start_chance_pct=1 (almost nobody answers) and a short
+All boards are opened together (a port open resets a D-AMP board) and set to idle off, behavior.chain_length=0 with behavior.start_chance_pct=1 (almost nobody answers) and a short
 rest: a listener that hears a valid pattern rests instead of answering, so no chain forms, and its verdict is still
 logged (valid=1). Each caller then plays --calls RB CALLs, --every s apart.
 A cell counts the caller's calls that the listener logged as a valid verdict within --window s after the caller's
@@ -48,12 +48,12 @@ pump(7)
 for n, s in ports.items():
     # The level automaton off (BEH-008: it acts before the rest rule and would answer a lone call with 1 / L) and the
     # outputs on (the bench boards store output.silent 1), live: a board that reboots comes back as stored.
-    for cmd in ("PARAM SET behavior.idle_enabled 0", "PARAM SET behavior.start_chance_pct 1",
-                "PARAM SET behavior.rest_ms %d" % a.rest_ms, "PARAM SET behavior.level_max 0",
+    for cmd in ("PARAM SET behavior.call_enabled 0", "PARAM SET behavior.start_chance_pct 1",
+                "PARAM SET behavior.rest_ms %d" % a.rest_ms, "PARAM SET behavior.chain_length 0",
                 "PARAM SET output.silent 0", "PARAM DUMP", "RB log full"):
         s.write((cmd + "\n").encode())
         pump(0.6)
-log.write("# setup done: behavior.idle_enabled=0, start_chance_pct=1, rest_ms=%d, level_max=0, "
+log.write("# setup done: behavior.call_enabled=0, start_chance_pct=1, rest_ms=%d, chain_length=0, "
           "output.silent=0 on every board\n" % a.rest_ms)
 pump(a.rest_ms / 1000.0 + 1)
 for caller in names:

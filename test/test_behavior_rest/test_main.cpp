@@ -244,7 +244,7 @@ void test_shorter_idle_timeout_applies_to_the_running_wait() {
     b.resetState();
     b.seedIdleSchedule(0);
     TEST_ASSERT_FALSE(idlesBy(b, 0, 1000));
-    cfg.idleTimeoutMs = 2000;  // PARAM SET behavior.idle_timeout_ms 2000 at t = 1 s
+    cfg.idleTimeoutMs = 2000;  // PARAM SET behavior.call_after_silence_ms 2000 at t = 1 s
     b.configure(cfg);
     TEST_ASSERT_FALSE(idlesBy(b, 1010, 1990));
     TEST_ASSERT_TRUE_MESSAGE(idlesBy(b, 2000, 2100), "the idle call comes 2 s after the wait started, not at 60 s");

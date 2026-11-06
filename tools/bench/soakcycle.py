@@ -162,7 +162,7 @@ def chord_check(cycle, stamp):
     automaton (BEH-008) is off for it too, so A and B answer every train."""
     global node_sink
     L, A, B = a.chord.split(",")
-    for c in ("PARAM SET behavior.idle_enabled 0", "PARAM SET behavior.level_max 0"):
+    for c in ("PARAM SET behavior.call_enabled 0", "PARAM SET behavior.chain_length 0"):
         to_nodes(c)
     to_node(L, "PARAM SET output.silent 1")
     to_node(A, "PARAM SET output.silent 0")

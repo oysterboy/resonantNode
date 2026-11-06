@@ -17,6 +17,27 @@ Answers to questions 2 to 4 of research/param-review.md ("For the owner to decid
 4. **Hidden knobs**: the ramp's end (the plateau) and the spread's shrink with the level (on/off, or its floor) become
    params; `level_max 0` keeps ignoring the spread ("automaton off").
 
+## Mapping, built 2026-11-06 (Behavior renames; ids unchanged, so a stored value survives)
+
+| old path | new path |
+|---|---|
+| behavior.level_max | behavior.chain_length |
+| behavior.level_decay_ms | behavior.level_fall_ms |
+| behavior.answer_jitter_ms | behavior.answer_spread_ms |
+| behavior.idle_enabled | behavior.call_enabled |
+| behavior.idle_timeout_ms | behavior.call_after_silence_ms |
+| behavior.idle_timeout_variation_ms | behavior.call_after_silence_spread_ms |
+| behavior.idle_blocked_after_heard_ms | behavior.call_blocked_after_heard_ms |
+| behavior.idle_blocked_after_own_emit_ms | behavior.call_blocked_after_own_ms |
+| behavior.suppress_self_chirp_ms | behavior.after_own_deaf_ms |
+| behavior.detection_suppress_tail_ms | behavior.after_own_tail_ms |
+| behavior.refractory_after_emit_ms | behavior.after_own_no_answer_ms |
+
+Unchanged: behavior.wait_after_heard_ms (the echo modes' `wait_ms` joins it in the vocabulary step), rest_ms,
+start_chance_pct, base_scatter_bins, band_per_node, band_range_*. The code fields keep their names (`levelMax`,
+`answerJitterMs`, `idleEnabled`); only the public paths change. Bench session headers and logs before 2026-11-06 name
+the old paths; read them through this table. `PARAM SET` with an old path answers `unknown_param`.
+
 ## Why
 
 - Renaming is cheap on the board (the store keys by id), costs only old tools and bench headers, and is done for

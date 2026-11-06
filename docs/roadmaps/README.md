@@ -173,5 +173,7 @@ ANA   analyzer
 BEH   behavior
 OUT   output
 PAR   params / config
+ECHO  echo modes (echo room, Whispernet)
+HW    hardware (boards, cases)
 VEK   VEKTOR later
 ```

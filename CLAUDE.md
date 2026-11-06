@@ -398,8 +398,8 @@ idea is `docs/decisions/2026-11-06-finished-items-leave-the-roadmaps.md`):
 - A value the owner chose: point at its decisions file, or write "chosen <date>" and the reason. A value that depends
   on how many nodes share the room says so, instead of naming today's count.
 - The test: read the sentence without `git log`. Is it still true and still useful? Then it stays.
-- `tools/ci/readability.py` line H counts the comment lines in `src/` that name a step number or the owner
-  (38 / 14 on 2026-11-06, from 208 / 53); a rise after a pass is the signal to look.
+- `tools/ci/readability.py` line H counts the comment lines in `src/` that name a step number or the owner as a
+  person (0 / 0 on 2026-11-06, from 208 / 42); a rise after a pass is the signal to look.
 
 ## Commit style
 

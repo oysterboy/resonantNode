@@ -12,7 +12,8 @@ pass closes, and a pass doc quotes them dated, the way bench numbers are quoted.
   F  mean CCN, src/modes vs the rest
   G  lines over 120 columns (clang-format leaves string literals)
   H  comment lines that age: naming a step number / naming the owner. CLAUDE.md, "Comments in code": a comment
-     says why; a step number ages out when the steps file is archived and renumbered, and "owner" is not a reason.
+     says why; a step number ages out when the steps file is archived and renumbered, and "owner" is not a reason
+     (the person: "owner 2026-10-17", "the owner"; a module that owns its params does not count).
      Path-like names (2026-11-01-step22.1-...) do not count, nor do an issue or a dated review reference.
 
 lizard is pinned so CI and the developer's machine count alike: `python -m pip install lizard==1.24.3`.
@@ -74,7 +75,10 @@ NOT_MEMBER = re.compile(r"^(using|typedef|friend|static|enum|struct|class|union|
 
 
 STEP_NUMBER = re.compile(r"(?<![-\w/.])steps? ?\d", re.I)
-OWNER_WORD = re.compile(r"\bowner", re.I)
+# The owner as a person ("owner 2026-10-17", "the owner", "owner's choice"), not a module that owns its params.
+OWNER_WORD = re.compile(
+    r"\(owner\b|\bthe owner\b|\bowner(?:'s)? (?:20\d\d|decision|choice|pick|call|asked|answer|range)|\bowner,? 20\d\d", re.I
+)
 
 
 def comment_lines(text):

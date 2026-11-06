@@ -28,22 +28,10 @@ struct BehaviorGateConfig {
     uint32_t idleBlockedAfterHeardMs = 1000;
     uint32_t idleBlockedAfterOwnEmitMs = 500;
 
-    // Rest when the network gets busy (decisions/2026-10-17-two-node-
-    // exchange-chain-length.md): a hard pause, no answers
-    // and no idle voice, for restMs. Two triggers, either one:
-    //  - the field: this many valid network patterns heard in the field
-    //    window (FieldStateConfig::patternWindowMs; only accepted, valid
-    //    verdicts count, so speech/music/traffic do not silence a node);
-    //  - the node's own budget: this many own emissions inside
-    //    ownEmitBudgetWindowMs (a node that hears only one loud neighbour
-    //    sees a thin field but keeps answering).
-    // Same values on every node, no per-node variation (decisions/2026-10-17-two-node-exchange-chain-length.md).
-    // 0 switches a trigger off.
-    // Both triggers default to 0 (off): the level automaton below rests the node (BEH-008). They stay as params for
-    // the reproducibility rule until retired.
-    uint32_t restAfterFieldPatterns = 0;
-    uint32_t ownEmitBudget = 0;
-    uint32_t ownEmitBudgetWindowMs = 10000;
+    // The pause at the top of the level (decisions/2026-10-17-two-node-exchange-chain-length.md): a hard pause, no
+    // answers and no idle voice, for restMs. The two older triggers (patterns heard in the field window, own
+    // emissions in a window) were retired 2026-11-06 (decisions/2026-11-06-retire-the-old-rest-triggers.md): the
+    // level automaton below does that job.
     // 8 s with the level automaton (BEH-008's first guess).
     uint32_t restMs = 8000;
 

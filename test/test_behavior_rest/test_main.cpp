@@ -1,13 +1,11 @@
 /*
 ResonantBehavior on the host: a busy network makes a node rest.
 
-decisions/2026-10-17-two-node-exchange-chain-length.md: above a
-level of network traffic the node pauses hard, no answers and no idle voice, for
-restMs. Two triggers: the field (valid network patterns heard in the field
-window, FieldState::recentPatternCount) and the node's own budget (emissions
-inside ownEmitBudgetWindowMs). Same values on every node. On the bench two nodes
-answered each other 518 times in 180 s (bench/sessions/2026-10-17-pairmatrix);
-these tests pin down that the rule cuts such a chain.
+decisions/2026-10-17-two-node-exchange-chain-length.md: above a level of network traffic the node pauses hard, no
+answers and no idle voice, for restMs. Since 2026-11-06 the one trigger is the level automaton (levelMax; the field
+and own-budget triggers were retired, decisions/2026-11-06-retire-the-old-rest-triggers.md). On the bench two nodes
+answered each other 518 times in 180 s (bench/sessions/2026-10-17-pairmatrix); these tests pin down that the rule
+cuts such a chain and what a rest does (drops a scheduled answer, silences idle, holds a call).
 
 Run with `pio test -e native-test-behavior`.
 */
@@ -22,7 +20,7 @@ Run with `pio test -e native-test-behavior`.
 
 namespace {
 
-constexpr unsigned long kTrainMs = 165;  // the Node's hop train, 25 ms x 5, gap 10
+constexpr unsigned long kTrainMs = 165;  // one hop train
 
 detection::OccurrenceVerdict validPattern(unsigned long heardAtMs) {
     detection::OccurrenceVerdict v;
@@ -39,27 +37,35 @@ detection::OccurrenceVerdict validPattern(unsigned long heardAtMs) {
     return v;
 }
 
-detection::FieldState fieldWith(unsigned long patterns) {
-    detection::FieldState f;
-    f.recentPatternCount = patterns;
-    return f;
+detection::FieldState quietField() {
+    return detection::FieldState();
 }
 
+// Every valid train answers (a start chance of 100 %), no spread; the rest comes at the top of the level.
 BehaviorGateConfig config() {
-    BehaviorGateConfig cfg;  // the two rest triggers (restAfterFieldPatterns, ownEmitBudget), the level automaton off
+    BehaviorGateConfig cfg;
     cfg.idleEnabled = false;
-    cfg.levelMax = 0;
-    cfg.restAfterFieldPatterns = 4;
-    cfg.ownEmitBudget = 6;
+    cfg.levelMax = 4;
+    cfg.startChancePct = 100;
+    cfg.levelDecayMs = 600000;  // the level only counts events here
+    cfg.answerJitterMs = 0;
     cfg.restMs = 5000;
     cfg.refractoryAfterEmitMs = 0;  // isolate the rest rule from the refractory question
     return cfg;
 }
 
+// Valid trains at t until the level reaches the top and the node rests (levelMax events at most).
+void restNow(ResonantBehavior& b, unsigned long t) {
+    for (unsigned long i = 0; i < b.config().levelMax + 1 && !b.resting(t); ++i) {
+        b.handleOccurrenceVerdict(validPattern(t), quietField(), t);
+    }
+    TEST_ASSERT_TRUE(b.resting(t));
+}
+
 // One heard pattern answered: verdict, wait, emission, finish. Returns the end of the emission.
-unsigned long answer(ResonantBehavior& b, unsigned long heardAt, unsigned long fieldPatterns) {
+unsigned long answer(ResonantBehavior& b, unsigned long heardAt) {
     TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::ConsumedPattern,
-                      b.handleOccurrenceVerdict(validPattern(heardAt), fieldWith(fieldPatterns), heardAt));
+                      b.handleOccurrenceVerdict(validPattern(heardAt), quietField(), heardAt));
     b.update(heardAt);
     const unsigned long emitAt = heardAt + b.config().waitAfterHeardMs;
     b.update(emitAt);
@@ -77,27 +83,26 @@ unsigned long answer(ResonantBehavior& b, unsigned long heardAt, unsigned long f
 void setUp() {}
 void tearDown() {}
 
-// The shipped defaults rest by the level automaton; the two old triggers are off (0).
+// The shipped defaults rest by the level automaton.
 void test_shipped_defaults_rest_by_the_level() {
     const BehaviorGateConfig cfg;
     TEST_ASSERT_TRUE(cfg.levelMax > 0);
-    TEST_ASSERT_EQUAL_UINT32(0, cfg.restAfterFieldPatterns);
-    TEST_ASSERT_EQUAL_UINT32(0, cfg.ownEmitBudget);
     TEST_ASSERT_TRUE(cfg.restMs > 0);
 }
 
-// Below the field threshold the node answers; at it, it rests instead.
-void test_dense_field_starts_a_rest_instead_of_an_answer() {
+// The events that take the level to the top start a rest instead of an answer.
+void test_the_top_of_the_level_starts_a_rest_instead_of_an_answer() {
     ResonantBehavior b;
     b.configure(config());
     b.resetState();
-    const unsigned long threshold = b.config().restAfterFieldPatterns;
-    answer(b, 1000, threshold - 1);
-    const unsigned long t = 3000;
-    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::RestFieldDense,
-                      b.handleOccurrenceVerdict(validPattern(t), fieldWith(threshold), t));
-    TEST_ASSERT_TRUE(b.resting(t));
+    unsigned long t = 1000;
+    for (unsigned long i = 0; i + 1 < b.config().levelMax && !b.resting(t); ++i) {
+        t = answer(b, t) +
+            2000;  // each heard train and each own emission raises the level by 1; clear of the self-suppress
+    }
+    restNow(b, t);
     TEST_ASSERT_EQUAL_UINT32(1, b.restsEntered());
+    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::RestLevel, b.lastRestReason());
     b.update(t + b.config().waitAfterHeardMs);
     TEST_ASSERT_FALSE(b.shouldStartChirp());
 }
@@ -105,39 +110,17 @@ void test_dense_field_starts_a_rest_instead_of_an_answer() {
 // A rest that starts while an answer is scheduled drops it (code-review-2026-10-30 B-M1).
 void test_rest_drops_a_scheduled_answer() {
     ResonantBehavior b;
-    b.configure(config());
+    BehaviorGateConfig cfg = config();
+    cfg.waitAfterHeardMs = 300;
+    b.configure(cfg);
     b.resetState();
-    const unsigned long threshold = b.config().restAfterFieldPatterns;
     const unsigned long t = 1000;
     TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::ConsumedPattern,
-                      b.handleOccurrenceVerdict(validPattern(t), fieldWith(threshold - 1), t));
+                      b.handleOccurrenceVerdict(validPattern(t), quietField(), t));
     b.update(t);
-    const unsigned long t2 = t + 60;  // inside the wait
-    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::RestFieldDense,
-                      b.handleOccurrenceVerdict(validPattern(t2), fieldWith(threshold), t2));
-    b.update(t + b.config().waitAfterHeardMs + 5);
+    restNow(b, t + 60);  // trains inside the wait take the level to the top
+    b.update(t + cfg.waitAfterHeardMs + 5);
     TEST_ASSERT_FALSE(b.shouldStartChirp());
-}
-
-// After an own-budget rest the next answer does not rest again at once (code-review-2026-10-30 B-M2).
-void test_budget_rest_does_not_rearm_on_the_next_answer() {
-    ResonantBehavior b;
-    b.configure(config());
-    b.resetState();
-    const unsigned long budget = b.config().ownEmitBudget;
-    unsigned long t = 1000;
-    for (unsigned long i = 0; i < budget; ++i) {
-        answer(b, t, 0);
-        t += 700;
-    }
-    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::RestOwnBudget, b.lastRestReason());
-    const unsigned long entered = b.restsEntered();
-    unsigned long after = t + b.config().restMs + kTrainMs + 10;
-    while (b.resting(after)) {
-        after += 100;
-    }
-    answer(b, after, 0);
-    TEST_ASSERT_EQUAL_UINT32(entered, b.restsEntered());
 }
 
 // A valid verdict blocked by a rest still counts as heard: an idle call due when the rest ends waits
@@ -152,66 +135,35 @@ void test_blocked_verdict_holds_the_idle_call() {
     b.resetState();
     const unsigned long t0 = 2000;
     b.update(t0);  // schedules the idle call
-    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(cfg.restAfterFieldPatterns), t0);  // starts a rest
+    restNow(b, t0);
     const unsigned long restEnd = t0 + cfg.restMs;
     const unsigned long late = restEnd - 200;  // heard 200 ms before the rest ends, blocked as Resting
     TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::Resting,
-                      b.handleOccurrenceVerdict(validPattern(late), fieldWith(0), late));
+                      b.handleOccurrenceVerdict(validPattern(late), quietField(), late));
     b.update(restEnd + 1);
     TEST_ASSERT_FALSE(b.shouldStartChirp());
     b.update(late + cfg.idleBlockedAfterHeardMs + 1);
     TEST_ASSERT_TRUE(b.shouldStartChirp());
 }
 
-// While resting every valid verdict is ignored, whatever the field says; after restMs the node answers again.
+// While resting every valid verdict is ignored; after restMs the node answers again.
 void test_rest_ignores_verdicts_until_it_ends() {
     ResonantBehavior b;
     b.configure(config());
     b.resetState();
     const unsigned long t0 = 2000;
-    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.config().restAfterFieldPatterns), t0);
-    TEST_ASSERT_TRUE(b.resting(t0));
+    restNow(b, t0);
     const unsigned long mid = t0 + b.config().restMs / 2;
     TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::Resting,
-                      b.handleOccurrenceVerdict(validPattern(mid), fieldWith(0), mid));
+                      b.handleOccurrenceVerdict(validPattern(mid), quietField(), mid));
     const unsigned long after = t0 + b.config().restMs + 1;
     TEST_ASSERT_FALSE(b.resting(after));
-    answer(b, after, 0);
-    TEST_ASSERT_EQUAL_UINT32(1, b.blockedResting() >= 1 ? 1 : 0);
+    answer(b, after);
+    TEST_ASSERT_TRUE(b.blockedResting() >= 1);
 }
 
-// A node that hears only a thin field but keeps answering hits its own budget and rests.
-void test_own_budget_starts_a_rest() {
-    ResonantBehavior b;
-    b.configure(config());
-    b.resetState();
-    const unsigned long budget = b.config().ownEmitBudget;
-    unsigned long t = 1000;
-    for (unsigned long i = 0; i < budget; ++i) {
-        answer(b, t, 0);
-        t += 700;  // the bench ping-pong: a turn every ~350 ms per pair, ~700 ms per node
-    }
-    TEST_ASSERT_TRUE(b.resting(t));
-    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::RestOwnBudget, b.lastRestReason());
-    TEST_ASSERT_EQUAL(ResonantBehavior::BehaviorDecision::Resting,
-                      b.handleOccurrenceVerdict(validPattern(t), fieldWith(0), t));
-}
-
-// The budget counts only emissions inside its window: slow traffic never trips it.
-void test_slow_traffic_stays_under_the_budget() {
-    ResonantBehavior b;
-    b.configure(config());
-    b.resetState();
-    unsigned long t = 1000;
-    for (int i = 0; i < 20; ++i) {
-        answer(b, t, 0);
-        t += b.config().ownEmitBudgetWindowMs / (b.config().ownEmitBudget - 1) + 100;
-    }
-    TEST_ASSERT_EQUAL_UINT32(0, b.restsEntered());
-}
-
-// A bench-like ping-pong between two nodes ends: each hears the other's answer, the
-// field fills (one pattern per turn in the ~4 s window), and one of them rests.
+// A bench-like ping-pong between two nodes ends: each hears the other's answer, the level rises on both, and one of
+// them rests.
 void test_two_node_ping_pong_is_cut() {
     ResonantBehavior a;
     ResonantBehavior b;
@@ -220,16 +172,12 @@ void test_two_node_ping_pong_is_cut() {
     a.resetState();
     b.resetState();
     unsigned long t = 1000;
-    unsigned long heardA = 0;
-    unsigned long heardB = 0;
     int turns = 0;
     ResonantBehavior* listener = &b;
-    unsigned long* heard = &heardB;
     for (; turns < 100; ++turns) {
-        ++*heard;  // the listener's field window gains the pattern it just heard
         listener->update(t);  // the Node's loop runs Behavior every pass (Refractory -> Idle)
         const ResonantBehavior::BehaviorDecision d =
-            listener->handleOccurrenceVerdict(validPattern(t), fieldWith(*heard), t);
+            listener->handleOccurrenceVerdict(validPattern(t), quietField(), t);
         if (d != ResonantBehavior::BehaviorDecision::ConsumedPattern) {
             break;
         }
@@ -241,13 +189,7 @@ void test_two_node_ping_pong_is_cut() {
         listener->update(emitAt + kTrainMs);
         listener->notifyChirpFinished(emitAt + kTrainMs);
         t = emitAt + kTrainMs + 30;  // the other node closes the train
-        if (listener == &b) {
-            listener = &a;
-            heard = &heardA;
-        } else {
-            listener = &b;
-            heard = &heardB;
-        }
+        listener = (listener == &b) ? &a : &b;
     }
     TEST_ASSERT_TRUE_MESSAGE(turns < 12, "the exchange should stop within a few turns");
     TEST_ASSERT_TRUE(a.restsEntered() + b.restsEntered() >= 1);
@@ -266,8 +208,7 @@ void test_no_idle_while_resting() {
     b.resetState();
     b.seedIdleSchedule(0);
     const unsigned long t0 = 100;
-    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.config().restAfterFieldPatterns), t0);
-    TEST_ASSERT_TRUE(b.resting(t0));
+    restNow(b, t0);
     for (unsigned long t = t0; t < t0 + b.config().restMs; t += 50) {
         b.update(t);
         TEST_ASSERT_FALSE_MESSAGE(b.shouldStartChirp(), "idle chirp during a rest");
@@ -345,8 +286,7 @@ void test_network_call_waits_while_resting() {
     b.configure(config());
     b.resetState();
     const unsigned long t0 = 1000;
-    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.config().restAfterFieldPatterns), t0);
-    TEST_ASSERT_TRUE(b.resting(t0));
+    restNow(b, t0);
     b.requestNetworkCall();
     b.update(t0 + 100);
     TEST_ASSERT_FALSE(b.shouldStartChirp());
@@ -355,17 +295,16 @@ void test_network_call_waits_while_resting() {
     TEST_ASSERT_TRUE(b.shouldStartChirp());
 }
 
-// Both triggers off: the old behaviour, no rest.
-void test_triggers_off_means_no_rest() {
+// Automaton off (levelMax 0): no rest, whatever is heard.
+void test_automaton_off_means_no_rest() {
     ResonantBehavior b;
     BehaviorGateConfig cfg = config();
-    cfg.restAfterFieldPatterns = 0;
-    cfg.ownEmitBudget = 0;
+    cfg.levelMax = 0;
     b.configure(cfg);
     b.resetState();
     unsigned long t = 1000;
     for (int i = 0; i < 12; ++i) {
-        answer(b, t, 50);
+        answer(b, t);
         t += 400;
     }
     TEST_ASSERT_EQUAL_UINT32(0, b.restsEntered());
@@ -374,18 +313,15 @@ void test_triggers_off_means_no_rest() {
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_shipped_defaults_rest_by_the_level);
-    RUN_TEST(test_dense_field_starts_a_rest_instead_of_an_answer);
+    RUN_TEST(test_the_top_of_the_level_starts_a_rest_instead_of_an_answer);
     RUN_TEST(test_rest_ignores_verdicts_until_it_ends);
     RUN_TEST(test_rest_drops_a_scheduled_answer);
-    RUN_TEST(test_budget_rest_does_not_rearm_on_the_next_answer);
     RUN_TEST(test_blocked_verdict_holds_the_idle_call);
-    RUN_TEST(test_own_budget_starts_a_rest);
-    RUN_TEST(test_slow_traffic_stays_under_the_budget);
     RUN_TEST(test_two_node_ping_pong_is_cut);
     RUN_TEST(test_no_idle_while_resting);
     RUN_TEST(test_shorter_idle_timeout_applies_to_the_running_wait);
     RUN_TEST(test_longer_idle_timeout_extends_the_running_wait_and_same_value_keeps_it);
-    RUN_TEST(test_triggers_off_means_no_rest);
+    RUN_TEST(test_automaton_off_means_no_rest);
     RUN_TEST(test_network_call_plays_the_network_signal);
     RUN_TEST(test_network_call_waits_while_resting);
     return UNITY_END();

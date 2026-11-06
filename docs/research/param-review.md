@@ -1,6 +1,6 @@
 # Param review: what each knob does, whether it still acts, what it is called (step 20.5, issue #88)
 
-Status: proposal for the owner, 2026-11-05. Nothing here is decided; a rename or a retirement the owner takes gets a
+Status: proposal for the owner, 2026-11-05; the owner answered on 2026-11-06 (decisions/2026-11-06-retire-the-old-rest-triggers.md and decisions/2026-11-06-param-review-owner-answers.md); the tables below are the state before that and still list the retired params. Before that, nothing was decided; a rename or a retirement the owner takes gets a
 `docs/decisions/` file, and the annotated list then goes to `notes_manual.md` (pointers to the code sites, no copied
 defaults). Values: `PARAM DUMP` on the board; the sites are listed in `src/app/ParamBindings.h` and the echo modes'
 `EchoApp::configureParams` / `Whispernet::describeParams`.

@@ -185,10 +185,8 @@ int main(int argc, char** argv) {
     if (scatter >= 0) {
         cfg.baseScatterBins = static_cast<uint32_t>(scatter);
     }
-    if (old) {  // --old: the fixed answer with the two rest triggers, to compare with the level automaton
+    if (old) {  // --old: the fixed answer without the level automaton (the old rest triggers were retired 2026-11-06)
         cfg.levelMax = 0;
-        cfg.restAfterFieldPatterns = 4;
-        cfg.ownEmitBudget = 6;
         cfg.restMs = 5000;
     }
     if (!bands.empty()) {

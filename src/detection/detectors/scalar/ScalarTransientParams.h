@@ -38,8 +38,6 @@ inline void describeParams(ParamRegistry& registry, detection::ScalarTransientCo
                      "detection.scalar_require_carrier_quality", &sc.requireCarrierQuality);
     registry.addBool(ParamId::Detection_ScalarRequireMinStrength, ModuleId::Detection,
                      "detection.scalar_require_min_strength", &sc.requireMinStrength);
-    registry.addFloat(ParamId::Detection_ScalarMinStrength, ModuleId::Detection, "detection.scalar_min_strength",
-                      &sc.minMatchedMeanStrength, 0.0f, 200000.0f);
     registry.addUInt32(ParamId::Detection_ScalarMinReleaseCoverageMs, ModuleId::Detection,
                        "detection.scalar_min_release_coverage_ms", &sc.minCoverageAboveReleaseMs, 0U, 5000U);
     registry.addUInt32(ParamId::Detection_ScalarMinLongestIslandMs, ModuleId::Detection,

@@ -142,7 +142,6 @@ void ResonantBehavior::resetState() {
     _lastFieldState = {};
     _rest = {};
     _level = {};
-    _emitTimes.clear();
 }
 
 void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
@@ -153,9 +152,6 @@ void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
     const bool idleChanged =
         profile.idleTimeoutMs != _config.idleTimeoutMs || profile.idleTimeVariationMs != _config.idleTimeVariationMs;
     _config = profile;
-    if (_config.ownEmitBudget > kEmitHistory) {
-        _config.ownEmitBudget = kEmitHistory;  // the history holds this many
-    }
     if (idleChanged) {
         rescheduleIdleFromWaitStart();
     }
@@ -227,12 +223,6 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
     if (resting(now)) {
         // Hard pause: a busy network is not answered (rest decision, 2026-10-17).
         setDecision(BehaviorDecision::Resting);
-        _counts.blockedResting++;
-    } else if (_config.restAfterFieldPatterns > 0 &&
-               _lastFieldState.recentPatternCount >= _config.restAfterFieldPatterns) {
-        // The field window holds enough valid network patterns: rest instead of answering.
-        enterRest(now + _config.restMs, BehaviorDecision::RestFieldDense);
-        setDecision(BehaviorDecision::RestFieldDense);
         _counts.blockedResting++;
     } else if (_state == State::Chirping) {
         setDecision(BehaviorDecision::OutputBusy);
@@ -476,15 +466,6 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitS
     setDecision(BehaviorDecision::Emitted);
     _counts.emitted++;
 
-    // Own budget: count this emission; at the budget the node rests from the
-    // end of this emission on.
-    _emitTimes.pushOverwrite(now);
-    if (_config.ownEmitBudget > 0 && ownEmitsInWindow(now) >= _config.ownEmitBudget) {
-        enterRest(now + emitSpanMs + _config.restMs, BehaviorDecision::RestOwnBudget);
-        // The emissions that caused this rest are paid for: without the clear the first answer after it found them
-        // still in the window and rested again, ~10 s with one answer inside.
-        _emitTimes.clear();
-    }
     // The level automaton: an own emission is one event; at the top the node rests from the end of this emission.
     if (_config.levelMax > 0 && raiseLevel(now, 1)) {
         enterRest(now + emitSpanMs + _config.restMs, BehaviorDecision::RestLevel);
@@ -518,17 +499,6 @@ void ResonantBehavior::enterRest(unsigned long untilMs, BehaviorDecision reason)
         _state = State::Idle;
         _heard = {};
     }
-}
-
-unsigned long ResonantBehavior::ownEmitsInWindow(unsigned long now) const {
-    unsigned long n = 0;
-    for (size_t i = 0; i < _emitTimes.count(); ++i) {
-        const unsigned long t = _emitTimes.at(i);
-        if (timing::atOrAfter(now, t) && now - t < _config.ownEmitBudgetWindowMs) {
-            n++;
-        }
-    }
-    return n;
 }
 
 bool ResonantBehavior::resting(unsigned long now) const {
@@ -741,10 +711,6 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
             return "emitted";
         case BehaviorDecision::WouldEmit:
             return "would_emit";
-        case BehaviorDecision::RestFieldDense:
-            return "rest_field_dense";
-        case BehaviorDecision::RestOwnBudget:
-            return "rest_own_budget";
         case BehaviorDecision::Resting:
             return "resting";
         case BehaviorDecision::DeclinedByLevel:

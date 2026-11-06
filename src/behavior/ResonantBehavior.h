@@ -34,11 +34,7 @@ public:
         AlreadyScheduled,
         Emitted,
         WouldEmit,
-        // Rest (decisions/2026-10-17-two-node-exchange-chain-length.md):
-        // the verdict that started a rest because the field was dense, and
-        // a verdict that arrived while resting.
-        RestFieldDense,
-        RestOwnBudget,
+        // A verdict that arrived while resting (the rest itself: RestLevel below).
         Resting,
         // The level automaton (BEH-008): a heard train not answered (the draw against p), a pending answer dropped
         // because another verdict came first (the yield), the train that took the level to the top.
@@ -202,7 +198,6 @@ private:
     void glideBase();
     void wanderBase();  // before an idle call: nothing heard since the last one -> a random base
     void setDecision(BehaviorDecision decision);
-    unsigned long ownEmitsInWindow(unsigned long now) const;
 
     // --- configured timing (BehaviorGateConfig.h documents the fields) ---
     BehaviorGateConfig _config = {};
@@ -215,8 +210,6 @@ private:
         BehaviorDecision lastReason = BehaviorDecision::None;
     };
     RestState _rest = {};
-    static constexpr size_t kEmitHistory = 16;
-    RingQueue<unsigned long, kEmitHistory> _emitTimes;  // the last own emissions, oldest dropped
 
     // --- state machine ---
     State _state = State::Idle;

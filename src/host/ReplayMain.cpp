@@ -12,7 +12,7 @@ Options
                           detection.scalar_cooldown_ms, detection.scalar_min_duration_ms,
                           detection.scalar_max_duration_ms, detection.scalar_min_peak_strength,
                           detection.scalar_release_debounce_ms, detection.scalar_require_carrier_quality,
-                          detection.scalar_require_min_strength, detection.scalar_min_strength,
+                          detection.scalar_require_min_strength,
                           detection.scalar_min_release_coverage_ms, detection.scalar_min_longest_island_ms,
                           detection.scalar_max_gap_ms, detection.contrast_medium, detection.amp_medium;
                           values are range-checked like on the board

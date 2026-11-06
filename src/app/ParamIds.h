@@ -55,7 +55,7 @@ enum class ParamId : uint16_t {
     Detection_ScalarReleaseDebounceMs,
     Detection_ScalarRequireCarrierQuality,
     Detection_ScalarRequireMinStrength,
-    Detection_ScalarMinStrength,
+    Detection_ScalarMinStrength,  // retired 2026-11-06, not registered (same decision)
     Detection_ScalarMinReleaseCoverageMs,
     Detection_ScalarMinLongestIslandMs,
     Detection_ScalarMaxGapMs,
@@ -88,6 +88,7 @@ enum class ParamId : uint16_t {
     Behavior_IdleTimeoutVariationMs,
     Behavior_IdleBlockedAfterHeardMs,
     Behavior_IdleBlockedAfterOwnEmitMs,
+    // Retired 2026-11-06, not registered (decisions/2026-11-06-retire-the-old-rest-triggers.md); the ids stay taken.
     Behavior_RestAfterFieldPatterns,
     Behavior_OwnEmitBudget,
     Behavior_OwnEmitBudgetWindowMs,

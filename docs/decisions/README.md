@@ -109,6 +109,8 @@ what replaced it.
 | 2026-11-06 | [Finished roadmap items move to the archive; IDs stay citable (tools/ci/roadmap_ids.py)](2026-11-06-finished-items-leave-the-roadmaps.md) |
 | 2026-11-06 | [A finished step folds to a Result line; its full text moves to the phase archive](2026-11-06-finished-steps-fold-to-a-line.md) |
 | 2026-11-06 | [Before the performance the signal changes only as a sound layer; then the code is frozen](2026-11-06-sound-layer-before-the-performance.md) |
+| 2026-11-06 | [The two old rest triggers and detection.scalar_min_strength are retired](2026-11-06-retire-the-old-rest-triggers.md) |
+| 2026-11-06 | [Param review: renames in Behavior first, one vocabulary in the echo modes, two hidden knobs become params](2026-11-06-param-review-owner-answers.md) |
 | 2026-11-06 | [Ten nodes on stripboard for the performance; checked breadboard nodes are the fallback, decided on 2026-11-30](2026-11-06-ten-stripboard-nodes-breadboard-fallback.md) |
 
 ## Open

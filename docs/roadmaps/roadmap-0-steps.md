@@ -226,6 +226,10 @@ substeps marked "on site" wait for those days.
         three windows after the own sound, answer_jitter_ms without effect at level_max 0, two triggers kept until
         retired. With PAR-018 (owner 2026-11-06): PARAM SAVE must not pin defaults it never changed, so the
         boards' stored params do not hide new defaults before the room.
+        Progress 2026-11-06: owner answers in decisions/2026-11-06-param-review-owner-answers.md; the two old rest
+        triggers and scalar_min_strength are gone (decisions/2026-11-06-retire-the-old-rest-triggers.md). Open: the
+        Behavior renames with the mapping table, the echo modes' vocabulary and start_chance_pct, the plateau and
+        the shrink as params, the annotated list in notes_manual.md.
    20.6 [TODO, by 2026-11-27] Which mode the performance's demo puts first, Whispernet or the echo room (owner
         2026-11-06: open). Criterion: the one that triggers reliably and does not false-trigger in the room's
         November measurement (20.4); the other stays a demo if it passes too (both are an OTA apart). A

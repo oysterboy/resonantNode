@@ -68,7 +68,9 @@ void tearDown() {}
 
 void test_bindings_register_every_field_once() {
     param::ParamRegistry r = makeRegistry();
-    TEST_ASSERT_EQUAL_UINT32(13 + 21, r.count());  // behavior: 13 + the level automaton's 4 + the base / band 4
+    TEST_ASSERT_EQUAL_UINT32(
+        12 + 18,
+        r.count());  // detection 12 + behavior 18 (the old rest triggers and scalar_min_strength retired 2026-11-06)
     TEST_ASSERT_NOT_NULL(r.find("detection.scalar_onset_threshold"));
     TEST_ASSERT_NOT_NULL(r.find("detection.scalar_max_gap_ms"));
     TEST_ASSERT_NOT_NULL(r.find("behavior.rest_ms"));
@@ -132,7 +134,7 @@ void test_save_and_load_need_a_store() {
     MemoryStore store;
     run(r, "PARAM SET detection.scalar_min_peak_strength 123", &store);
     run(r, "PARAM SAVE", &store);
-    TEST_ASSERT_EQUAL_UINT32(34, store.entries.size());
+    TEST_ASSERT_EQUAL_UINT32(30, store.entries.size());
     scalar.minTransientPeakStrength = 1.0f;  // drift the field; LOAD puts the stored value back
     const param::ParamCommandResult loaded = run(r, "PARAM LOAD", &store);
     TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::AllGroups), static_cast<int>(loaded.effect));

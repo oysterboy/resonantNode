@@ -33,3 +33,13 @@ E1 is heard (by E2 and E4) and hears (E2 6/7). Weak links: E4 -> E1 0/3, E5 -> E
 E3 and E4. E3 is silent (no emits). The earlier "E1 heard by no one" (reach matrix) was a different, quieter test;
 the owner checked E1's speaker by ear at 09:30 on 2026-11-06 and it plays.
 Logger note: night5.log stopped at 09:53 with two loggers on COM12; night6.log is the single logger since 12:28.
+
+### Update 12:43 (night6.log, 30 min, 270-370 emits per board)
+
+The larger sample (`heard_by.txt` rewritten) replaces the 13-minute reading above. Share of an emitter's clean emits
+that the listener logged as a valid verdict within 0.4 s:
+E1 is heard by E2 (25/33) and E4 (17/28), hardly by E3 (2/16 valid, 10 verdicts at all), not by E5 (0/25, no
+verdict). E1 hears E2 (23/28), not E4 (0/20) and not E5 (0/34). E5 is heard by E3 (8/26) and E4 (55/62) but not by E1
+or E2 (0/34, 0/38); E5 hears E2 (17/28) and E4 (41/45). So E1 and E5 are the weak pair: the dead links are E5 -> E1,
+E5 -> E2, E4 -> E1, E1 -> E5, and they have no verdict at all (not "heard but invalid"), which says level or
+placement, not the validity rule. To check by the owner on site: E5's speaker aim and E1's microphone.

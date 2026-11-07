@@ -757,16 +757,21 @@ void EchoApp::handleOtaCommand(const char* line) {
         _net.flush(1500);
     }
     ota::runCommand(line, serialOut());
-    // The update failed: back to listening, if the heap still allows.
-    if (kWhispernet) {
-        if (!_whisper.resume()) {
-            serialOut().println("ECHO ERR whisper_alloc_failed");
-        }
-    } else if (!allocateEchoBuffers()) {
-        serialOut().println("ECHO ERR ring_or_clip_alloc_failed");
-    }
+    // The update failed: back to listening. The pull leaves the heap too fragmented for the ring and clip (77 KB) or
+    // the delay line (E1 and E5 on 2026-11-07: the board answered, but its echo room was gone), so a board that cannot
+    // get them back restarts and boots with its stored params.
+    const bool back = kWhispernet ? _whisper.resume() : allocateEchoBuffers();
     if (_net.started()) {
         _net.restoreChannel();
+    }
+    if (!back) {
+        serialOut().println(kWhispernet ? "ECHO ERR whisper_alloc_failed, restarting"
+                                        : "ECHO ERR ring_or_clip_alloc_failed, restarting");
+        if (_net.started()) {
+            _net.flush(1500);
+        }
+        serialOut().flush();
+        ESP.restart();
     }
 }
 

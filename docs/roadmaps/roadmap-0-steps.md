@@ -273,6 +273,14 @@ substeps marked "on site" wait for those days.
         failed one; the Analyzer answers `OTA result=busy reason=seq_active` while a run is active or queued. PC part
         done (e20f4a6, CI run 420 green); the gate's board part (a failed OTA during a whisper and an echo replay)
         open for the bench.
+        2026-11-07, bench (radio, E1 echo, E5 whisper, a failed pull fired at the board right after a replay line):
+        the board answered, but its echo room was gone. After the failed pull the heap held no 77 KB block for ring
+        and clip (largest block 43-47 KB) and no delay line for Whispernet: `ECHO ERR ring_or_clip_alloc_failed` /
+        `whisper_alloc_failed`, the next replay `clip_missing` (E1) and `short_writes` climbing (E5), until a reboot.
+        Fix: a board that cannot get them back restarts (EchoApp::handleOtaCommand). Re-run on the same two boards:
+        three failed pulls each, each board restarted, answered STATUS and replayed again. A good update was never
+        affected. The Analyzer's refused OTA mid-run is not run (no Analyzer on the air). Gate met for the echo and
+        whisper half.
    23.2 The train unit out of Behavior (M1 with D6): the Node hands Behavior the single-train duration from
         output.hop_* (as it hands the base grid), trainsInVerdict counts in it, native-fieldsim reads the same
         value; the 2026-11-05 overnight values reconsidered against the corrected count. PC, then a two-board chord

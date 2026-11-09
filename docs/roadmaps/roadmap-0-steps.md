@@ -217,7 +217,7 @@ substeps marked "on site" wait for those days.
         chain length apart, behavior.start_chance_pct (ca6714de, decisions/2026-11-05-start-chance-and-chain-
         length.md), level_max up to 500. Then one knob at a time on one window (2026-11-05-radio-log-lively): at
         start chance 85, level_max 200, jitter 1000, wait 0, chains median 25 emits, max 94; the run left on
-        overnight. Open: these values as defaults (owner, after the night), 20.5, ECHO-004, Whispernet's band check.
+        overnight. Open: ECHO-004, Whispernet's band check. The values became the Node's defaults on 2026-11-09 (below).
    20.5 [TODO, before 20.4; owner 2026-11-05] Param review: every param of the three modes, what it does, its unit,
         whether it still does anything, and whether its name says so; the annotated list in notes_manual.md,
         renames and retirements each with a decisions/ file. Issue #88, a sub-issue of #84 at the owner's request
@@ -230,8 +230,12 @@ substeps marked "on site" wait for those days.
         triggers and scalar_min_strength are gone (decisions/2026-11-06-retire-the-old-rest-triggers.md). The Behavior
         renames are built (the mapping table in the same decision). The plateau and the shrink
         are params (plateau_pct, spread_shrinks). The echo modes take the Node's names and start_chance_pct (built
-        2026-11-06, mapping in the param-review decision; on the boards after a listening test). Open: the annotated
-        list in notes_manual.md.
+        2026-11-06, mapping in the param-review decision; on the boards after a listening test).
+        Progress 2026-11-09: the annotated list is in notes_manual.md ("Param reference (Node)"); PAR-018 is built
+        (PARAM SAVE stores only what differs from the default, decisions/2026-11-09-save-only-what-differs.md); the
+        overnight field is the Node's default set (decisions/2026-11-09-node-ships-the-overnight-field.md). Open: an
+        annotated list for the echo modes' params (PARAM LIST shows them, the manual does not), and a PARAM SAVE on each Node board
+        to drop the entries that equal the new defaults.
    20.6 [TODO, by 2026-11-27] Which mode the performance's demo puts first, Whispernet or the echo room (owner
         2026-11-06: open). Criterion: the one that triggers reliably and does not false-trigger in the room's
         November measurement (20.4) and in the whisper evaluation (27); the other stays a demo if it passes too (both
@@ -291,7 +295,8 @@ substeps marked "on site" wait for those days.
         unit) host-tested on the old 215 and the glide's 125 (test_behavior_level +2). A verdict without a unit
         counts one train: the echo modes set none, so a whisper phrase now raises the level by 1, not by up to 3 as
         the 215 ms constant made of a long phrase (owner to confirm, whisper.level_max was tuned with the old count).
-        The overnight values and the board chord check: open for the bench.
+        2026-11-09: the overnight values ran on 7d8c4dfa, which has this count (8c4cfd4 is in it), and the owner took
+        them as the Node's defaults. The two-board chord check on site stays open.
    23.3 The echo chain's host harness on the boards' geometry (M5): native-echoreplay (or one env per mode) with
         the boards' FEATURE_HISTORY flags, the echo room's and Whispernet's config builders in a header the shell
         and the replay share, the synthetic set re-run. PC. Gate: the replay's verdicts over

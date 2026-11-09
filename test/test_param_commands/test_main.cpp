@@ -33,6 +33,10 @@ public:
         entries[entry.id] = entry;
         return true;
     }
+    bool erase(uint16_t id) override {
+        entries.erase(id);
+        return true;
+    }
     bool clear() override {
         entries.clear();
         ++clears;
@@ -134,7 +138,7 @@ void test_save_and_load_need_a_store() {
     MemoryStore store;
     run(r, "PARAM SET detection.scalar_min_peak_strength 123", &store);
     run(r, "PARAM SAVE", &store);
-    TEST_ASSERT_EQUAL_UINT32(32, store.entries.size());
+    TEST_ASSERT_EQUAL_UINT32(1, store.entries.size());  // only the value that differs from its default (PAR-018)
     scalar.minTransientPeakStrength = 1.0f;  // drift the field; LOAD puts the stored value back
     const param::ParamCommandResult loaded = run(r, "PARAM LOAD", &store);
     TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::AllGroups), static_cast<int>(loaded.effect));

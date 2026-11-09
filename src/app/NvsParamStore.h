@@ -36,6 +36,15 @@ public:
         return _prefs.putBytes(key, &entry, sizeof(entry)) == sizeof(entry);
     }
 
+    bool erase(uint16_t id) override {
+        if (!open()) {
+            return false;
+        }
+        char key[8];
+        makeKey(id, key);
+        return !_prefs.isKey(key) || _prefs.remove(key);
+    }
+
     bool clear() override { return open() && _prefs.clear(); }
 
 private:

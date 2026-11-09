@@ -75,3 +75,22 @@ struct BehaviorGateConfig {
     uint32_t bandRangeLowHz = 2000;
     uint32_t bandRangeHighHz = 6500;
 };
+
+// What the Node ships with: the field's settings of the 2026-11-05 overnight run, confirmed by the owner as the
+// defaults on 2026-11-09 (bench/sessions/2026-11-05-night-e0, 2026-11-05-radio-log-lively). One window for every
+// node, a long chain with a high start chance, no fixed wait. The struct's own defaults stay for the host tests,
+// the field simulation and the echo modes, which set what they need.
+inline BehaviorGateConfig shippedNodeBehavior() {
+    BehaviorGateConfig b;
+    b.waitAfterHeardMs = 0;
+    b.refractoryAfterEmitMs = 200;
+    b.idleTimeoutMs = 30000;
+    b.idleTimeVariationMs = 10000;
+    b.levelMax = 200;
+    b.startChancePct = 85;
+    b.answerJitterMs = 1000;
+    b.bandPerNode = true;
+    b.bandRangeLowHz = 2500;
+    b.bandRangeHighHz = 3500;
+    return b;
+}

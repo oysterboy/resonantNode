@@ -113,9 +113,64 @@ FrequencyTarget score (another stream, or above 32767).
 
 Where the defaults live: `detection.*` in `src/detection/DetectionProfile.h` (the profile
 structs), `behavior.*` in `src/behavior/BehaviorProfile.h` (`BehaviorGateConfig`), `output.*` in
-`src/app/RuntimeDefaults.h` and the roster. Retuning a default is its own pass, logged through
-`tools/logging/`; do not change these headers as a side effect of other work.
+`src/app/RuntimeDefaults.h` and the roster. The Node's shipped `behavior.*` values are `shippedNodeBehavior()` in
+`BehaviorProfile.h` (the 2026-11-05 overnight field, confirmed as the defaults on 2026-11-09); the struct's own
+defaults stay for the host tests, the field simulation and the echo modes. Retuning a default is its own pass, logged
+through `tools/logging/`; do not change these headers as a side effect of other work.
 
+### Param reference (Node)
+
+What each param does, its unit and when it acts. Values are not copied here: `PARAM DUMP` on the board shows them,
+the sites are listed above. Paths renamed on 2026-11-06 are mapped in
+`docs/decisions/2026-11-06-param-review-owner-answers.md`; a `PARAM SET` with an old path answers `unknown_param`.
+**cond.** means the param acts only in the setting named.
+
+`behavior.*`: how the node answers and calls.
+
+| path | what it does | unit | acts |
+|---|---|---|---|
+| `wait_after_heard_ms` | fixed wait before an answer | ms | yes |
+| `answer_spread_ms` | a random 0..x added to that wait, shrinking with the level (`spread_shrinks`) | ms | cond.: `chain_length` > 0 |
+| `spread_shrinks` | the spread shrinks as the level rises; 0 keeps the full window | bool | cond.: `chain_length` > 0 |
+| `after_own_deaf_ms` | detection deaf while the own sound plays, plus this | ms | yes |
+| `after_own_tail_ms` | detection deaf for the room's tail after the own sound | ms | yes |
+| `after_own_no_answer_ms` | after the own sound, heard trains count but are not answered | ms | yes |
+| `call_enabled` | the node calls on its own after a silence | bool | yes |
+| `call_after_silence_ms` | the silence before the own call | ms | yes |
+| `call_after_silence_spread_ms` | plus or minus a random amount on that | ms | yes |
+| `call_blocked_after_heard_ms` | no own call this soon after hearing a train | ms | yes |
+| `call_blocked_after_own_ms` | no own call this soon after the own sound | ms | yes |
+| `chain_length` | events (heard trains plus own sounds) until the rest; 0 switches the level automaton off | count | yes |
+| `level_fall_ms` | the level drops by 1 per this much silence | ms | cond.: `chain_length` > 0 |
+| `start_chance_pct` | chance of answering the first train in a quiet field; it rises evenly to 100 % | % | yes (0 = 1 in `chain_length`) |
+| `plateau_pct` | the chance reaches 100 % after this share of the ramp, certain beyond | % | cond.: `start_chance_pct` > 0 |
+| `rest_ms` | the pause at the top of the level | ms | cond.: `chain_length` > 0 |
+| `band_per_node` | each node its own window on the range, so the windows differ per node | bool | yes |
+| `band_range_low_hz`, `band_range_high_hz` | the range the windows sit on | Hz | cond.: `band_per_node` 1 |
+| `base_scatter_bins` | how far the base moves at a rest (0 = anywhere) | bins | cond.: `band_per_node` 1 |
+
+`output.*` and `node.*`: the sound and the node's own switches.
+
+| path | what it does | unit | acts |
+|---|---|---|---|
+| `output.hop_enabled` | the signal is the climbing train (else the plain pattern) | bool | yes |
+| `output.hop_rotation` | the start base from the roster | index | yes |
+| `output.hop_pulse_ms` | one step's length | ms | yes |
+| `output.hop_gap_ms` | silence between steps (0 = one glide) | ms | yes |
+| `output.hop_steps` | steps per signal | count | yes |
+| `output.idle_announce_hz`, `output.idle_announce_ms` | the call's lead-in tone and its length (0 Hz = none) | Hz, ms | yes |
+| `output.silent` | outputs off, detection keeps running | bool | yes |
+| `node.radio_enabled` | the radio at boot | bool | yes, read at boot |
+| `node.radio_log` | console lines per second mirrored to the radio, 0 off | lines/s | yes |
+
+`detection.*` is tuning, a pass of its own: `scalar_onset_threshold` and `scalar_release_threshold` (a sound starts
+above, ends below), `scalar_cooldown_ms`, `scalar_min_duration_ms` / `scalar_max_duration_ms` (allowed length, 0 =
+no limit), `scalar_release_debounce_ms`, `scalar_max_gap_ms`, `scalar_min_release_coverage_ms` and
+`scalar_min_longest_island_ms` (time above release, summed and longest), `scalar_min_peak_strength`, the two
+switches `scalar_require_min_strength` and `scalar_require_carrier_quality` (each turns its limits on), `band_low_hz`
+/ `band_high_hz` (the shared band; the window rules while `behavior.band_per_node` is 1), `amp_medium` and
+`contrast_medium` (the inspectors' limits), and `shape_*` (the climb the hop train must show).
+
 ### Apply points, in boot order
 
 - `Node::begin()`: `configureParameters()`, audio source and signal start, detection reset, then
@@ -126,9 +181,12 @@ structs), `behavior.*` in `src/behavior/BehaviorProfile.h` (`BehaviorGateConfig`
   a stored `node.radio_enabled 0` keeps it off.
 - `PARAM SET <path> <value>`: writes the bound field and applies its module in place, no detector
   reset. Live only, lost on reboot.
-- `PARAM SAVE`: the only flash write; stores every registered param. `PARAM LOAD` re-reads and
-  applies the store, `PARAM RESET` clears it and restores the firmware defaults
-  (`docs/decisions/2026-10-23-param-persistence-save-only.md`).
+- `PARAM SAVE`: the only flash write; stores the params whose value differs from the firmware default and drops the
+  stored entry of one that is back at its default, so a later default is not hidden by a value nobody chose (PAR-018,
+  `docs/decisions/2026-11-09-save-only-what-differs.md`). The line reads `written= unchanged= removed= failed=`.
+  `PARAM LOAD` re-reads and applies the store, `PARAM RESET` clears it and restores the firmware defaults
+  (`docs/decisions/2026-10-23-param-persistence-save-only.md`). A board saved before 2026-11-09 still holds an entry
+  for every param; `PARAM SAVE` once drops those that equal the default.
 - `RB PROFILE name=...`: switches the profile and reapplies detection and behavior from the profile
   structs, which replaces the bound `detection.*` fields wholesale. Live `PARAM SET` overrides on
   them are gone after a switch; check `PARAM DUMP`.
@@ -462,7 +520,7 @@ detector thresholds, timing       PARAM SET detection.scalar_* (live)   defaults
 listening band                    PARAM SET detection.band_*             defaults: RuntimeDefaults.h (kDefaultNetworkBand*)
 inspector medium limits           PARAM SET detection.amp_medium | contrast_medium
 shape rule (hop train only)       PARAM SET detection.shape_*            defaults: DetectionProfile.h (module 2)
-answer timing, idle, rest         PARAM SET behavior.*                   defaults: BehaviorProfile.h
+answer timing, idle, rest         PARAM SET behavior.*                   defaults: BehaviorProfile.h (shippedNodeBehavior)
 hop train, idle announce, silent  PARAM SET output.*                     defaults: RuntimeDefaults.h, NodeRoster.h
 radio                             PARAM SET node.radio_enabled
 tone level                        I2S_TONE_AMPLITUDE (build flag / RuntimeDefaults.h)

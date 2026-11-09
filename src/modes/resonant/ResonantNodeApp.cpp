@@ -77,7 +77,7 @@ static const char* streamDisplayName(detection::FeatureStreamId stream) {
 }
 
 BehaviorGateConfig makeTonalPulseBehaviorProfile() {
-    return BehaviorGateConfig{};
+    return shippedNodeBehavior();
 }
 
 const char* detectionProfileKindName(detection::DetectionProfileKind kind) {

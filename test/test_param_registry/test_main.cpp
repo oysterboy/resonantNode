@@ -119,6 +119,10 @@ public:
         entries[entry.id] = entry;
         return true;
     }
+    bool erase(uint16_t id) override {
+        entries.erase(id);
+        return true;
+    }
     bool clear() override {
         entries.clear();
         return true;
@@ -135,7 +139,7 @@ void test_save_then_load_restores_values_over_defaults() {
     set(r, "b.f", "2.25");
     set(r, "b.flag", "1");
     const param::ParamSaveReport saved = r.save(store);
-    TEST_ASSERT_EQUAL_UINT32(4, saved.written);  // every registered param, also the unchanged u16
+    TEST_ASSERT_EQUAL_UINT32(3, saved.written);  // the u16 is at its default: not stored (PAR-018)
     TEST_ASSERT_EQUAL_UINT32(0, saved.failed);
 
     r.restoreDefaults();
@@ -144,8 +148,8 @@ void test_save_then_load_restores_values_over_defaults() {
     TEST_ASSERT_FALSE(flag);
 
     const param::ParamLoadReport loaded = r.load(store, Serial);
-    TEST_ASSERT_EQUAL_UINT32(4, loaded.stored);
-    TEST_ASSERT_EQUAL_UINT32(4, loaded.applied);
+    TEST_ASSERT_EQUAL_UINT32(3, loaded.stored);
+    TEST_ASSERT_EQUAL_UINT32(3, loaded.applied);
     TEST_ASSERT_EQUAL_UINT32(0, loaded.stale);
     TEST_ASSERT_EQUAL_UINT32(0, loaded.invalid);
     TEST_ASSERT_EQUAL_UINT32(1234, u32);
@@ -175,24 +179,41 @@ void test_stored_value_wins_over_a_changed_default_and_counts_stale() {
     const param::ParamLoadReport loaded = r.load(store, Serial);
     TEST_ASSERT_EQUAL_UINT32(1, loaded.stale);
     TEST_ASSERT_EQUAL_UINT32(1234, u32);  // stored wins
-    // A saved value equal to its old default is stale too, and still wins.
+    // An entry saved at the old default (SAVE no longer writes one, an older firmware did) is stale too, and still wins.
     store.entries.clear();
-    {
-        setUp();
-        param::ParamRegistry old = makeRegistry();
-        old.captureDefaults();  // u32 default 1000
-        old.save(store);
-    }
+    store.entries[static_cast<uint16_t>(Id::U32)] = {param::StoredParam::kVersion,
+                                                     static_cast<uint8_t>(param::ParamType::UInt32),
+                                                     static_cast<uint16_t>(Id::U32), 1000, 1000};
     u32 = 2000;
     r.captureDefaults();
     TEST_ASSERT_EQUAL_UINT32(1, r.load(store, Serial).stale);
     TEST_ASSERT_EQUAL_UINT32(1000, u32);
 }
 
+void test_save_drops_the_entry_of_a_value_that_is_the_default_again() {
+    param::ParamRegistry r = makeRegistry();
+    r.captureDefaults();
+    MemoryStore store;
+    set(r, "a.u32", "1234");
+    TEST_ASSERT_EQUAL_UINT32(1, r.save(store).written);
+    TEST_ASSERT_EQUAL_UINT32(1, store.entries.size());
+    // Back to the default: the next SAVE removes the entry, so a later firmware default is not hidden.
+    set(r, "a.u32", "1000");
+    const param::ParamSaveReport saved = r.save(store);
+    TEST_ASSERT_EQUAL_UINT32(1, saved.removed);
+    TEST_ASSERT_EQUAL_UINT32(0, saved.written);
+    TEST_ASSERT_EQUAL_UINT32(0, store.entries.size());
+    TEST_ASSERT_EQUAL_UINT32(4, r.save(store).unchanged);
+}
+
 void test_invalid_entries_keep_the_field() {
     param::ParamRegistry r = makeRegistry();
     r.captureDefaults();
     MemoryStore store;
+    set(r, "a.u32", "1234");
+    set(r, "a.u16", "99");
+    set(r, "b.f", "2.25");
+    set(r, "b.flag", "1");
     r.save(store);
     store.entries[static_cast<uint16_t>(Id::U16)].valueBits = 501;  // past the 500 max
     store.entries[static_cast<uint16_t>(Id::F)].type = static_cast<uint8_t>(param::ParamType::UInt32);
@@ -211,13 +232,14 @@ void test_float_nan_bits_are_invalid() {
     param::ParamRegistry r = makeRegistry();
     r.captureDefaults();
     MemoryStore store;
+    set(r, "b.f", "2.25");
     r.save(store);
     const float nan = NAN;
     uint32_t bits = 0;
     memcpy(&bits, &nan, sizeof(bits));
     store.entries[static_cast<uint16_t>(Id::F)].valueBits = bits;
     TEST_ASSERT_EQUAL_UINT32(1, r.load(store, Serial).invalid);
-    TEST_ASSERT_EQUAL_FLOAT(1.5f, f);
+    TEST_ASSERT_EQUAL_FLOAT(2.25f, f);  // the field keeps what it held
 }
 
 void test_missing_entries_keep_defaults_and_clear_empties_the_store() {
@@ -243,6 +265,7 @@ int main(int, char**) {
     RUN_TEST(test_float_and_bool_rules);
     RUN_TEST(test_save_then_load_restores_values_over_defaults);
     RUN_TEST(test_stored_value_wins_over_a_changed_default_and_counts_stale);
+    RUN_TEST(test_save_drops_the_entry_of_a_value_that_is_the_default_again);
     RUN_TEST(test_invalid_entries_keep_the_field);
     RUN_TEST(test_float_nan_bits_are_invalid);
     RUN_TEST(test_missing_entries_keep_defaults_and_clear_empties_the_store);

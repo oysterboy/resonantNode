@@ -88,6 +88,8 @@ ParamCommandResult handleParamCommand(const char* line, const ParamRegistry& reg
         out.print(static_cast<unsigned long>(report.written));
         out.print(" unchanged=");
         out.print(static_cast<unsigned long>(report.unchanged));
+        out.print(" removed=");
+        out.print(static_cast<unsigned long>(report.removed));
         out.print(" failed=");
         out.print(static_cast<unsigned long>(report.failed));
         out.print(" status=");

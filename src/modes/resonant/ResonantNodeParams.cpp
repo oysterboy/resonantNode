@@ -74,6 +74,8 @@ unsigned long NodeParams::printChangedSinceRemembered(Print& out) const {
 // ResonantBehavior::configure() (setters only, no state reset). The inspection limits are the Node's copy of the
 // active plan's (InspectionLimits), written back by applyLiveDetectionParams().
 void Node::configureParameters() {
+    // Before the registry binds: its defaults are the values the bound fields hold when they are described.
+    _activeBehaviorProfile = makeTonalPulseBehaviorProfile();
     configureI2SParameters();
     loadInspectionLimitsFromProfile();
     _params.describe(NodeParams::Fields{_activeDetectionProfile.scalarTransient, _band, _composer.values(), _switches,

@@ -79,6 +79,8 @@ public:
     // False when there is no entry for id or it cannot be read whole.
     virtual bool read(uint16_t id, StoredParam& out) = 0;
     virtual bool write(const StoredParam& entry) = 0;
+    // Removes the entry of one id; true when none is left.
+    virtual bool erase(uint16_t id) = 0;
     // Removes every entry, also those of ids no longer registered.
     virtual bool clear() = 0;
 };
@@ -92,7 +94,8 @@ struct ParamLoadReport {
 
 struct ParamSaveReport {
     size_t written = 0;
-    size_t unchanged = 0;  // the store already held this entry: not rewritten
+    size_t unchanged = 0;  // the store already held this entry (or none is needed): not rewritten
+    size_t removed = 0;    // a stored entry dropped because the value is the firmware default again
     size_t failed = 0;
 };
 
@@ -162,8 +165,9 @@ public:
     bool isDefault(const ParamBinding& binding) const { return valueBits(binding) == binding.defaultBits; }
     // Writes the captured defaults back into every field.
     void restoreDefaults() const;
-    // Writes every registered param. An entry the store already holds as is
-    // is not rewritten (flash wear, and SAVE stays short).
+    // Stores every registered param whose value differs from the firmware default and drops the stored entry of one
+    // that equals it, so a later firmware default is not hidden by a value nobody chose (PAR-018). An entry the store
+    // already holds as is is not rewritten (flash wear, and SAVE stays short).
     ParamSaveReport save(ParamStore& store) const;
     // Reads every registered param's entry and writes the valid ones into the
     // fields: a stored value wins over the default. Prints a line per value

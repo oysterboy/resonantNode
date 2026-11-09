@@ -347,9 +347,19 @@ ParamSaveReport ParamRegistry::save(ParamStore& store) const {
         const StoredParam entry{StoredParam::kVersion, static_cast<uint8_t>(binding.type), binding.id,
                                 valueBits(binding), binding.defaultBits};
         StoredParam existing{};
-        if (store.read(binding.id, existing) && existing.version == entry.version && existing.type == entry.type &&
-            existing.id == entry.id && existing.valueBits == entry.valueBits &&
-            existing.savedDefaultBits == entry.savedDefaultBits) {
+        const bool held = store.read(binding.id, existing);
+        if (isDefault(binding)) {
+            if (!held) {
+                ++report.unchanged;
+            } else if (store.erase(binding.id)) {
+                ++report.removed;
+            } else {
+                ++report.failed;
+            }
+            continue;
+        }
+        if (held && existing.version == entry.version && existing.type == entry.type && existing.id == entry.id &&
+            existing.valueBits == entry.valueBits && existing.savedDefaultBits == entry.savedDefaultBits) {
             ++report.unchanged;
             continue;
         }

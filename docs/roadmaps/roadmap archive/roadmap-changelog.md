@@ -763,6 +763,20 @@ LIST / GET / SET / DUMP beyond the stricter parse rejects.
 Sequenced in roadmap-0-steps.md step 10, before PAR-015.
 ```
 
+### PAR-018 - PARAM SAVE pins defaults it never changed
+
+Status: DONE 2026-11-09 (decisions/2026-11-09-save-only-what-differs.md). Was: PLANNED (2026-10-30, found in step 14)
+
+```text
+PARAM SAVE writes every registered param, so a param the board never had changed is stored at today's
+firmware default and overrides any later default. Step 14: the Nodes had detection.scalar_max_duration_ms = 300
+stored, so the new 450 default never applied (boot: "PARAM stale ... using=stored") and the first chord check
+ran at 300. Saving 450 then pinned 8 more params on E1 / E5. Options: save only params whose value differs from
+the firmware default (and drop a stored entry that equals it), or store a "set by the user" flag per entry;
+the stale warning at boot stays either way. Touches PAR-010's store format (NvsParamStore) and the persistence
+test in test_param_registry.
+```
+
 ## Node / Runtime
 
 ```text

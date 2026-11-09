@@ -184,7 +184,8 @@ switches `scalar_require_min_strength` and `scalar_require_carrier_quality` (eac
 - `PARAM SAVE`: the only flash write; stores the params whose value differs from the firmware default and drops the
   stored entry of one that is back at its default, so a later default is not hidden by a value nobody chose (PAR-018,
   `docs/decisions/2026-11-09-save-only-what-differs.md`). The line reads `written= unchanged= removed= failed=`.
-  `PARAM LOAD` re-reads and applies the store, `PARAM RESET` clears it and restores the firmware defaults
+  `PARAM LOAD` returns every param to its default and then applies the store (so it also undoes a live
+  `PARAM SET` of a param that has no entry), `PARAM RESET` clears it and restores the firmware defaults
   (`docs/decisions/2026-10-23-param-persistence-save-only.md`). A board saved before 2026-11-09 still holds an entry
   for every param; `PARAM SAVE` once drops those that equal the default.
 - `RB PROFILE name=...`: switches the profile and reapplies detection and behavior from the profile

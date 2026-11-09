@@ -6,7 +6,7 @@ PING and PARAM SET, SELFTEST, SELFTEST external, SELFTEST by radio. Writes one t
       [--ref-log bench/sessions/<soak>/soak.log]
 
 Leaves every Node as found: output.silent 1 (stored), the changed param restored and saved, RB log as it was; the
-gateway gets PARAM LOAD at the end (call_enabled, chain_length and the RB PROFILE reset undone) and its RB log mode back (review
+gateway gets PARAM LOAD at the end (call_enabled, band_per_node, chain_length and the RB PROFILE reset undone) and its RB log mode back (review
 12.0 L21). A PARAM GET that answers no value is a FAIL, not a skipped check (M9).
 """
 import argparse
@@ -161,6 +161,9 @@ check("cmd: RB PROFILE (reset lines)", "PROFILE" in prof, (prof.strip().splitlin
 for n in (GW,):
     cmd(n, "RB log full", 0.5)
     cmd(n, "PARAM SET behavior.call_enabled 0", 0.5)
+    # The emitter's hop list sits on the shared band (2950-4700 Hz); the Node now ships one 2500-3500 Hz window per node
+    # (decisions/2026-11-09-node-ships-the-overnight-field.md). Live only, undone by the gateway's PARAM LOAD at the end.
+    cmd(n, "PARAM SET behavior.band_per_node 0", 0.5)
 m = len(buf[GW])
 for i in range(3):
     ports["EM"].write(b"EMIT PULSES 5 25 10 trial=%d freq=3300 hop=2950,3200,3450,3700,3950\n" % (i + 1))

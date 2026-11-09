@@ -143,6 +143,10 @@ void test_save_and_load_need_a_store() {
     const param::ParamCommandResult loaded = run(r, "PARAM LOAD", &store);
     TEST_ASSERT_EQUAL_INT(static_cast<int>(param::ParamCommandEffect::AllGroups), static_cast<int>(loaded.effect));
     TEST_ASSERT_EQUAL_FLOAT(123.0f, scalar.minTransientPeakStrength);
+    // LOAD also undoes a live change of a param that has no stored entry (SAVE keeps only what differs).
+    scalar.onsetReleaseThreshold = scalar.onsetReleaseThreshold + 1.0f;
+    run(r, "PARAM LOAD", &store);
+    TEST_ASSERT_EQUAL_FLOAT(detection::ScalarTransientConfig().onsetReleaseThreshold, scalar.onsetReleaseThreshold);
     // RESET clears the store too.
     run(r, "PARAM RESET", &store);
     TEST_ASSERT_EQUAL_INT(1, store.clears);

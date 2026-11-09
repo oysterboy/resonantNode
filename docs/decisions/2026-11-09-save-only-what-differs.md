@@ -23,6 +23,9 @@ its format (value and the default it was saved against); `PARAM load` and the st
 
 ## Consequences
 
+- `PARAM LOAD` returns every param to its default first and then applies the store: the persisted state is the
+  defaults with the entries over them. The bench scripts that undo their changes with `PARAM LOAD` (`nodecheck.py`,
+  `soakcycle.py`, `maxdurnoise.py`) rely on it. At boot the fields hold the defaults already.
 - A value set by hand to the default and saved is dropped, and follows later defaults: that is the point.
 - A board saved before this change keeps its entries until the next `PARAM SAVE` removes the ones that equal the
   default. `output.silent 1` is not a default, so a saved silent board stays silent.

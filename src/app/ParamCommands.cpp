@@ -102,6 +102,9 @@ ParamCommandResult handleParamCommand(const char* line, const ParamRegistry& reg
             out.println("PARAM LOAD status=no_store");
             return result;
         }
+        // The persisted state is the defaults with the stored entries over them (SAVE keeps only what differs, PAR-018),
+        // so a live change of a param with no entry is undone too.
+        registry.restoreDefaults();
         loadStoredParams(registry, *store, out);
         result.effect = ParamCommandEffect::AllGroups;
         return result;

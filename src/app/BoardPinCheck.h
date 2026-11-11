@@ -25,40 +25,41 @@ namespace board_pins {
 
 // Every signal of the board, -1 where it has none. Keep in step with the BOARD_PIN_* list below.
 constexpr int kSignals[] = {
-    AUDIO_I2S_SCK_PIN, AUDIO_I2S_WS_PIN, AUDIO_I2S_DATA_PIN, AUDIO_I2S_DOUT_PIN, CHIRP_PIN, CHIRP_BTL_PIN,
-    STATUS_LED_PIN,    EMITTER_UART_RX_PIN, EMITTER_UART_TX_PIN, BUTTON_PIN, AMP_SD_PIN, AUX_S1_PIN,
-    AUX_S2_PIN,        AUX_S3_PIN,       AUX_S4_PIN,         AUX_S5_PIN,
+    AUDIO_I2S_SCK_PIN, AUDIO_I2S_WS_PIN,    AUDIO_I2S_DATA_PIN,  AUDIO_I2S_DOUT_PIN, CHIRP_PIN,  CHIRP_BTL_PIN,
+    STATUS_LED_PIN,    EMITTER_UART_RX_PIN, EMITTER_UART_TX_PIN, BUTTON_PIN,         AMP_SD_PIN, AUX_S1_PIN,
+    AUX_S2_PIN,        AUX_S3_PIN,          AUX_S4_PIN,          AUX_S5_PIN,
 };
 constexpr int kAlwaysForbidden[] = {1, 3, 6, 7, 8, 9, 10, 11};
 constexpr int kBoardForbidden[] = {BOARD_FORBIDDEN_PINS};
 constexpr int kBoardSupply[] = {BOARD_SUPPLY_PINS};
 
-template <int N> constexpr int countIn(const int (&pins)[N], int pin, int i = 0) {
+template <int N>
+constexpr int countIn(const int (&pins)[N], int pin, int i = 0) {
     return i >= N ? 0 : (pins[i] == pin ? 1 : 0) + countIn(pins, pin, i + 1);
 }
 
-template <int N> constexpr bool inList(const int (&pins)[N], int pin) {
+template <int N>
+constexpr bool inList(const int (&pins)[N], int pin) {
     return countIn(pins, pin) > 0;
 }
 
 // The ESP32's GPIOs: 20, 24 and 28-31 do not exist.
 constexpr bool isGpio(int pin) {
-    return (pin >= 0 && pin <= 19) || (pin >= 21 && pin <= 23) || (pin >= 25 && pin <= 27) ||
-           (pin >= 32 && pin <= 39);
+    return (pin >= 0 && pin <= 19) || (pin >= 21 && pin <= 23) || (pin >= 25 && pin <= 27) || (pin >= 32 && pin <= 39);
 }
 
 } // namespace board_pins
 
-#define BOARD_PIN_CHECK_(label, pin, drives)                                                                         \
-    static_assert((pin) < 0 || board_pins::isGpio(pin), label ": no such GPIO on the ESP32");                       \
-    static_assert((pin) < 0 || board_pins::countIn(board_pins::kSignals, (pin)) == 1,                               \
-                  label ": pin used twice on this board");                                                           \
-    static_assert((pin) < 0 || !board_pins::inList(board_pins::kAlwaysForbidden, (pin)),                            \
-                  label ": on a flash pin (6-11) or a USB serial pin (1, 3)");                                       \
-    static_assert((pin) < 0 || !board_pins::inList(board_pins::kBoardForbidden, (pin)),                             \
-                  label ": on a pin this board forbids (BOARD_FORBIDDEN_PINS)");                                     \
-    static_assert((pin) < 0 || !board_pins::inList(board_pins::kBoardSupply, (pin)),                                \
-                  label ": on a supply pin of this board (BOARD_SUPPLY_PINS), a short as an output");                \
+#define BOARD_PIN_CHECK_(label, pin, drives) \
+    static_assert((pin) < 0 || board_pins::isGpio(pin), label ": no such GPIO on the ESP32"); \
+    static_assert((pin) < 0 || board_pins::countIn(board_pins::kSignals, (pin)) == 1, \
+                  label ": pin used twice on this board"); \
+    static_assert((pin) < 0 || !board_pins::inList(board_pins::kAlwaysForbidden, (pin)), \
+                  label ": on a flash pin (6-11) or a USB serial pin (1, 3)"); \
+    static_assert((pin) < 0 || !board_pins::inList(board_pins::kBoardForbidden, (pin)), \
+                  label ": on a pin this board forbids (BOARD_FORBIDDEN_PINS)"); \
+    static_assert((pin) < 0 || !board_pins::inList(board_pins::kBoardSupply, (pin)), \
+                  label ": on a supply pin of this board (BOARD_SUPPLY_PINS), a short as an output"); \
     static_assert(!(drives) || (pin) < 34, label ": drives one of the input-only pins 34-39")
 
 // The stringized name is the macro's own (#name does not expand it); the value is expanded for the checks.

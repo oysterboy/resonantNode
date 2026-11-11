@@ -28,7 +28,8 @@ that leaves detection as it is (24; decisions/2026-11-06-sound-layer-before-the-
 frozen: params and fixes for real faults only.
 
 ```text
-until 11-30     23's board parts; 20.5 with PAR-018; the echo modes on the desk; 21, every board over the bench
+until 11-30     23's board parts; 20.5 with PAR-018; the echo modes on the desk; 21, every board over the bench;
+                28 the light
 November        13.1 and 15 in the room with a few nodes; the room's noise for 20.4
 by 11-27        20.6 the demo's mode first
 12-01 .. 12-06  24 the sound layer; then the code freeze
@@ -370,6 +371,18 @@ substeps marked "on site" wait for those days.
    Gate: ten checked nodes in the roster by 2026-11-30, on stripboard in cases or a checked breadboard node in place
    of one that missed the date; a bench session cited; the room steps in December run on them.
 
+28. [TODO, by 2026-11-30] The light: a dimmed ring on the Aux port, under a hard current cap. (issue #94) PC, then the owner's bench.
+   roadmap-output.md OUT-007; decisions/2026-10-13-light-half-amp-on-board-5v.md. Its own step before the code
+   freeze (owner 2026-11-11), so the room from 2026-12-07 and the video run with the light ("Licht ist Pflicht",
+   Case V1). V1 most likely a PWM-dimmed ring on Aux S2 (GPIO 18) of the stripboard (owner 2026-11-11: "probably").
+   28.1 With the owner: the ring (PWM or WS2812, LED count) and what the light shows (states, colours).
+   28.2 PC: LightOutput, the cap (build-time ceiling, a param below it) and the state mapping, host-tested; the
+        pin on the stripboard's board config (the lochraster_v1 board; Aux pins reserved there).
+   28.3 Bench, on the HW-001 prototype or a breadboard node with the ring: the ring at its cap measured; the 5 V rail
+        with the light at its cap, the hop train at the shipped level and the radio, in the closed case; the mic's
+        floor in the band with the light off and at its cap. A measurement, not a tuning pass.
+   Gate: OUT-007's gate; the light on every board checked in 21.4 before 2026-12-07.
+
 24. [TODO, 2026-12-01 .. 12-06] The sound layer: OUT-006's aesthetic layer and BEH-006's variation over time, detection unchanged. (issue #90)
    roadmap-output.md OUT-006, roadmap-behavior.md BEH-006, PAR-009 for the params they need; docs/research/polyphony.md.
    Before the field with all nodes, in the first week of December (owner 2026-11-06), as a layer that changes the
@@ -473,6 +486,8 @@ parallel.
 
 ## Status log
 
+Status update 2026-11-11: step 28 added (the light, OUT-007, issue #94; owner: its own step before the freeze, by
+2026-11-30); the 0.5 A cap from 2026-10-13 filed as a decision.
 Status update 2026-11-06, later: steps 26 (whisper corpus, issue #92) and 27 (whisper evaluation, issue #93) added with
 ECHO-005 (owner): the long-recording firmware is built (REC over USB), the first host findings are in whispernet.md.
 Status update 2026-11-06: the plan to the performance on 2026-12-13, set with the owner: the tryout room is the

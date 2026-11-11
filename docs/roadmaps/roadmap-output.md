@@ -1,7 +1,7 @@
 # Roadmap - Output
 
 Status: future-supporting roadmap.
-Scope: SoundOutput / ChirpOutput boundary, later OutputStatus and OutputProfile.
+Scope: SoundOutput / ChirpOutput boundary, later OutputStatus and OutputProfile; the node's light (OUT-007).
 Purpose: keep the current output path understandable while the behavior/output
 split stays simple.
 
@@ -84,6 +84,42 @@ detection layer considered and dropped 2026-10-15.
 Source: docs/research/frequency-drift-detection.md (Two-layer signal).
 ```
 
+### OUT-007 - the light: a dimmed ring on the Aux port
+
+Status: TODO (owner 2026-11-11: its own step before the code freeze, roadmap-0-steps.md step 28, by 2026-11-30;
+issue #94). The cap: decisions/2026-10-13-light-half-amp-on-board-5v.md.
+
+```text
+What: the node's light, which the case design needs ("Licht ist Pflicht" for the video; Case V1: the light shows
+the node's state, e.g. listening / waiting / playing). A LightOutput beside SoundOutput: Behavior decides, the
+Node composes what the light shows from Behavior's state, LightOutput performs it. It reads no detector internals,
+and detection never reads the light. The state-to-level mapping and the current cap are pure code, host-tested;
+the pin driver sits in src/hal/. Params under light.*. The status LED (STATUS_LED_PIN) stays the debug indicator.
+
+V1 hardware (owner 2026-11-11: "probably"): a PWM-dimmed ring, one channel, on an Aux pin of the stripboard
+(Aux S2, GPIO 18), through a logic-level N-MOSFET (gate pull-down, so the ring stays dark while the pin floats at
+boot). WS2812 stays possible later behind the same LightOutput (a per-pixel current model, RMT only: I2S port 0
+is the audio).
+Open with the owner: the ring (PWM or WS2812, LED count), what the light shows (states, colours, fades).
+
+The cap (the decision above): a hard ceiling set at build time from the ring's measured full-on current, a param
+that lowers it (a low saved value for the bench on USB, where the DevKit's diode gives about 0.5 A to everything).
+Proposed 2026-11-11, for the owner: the 0.5 A is the light's own ceiling; no ducking while the amp plays (a dip
+would show exactly when the light should say "playing"). Instead the whole 5 V rail is measured once: light at its
+cap + the hop train at the shipped level + the radio, in the closed case. Estimate: ~0.5 + ~0.3 + ~0.3 A, about
+1.1 A on the MP1584; if the buck does not hold it, the cap goes down.
+
+Noise: the light switches up to 0.5 A on the rail the amp and (through the ESP's regulator) the mic share, and its
+return can run through the mic's ground strip. PWM well above the band and above the mic's Nyquist (a build-time
+frequency, ~20-25 kHz on LEDC; an offboard COB driver may want less, its input level is still open), Aux 5V / GND
+wired straight to the buck output. Checked on the bench, not tuned: the mic's floor in the band with the light off
+and at its cap (DetectionProfile / BehaviorProfile stay as they are).
+
+Gate: the cap host-tested (no level and no param exceeds it); on the bench the ring at its cap measured <= the
+ceiling, the 5 V rail as above, the floor in the band with the light off and at its cap compared, each in a bench
+session cited; the light runs on every node in the room from 2026-12-07.
+```
+
 ## Current focus
 
 ```text
@@ -93,6 +129,8 @@ over I2S) is NODE-009, step 2: hardware, not output architecture.
 Now (2026-10-26): no output step is sequenced; OUT-006 waits on step 8a, OUT-004 on step 11.
 Now (2026-10-29, 12.3): OUT-005 done (5b); OUT-004 and OUT-006 (8a, after step 19's decision) are in
 roadmap-0-steps.md "After the performance".
+Now (2026-11-11): OUT-006's aesthetic layer is step 24 (2026-12-01 .. 12-06); OUT-007, the light, is step 28,
+before it (by 2026-11-30).
 ```
 
 ## Spec candidates

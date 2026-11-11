@@ -115,6 +115,7 @@ what replaced it.
 | 2026-11-09 | [The Node ships the settings of the 2026-11-05 overnight field](2026-11-09-node-ships-the-overnight-field.md) |
 | 2026-11-09 | [PARAM SAVE stores only what differs from the firmware default (PAR-018)](2026-11-09-save-only-what-differs.md) |
 | 2026-11-06 | [Ten nodes on stripboard for the performance; checked breadboard nodes are the fallback, decided on 2026-11-30](2026-11-06-ten-stripboard-nodes-breadboard-fallback.md) |
+| 2026-11-11 | [The stripboard node is its own board variant (BOARD_LOCHRASTER_V1), its pins checked at compile time](2026-11-11-stripboard-board-variant.md) |
 
 ## Open
 

@@ -35,11 +35,15 @@ the owner's hands, the same hands that run the bench checks and the site days.
 Status: TODO (owner 2026-10-30)
 
 ```text
-1. One stripboard: the DevKit on headers, the amp and mic breakouts, the D-AMP pinout exactly as wired today, so
-   the firmware needs no board variant and E1-E5 stay valid references for the batch.
+1. One stripboard: the DevKit on headers, the amp and mic breakouts, on the stripboard's own pinout (owner
+   2026-10-30, pins of 2026-11-11; decisions/2026-11-11-stripboard-board-variant.md): the same amp, mic and I2S
+   framing as E1-E5 on other pins, so the firmware builds it as a board variant (BOARD_LOCHRASTER_V1, the
+   esp32dev-lr1* envs, built and pin-checked at compile time since 2026-11-11, not yet on a board). E1-E5 stay the
+   acoustic references; their images do not go onto a stripboard.
 2. Room left for the second mic breakout, unpopulated (docs/research/second-mic-diversity.md, parked): costs
    nothing now, saves a rebuild later.
-3. Power in (USB), the LED, the programming header (OTA means it is needed once per board).
+3. Power in (USB), the LED, the programming header (OTA means it is needed once per board); the button, the Aux
+   header (the light, OUT-007) and UART2 on its own header.
 4. Mic and speaker placement fixed with the case (HW-003) so every node has the same geometry; that geometry is
    what steps 15 and 18 measure in the room.
 Effort: 1-2 days. Gate: the proto runs the Node image, passes nodecheck.py, and its strip layout is on paper (a

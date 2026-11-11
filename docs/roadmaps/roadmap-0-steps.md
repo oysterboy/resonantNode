@@ -357,7 +357,7 @@ substeps marked "on site" wait for those days.
    module with params, or dropped); 20.6 can name its mode.
 
 21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
-   roadmap-hardware.md HW-001 (the prototype, the D-AMP pinout as wired, room for the second mic), HW-002 (ten
+   roadmap-hardware.md HW-001 (the prototype on its own pinout, the lochraster_v1 board config, room for the second mic), HW-002 (ten
    boards, each nodecheck'd and in the roster), HW-003 (ten cases, one geometry), HW-004 (ten nodes in the firmware:
    roster entries, the field measured at five). Handmade, hands-bound (owner 2026-10-30); runs beside 13-20 on the
    owner's bench hours; the plan to 2026-12-13 in roadmap-hardware.md.
@@ -375,7 +375,9 @@ substeps marked "on site" wait for those days.
    roadmap-output.md OUT-007; decisions/2026-10-13-light-half-amp-on-board-5v.md. Its own step before the code
    freeze (owner 2026-11-11), so the room from 2026-12-07 and the video run with the light ("Licht ist Pflicht",
    Case V1). V1 most likely a PWM-dimmed ring on Aux S2 (GPIO 18) of the stripboard (owner 2026-11-11: "probably").
-   28.1 With the owner: the ring (PWM or WS2812, LED count) and what the light shows (states, colours).
+   28.1 With the owner: the ring and what the light shows (states, colours). Owner 2026-11-11: a WS2812 ring or a
+        MOSFET-switched PWM one, chosen by about 2026-11-18; the kind a board-config constant, never a param
+        (OUT-007). The shared part and the PWM driver first, the WS2812 driver only if that ring is chosen.
    28.2 PC: LightOutput, the cap (build-time ceiling, a param below it) and the state mapping, host-tested; the
         pin on the stripboard's board config (the lochraster_v1 board; Aux pins reserved there).
    28.3 Bench, on the HW-001 prototype or a breadboard node with the ring: the ring at its cap measured; the 5 V rail
@@ -486,6 +488,8 @@ parallel.
 
 ## Status log
 
+Status update 2026-11-11, later: the stripboard's board config (BOARD_LOCHRASTER_V1, esp32dev-lr1*, a pin check at
+compile time; decisions/2026-11-11-stripboard-board-variant.md) for HW-001, compiled by CI, not yet on a board.
 Status update 2026-11-11: step 28 added (the light, OUT-007, issue #94; owner: its own step before the freeze, by
 2026-11-30); the 0.5 A cap from 2026-10-13 filed as a decision.
 Status update 2026-11-06, later: steps 26 (whisper corpus, issue #92) and 27 (whisper evaluation, issue #93) added with

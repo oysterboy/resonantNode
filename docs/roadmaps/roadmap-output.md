@@ -100,7 +100,14 @@ V1 hardware (owner 2026-11-11: "probably"): a PWM-dimmed ring, one channel, on a
 (Aux S2, GPIO 18), through a logic-level N-MOSFET (gate pull-down, so the ring stays dark while the pin floats at
 boot). WS2812 stays possible later behind the same LightOutput (a per-pixel current model, RMT only: I2S port 0
 is the audio).
-Open with the owner: the ring (PWM or WS2812, LED count), what the light shows (states, colours, fades).
+Owner 2026-11-11: the ring is a one-wire one (WS2812) or a MOSFET-switched PWM one, the choice by about 2026-11-18
+so the light is on every board before 21.4's checks. The kind is a board-config constant (LIGHT_KIND none / pwm /
+ws2812, default none), never a param: both hang on the same pin, and PWM into a WS2812 reads as all-ones, every
+LED full white (0.85-1.7 A), past the cap; a saved param would survive a reflash. Built first: the shared part
+(state to level, the cap) and the PWM driver, which the offboard COB fallback needs too (its 24 V current is not
+the board's, its PWM frequency may have to be lower); the WS2812 driver (a pinned RMT library, the per-pixel
+model) only if that ring is chosen.
+Open with the owner: the ring (which kind, LED count), what the light shows (states, colours, fades).
 
 The cap (the decision above): a hard ceiling set at build time from the ring's measured full-on current, a param
 that lowers it (a low saved value for the bench on USB, where the DevKit's diode gives about 0.5 A to everything).

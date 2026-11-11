@@ -24,6 +24,11 @@ jobs:
           - esp32dev-piezo
           - esp32dev-piezo-analyzer
           - esp32dev-piezo-emitter
+          - esp32dev-lr1
+          - esp32dev-lr1-analyzer
+          - esp32dev-lr1-emitter
+          - esp32dev-lr1-echo
+          - esp32dev-lr1-whisper
           - esp32dev-wraptest
           - esp32dev-analyzer-wraptest
     steps:
@@ -48,6 +53,13 @@ jobs:
         run: |
           PLATFORMIO_BUILD_FLAGS="-D OTA_TEST_CRASH" pio run -e esp32dev
           PLATFORMIO_BUILD_FLAGS="-D OTA_TEST_HANG" pio run -e esp32dev
+      # The board pin check (src/app/BoardPinCheck.h) must stop a build: a status LED moved onto the amp's data pin.
+      - if: matrix.env == 'esp32dev-lr1'
+        run: |
+          if PLATFORMIO_BUILD_FLAGS="-D STATUS_LED_PIN=27" pio run -e esp32dev-lr1 > pincheck.log 2>&1; then
+            echo "pin check: a doubled pin built"; exit 1
+          fi
+          grep -q "pin used twice on this board" pincheck.log || { tail -30 pincheck.log; exit 1; }
 
   host:
     runs-on: ubuntu-24.04

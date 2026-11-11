@@ -8,18 +8,29 @@ the wiring. The board is a build variant, never switched at runtime
 (docs/decisions/2026-10-06-damp-output-hardware.md,
 docs/decisions/2026-10-09-discontinue-piezo.md).
 
-- Default: D-AMP. MAX98357A amp and I2S MEMS mic share one full-duplex
-  I2S port (BCLK 26, WS 25), amp DIN 32, mic SD 33, mic L/R to GND.
-  Status LED on 2 (the DevKit's onboard LED; an external one goes
+- Default: D-AMP on a breadboard. MAX98357A amp and I2S MEMS mic share one
+  full-duplex I2S port (BCLK 26, WS 25), amp DIN 32, mic SD 33, mic L/R to
+  GND. Status LED on 2 (the DevKit's onboard LED; an external one goes
   GPIO 2 -> ~330 R -> LED -> GND: GPIO 2 is a strapping pin and must not be
   pulled high at boot).
+- BOARD_LOCHRASTER_V1: the stripboard node (HW-001; pinout of 2026-11-11 on
+  the Trello card "Prototyp-Platine HW-001"). The same amp, mic and port
+  framing as D-AMP on other pins: BCLK 26, WS 25, mic SD 35, amp DIN 27, so
+  every D-AMP code path applies to it. The mic is powered from the strips of
+  GPIO 32 (GND) and 33 (3V3): never flash a D-AMP image onto it, D-AMP drives
+  32 as the amp's data line, into ground.
 - BOARD_PIEZO: the discontinued piezo nodes, kept as a fallback build.
   Mic on its own RX-only port (14/27/33), LEDC square wave on 25 with the
   inverted BTL leg on 26, LED on 2.
 
 Every value is an #ifndef default so a single one can still be overridden
-from platformio.ini.
+from platformio.ini; BoardPinCheck.h (included at the end) refuses a set of
+pins that collide or that the board must not drive.
 */
+
+#if defined(BOARD_PIEZO) && defined(BOARD_LOCHRASTER_V1)
+#error "BOARD_PIEZO and BOARD_LOCHRASTER_V1 are two boards: define one"
+#endif
 
 #if defined(BOARD_PIEZO)
 
@@ -46,6 +57,13 @@ from platformio.ini.
 #ifndef STATUS_LED_PIN
 #define STATUS_LED_PIN 2
 #endif
+// Analyzer <-> Emitter control UART (Serial2).
+#ifndef EMITTER_UART_RX_PIN
+#define EMITTER_UART_RX_PIN 16
+#endif
+#ifndef EMITTER_UART_TX_PIN
+#define EMITTER_UART_TX_PIN 17
+#endif
 
 #ifndef I2S_CAPTURE_MODE
 #define I2S_CAPTURE_MODE (I2S_MODE_MASTER | I2S_MODE_RX)
@@ -65,7 +83,70 @@ from platformio.ini.
 #define I2S_RX_MSB_ALIGN 0
 #endif
 
-#else // D-AMP
+#else // D-AMP: the breadboard nodes and the stripboard (BOARD_LOCHRASTER_V1)
+
+#if defined(BOARD_LOCHRASTER_V1)
+
+#define BOARD_NAME "lochraster_v1"
+
+#ifndef AUDIO_I2S_SCK_PIN
+#define AUDIO_I2S_SCK_PIN 26
+#endif
+#ifndef AUDIO_I2S_WS_PIN
+#define AUDIO_I2S_WS_PIN 25
+#endif
+// GPIO 35 is input-only, which is all the mic's data line needs; it has no internal pull, so with a second mic on
+// the shared SD line the board carries the 100 k to GND.
+#ifndef AUDIO_I2S_DATA_PIN
+#define AUDIO_I2S_DATA_PIN 35
+#endif
+#ifndef AUDIO_I2S_DOUT_PIN
+#define AUDIO_I2S_DOUT_PIN 27
+#endif
+// GPIO 14 drives a short signal while the chip boots: the LED may flicker once at reset.
+#ifndef STATUS_LED_PIN
+#define STATUS_LED_PIN 14
+#endif
+// Analyzer <-> Emitter control UART (Serial2): on the stripboard's UART2 header. 16/17, the breadboard nodes' pins,
+// are Aux S4 / S3 here, so a cable between a stripboard and a breadboard node crosses 23 -> 16 and 17 -> 22.
+#ifndef EMITTER_UART_RX_PIN
+#define EMITTER_UART_RX_PIN 22
+#endif
+#ifndef EMITTER_UART_TX_PIN
+#define EMITTER_UART_TX_PIN 23
+#endif
+
+// Wired on the board, no code drives them yet. Declared so BoardPinCheck.h keeps every other signal off them.
+#ifndef BUTTON_PIN
+#define BUTTON_PIN 13 // to GND, the internal pull-up
+#endif
+#ifndef AMP_SD_PIN
+#define AMP_SD_PIN 21 // the amp's shutdown (mute while listening); the bridge is soldered later
+#endif
+// The 8-pin Aux header: GND, S1-S5, 5V, 3V3. S2 carries the light's signal (OUT-007).
+#ifndef AUX_S1_PIN
+#define AUX_S1_PIN 19
+#endif
+#ifndef AUX_S2_PIN
+#define AUX_S2_PIN 18
+#endif
+#ifndef AUX_S3_PIN
+#define AUX_S3_PIN 17
+#endif
+#ifndef AUX_S4_PIN
+#define AUX_S4_PIN 16
+#endif
+#ifndef AUX_S5_PIN
+#define AUX_S5_PIN 4
+#endif
+
+// Pins this layout must never configure. 0, 2, 5, 12 and 15 are strapping pins; the layout cuts their strips at the
+// DevKit and uses the far side for other nets. 32 and 33 carry the mic's GND and 3V3: as an output either one is a
+// short.
+#define BOARD_FORBIDDEN_PINS 0, 2, 5, 12, 15
+#define BOARD_SUPPLY_PINS 32, 33
+
+#else // the breadboard D-AMP node
 
 #define BOARD_NAME "damp"
 
@@ -81,14 +162,24 @@ from platformio.ini.
 #ifndef AUDIO_I2S_DOUT_PIN
 #define AUDIO_I2S_DOUT_PIN 32
 #endif
+#ifndef STATUS_LED_PIN
+#define STATUS_LED_PIN 2
+#endif
+// Analyzer <-> Emitter control UART (Serial2).
+#ifndef EMITTER_UART_RX_PIN
+#define EMITTER_UART_RX_PIN 16
+#endif
+#ifndef EMITTER_UART_TX_PIN
+#define EMITTER_UART_TX_PIN 17
+#endif
+
+#endif // BOARD_LOCHRASTER_V1
+
 #ifndef CHIRP_PIN
 #define CHIRP_PIN -1
 #endif
 #ifndef CHIRP_BTL_PIN
 #define CHIRP_BTL_PIN -1
-#endif
-#ifndef STATUS_LED_PIN
-#define STATUS_LED_PIN 2
 #endif
 
 #ifndef I2S_CAPTURE_MODE
@@ -114,13 +205,31 @@ from platformio.ini.
 
 #endif
 
-// Analyzer <-> Emitter control UART (Serial2), same on both boards.
-#ifndef EMITTER_UART_RX_PIN
-#define EMITTER_UART_RX_PIN 16
-#endif
-#ifndef EMITTER_UART_TX_PIN
-#define EMITTER_UART_TX_PIN 17
-#endif
 #ifndef EMITTER_UART_BAUD
 #define EMITTER_UART_BAUD 115200
 #endif
+
+// Signals a board has wired but no code drives yet; -1 where a board has none.
+#ifndef BUTTON_PIN
+#define BUTTON_PIN -1
+#endif
+#ifndef AMP_SD_PIN
+#define AMP_SD_PIN -1
+#endif
+#ifndef AUX_S1_PIN
+#define AUX_S1_PIN -1
+#endif
+#ifndef AUX_S2_PIN
+#define AUX_S2_PIN -1
+#endif
+#ifndef AUX_S3_PIN
+#define AUX_S3_PIN -1
+#endif
+#ifndef AUX_S4_PIN
+#define AUX_S4_PIN -1
+#endif
+#ifndef AUX_S5_PIN
+#define AUX_S5_PIN -1
+#endif
+
+#include "BoardPinCheck.h"

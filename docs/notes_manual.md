@@ -27,6 +27,15 @@ since 2026-10-09. The discontinued piezo boards build as `esp32dev-piezo`, `esp3
 `esp32dev-piezo-emitter` (`-D BOARD_PIEZO`). Pins and I2S slots per board: `src/app/BoardConfig.h`.
 Never flash a piezo build onto a D-AMP board or the reverse: the pinouts collide on GPIO 25/26.
 
+The stripboard nodes (HW-001, 2026-11-11) build the same modes on their own pins: `esp32dev-lr1` (Node),
+`esp32dev-lr1-analyzer`, `esp32dev-lr1-emitter`, `esp32dev-lr1-echo`, `esp32dev-lr1-whisper` (`-D BOARD_LOCHRASTER_V1`,
+`BOARD_NAME` `lochraster_v1` in the boot banner). Never flash a plain D-AMP image onto a stripboard: it drives GPIO 32,
+which carries the mic's GND there. The reverse leaves the mic silent and Serial2 on other pins, nothing worse. Their
+Serial2 to an Emitter is on the UART2 header (TX 23 / RX 22, the breadboard nodes 17 / 16; the cable crosses TX and RX,
+GND along). Every board's pins pass a compile-time check (`src/app/BoardPinCheck.h`): a pin used twice, a flash or USB
+serial pin, an output on 34-39, or a pin the board lists as forbidden or as a supply stops the build with the signal's
+name.
+
 What each image is built from (2026-11-01): the Node, Analyzer and Emitter builds leave out the echo shell
 (`src/modes/echo/`) and the echo modes' inspection modules (`src/detection/inspection/EchoInspection.cpp`, built
 only with `ECHO_INSPECTION`); the echo and whisper builds leave out the Node's mode, the band bank
@@ -118,59 +127,112 @@ structs), `behavior.*` in `src/behavior/BehaviorProfile.h` (`BehaviorGateConfig`
 defaults stay for the host tests, the field simulation and the echo modes. Retuning a default is its own pass, logged
 through `tools/logging/`; do not change these headers as a side effect of other work.
 
-### Param reference (Node)
-
-What each param does, its unit and when it acts. Values are not copied here: `PARAM DUMP` on the board shows them,
-the sites are listed above. Paths renamed on 2026-11-06 are mapped in
-`docs/decisions/2026-11-06-param-review-owner-answers.md`; a `PARAM SET` with an old path answers `unknown_param`.
-**cond.** means the param acts only in the setting named.
-
-`behavior.*`: how the node answers and calls.
-
-| path | what it does | unit | acts |
-|---|---|---|---|
-| `wait_after_heard_ms` | fixed wait before an answer | ms | yes |
-| `answer_spread_ms` | a random 0..x added to that wait, shrinking with the level (`spread_shrinks`) | ms | cond.: `chain_length` > 0 |
-| `spread_shrinks` | the spread shrinks as the level rises; 0 keeps the full window | bool | cond.: `chain_length` > 0 |
-| `after_own_deaf_ms` | detection deaf while the own sound plays, plus this | ms | yes |
-| `after_own_tail_ms` | detection deaf for the room's tail after the own sound | ms | yes |
-| `after_own_no_answer_ms` | after the own sound, heard trains count but are not answered | ms | yes |
-| `call_enabled` | the node calls on its own after a silence | bool | yes |
-| `call_after_silence_ms` | the silence before the own call | ms | yes |
-| `call_after_silence_spread_ms` | plus or minus a random amount on that | ms | yes |
-| `call_blocked_after_heard_ms` | no own call this soon after hearing a train | ms | yes |
-| `call_blocked_after_own_ms` | no own call this soon after the own sound | ms | yes |
-| `chain_length` | events (heard trains plus own sounds) until the rest; 0 switches the level automaton off | count | yes |
-| `level_fall_ms` | the level drops by 1 per this much silence | ms | cond.: `chain_length` > 0 |
-| `start_chance_pct` | chance of answering the first train in a quiet field; it rises evenly to 100 % | % | yes (0 = 1 in `chain_length`) |
-| `plateau_pct` | the chance reaches 100 % after this share of the ramp, certain beyond | % | cond.: `start_chance_pct` > 0 |
-| `rest_ms` | the pause at the top of the level | ms | cond.: `chain_length` > 0 |
-| `band_per_node` | each node its own window on the range, so the windows differ per node | bool | yes |
-| `band_range_low_hz`, `band_range_high_hz` | the range the windows sit on | Hz | cond.: `band_per_node` 1 |
-| `base_scatter_bins` | how far the base moves at a rest (0 = anywhere) | bins | cond.: `band_per_node` 1 |
-
-`output.*` and `node.*`: the sound and the node's own switches.
-
-| path | what it does | unit | acts |
-|---|---|---|---|
-| `output.hop_enabled` | the signal is the climbing train (else the plain pattern) | bool | yes |
-| `output.hop_rotation` | the start base from the roster | index | yes |
-| `output.hop_pulse_ms` | one step's length | ms | yes |
-| `output.hop_gap_ms` | silence between steps (0 = one glide) | ms | yes |
-| `output.hop_steps` | steps per signal | count | yes |
-| `output.idle_announce_hz`, `output.idle_announce_ms` | the call's lead-in tone and its length (0 Hz = none) | Hz, ms | yes |
-| `output.silent` | outputs off, detection keeps running | bool | yes |
-| `node.radio_enabled` | the radio at boot | bool | yes, read at boot |
-| `node.radio_log` | console lines per second mirrored to the radio, 0 off | lines/s | yes |
-
-`detection.*` is tuning, a pass of its own: `scalar_onset_threshold` and `scalar_release_threshold` (a sound starts
-above, ends below), `scalar_cooldown_ms`, `scalar_min_duration_ms` / `scalar_max_duration_ms` (allowed length, 0 =
-no limit), `scalar_release_debounce_ms`, `scalar_max_gap_ms`, `scalar_min_release_coverage_ms` and
-`scalar_min_longest_island_ms` (time above release, summed and longest), `scalar_min_peak_strength`, the two
-switches `scalar_require_min_strength` and `scalar_require_carrier_quality` (each turns its limits on), `band_low_hz`
-/ `band_high_hz` (the shared band; the window rules while `behavior.band_per_node` is 1), `amp_medium` and
-`contrast_medium` (the inspectors' limits), and `shape_*` (the climb the hop train must show).
-
+### Param reference (Node)
+
+
+
+What each param does, its unit and when it acts. Values are not copied here: `PARAM DUMP` on the board shows them,
+
+the sites are listed above. Paths renamed on 2026-11-06 are mapped in
+
+`docs/decisions/2026-11-06-param-review-owner-answers.md`; a `PARAM SET` with an old path answers `unknown_param`.
+
+**cond.** means the param acts only in the setting named.
+
+
+
+`behavior.*`: how the node answers and calls.
+
+
+
+| path | what it does | unit | acts |
+
+|---|---|---|---|
+
+| `wait_after_heard_ms` | fixed wait before an answer | ms | yes |
+
+| `answer_spread_ms` | a random 0..x added to that wait, shrinking with the level (`spread_shrinks`) | ms | cond.: `chain_length` > 0 |
+
+| `spread_shrinks` | the spread shrinks as the level rises; 0 keeps the full window | bool | cond.: `chain_length` > 0 |
+
+| `after_own_deaf_ms` | detection deaf while the own sound plays, plus this | ms | yes |
+
+| `after_own_tail_ms` | detection deaf for the room's tail after the own sound | ms | yes |
+
+| `after_own_no_answer_ms` | after the own sound, heard trains count but are not answered | ms | yes |
+
+| `call_enabled` | the node calls on its own after a silence | bool | yes |
+
+| `call_after_silence_ms` | the silence before the own call | ms | yes |
+
+| `call_after_silence_spread_ms` | plus or minus a random amount on that | ms | yes |
+
+| `call_blocked_after_heard_ms` | no own call this soon after hearing a train | ms | yes |
+
+| `call_blocked_after_own_ms` | no own call this soon after the own sound | ms | yes |
+
+| `chain_length` | events (heard trains plus own sounds) until the rest; 0 switches the level automaton off | count | yes |
+
+| `level_fall_ms` | the level drops by 1 per this much silence | ms | cond.: `chain_length` > 0 |
+
+| `start_chance_pct` | chance of answering the first train in a quiet field; it rises evenly to 100 % | % | yes (0 = 1 in `chain_length`) |
+
+| `plateau_pct` | the chance reaches 100 % after this share of the ramp, certain beyond | % | cond.: `start_chance_pct` > 0 |
+
+| `rest_ms` | the pause at the top of the level | ms | cond.: `chain_length` > 0 |
+
+| `band_per_node` | each node its own window on the range, so the windows differ per node | bool | yes |
+
+| `band_range_low_hz`, `band_range_high_hz` | the range the windows sit on | Hz | cond.: `band_per_node` 1 |
+
+| `base_scatter_bins` | how far the base moves at a rest (0 = anywhere) | bins | cond.: `band_per_node` 1 |
+
+
+
+`output.*` and `node.*`: the sound and the node's own switches.
+
+
+
+| path | what it does | unit | acts |
+
+|---|---|---|---|
+
+| `output.hop_enabled` | the signal is the climbing train (else the plain pattern) | bool | yes |
+
+| `output.hop_rotation` | the start base from the roster | index | yes |
+
+| `output.hop_pulse_ms` | one step's length | ms | yes |
+
+| `output.hop_gap_ms` | silence between steps (0 = one glide) | ms | yes |
+
+| `output.hop_steps` | steps per signal | count | yes |
+
+| `output.idle_announce_hz`, `output.idle_announce_ms` | the call's lead-in tone and its length (0 Hz = none) | Hz, ms | yes |
+
+| `output.silent` | outputs off, detection keeps running | bool | yes |
+
+| `node.radio_enabled` | the radio at boot | bool | yes, read at boot |
+
+| `node.radio_log` | console lines per second mirrored to the radio, 0 off | lines/s | yes |
+
+
+
+`detection.*` is tuning, a pass of its own: `scalar_onset_threshold` and `scalar_release_threshold` (a sound starts
+
+above, ends below), `scalar_cooldown_ms`, `scalar_min_duration_ms` / `scalar_max_duration_ms` (allowed length, 0 =
+
+no limit), `scalar_release_debounce_ms`, `scalar_max_gap_ms`, `scalar_min_release_coverage_ms` and
+
+`scalar_min_longest_island_ms` (time above release, summed and longest), `scalar_min_peak_strength`, the two
+
+switches `scalar_require_min_strength` and `scalar_require_carrier_quality` (each turns its limits on), `band_low_hz`
+
+/ `band_high_hz` (the shared band; the window rules while `behavior.band_per_node` is 1), `amp_medium` and
+
+`contrast_medium` (the inspectors' limits), and `shape_*` (the climb the hop train must show).
+
+
+
 ### Apply points, in boot order
 
 - `Node::begin()`: `configureParameters()`, audio source and signal start, detection reset, then

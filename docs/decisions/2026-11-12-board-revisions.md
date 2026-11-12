@@ -9,8 +9,10 @@ Date: 2026-11-12
 - **RC:** a layout revision inside a generation (RC1, RC2, ...). An RC is frozen once boards are cut from it; any
   change after that is a new RC. Fixes before the freeze are new versions of the same RC.
 - **One layout artifact per RC** (claude.ai): a new RC starts as a copy, the old one stays unchanged.
-- **One GitHub issue per RC** collects the findings (#96 for RC2). It closes when the RC is frozen; what is still
-  open moves to the next RC's issue.
+- **One Trello checklist per RC** on the board's Trello card collects the fixes ("RC2 Fixes" on
+  "RES: Prototyp-Platine HW-001"). It is done when the RC is frozen; what is still open moves to the next RC's
+  checklist. Hardware hand-work is tracked on Trello, not in GitHub issues; an issue exists only where the repo has
+  to change (a new board in `BoardConfig.h`, a firmware guard).
 - **Firmware:** the board name follows the pinout, not the RC. An RC that changes a pin gets a new board name
   (`lochraster_v2`); one that does not keeps it.
 - **In the repo:** `docs/hardware/boards.md` (generation, RC, status, date, artifact, firmware board, issue) and, at
@@ -24,7 +26,7 @@ but which RC a board was cut from, and which firmware it takes, has to survive i
 ## Rules out
 
 - Editing a frozen RC's artifact.
-- Design details on Trello cards (Trello holds status and links only).
+- Design details on Trello cards (Trello holds tasks, status and links; the reasons go to `docs/lab/` and here).
 
 ## Revisit when
 

@@ -2,7 +2,8 @@
 
 Date: 2026-11-12. Board: HW-001, layout RC2, firmware board `lochraster_v1` (`esp32dev-lr1`).
 Layout and build guide: the RC2 layout artifact ("Node-Platine V1 RC2",
-https://claude.ai/artifact/AFSXXhcWmjkM6ZtH4Dfeqo) with its 1:1 PDF. Fix list: issue #96.
+https://claude.ai/artifact/AFSXXhcWmjkM6ZtH4Dfeqo) with its 1:1 PDF. Fix list: Trello card "RES: Prototyp-Platine HW-001", checklist "RC2 Fixes" (https://trello.com/c/1MuBUqNm); the first
+findings were collected in issue #96, closed and moved there.
 No bench session was recorded; the numbers below were read off the lab PSU, the multimeter and `SELFTEST` on the
 owner's bench.
 
@@ -98,7 +99,7 @@ audio system design guide (SDAA212), section 4.
 
 - Hotfix on this board: the resistor sits in the cable under heat shrink. The batch gets it on the board, on the
   solder side across a cut in strips 10 and 11 between columns 14 and 15 (BCLK and WS, ahead of mic and MAX). That
-  placement is untested; it is the next bench test (issue #96).
+  placement is untested; it is the next bench test ("RC2 Fixes" on Trello).
 - WS: the same resistor is planned; with the SCK resistor alone the board already runs clean.
 - `SELFTEST`: chirp 1 of each amp check has a raised noise floor (12569 against about 2000, SNR 18.8 dB),
   probably the amp turning on. It does not fail the check but eats into the spread margin.

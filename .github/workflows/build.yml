@@ -29,6 +29,11 @@ jobs:
           - esp32dev-lr1-emitter
           - esp32dev-lr1-echo
           - esp32dev-lr1-whisper
+          - esp32dev-lr2
+          - esp32dev-lr2-analyzer
+          - esp32dev-lr2-emitter
+          - esp32dev-lr2-echo
+          - esp32dev-lr2-whisper
           - esp32dev-wraptest
           - esp32dev-analyzer-wraptest
     steps:

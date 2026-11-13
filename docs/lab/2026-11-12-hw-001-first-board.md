@@ -156,3 +156,8 @@ the zeros (0 %, tests A and C above).
 A D-AMP image on a v2 board drives GPIO 32 (amp DIN) against the mic's SD output: an output-against-output clash,
 milder than v1's output into ground, but it can wear the mic. Only `esp32dev-lr2*` images go onto the stripboard
 nodes.
+
+Mic cable length, same board and image: a 10 cm cable works as well as 20 cm (two runs, bit8 50.4 / 49.7 %,
+framing ok, no crackle). The amp check moved with the loose mic's position (tone 87k-140k, spread 1.33 FAIL, then
+1.16 PASS): compare boards only with the mic fixed at one marked spot. The length is picked with the case
+prototype (HW-003).

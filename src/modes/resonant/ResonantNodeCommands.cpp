@@ -105,7 +105,9 @@ void Node::printHelp(const char* line) {
 
 // The light test (issue #94): one colour on all pixels of the strip on LIGHT_PIN, under the build-time current cap.
 // rgb: 3 bytes per pixel (WS2812); rgbw / w: 4 bytes per pixel (SK6812 RGBW), so a W-only frame shows which kind a
-// strip is. A plain number is the strip's white (LIGHT_WHITE_*) as a percentage of full.
+// strip is. A plain number is the strip's white (LIGHT_WHITE_*) at a perceived level: 100 is the brightest the cap
+// allows, 50 looks about half as bright (decisions/2026-11-13-light-level-scalar-cap-in-hal.md); rgb / rgbw stay raw
+// bytes, capped.
 void Node::handleLightCommand(const char* line) {
     if (!_light.ready()) {
         serialOut().println("LIGHT ERR no_light (LIGHT_PIN < 0 in this build, or the RMT driver failed)");
@@ -116,7 +118,7 @@ void Node::handleLightCommand(const char* line) {
     bool ok = false;
     bool four = false;
     uint8_t r = 0, g = 0, bl = 0, w = 0;
-    auto level = [](int percent) { return static_cast<uint8_t>(percent * 255 / 100); };
+    int levelPct = -1;  // >= 0: a perceived level of the white (or the W channel alone)
     auto inByte = [](int v) { return v >= 0 && v <= 255; };
     // alt / alt4: even pixels red, odd pixels blue (3 bytes per pixel) or white-only (4 bytes), so a strip of the other
     // kind, or a colour order that is not GRB, shows per pixel.
@@ -134,21 +136,26 @@ void Node::handleLightCommand(const char* line) {
     } else if (sscanf(args, "rgb %d %d %d", &a, &b, &c) == 3 && inByte(a) && inByte(b) && inByte(c)) {
         r = a, g = b, bl = c, ok = true;
     } else if (sscanf(args, "w %d", &a) == 1 && a >= 0 && a <= 100) {
-        w = level(a), four = true, ok = true;
+        w = 255, levelPct = a, four = true, ok = true;
     } else if (sscanf(args, "%d", &a) == 1 && a >= 0 && a <= 100 && args[0] >= '0' && args[0] <= '9') {
-        r = level(a) * LIGHT_WHITE_R / 255, g = level(a) * LIGHT_WHITE_G / 255, bl = level(a) * LIGHT_WHITE_B / 255,
-        ok = true;
+        r = LIGHT_WHITE_R, g = LIGHT_WHITE_G, bl = LIGHT_WHITE_B, levelPct = a, ok = true;
     }
     if (!ok) {
         serialOut().println(
             "LIGHT ERR usage: LIGHT <0..100> | off | alt | alt4 | rgb r g b | rgbw r g b w | w <0..100>");
         return;
     }
+    const uint8_t colour[4] = {r, g, bl, w};
     const bool sent = alternating ? _light.showAlternating(altRed, four ? altWhite : altBlue, four ? 4 : 3)
+        : levelPct >= 0           ? _light.showLevel(levelPct / 100.0f, colour, four ? 4 : 3)
         : four                    ? _light.showRgbw(r, g, bl, w)
                                   : _light.showRgb(r, g, bl);
     serialOut().print("LIGHT ");
     serialOut().print(sent ? "ok" : "ERR send_failed");
+    if (levelPct >= 0) {
+        serialOut().print(" level_pct=");
+        serialOut().print(levelPct);
+    }
     serialOut().print(" bytes_per_pixel=");
     serialOut().print(four ? 4 : 3);
     serialOut().print(" pixels=");

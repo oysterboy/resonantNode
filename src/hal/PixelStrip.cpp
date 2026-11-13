@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "LightCurve.h"
+
 namespace {
 
 constexpr rmt_channel_t kChannel = RMT_CHANNEL_0;
@@ -13,8 +15,6 @@ constexpr uint16_t kT0High = 14;  // 350 ns
 constexpr uint16_t kT0Low = 36;   // 900 ns
 constexpr uint16_t kT1High = 28;  // 700 ns
 constexpr uint16_t kT1Low = 22;   // 550 ns
-// One colour channel of one pixel at full level draws about this much (the data sheets' 20 mA per colour).
-constexpr float kChannelFullMa = 20.0f;
 
 // Turns the frame's bytes into RMT items, most significant bit first; the driver calls this from its interrupt.
 void IRAM_ATTR translate(const void* src, rmt_item32_t* dest, size_t srcSize, size_t wantedItems,
@@ -96,23 +96,24 @@ bool PixelStrip::showAlternating(const uint8_t* even, const uint8_t* odd, uint8_
     return show(even, odd, bytesPerPixel);
 }
 
+bool PixelStrip::showLevel(float level, const uint8_t* colour, uint8_t bytesPerPixel) {
+    if (!_ready || (bytesPerPixel != 3 && bytesPerPixel != 4)) {
+        return false;
+    }
+    uint8_t bytes[4] = {0, 0, 0, 0};
+    light_curve::colourAtLevel(level, colour, bytesPerPixel, _pixels, _capMa, bytes);
+    return show(bytes, bytes, bytesPerPixel);  // fits the cap already; show() holds it again
+}
+
 bool PixelStrip::show(const uint8_t* even, const uint8_t* odd, uint8_t bytesPerPixel) {
     if (!_ready) {
         return false;
     }
-    float evenLevel = 0.0f;
-    float oddLevel = 0.0f;
-    for (uint8_t i = 0; i < bytesPerPixel; ++i) {
-        evenLevel += even[i] / 255.0f;
-        oddLevel += odd[i] / 255.0f;
-    }
     const uint16_t evenCount = (_pixels + 1) / 2;
     const uint16_t oddCount = _pixels / 2;
-    const float wantedMa = (evenLevel * evenCount + oddLevel * oddCount) * kChannelFullMa;
-    float scale = 1.0f;
-    if (wantedMa > static_cast<float>(_capMa)) {
-        scale = static_cast<float>(_capMa) / wantedMa;
-    }
+    const float wantedMa =
+        light_curve::estimateMa(even, bytesPerPixel, evenCount) + light_curve::estimateMa(odd, bytesPerPixel, oddCount);
+    const float scale = light_curve::capScale(wantedMa, _capMa);
     for (uint8_t i = 0; i < 4; ++i) {
         _sent[i] = i < bytesPerPixel ? static_cast<uint8_t>(even[i] * scale) : 0;  // the even pixels' colour
     }

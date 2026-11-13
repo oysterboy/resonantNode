@@ -18,7 +18,7 @@
 #include "../../output/ChirpOutput.h"
 #include "../../app/SerialLine.h"
 #include "../../output/SoundOutput.h"
-#include "../../output/PixelStrip.h"
+#include "../../hal/PixelStrip.h"
 #include "../../net/NodeNet.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/evaluation/OccurrenceVerdict.h"

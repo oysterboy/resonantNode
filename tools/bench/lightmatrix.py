@@ -4,8 +4,11 @@ One run covers one firmware state (the image and R1's radio setting are fixed by
 setup goes into the session as --label text). Inside that state it walks the light cells over USB:
 
   light=idle   no LIGHT frame (strip dark)
-  light=dim    LIGHT 10 held (within USB power, buck off)
-  light=white  LIGHT 100 held (the strip's white under the 0.5 A cap)
+  light=dim    LIGHT 50 held (looks half as bright as the cap, ~90 mA estimated on 30 pixels; within USB power)
+  light=white  LIGHT 100 held (the strip's white at the 0.5 A cap)
+
+LIGHT's number is a perceived level since 2026-11-13 (decisions/2026-11-13-light-level-scalar-cap-in-hal.md); the
+2026-11-13 sessions before that change ran "dim" as LIGHT 10 on the old linear scale, about 115 mA.
   light=alt    LIGHT alt held (even red / odd blue)
 
 For every cell: N x SELFTEST with the idle call off (mic pass and bit8, amp pass, SNR, tone spread, per-chirp
@@ -104,7 +107,7 @@ def ping_counters(gw, name):
 
 
 def light_command(mode):
-    return {"idle": "LIGHT off", "dim": "LIGHT 10", "white": "LIGHT 100", "alt": "LIGHT alt"}[mode]
+    return {"idle": "LIGHT off", "dim": "LIGHT 50", "white": "LIGHT 100", "alt": "LIGHT alt"}[mode]
 
 
 def run_cell(r1, gw, mode, runs, listen_s, name):

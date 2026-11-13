@@ -387,7 +387,10 @@ substeps marked "on site" wait for those days.
    28.2 PC: LightOutput, the cap (build-time ceiling, a param below it) and the state mapping, host-tested; the
         pin on the stripboard's board config (the lochraster_v1 board; Aux pins reserved there).
         2026-11-13 (0b54c9c0): PixelStrip (WS2812 / SK6812 on RMT), the 0.5 A cap at build time and the LIGHT test
-        command. Open: the state mapping and the param below the cap, after 28.1 names the states.
+        command. Owner 2026-11-13: the cap and a perceived curve at the driver, one level 0..1 above it
+        (decisions/2026-11-13-light-level-scalar-cap-in-hal.md); built the same day (src/hal/LightCurve.h,
+        PixelStrip::showLevel, LIGHT <0..100> on that scale, test_light_curve). Open: the state mapping and the param
+        below the cap, after 28.1 names the states.
    28.3 Bench, on the HW-001 prototype or a breadboard node with the ring: the ring at its cap measured; the 5 V rail
         with the light at its cap, the hop train at the shipped level and the radio, in the closed case; the mic's
         floor in the band with the light off and at its cap. A measurement, not a tuning pass.

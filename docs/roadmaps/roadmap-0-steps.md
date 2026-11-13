@@ -356,7 +356,7 @@ substeps marked "on site" wait for those days.
    Gate: the held-out table in docs/research/whispernet.md; a decisions/ file for the classifier (landed as a
    module with params, or dropped); 20.6 can name its mode.
 
-21. [TODO] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
+21. [RUNNING 2026-11-12: 21.1 board 1 checked, parts for ten open] Build the installation's nodes: a stripboard prototype, then ten boards and ten cases. (issue #85)
    roadmap-hardware.md HW-001 (the prototype on its own pinout, the lochraster_v1 board config, room for the second mic), HW-002 (ten
    boards, each nodecheck'd and in the roster), HW-003 (ten cases, one geometry), HW-004 (ten nodes in the firmware:
    roster entries, the field measured at five). Handmade, hands-bound (owner 2026-10-30); runs beside 13-20 on the
@@ -377,7 +377,7 @@ substeps marked "on site" wait for those days.
    Gate: ten checked nodes in the roster by 2026-11-30, on stripboard in cases or a checked breadboard node in place
    of one that missed the date; a bench session cited; the room steps in December run on them.
 
-28. [TODO, by 2026-11-30] The light: a dimmed ring on the Aux port, under a hard current cap. (issue #94) PC, then the owner's bench.
+28. [RUNNING 2026-11-13, by 2026-11-30: 28.2 driver part, 28.3 on R1's test strip] The light: a dimmed ring on the Aux port, under a hard current cap. (issue #94) PC, then the owner's bench.
    roadmap-output.md OUT-007; decisions/2026-10-13-light-half-amp-on-board-5v.md. Its own step before the code
    freeze (owner 2026-11-11), so the room from 2026-12-07 and the video run with the light ("Licht ist Pflicht",
    Case V1). V1 most likely a PWM-dimmed ring on Aux S2 (GPIO 18) of the stripboard (owner 2026-11-11: "probably").
@@ -386,6 +386,8 @@ substeps marked "on site" wait for those days.
         (OUT-007). The shared part and the PWM driver first, the WS2812 driver only if that ring is chosen.
    28.2 PC: LightOutput, the cap (build-time ceiling, a param below it) and the state mapping, host-tested; the
         pin on the stripboard's board config (the lochraster_v1 board; Aux pins reserved there).
+        2026-11-13 (0b54c9c0): PixelStrip (WS2812 / SK6812 on RMT), the 0.5 A cap at build time and the LIGHT test
+        command. Open: the state mapping and the param below the cap, after 28.1 names the states.
    28.3 Bench, on the HW-001 prototype or a breadboard node with the ring: the ring at its cap measured; the 5 V rail
         with the light at its cap, the hop train at the shipped level and the radio, in the closed case; the mic's
         floor in the band with the light off and at its cap. A measurement, not a tuning pass.

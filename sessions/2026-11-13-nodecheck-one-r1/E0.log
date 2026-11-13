@@ -1,0 +1,90 @@
+NET sent seq=57363 target=R1 text=NET PING
+NET reply from=R1 seq=57363 part=0 NET node=R1 started=1 build=ba8bcac2 silent=0 uptime_s=11 rx=1 rejected=0 queue_full=0 tx=0 tx_failed=0 outbox_full=0 commands=0 log=0 log_sent=0 log_dropped=0
+NET reply from=R1 seq=57363 done parts=1
+NET sent seq=57364 target=R1 text=PARAM SET behavior.wait_after_heard_ms 0
+NET reply from=R1 seq=57364 part=0 PARAM SET path=behavior.wait_after_heard_ms module=behavior old=0 new=0 status=ok
+NET reply from=R1 seq=57364 done parts=1
+NET sent seq=57365 target=* text=NET PING
+NET reply from=E1 seq=57365 part=0 NET node=E1 started=1 build=c528cd78 silent=0 uptime_s=554297 rx=7968 rejected=2995 queue_full=0 tx=10855 tx_failed=0 outbox_full=0 commands=1221 log=20 log_sent=32 log_dropped=18
+NET reply from=E1 seq=57365 done parts=1
+NET reply from=E2 seq=57365 part=0 NET node=E2 started=1 build=03edf3b4 silent=0 uptime_s=9157 rx=1637 rejected=1032 queue_full=0 tx=68 tx_failed=0 outbox_full=0 commands=16 log=20 log_sent=44 log_dropped=18
+NET reply from=E2 seq=57365 done parts=1
+NET reply from=R1 seq=57365 part=0 NET node=R1 started=1 build=ba8bcac2 silent=0 uptime_s=14 rx=7 rejected=4 queue_full=0 tx=2 tx_failed=0 outbox_full=0 commands=2 log=0 log_sent=0 log_dropped=0
+NET reply from=R1 seq=57365 done parts=1
+NET reply from=E3 seq=57365 part=0 NET node=E3 started=1 build=8003bf22 silent=0 uptime_s=457 rx=73 rejected=48 queue_full=0 tx=40 tx_failed=0 outbox_full=0 commands=12 log=20 log_sent=28 log_dropped=18
+NET reply from=E3 seq=57365 done parts=1
+NET sent seq=57366 target=E1 text=PARAM SET output.silent 1
+NET reply from=E1 seq=57366 part=0 PARAM SET path=output.silent module=output old=0 new=1 status=ok
+NET reply from=E1 seq=57366 part=0 RB silent=1
+NET reply from=E1 seq=57366 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+NET reply from=E1 seq=57366 done parts=1
+NET sent seq=57367 target=E2 text=PARAM SET output.silent 1
+NET reply from=E2 seq=57367 part=0 PARAM SET path=output.silent module=output old=0 new=1 status=ok
+NET reply from=E2 seq=57367 part=0 RB silent=1
+NET reply from=E2 seq=57367 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+NET reply from=E2 seq=57367 done parts=1
+NET sent seq=57368 target=E3 text=PARAM SET output.silent 1
+NET reply from=E3 seq=57368 part=0 PARAM SET path=output.silent module=output old=0 new=1 status=ok
+NET reply from=E3 seq=57368 part=0 RB silent=1
+NET reply from=E3 seq=57368 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+NET reply from=E3 seq=57368 done parts=1
+NET sent seq=57369 target=E2 text=PARAM SET output.silent 0
+NET reply from=E2 seq=57369 part=0 PARAM SET path=output.silent module=output old=1 new=0 status=ok
+NET reply from=E2 seq=57369 part=0 RB silent=0
+NET reply from=E2 seq=57369 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+NET reply from=E2 seq=57369 done parts=1
+NET sent seq=57370 target=E2 text=SELFTEST chirp n=5
+NET sent seq=57371 target=E2 text=PARAM SET output.silent 1
+NET reply from=E2 seq=57370 part=0 NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+NET reply from=E2 seq=57370 part=0 SELFTEST_CHIRP start n=5 freq_hz=3200 path=behavior gap_ms=1500
+NET reply from=E2 seq=57370 part=0 NET cmd from=D4:E9:F4:71:90:80 seq=57371 target=E2 text=PARAM SET output.silent 1
+NET reply from=E2 seq=57370 done parts=1
+NET sent seq=57372 target=R1 text=SELFTEST
+NET reply from=R1 seq=57372 part=0 NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+NET reply from=R1 seq=57372 part=0 SELFTEST_BEGIN role=node mode=full board=lochraster_v2
+NET reply from=R1 seq=57372 part=1 SELFTEST check=board result=PASS mac=c8:2e:18:c0:bd:0c board=lochraster_v2 role=node version=0.4.0 git=ba8bcac2 built=Nov_13_2026 built_time=17:52:16 uptime_ms=45959
+NET reply from=R1 seq=57372 part=1 SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=312369 floor_mean=1260 floor_peak=43432 bit8_pct=49.7 framing=ok slot=0
+NET reply from=R1 seq=57372 part=2 SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=3463 smooth_at_rebase=20.0 quiet_rebases=1 forced_rebases=0 baseline=46.8
+NET reply from=R1 seq=57372 part=2 SELFTEST_AMP n=1 floor=1659 tone=177375 snr_db=40.6 samples=6400 valid=1
+NET reply from=R1 seq=57372 part=3 SELFTEST_AMP n=2 floor=1642 tone=177086 snr_db=40.7 samples=6400 valid=1
+NET reply from=R1 seq=57372 part=3 SELFTEST_AMP n=3 floor=1263 tone=177277 snr_db=42.9 samples=6400 valid=1
+NET reply from=R1 seq=57372 part=3 SELFTEST_AMP n=4 floor=1761 tone=177326 snr_db=40.1 samples=6400 valid=1
+NET reply from=R1 seq=57372 part=4 SELFTEST_AMP n=5 floor=1657 tone=176692 snr_db=40.6 samples=6400 valid=1
+NET reply from=R1 seq=57372 part=4 SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=177277 floor=1657 snr_db=40.6 snr_min_db=40.1 snr_max_db=42.9 tone_spread=1.00 pass_db=30.0 max_spread=1.30
+NET reply from=R1 seq=57372 part=5 SELFTEST_RESTORE detection=reset baseline=SETTLE
+NET reply from=R1 seq=57372 part=5 RB baseline active
+NET reply from=R1 seq=57372 part=5 BEH emit start now=53420 source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=5 RB emit accepted source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=6 RB emit shape=hop steps=5 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+NET reply from=R1 seq=57372 part=6 BEH emit start now=54995 source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=6 RB emit accepted source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=7 RB emit shape=hop steps=5 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+NET reply from=R1 seq=57372 part=7 BEH emit start now=56571 source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=7 RB emit accepted source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=7 RB emit shape=hop steps=5 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+NET reply from=R1 seq=57372 part=8 BEH emit start now=58147 source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=8 RB emit accepted source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=8 RB emit shape=hop steps=5 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+NET reply from=R1 seq=57372 part=9 BEH emit start now=59723 source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=9 RB emit accepted source=selftest state=Chirping pattern=single
+NET reply from=R1 seq=57372 part=9 RB emit shape=hop steps=5 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+NET reply from=R1 seq=57372 part=10 SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=0 other_valid=0 echo_window_ms=300 suppress_tail_ms=60
+NET reply from=R1 seq=57372 part=10 SELFTEST check=external_chirp result=SKIP reason=not_requested
+NET reply from=R1 seq=57372 part=10 SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node
+NET reply from=R1 seq=57372 done parts=11
+NET sent seq=57373 target=E1 text=PARAM SET output.silent 0
+NET reply from=E1 seq=57373 part=0 PARAM SET path=output.silent module=output old=1 new=0 status=ok
+NET reply from=E1 seq=57373 part=0 RB silent=0
+NET reply from=E1 seq=57373 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+NET reply from=E1 seq=57373 done parts=1
+NET sent seq=57374 target=E2 text=PARAM SET output.silent 0
+NET reply from=E2 seq=57371 part=0 PARAM SET path=output.silent module=output old=0 new=1 status=ok
+NET reply from=E2 seq=57371 part=0 RB silent=1
+NET reply from=E2 seq=57371 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+NET reply from=E2 seq=57371 part=1 NET cmd from=D4:E9:F4:71:90:80 seq=57374 target=E2 text=PARAM SET output.silent 0
+NET reply from=E2 seq=57371 done parts=2
+NET sent seq=57375 target=E3 text=PARAM SET output.silent 0
+NET reply from=E3 seq=57375 part=0 PARAM SET path=output.silent module=output old=1 new=0 status=ok
+NET reply from=E3 seq=57375 part=0 RB silent=0
+NET reply from=E3 seq=57375 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+NET reply from=E3 seq=57375 done parts=1

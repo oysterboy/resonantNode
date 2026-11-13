@@ -50,6 +50,43 @@ inline float capScale(float wantedMa, uint16_t capMa) {
     return wantedMa > static_cast<float>(capMa) ? static_cast<float>(capMa) / wantedMa : 1.0f;
 }
 
+// Hue (degrees, any value, wraps) and saturation (0..1) to RGB at full value, each channel 0..1.
+inline void hsToRgb(float hueDeg, float sat, float rgb[3]) {
+    float h = hueDeg - 360.0f * static_cast<float>(static_cast<int>(hueDeg / 360.0f));
+    if (h < 0.0f) {
+        h += 360.0f;
+    }
+    const float s = sat < 0.0f ? 0.0f : (sat > 1.0f ? 1.0f : sat);
+    const float sector = h / 60.0f;
+    const int i = static_cast<int>(sector) % 6;
+    const float f = sector - static_cast<float>(static_cast<int>(sector));
+    const float p = 1.0f - s;
+    const float q = 1.0f - s * f;
+    const float t = 1.0f - s * (1.0f - f);
+    const float table[6][3] = {{1.0f, t, p}, {q, 1.0f, p}, {p, 1.0f, t}, {p, q, 1.0f}, {t, p, 1.0f}, {1.0f, p, q}};
+    for (int c = 0; c < 3; ++c) {
+        rgb[c] = table[i][c];
+    }
+}
+
+// The one scale every HSB colour gets: full white (all three channels) on all pixels fits the cap, so any other
+// colour fits too, and a change of hue does not pulse in brightness (decisions/2026-11-13-light-colour-model-and-
+// states.md, option (b)).
+inline float hsbScale(uint16_t pixels, uint16_t capMa) {
+    return capScale(3.0f * static_cast<float>(pixels) * kChannelFullMa, capMa);
+}
+
+// RGB bytes for hue, saturation and a perceived brightness 0..1 (1.0: full white would sit at the cap). Rounded
+// down, so the estimate never exceeds the cap.
+inline void rgbAtHsb(float hueDeg, float sat, float bright, uint16_t pixels, uint16_t capMa, uint8_t out[3]) {
+    float rgb[3];
+    hsToRgb(hueDeg, sat, rgb);
+    const float scale = 255.0f * hsbScale(pixels, capMa) * perceivedToLinear(bright);
+    for (int c = 0; c < 3; ++c) {
+        out[c] = static_cast<uint8_t>(rgb[c] * scale);
+    }
+}
+
 // The bytes for `colour` at `level`: the colour scaled to the cap, then by the perceived curve. Rounded down, so the
 // estimate of the result never exceeds the cap.
 inline void colourAtLevel(float level, const uint8_t* colour, uint8_t channels, uint16_t pixels, uint16_t capMa,

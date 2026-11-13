@@ -15,6 +15,7 @@ enum class ModuleId : uint8_t {
     Detection,
     Behavior,
     Output,
+    Light,
 };
 
 inline const char* moduleName(ModuleId module) {
@@ -27,6 +28,8 @@ inline const char* moduleName(ModuleId module) {
             return "behavior";
         case ModuleId::Output:
             return "output";
+        case ModuleId::Light:
+            return "light";
     }
     return "unknown";
 }
@@ -188,6 +191,28 @@ enum class ParamId : uint16_t {
     Echo_PlateauPct,
     Whisper_StartChancePct,
     Whisper_PlateauPct,
+    // The light's effects (OUT-007, decisions/2026-11-13-light-colour-model-and-states.md): the Node's light.*.
+    Light_Enabled,
+    Light_MaxMa,
+    Light_IdleMode,
+    Light_HueSource,
+    Light_IdleTopPct,
+    Light_HeardTopPct,
+    Light_FadeMs,
+    Light_EmitRampMs,
+    Light_FallMs,
+    Light_BreatheMs,
+    Light_HueALow,
+    Light_HueAHigh,
+    Light_HueBLow,
+    Light_HueBHigh,
+    Light_SatAPct,
+    Light_SatBPct,
+    // The echo modes' light (EchoLight): one hue and saturation per mode, the glow, Whispernet's release.
+    Light_ModeHue,
+    Light_ModeSatPct,
+    Light_GlowPct,
+    Light_ReleaseMs,
 };
 
 }  // namespace param

@@ -104,7 +104,7 @@ public:
     // The Node registers 56 (2026-11-05), Whispernet 36. An add past the cap, or on a duplicate path or id, is
     // refused and counted (refusedAdds), and every mode prints the count at boot: a param dropped silently from
     // PARAM LIST is what review 2026-11-05 L15 found could happen.
-    static constexpr size_t kMaxParams = 64;
+    static constexpr size_t kMaxParams = 80;  // the Node registers 70 (with light.*, 2026-11-13)
     using GroupNamer = const char* (*)(uint8_t group);
 
     // Raw registration. Rejects a null path or field, a duplicate path, a

@@ -30,6 +30,7 @@
 #include "../../net/NetGateway.h"
 #include "ResonantNodeSelfTest.h"
 #include "ResonantNodeSignalComposer.h"
+#include "ResonantNodeLight.h"
 #include "ResonantNodeParams.h"
 
 /*
@@ -141,6 +142,8 @@ private:
     void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history
     // Behavior's chirp request into a SoundOutput request; a request that does not start ends the emission at once.
     void startEmission(unsigned long now);
+    void updateLight(unsigned long now);  // the light's tick (every kLightTickMs), from Behavior's state
+    void applyLightParams();  // light.max_ma to the driver; light.enabled 0 darkens the strip
     void updateEmissions(unsigned long now);  // the output tick; the emission's end goes to Behavior and SELFTEST
     void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset
     void loadInspectionLimitsFromProfile();  // detection.contrast_medium / amp_medium / shape_* from the plan
@@ -200,7 +203,10 @@ private:
 
     // Debug / logging support.
     NodeLed _led;
-    PixelStrip _light;  // the light test (issue #94): the LIGHT command only, nothing drives it from Behavior yet
+    PixelStrip _light;  // the strip on LIGHT_PIN (not ready when the build has none)
+    NodeLight _lightFx;  // what it shows, from Behavior's state (light.*)
+    bool _lightManual = false;  // a LIGHT command holds the strip until LIGHT auto
+    unsigned long _lightLastMs = 0;
     // 256 like the Analyzer's USB line; a longer line is refused, never run
     // cut (issue #31; app/SerialLine.h). Also the command scratch size.
     serial_line::LineReader<serial_line::kCommandLineMax> _serialLine;

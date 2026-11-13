@@ -300,6 +300,7 @@ void Node::begin() {
         serialOut().print(" cap_ma=");
         serialOut().print(LIGHT_MAX_MA);
         serialOut().println(lightOk ? " status=ok" : " status=failed");
+        applyLightParams();  // a stored light.max_ma, now that the driver is up
     }
     _behavior.seedIdleSchedule(timebase::nowMs());
     _silentApplied = _switches.silent;
@@ -756,10 +757,52 @@ void Node::update() {
     updateEmissions(now);
 
     _led.update(now);
+    updateLight(now);
 
     if (_selfTest.active()) {
         updateSelfTest(timebase::nowMs());
     }
+}
+
+// The light follows Behavior (decisions/2026-11-13-light-colour-model-and-states.md): the state, the answer's start,
+// the idle wait and the bases go to NodeLight, its colour to the driver. 50 updates a second keep the fades smooth;
+// a frame equal to the last is not sent, one still going out is skipped (PixelStrip::showHsb).
+void Node::updateLight(unsigned long now) {
+    static constexpr unsigned long kLightTickMs = 20;
+    if (!_light.ready() || _lightManual || now - _lightLastMs < kLightTickMs) {
+        return;
+    }
+    _lightLastMs = now;
+    NodeLight::Input in;
+    in.nowMs = now;
+    switch (_behavior.state()) {
+        case ResonantBehavior::State::Idle:
+            in.phase = NodeLight::Phase::Idle;
+            break;
+        case ResonantBehavior::State::HeardPattern:
+            in.phase = NodeLight::Phase::Heard;
+            break;
+        case ResonantBehavior::State::Chirping:
+            in.phase = NodeLight::Phase::Emitting;
+            break;
+        case ResonantBehavior::State::Refractory:
+            in.phase = NodeLight::Phase::Afterglow;
+            break;
+    }
+    in.answerAtMs = _behavior.waitUntilMs();
+    in.idleCallCanCome = _behavior.config().idleEnabled && _behavior.outputsEnabled() && !_behavior.resting(now);
+    in.idleFromMs = _behavior.idleScheduledFromMs();
+    in.idleAtMs = _behavior.idleNextAtMs();
+    in.baseCount = _behavior.baseCount();
+    in.ownBase = _behavior.baseBin();
+    in.heardBase = _behavior.baseHeard();
+    const NodeLight::Hsb c = _lightFx.update(in);
+    _light.showHsb(c.hueDeg, c.sat, c.bright);
+}
+
+void Node::applyLightParams() {
+    const uint32_t maxMa = _lightFx.values().maxMa;
+    _light.setCapMa(static_cast<uint16_t>(maxMa > 0xFFFFU ? 0xFFFFU : maxMa));
 }
 
 // Behavior asked for a chirp: start the emission it asked for. A heard pattern is answered with the network

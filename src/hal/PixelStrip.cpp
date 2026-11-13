@@ -77,6 +77,7 @@ bool PixelStrip::begin(int pin, uint16_t pixels, uint16_t capMa) {
     }
     _pixels = pixels;
     _capMa = capMa;
+    _buildCapMa = capMa;
     _ready = true;
     showRgb(0, 0, 0);  // the strip starts dark
     return true;
@@ -105,10 +106,33 @@ bool PixelStrip::showLevel(float level, const uint8_t* colour, uint8_t bytesPerP
     return show(bytes, bytes, bytesPerPixel);  // fits the cap already; show() holds it again
 }
 
-bool PixelStrip::show(const uint8_t* even, const uint8_t* odd, uint8_t bytesPerPixel) {
+void PixelStrip::setCapMa(uint16_t capMa) {
+    _capMa = capMa < _buildCapMa ? capMa : _buildCapMa;  // a param lowers the cap, never raises it
+}
+
+bool PixelStrip::showHsb(float hueDeg, float sat, float bright) {
     if (!_ready) {
         return false;
     }
+    uint8_t rgb[4] = {0, 0, 0, 0};
+    light_curve::rgbAtHsb(hueDeg, sat, bright, _pixels, _capMa, rgb);
+    if (_lastUniform3 && rgb[0] == _sent[0] && rgb[1] == _sent[1] && rgb[2] == _sent[2]) {
+        return true;  // the strip already shows it
+    }
+    const bool sent = show(rgb, rgb, 3, false);
+    _lastUniform3 = sent;
+    return sent;
+}
+
+bool PixelStrip::show(const uint8_t* even, const uint8_t* odd, uint8_t bytesPerPixel, bool wait) {
+    if (!_ready) {
+        return false;
+    }
+    // The RMT reads _frame while it sends: a frame still going out is not overwritten (the next call sends).
+    if (rmt_wait_tx_done(kChannel, wait ? portMAX_DELAY : 0) != ESP_OK) {
+        return false;
+    }
+    _lastUniform3 = false;
     const uint16_t evenCount = (_pixels + 1) / 2;
     const uint16_t oddCount = _pixels / 2;
     const float wantedMa =
@@ -127,6 +151,7 @@ bool PixelStrip::show(const uint8_t* even, const uint8_t* odd, uint8_t bytesPerP
                                  static_cast<uint8_t>(colour[2] * scale), static_cast<uint8_t>(colour[3] * scale)};
         memcpy(_frame + static_cast<size_t>(pixel) * bytesPerPixel, wire, bytesPerPixel);
     }
-    // Blocks until the frame is out (about 1 ms for 30 pixels): only a test command calls this.
-    return rmt_write_sample(kChannel, _frame, static_cast<size_t>(_pixels) * bytesPerPixel, true) == ESP_OK;
+    // wait: blocks until the frame is out (about 1 ms for 28 pixels), for the test command; the light's effects
+    // return at once and let the RMT finish on its own.
+    return rmt_write_sample(kChannel, _frame, static_cast<size_t>(_pixels) * bytesPerPixel, wait) == ESP_OK;
 }

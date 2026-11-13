@@ -107,14 +107,37 @@ void Node::printHelp(const char* line) {
 // rgb: 3 bytes per pixel (WS2812); rgbw / w: 4 bytes per pixel (SK6812 RGBW), so a W-only frame shows which kind a
 // strip is. A plain number is the strip's white (LIGHT_WHITE_*) at a perceived level: 100 is the brightest the cap
 // allows, 50 looks about half as bright (decisions/2026-11-13-light-level-scalar-cap-in-hal.md); rgb / rgbw stay raw
-// bytes, capped.
+// bytes, capped. hsb h s b: a colour as the light's effects give it (hue degrees, saturation and brightness in %).
+// Every one of these holds the strip until LIGHT auto hands it back to the effects (NodeLight).
 void Node::handleLightCommand(const char* line) {
     if (!_light.ready()) {
         serialOut().println("LIGHT ERR no_light (LIGHT_PIN < 0 in this build, or the RMT driver failed)");
         return;
     }
     const char* args = text_parse::rest(line, "LIGHT");
+    if (equalsIgnoreCase(args, "auto")) {
+        _lightManual = false;
+        _lightFx.reset();  // the effects start dark, from Behavior's state now
+        serialOut().println("LIGHT auto ok");
+        return;
+    }
     int a = 0, b = 0, c = 0, d = 0;
+    if (sscanf(args, "hsb %d %d %d", &a, &b, &c) == 3 && a >= 0 && a <= 359 && b >= 0 && b <= 100 && c >= 0 &&
+        c <= 100) {
+        _lightManual = true;
+        const bool shown = _light.showHsb(static_cast<float>(a), b / 100.0f, c / 100.0f);
+        serialOut().print("LIGHT ");
+        serialOut().print(shown ? "ok" : "ERR busy");
+        serialOut().print(" hsb sent=");
+        serialOut().print(_light.sentR());
+        serialOut().print(",");
+        serialOut().print(_light.sentG());
+        serialOut().print(",");
+        serialOut().print(_light.sentB());
+        serialOut().print(" cap_ma=");
+        serialOut().println(_light.capMa());
+        return;
+    }
     bool ok = false;
     bool four = false;
     uint8_t r = 0, g = 0, bl = 0, w = 0;
@@ -142,9 +165,11 @@ void Node::handleLightCommand(const char* line) {
     }
     if (!ok) {
         serialOut().println(
-            "LIGHT ERR usage: LIGHT <0..100> | off | alt | alt4 | rgb r g b | rgbw r g b w | w <0..100>");
+            "LIGHT ERR usage: LIGHT <0..100> | off | alt | alt4 | rgb r g b | rgbw r g b w | w <0..100> | "
+            "hsb <0..359> <0..100> <0..100> | auto");
         return;
     }
+    _lightManual = true;
     const uint8_t colour[4] = {r, g, bl, w};
     const bool sent = alternating ? _light.showAlternating(altRed, four ? altWhite : altBlue, four ? 4 : 3)
         : levelPct >= 0           ? _light.showLevel(levelPct / 100.0f, colour, four ? 4 : 3)

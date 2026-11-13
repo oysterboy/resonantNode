@@ -393,8 +393,12 @@ substeps marked "on site" wait for those days.
         2026-11-13 (0b54c9c0): PixelStrip (WS2812 / SK6812 on RMT), the 0.5 A cap at build time and the LIGHT test
         command. Owner 2026-11-13: the cap and a perceived curve at the driver, one level 0..1 above it
         (decisions/2026-11-13-light-level-scalar-cap-in-hal.md); built the same day (src/hal/LightCurve.h,
-        PixelStrip::showLevel, LIGHT <0..100> on that scale, test_light_curve). Open: HSB in the driver, the light
-        composer per mode (the states in the colour decision), the light.* params including the one below the cap.
+        PixelStrip::showLevel, LIGHT <0..100> on that scale, test_light_curve). Built 2026-11-13 after the colour
+        decision: HSB in the driver (one scale, white at the cap; frames sent without blocking the loop), NodeLight
+        (the Node's states, both idle and both hue variants), EchoLight (echo glow, Whispernet's replay), light.*
+        params with light.max_ma below the cap, LIGHT hsb / auto; test_node_light; the param registry holds 80 (the
+        Node 70). Open: seen on R1 (the light at 50 frames a second against the audio loop: RB STATUS drops and
+        block_us_max), the hues set by eye.
    28.3 Bench, on the HW-001 prototype or a breadboard node with the ring: the ring at its cap measured; the 5 V rail
         with the light at its cap, the hop train at the shipped level and the radio, in the closed case; the mic's
         floor in the band with the light off and at its cap. A measurement, not a tuning pass.

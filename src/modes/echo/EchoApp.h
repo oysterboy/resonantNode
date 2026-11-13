@@ -20,6 +20,8 @@
 #include "../../net/NodeNet.h"
 #include "../../output/ChirpOutput.h"
 #include "../../output/SoundOutput.h"
+#include "../../hal/PixelStrip.h"
+#include "EchoLight.h"
 #include "EchoParams.h"
 #include "Whispernet.h"
 
@@ -179,6 +181,13 @@ private:
     DuplexStream _duplex{_i2sPort};  // the whisper build's lockstep output
     EchoParams _params;  // echo.* or whisper.* (ECHO-003)
     bool _whisperDeaf = false;  // detection paused for Whispernet's own playback
+
+    // The light (when the build has one on LIGHT_PIN): the mode's glow, Whispernet's playback on top.
+    PixelStrip _light;
+    EchoLight _lightFx;
+    float _lightPlayedPeak = 0.0f;  // the loudest output sample since the light's last tick, 0..1 after the gain
+    unsigned long _lightLastMs = 0;
+    void updateLight(unsigned long now);
 
     Load _load;
     unsigned long _toneOffAtMs = 0;

@@ -6,6 +6,7 @@
 
 #include <new>
 
+#include "../../app/BoardConfig.h"
 #include "../../app/BuildInfo.h"
 #include "../../app/FirmwareOta.h"
 #include "../../app/NodeRoster.h"
@@ -85,7 +86,10 @@ void EchoApp::begin() {
     _follower.setShift(EnvelopeFollower::shiftForRate(_i2sPort.sampleRateHz()));  // ~1.3 ms at any rate
     _behavior.resetState();
     configureEcho();
-    configureParams();  // echo.* / whisper.*: stored values over the defaults
+    if (LIGHT_PIN >= 0 && _light.begin(LIGHT_PIN, LIGHT_PIXELS, LIGHT_MAX_MA)) {
+        serialOut().println("ECHO light ok");
+    }
+    configureParams();  // echo.* / whisper.* / light.*: stored values over the defaults
     const bool netUp = _net.begin();
     _netGateway.begin();
 
@@ -129,6 +133,7 @@ void EchoApp::update() {
 
     const unsigned long now = timebase::nowMs();
     runBehavior(now);
+    updateLight(now);
     if (_toneOn && static_cast<long>(now - _toneOffAtMs) >= 0) {
         _toneOutput.toneOff();
         _toneOn = false;
@@ -153,6 +158,17 @@ void EchoApp::update() {
     if (passUs > _load.passUsMax) {
         _load.passUsMax = passUs;
     }
+}
+
+// The light, 50 updates a second (EchoLight): a frame equal to the last, or one still going out, is not sent.
+void EchoApp::updateLight(unsigned long now) {
+    if (!_light.ready() || now - _lightLastMs < 20UL) {
+        return;
+    }
+    _lightLastMs = now;
+    const EchoLight::Hsb c = _lightFx.update(now, _lightPlayedPeak);
+    _lightPlayedPeak = 0.0f;
+    _light.showHsb(c.hueDeg, c.sat, c.bright);
 }
 
 // The per-sample path both modes will run: rectify, smooth, store. Timed per block.
@@ -185,6 +201,14 @@ void EchoApp::pollAudio() {
         if (kWhispernet) {
             // As many frames out as came in: the speaker stays a fixed number of frames behind the mic.
             _duplex.writeBlock(block.startSampleIndex, _whisper.blockOutput(), _whisper.blockOutputCount());
+            int32_t peak = 0;
+            const int16_t* out = _whisper.blockOutput();
+            for (size_t i = 0; i < _whisper.blockOutputCount(); ++i) {
+                const int32_t a = out[i] < 0 ? -static_cast<int32_t>(out[i]) : out[i];
+                peak = a > peak ? a : peak;
+            }
+            const float played = static_cast<float>(peak) * _whisper.values().gain / 32767.0f;  // as the amp gets it
+            _lightPlayedPeak = played > _lightPlayedPeak ? played : _lightPlayedPeak;
         }
         if (_follower.value() > _envelopePeak) {
             _envelopePeak = _follower.value();
@@ -208,6 +232,14 @@ void EchoApp::pollAudio() {
 void EchoApp::configureParams() {
     _params.registry().addUInt32(param::ParamId::Node_RadioLog, param::ModuleId::Node, "node.radio_log", &_radioLog, 0U,
                                  20U);
+    // The light's first guesses per mode, set in the room by eye: the echo room warm and steady, Whispernet cool
+    // and dim until it plays.
+    EchoLight::Values& lv = _lightFx.values();
+    lv.maxMa = LIGHT_MAX_MA;
+    lv.hue = kWhispernet ? 200U : 35U;
+    lv.satPct = kWhispernet ? 60U : 70U;
+    lv.glowPct = kWhispernet ? 15U : 30U;
+    _lightFx.describeParams(_params.registry(), kWhispernet);
     if (kWhispernet) {
         _whisper.describeParams(_params.registry());
     } else {
@@ -258,6 +290,8 @@ void EchoApp::configureParams() {
 // What a PARAM or GATE write changed, into the running mode.
 void EchoApp::applyParams() {
     _netGateway.setLogMirror(_nodeName, _radioLog);
+    const uint32_t maxMa = _lightFx.values().maxMa;
+    _light.setCapMa(static_cast<uint16_t>(maxMa > 0xFFFFU ? 0xFFFFU : maxMa));
     if (kWhispernet) {
         _whisper.applyValues(_runtime, _behavior);
         return;

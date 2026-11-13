@@ -67,6 +67,12 @@ public:
     void setBaseGrid(uint32_t lowHz, uint32_t spacingHz, uint32_t count, uint32_t windowBins = 0);
     void seedBaseBin(uint32_t bin);
     uint32_t baseBin() const { return _base.bin; }
+    // Read-only, for the light: how many bases, the base last heard (-1 none), and the idle wait running (from, due;
+    // nextAt 0 when none is scheduled). The idle call may still be held past the due time by the blocks in canIdle().
+    uint32_t baseCount() const { return _base.count; }
+    long baseHeard() const { return _base.heard; }
+    unsigned long idleScheduledFromMs() const { return _idle.scheduledFromMs; }
+    unsigned long idleNextAtMs() const { return _idle.nextAtMs; }
 
     void resetState();
     void configure(const BehaviorGateConfig& profile);

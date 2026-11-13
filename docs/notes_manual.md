@@ -259,6 +259,26 @@ switches `scalar_require_min_strength` and `scalar_require_carrier_quality` (eac
 - Boot prints `PARAM load stored=N applied=N stale=N invalid=N` plus one line per stored value that
   differs from its default.
 
+### The light
+
+Stripboard builds only (`LIGHT_PIN`, `LIGHT_PIXELS` and the build-time cap `LIGHT_MAX_MA` in
+`src/app/BoardConfig.h`); a build without a strip prints `LIGHT ERR no_light`. From boot the strip follows Behavior
+(`src/modes/resonant/ResonantNodeLight.h` has the state table): colour A while idle, rising toward the idle call or
+breathing when no call can come; colour B from a heard pattern through the answer and its afterglow. The base bins
+set the hues. Why it looks the way it does: `docs/decisions/2026-11-13-light-colour-model-and-states.md` and
+`-light-level-scalar-cap-in-hal.md`.
+
+- `LIGHT <0..100>`, `LIGHT hsb <hue 0..359> <sat 0..100> <bright 0..100>`, `LIGHT off`, and the test frames `LIGHT alt`
+  / `alt4` / `rgb r g b` / `rgbw r g b w` / `w <0..100>`: the strip holds that until `LIGHT auto`, which hands it
+  back to the effects (a reboot does too). Brightness is perceived: 100 is the cap, 50 looks half as bright.
+- `light.*` params, live: `enabled`, `max_ma` (below the build cap, never above), `idle_mode` (0 rise, 1 breathe),
+  `hue_source` (0 colour B from the node's own base, 1 from the base heard), `idle_top_pct`, `heard_top_pct`,
+  `fade_ms` (A to B), `emit_ramp_ms`, `fall_ms` (afterglow, full to dark), `breathe_ms`, `hue_a_low` / `hue_a_high` /
+  `hue_b_low` / `hue_b_high` (degrees at the lowest / highest base), `sat_a_pct`, `sat_b_pct`.
+- Echo shell (`esp32dev-lr*-echo` / `-whisper`): one colour per mode, `light.enabled`, `light.max_ma`, `light.hue`,
+  `light.sat_pct`, `light.glow_pct`; Whispernet also `light.release_ms` (its brightness follows what it plays). No
+  `LIGHT` command there.
+
 ### Silent mode
 
 `PARAM SET output.silent 1` keeps the node listening (verdicts counted, `decision=outputs_off` in

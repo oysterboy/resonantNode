@@ -36,6 +36,14 @@ public:
     // about half as bright, 0 is dark; outside 0..1 is clamped. bytesPerPixel 3 or 4.
     bool showLevel(float level, const uint8_t* colour, uint8_t bytesPerPixel);
 
+    // The light's effects: hue (degrees), saturation 0..1 and a perceived brightness 0..1 on all pixels, 3 bytes per
+    // pixel, one scale for every colour (light_curve::rgbAtHsb). Returns at once; a frame still going out, or one
+    // equal to the last, is not sent again (false / true).
+    bool showHsb(float hueDeg, float sat, float bright);
+
+    // A param below the build-time cap (light.max_ma); a value above it is held at the build cap.
+    void setCapMa(uint16_t capMa);
+
     bool ready() const { return _ready; }
     uint16_t pixels() const { return _pixels; }
     uint16_t capMa() const { return _capMa; }
@@ -48,11 +56,13 @@ public:
     uint8_t scalePct() const { return _scalePct; }
 
 private:
-    bool show(const uint8_t* even, const uint8_t* odd, uint8_t bytesPerPixel);
+    bool show(const uint8_t* even, const uint8_t* odd, uint8_t bytesPerPixel, bool wait = true);
 
     bool _ready = false;
     uint16_t _pixels = 0;
     uint16_t _capMa = 0;
+    uint16_t _buildCapMa = 0;
+    bool _lastUniform3 = false;  // the last frame was showHsb's: one RGB colour on every pixel, as in _sent
     uint8_t* _frame = nullptr;
     uint8_t _sent[4] = {0, 0, 0, 0};
     uint16_t _estimatedMa = 0;

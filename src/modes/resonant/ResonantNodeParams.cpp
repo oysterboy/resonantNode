@@ -6,6 +6,7 @@
 #include <string.h>
 #include "../../detection/InspectionPlanContract.h"
 #include <ParamRegistry.h>
+#include "../../app/BoardConfig.h"
 #include "../../app/ParamBindings.h"
 #include "../../app/ParamCommands.h"
 #include "../../app/ParamIds.h"
@@ -24,6 +25,7 @@ void NodeParams::describe(const Fields& f) {
     param::describeParams(_registry, f.node);        // output.silent, node.radio_enabled
     param::describeParams(_registry, f.behavior);    // behavior.* (13)
     param::describeParams(_registry, f.inspection);  // detection.contrast_medium / amp_medium, detection.shape_* (8)
+    param::describeParams(_registry, f.light);       // light.* (16)
 }
 
 param::ParamLoadReport NodeParams::loadStored(Print& out) {
@@ -78,8 +80,9 @@ void Node::configureParameters() {
     _activeBehaviorProfile = makeTonalPulseBehaviorProfile();
     configureI2SParameters();
     loadInspectionLimitsFromProfile();
+    _lightFx.values().maxMa = LIGHT_MAX_MA;  // light.max_ma starts at the build cap; it can only go below it
     _params.describe(NodeParams::Fields{_activeDetectionProfile.scalarTransient, _band, _composer.values(), _switches,
-                                        _activeBehaviorProfile, _inspectionLimits});
+                                        _activeBehaviorProfile, _inspectionLimits, _lightFx.values()});
 }
 
 // The inspectors' medium limits and the shape settings as live params, read from the
@@ -116,6 +119,7 @@ void Node::handleParamCommand(const char* line) {
             // once (applySilent directly: the Detection route prints hop_check).
             applyParamModule(param::ModuleId::Behavior);
             applySilent();
+            applyLightParams();
             applyParamModule(param::ModuleId::Detection);  // also prints hop_check and plan_check
             break;
         case param::ParamCommandEffect::None:
@@ -131,6 +135,7 @@ void Node::loadStoredParams() {
     if (report.applied > 0) {
         applyLiveDetectionParams();
         applyActiveBehaviorGateConfig();
+        applyLightParams();
     }
 }
 
@@ -152,6 +157,9 @@ void Node::applyParamModule(param::ModuleId module) {
             break;
         case param::ModuleId::Node:
             _netGateway.setLogMirror(_nodeName, _switches.radioLog);
+            break;
+        case param::ModuleId::Light:
+            applyLightParams();
             break;
     }
 }

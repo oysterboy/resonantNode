@@ -11,6 +11,7 @@
 #include "../../detection/detectors/scalar/ScalarTransientConfig.h"
 #include "../../detection/features/NetworkBand.h"
 #include "../../detection/inspection/InspectionLimits.h"
+#include "ResonantNodeLight.h"
 #include "ResonantNodeSignalComposer.h"
 
 class Print;
@@ -55,10 +56,11 @@ public:
         NodeSwitches& node;
         BehaviorGateConfig& behavior;
         detection::InspectionLimits& inspection;
+        NodeLight::Values& light;
     };
 
     // detection.scalar_*, detection.band_*, output.hop_* / idle_announce_*, output.silent, node.radio_enabled,
-    // behavior.*, detection.contrast_medium / amp_medium, detection.shape_*.
+    // behavior.*, detection.contrast_medium / amp_medium, detection.shape_*, light.*.
     void describe(const Fields& fields);
 
     // The fields hold the firmware defaults now (PAR-010 boot order).

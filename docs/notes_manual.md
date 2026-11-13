@@ -30,7 +30,7 @@ Never flash a piezo build onto a D-AMP board or the reverse: the pinouts collide
 The stripboard nodes (HW-001, 2026-11-11) build the same modes on their own pins: `esp32dev-lr1` (Node),
 `esp32dev-lr1-analyzer`, `esp32dev-lr1-emitter`, `esp32dev-lr1-echo`, `esp32dev-lr1-whisper` (`-D BOARD_LOCHRASTER_V1`,
 `BOARD_NAME` `lochraster_v1` in the boot banner). Never flash a plain D-AMP image onto a stripboard: it drives GPIO 32,
-which carries the mic's GND there. The v2 stripboard (RC2 batch 1, 2026-11-13: the mic header in ribbon order, mic SD
+which carries the mic's GND on v1 and the mic's data output on v2 (driven against it). The v2 stripboard (RC2 batch 1, 2026-11-13: the mic header in ribbon order, mic SD
 on GPIO 32 instead of 35) builds as `esp32dev-lr2`, `-lr2-analyzer`, `-lr2-emitter`, `-lr2-echo`, `-lr2-whisper`
 (`-D BOARD_LOCHRASTER_V2`, `lochraster_v2` in the banner); an lr1 image on it reads 35 and an lr2 image on a v1 board
 reads 32 (the mic's GND): the mic is silent either way, nothing worse. The reverse leaves the mic silent and Serial2 on other pins, nothing worse. Their

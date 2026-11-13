@@ -34,7 +34,8 @@ void test_curve_rises_and_follows_lightness() {
     TEST_ASSERT_FLOAT_WITHIN(0.002f, 0.1842f, light_curve::perceivedToLinear(0.5f));
     TEST_ASSERT_FLOAT_WITHIN(0.0005f, 0.0114f, light_curve::perceivedToLinear(0.1f));
     // the two pieces meet at L* = 8 without a step: 0.0002 apart differ by the slope alone (~0.11 x 0.0002)
-    TEST_ASSERT_FLOAT_WITHIN(0.00003f, light_curve::perceivedToLinear(0.0799f), light_curve::perceivedToLinear(0.0801f));
+    TEST_ASSERT_FLOAT_WITHIN(0.00003f, light_curve::perceivedToLinear(0.0799f),
+                             light_curve::perceivedToLinear(0.0801f));
 }
 
 void test_full_level_is_the_cap() {

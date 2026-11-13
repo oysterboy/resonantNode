@@ -89,7 +89,9 @@ Source: docs/research/frequency-drift-detection.md (Two-layer signal).
 Status: TODO (owner 2026-11-11: its own step before the code freeze, roadmap-0-steps.md step 28, by 2026-11-30;
 issue #94). The cap: decisions/2026-10-13-light-half-amp-on-board-5v.md. Where the cap and the curve sit, and the
 level the effects use (one scalar 0..1, 1.0 = the cap, perceived): decisions/2026-11-13-light-level-scalar-cap-in-hal.md;
-the WS2812 driver and that curve are built (src/hal/PixelStrip, src/hal/LightCurve.h).
+the WS2812 driver and that curve are built (src/hal/PixelStrip, src/hal/LightCurve.h). The light is a 28-pixel RGB
+WS2812 strip, and what it shows per mode and state (HSB): decisions/2026-11-13-light-colour-model-and-states.md
+(owner 2026-11-13; the PWM ring below is no longer the V1).
 
 ```text
 What: the node's light, which the case design needs ("Licht ist Pflicht" for the video; Case V1: the light shows

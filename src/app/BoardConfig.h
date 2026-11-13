@@ -267,7 +267,7 @@ pins that collide or that the board must not drive.
 #endif
 #endif
 #ifndef LIGHT_PIXELS
-#define LIGHT_PIXELS 30 // ~0.5 m of a 60 / m strip; the ring's count is set when the ring is chosen
+#define LIGHT_PIXELS 28 // the node's strip (docs/decisions/2026-11-13-light-colour-model-and-states.md)
 #endif
 // The strip's "white" (chosen 2026-11-13 by eye on the black RGB reel: equal channels look bluish): LIGHT <pct> dims this.
 #ifndef LIGHT_WHITE_R

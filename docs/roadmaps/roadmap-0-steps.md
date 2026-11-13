@@ -384,13 +384,17 @@ substeps marked "on site" wait for those days.
    28.1 With the owner: the ring and what the light shows (states, colours). Owner 2026-11-11: a WS2812 ring or a
         MOSFET-switched PWM one, chosen by about 2026-11-18; the kind a board-config constant, never a param
         (OUT-007). The shared part and the PWM driver first, the WS2812 driver only if that ring is chosen.
+        Owner 2026-11-13: a WS2812 RGB strip of 28 pixels; HSB with B the level; per state colour A (idle, rising
+        to ~0.5 toward the call) and B (heard, emitting to 1.0, afterglow), the frequency setting both hues, two
+        variants each for the idle and the heard hue; echo a steady glow, Whispernet the smoothed replay
+        (decisions/2026-11-13-light-colour-model-and-states.md). The PWM driver is no longer needed.
    28.2 PC: LightOutput, the cap (build-time ceiling, a param below it) and the state mapping, host-tested; the
         pin on the stripboard's board config (the lochraster_v1 board; Aux pins reserved there).
         2026-11-13 (0b54c9c0): PixelStrip (WS2812 / SK6812 on RMT), the 0.5 A cap at build time and the LIGHT test
         command. Owner 2026-11-13: the cap and a perceived curve at the driver, one level 0..1 above it
         (decisions/2026-11-13-light-level-scalar-cap-in-hal.md); built the same day (src/hal/LightCurve.h,
-        PixelStrip::showLevel, LIGHT <0..100> on that scale, test_light_curve). Open: the state mapping and the param
-        below the cap, after 28.1 names the states.
+        PixelStrip::showLevel, LIGHT <0..100> on that scale, test_light_curve). Open: HSB in the driver, the light
+        composer per mode (the states in the colour decision), the light.* params including the one below the cap.
    28.3 Bench, on the HW-001 prototype or a breadboard node with the ring: the ring at its cap measured; the 5 V rail
         with the light at its cap, the hop train at the shipped level and the radio, in the closed case; the mic's
         floor in the band with the light off and at its cap. A measurement, not a tuning pass.
@@ -399,7 +403,7 @@ substeps marked "on site" wait for those days.
         (82 SELFTESTs PASS, no dropped audio, no failed sends); current at 24 V only: off 0.034 A, cap 0.109 A,
         the strip ~0.31 A at 5 V against the firmware's 500 mA estimate; 3.3 V data drove it without flicker at the
         bench wiring (owner, by eye). Open: the 5 V rail itself, the ring,
-        the closed case, the white reel's type (issue #94 check 3). bench/sessions/2026-11-13-r1-light-power,
+        the closed case (the reel's type: RGB, owner 2026-11-13, issue #94 check 3). bench/sessions/2026-11-13-r1-light-power,
         -r1-light-radio-stress, -hw005-radio-vs-mic.
    Gate: OUT-007's gate; the light on every board checked in 21.4 before 2026-12-07.
 

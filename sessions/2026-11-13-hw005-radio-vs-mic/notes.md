@@ -44,8 +44,8 @@ and 14333 (radio off, cap, chirp 1).
 - No false detections from the node's own transmissions in 5 min of continuous traffic.
 - Small and not a problem: with the radio on, the strip at the cap cost about 2.5 dB of SNR (set means 37.3 / 36.4
   dB against 39.5 / 39.2 dark; floor medians 2261 / 2739 against 1883 / 1986). With the radio off there was no
-  difference (38.4 cap, 38.2 dark; floors 2020 / 2120). The radio-off sets ran 25 min later, so this is not a
-  clean light x radio interaction; far from the 30 dB line. Noted, not tuned.
+  difference (38.4 cap, 38.2 dark; floors 2020 / 2120). The sets ran at different times, so an
+  interaction of light and radio is not shown; far from the 30 dB line. Noted, not tuned.
 
 ## State after the run
 

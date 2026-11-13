@@ -339,7 +339,7 @@ substeps marked "on site" wait for those days.
      (the git proxy answers 403), delete it on GitHub. The echo modes' spec chapter and the other deferred items are
      under "Review leftovers" with their triggers; M4 (AmpExperimental's contrast scale) waits for 20.5.
 
-26. [TODO, by 2026-11-20] Whisper corpus: long recordings of several voices on the board's own mic. (issue #92) At the lab PC.
+26. [RUNNING 2026-11-13: the test recording passed, the voices open; by 2026-11-20] Whisper corpus: long recordings of several voices on the board's own mic. (issue #92) At the lab PC.
    ECHO-005 items 1-2. The firmware is built (REC, LongRecorder, tools/bench/longrec.py; compiled and host-tested
    2026-11-06, never run on a board), so the first thing on the bench is one board on USB and one test recording:
    frames complete, no dropped buffers, the baud back after. Then the sections for each voice (the list in
@@ -347,6 +347,11 @@ substeps marked "on site" wait for those days.
    voices needed; I (Claude) prepare the plan, the cues and the labelling.
    Gate: a test recording with under 1 % of the samples missing; at least four voices, each with the same sections,
    and the room's noises, in a bench session cited.
+   2026-11-13: the test recording on R1 (stripboard, the Whispernet image, 60 s): 100 % of the samples, no dropped
+   buffers, the console back at 115200 (bench/sessions/2026-11-13-r1-rec-test). On the way: the recorder's ring
+   takes the largest of 12 / 8 / 6 / 4 KB that fits (Whispernet's heap had no 12 KB block) and fills from the first
+   frame; longrec.py --boot-wait / --setup / --status for a board that restarts when its port opens. Open: the
+   voices and the noises (owner and voices).
 
 27. [TODO, 2026-11-20 .. 11-26] Whisper evaluation: the detectors compared, a classifier tried, held out by voice. (issue #93) PC.
    ECHO-005 items 3-4. The chain with the room-following onset, WebRTC VAD and Silero on the corpus; a small tree

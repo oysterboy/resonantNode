@@ -7,6 +7,12 @@ The board does the baud switch itself: the "REC start" line arrives at 115200, t
 "REC end" line brings it back. Run the board with its own playback off (echo.enabled 0 / whisper.enabled 0), the
 stream is the raw mic. Frames that arrive damaged or not at all (the position jumps) are filled with silence and
 counted. Ctrl+C sends REC STOP and keeps what came. Needs pyserial.
+
+A board that restarts when its port opens (R1, 2026-11-13) needs --boot-wait, and its live settings only last while
+the port is open: put them in --setup and read the counters with --status in the same run, e.g.
+
+  python tools/bench/longrec.py --port COM3 --secs 60 --out test.wav --boot-wait 12 \
+      --setup "PARAM SET whisper.enabled 0" --setup "ECHO STATUS" --status "ECHO STATUS"
 """
 import argparse
 import struct
@@ -62,6 +68,14 @@ def main():
     ap.add_argument("--secs", type=int, required=True, help="1..600")
     ap.add_argument("--out", required=True, help="the WAV to write")
     ap.add_argument("--baud", type=int, default=115200, help="the console's baud before and after the stream")
+    ap.add_argument("--boot-wait", type=float, default=0.0,
+                    help="seconds to wait after opening the port: a board that restarts when its port opens (R1 on a "
+                         "CP210x) would take REC mid-boot")
+    ap.add_argument("--setup", action="append", default=[],
+                    help="a command before REC, repeatable (e.g. \"PARAM SET whisper.enabled 0\"): live values survive "
+                         "only while the port stays open, so set them here, not in a separate session")
+    ap.add_argument("--status", action="append", default=[],
+                    help="a command after REC end, repeatable (e.g. \"ECHO STATUS\"): its reply is printed")
     A = ap.parse_args()
 
     ser = serial.Serial()
@@ -69,6 +83,24 @@ def main():
     ser.dtr = False
     ser.rts = False
     ser.open()
+
+    def console(line, wait=1.5):
+        ser.reset_input_buffer()
+        ser.write((line + "\n").encode())
+        reply, t_end = b"", time.time() + wait
+        while time.time() < t_end:
+            reply += ser.read(512)
+        print(">> %s\n%s" % (line, reply.decode(errors="replace").strip()), flush=True)
+
+    if A.boot_wait > 0:
+        t_end = time.time() + A.boot_wait
+        boot = b""
+        while time.time() < t_end:
+            boot += ser.read(1024)
+        build = [x for x in boot.decode(errors="replace").splitlines() if "BUILD role=" in x]
+        print(build[0].strip() if build else "no BUILD line in %.0f s" % A.boot_wait, flush=True)
+    for line in A.setup:
+        console(line)
     ser.reset_input_buffer()
     ser.write(("REC %d\n" % A.secs).encode())
 
@@ -117,6 +149,9 @@ def main():
         print("stopped")
 
     ser.baudrate = A.baud
+    time.sleep(0.3)
+    for line in A.status:
+        console(line)
     ser.close()
     with wave.open(A.out, "wb") as w:
         w.setnchannels(1)

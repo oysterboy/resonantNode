@@ -177,8 +177,10 @@ void EchoApp::pollAudio() {
     size_t processed = 0;
     AudioBlock block;
     while (processed < maxSamples && _i2sPort.readBlock(block)) {
-        if (_recActive) {
-            _rec.push(block.samples, block.sampleCount);  // the mic as it heard, before any cancelling
+        // The mic as it heard, before any cancelling. From the first frame on: the ring holds ~128 ms, the PC's baud
+        // switch takes 400 ms, and samples taken before it overflowed the ring (0.3 s lost at the start, R1 2026-11-13).
+        if (_recActive && static_cast<long>(timebase::nowMs() - _recFirstFrameMs) >= 0) {
+            _rec.push(block.samples, block.sampleCount);
         }
         const uint32_t startUs = micros();
         // The ring's own index of this block's first sample: the clip is cut by it. Not block.startSampleIndex, which
@@ -672,15 +674,27 @@ void EchoApp::handleRecCommand(const char* line) {
         serialOut().println("REC ERR busy");
         return;
     }
-    constexpr size_t kRingBytes = 12288;  // ~0.25 s at 24 kHz: the port at 921600 drains twice what the mic fills
-    _recBuf = static_cast<uint8_t*>(heap_caps_malloc(kRingBytes, MALLOC_CAP_8BIT));
+    // The largest ring that fits: the port at 921600 drains twice what the mic fills at 24 kHz, so the ring only bridges
+    // the loop's pauses (2.5 ms at most, ~120 bytes); 4 KB is ~85 ms. Whispernet's heap holds no 12 KB block with the
+    // line and the radio up (7.9 KB largest on R1, 2026-11-13).
+    constexpr size_t kRingSizes[] = {12288, 8192, 6144, 4096};
+    size_t ringBytes = 0;
+    for (const size_t bytes : kRingSizes) {
+        _recBuf = static_cast<uint8_t*>(heap_caps_malloc(bytes, MALLOC_CAP_8BIT));
+        if (_recBuf != nullptr) {
+            ringBytes = bytes;
+            break;
+        }
+    }
     if (_recBuf == nullptr) {
         serialOut().println("REC ERR no_heap");
         return;
     }
     const uint32_t rate = _i2sPort.sampleRateHz();
-    _rec.begin(_recBuf, kRingBytes, static_cast<uint64_t>(secs) * rate);
-    serialOut().print("REC start rate=");
+    _rec.begin(_recBuf, ringBytes, static_cast<uint64_t>(secs) * rate);
+    serialOut().print("REC start ring_bytes=");
+    serialOut().print(static_cast<unsigned long>(ringBytes));
+    serialOut().print(" rate=");
     serialOut().print(rate);
     serialOut().print(" bits=16 secs=");
     serialOut().print(secs);

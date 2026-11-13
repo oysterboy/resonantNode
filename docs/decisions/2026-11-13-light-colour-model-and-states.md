@@ -6,7 +6,7 @@ Date: 2026-11-13
 
 ## Decision
 
-**The light.** A WS2812 strip, RGB (3 bytes per pixel, no white channel; issue #94 check 3), 28 pixels per node.
+**The light.** A WS2812 strip, RGB (3 bytes per pixel, no white channel), 28 pixels per node.
 
 **The colour model is HSB.** The light's effects hand the driver hue, saturation and brightness; B is the level of
 decisions/2026-11-13-light-level-scalar-cap-in-hal.md (0..1, perceived, 1.0 at the cap). The driver turns H and S

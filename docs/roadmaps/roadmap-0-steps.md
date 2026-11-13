@@ -408,7 +408,8 @@ substeps marked "on site" wait for those days.
         (82 SELFTESTs PASS, no dropped audio, no failed sends); current at 24 V only: off 0.034 A, cap 0.109 A,
         the strip ~0.31 A at 5 V against the firmware's 500 mA estimate; 3.3 V data drove it without flicker at the
         bench wiring (owner, by eye). Open: the 5 V rail itself, the ring,
-        the closed case (the reel's type: RGB, owner 2026-11-13, issue #94 check 3). bench/sessions/2026-11-13-r1-light-power,
+        the closed case, the white reel's type (issue #94 check 3; the strip chosen is the black RGB reel, owner
+        2026-11-13). bench/sessions/2026-11-13-r1-light-power,
         -r1-light-radio-stress, -hw005-radio-vs-mic.
    Gate: OUT-007's gate; the light on every board checked in 21.4 before 2026-12-07.
 

@@ -18,6 +18,7 @@
 #include "../../output/ChirpOutput.h"
 #include "../../app/SerialLine.h"
 #include "../../output/SoundOutput.h"
+#include "../../output/PixelStrip.h"
 #include "../../net/NodeNet.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/evaluation/OccurrenceVerdict.h"
@@ -92,6 +93,7 @@ private:
     void handleOtaCommand(const char* line);
     void printHelp(const char* line);
     void handleSelfTestCommand(const char* line);
+    void handleLightCommand(const char* line);
     void refuseRbParam(const char* line);
     void refuseRbBehav(const char* line);
     void handleRebaseForceCommand(const char* line);
@@ -198,6 +200,7 @@ private:
 
     // Debug / logging support.
     NodeLed _led;
+    PixelStrip _light;  // the light test (issue #94): the LIGHT command only, nothing drives it from Behavior yet
     // 256 like the Analyzer's USB line; a longer line is refused, never run
     // cut (issue #31; app/SerialLine.h). Also the command scratch size.
     serial_line::LineReader<serial_line::kCommandLineMax> _serialLine;

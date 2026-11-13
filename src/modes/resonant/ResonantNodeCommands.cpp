@@ -29,6 +29,7 @@ const Node::Command Node::kCommands[] = {
     {"OTA", Command::Match::Word, &Node::handleOtaCommand},
     {"RB help", Command::Match::Exact, &Node::printHelp},
     {"SELFTEST", Command::Match::Word, &Node::handleSelfTestCommand},
+    {"LIGHT", Command::Match::Word, &Node::handleLightCommand},
     {"RB PROFILE", Command::Match::Word, &Node::handleProfileCommand},
     {"RB STATUS", Command::Match::Word, &Node::printRbStatus},
     {"RB PARAM", Command::Match::Word, &Node::refuseRbParam},
@@ -98,6 +99,74 @@ void Node::printHelp(const char* line) {
     serialOut().println(
         "RB CMD: NET <target|*> <command> (PARAM, RB, SELFTEST to one target, NET PING) | NET STATUS (by radio)");
     serialOut().println("RB CMD: SELFTEST | SELFTEST external wait_ms=10000 | SELFTEST chirp n=5 | SELFTEST help");
+    serialOut().println(
+        "RB CMD: LIGHT <0..100> | LIGHT off | LIGHT alt | LIGHT alt4 | LIGHT rgb <r> <g> <b> | LIGHT rgbw <r> <g> <b> <w> | LIGHT w <0..100>");
+}
+
+// The light test (issue #94): one colour on all pixels of the strip on LIGHT_PIN, under the build-time current cap.
+// rgb: 3 bytes per pixel (WS2812); rgbw / w: 4 bytes per pixel (SK6812 RGBW), so a W-only frame shows which kind a
+// strip is. A plain number is the strip's white (LIGHT_WHITE_*) as a percentage of full.
+void Node::handleLightCommand(const char* line) {
+    if (!_light.ready()) {
+        serialOut().println("LIGHT ERR no_light (LIGHT_PIN < 0 in this build, or the RMT driver failed)");
+        return;
+    }
+    const char* args = text_parse::rest(line, "LIGHT");
+    int a = 0, b = 0, c = 0, d = 0;
+    bool ok = false;
+    bool four = false;
+    uint8_t r = 0, g = 0, bl = 0, w = 0;
+    auto level = [](int percent) { return static_cast<uint8_t>(percent * 255 / 100); };
+    auto inByte = [](int v) { return v >= 0 && v <= 255; };
+    // alt / alt4: even pixels red, odd pixels blue (3 bytes per pixel) or white-only (4 bytes), so a strip of the other
+    // kind, or a colour order that is not GRB, shows per pixel.
+    const uint8_t altRed[4] = {255, 0, 0, 0};
+    const uint8_t altBlue[4] = {0, 0, 255, 0};
+    const uint8_t altWhite[4] = {0, 0, 0, 255};
+    bool alternating = false;
+    if (equalsIgnoreCase(args, "off")) {
+        ok = true;
+    } else if (equalsIgnoreCase(args, "alt") || equalsIgnoreCase(args, "alt4")) {
+        four = equalsIgnoreCase(args, "alt4"), alternating = true, ok = true;
+    } else if (sscanf(args, "rgbw %d %d %d %d", &a, &b, &c, &d) == 4 && inByte(a) && inByte(b) && inByte(c) &&
+               inByte(d)) {
+        r = a, g = b, bl = c, w = d, four = true, ok = true;
+    } else if (sscanf(args, "rgb %d %d %d", &a, &b, &c) == 3 && inByte(a) && inByte(b) && inByte(c)) {
+        r = a, g = b, bl = c, ok = true;
+    } else if (sscanf(args, "w %d", &a) == 1 && a >= 0 && a <= 100) {
+        w = level(a), four = true, ok = true;
+    } else if (sscanf(args, "%d", &a) == 1 && a >= 0 && a <= 100 && args[0] >= '0' && args[0] <= '9') {
+        r = level(a) * LIGHT_WHITE_R / 255, g = level(a) * LIGHT_WHITE_G / 255, bl = level(a) * LIGHT_WHITE_B / 255,
+        ok = true;
+    }
+    if (!ok) {
+        serialOut().println(
+            "LIGHT ERR usage: LIGHT <0..100> | off | alt | alt4 | rgb r g b | rgbw r g b w | w <0..100>");
+        return;
+    }
+    const bool sent = alternating ? _light.showAlternating(altRed, four ? altWhite : altBlue, four ? 4 : 3)
+        : four                    ? _light.showRgbw(r, g, bl, w)
+                                  : _light.showRgb(r, g, bl);
+    serialOut().print("LIGHT ");
+    serialOut().print(sent ? "ok" : "ERR send_failed");
+    serialOut().print(" bytes_per_pixel=");
+    serialOut().print(four ? 4 : 3);
+    serialOut().print(" pixels=");
+    serialOut().print(_light.pixels());
+    serialOut().print(" sent=");
+    serialOut().print(_light.sentR());
+    serialOut().print(",");
+    serialOut().print(_light.sentG());
+    serialOut().print(",");
+    serialOut().print(_light.sentB());
+    serialOut().print(",");
+    serialOut().print(_light.sentW());
+    serialOut().print(" est_ma=");
+    serialOut().print(_light.estimatedMa());
+    serialOut().print(" cap_ma=");
+    serialOut().print(_light.capMa());
+    serialOut().print(" scale_pct=");
+    serialOut().println(_light.scalePct());
 }
 
 void Node::handleSelfTestCommand(const char* line) {

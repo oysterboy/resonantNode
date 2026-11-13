@@ -26,7 +26,9 @@ This file holds the rules for changing the repo; people follow them too. Where e
 ## Working rules
 
 - **Boards:** never flash a D-AMP image (`esp32dev`, `esp32dev-analyzer`, ...) onto a stripboard node (`esp32dev-lr1*`,
-  `-D BOARD_LOCHRASTER_V1`): it drives GPIO 32, which carries the stripboard mic's GND. Never flash a piezo build onto
+  `-D BOARD_LOCHRASTER_V1`): it drives GPIO 32, which carries the stripboard mic's GND (on `esp32dev-lr2*`,
+  `BOARD_LOCHRASTER_V2`, 32 is the mic's data line, driven against the mic's output). An lr1 image on an lr2 board, or
+  the reverse, only leaves the mic silent. Never flash a piezo build onto
   a D-AMP board or the reverse: the pinouts collide on GPIO 25/26. The
   D-AMP board (MAX98357A + I2S mic on one full-duplex port) is the node hardware since 2026-10-09; the piezo envs
   (`esp32dev-piezo*`, `-D BOARD_PIEZO`) stay compiling as the fallback. Pins and I2S slots: `src/app/BoardConfig.h`.

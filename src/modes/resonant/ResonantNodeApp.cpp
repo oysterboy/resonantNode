@@ -291,6 +291,16 @@ void Node::begin() {
     _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
     _chirpOutput.begin();
     _led.begin(_ledPin);
+    if (LIGHT_PIN >= 0) {
+        const bool lightOk = _light.begin(LIGHT_PIN, LIGHT_PIXELS, LIGHT_MAX_MA);
+        serialOut().print("RB light pin=");
+        serialOut().print(LIGHT_PIN);
+        serialOut().print(" pixels=");
+        serialOut().print(LIGHT_PIXELS);
+        serialOut().print(" cap_ma=");
+        serialOut().print(LIGHT_MAX_MA);
+        serialOut().println(lightOk ? " status=ok" : " status=failed");
+    }
     _behavior.seedIdleSchedule(timebase::nowMs());
     _silentApplied = _switches.silent;
     if (_switches.silent) {

@@ -387,7 +387,7 @@ substeps marked "on site" wait for those days.
         floor in the band with the light off and at its cap. A measurement, not a tuning pass.
         2026-11-13, R1 (stripboard board 1, a 30-pixel WS2812 test strip, not yet the ring, no case): the light at
         its cap against audio and radio, no effect beyond about 2.5 dB of the amp check's SNR with the radio on
-        (98 SELFTESTs PASS, no dropped audio, no failed sends); current at 24 V only: off 0.034 A, cap 0.109 A,
+        (82 SELFTESTs PASS, no dropped audio, no failed sends); current at 24 V only: off 0.034 A, cap 0.109 A,
         the strip ~0.31 A at 5 V against the firmware's 500 mA estimate. Open: the 5 V rail itself, the ring,
         the closed case, the white reel's type (issue #94 check 3). bench/sessions/2026-11-13-r1-light-power,
         -r1-light-radio-stress, -hw005-radio-vs-mic.

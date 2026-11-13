@@ -161,3 +161,20 @@ Mic cable length, same board and image: a 10 cm cable works as well as 20 cm (tw
 framing ok, no crackle). The amp check moved with the loose mic's position (tone 87k-140k, spread 1.33 FAIL, then
 1.16 PASS): compare boards only with the mic fixed at one marked spot. The length is picked with the case
 prototype (HW-003).
+
+## 2026-11-13, evening: light at the cap, power path, amp check
+
+Board 1 (R1), image `esp32dev-lr2` from 36366672 plus the then uncommitted light code; speaker now on a box
+instead of a carton, mic about 10 cm above it. Data: `bench/sessions/2026-11-13-r1-light-power/notes.md` (bench
+branch).
+
+- Light against audio (issue #94, check 2, USB half): six `SELFTEST`s over USB, alternating strip dark and
+  `LIGHT 100` (the 0.5 A cap): 6/6 PASS, SNR 29-42 dB, spread 1.02-1.13, floors 1.2k-5.5k with and without the
+  light. No measurable effect. The radio half (issue #99) is still open.
+- The amp's earlier `low_snr` fails moved with the speaker: on the carton tone 45k-73k, on the box 160k-181k.
+  Compare boards only with the speaker and mic at fixed, marked spots.
+- Current at 24 V (lab supply): strip off 0.034 A, `LIGHT 100` 0.109 A, `LIGHT 10` 0.062 A. The strip at the cap
+  draws about 1.8 W, about 0.31 A at 5 V if the buck runs at 85 %: below the firmware's 500 mA estimate (30
+  pixels, the black RGB reel). The whole node at the cap is about 2.6 W at 24 V.
+- Power path: R1 calling every 3 s sounded clean on USB + buck, buck only and USB only; one "bad noise" heard
+  earlier did not come back. No dropped audio buffers after boot in any of them.

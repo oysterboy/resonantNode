@@ -4,6 +4,7 @@ One run covers one firmware state (the image and R1's radio setting are fixed by
 setup goes into the session as --label text). Inside that state it walks the light cells over USB:
 
   light=idle   no LIGHT frame (strip dark)
+  light=dim    LIGHT 10 held (within USB power, buck off)
   light=white  LIGHT 100 held (the strip's white under the 0.5 A cap)
   light=alt    LIGHT alt held (even red / odd blue)
 
@@ -16,7 +17,10 @@ optional: R1's NET PING counters at the start and the end of each cell.
 
 Output: bench/sessions/<date>-lightmatrix-<slug>/lightmatrix.json and console.log (a run without its setup and
 firmware hash is not evidence: the BUILD banner is read first and stored). The idle call and the light are
-restored at the end (call_enabled 1, LIGHT off).
+restored at the end (call_enabled 1, LIGHT off). The files are written after every cell too.
+
+Opening the Node's port restarts it (seen on R1 2026-11-13 over a CP210x, DTR/RTS held low): the run starts on a
+fresh boot. Run it unpiped (no grep) or with python -u: a pipe holds the progress lines back until the end.
 """
 import argparse
 import datetime
@@ -100,7 +104,7 @@ def ping_counters(gw, name):
 
 
 def light_command(mode):
-    return {"idle": "LIGHT off", "white": "LIGHT 100", "alt": "LIGHT alt"}[mode]
+    return {"idle": "LIGHT off", "dim": "LIGHT 10", "white": "LIGHT 100", "alt": "LIGHT alt"}[mode]
 
 
 def run_cell(r1, gw, mode, runs, listen_s, name):
@@ -163,20 +167,25 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     session = {"label": args.label, "build": build.group(0) if build else None,
                "started": datetime.datetime.now().isoformat(timespec="seconds"), "cells": []}
-    print("build:", session["build"])
+    print("build:", session["build"], flush=True)
+
+    def save():
+        with open(os.path.join(out_dir, "lightmatrix.json"), "w") as f:
+            json.dump(session, f, indent=1)
+        with open(os.path.join(out_dir, "console.log"), "w") as f:
+            f.write("\n".join(r1.log))
+
     try:
         for mode in args.lights.split(","):
             cell = run_cell(r1, gw, mode, args.runs, args.listen_s, args.name)
             cell["summary"] = summarize(cell)
             session["cells"].append(cell)
             print("  ->", cell["summary"], flush=True)
+            save()  # per cell: a killed run skips the finally below
     finally:
         r1.cmd("LIGHT off", until="LIGHT")
         r1.cmd("PARAM SET behavior.call_enabled 1", until="status=")
-        with open(os.path.join(out_dir, "lightmatrix.json"), "w") as f:
-            json.dump(session, f, indent=1)
-        with open(os.path.join(out_dir, "console.log"), "w") as f:
-            f.write("\n".join(r1.log))
+        save()
     print("saved", out_dir)
 
 

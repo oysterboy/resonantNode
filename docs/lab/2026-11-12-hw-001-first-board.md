@@ -129,3 +129,30 @@ the MAX keeps a direct clock. WS needs no resistor (B: the crackle is BCLK's).
 
 Board rule from here: 330 ohm in the mic's BCLK branch, on the board as in D; WS direct. Still unmeasured on a
 scope (planned after the tryout).
+
+## 2026-11-13: mic header order and `lochraster_v2`
+
+Why: the INMP441 ribbon should run straight onto the board, without reordering in the Dupont housing (owner,
+mechanical). New order on strips 6-11, top down: GND, VDD, SD, L/R, WS, SCK (was L/R, SD, GND, VDD, WS, SCK).
+WS and SCK keep strips 10/11, so the clock branch of run D stays as tested. SD lands on strip 8, the DevKit's
+GPIO 32: a pin change, so a new firmware board, `lochraster_v2` (issue #98,
+`docs/decisions/2026-11-12-board-revisions.md`). Batch 1 is cut from the RC2 layout with this order: strips 6, 7
+and 9 cut at the DevKit (34, 35, 33 off), strip 8 through to 32.
+
+Board 1 keeps its old header order and cable; only SD moved: strips 7 and 8 cut at the DevKit, a solder-side wire
+from the SD strip to pin 32. GPIO 33 still sits on the mic's 3V3 strip there, so v2 must never drive 33.
+
+Before v2 was flashed, the reworked board ran the v1 image for about 10 s: harmless, v1 never configures 32 (it
+only reads the now open 35).
+
+`SELFTEST` on board 1 with `lochraster_v2` (image built locally from 2d77a33 plus the uncommitted v2 board):
+PASS 5 / FAIL 0 / SKIP 1. Mic: bit8 49.7 %, framing ok, floor mean 1277. Amp: five chirps at 3200 Hz, SNR
+38.2-40.2 dB, spread 1.10; first chirp floor 2254, no raised floor.
+
+How to read bit8: the mic sends 24 data bits in a 32-bit slot, the low 8 bits are zero. Bit 8 is the lowest data
+bit and carries noise, so it is set about half the time when the frame is aligned; a one-bit shift moves it into
+the zeros (0 %, tests A and C above).
+
+A D-AMP image on a v2 board drives GPIO 32 (amp DIN) against the mic's SD output: an output-against-output clash,
+milder than v1's output into ground, but it can wear the mic. Only `esp32dev-lr2*` images go onto the stripboard
+nodes.

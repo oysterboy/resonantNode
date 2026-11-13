@@ -77,7 +77,7 @@ What it was not, in the order it was ruled out:
 The SELFTEST's amp check measures the tone through the mic, so the mic gets its clock with the resistor in place.
 
 Most likely explanation (not measured, there was no scope): BCLK leaves GPIO 26 with edges of a few ns. On the
-stripboard the MAX sits a few millimetres from the junction where the mic's 15-20 cm cable branches off. The
+stripboard the MAX sits a few millimetres from the junction where the mic's 20 cm cable branches off (the same length as on the E nodes). The
 cable's far end is an open, high-impedance input; the edge reflects there and arrives back at the junction about
 2 ns later, while the edge at the MAX is still near its threshold. The MAX sees a step in the edge and counts a
 clock twice: bits slip, the level drops and the rest turns to noise. A receiver at the end of a line sees incident

@@ -1,0 +1,25 @@
+﻿no BUILD line in 12 s
+>> PARAM SET whisper.enabled 0
+PARAM SET path=whisper.enabled module=output old=1 new=0 status=ok
+>> ECHO STATUS
+ECHO status node=R1 uptime_s=19 window_s=19 rate_hz=24000 measured_mhz=23999960 samples=472832 dropped_bufs=12 dropped_total=12 passes=19572 pass_us_mean=180 pass_us_max=2546 block_us_max=1876 env_peak=62245 tone=0 free_heap=49144 largest_block=7924 net_rx=0 net_tx=0 level=788 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+
+WHISPER status delay_ms=659 phrases=8 whispers=0 checks=37 asked=0 answered=0 opens=0 gated_ms=0 replays=0 deafs=0 deaf_ms=0 cuts=0 gate_open=0 short_writes=1 refills=0 room=26 onset_now=250 aec=0 aec_erle_db=0.0 aec_peak_tap=0 aec_delay=1066 aec_shifts=0 line_bytes=96000
+
+ECHO status node=R1 uptime_s=20 window_s=20 rate_hz=24000 measured_mhz=23999960 samples=481024 dropped_bufs=12 dropped_total=12 passes=19906 pass_us_mean=180 pass_us_max=2546 block_us_max=1876 env_peak=24690 tone=0 free_heap=49144 largest_block=7924 net_rx=0 net_tx=0 level=23 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+
+WHISPER status delay_ms=659 phrases=8 whispers=0 checks=38 asked=0 answered=0 opens=0 gated_ms=0 replays=0 deafs=0 deaf_ms=0 cuts=0 gate_open=0 short_writes=1 refills=0 room=26 onset_now=250 aec=0 aec_erle_db=0.0 aec_peak_tap=0 aec_delay=1066 aec_shifts=0 line_bytes=96000
+
+WHISPER phrase dur_ms=955 level_p90=1998 mod=0.99 flat=0.30 valid=0 failed=loudness
+REC start ring_bytes=6144 rate=24000 bits=16 secs=60 baud=921600
+0 / 1440000 samples
+236048 / 1440000 samples
+477328 / 1440000 samples
+718480 / 1440000 samples
+958864 / 1440000 samples
+1199880 / 1440000 samples
+>> ECHO STATUS
+ECHO status node=R1 uptime_s=81 window_s=81 rate_hz=24000 measured_mhz=23999960 samples=1956864 dropped_bufs=12 dropped_total=12 passes=70119 pass_us_mean=235 pass_us_max=6249 block_us_max=1876 env_peak=1047 tone=0 free_heap=49144 largest_block=7924 net_rx=0 net_tx=0 level=65 occurrences=0 claps=0 slow=0 replays=0 clip_missing=0 behavior=Idle level_auto=0
+
+WHISPER status delay_ms=659 phrases=30 whispers=0 checks=129 asked=0 answered=0 opens=0 gated_ms=0 replays=0 deafs=0 deaf_ms=0 cuts=0 gate_open=0 short_writes=1 refills=0 room=23 onset_now=250 aec=0 aec_erle_db=0.0 aec_peak_tap=0 aec_delay=1066 aec_shifts=0 line_bytes=96000
+bench/sessions/2026-11-13-r1-rec-test/test_60s.wav: 1432976 of 1440000 samples received (99.5 % filled), 0 bad frames; board: REC end samples=1440000 dropped=7024

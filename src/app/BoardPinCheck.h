@@ -24,10 +24,17 @@ C++11 on the ESP builds (Arduino-ESP32 2.x), so the helpers are single-return re
 namespace board_pins {
 
 // Every signal of the board, -1 where it has none. Keep in step with the BOARD_PIN_* list below.
+// The light's pin is Aux S2 on the stripboards (checked there); a build that puts it elsewhere gets it checked too.
+#if LIGHT_PIN != AUX_S2_PIN
+#define BOARD_LIGHT_SIGNAL LIGHT_PIN
+#else
+#define BOARD_LIGHT_SIGNAL -1
+#endif
+
 constexpr int kSignals[] = {
-    AUDIO_I2S_SCK_PIN, AUDIO_I2S_WS_PIN,    AUDIO_I2S_DATA_PIN,  AUDIO_I2S_DOUT_PIN, CHIRP_PIN,  CHIRP_BTL_PIN,
-    STATUS_LED_PIN,    EMITTER_UART_RX_PIN, EMITTER_UART_TX_PIN, BUTTON_PIN,         AMP_SD_PIN, AUX_S1_PIN,
-    AUX_S2_PIN,        AUX_S3_PIN,          AUX_S4_PIN,          AUX_S5_PIN,
+    AUDIO_I2S_SCK_PIN, AUDIO_I2S_WS_PIN,    AUDIO_I2S_DATA_PIN,  AUDIO_I2S_DOUT_PIN, CHIRP_PIN,          CHIRP_BTL_PIN,
+    STATUS_LED_PIN,    EMITTER_UART_RX_PIN, EMITTER_UART_TX_PIN, BUTTON_PIN,         AMP_SD_PIN,         AUX_S1_PIN,
+    AUX_S2_PIN,        AUX_S3_PIN,          AUX_S4_PIN,          AUX_S5_PIN,         BOARD_LIGHT_SIGNAL,
 };
 constexpr int kAlwaysForbidden[] = {1, 3, 6, 7, 8, 9, 10, 11};
 constexpr int kBoardForbidden[] = {BOARD_FORBIDDEN_PINS};
@@ -84,6 +91,7 @@ BOARD_PIN_OUT(AUX_S2_PIN);
 BOARD_PIN_OUT(AUX_S3_PIN);
 BOARD_PIN_OUT(AUX_S4_PIN);
 BOARD_PIN_OUT(AUX_S5_PIN);
+BOARD_PIN_OUT(BOARD_LIGHT_SIGNAL);
 
 #undef BOARD_PIN_IN
 #undef BOARD_PIN_OUT

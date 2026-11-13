@@ -48,7 +48,8 @@ public:
         if (playedPeak > 1.0f / 256.0f) {
             target = (20.0f * log10f(playedPeak > 1.0f ? 1.0f : playedPeak) + 48.0f) / 48.0f;
         }
-        const float fall = _values.releaseMs == 0 ? 1.0f : static_cast<float>(dt) / static_cast<float>(_values.releaseMs);
+        const float fall =
+            _values.releaseMs == 0 ? 1.0f : static_cast<float>(dt) / static_cast<float>(_values.releaseMs);
         _env = target > _env ? target : (_env - fall > target ? _env - fall : target);
         const float glow = static_cast<float>(_values.glowPct) / 100.0f;
         Hsb c;

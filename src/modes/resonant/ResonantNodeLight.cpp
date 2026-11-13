@@ -106,8 +106,7 @@ NodeLight::Hsb NodeLight::update(const Input& in) {
         case Phase::Heard: {
             const float top = static_cast<float>(_values.heardTopPct) / 100.0f;
             const long span = static_cast<long>(in.answerAtMs - _enteredMs);
-            const float t =
-                span <= 0 ? 1.0f : clamp01(static_cast<float>(inPhase) / static_cast<float>(span));
+            const float t = span <= 0 ? 1.0f : clamp01(static_cast<float>(inPhase) / static_cast<float>(span));
             bright = _brightAtEntry + (top - _brightAtEntry) * t;
             break;
         }

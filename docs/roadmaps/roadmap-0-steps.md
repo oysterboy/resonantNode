@@ -362,8 +362,8 @@ substeps marked "on site" wait for those days.
    roster entries, the field measured at five). Handmade, hands-bound (owner 2026-10-30); runs beside 13-20 on the
    owner's bench hours; the plan to 2026-12-13 in roadmap-hardware.md.
    21.1 HW-001 the prototype (11-02 .. 11-13); parts for ten ordered. Owner's bench.
-        HW-005 (issue #99): the node's own radio against its mic, confirmed with the radio off, then the listening
-        test under traffic; a remedy on the board would change the batch (HW-002).
+        2026-11-13: HW-005 done, the node's own radio does not reach its mic (no false onsets under traffic, the
+        self-test's floor spikes with the radio off as well; bench/sessions/2026-11-13-hw005-radio-vs-mic/notes.md).
    21.2 HW-002 ten boards and HW-003 ten cases (11-16 .. 11-30). Owner's bench.
    21.3 HW-004: ten roster entries, the fieldsim at ten, step 18's node count named. PC.
    21.4 Every board over the bench, one at a time, stripboard and breadboard alike (owner 2026-11-06): USB flash, a

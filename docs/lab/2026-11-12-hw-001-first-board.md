@@ -182,3 +182,8 @@ branch).
   back, and `SELFTEST` by radio, each with the strip at the cap and dark: 18/18 PASS, no dropped audio, no failed
   sends. Two single-chirp floor spikes (16k, 18k), one with the strip lit, one dark: they come with R1 transmitting,
   not with the light. `bench/sessions/2026-11-13-r1-light-radio-stress/notes.md`.
+- HW-005, the node's own radio against its mic (same evening, committed image ba8bcac2): no false onsets from 5 min
+  of continuous radio traffic (one rejected onset, 227 ms, more like a sound in the room), 60/60 `SELFTEST` PASS with
+  the radio on, under traffic and off. The single-chirp floor spikes come with the radio off too. The check's
+  `floor` is the peak of the raw, unfiltered signal in the 75 ms before each chirp, so one click raises it.
+  `bench/sessions/2026-11-13-hw005-radio-vs-mic/notes.md`.

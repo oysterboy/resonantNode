@@ -1099,6 +1099,30 @@ wire silenced E1's amp on 2026-10-09, and E1 is in storage since 2026-10-10.
 Runs in parallel with NODE-010; doesn't gate NODE-011.
 ```
 
+## Hardware
+
+### HW-005 - the node's own radio against its mic
+
+Status: DONE 2026-11-13 (issue #99 closed). bench/sessions/2026-11-13-hw005-radio-vs-mic/notes.md: in 5 min of
+continuous traffic (462 reply frames) one rejected onset, none in 15 min without; 60/60 SELFTEST PASS, single-chirp
+floor spikes with the radio off and without traffic as well, none in the traffic sets. The radio is not the cause;
+the amp check's floor is a raw broadband peak, so a single high value is room sound. No remedy, no decisions file.
+
+```text
+1. On the stripboard (R1, 2026-11-13) single amp-check chirps showed noise floors of 16k-18k (usual 1-5k), and
+   193k on the earlier set, only while the node itself transmitted; the light is ruled out
+   (bench/sessions/2026-11-13-r1-light-radio-stress/notes.md). The suspected path is inside the board (TX current
+   bursts into the mic's supply or clock), so each node disturbs itself, not its neighbours. Unproven.
+2. Confirm: R1 with node.radio_enabled 0, a USB SELFTEST set with the light at its cap and dark, against the 18
+   tests of 2026-11-13. Spikes gone = the radio is the cause.
+3. What matters for the installation is listening, not the self-test: with all other nodes muted and the room
+   quiet, R1 made to transmit back to back for 5 min (NET R1 RB STATUS from the gateway), then 5 min without
+   traffic; heard.valid and the onsets that never became a verdict compared between the two phases.
+4. Only then a choice, if needed: the radio reply held until the amp check ends; radio quiet while the
+   performance plays; a bulk capacitor at the ESP or the mic cable away from the antenna in the batch (HW-002).
+Gate: both comparisons in a bench session; if traffic raises false detections, a decisions file on the remedy.
+```
+
 ## Procedure
 
 ```text

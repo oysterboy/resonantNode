@@ -610,6 +610,12 @@ layout). A gate result cites a `bench/sessions/...` path, never a run that only 
 The standing board check after a change is `tools/bench/nodecheck.py` (the Nodes, 26-27 checks on 2026-11-06) and,
 for Analyzer output, `tools/bench/analyzerab.py` against the last A/B set.
 
+One board at a time (a new or reworked board, the per-board check before a case): `tools/bench/nodecheck_one.py
+--node R1=COM3 --gw E0=COM12 --source E2 --out bench/sessions/<folder>`. Only the board and a radio gateway on USB;
+a Node in earshot plays the chirps for `SELFTEST external` by radio. It mutes every node that answers a ping and puts
+each back, and leaves the board as found. It skips what is the same firmware on every board (the RB STATUS key set
+against a reference, the answer path with an Emitter's trains): those stay in `nodecheck.py` after a firmware change.
+
 ## Source map
 
 ```text

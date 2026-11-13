@@ -362,12 +362,16 @@ substeps marked "on site" wait for those days.
    roster entries, the field measured at five). Handmade, hands-bound (owner 2026-10-30); runs beside 13-20 on the
    owner's bench hours; the plan to 2026-12-13 in roadmap-hardware.md.
    21.1 HW-001 the prototype (11-02 .. 11-13); parts for ten ordered. Owner's bench.
+        2026-11-13: R1 (board 1, lochraster_v2, ba8bcac2) passes tools/bench/nodecheck_one.py 24/24
+        (bench/sessions/2026-11-13-nodecheck-one-r1); the layout drawing is the artifact listed in
+        docs/hardware/boards.md. Open for the gate: parts for ten ordered (owner).
         2026-11-13: HW-005 done, the node's own radio does not reach its mic (no false onsets under traffic, the
         self-test's floor spikes with the radio off as well; bench/sessions/2026-11-13-hw005-radio-vs-mic/notes.md).
    21.2 HW-002 ten boards and HW-003 ten cases (11-16 .. 11-30). Owner's bench.
    21.3 HW-004: ten roster entries, the fieldsim at ten, step 18's node count named. PC.
    21.4 Every board over the bench, one at a time, stripboard and breadboard alike (owner 2026-11-06): USB flash, a
-        roster line with its MAC, the stored params checked (PARAM load stored=), tools/bench/nodecheck.py; one or
+        roster line with its MAC, the stored params checked (PARAM load stored=), tools/bench/nodecheck_one.py (one board
+        and the gateway on USB, owner 2026-11-13; nodecheck.py after a firmware change); one or
         two checked spares. 2026-11-30 is the fallback date: a stripboard node not checked by then is replaced by a
         checked breadboard node for the performance (decisions/2026-11-06-ten-stripboard-nodes-breadboard-fallback.md).
    Gate: ten checked nodes in the roster by 2026-11-30, on stripboard in cases or a checked breadboard node in place

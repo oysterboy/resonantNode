@@ -50,6 +50,9 @@ Status: TODO (owner 2026-10-30)
    what steps 15 and 18 measure in the room.
 Effort: 1-2 days. Gate: the proto runs the Node image, passes nodecheck.py, and its strip layout is on paper (a
 photo or a drawing in bench/, cited) so the batch is a repeat.
+2026-11-13: board 1 (R1) runs the Node image (`esp32dev-lr2`, ba8bcac2) and passes nodecheck_one.py 24/24
+(bench/sessions/2026-11-13-nodecheck-one-r1); the layout is the RC2 drawing listed in docs/hardware/boards.md (an
+artifact, not in bench/). Gate met unless the owner wants the drawing in bench/ as well.
 ```
 
 ### HW-002 - ten boards
@@ -61,7 +64,7 @@ build notes in docs/lab/2026-11-12-hw-001-first-board.md, the layout RCs in docs
 
 ```text
 1. Parts for ten ordered now (the breakouts are the only wait); the layout from HW-001 repeated.
-2. Each board runs the Node image and passes nodecheck.py before it goes into a case; its eFuse MAC goes into
+2. Each board runs the Node image and passes nodecheck_one.py (one board on USB) before it goes into a case; its eFuse MAC goes into
    the roster (HW-004).
 Effort: 3-5 days of soldering, any week. Gate: ten boards, each checked, listed in the roster, a bench session
 citing the check.

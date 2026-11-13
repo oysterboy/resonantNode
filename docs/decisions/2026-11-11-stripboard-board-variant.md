@@ -34,6 +34,10 @@ OTA check refuses an image whose BOARD_NAME differs from the running one. Open w
 own pin 32 sits on the GND strip or is cut off it (2026-10-30 "32 geschnitten + Brücke" against 2026-11-11 "32 =
 GND"); the check locks 32 / 33 either way.
 
+Update 2026-11-12: PCB RC2 is tested with this variant (`esp32dev-lr1`, compiles; not yet run on the board), the
+relation to lochraster_v1 need not be 1:1. On RC2, GPIO 32 and 33 are not connected to anything (owner); the lock on
+32 / 33 stays, it costs nothing.
+
 ## Source
 
 GitHub issue #85 (comment of 2026-10-30); Trello "Prototyp-Platine HW-001", comments of 2026-10-30 (I2S blocker,

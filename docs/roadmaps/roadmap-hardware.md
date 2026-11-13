@@ -39,7 +39,9 @@ Status: TODO (owner 2026-10-30)
    2026-10-30, pins of 2026-11-11; decisions/2026-11-11-stripboard-board-variant.md): the same amp, mic and I2S
    framing as E1-E5 on other pins, so the firmware builds it as a board variant (BOARD_LOCHRASTER_V1, the
    esp32dev-lr1* envs, built and pin-checked at compile time since 2026-11-11, not yet on a board). E1-E5 stay the
-   acoustic references; their images do not go onto a stripboard.
+   acoustic references; their images do not go onto a stripboard. PCB RC2 (under test since 2026-11-12) runs the
+   lochraster_v1 image (`esp32dev-lr1`); the relation need not be 1:1, so RC2 differences get their own note or
+   board variant when found. On RC2 GPIO 32 and 33 are not connected to anything.
 2. Room left for the second mic breakout, unpopulated (docs/research/second-mic-diversity.md, parked): costs
    nothing now, saves a rebuild later.
 3. Power in (USB), the LED, the programming header (OTA means it is needed once per board); the button, the Aux

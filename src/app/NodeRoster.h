@@ -30,6 +30,7 @@ constexpr Entry kNodes[] = {
     {0x38B749C3DC24ULL, "E3", 2},  // 24:dc:c3:49:b7:38
     {0xECEF4AC3DC24ULL, "E4", 3},  // 24:dc:c3:4a:ef:ec
     {0x38FE4AC3DC24ULL, "E5", 1},  // 24:dc:c3:4a:fe:38
+    {0x0CBDC0182EC8ULL, "R1", 2},  // c8:2e:18:c0:bd:0c (PCB RC2, lochraster_v1 image; base 2 shared with E3)
     {0x809071F4E9D4ULL, "E0", 0},  // d4:e9:f4:71:90:80 (CH340 board, the radio gateway: no mic, no amp)
 };
 

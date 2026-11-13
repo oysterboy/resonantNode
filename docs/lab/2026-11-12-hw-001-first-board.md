@@ -104,3 +104,28 @@ audio system design guide (SDAA212), section 4.
 - `SELFTEST`: chirp 1 of each amp check has a raised noise floor (12569 against about 2000, SNR 18.8 dB),
   probably the amp turning on. It does not fail the check but eats into the spread margin.
 - The E nodes run without the resistor; the explanation above says why, a scope would confirm it.
+
+## 2026-11-13: the resistor on the board
+
+The cable hotfix moved onto the board, solder side. Three placements were tried on the same board, mic cable
+without a resistor each time:
+
+| Test | Strip 11 (BCLK) | Strip 10 (WS) | Calls | `SELFTEST` mic |
+|---|---|---|---|---|
+| A | 330 ohm across a cut at columns 14/15 (ahead of MAX and mic) | the same | clean | FAIL `framing_bit8` (bit8 0.0 %) |
+| B | cut bridged with wire | 330 ohm at 14/15 | crackle | - |
+| C | 330 ohm at 14/15 | cut bridged with wire | - | FAIL `framing_bit8` (bit8 0.1 %) |
+| **D** | **cuts at 11/12 and 14/15: the mic headers (columns 12-13) are an island fed through 330 ohm at 14/15; a solder-side wire from column 10 to 16 keeps the MAX on the ESP directly** | bridged (no resistor) | clean | **PASS** |
+
+Run D: `SELFTEST` PASS 5 / FAIL 0 / SKIP 1 (`external_chirp` not requested). Mic: bit8 50.1 %, framing ok, floor
+mean 1149. Amp: five chirps at 3200 Hz, SNR 33.9-36.2 dB, spread 1.03. The first chirp's raised floor seen on
+2026-11-12 (12569) did not come back (2410).
+
+Reading: a resistor ahead of the junction (A, C) does stop the crackle, but it slows BCLK for everything behind it
+(strip, both headers, MAX, mic cable, some 60-100 pF, so 20-30 ns at 330 ohm). The ESP samples the mic's SD on its
+own, undelayed BCLK, so the mic's data arrive late by about one bit: the framing check catches it. In the mic
+branch only (D, and the cable hotfix) the resistor sees about 30 pF, about 10 ns, which the timing tolerates, and
+the MAX keeps a direct clock. WS needs no resistor (B: the crackle is BCLK's).
+
+Board rule from here: 330 ohm in the mic's BCLK branch, on the board as in D; WS direct. Still unmeasured on a
+scope (planned after the tryout).

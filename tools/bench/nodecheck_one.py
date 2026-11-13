@@ -165,7 +165,7 @@ check("RB STATUS printed", len(keys) > 30, "%d keys" % len(keys))
 for line, expect in (("RB help", "RB CMD"), ("RB summary", "RB"), ("RB log full", "RB log"),
                      ("PARAM GET output.silent", "path=output.silent"), ("PARAM DUMP", "path=detection.shape_tail_ms"),
                      ("NET STATUS", "NET"), ("XYZ_not_a_command", "RB ERR unknown_command"),
-                     ("OTA", "OTA result=bad_command"), ("LIGHT off", "LIGHT"), ("RB rebase", "RB rebase")):
+                     ("OTA", "OTA result=bad_command"), ("LIGHT auto", "LIGHT"), ("RB rebase", "RB rebase")):
     reply = cmd(N, line, 3.0 if "rebase" in line else 1.5)
     hit = [l for l in reply.splitlines() if expect in l]  # the board's own verdict lines interleave with the reply
     check("cmd: " + line, bool(hit), (hit or ["(no reply)"])[0].strip()[:70])

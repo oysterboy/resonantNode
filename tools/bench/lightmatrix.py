@@ -20,7 +20,7 @@ optional: R1's NET PING counters at the start and the end of each cell.
 
 Output: bench/sessions/<date>-lightmatrix-<slug>/lightmatrix.json and console.log (a run without its setup and
 firmware hash is not evidence: the BUILD banner is read first and stored). The idle call and the light are
-restored at the end (call_enabled 1, LIGHT off). The files are written after every cell too.
+restored at the end (call_enabled 1, LIGHT auto: the effects again). The files are written after every cell too.
 
 Opening the Node's port restarts it (seen on R1 2026-11-13 over a CP210x, DTR/RTS held low): the run starts on a
 fresh boot. Run it unpiped (no grep) or with python -u: a pipe holds the progress lines back until the end.
@@ -186,7 +186,7 @@ def main():
             print("  ->", cell["summary"], flush=True)
             save()  # per cell: a killed run skips the finally below
     finally:
-        r1.cmd("LIGHT off", until="LIGHT")
+        r1.cmd("LIGHT auto", until="LIGHT")  # back to the light's effects (a manual LIGHT holds the strip)
         r1.cmd("PARAM SET behavior.call_enabled 1", until="status=")
         save()
     print("saved", out_dir)

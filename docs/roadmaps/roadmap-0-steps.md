@@ -397,8 +397,9 @@ substeps marked "on site" wait for those days.
         decision: HSB in the driver (one scale, white at the cap; frames sent without blocking the loop), NodeLight
         (the Node's states, both idle and both hue variants), EchoLight (echo glow, Whispernet's replay), light.*
         params with light.max_ma below the cap, LIGHT hsb / auto; test_node_light; the param registry holds 80 (the
-        Node 70). Open: seen on R1 (the light at 50 frames a second against the audio loop: RB STATUS drops and
-        block_us_max), the hues set by eye.
+        Node 70). On R1 the same evening (e9212ad9): no dropped audio in 4 min of a busy field, longest block
+        3.6 ms, SELFTEST 3/3 PASS at 40-42 dB with the others muted
+        (bench/sessions/2026-11-13-r1-light-effects). Open: the hues and timings set by eye.
    28.3 Bench, on the HW-001 prototype or a breadboard node with the ring: the ring at its cap measured; the 5 V rail
         with the light at its cap, the hop train at the shipped level and the radio, in the closed case; the mic's
         floor in the band with the light off and at its cap. A measurement, not a tuning pass.

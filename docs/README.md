@@ -21,6 +21,7 @@ How is a big item executed?     its pass / plan doc in docs/refactors/
 Why was it built this way?      docs/decisions/ (forks taken, and open ones)
 How could X be done?            docs/research/ (options, designs; marks what got promoted)
 What did we observe?            docs/lab/ and the bench/ sessions
+Which board, which layout RC?   docs/hardware/boards.md (drawings in the layout artifacts)
 What happened?                  docs/changelog.md (by pass), CHANGELOG.md (by firmware version), git log
 How are the tests run?          test/README
 ```
@@ -121,6 +122,11 @@ sessions and drops notes from the phone. Nothing is written only there.
    naming the commit.
 3. **Nothing is decided in an issue.** A thread that reaches a decision gets a `docs/decisions/` file; the issue
    links to it.
+
+Hardware hand-work (cutting, soldering, cases, ordering) and other project tasks are tracked on Trello, not in
+issues; the project's Trello cards hold tasks, status and links, the reasons land here (`docs/lab/`,
+`docs/decisions/`). An issue about hardware exists only where the repo has to change (a board in `BoardConfig.h`, a
+firmware guard). Layout drawings live in claude.ai artifacts, listed in `docs/hardware/boards.md`.
 
 Titles carry `[Step N]`; retitle when the steps file is reordered. No issues below step granularity: a substep
 such as 12.4 belongs to its step's issue, and one opened anyway is folded in and closed. No Projects boards, no

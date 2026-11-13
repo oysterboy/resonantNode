@@ -114,8 +114,10 @@ what replaced it.
 | 2026-11-06 | [Param review: renames in Behavior first, one vocabulary in the echo modes, two hidden knobs become params](2026-11-06-param-review-owner-answers.md) |
 | 2026-11-09 | [The Node ships the settings of the 2026-11-05 overnight field](2026-11-09-node-ships-the-overnight-field.md) |
 | 2026-11-09 | [PARAM SAVE stores only what differs from the firmware default (PAR-018)](2026-11-09-save-only-what-differs.md) |
-| 2026-11-06 | [Ten nodes on stripboard for the performance; checked breadboard nodes are the fallback, decided on 2026-11-30](2026-11-06-ten-stripboard-nodes-breadboard-fallback.md) |
+| 2026-11-06 | [Ten nodes on stripboard for the performance; checked breadboard nodes are the fallback, decided on 2026-11-30](2026-11-06-ten-stripboard-nodes-breadboard-fallback.md) (count superseded 2026-11-12 by five) |
 | 2026-11-11 | [The stripboard node is its own board variant (BOARD_LOCHRASTER_V1), its pins checked at compile time](2026-11-11-stripboard-board-variant.md) |
+| 2026-11-12 | [Five stripboard nodes for the performance, five breadboard nodes beside them](2026-11-12-five-stripboard-nodes.md) (HW-002) |
+| 2026-11-12 | [Board revisions: a generation, layout RCs inside it, frozen when a batch is cut](2026-11-12-board-revisions.md) |
 
 ## Open
 

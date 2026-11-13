@@ -55,7 +55,9 @@ photo or a drawing in bench/, cited) so the batch is a repeat.
 ### HW-002 - ten boards
 
 Status: TODO (owner 2026-10-30); by 2026-11-30, with a checked breadboard node as the fallback for a board not done by
-then (decisions/2026-11-06-ten-stripboard-nodes-breadboard-fallback.md)
+then (decisions/2026-11-06-ten-stripboard-nodes-breadboard-fallback.md). Since 2026-11-12: five boards in batch 1
+(week of 11-23), a second batch only if it fits (decisions/2026-11-12-five-stripboard-nodes.md); the prototype's
+build notes in docs/lab/2026-11-12-hw-001-first-board.md, the layout RCs in docs/hardware/boards.md.
 
 ```text
 1. Parts for ten ordered now (the breakouts are the only wait); the layout from HW-001 repeated.

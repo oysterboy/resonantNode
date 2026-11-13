@@ -1,6 +1,7 @@
 # Ten nodes on stripboard for the performance; checked breadboard nodes are the fallback, decided on 2026-11-30
 
-Status: decided (owner 2026-11-06: "Ziel sind 10 Platinen-Nodes. Breadboard ist fallback.")
+Status: decided (owner 2026-11-06: "Ziel sind 10 Platinen-Nodes. Breadboard ist fallback."); the count is superseded by
+`2026-11-12-five-stripboard-nodes.md` (five boards), the bench rule and the 2026-11-30 cut-off still hold
 Date: 2026-11-06
 
 ## Decision

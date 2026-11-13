@@ -178,3 +178,7 @@ branch).
   pixels, the black RGB reel). The whole node at the cap is about 2.6 W at 24 V.
 - Power path: R1 calling every 3 s sounded clean on USB + buck, buck only and USB only; one "bad noise" heard
   earlier did not come back. No dropped audio buffers after boot in any of them.
+- Radio stress with the light (same evening): `SELFTEST` over USB while the gateway asks R1 for `RB STATUS` back to
+  back, and `SELFTEST` by radio, each with the strip at the cap and dark: 18/18 PASS, no dropped audio, no failed
+  sends. Two single-chirp floor spikes (16k, 18k), one with the strip lit, one dark: they come with R1 transmitting,
+  not with the light. `bench/sessions/2026-11-13-r1-light-radio-stress/notes.md`.

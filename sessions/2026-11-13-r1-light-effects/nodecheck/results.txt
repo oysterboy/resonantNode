@@ -1,0 +1,24 @@
+boot: BUILD, warmup, active          FAIL  build=[('e9212ad9', 'lochraster_v2')] {'BUILD role=': 0.43, 'RB warmup done': 2.57}
+boot: params loaded                  PASS  PARAM load stored=0 applied=0 stale=0 invalid=0
+boot: roster name                    PASS  RB node name=R1
+boot: radio started                  PASS  RB net started=1
+RB STATUS printed                    PASS  85 keys
+cmd: RB help                         PASS  RB CMD: PARAM SET behavior.<key> <value> (Behavior timing, rest and id
+cmd: RB summary                      PASS  RB summary: pending=17 accepted=17 validPatterns=17 chirpStarted=1 ove
+cmd: RB log full                     PASS  RB log mode=full
+cmd: PARAM GET output.silent         PASS  PARAM GET path=output.silent module=output value=0
+cmd: PARAM DUMP                      PASS  PARAM path=detection.shape_tail_ms module=detection type=uint32 value=
+cmd: NET STATUS                      PASS  NET node=R1 started=1 build=e9212ad9 silent=0 uptime_s=39 rx=0 rejecte
+cmd: XYZ_not_a_command               PASS  RB ERR unknown_command
+cmd: OTA                             PASS  OTA result=bad_command (use OTA url=http://<host>:<port>/<file>.bin to
+cmd: LIGHT off                       PASS  LIGHT ok bytes_per_pixel=3 pixels=28 sent=0,0,0,0 est_ma=0 cap_ma=500 
+cmd: RB rebase                       PASS  RB rebase requested quiet-gated
+PARAM SAVE / reboot / load           PASS  set 31234, after reboot ['31234']
+param restored                       PASS  ['30000']
+NET PING from E0                     PASS  NET node=R1 started=1 build=e9212ad9 silent=0 uptime_s=11 rx=1 rejecte
+NET PARAM SET round trip             PASS  value 0
+others muted by radio                PASS  pinged ['E1', 'E2', 'E3'], muted ['E1', 'E2', 'E3']
+SELFTEST on R1                       PASS  [('board', 'PASS'), ('mic', 'PASS'), ('quiet_boot', 'PASS'), ('amp', 'PASS'), ('own_chirp_suppressed', 'PASS'), ('external_chirp', 'SKIP')] mic(bit8,framing)=[('49.8', 'ok')] amp(snr min,max,spread)=[('40.5', '44.5', '1.01')]
+SELFTEST external (R1 hears E2)      PASS  ['PASS']
+SELFTEST by radio (NET R1)           PASS  [('board', 'PASS'), ('mic', 'PASS'), ('quiet_boot', 'PASS'), ('amp', 'PASS'), ('own_chirp_suppressed', 'PASS'), ('external_chirp', 'SKIP')]
+others put back                      PASS  muted and restored: ['E1', 'E2', 'E3']

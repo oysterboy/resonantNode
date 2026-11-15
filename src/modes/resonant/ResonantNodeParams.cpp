@@ -25,7 +25,7 @@ void NodeParams::describe(const Fields& f) {
     param::describeParams(_registry, f.node);        // output.silent, node.radio_enabled
     param::describeParams(_registry, f.behavior);    // behavior.* (13)
     param::describeParams(_registry, f.inspection);  // detection.contrast_medium / amp_medium, detection.shape_* (8)
-    param::describeParams(_registry, f.light);       // light.* (16)
+    param::describeParams(_registry, f.light);       // light.* (15)
 }
 
 param::ParamLoadReport NodeParams::loadStored(Print& out) {
@@ -80,7 +80,7 @@ void Node::configureParameters() {
     _activeBehaviorProfile = makeTonalPulseBehaviorProfile();
     configureI2SParameters();
     loadInspectionLimitsFromProfile();
-    _lightFx.values().maxMa = LIGHT_MAX_MA;  // light.max_ma starts at the build cap; it can only go below it
+    _lightFx.values().maxMa = LIGHT_DEFAULT_MA;  // the driver holds light.max_ma at or below LIGHT_MAX_MA
     _params.describe(NodeParams::Fields{_activeDetectionProfile.scalarTransient, _band, _composer.values(), _switches,
                                         _activeBehaviorProfile, _inspectionLimits, _lightFx.values()});
 }

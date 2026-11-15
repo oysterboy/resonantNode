@@ -78,6 +78,7 @@ bool PixelStrip::begin(int pin, uint16_t pixels, uint16_t capMa) {
     _pixels = pixels;
     _capMa = capMa;
     _buildCapMa = capMa;
+    _ditherStride = light_curve::ditherStride(pixels);
     _ready = true;
     showRgb(0, 0, 0);  // the strip starts dark
     return true;
@@ -114,13 +115,36 @@ bool PixelStrip::showHsb(float hueDeg, float sat, float bright) {
     if (!_ready) {
         return false;
     }
-    uint8_t rgb[4] = {0, 0, 0, 0};
-    light_curve::rgbAtHsb(hueDeg, sat, bright, _pixels, _capMa, rgb);
-    if (_lastUniform3 && rgb[0] == _sent[0] && rgb[1] == _sent[1] && rgb[2] == _sent[2]) {
+    uint32_t totals[3] = {0, 0, 0};
+    light_curve::rgbTotalsAtHsb(hueDeg, sat, bright, _pixels, _capMa, totals);
+    if (_lastHsb && totals[0] == _hsbTotals[0] && totals[1] == _hsbTotals[1] && totals[2] == _hsbTotals[2]) {
         return true;  // the strip already shows it
     }
-    const bool sent = show(rgb, rgb, 3, false);
-    _lastUniform3 = sent;
+    if (rmt_wait_tx_done(kChannel, 0) != ESP_OK) {
+        return false;  // still going out; the next call sends
+    }
+    // On the wire: green, red, blue. The totals fit the cap already (rounded down from the one HSB scale).
+    for (uint16_t pixel = 0; pixel < _pixels; ++pixel) {
+        uint8_t* wire = _frame + static_cast<size_t>(pixel) * 3U;
+        wire[0] = light_curve::ditherByte(totals[1], _pixels, _ditherStride, pixel);
+        wire[1] = light_curve::ditherByte(totals[0], _pixels, _ditherStride, pixel);
+        wire[2] = light_curve::ditherByte(totals[2], _pixels, _ditherStride, pixel);
+    }
+    float sumMa = 0.0f;
+    for (uint8_t i = 0; i < 3; ++i) {
+        _sent[i] = static_cast<uint8_t>(totals[i] / _pixels);  // the dimmer pixels' bytes
+        sumMa += static_cast<float>(totals[i]) / 255.0f * light_curve::kChannelFullMa;
+    }
+    _sent[3] = 0;
+    _estimatedMa = static_cast<uint16_t>(sumMa);
+    _scalePct = static_cast<uint8_t>(light_curve::hsbScale(_pixels, _capMa) * 100.0f);
+    const bool sent = rmt_write_sample(kChannel, _frame, static_cast<size_t>(_pixels) * 3U, false) == ESP_OK;
+    _lastHsb = sent;
+    if (sent) {
+        for (uint8_t i = 0; i < 3; ++i) {
+            _hsbTotals[i] = totals[i];
+        }
+    }
     return sent;
 }
 
@@ -132,7 +156,7 @@ bool PixelStrip::show(const uint8_t* even, const uint8_t* odd, uint8_t bytesPerP
     if (rmt_wait_tx_done(kChannel, wait ? portMAX_DELAY : 0) != ESP_OK) {
         return false;
     }
-    _lastUniform3 = false;
+    _lastHsb = false;
     const uint16_t evenCount = (_pixels + 1) / 2;
     const uint16_t oddCount = _pixels / 2;
     const float wantedMa =

@@ -256,9 +256,10 @@ pins that collide or that the board must not drive.
 
 // The light test (issue #94): a WS2812 / SK6812 strip, one colour on all pixels, driven by the Node's LIGHT command.
 // On the stripboards it sits on Aux S2 (GPIO 18, 330 ohm in the data line); elsewhere it is off until a build sets
-// LIGHT_PIN (the breadboard D-AMP nodes leave GPIO 18 free). The ceiling is the 0.5 A of the board's 5 V
-// (docs/decisions/2026-10-13-light-half-amp-on-board-5v.md): the driver scales every frame to it, a param may lower it
-// later but never raise it.
+// LIGHT_PIN (the breadboard D-AMP nodes leave GPIO 18 free). LIGHT_MAX_MA is the hard ceiling of the board's 5 V for
+// the light: the driver scales every frame to it, and light.max_ma (default LIGHT_DEFAULT_MA) may sit anywhere below
+// it, never above. 0.8 A built in, 0.5 A by default until the closed case holds 0.8 A on the bench
+// (docs/decisions/2026-10-13-light-half-amp-on-board-5v.md, revised 2026-11-15).
 #ifndef LIGHT_PIN
 #if defined(BOARD_LOCHRASTER_V1) || defined(BOARD_LOCHRASTER_V2)
 #define LIGHT_PIN AUX_S2_PIN
@@ -280,7 +281,10 @@ pins that collide or that the board must not drive.
 #define LIGHT_WHITE_B 90
 #endif
 #ifndef LIGHT_MAX_MA
-#define LIGHT_MAX_MA 500
+#define LIGHT_MAX_MA 800
+#endif
+#ifndef LIGHT_DEFAULT_MA
+#define LIGHT_DEFAULT_MA 500
 #endif
 
 #include "BoardPinCheck.h"

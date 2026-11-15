@@ -237,7 +237,7 @@ void EchoApp::configureParams() {
     // The light's first guesses per mode, set in the room by eye: the echo room warm and steady, Whispernet cool
     // and dim until it plays.
     EchoLight::Values& lv = _lightFx.values();
-    lv.maxMa = LIGHT_MAX_MA;
+    lv.maxMa = LIGHT_DEFAULT_MA;
     lv.hue = kWhispernet ? 200U : 35U;
     lv.satPct = kWhispernet ? 60U : 70U;
     lv.glowPct = kWhispernet ? 15U : 30U;

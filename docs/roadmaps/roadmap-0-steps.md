@@ -406,6 +406,11 @@ substeps marked "on site" wait for those days.
         Node 70). On R1 the same evening (e9212ad9): no dropped audio in 4 min of a busy field, longest block
         3.6 ms, SELFTEST 3/3 PASS at 40-42 dB with the others muted
         (bench/sessions/2026-11-13-r1-light-effects). Open: the hues and timings set by eye.
+        Owner 2026-11-15 on R1: too much colour change. Rebuilt the same day: one colour per node from its own
+        base, a floor (never off), the jump on the chirp and not the announcement, a 2 s afterglow, dither across
+        the pixels; the estimate at 13 mA a channel (the 2026-11-13 measurement), the build cap 0.8 A with
+        light.max_ma at 0.5 A until 28.3's rail check at 0.8 A (decisions/2026-11-15-node-light-one-colour-and-
+        floor.md, 2026-10-13-light-half-amp-on-board-5v.md revised). On R1 (USB) the same evening.
    28.3 Bench, on the HW-001 prototype or a breadboard node with the ring: the ring at its cap measured; the 5 V rail
         with the light at its cap, the hop train at the shipped level and the radio, in the closed case; the mic's
         floor in the band with the light off and at its cap. A measurement, not a tuning pass.

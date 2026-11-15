@@ -263,18 +263,19 @@ switches `scalar_require_min_strength` and `scalar_require_carrier_quality` (eac
 
 Stripboard builds only (`LIGHT_PIN`, `LIGHT_PIXELS` and the build-time cap `LIGHT_MAX_MA` in
 `src/app/BoardConfig.h`); a build without a strip prints `LIGHT ERR no_light`. From boot the strip follows Behavior
-(`src/modes/resonant/ResonantNodeLight.h` has the state table): colour A while idle, rising toward the idle call or
-breathing when no call can come; colour B from a heard pattern through the answer and its afterglow. The base bins
-set the hues. Why it looks the way it does: `docs/decisions/2026-11-13-light-colour-model-and-states.md` and
-`-light-level-scalar-cap-in-hal.md`.
+(`src/modes/resonant/ResonantNodeLight.h` has the state table): one colour per node, its hue from the node's own
+base; never below the floor; rising toward the idle call, a lift when it hears, full on the chirp, an afterglow back
+down. Why it looks the way it does: `docs/decisions/2026-11-15-node-light-one-colour-and-floor.md`,
+`2026-11-13-light-colour-model-and-states.md` (HSB) and `2026-11-13-light-level-scalar-cap-in-hal.md`; the cap:
+`2026-10-13-light-half-amp-on-board-5v.md`.
 
 - `LIGHT <0..100>`, `LIGHT hsb <hue 0..359> <sat 0..100> <bright 0..100>`, `LIGHT off`, and the test frames `LIGHT alt`
   / `alt4` / `rgb r g b` / `rgbw r g b w` / `w <0..100>`: the strip holds that until `LIGHT auto`, which hands it
   back to the effects (a reboot does too). Brightness is perceived: 100 is the cap, 50 looks half as bright.
-- `light.*` params, live: `enabled`, `max_ma` (below the build cap, never above), `idle_mode` (0 rise, 1 breathe),
-  `hue_source` (0 colour B from the node's own base, 1 from the base heard), `idle_top_pct`, `heard_top_pct`,
-  `fade_ms` (A to B), `emit_ramp_ms`, `fall_ms` (afterglow, full to dark), `breathe_ms`, `hue_a_low` / `hue_a_high` /
-  `hue_b_low` / `hue_b_high` (degrees at the lowest / highest base), `sat_a_pct`, `sat_b_pct`.
+- `light.*` params, live: `enabled`, `max_ma` (up to the build cap `LIGHT_MAX_MA`, never above; default
+  `LIGHT_DEFAULT_MA`), `idle_mode` (0 rise, 1 breathe), `floor_pct`, `idle_top_pct`, `heard_lift_pct`,
+  `heard_lift_ms`, `heard_top_pct`, `emit_ramp_ms`, `glow_ms` (afterglow, full to the floor), `yield_ms` (heard, no
+  answer, back down), `breathe_ms`, `hue_low` / `hue_high` (degrees at the lowest / highest base), `sat_pct`.
 - Echo shell (`esp32dev-lr*-echo` / `-whisper`): one colour per mode, `light.enabled`, `light.max_ma`, `light.hue`,
   `light.sat_pct`, `light.glow_pct`; Whispernet also `light.release_ms` (its brightness follows what it plays). No
   `LIGHT` command there.

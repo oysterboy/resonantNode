@@ -782,9 +782,13 @@ void Node::updateLight(unsigned long now) {
         case ResonantBehavior::State::HeardPattern:
             in.phase = NodeLight::Phase::Heard;
             break;
-        case ResonantBehavior::State::Chirping:
-            in.phase = NodeLight::Phase::Emitting;
+        case ResonantBehavior::State::Chirping: {
+            // The idle call's announcement and its gap hold the light; the jump comes with the call itself.
+            const OutputPhase out = _soundOutput.status().phase;
+            in.phase = out == OutputPhase::Announce || out == OutputPhase::AnnounceGap ? NodeLight::Phase::Announce
+                                                                                       : NodeLight::Phase::Emitting;
             break;
+        }
         case ResonantBehavior::State::Refractory:
             in.phase = NodeLight::Phase::Afterglow;
             break;
@@ -795,7 +799,6 @@ void Node::updateLight(unsigned long now) {
     in.idleAtMs = _behavior.idleNextAtMs();
     in.baseCount = _behavior.baseCount();
     in.ownBase = _behavior.baseBin();
-    in.heardBase = _behavior.baseHeard();
     const NodeLight::Hsb c = _lightFx.update(in);
     _light.showHsb(c.hueDeg, c.sat, c.bright);
 }

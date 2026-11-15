@@ -44,14 +44,14 @@ void test_full_level_is_the_cap() {
     const float ma = light_curve::estimateMa(out, 3, 30);
     TEST_ASSERT_TRUE(ma <= 500.0f);
     TEST_ASSERT_TRUE(ma > 490.0f);  // within the rounding of three bytes, not the 41 % ceiling of a raw percentage
-    TEST_ASSERT_EQUAL_UINT8(105, out[0]);
-    TEST_ASSERT_EQUAL_UINT8(70, out[1]);
-    TEST_ASSERT_EQUAL_UINT8(37, out[2]);
+    TEST_ASSERT_EQUAL_UINT8(161, out[0]);
+    TEST_ASSERT_EQUAL_UINT8(107, out[1]);
+    TEST_ASSERT_EQUAL_UINT8(57, out[2]);
 }
 
 void test_a_colour_that_fits_is_not_raised() {
     uint8_t out[3];
-    light_curve::colourAtLevel(1.0f, kWarmWhite, 3, 1, 500, out);  // one pixel: ~40 mA, under the cap
+    light_curve::colourAtLevel(1.0f, kWarmWhite, 3, 1, 500, out);  // one pixel: ~26 mA, under the cap
     TEST_ASSERT_EQUAL_UINT8(255, out[0]);
     TEST_ASSERT_EQUAL_UINT8(170, out[1]);
     TEST_ASSERT_EQUAL_UINT8(90, out[2]);
@@ -86,8 +86,8 @@ void test_never_over_the_cap() {
 void test_cap_scale() {
     TEST_ASSERT_EQUAL_FLOAT(1.0f, light_curve::capScale(400.0f, 500));
     TEST_ASSERT_EQUAL_FLOAT(0.5f, light_curve::capScale(1000.0f, 500));
-    // 255 + 170 + 90 on 30 pixels at 20 mA per full channel
-    TEST_ASSERT_FLOAT_WITHIN(0.5f, 1211.8f, light_curve::estimateMa(kWarmWhite, 3, 30));
+    // 255 + 170 + 90 on 30 pixels at 13 mA per full channel
+    TEST_ASSERT_FLOAT_WITHIN(0.5f, 787.6f, light_curve::estimateMa(kWarmWhite, 3, 30));
 }
 
 int main(int, char**) {

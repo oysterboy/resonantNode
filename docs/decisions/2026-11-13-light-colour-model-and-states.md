@@ -1,7 +1,9 @@
 # The light's colour model (HSB) and what it shows per mode and state
 
 Status: decided (owner 2026-11-13, in the session that followed the level decision); built 2026-11-13
-(src/modes/resonant/ResonantNodeLight, src/modes/echo/EchoLight.h, src/hal/LightCurve.h), not yet seen on a board
+(src/modes/resonant/ResonantNodeLight, src/modes/echo/EchoLight.h, src/hal/LightCurve.h). The Node's part (colours
+A and B, the hue variants, the fall to dark) replaced 2026-11-15 by
+decisions/2026-11-15-node-light-one-colour-and-floor.md; HSB, the one scale and the echo modes stay as here.
 Date: 2026-11-13
 
 ## Decision

@@ -195,13 +195,14 @@ enum class ParamId : uint16_t {
     Light_Enabled,
     Light_MaxMa,
     Light_IdleMode,
-    Light_HueSource,
+    Light_HueSource,  // retired 2026-11-15, not registered (decisions/2026-11-15-node-light-one-colour-and-floor.md)
     Light_IdleTopPct,
     Light_HeardTopPct,
-    Light_FadeMs,
+    Light_FadeMs,  // retired 2026-11-15, not registered (same decision)
     Light_EmitRampMs,
-    Light_FallMs,
+    Light_FallMs,  // retired 2026-11-15, not registered (light.glow_ms is Light_GlowMs)
     Light_BreatheMs,
+    // Retired 2026-11-15, not registered: the two colours became one (light.hue_low / hue_high / sat_pct).
     Light_HueALow,
     Light_HueAHigh,
     Light_HueBLow,
@@ -213,6 +214,15 @@ enum class ParamId : uint16_t {
     Light_ModeSatPct,
     Light_GlowPct,
     Light_ReleaseMs,
+    // The Node's one colour and its floor (decisions/2026-11-15-node-light-one-colour-and-floor.md).
+    Light_FloorPct,
+    Light_HeardLiftPct,
+    Light_HeardLiftMs,
+    Light_GlowMs,
+    Light_YieldMs,
+    Light_HueLow,
+    Light_HueHigh,
+    Light_SatPct,
 };
 
 }  // namespace param

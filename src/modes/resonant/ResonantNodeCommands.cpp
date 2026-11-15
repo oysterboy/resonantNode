@@ -117,7 +117,7 @@ void Node::handleLightCommand(const char* line) {
     const char* args = text_parse::rest(line, "LIGHT");
     if (equalsIgnoreCase(args, "auto")) {
         _lightManual = false;
-        _lightFx.reset();  // the effects start dark, from Behavior's state now
+        _lightFx.reset();  // the effects start at the floor, from Behavior's state now
         serialOut().println("LIGHT auto ok");
         return;
     }

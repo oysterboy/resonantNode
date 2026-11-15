@@ -91,7 +91,8 @@ issue #94). The cap: decisions/2026-10-13-light-half-amp-on-board-5v.md. Where t
 level the effects use (one scalar 0..1, 1.0 = the cap, perceived): decisions/2026-11-13-light-level-scalar-cap-in-hal.md;
 the WS2812 driver and that curve are built (src/hal/PixelStrip, src/hal/LightCurve.h). The light is a 28-pixel RGB
 WS2812 strip, and what it shows per mode and state (HSB): decisions/2026-11-13-light-colour-model-and-states.md
-(owner 2026-11-13; the PWM ring below is no longer the V1).
+(owner 2026-11-13; the PWM ring below is no longer the V1); the Node's part since 2026-11-15 one colour per node, a
+floor and the emission as the biggest gesture: decisions/2026-11-15-node-light-one-colour-and-floor.md.
 
 ```text
 What: the node's light, which the case design needs ("Licht ist Pflicht" for the video; Case V1: the light shows

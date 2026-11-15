@@ -15,10 +15,10 @@ Pure: no Arduino, host-tested in test/test_light_curve.
 */
 namespace light_curve {
 
-// One colour channel of one pixel at full level draws about this much (the data sheets' 20 mA per colour). On R1's
-// strip it read high at the cap (about 0.31 A measured for 500 mA estimated, bench/sessions/2026-11-13-r1-light-power):
-// the cap errs on the safe side.
-constexpr float kChannelFullMa = 20.0f;
+// One colour channel of one pixel at full level draws about this much. The data sheets say 20 mA; R1's strip (the
+// black RGB reel) drew about 0.31 A where 20 mA estimated 500 mA (bench/sessions/2026-11-13-r1-light-power), about
+// 12.4 mA a channel with the buck's efficiency assumed at 85 %. 13 keeps a little margin, so the cap still errs safe.
+constexpr float kChannelFullMa = 13.0f;
 
 // Lightness L* (level x 100) to relative luminance (0..1), CIE 1931. The two pieces meet at L* = 8.
 inline float perceivedToLinear(float level) {
@@ -85,6 +85,53 @@ inline void rgbAtHsb(float hueDeg, float sat, float bright, uint16_t pixels, uin
     for (int c = 0; c < 3; ++c) {
         out[c] = static_cast<uint8_t>(rgb[c] * scale);
     }
+}
+
+// Channel totals over the whole strip for hue, saturation and a perceived brightness: the sum of one channel's bytes
+// over all pixels, so a level between two byte values survives as a fraction spread over the pixels (ditherByte).
+// Rounded down, so the frame never exceeds the cap; each pixel's share is at most 255.
+inline void rgbTotalsAtHsb(float hueDeg, float sat, float bright, uint16_t pixels, uint16_t capMa, uint32_t out[3]) {
+    float rgb[3];
+    hsToRgb(hueDeg, sat, rgb);
+    const float scale = 255.0f * hsbScale(pixels, capMa) * perceivedToLinear(bright) * static_cast<float>(pixels);
+    for (int c = 0; c < 3; ++c) {
+        out[c] = static_cast<uint32_t>(rgb[c] * scale);
+    }
+}
+
+// A step coprime with `pixels` near 0.38 of it: the order in which the pixels take the extra byte (ditherByte)
+// jumps around the strip, so the brighter pixels spread out instead of bunching at one end.
+inline uint16_t ditherStride(uint16_t pixels) {
+    if (pixels < 3) {
+        return 1;
+    }
+    for (uint16_t s = static_cast<uint16_t>(pixels * 0.38f); s < pixels; ++s) {
+        uint16_t a = s;
+        uint16_t b = pixels;
+        while (b != 0) {
+            const uint16_t t = static_cast<uint16_t>(a % b);
+            a = b;
+            b = t;
+        }
+        if (a == 1 && s > 0) {
+            return s;
+        }
+    }
+    return 1;
+}
+
+// One pixel's byte of a channel total: total / pixels, plus one on the first (total % pixels) pixels in the stride's
+// order. A total one higher lights exactly one more pixel one byte brighter, so a slow fade at the bottom moves in
+// steps of 1/pixels of a byte instead of whole bytes (decisions/2026-11-15-node-light-one-colour-and-floor.md).
+inline uint8_t ditherByte(uint32_t total, uint16_t pixels, uint16_t stride, uint16_t pixel) {
+    if (pixels == 0) {
+        return 0;
+    }
+    const uint32_t base = total / pixels;
+    const uint32_t rest = total % pixels;
+    const uint32_t rank = (static_cast<uint32_t>(pixel) * stride) % pixels;
+    const uint32_t v = base + (rank < rest ? 1U : 0U);
+    return static_cast<uint8_t>(v > 255U ? 255U : v);
 }
 
 // The bytes for `colour` at `level`: the colour scaled to the cap, then by the perceived curve. Rounded down, so the

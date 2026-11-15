@@ -37,8 +37,10 @@ public:
     bool showLevel(float level, const uint8_t* colour, uint8_t bytesPerPixel);
 
     // The light's effects: hue (degrees), saturation 0..1 and a perceived brightness 0..1 on all pixels, 3 bytes per
-    // pixel, one scale for every colour (light_curve::rgbAtHsb). Returns at once; a frame still going out, or one
-    // equal to the last, is not sent again (false / true).
+    // pixel, one scale for every colour (light_curve::rgbTotalsAtHsb). A level between two byte values is spread over
+    // the pixels (light_curve::ditherByte): behind the diffuser that reads as the level between, so slow fades low
+    // down do not step. Returns at once; a frame still going out, or one equal to the last, is not sent again
+    // (false / true).
     bool showHsb(float hueDeg, float sat, float bright);
 
     // A param below the build-time cap (light.max_ma); a value above it is held at the build cap.
@@ -62,7 +64,9 @@ private:
     uint16_t _pixels = 0;
     uint16_t _capMa = 0;
     uint16_t _buildCapMa = 0;
-    bool _lastUniform3 = false;  // the last frame was showHsb's: one RGB colour on every pixel, as in _sent
+    bool _lastHsb = false;  // the last frame was showHsb's, with the channel totals in _hsbTotals
+    uint32_t _hsbTotals[3] = {0, 0, 0};
+    uint16_t _ditherStride = 1;
     uint8_t* _frame = nullptr;
     uint8_t _sent[4] = {0, 0, 0, 0};
     uint16_t _estimatedMa = 0;

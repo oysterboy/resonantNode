@@ -352,6 +352,10 @@ substeps marked "on site" wait for those days.
    takes the largest of 12 / 8 / 6 / 4 KB that fits (Whispernet's heap had no 12 KB block) and fills from the first
    frame; longrec.py --boot-wait / --setup / --status for a board that restarts when its port opens. Open: the
    voices and the noises (owner and voices).
+   2026-11-16: the session tool, tools/bench/whispersession.py: one take at a time, each started by the operator's
+   go after briefing the voice for that take (owner: no list of cues up front); 16 takes per voice (7.3 min of
+   recording), --plan room for the noises once per day; WAVs and labels.csv in bench/sessions/<date>-whisper-corpus.
+   Tried without a board (--dry-run). longrec.py split into functions it shares.
 
 27. [TODO, 2026-11-20 .. 11-26] Whisper evaluation: the detectors compared, a classifier tried, held out by voice. (issue #93) PC.
    ECHO-005 items 3-4. The chain with the room-following onset, WebRTC VAD and Silero on the corpus; a small tree

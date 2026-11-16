@@ -13,6 +13,9 @@ the port is open: put them in --setup and read the counters with --status in the
 
   python tools/bench/longrec.py --port COM3 --secs 60 --out test.wav --boot-wait 12 \
       --setup "PARAM SET whisper.enabled 0" --setup "ECHO STATUS" --status "ECHO STATUS"
+
+Several takes on one open port (a session with a voice): tools/bench/whispersession.py, which uses the functions
+below.
 """
 import argparse
 import struct
@@ -60,9 +63,105 @@ def parse(buf, pcm, total):
         del buf[:size]
 
 
-def main():
+def open_port(port, baud=115200):
+    """The console port, opened without toggling DTR / RTS."""
     import serial
 
+    ser = serial.Serial()
+    ser.port, ser.baudrate, ser.timeout = port, baud, 0.05
+    ser.dtr = False
+    ser.rts = False
+    ser.open()
+    return ser
+
+
+def console(ser, line, wait=1.5, show=True):
+    """One console command; returns the reply."""
+    ser.reset_input_buffer()
+    ser.write((line + "\n").encode())
+    reply, t_end = b"", time.time() + wait
+    while time.time() < t_end:
+        reply += ser.read(512)
+    text = reply.decode(errors="replace").strip()
+    if show:
+        print(">> %s\n%s" % (line, text), flush=True)
+    return text
+
+
+def wait_boot(ser, seconds):
+    """Reads the boot for `seconds`; returns its BUILD line, or a note that none came."""
+    t_end = time.time() + seconds
+    boot = b""
+    while time.time() < t_end:
+        boot += ser.read(1024)
+    build = [x for x in boot.decode(errors="replace").splitlines() if "BUILD role=" in x]
+    return build[0].strip() if build else "no BUILD line in %.0f s" % seconds
+
+
+def record(ser, secs, baud=115200, progress=True):
+    """One REC on an open port at `baud`. Returns (rate, pcm bytes, samples filled, bad frames, the "REC end" line or
+    None); the port is back at `baud` after. Raises RuntimeError when the board does not start."""
+    ser.reset_input_buffer()
+    ser.write(("REC %d\n" % secs).encode())
+
+    # The start line, then the baud.
+    text, t_end = b"", time.time() + 5
+    while time.time() < t_end:
+        text += ser.read(256)
+        if b"baud=921600" in text:
+            break
+        if b"REC ERR" in text:
+            raise RuntimeError(text.decode(errors="replace").strip())
+    else:
+        raise RuntimeError("no REC start from the board (the echo or whisper firmware?): %r" % text[-200:])
+    line = [x for x in text.decode(errors="replace").splitlines() if "REC start" in x][0]
+    rate = int(line.split("rate=")[1].split()[0])
+    ser.baudrate = 921600
+    ser.reset_input_buffer()
+    if progress:
+        print(line.strip(), flush=True)
+
+    total = rate * secs
+    pcm = bytearray(total * 2)
+    filled = bad = 0
+    buf = bytearray()
+    last = time.time()
+    ended = None
+    shown = time.time()
+    try:
+        while time.time() - last < 8:
+            data = ser.read(8192)
+            if data:
+                last = time.time()
+                buf += data
+            buf, got, nbad, end_line = parse(buf, pcm, total)
+            filled += got
+            bad += nbad
+            ended = end_line or ended
+            if ended:
+                break
+            if progress and time.time() - shown > 10:
+                shown = time.time()
+                print("%d / %d samples" % (filled, total), flush=True)
+    except KeyboardInterrupt:
+        ser.write(b"REC STOP\n")
+        time.sleep(1.0)
+        print("stopped")
+
+    ser.baudrate = baud
+    time.sleep(0.3)
+    return rate, bytes(pcm), filled, bad, ended
+
+
+def write_wav(path, rate, pcm):
+    with wave.open(path, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(pcm)
+
+
+def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", required=True)
     ap.add_argument("--secs", type=int, required=True, help="1..600")
@@ -78,86 +177,20 @@ def main():
                     help="a command after REC end, repeatable (e.g. \"ECHO STATUS\"): its reply is printed")
     A = ap.parse_args()
 
-    ser = serial.Serial()
-    ser.port, ser.baudrate, ser.timeout = A.port, A.baud, 0.05
-    ser.dtr = False
-    ser.rts = False
-    ser.open()
-
-    def console(line, wait=1.5):
-        ser.reset_input_buffer()
-        ser.write((line + "\n").encode())
-        reply, t_end = b"", time.time() + wait
-        while time.time() < t_end:
-            reply += ser.read(512)
-        print(">> %s\n%s" % (line, reply.decode(errors="replace").strip()), flush=True)
-
+    ser = open_port(A.port, A.baud)
     if A.boot_wait > 0:
-        t_end = time.time() + A.boot_wait
-        boot = b""
-        while time.time() < t_end:
-            boot += ser.read(1024)
-        build = [x for x in boot.decode(errors="replace").splitlines() if "BUILD role=" in x]
-        print(build[0].strip() if build else "no BUILD line in %.0f s" % A.boot_wait, flush=True)
+        print(wait_boot(ser, A.boot_wait), flush=True)
     for line in A.setup:
-        console(line)
-    ser.reset_input_buffer()
-    ser.write(("REC %d\n" % A.secs).encode())
-
-    # The start line, then the baud.
-    text, t_end = b"", time.time() + 5
-    while time.time() < t_end:
-        text += ser.read(256)
-        if b"baud=921600" in text:
-            break
-        if b"REC ERR" in text:
-            sys.exit(text.decode(errors="replace").strip())
-    else:
-        sys.exit("no REC start from the board (the echo or whisper firmware?): %r" % text[-200:])
-    line = [x for x in text.decode(errors="replace").splitlines() if "REC start" in x][0]
-    rate = int(line.split("rate=")[1].split()[0])
-    ser.baudrate = 921600
-    ser.reset_input_buffer()
-    print(line.strip(), flush=True)
-
-    total = rate * A.secs
-    pcm = bytearray(total * 2)
-    filled = bad = 0
-    buf = bytearray()
-    last = time.time()
-    ended = None
-    shown = 0
+        console(ser, line)
     try:
-        while time.time() - last < 8:
-            data = ser.read(8192)
-            if data:
-                last = time.time()
-                buf += data
-            buf, got, nbad, end_line = parse(buf, pcm, total)
-            filled += got
-            bad += nbad
-            ended = end_line or ended
-            if ended:
-                break
-            if time.time() - shown > 10:
-                shown = time.time()
-                print("%d / %d samples" % (filled, total), flush=True)
-    except KeyboardInterrupt:
-        ser.baudrate = 921600
-        ser.write(b"REC STOP\n")
-        time.sleep(1.0)
-        print("stopped")
-
-    ser.baudrate = A.baud
-    time.sleep(0.3)
+        rate, pcm, filled, bad, ended = record(ser, A.secs, A.baud)
+    except RuntimeError as e:
+        sys.exit(str(e))
     for line in A.status:
-        console(line)
+        console(ser, line)
     ser.close()
-    with wave.open(A.out, "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(rate)
-        w.writeframes(bytes(pcm))
+    write_wav(A.out, rate, pcm)
+    total = len(pcm) // 2
     print("%s: %d of %d samples received (%.1f %% filled), %d bad frames; board: %s"
           % (A.out, filled, total, 100.0 * filled / total, bad, ended or "no REC end seen"))
 

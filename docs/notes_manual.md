@@ -501,7 +501,8 @@ ECHO GATE [onset=] [release=] [floor=] [peak=] [attack=MS] [pre=MS] [post=MS] [g
                           2026-11-05, 300 ms at 48 kHz before)
 REC <secs 1..600>|STOP    the mic as framed PCM over USB at 921600 baud (the board switches the baud and back);
                           tools/bench/longrec.py reads it into a WAV. Raw mic, so run with the own playback off.
-                          Untested on a board until one sits on USB (2026-11-06: compiled and host-tested only).
+                          100 % of the samples on R1, 2026-11-13 (bench/sessions/2026-11-13-r1-rec-test).
+                          A session with one voice, take by take: tools/bench/whispersession.py (--list shows the takes)
 TONE <hz> <ms>            a test tone through the amp, at the shell's rate
 OTA url=... token=...     as on the Node; the image confirms after 20 s once its radio started
 NET STATUS / NET PING     the radio's counters

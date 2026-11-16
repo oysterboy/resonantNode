@@ -47,6 +47,6 @@ Median length of the valid detections (ms):
 ## Open
 
 - The cricket's length against the 450 ms maximum: a shorter trill (fewer pulses or shorter gaps) for the high
-  windows, or a longer maximum, which is a detection setting (and the inspection look-back, 576 ms, caps it near
-  470). Not changed here.
+  windows, or a longer maximum, which is a detection setting (the inspection look-back, 576 ms, allows at most
+  576 - 20 debounce - 100 window = 456 ms without a larger history build). Not changed here.
 - R1's rejections at 250-1250: needs the reject reason printed, or an Analyzer capture.

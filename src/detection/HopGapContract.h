@@ -18,6 +18,8 @@ Hard (the train can never be one occurrence):
   - island: the longest stretch above release >= min longest island: one pulse,
     or the whole train when gap is 0 (the pulses join into one glide);
   - max gap: gap <= max gap (the carrier-quality gap check).
+A trill before the climb (trillPulses, trillGapMs) adds its pulses to the train and coverage; its gap is held to
+max gap and debounce like the climb's.
 Soft (the train is one occurrence only in some rooms):
   - debounce: gap < release debounce. A dip in the band feature that lasts the
     debounce closes the candidate; the gap is bridged only while the room tail
@@ -32,9 +34,12 @@ namespace detection {
 constexpr unsigned long kHopRoomTailMarginMs = 50;
 
 struct HopTrainShape {
-    unsigned long steps = 0;
+    unsigned long steps = 0;  // the climb
     unsigned long pulseMs = 0;
     unsigned long gapMs = 0;
+    // A trill before the climb (output.hop_trill_*): pulses of pulseMs on the base bin, each followed by trillGapMs.
+    unsigned long trillPulses = 0;
+    unsigned long trillGapMs = 0;
 };
 
 struct HopGapCheck {
@@ -54,7 +59,8 @@ inline unsigned long hopTrainMs(const HopTrainShape& shape) {
     if (shape.steps == 0) {
         return 0;
     }
-    return shape.steps * shape.pulseMs + (shape.steps - 1) * shape.gapMs;
+    return (shape.steps + shape.trillPulses) * shape.pulseMs + shape.trillPulses * shape.trillGapMs +
+        (shape.steps - 1) * shape.gapMs;
 }
 
 inline HopGapCheck checkHopGap(const HopTrainShape& shape, const ScalarTransientConfig& scalar) {
@@ -65,13 +71,17 @@ inline HopGapCheck checkHopGap(const HopTrainShape& shape, const ScalarTransient
     c.durationFits =
         c.trainMs >= scalar.minTransientDurationMs && (noMax || c.trainMs <= scalar.maxTransientDurationMs);
     c.tailFits = noMax || c.trainMs + kHopRoomTailMarginMs <= scalar.maxTransientDurationMs;
+    const bool trill = shape.trillPulses > 0;
     if (scalar.requireCarrierQuality) {
-        c.coverageFits = shape.steps * shape.pulseMs >= scalar.minCoverageAboveReleaseMs;
-        const unsigned long islandMs = shape.gapMs == 0 ? c.trainMs : shape.pulseMs;  // gap 0: one glide
+        c.coverageFits = (shape.steps + shape.trillPulses) * shape.pulseMs >= scalar.minCoverageAboveReleaseMs;
+        // gap 0: the climb is one glide, the longest stretch above release (a trill's pulses are shorter).
+        const unsigned long islandMs = shape.gapMs == 0 ? shape.steps * shape.pulseMs : shape.pulseMs;
         c.islandFits = islandMs >= scalar.minLongestIslandMs;
-        c.gapWithinMaxGap = shape.steps < 2 || shape.gapMs <= scalar.maxGapMs;
+        c.gapWithinMaxGap =
+            (shape.steps < 2 || shape.gapMs <= scalar.maxGapMs) && (!trill || shape.trillGapMs <= scalar.maxGapMs);
     }
-    c.gapBelowDebounce = shape.steps < 2 || shape.gapMs < scalar.releaseDebounceMs;
+    c.gapBelowDebounce = (shape.steps < 2 || shape.gapMs < scalar.releaseDebounceMs) &&
+        (!trill || shape.trillGapMs < scalar.releaseDebounceMs);
     return c;
 }
 

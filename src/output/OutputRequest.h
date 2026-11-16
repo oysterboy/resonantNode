@@ -53,6 +53,9 @@ struct OutputRequest {
     size_t hopSteps = 0;
     unsigned long pulseMs = 0;
     unsigned long gapMs = 0;
+    // The first trillPulses pulses are each followed by trillGapMs instead of gapMs (the trill before the climb).
+    size_t trillPulses = 0;
+    unsigned long trillGapMs = 0;
     // IdleCall.
     uint32_t announceHz = 0;
     unsigned long announceMs = 0;

@@ -43,6 +43,13 @@ public:
         (void)gain;
         (void)n;
     }
+    // Optional: the first `pulses` pulses of the NEXT startPulseTrain() are each followed by gapMs instead of the
+    // train's gap (the trill before a gapless climb); pulses = 0 clears it. A device that can't ignores it and
+    // plays every gap at the train's gap.
+    virtual void setPulseLeadGap(uint32_t pulses, uint32_t gapMs) {
+        (void)pulses;
+        (void)gapMs;
+    }
     // True from startPulseTrain() until the last pulse has ramped to silence.
     virtual bool pulseTrainActive() const { return false; }
     // Optional: a sweep inside a plain tone (OUT-005). From the next toneOn()

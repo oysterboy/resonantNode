@@ -49,9 +49,13 @@ const char* outputPhaseName(OutputPhase phase) {
 namespace {
 
 unsigned long trainMs(const OutputRequest& r) {
-    return r.hopSteps == 0
-        ? 0UL
-        : static_cast<unsigned long>(r.hopSteps) * r.pulseMs + static_cast<unsigned long>(r.hopSteps - 1) * r.gapMs;
+    if (r.hopSteps == 0) {
+        return 0UL;
+    }
+    // Each trill pulse is followed by the trill gap (the last one too, before the climb); the climb's pulses by gapMs.
+    const size_t trill = r.trillPulses < r.hopSteps ? r.trillPulses : r.hopSteps - 1;
+    return static_cast<unsigned long>(r.hopSteps) * r.pulseMs + static_cast<unsigned long>(trill) * r.trillGapMs +
+        static_cast<unsigned long>(r.hopSteps - 1 - trill) * r.gapMs;
 }
 
 OutputReject validateTrain(const OutputRequest& r, const OutputLimits& limits) {
@@ -66,7 +70,7 @@ OutputReject validateTrain(const OutputRequest& r, const OutputLimits& limits) {
     if (r.pulseMs == 0 || r.pulseMs > limits.maxPulseMs) {
         return OutputReject::PulseOutOfRange;
     }
-    if (r.gapMs > limits.maxGapMs) {
+    if (r.gapMs > limits.maxGapMs || (r.trillPulses > 0 && r.trillGapMs > limits.maxGapMs)) {
         return OutputReject::GapOutOfRange;
     }
     return OutputReject::None;
@@ -198,6 +202,7 @@ bool SoundOutput::start(const OutputRequest& request) {
 
 bool SoundOutput::startHop(const OutputRequest& request) {
     _chirp.setPulseHop(request.hopHz, request.hopSteps);
+    _chirp.setPulseLeadGap(static_cast<uint32_t>(request.trillPulses), static_cast<uint32_t>(request.trillGapMs));
     _chirp.startPulseTrain(static_cast<uint32_t>(request.hopSteps), request.pulseMs, request.gapMs);
     if (!_chirp.isActive()) {
         _chirp.setPulseHop(nullptr, 0);

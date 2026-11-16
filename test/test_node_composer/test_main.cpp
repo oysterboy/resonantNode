@@ -178,7 +178,7 @@ void test_trill_before_the_climb() {
     c.values().hopGapMs = 15;
     OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Single, true, 2);
     TEST_ASSERT_EQUAL_UINT32(9, r.hopSteps);
-    TEST_ASSERT_EQUAL_UINT32(9, c.trainPulses());
+    TEST_ASSERT_EQUAL_UINT32(300, detection::hopTrainMs(c.trainShape(5)));
     const uint32_t expect[9] = {3450, 3450, 3450, 3450, 3450, 3700, 3950, 4200, 4450};
     TEST_ASSERT_EQUAL_UINT32_ARRAY(expect, r.hopHz, 9);
     TEST_ASSERT_EQUAL_UINT32(300, SoundOutput::plannedSpanMs(r, runtime::kDefaultChirpDurationMs));
@@ -191,9 +191,47 @@ void test_trill_before_the_climb() {
     TEST_ASSERT_EQUAL_UINT32(3200, r.hopHz[5]);
 }
 
+void test_gapped_trill_before_the_glide() {
+    // 10 trill pulses of 15 ms with 15 ms gaps, then the shipped glide (5 x 15 ms, no gap): 375 ms. Only the trill
+    // has gaps; the detector reads it as one sound once the release debounce outlasts the trill gap.
+    NodeSignalComposer c;
+    c.values().hopTrillPulses = 10;
+    c.values().hopTrillGapMs = 15;
+    const OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Single, true, 0);
+    TEST_ASSERT_EQUAL_UINT32(15, r.hopSteps);
+    TEST_ASSERT_EQUAL_UINT32(10, r.trillPulses);
+    TEST_ASSERT_EQUAL_UINT32(15, r.trillGapMs);
+    TEST_ASSERT_EQUAL_UINT32(0, r.gapMs);
+    TEST_ASSERT_EQUAL_UINT32(2950, r.hopHz[9]);
+    TEST_ASSERT_EQUAL_UINT32(2950, r.hopHz[10]);
+    TEST_ASSERT_EQUAL_UINT32(3950, r.hopHz[14]);
+    TEST_ASSERT_EQUAL_UINT32(375, SoundOutput::plannedSpanMs(r, runtime::kDefaultChirpDurationMs));
+    TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
+
+    const detection::HopTrainShape shape = c.trainShape(5);
+    TEST_ASSERT_EQUAL_UINT32(375, detection::hopTrainMs(shape));
+    detection::ScalarTransientConfig sc;
+    sc.minTransientDurationMs = 70;
+    sc.maxTransientDurationMs = 450;
+    sc.requireCarrierQuality = true;
+    sc.minCoverageAboveReleaseMs = 60;
+    sc.minLongestIslandMs = 20;
+    sc.maxGapMs = 20;
+    sc.releaseDebounceMs = 10;  // shipped: the 15 ms trill gap closes the candidate (soft)
+    detection::HopGapCheck chk = detection::checkHopGap(shape, sc);
+    TEST_ASSERT_TRUE(chk.hardOk());
+    TEST_ASSERT_FALSE(chk.gapBelowDebounce);
+    sc.releaseDebounceMs = 20;  // the cricket preset
+    chk = detection::checkHopGap(shape, sc);
+    TEST_ASSERT_TRUE(chk.hardOk());
+    TEST_ASSERT_TRUE(chk.softOk());  // 375 + 50 tail <= 450
+    sc.maxGapMs = 10;                // a trill gap past max gap can never be one sound
+    TEST_ASSERT_FALSE(detection::checkHopGap(shape, sc).hardOk());
+}
+
 void test_trill_is_trimmed_to_the_span_limit() {
-    // Every bound at its top: 8 trill + 8 steps of 250 + 15 gaps would be 7750 ms. The trill is shortened, the call
-    // stays valid instead of falling back to the plain chirp.
+    // Steps, pulse and gap at their tops with 12 trill pulses (15 ms trill gaps) would be 6930 ms. The trill is
+    // shortened, the call stays valid instead of falling back to the plain chirp.
     Grid wide;
     wide.lowHz = 2000;
     wide.spacingHz = 250;
@@ -202,9 +240,9 @@ void test_trill_is_trimmed_to_the_span_limit() {
     c.values().hopSteps = 8;
     c.values().hopPulseMs = 250;
     c.values().hopGapMs = 250;
-    c.values().hopTrillPulses = 8;
+    c.values().hopTrillPulses = 12;
     OutputRequest r = c.compose(wide, ChirpPattern::Single, true, 0);
-    TEST_ASSERT_EQUAL_UINT32(12, r.hopSteps);  // 12 x 250 + 11 x 250 = 5750 <= 6000
+    TEST_ASSERT_EQUAL_UINT32(16, r.hopSteps);  // 16 x 250 + 8 trill gaps x 15 + 7 x 250 = 5870 <= 6000
     TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
     c.values().idleAnnounceMs = 2000;
     r = c.compose(wide, ChirpPattern::Idle, false, 0);
@@ -227,6 +265,7 @@ int main(int, char**) {
     RUN_TEST(test_bins_from_a_moved_band);
     RUN_TEST(test_longest_train_and_call_fit_the_span_limit);
     RUN_TEST(test_trill_before_the_climb);
+    RUN_TEST(test_gapped_trill_before_the_glide);
     RUN_TEST(test_trill_is_trimmed_to_the_span_limit);
     return UNITY_END();
 }

@@ -46,6 +46,7 @@ public:
     void toneOff() override;
     bool startPulseTrain(uint32_t count, uint32_t onMs, uint32_t gapMs, uint32_t rampMs) override;
     void setPulseHop(const uint32_t* hz, size_t n) override;
+    void setPulseLeadGap(uint32_t pulses, uint32_t gapMs) override;
     void setPulseGains(const float* gain, size_t n) override;
     bool pulseTrainActive() const override;
     void setSweep(uint32_t endHz, uint32_t durationMs) override;
@@ -94,6 +95,8 @@ private:
     size_t _reqHopCount = 0;
     float _reqGain[kMaxHop] = {};
     size_t _reqGainCount = 0;
+    uint32_t _reqLeadPulses = 0;
+    uint32_t _reqLeadGapMs = 0;
 
     // Task-only render state.
     uint32_t _phase = 0;
@@ -105,6 +108,8 @@ private:
     uint32_t _trainSegmentLeft = 0;  // samples left in the current segment
     uint32_t _trainOnSamples = 0;
     uint32_t _trainGapSamples = 0;
+    uint32_t _leadPulsesLeft = 0;     // pulses still followed by the lead gap (the trill)
+    uint32_t _leadGapSamples = 0;
     uint32_t _trainRampMs = 0;
     uint32_t _hopHz[kMaxHop] = {};  // frequency per pulse, cycled; none = _toneHz
     size_t _hopCount = 0;

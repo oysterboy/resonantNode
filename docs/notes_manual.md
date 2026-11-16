@@ -210,7 +210,7 @@ the sites are listed above. Paths renamed on 2026-11-06 are mapped in
 
 | `output.hop_steps` | steps per signal | count | yes |
 
-| `output.hop_trill_pulses` | pulses on the base pitch before the climb, each as long as a step, the gaps as between steps (a cricket-like trill; 0 = the plain train; shortened if a call would pass 6 s) | count | yes |
+| `output.hop_trill_pulses`, `output.hop_trill_gap_ms` | pulses on the base pitch before the climb (up to 12), each as long as a step and followed by the trill gap; the climb keeps `hop_gap_ms` (a cricket-like trill before the glide; 0 pulses = the plain train; shortened if a call would pass 6 s) | count, ms | yes |
 
 | `output.idle_announce_hz`, `output.idle_announce_ms` | the call's lead-in tone and its length (0 Hz = none) | Hz, ms | yes |
 

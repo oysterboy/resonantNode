@@ -154,6 +154,13 @@ void I2sToneOutput::setPulseHop(const uint32_t* hz, size_t n) {
     portEXIT_CRITICAL(&_trainMux);
 }
 
+void I2sToneOutput::setPulseLeadGap(uint32_t pulses, uint32_t gapMs) {
+    portENTER_CRITICAL(&_trainMux);
+    _reqLeadPulses = pulses;
+    _reqLeadGapMs = gapMs;
+    portEXIT_CRITICAL(&_trainMux);
+}
+
 void I2sToneOutput::setPulseGains(const float* gain, size_t n) {
     portENTER_CRITICAL(&_trainMux);
     _reqGainCount = (gain == nullptr || n > kMaxHop) ? 0 : n;
@@ -243,6 +250,8 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
         const uint32_t rampSamples = (sampleRateHz * rampMs) / 1000U;
         _trainOnSamples = pulseSamples > rampSamples ? pulseSamples - rampSamples : 1;
         _trainGapSamples = (sampleRateHz * _reqTrainGapMs) / 1000U + rampSamples;
+        _leadPulsesLeft = _reqLeadPulses;
+        _leadGapSamples = (sampleRateHz * _reqLeadGapMs) / 1000U + rampSamples;
         _trainRampMs = rampMs;
         _trainSegmentLeft = _trainOnSamples;
     }
@@ -329,6 +338,10 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
                     --_trainPulsesLeft;
                     _trainOn = false;
                     _trainSegmentLeft = _trainGapSamples;
+                    if (_leadPulsesLeft > 0) {
+                        --_leadPulsesLeft;
+                        _trainSegmentLeft = _leadGapSamples;
+                    }
                     if (_trainPulsesLeft == 0) {
                         _trainRunning = false;
                         _trainDraining = true;

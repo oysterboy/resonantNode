@@ -36,6 +36,8 @@ public:
     // Frequency per pulse for the next startPulseTrain() (hop); n = 0 clears.
     void setPulseHop(const uint32_t* hz, size_t n) { _toneOutput.setPulseHop(hz, n); }
     void setPulseGains(const float* gain, size_t n) { _toneOutput.setPulseGains(gain, n); }
+    // The first `pulses` pulses of the next device-timed train followed by gapMs (ToneOutput::setPulseLeadGap).
+    void setPulseLeadGap(uint32_t pulses, uint32_t gapMs) { _toneOutput.setPulseLeadGap(pulses, gapMs); }
     // Sweep inside the next plain chirp (OUT-005): glide from the tone to
     // endHz over durationMs; endHz = 0 clears. Stays set until cleared.
     void setSweep(uint32_t endHz, uint32_t durationMs) { _toneOutput.setSweep(endHz, durationMs); }

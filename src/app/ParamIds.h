@@ -226,6 +226,7 @@ enum class ParamId : uint16_t {
     // Pulses on the train's base bin before the climb (a cricket-like trill; 0 = the plain train). At the end: the
     // stored params are keyed by this enum's position.
     Output_HopTrillPulses,
+    Output_HopTrillGapMs,
 };
 
 }  // namespace param

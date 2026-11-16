@@ -560,10 +560,7 @@ void Node::syncBaseBin() {
     // One train as a verdict reads it: the train plus the room tail the hop-gap contract allows (the 165 ms train
     // read up to 214 ms at 100 cm; the 75 ms glide ~82 ms on the desk, decisions/2026-11-05-short-glide-signal.md).
     // Behavior counts a merged chord in this unit (review 2026-11-05 M1).
-    detection::HopTrainShape shape;
-    shape.steps = _composer.trainPulses();  // the trill's pulses are part of what the detector hears
-    shape.pulseMs = _composer.values().hopPulseMs;
-    shape.gapMs = _composer.values().hopGapMs;
+    const detection::HopTrainShape shape = _composer.trainShape(_composer.values().hopSteps);
     _behavior.setHeardTrainMs(static_cast<uint32_t>(detection::hopTrainMs(shape) + detection::kHopRoomTailMarginMs));
     const uint32_t seed = _composer.values().hopRotation;
     if (!_baseSeeded || seed != _baseSeed || bases != _baseCount) {

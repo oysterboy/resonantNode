@@ -7,6 +7,7 @@
 
 #include "../../app/ParamIds.h"
 #include "../../app/RuntimeDefaults.h"
+#include "../../detection/HopGapContract.h"
 #include "../../output/OutputRequest.h"
 
 class FreqBandStream;
@@ -49,10 +50,11 @@ public:
         uint32_t hopPulseMs = runtime::kDefaultHopPulseMs;
         uint32_t hopGapMs = runtime::kDefaultHopGapMs;
         uint32_t hopSteps = runtime::kDefaultHopSteps;
-        // Pulses on the base bin before the climb, each pulse and gap as the climb's: a cricket's trill with the
-        // climb still crossing the band's bins, which a fixed tone alone would lose in the room's comb
-        // (docs/research/room-comb-and-margin.md). 0 = the plain train.
+        // Pulses on the base bin before the climb, each as long as a step and followed by hopTrillGapMs: a cricket's
+        // trill, with the climb still crossing the band's bins, which a fixed tone alone would lose in the room's
+        // comb (docs/research/room-comb-and-margin.md). 0 = the plain train. The climb keeps hopGapMs (0: the glide).
         uint32_t hopTrillPulses = 0;
+        uint32_t hopTrillGapMs = 15;
         uint32_t idleAnnounceHz = 300;
         uint32_t idleAnnounceMs = 500;
     };
@@ -76,8 +78,16 @@ public:
     // is 0 (request.hopSteps is then 0).
     bool composeHopTrain(const BandGrid& grid, uint32_t baseBin, OutputRequest& request,
                          unsigned long maxTrainMs) const;
-    // Pulses in a train (trill and climb) before a span limit trims the trill; the detector's view of the train.
-    uint32_t trainPulses() const { return _values.hopSteps + _values.hopTrillPulses; }
+    // The train as the detector's contract reads it (trill and climb, before a span limit trims the trill).
+    detection::HopTrainShape trainShape(unsigned long climbSteps) const {
+        detection::HopTrainShape shape;
+        shape.steps = climbSteps;
+        shape.pulseMs = _values.hopPulseMs;
+        shape.gapMs = _values.hopGapMs;
+        shape.trillPulses = _values.hopTrillPulses;
+        shape.trillGapMs = _values.hopTrillGapMs;
+        return shape;
+    }
     // The request for what Behavior asked: a heard pattern is answered with the hop train (networkSignal), the
     // idle call is the announcement tone, a gap, then the hop train (or the plain chirp when the hop is off);
     // everything else is the plain pattern.
@@ -99,10 +109,12 @@ inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& 
     registry.addUInt32(ParamId::Output_HopPulseMs, ModuleId::Output, "output.hop_pulse_ms", &hop.hopPulseMs, 1U, 250U);
     registry.addUInt32(ParamId::Output_HopGapMs, ModuleId::Output, "output.hop_gap_ms", &hop.hopGapMs, 0U, 250U);
     registry.addUInt32(ParamId::Output_HopSteps, ModuleId::Output, "output.hop_steps", &hop.hopSteps, 1U, 8U);
-    // Up to 8 (runtime::kMaxTrillPulses); a trill that would push a call past OutputLimits.maxSpanMs is shortened
+    // Up to 12 (runtime::kMaxTrillPulses); a trill that would push a call past OutputLimits.maxSpanMs is shortened
     // by the composer, never rejected.
     registry.addUInt32(ParamId::Output_HopTrillPulses, ModuleId::Output, "output.hop_trill_pulses", &hop.hopTrillPulses,
                        0U, static_cast<uint32_t>(runtime::kMaxTrillPulses));
+    registry.addUInt32(ParamId::Output_HopTrillGapMs, ModuleId::Output, "output.hop_trill_gap_ms", &hop.hopTrillGapMs,
+                       0U, 250U);
     registry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &hop.idleAnnounceHz,
                        0U, runtime::kMaxToneHz);
     registry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &hop.idleAnnounceMs,

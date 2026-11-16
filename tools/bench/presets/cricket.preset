@@ -1,7 +1,8 @@
-# Trill-climb: 4 pulses on the base pitch, then the 5-step climb, 20 ms pulses, 15 ms gaps (300 ms); needs output.hop_trill_pulses (2026-11-16 image)
-# The release debounce bridges the 15 ms gaps (HopGapContract: gap < debounce). Window and range as stored.
-PARAM SET output.hop_trill_pulses 4
+# Trill-climb: 10 pulses on the base pitch with 15 ms gaps, then the gapless glide (15 ms x 5); 375 ms. Needs output.hop_trill_gap_ms (image of 2026-11-16 evening)
+# Only the trill has gaps. The release debounce (20) outlasts the trill gap so the call stays one sound; 375 + 50 ms room tail fits the 450 ms maximum.
+PARAM SET output.hop_trill_pulses 10
+PARAM SET output.hop_trill_gap_ms 15
 PARAM SET output.hop_steps 5
-PARAM SET output.hop_pulse_ms 20
-PARAM SET output.hop_gap_ms 15
+PARAM SET output.hop_pulse_ms 15
+PARAM SET output.hop_gap_ms 0
 PARAM SET detection.scalar_release_debounce_ms 20

@@ -54,8 +54,11 @@ bool NodeSignalComposer::composeHopTrain(const BandGrid& grid, uint32_t baseBin,
     }
     size_t trill =
         _values.hopTrillPulses < runtime::kMaxTrillPulses ? _values.hopTrillPulses : runtime::kMaxTrillPulses;
-    const unsigned long period = _values.hopPulseMs + _values.hopGapMs;
-    while (trill > 0 && (n + trill) * period - _values.hopGapMs > maxTrainMs) {
+    // Each trill pulse is followed by the trill gap, the climb's pulses by the train's gap.
+    const auto spanMs = [&](size_t t) {
+        return (n + t) * _values.hopPulseMs + t * _values.hopTrillGapMs + (n - 1) * _values.hopGapMs;
+    };
+    while (trill > 0 && spanMs(trill) > maxTrainMs) {
         --trill;
     }
     for (size_t k = 0; k < trill; ++k) {
@@ -67,6 +70,8 @@ bool NodeSignalComposer::composeHopTrain(const BandGrid& grid, uint32_t baseBin,
     request.hopSteps = trill + n;
     request.pulseMs = _values.hopPulseMs;
     request.gapMs = _values.hopGapMs;
+    request.trillPulses = trill;
+    request.trillGapMs = _values.hopTrillGapMs;
     return true;
 }
 

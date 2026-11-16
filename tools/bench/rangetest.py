@@ -21,8 +21,8 @@ acknowledgement, no retry), the node's reply is unicast (the radio acknowledges 
                   the ones whose last part (or command) never came
 The firmware reports no signal strength (RSSI); the margin is read from bcast_pct and from the variants at the far end.
 
-Other radios of this network (NET_ID) must be off: their frames land in the node's rx count. The node: muted
-(PARAM SET output.silent 1), powered at the far end (a power bank). Rows go to --out after every point.
+Other radios of this network (NET_ID) must be off: their frames land in the node's rx count. The node is powered at
+the far end (a power bank); the script mutes it first (live). Rows go to --out after every point.
 """
 import argparse
 import csv
@@ -146,6 +146,9 @@ def main():
     out = A.out or "range_%s_%s.csv" % (A.node, datetime.date.today().isoformat())
     gw = Gateway(A.port)
     print("gateway on %s; the node %s should answer at arm's length first:" % (A.port, A.node))
+    # A node powered up on a power bank boots unmuted (the mute is live, not stored).
+    reply, _, _, _ = gw.command(A.node, "PARAM SET output.silent 1", 2.0)
+    print("  muted" if any("status=ok" in x for x in reply) else "  (no answer to the mute)")
     c = counters(gw, A.node)
     print("  %s" % ("answers (rx=%d tx_failed=%d)" % c if c else "NO ANSWER: check the node, its name, its power"))
 

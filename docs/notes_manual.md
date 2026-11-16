@@ -353,6 +353,11 @@ the update goes over WiFi like the others'. A new board prints `GATEWAY efuse_ma
 
 `boardview.py --boards E0=COMx --radio E1,E2,E3,E4,E5 --poll "RB STATUS"` shows every board through it.
 
+The radio's range: `tools/bench/rangetest.py --port COMx --node R1` on a laptop with the gateway (the file and
+pyserial are all it needs). At each distance the operator types the metres and a note; it pings the node, asks for
+long replies and reads the node's counters, one CSV row per point. The firmware reports no signal strength: the
+broadcast delivery (`bcast_pct`) is the number that falls first, before the replies do.
+
 The log by radio (2026-11-05, `docs/decisions/2026-11-05-radio-log-mirror.md`): `node.radio_log` N (0 off, the
 default; up to 20) makes a board send every console line it prints, outside a remote command's reply, as one radio
 frame, at most N lines per second on average (the rest counted as dropped); in all three modes, with the same path.

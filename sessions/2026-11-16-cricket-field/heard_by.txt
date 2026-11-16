@@ -1,0 +1,10 @@
+log span 905 s
+E2   trains  117  verdicts   98  valid   98 (consumed_pattern 83, declined_by_level 15)
+E3   trains    0  verdicts  201  valid  106 (outputs_off 106)
+R1   trains  116  verdicts   97  valid   97 (consumed_pattern 82, declined_by_level 15)
+
+rows = sender, cols = listener: valid / clean trains (any verdict), within 0.9 s
+                    E2              E3              R1
+E2                   - 47/47 100% (47)109/117 93% (109)
+E3                   -               -               -
+R1     97/116 84% (97)    0/42 0% (26)               -

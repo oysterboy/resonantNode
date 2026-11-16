@@ -1,0 +1,5 @@
+17:41 all three on main 6e56f53b by radio OTA through E0 (E2, E3 node.bin = esp32dev; R1 r1.bin = esp32dev-lr2); each confirmed. E3 saved output.silent 1 before (it reboots when it plays, 2026-11-16-low-window-field).
+17:43 nodepreset.py cricket --gateway E0=COM12 --targets R1,E2,E3: trill 10 x 15 ms, trill gap 15 ms, then the 5-step glide (15 ms, gap 0), 375 ms; detection.scalar_release_debounce_ms 20. Live, not saved. hop_check ok on all three (train 375, heard 425).
+   Window as stored: band_per_node 1, range 2500-3500 (one window, base 0). The owner liked the sound by ear.
+17:45:25 live: node.radio_log 20, RB log full on all three. Logger: boardview.py --boards E0=COM12 --radio R1,E2,E3 --poll "RB STATUS" --every 60, 900 s, into run1.log
+18:01:21 run over; cricket left running live on R1/E2 (E3 muted) for the owner to listen; not saved.

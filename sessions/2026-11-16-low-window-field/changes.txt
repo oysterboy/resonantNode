@@ -1,0 +1,6 @@
+16:42 read by radio through E0 (COM12): R1, E2, E3 answer, E1 does not. All three on band_per_node 1, range 2500-3500 (one window, base 0); E2, E3 muted live, R1 unmuted (heard.valid 0 in 55 min).
+16:43:46 live, not saved, NET *: behavior.band_range_low_hz 250, band_range_high_hz 1250 (one window 250-1250 Hz, 5 steps at 250 Hz, a single base: no glide, scatter or wander possible), node.radio_log 20, output.silent 0, RB log full.
+16:44 E3 back at 2500-3500: E3 reboots every 10-25 s once unmuted, about 4 s after "baseline active" each time (radio log), output.started 0, i2s.dropped_dma_buffers 25. Reading: a brownout when its amp starts (its stored silent is 0, it had been muted live). Not checked on its serial.
+16:47:50 E3 muted live again (output.silent 1), its range set to 250-1250, RB log full: stays up (40 s and on). E3 is a listener in this run; R1 and E2 play.
+16:48:48 logger started: boardview.py --boards E0=COM12 --radio R1,E2,E3 --poll 'RB STATUS' --every 60, 900 s, into run1.log
+17:04:10 run over: E3 up 988 s (no reboot while muted). Live, NET *: output.silent 1, band_range 2500-3500 back; R1 node.radio_log 0 back. Nothing saved on any board.

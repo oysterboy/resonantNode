@@ -12,3 +12,7 @@
 14:26:53 image 0b989164 (level_max up to 500); level_max 50, saved
 14:49:43 level_max 200, wait_after_heard_ms 0 (owner: the fixed delay as short as possible), saved
 14:53:14 start_chance_pct 85 (chains ended on declined_by_level at ~50 %), saved
+19:49:48 all silent for the second labelled recording (owner at the bench, C920); restore silent 0 after
+19:58:21 silent 0 again on E1, E2, E4, E5 after the second labelled recording
+19:59:47 B: echo image (damping) on E1, E2, E4, E5 by radio from E3; the Node night run ends here
+20:04:04 E3 made sound: NET * output.silent 0 also reached E3 (the gateway runs its own NET * commands); silent 1 again on E3 and saved. NET * output.silent needs E3 set locally after

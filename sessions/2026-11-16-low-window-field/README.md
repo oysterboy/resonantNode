@@ -31,9 +31,8 @@ board's left out; in brackets: followed by any verdict):
   E2 105 / 106). On 2500-3500 Hz earlier today R1 had heard nothing in 55 min, but E2 and E3 were muted then, so
   that says nothing about the window.
 - E3 hears the trains (210 verdicts, most at strength ~23000, 134 ms) but calls 199 of them `single_pulse`, not
-  the five-step train: the shape check fails at E3, not the level. E3's boot line showed `RB signal band=2950-4700
-  ... rotation=2` against the 2500-3500 grid, so a stored detection band or rotation on E3 is the first thing to
-  check. Only 11 valid.
+  the five-step train: the shape check fails at E3, not the level (its status showed the same 250-1250 window as
+  the others). Why E3 sees one bin where R1 and E2 see the train is not found (its mic, its place). Only 11 valid.
 
 ## Open
 

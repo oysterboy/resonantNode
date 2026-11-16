@@ -57,11 +57,11 @@ void test_idle_rises_from_the_floor_to_its_top_at_the_call() {
     NodeLight::Hsb c = light.update(idleAt(1000));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.35f, c.bright);  // starts at the floor, never dark
     c = run(light, idleAt(0), 1020, 16000);
-    TEST_ASSERT_FLOAT_WITHIN(0.005f, 0.40f, c.bright);  // half way to the call: half way from 0.35 to 0.45
+    TEST_ASSERT_FLOAT_WITHIN(0.005f, 0.375f, c.bright);  // half way to the call: half way from 0.35 to 0.40
     c = run(light, idleAt(0), 16020, 31000);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.45f, c.bright);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.40f, c.bright);
     c = run(light, idleAt(0), 31020, 40000);  // the call held past its time: stays at the top
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.45f, c.bright);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.40f, c.bright);
     TEST_ASSERT_FLOAT_WITHIN(0.5f, 20.0f, c.hueDeg);  // hue_low at the lowest base
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.8f, c.sat);
 }
@@ -78,12 +78,12 @@ void test_idle_breathes_between_floor_and_top_when_no_call_can_come() {
         hi = b > hi ? b : hi;
     }
     TEST_ASSERT_FLOAT_WITHIN(0.005f, 0.35f, lo);
-    TEST_ASSERT_FLOAT_WITHIN(0.005f, 0.45f, hi);
+    TEST_ASSERT_FLOAT_WITHIN(0.005f, 0.40f, hi);
 }
 
 void test_heard_lifts_quickly_then_builds_to_its_top_by_the_answer() {
     NodeLight light;
-    run(light, idleAt(0), 1000, 7000);  // idle at 0.37 (6 s of 30)
+    run(light, idleAt(0), 1000, 7000);  // idle at 0.36 (6 s of 30)
     NodeLight::Input in = idleAt(0);
     in.phase = Phase::Heard;
     in.answerAtMs = 7020 + 1200;
@@ -115,7 +115,7 @@ void test_the_announcement_holds_and_the_call_jumps() {
     run(light, in, 0, 1000);  // at the idle top when the call is due
     in.phase = Phase::Announce;
     NodeLight::Hsb c = run(light, in, 1020, 1720);  // 500 ms tone + 200 ms gap
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.45f, c.bright);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.40f, c.bright);
     in.phase = Phase::Emitting;
     c = run(light, in, 1740, 1820);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, c.bright);

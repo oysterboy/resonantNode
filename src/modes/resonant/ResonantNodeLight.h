@@ -63,7 +63,7 @@ public:
         uint32_t maxMa = 500;  // the driver holds it at or below the build cap (LIGHT_MAX_MA)
         uint32_t idleMode = 0;
         uint32_t floorPct = 35;  // never darker: below about 0.3 the strip has only a few byte steps left
-        uint32_t idleTopPct = 45;
+        uint32_t idleTopPct = 40;  // chosen 2026-11-15 by eye on R1: higher reads as too much at rest
         uint32_t heardLiftPct = 55;
         uint32_t heardLiftMs = 200;
         uint32_t heardTopPct = 65;

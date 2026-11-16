@@ -23,7 +23,7 @@ The owner on R1's first effects: "does too much, too much colour changing".
 
 | Moment | Brightness | Time |
 |---|---|---|
-| idle | floor -> 0.45 by the idle call; a breath between the two when no call can come | slow |
+| idle | floor -> 0.40 by the idle call (owner on R1: 0.45 a bit much); a breath between the two when no call can come | slow |
 | heard | quick lift to 0.55, then building to 0.65 by the answer's start | lift 200 ms |
 | the idle call's announcement and gap | held | |
 | emitting (the call or the answer itself) | jump to 1.0, held while it sounds | 80 ms |

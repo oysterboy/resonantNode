@@ -49,6 +49,10 @@ public:
         uint32_t hopPulseMs = runtime::kDefaultHopPulseMs;
         uint32_t hopGapMs = runtime::kDefaultHopGapMs;
         uint32_t hopSteps = runtime::kDefaultHopSteps;
+        // Pulses on the base bin before the climb, each pulse and gap as the climb's: a cricket's trill with the
+        // climb still crossing the band's bins, which a fixed tone alone would lose in the room's comb
+        // (docs/research/room-comb-and-margin.md). 0 = the plain train.
+        uint32_t hopTrillPulses = 0;
         uint32_t idleAnnounceHz = 300;
         uint32_t idleAnnounceMs = 500;
     };
@@ -67,9 +71,13 @@ public:
     // The train's bins on the grid, climbing from baseBin: hopSteps of them (at most capacity and the grid's bins),
     // 0 when the grid has no bins.
     size_t hopFrequencies(const BandGrid& grid, uint32_t baseBin, uint32_t* out, size_t capacity) const;
-    // The node's network signal into request's hop fields (BEH-005). False when the grid has no bins or the
-    // pulse is 0 (request.hopSteps is then 0).
-    bool composeHopTrain(const BandGrid& grid, uint32_t baseBin, OutputRequest& request) const;
+    // The node's network signal into request's hop fields (BEH-005): the trill's pulses on the base bin, then the
+    // climb. The trill is shortened until the train fits maxTrainMs. False when the grid has no bins or the pulse
+    // is 0 (request.hopSteps is then 0).
+    bool composeHopTrain(const BandGrid& grid, uint32_t baseBin, OutputRequest& request,
+                         unsigned long maxTrainMs) const;
+    // Pulses in a train (trill and climb) before a span limit trims the trill; the detector's view of the train.
+    uint32_t trainPulses() const { return _values.hopSteps + _values.hopTrillPulses; }
     // The request for what Behavior asked: a heard pattern is answered with the hop train (networkSignal), the
     // idle call is the announcement tone, a gap, then the hop train (or the plain chirp when the hop is off);
     // everything else is the plain pattern.
@@ -91,6 +99,10 @@ inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& 
     registry.addUInt32(ParamId::Output_HopPulseMs, ModuleId::Output, "output.hop_pulse_ms", &hop.hopPulseMs, 1U, 250U);
     registry.addUInt32(ParamId::Output_HopGapMs, ModuleId::Output, "output.hop_gap_ms", &hop.hopGapMs, 0U, 250U);
     registry.addUInt32(ParamId::Output_HopSteps, ModuleId::Output, "output.hop_steps", &hop.hopSteps, 1U, 8U);
+    // Up to 8 (runtime::kMaxTrillPulses); a trill that would push a call past OutputLimits.maxSpanMs is shortened
+    // by the composer, never rejected.
+    registry.addUInt32(ParamId::Output_HopTrillPulses, ModuleId::Output, "output.hop_trill_pulses", &hop.hopTrillPulses,
+                       0U, static_cast<uint32_t>(runtime::kMaxTrillPulses));
     registry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &hop.idleAnnounceHz,
                        0U, runtime::kMaxToneHz);
     registry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &hop.idleAnnounceMs,

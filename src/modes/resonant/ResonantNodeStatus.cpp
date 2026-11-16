@@ -28,6 +28,7 @@ void Node::printSignalConfig() {
     printKeyValue("base", _behavior.baseBin());
     printKeyValue("band_per_node", _activeBehaviorProfile.bandPerNode ? 1 : 0);
     printKeyValue("steps", hop.hopSteps);
+    printKeyValue("trill", hop.hopTrillPulses);
     printKeyValue("pulse_ms", hop.hopPulseMs);
     printKeyValue("gap_ms", hop.hopGapMs);
     serialOut().print(" order=");
@@ -82,6 +83,7 @@ void Node::printRbStatus(const char* line) {
         printKeyValue("hop_enabled", hop.hopEnabled ? 1 : 0);
         printKeyValue("hop_rotation", hop.hopRotation);
         printKeyValue("hop_steps", hop.hopSteps);
+        printKeyValue("hop_trill_pulses", hop.hopTrillPulses);
         printKeyValue("hop_pulse_ms", hop.hopPulseMs);
         printKeyValue("hop_gap_ms", hop.hopGapMs);
     }
@@ -180,7 +182,8 @@ void Node::printHopGapCheck() {
     uint32_t hz[8];
     detection::HopTrainShape shape;
     shape.steps = static_cast<unsigned long>(
-        _composer.hopFrequencies(trainGrid(), _behavior.baseBin(), hz, sizeof(hz) / sizeof(hz[0])));
+        _composer.hopFrequencies(trainGrid(), _behavior.baseBin(), hz, sizeof(hz) / sizeof(hz[0])) +
+        hop.hopTrillPulses);
     shape.pulseMs = hop.hopPulseMs;
     shape.gapMs = hop.hopGapMs;
     const detection::ScalarTransientConfig& sc = _activeDetectionProfile.scalarTransient;

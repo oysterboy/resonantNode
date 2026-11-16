@@ -1,0 +1,5 @@
+# the 2026-11-16 run: one window at the range's floor, 250-1250 Hz, nothing moves (R1 / E2 88-90 %)
+PARAM SET behavior.band_per_node 1
+PARAM SET behavior.band_range_low_hz 250
+PARAM SET behavior.band_range_high_hz 1250
+PARAM SET output.silent 0

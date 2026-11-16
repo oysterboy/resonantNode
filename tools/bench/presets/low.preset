@@ -1,0 +1,11 @@
+# the 41 h run: 300-5000 Hz (500 then), lively and quick, a short 120 Hz idle tone
+PARAM SET behavior.band_per_node 1
+PARAM SET behavior.base_scatter_bins 1
+PARAM SET output.silent 0
+PARAM SET behavior.band_range_low_hz 300
+PARAM SET behavior.band_range_high_hz 5000
+PARAM SET behavior.chain_length 4
+PARAM SET behavior.level_fall_ms 5000
+PARAM SET behavior.answer_spread_ms 800
+PARAM SET output.idle_announce_hz 120
+PARAM SET output.idle_announce_ms 80

@@ -55,7 +55,7 @@ unsigned long trainMs(const OutputRequest& r) {
 }
 
 OutputReject validateTrain(const OutputRequest& r, const OutputLimits& limits) {
-    if (r.hopSteps == 0 || r.hopSteps > kMaxHopSteps) {
+    if (r.hopSteps == 0 || r.hopSteps > kMaxTrainPulses) {
         return OutputReject::NoSteps;
     }
     for (size_t k = 0; k < r.hopSteps; ++k) {

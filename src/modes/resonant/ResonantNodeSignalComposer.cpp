@@ -44,13 +44,27 @@ size_t NodeSignalComposer::hopFrequencies(const BandGrid& grid, uint32_t baseBin
     return steps;
 }
 
-bool NodeSignalComposer::composeHopTrain(const BandGrid& grid, uint32_t baseBin, OutputRequest& request) const {
-    const size_t n = hopFrequencies(grid, baseBin, request.hopHz, kMaxHopSteps);
+bool NodeSignalComposer::composeHopTrain(const BandGrid& grid, uint32_t baseBin, OutputRequest& request,
+                                         unsigned long maxTrainMs) const {
+    uint32_t climb[kMaxHopSteps] = {};
+    const size_t n = hopFrequencies(grid, baseBin, climb, kMaxHopSteps);
     if (n == 0 || _values.hopPulseMs == 0) {
         request.hopSteps = 0;
         return false;
     }
-    request.hopSteps = n;
+    size_t trill =
+        _values.hopTrillPulses < runtime::kMaxTrillPulses ? _values.hopTrillPulses : runtime::kMaxTrillPulses;
+    const unsigned long period = _values.hopPulseMs + _values.hopGapMs;
+    while (trill > 0 && (n + trill) * period - _values.hopGapMs > maxTrainMs) {
+        --trill;
+    }
+    for (size_t k = 0; k < trill; ++k) {
+        request.hopHz[k] = climb[0];
+    }
+    for (size_t k = 0; k < n; ++k) {
+        request.hopHz[trill + k] = climb[k];
+    }
+    request.hopSteps = trill + n;
     request.pulseMs = _values.hopPulseMs;
     request.gapMs = _values.hopGapMs;
     return true;
@@ -64,7 +78,8 @@ OutputRequest NodeSignalComposer::compose(const BandGrid& grid, ChirpPattern pat
                                           uint32_t baseBin) const {
     OutputRequest request;
     request.pattern = pattern;
-    if (_values.hopEnabled && networkSignal && composeHopTrain(grid, baseBin, request)) {
+    const unsigned long maxSpanMs = OutputLimits().maxSpanMs;
+    if (_values.hopEnabled && networkSignal && composeHopTrain(grid, baseBin, request, maxSpanMs)) {
         request.kind = OutputRequest::Kind::HopTrain;
     } else if (_values.idleAnnounceHz > 0 && pattern == ChirpPattern::Idle) {
         request.kind = OutputRequest::Kind::IdleCall;
@@ -74,7 +89,9 @@ OutputRequest NodeSignalComposer::compose(const BandGrid& grid, ChirpPattern pat
         request.announceHz = _values.idleAnnounceHz < minHz ? minHz : _values.idleAnnounceHz;
         request.announceMs = _values.idleAnnounceMs;
         request.announceGapMs = kIdleAnnounceGapMs;
-        if (!_values.hopEnabled || !composeHopTrain(grid, baseBin, request)) {
+        const unsigned long announceSpanMs = request.announceMs + request.announceGapMs;
+        const unsigned long callMaxMs = announceSpanMs < maxSpanMs ? maxSpanMs - announceSpanMs : 0;
+        if (!_values.hopEnabled || !composeHopTrain(grid, baseBin, request, callMaxMs)) {
             request.hopSteps = 0;
         }
     } else {

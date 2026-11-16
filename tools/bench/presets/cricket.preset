@@ -1,0 +1,7 @@
+# Trill-climb: 4 pulses on the base pitch, then the 5-step climb, 20 ms pulses, 15 ms gaps (300 ms); needs output.hop_trill_pulses (2026-11-16 image)
+# The release debounce bridges the 15 ms gaps (HopGapContract: gap < debounce). Window and range as stored.
+PARAM SET output.hop_trill_pulses 4
+PARAM SET output.hop_steps 5
+PARAM SET output.hop_pulse_ms 20
+PARAM SET output.hop_gap_ms 15
+PARAM SET detection.scalar_release_debounce_ms 20

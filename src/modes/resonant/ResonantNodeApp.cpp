@@ -561,7 +561,7 @@ void Node::syncBaseBin() {
     // read up to 214 ms at 100 cm; the 75 ms glide ~82 ms on the desk, decisions/2026-11-05-short-glide-signal.md).
     // Behavior counts a merged chord in this unit (review 2026-11-05 M1).
     detection::HopTrainShape shape;
-    shape.steps = _composer.values().hopSteps;
+    shape.steps = _composer.trainPulses();  // the trill's pulses are part of what the detector hears
     shape.pulseMs = _composer.values().hopPulseMs;
     shape.gapMs = _composer.values().hopGapMs;
     _behavior.setHeardTrainMs(static_cast<uint32_t>(detection::hopTrainMs(shape) + detection::kHopRoomTailMarginMs));

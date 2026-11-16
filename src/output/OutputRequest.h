@@ -36,6 +36,7 @@ inline const char* chirpPatternName(ChirpPattern pattern) {
 }
 
 constexpr size_t kMaxHopSteps = runtime::kMaxHopSteps;
+constexpr size_t kMaxTrainPulses = runtime::kMaxTrainPulses;
 
 struct OutputRequest {
     enum class Kind : uint8_t {
@@ -46,8 +47,9 @@ struct OutputRequest {
     };
     Kind kind = Kind::Pattern;
     ChirpPattern pattern = ChirpPattern::Single;
-    // HopTrain, and an IdleCall's call (hopSteps 0: the call is the plain chirp).
-    uint32_t hopHz[kMaxHopSteps] = {};
+    // HopTrain, and an IdleCall's call (hopSteps 0: the call is the plain chirp). One entry per pulse: a trill's
+    // repeats of the base bin, then the climb, so hopSteps counts pulses, not distinct bins.
+    uint32_t hopHz[kMaxTrainPulses] = {};
     size_t hopSteps = 0;
     unsigned long pulseMs = 0;
     unsigned long gapMs = 0;

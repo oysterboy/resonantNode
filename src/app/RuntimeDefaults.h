@@ -147,5 +147,9 @@ constexpr uint32_t kMaxToneHz = 7900UL;
 static_assert(kMaxToneHz < kDefaultAudioI2SSampleRateHz / 2, "kMaxToneHz must stay below Nyquist");
 constexpr unsigned long kDefaultChirpPauseMs = 150UL;
 constexpr size_t kMaxHopSteps = 8;
+// A train can open with pulses on its base bin before the climb (output.hop_trill_pulses, the cricket-like trill),
+// so a request carries more pulses than steps.
+constexpr size_t kMaxTrillPulses = 8;
+constexpr size_t kMaxTrainPulses = kMaxHopSteps + kMaxTrillPulses;
 
 } // namespace runtime

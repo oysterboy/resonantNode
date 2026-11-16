@@ -210,6 +210,8 @@ the sites are listed above. Paths renamed on 2026-11-06 are mapped in
 
 | `output.hop_steps` | steps per signal | count | yes |
 
+| `output.hop_trill_pulses` | pulses on the base pitch before the climb, each as long as a step, the gaps as between steps (a cricket-like trill; 0 = the plain train; shortened if a call would pass 6 s) | count | yes |
+
 | `output.idle_announce_hz`, `output.idle_announce_ms` | the call's lead-in tone and its length (0 Hz = none) | Hz, ms | yes |
 
 | `output.silent` | outputs off, detection keeps running | bool | yes |
@@ -487,6 +489,17 @@ level, the level, the last action and its age, counters. It asks RB STATUS and E
 other's) and reads what the boards print. It holds the ports: stop it before nodegroup or an OTA script.
 `--radio E1,E4,E5` (2026-11-05) adds rows for boards without USB, from the `NET log from=` lines (node.radio_log) and
 NET replies the first `--boards` board prints; a Node there also sends `NET * RB STATUS` each round.
+
+## Presets: named setups as files (2026-11-16)
+
+`tools/bench/presets/<name>.preset` holds a setup as Node commands, one per line (`PARAM SET <path> <value>`; `#`
+lines are comments, the first is the one-line description). `python tools/bench/nodepreset.py --list` lists them;
+`nodepreset.py <name> --boards R1=COM3,...` applies one by USB, `--gateway E0=COM12 --targets R1,E2,E3` by radio,
+and reports per board which PARAM SET did not answer ok. Nothing is saved: a reboot or `PARAM LOAD` brings back the
+stored setup. `nodepreset.py --capture <name> --gateway E0=COM12 --from R1 --what "..."` (or `--boards R1=COM3`)
+writes every detection.*, behavior.* and output.* value a board holds, without its rotation and silent switch, as a
+new preset: capture the running setup before trying another. A preset that needs a newer image says so in its
+description.
 
 ## Echo shell (esp32dev-echo, 2026-10-30)
 

@@ -169,6 +169,49 @@ void test_longest_train_and_call_fit_the_span_limit() {
     TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
 }
 
+void test_trill_before_the_climb() {
+    // The cricket-like call: 4 pulses on the base bin, then the 5-step climb, 20 ms pulses, 15 ms gaps (300 ms).
+    NodeSignalComposer c;
+    TEST_ASSERT_EQUAL_UINT32(0, c.values().hopTrillPulses);  // shipped: no trill, the plain train
+    c.values().hopTrillPulses = 4;
+    c.values().hopPulseMs = 20;
+    c.values().hopGapMs = 15;
+    OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Single, true, 2);
+    TEST_ASSERT_EQUAL_UINT32(9, r.hopSteps);
+    TEST_ASSERT_EQUAL_UINT32(9, c.trainPulses());
+    const uint32_t expect[9] = {3450, 3450, 3450, 3450, 3450, 3700, 3950, 4200, 4450};
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expect, r.hopHz, 9);
+    TEST_ASSERT_EQUAL_UINT32(300, SoundOutput::plannedSpanMs(r, runtime::kDefaultChirpDurationMs));
+    TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
+    // The idle call carries the same trill after its announcement.
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
+    TEST_ASSERT_EQUAL(static_cast<int>(OutputRequest::Kind::IdleCall), static_cast<int>(r.kind));
+    TEST_ASSERT_EQUAL_UINT32(9, r.hopSteps);
+    TEST_ASSERT_EQUAL_UINT32(2950, r.hopHz[3]);
+    TEST_ASSERT_EQUAL_UINT32(3200, r.hopHz[5]);
+}
+
+void test_trill_is_trimmed_to_the_span_limit() {
+    // Every bound at its top: 8 trill + 8 steps of 250 + 15 gaps would be 7750 ms. The trill is shortened, the call
+    // stays valid instead of falling back to the plain chirp.
+    Grid wide;
+    wide.lowHz = 2000;
+    wide.spacingHz = 250;
+    wide.bins = 8;
+    NodeSignalComposer c;
+    c.values().hopSteps = 8;
+    c.values().hopPulseMs = 250;
+    c.values().hopGapMs = 250;
+    c.values().hopTrillPulses = 8;
+    OutputRequest r = c.compose(wide, ChirpPattern::Single, true, 0);
+    TEST_ASSERT_EQUAL_UINT32(12, r.hopSteps);  // 12 x 250 + 11 x 250 = 5750 <= 6000
+    TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
+    c.values().idleAnnounceMs = 2000;
+    r = c.compose(wide, ChirpPattern::Idle, false, 0);
+    TEST_ASSERT_EQUAL_UINT32(8, r.hopSteps);  // 2200 of announcement leave 3800: the climb alone
+    TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
+}
+
 }  // namespace
 
 void setUp() {}
@@ -183,5 +226,7 @@ int main(int, char**) {
     RUN_TEST(test_idle_call_without_hop);
     RUN_TEST(test_bins_from_a_moved_band);
     RUN_TEST(test_longest_train_and_call_fit_the_span_limit);
+    RUN_TEST(test_trill_before_the_climb);
+    RUN_TEST(test_trill_is_trimmed_to_the_span_limit);
     return UNITY_END();
 }

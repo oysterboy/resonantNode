@@ -1,5 +1,6 @@
 # the shipped field as R1 ran it on 2026-11-16: the 75 ms glide, one window 2500-3500 Hz, start chance 85, level 200
 # captured 2026-11-16 17:20 from R1 by radio through E0, 50 params (detection, behavior, output; not rotation or silent)
+# 2026-11-16: trill off added by hand (the capture predates output.hop_trill_*), so applying glide undoes cricket.
 PARAM SET detection.scalar_onset_threshold 2000
 PARAM SET detection.scalar_release_threshold 1500
 PARAM SET detection.scalar_cooldown_ms 50
@@ -50,3 +51,5 @@ PARAM SET detection.shape_medium_min_bins 3
 PARAM SET detection.shape_medium_min_rising_steps 2
 PARAM SET detection.shape_strong_min_bins 4
 PARAM SET detection.shape_strong_min_rising_steps 3
+PARAM SET output.hop_trill_pulses 0
+PARAM SET output.hop_trill_gap_ms 15

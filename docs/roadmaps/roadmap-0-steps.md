@@ -450,9 +450,10 @@ substeps marked "on site" wait for those days.
    24.1 The trill: pulses on the base pitch before the climb, a cricket-like start (output.hop_trill_pulses, up to
         12, 0 = the plain train; output.hop_trill_gap_ms). Landed 2026-11-16 (90d94e2, 6e56f53): the composer puts it
         in front of the climb and shortens it if a call would pass the output's 6 s span; the boot check and the
-        heard-train length count it; the param ids are appended (stored params are keyed by position). Open: whether
-        the trill is for the performance or a bench experiment (owner); what it does to hearing (the matrix below);
-        its defaults, which get a decisions file if the owner sets them. More substeps expected (24.1.x).
+        heard-train length count it; the param ids are appended (stored params are keyed by position). Owner
+        2026-11-17: the trill is part of the performance (decisions/2026-11-17-trill-is-part-of-the-performance.md).
+        Open: what it does to hearing (the matrix below); its values (pulses, gap, debounce, the click) settled
+        before the freeze, and how they reach the boards (a changed default or PARAM SAVE). More substeps expected (24.1.x).
         Owner 2026-11-17: the trill keeps its release debounce, detection.scalar_release_debounce_ms 20 in the
         cricket preset (shipped 10): the call stays one sound across the 15 ms trill gaps.
         24.1.1 Broadband beside the climb (variant A), owner 2026-11-17: the call people can place
@@ -483,6 +484,7 @@ substeps marked "on site" wait for those days.
         for the plain train, the trill and each preset in use. Open: the runs and their bench/sessions/ paths.
    24.4 Further sound modifications, as they come (owner 2026-11-17: expected). Each one gets its own line here with
         its date and params, goes through the same matrix, and is cut or kept before the code freeze.
+   The rehearsal (step 25) runs with the trill on.
    Gate: on the desk every node hears the others as before (hop10 10 / 10 per base bin, nodecheck green on every
    board), T2h byte-identical, with the glide setup; then the code freeze until the performance. Detection CODE is
    unchanged; a detection PARAM may change when a sound setting needs it (owner 2026-11-17, decisions/2026-11-17-

@@ -647,6 +647,16 @@ replay corpora from RAW captures with `tools/bench/rawcorpus.py`. Hardware evide
 on the `bench` branch, checked out as a worktree at `bench/` (its `README.md` has the session
 layout). A gate result cites a `bench/sessions/...` path, never a run that only exists in `logs/`.
 
+Trying the trill (a cricket-like start of the call, `output.hop_trill_*`, "Param reference (Node)"; sound-layer work
+in `docs/roadmaps/roadmap-0-steps.md`, step 24): apply the `cricket` preset (`nodepreset.py cricket ...`, "Presets") to
+every board that plays, and `glide` to undo it (glide sets the trill to 0 pulses). Nothing is saved. `cricket` also sets
+`detection.scalar_release_debounce_ms 20` so the call stays one sound across the trill gaps: that is a detection
+param, so read it as part of the trill, not as a free choice. To read its effect on hearing, `tools/bench/callmatrix.py`
+runs the field cell by cell, one call (preset) and one frequency window at a time, through the gateway and reports the
+detection rate per call and window (usage in the file's header); commit the session to `bench/sessions/...` and cite
+it. A trill that lowers the rate against `glide` in the same window is a detection-side problem, not only a sound
+choice. The whole call, trill included, has to fit the 6 s output span and the node's boot check.
+
 The standing board check after a change is `tools/bench/nodecheck.py` (the Nodes, 26-27 checks on 2026-11-06) and,
 for Analyzer output, `tools/bench/analyzerab.py` against the last A/B set.
 

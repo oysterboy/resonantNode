@@ -428,6 +428,15 @@ substeps marked "on site" wait for those days.
         -r1-light-radio-stress, -hw005-radio-vs-mic.
    Gate: OUT-007's gate; the light on every board checked in 21.4 before 2026-12-07.
 
+29. [TODO, by 2026-12-06, before the code freeze] The floors: do the nodes measure the same room alike, and one rebase for all. (issue #100) On the bench, then in the room.
+   roadmap-node.md NODE-020. Owner 2026-11-17: observation first.
+   29.1 Observe: audio.baseline and the baseline state of every board (NET * RB STATUS), at a few moments of a
+        day and after a boot; PARAM load stored= read first. Boards or moments? A lab note in docs/lab/.
+   29.2 The installation's procedure: NET * RB rebase force while the room is quiet (RB rebase when the gate
+        should decide); confirm the radio path takes the forced route; a line in notes_manual.md.
+   Gate: the baseline spread measured and dated (bench/sessions/... cited), the procedure written and tried on
+   the boards in 21; no threshold changed.
+
 24. [TODO, 2026-12-01 .. 12-06] The sound layer: OUT-006's aesthetic layer and BEH-006's variation over time, detection unchanged. (issue #90)
    roadmap-output.md OUT-006, roadmap-behavior.md BEH-006, PAR-009 for the params they need; docs/research/polyphony.md.
    Before the field with all nodes, in the first week of December (owner 2026-11-06), as a layer that changes the

@@ -180,6 +180,32 @@ Options, none urgent:
 Source: review 2026-10-17 (Claude session, remote); docs/lab/2026-10-17-slot1.md afternoon.
 ```
 
+### NODE-020 - one floor for all nodes: observe the boot floors, then a rebase for the whole field
+
+Status: TODO (noted 2026-11-17, owner request after the lab note "Different floors": no quiet room at boot).
+
+```text
+Question: the baseline is a snapshot (audio.baseline in RB STATUS), taken at each node's own quiet hold after its
+own boot (NodeBaseline: quiet under 400 for 1 s, 20 s timeout, then the old floor). Boards in one room, or one
+board at different moments, can hold different floors; the detection's absolute levels then act at a different
+effective SNR per node.
+Known: the room's quiet level moved 40-100 (morning) to 150-260 (afternoon) on the desk 2026-11-01
+(src/audio/RoomLevel.h); D-AMP floor ~230-250; the floor is ~4x higher with the DC blocker and one board failed
+the 400 gate with the radio on (docs/lab/notes_lab.md).
+Not the same as a hard power-on of all nodes: each boot runs its own warmup and gate, power-on is the noisiest
+moment (the 20 s timeout exists for it, chosen 2026-10-29) and a node that times out keeps a boot floor
+silently.
+1) Observation first (owner 2026-11-17): audio.baseline and the baseline state of every node (NET * RB STATUS)
+   at several moments of one day and after a boot; boards or moments? Nothing is retuned for it.
+2) For the installation: NET * RB rebase force, in a room known to be quiet, so every node takes its floor in
+   the same second; NET * RB rebase when the gate should decide. The replies show a node that failed.
+   To confirm in code first: that a NET-delivered "RB rebase force" takes the same path as serial.
+3) Only if the spread is the boards: the supply and DC-blocker question in notes_lab.md, then a tracking floor
+   like RoomLevel for the Node as its own item.
+Gate: the spread of audio.baseline over the nodes, measured and dated; the rebase procedure in notes_manual.md
+(bench workflow) with its result; no threshold changed (CLAUDE.md, "Tuning").
+```
+
 ## Current focus
 
 ```text

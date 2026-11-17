@@ -434,6 +434,11 @@ substeps marked "on site" wait for those days.
         day and after a boot; PARAM load stored= read first. Boards or moments? A lab note in docs/lab/.
    29.2 The installation's procedure: NET * RB rebase force while the room is quiet (RB rebase when the gate
         should decide); confirm the radio path takes the forced route; a line in notes_manual.md.
+        2026-11-17 (code reading, no board): the radio path is the serial path. RemoteCommandPolicy lets every
+        "RB ..." through, runRemoteCommand hands the text to handleSerialLine, the same kCommands table, so
+        "RB rebase force" reaches handleRebaseForceCommand; commands go out 3 times and receivers drop repeats by
+        seq. A node in SELFTEST refuses (RB rebase refused busy=selftest). A forced rebase also resets Behavior,
+        detection state and the counters, so it is not a pure floor reading. Open: on the boards.
    Gate: the baseline spread measured and dated (bench/sessions/... cited), the procedure written and tried on
    the boards in 21; no threshold changed.
 

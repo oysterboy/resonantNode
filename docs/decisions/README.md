@@ -118,6 +118,7 @@ what replaced it.
 | 2026-11-11 | [The stripboard node is its own board variant (BOARD_LOCHRASTER_V1), its pins checked at compile time](2026-11-11-stripboard-board-variant.md) |
 | 2026-11-12 | [Five stripboard nodes for the performance, five breadboard nodes beside them](2026-11-12-five-stripboard-nodes.md) (HW-002) |
 | 2026-11-12 | [Board revisions: a generation, layout RCs inside it, frozen when a batch is cut](2026-11-12-board-revisions.md) |
+| 2026-11-17 | [The sound layer may set detection params it needs (the trill's release debounce); glide stays the complete reference setup](2026-11-17-sound-layer-may-set-detection-params.md) |
 
 ## Open
 

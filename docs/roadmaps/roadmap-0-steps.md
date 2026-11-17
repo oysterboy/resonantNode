@@ -453,19 +453,23 @@ substeps marked "on site" wait for those days.
         heard-train length count it; the param ids are appended (stored params are keyed by position). Open: whether
         the trill is for the performance or a bench experiment (owner); what it does to hearing (the matrix below);
         its defaults, which get a decisions file if the owner sets them. More substeps expected (24.1.x).
+        Owner 2026-11-17: the trill keeps its release debounce, detection.scalar_release_debounce_ms 20 in the
+        cricket preset (shipped 10): the call stays one sound across the 15 ms trill gaps.
    24.2 Presets as files: tools/bench/presets/*.preset (calm, cricket, deep, glide, low, lowwindow), applied by USB
         or radio with tools/bench/nodepreset.py (--capture writes a board's setup as a preset; glide is R1's field of
         2026-11-16), tools/bench/presetpage.py builds the page; the glide preset turns the trill off. A preset is
-        params only: what it changes goes through PARAM SET, no new code path.
+        params only: what it changes goes through PARAM SET, no new code path. glide.preset is the reference
+        setup, complete (50 params, 24 detection) and kept in the tree: applying it puts any board back, and a
+        change to a default is made in the code and in glide.preset in the same commit.
    24.3 Measure: tools/bench/callmatrix.py (3ab2dd4), the detection rate per call and window through the gateway,
         for the plain train, the trill and each preset in use. Open: the runs and their bench/sessions/ paths.
    24.4 Further sound modifications, as they come (owner 2026-11-17: expected). Each one gets its own line here with
         its date and params, goes through the same matrix, and is cut or kept before the code freeze.
    Gate: on the desk every node hears the others as before (hop10 10 / 10 per base bin, nodecheck green on every
-   board), T2h byte-identical; then the code freeze until the performance. With the trill or a preset on, the same
-   matrix (24.3) has to hold, or the setting stays out of the performance. A change that makes a node hear the
-   others worse is a detection change and waits until after the performance (the sound layer leaves detection as
-   it is).
+   board), T2h byte-identical, with the glide setup; then the code freeze until the performance. Detection CODE is
+   unchanged; a detection PARAM may change when a sound setting needs it (owner 2026-11-17, decisions/2026-11-17-
+   sound-layer-may-set-detection-params.md): the preset lists it, and the 24.3 matrix shows hearing no worse than
+   glide in the same window, or the setting stays out of the performance.
 
 18. [TODO, 2026-12-07 .. 12-12] The field with all nodes in the room: BEH-008 and BEH-009 with up to ten, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.

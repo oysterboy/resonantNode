@@ -3,6 +3,8 @@
 Status: decided (owner 2026-11-06: "D kommt vor B. In der ersten Dez Woche", and "ja, D so ok" to a sound layer that
 leaves detection as it is)
 Date: 2026-11-06
+Amended 2026-11-17: "leaves the detection layer as it is" means no detector code change; a detection param a sound
+setting needs is allowed on the terms of 2026-11-17-sound-layer-may-set-detection-params.md.
 
 ## Decision
 

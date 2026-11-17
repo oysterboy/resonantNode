@@ -501,6 +501,11 @@ writes every detection.*, behavior.* and output.* value a board holds, without i
 new preset: capture the running setup before trying another. A preset that needs a newer image says so in its
 description.
 
+`glide` is the reference: the complete setup of the shipped field (50 params, 24 of them detection, the trill off), so
+`nodepreset.py glide ...` restores any board after another preset. Keep it complete: when a default changes in the
+code, change `glide.preset` in the same commit, and a preset that differs from it on a detection param says so in its
+own comments.
+
 ## Echo shell (esp32dev-echo, 2026-10-30)
 
 The shell the echo room and Whispernet will grow in (`src/modes/echo/`, roadmap-echo.md ECHO-003). It does not
@@ -651,7 +656,7 @@ Trying the trill (a cricket-like start of the call, `output.hop_trill_*`, "Param
 in `docs/roadmaps/roadmap-0-steps.md`, step 24): apply the `cricket` preset (`nodepreset.py cricket ...`, "Presets") to
 every board that plays, and `glide` to undo it (glide sets the trill to 0 pulses). Nothing is saved. `cricket` also sets
 `detection.scalar_release_debounce_ms 20` so the call stays one sound across the trill gaps: that is a detection
-param, so read it as part of the trill, not as a free choice. To read its effect on hearing, `tools/bench/callmatrix.py`
+param, kept on purpose (decisions/2026-11-17-sound-layer-may-set-detection-params.md), part of the trill and not a free choice. To read its effect on hearing, `tools/bench/callmatrix.py`
 runs the field cell by cell, one call (preset) and one frequency window at a time, through the gateway and reports the
 detection rate per call and window (usage in the file's header); commit the session to `bench/sessions/...` and cite
 it. A trill that lowers the rate against `glide` in the same window is a detection-side problem, not only a sound

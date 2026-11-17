@@ -1,4 +1,5 @@
 # the shipped field as R1 ran it on 2026-11-16: the 75 ms glide, one window 2500-3500 Hz, start chance 85, level 200
+# THE REFERENCE SETUP (decisions/2026-11-17-sound-layer-may-set-detection-params.md): complete, every detection, behavior and output value; apply it to put a board back after another preset. Change it with the code defaults, in the same commit.
 # captured 2026-11-16 17:20 from R1 by radio through E0, 50 params (detection, behavior, output; not rotation or silent)
 # 2026-11-16: trill off added by hand (the capture predates output.hop_trill_*), so applying glide undoes cricket.
 PARAM SET detection.scalar_onset_threshold 2000

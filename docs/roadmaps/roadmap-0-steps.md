@@ -447,8 +447,25 @@ substeps marked "on site" wait for those days.
    Before the field with all nodes, in the first week of December (owner 2026-11-06), as a layer that changes the
    sound and leaves the detection layer as it is (decisions/2026-11-06-sound-layer-before-the-performance.md).
    DET-014 and BEH-007 change detection: after the performance. PC, then the desk with the nodes at hand.
+   24.1 The trill: pulses on the base pitch before the climb, a cricket-like start (output.hop_trill_pulses, up to
+        12, 0 = the plain train; output.hop_trill_gap_ms). Landed 2026-11-16 (90d94e2, 6e56f53): the composer puts it
+        in front of the climb and shortens it if a call would pass the output's 6 s span; the boot check and the
+        heard-train length count it; the param ids are appended (stored params are keyed by position). Open: whether
+        the trill is for the performance or a bench experiment (owner); what it does to hearing (the matrix below);
+        its defaults, which get a decisions file if the owner sets them. More substeps expected (24.1.x).
+   24.2 Presets as files: tools/bench/presets/*.preset (calm, cricket, deep, glide, low, lowwindow), applied by USB
+        or radio with tools/bench/nodepreset.py (--capture writes a board's setup as a preset; glide is R1's field of
+        2026-11-16), tools/bench/presetpage.py builds the page; the glide preset turns the trill off. A preset is
+        params only: what it changes goes through PARAM SET, no new code path.
+   24.3 Measure: tools/bench/callmatrix.py (3ab2dd4), the detection rate per call and window through the gateway,
+        for the plain train, the trill and each preset in use. Open: the runs and their bench/sessions/ paths.
+   24.4 Further sound modifications, as they come (owner 2026-11-17: expected). Each one gets its own line here with
+        its date and params, goes through the same matrix, and is cut or kept before the code freeze.
    Gate: on the desk every node hears the others as before (hop10 10 / 10 per base bin, nodecheck green on every
-   board), T2h byte-identical; then the code freeze until the performance.
+   board), T2h byte-identical; then the code freeze until the performance. With the trill or a preset on, the same
+   matrix (24.3) has to hold, or the setting stays out of the performance. A change that makes a node hear the
+   others worse is a detection change and waits until after the performance (the sound layer leaves detection as
+   it is).
 
 18. [TODO, 2026-12-07 .. 12-12] The field with all nodes in the room: BEH-008 and BEH-009 with up to ten, the new baseline. (issue #80) On site.
    The hearing matrix on the new band, step 6's pass marks, the chains' shape.

@@ -203,6 +203,7 @@ bool SoundOutput::start(const OutputRequest& request) {
 bool SoundOutput::startHop(const OutputRequest& request) {
     _chirp.setPulseHop(request.hopHz, request.hopSteps);
     _chirp.setPulseLeadGap(static_cast<uint32_t>(request.trillPulses), static_cast<uint32_t>(request.trillGapMs));
+    _chirp.setPulseBroadband(request.broadbandPct, request.broadbandTrillOnly, request.broadbandLowHz);
     _chirp.startPulseTrain(static_cast<uint32_t>(request.hopSteps), request.pulseMs, request.gapMs);
     if (!_chirp.isActive()) {
         _chirp.setPulseHop(nullptr, 0);

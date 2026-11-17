@@ -50,6 +50,14 @@ public:
         (void)pulses;
         (void)gapMs;
     }
+    // Optional (step 24.1): a burst of high-passed noise at the start of the NEXT train's pulses, levelPct of the
+    // tone's peak (0 = none, the device's output is then unchanged), on every pulse or on the trill's only, above
+    // lowHz so it stays out of the detection band. A device that can't ignores it. Cleared by levelPct = 0.
+    virtual void setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_t lowHz) {
+        (void)levelPct;
+        (void)trillOnly;
+        (void)lowHz;
+    }
     // True from startPulseTrain() until the last pulse has ramped to silence.
     virtual bool pulseTrainActive() const { return false; }
     // Optional: a sweep inside a plain tone (OUT-005). From the next toneOn()

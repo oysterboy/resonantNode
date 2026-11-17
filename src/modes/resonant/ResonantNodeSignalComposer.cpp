@@ -72,6 +72,9 @@ bool NodeSignalComposer::composeHopTrain(const BandGrid& grid, uint32_t baseBin,
     request.gapMs = _values.hopGapMs;
     request.trillPulses = trill;
     request.trillGapMs = _values.hopTrillGapMs;
+    request.broadbandPct = _values.broadbandLevel;
+    request.broadbandTrillOnly = _values.broadbandScope == 1;
+    request.broadbandLowHz = _values.broadbandLowHz;
     return true;
 }
 

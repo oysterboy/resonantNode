@@ -55,6 +55,14 @@ public:
         // comb (docs/research/room-comb-and-margin.md). 0 = the plain train. The climb keeps hopGapMs (0: the glide).
         uint32_t hopTrillPulses = 0;
         uint32_t hopTrillGapMs = 15;
+        // A burst of high-passed noise at the start of the pulses, so people can place the call
+        // (docs/research/broadband-localizable-call.md): broadbandLevel percent of the tone's peak, 0 = off (the
+        // output is then today's); broadbandScope 0 = every pulse, 1 = the trill's only; the burst lies above
+        // broadbandLowHz, which keeps it out of the detection band. The tone gives up 20 log10(1 + level) dB of
+        // headroom for it (output/BroadbandBurst.h).
+        uint32_t broadbandLevel = 0;
+        uint32_t broadbandScope = 0;
+        uint32_t broadbandLowHz = 6500;
         uint32_t idleAnnounceHz = 300;
         uint32_t idleAnnounceMs = 500;
     };
@@ -115,6 +123,12 @@ inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& 
                        0U, static_cast<uint32_t>(runtime::kMaxTrillPulses));
     registry.addUInt32(ParamId::Output_HopTrillGapMs, ModuleId::Output, "output.hop_trill_gap_ms", &hop.hopTrillGapMs,
                        0U, 250U);
+    registry.addUInt32(ParamId::Output_BroadbandLevel, ModuleId::Output, "output.broadband_level", &hop.broadbandLevel,
+                       0U, 100U);
+    registry.addUInt32(ParamId::Output_BroadbandScope, ModuleId::Output, "output.broadband_scope", &hop.broadbandScope,
+                       0U, 1U);
+    registry.addUInt32(ParamId::Output_BroadbandLowHz, ModuleId::Output, "output.broadband_low_hz", &hop.broadbandLowHz,
+                       1000U, runtime::kMaxToneHz);
     registry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &hop.idleAnnounceHz,
                        0U, runtime::kMaxToneHz);
     registry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &hop.idleAnnounceMs,

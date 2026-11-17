@@ -161,6 +161,21 @@ void I2sToneOutput::setPulseLeadGap(uint32_t pulses, uint32_t gapMs) {
     portEXIT_CRITICAL(&_trainMux);
 }
 
+void I2sToneOutput::setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_t lowHz) {
+    portENTER_CRITICAL(&_trainMux);
+    _reqBroadbandPct = levelPct > broadband::kMaxLevelPct ? broadband::kMaxLevelPct : levelPct;
+    _reqBroadbandTrillOnly = trillOnly;
+    _reqBroadbandLowHz = lowHz;
+    portEXIT_CRITICAL(&_trainMux);
+}
+
+// _leadPulsesLeft still counts the pulse that is starting while it is a trill pulse (it drops when the pulse ends).
+void I2sToneOutput::startPulseBurst() {
+    if (_bbPct > 0 && (!_bbTrillOnly || _leadPulsesLeft > 0)) {
+        _burst.trigger();
+    }
+}
+
 void I2sToneOutput::setPulseGains(const float* gain, size_t n) {
     portENTER_CRITICAL(&_trainMux);
     _reqGainCount = (gain == nullptr || n > kMaxHop) ? 0 : n;
@@ -254,6 +269,13 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
         _leadGapSamples = (sampleRateHz * _reqLeadGapMs) / 1000U + rampSamples;
         _trainRampMs = rampMs;
         _trainSegmentLeft = _trainOnSamples;
+        _bbPct = _reqBroadbandPct;
+        _bbTrillOnly = _reqBroadbandTrillOnly;
+        _reqBroadbandPct = 0;  // for the NEXT train only, like the other requests a caller sets before it
+        if (_bbPct > 0) {
+            _burst.configure(sampleRateHz, _reqBroadbandLowHz);
+            startPulseBurst();
+        }
     }
     portEXIT_CRITICAL(&_trainMux);
 }
@@ -353,6 +375,7 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
                         _trainStep = hopStep(sampleRateHz);
                     }
                     _trainGain = nextGain();
+                    startPulseBurst();
                 }
             }
             if (_trainRunning && _trainSegmentLeft > 0) {
@@ -386,7 +409,15 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
             const float s = sinf(static_cast<float>(_phase) * kPhaseToRadians);
             // Without a gain list the product is _amplitude itself, bit for bit the plain tone.
             const float amplitude = _gainCount > 0 ? _amplitude * _trainGain : _amplitude;
-            value = static_cast<int32_t>(s * amplitude * _envelope * kFullScale);
+            if (_bbPct > 0 && trainShape) {
+                // The burst has its own sharp onset, not the tone's ramp; the tone gives up headroom for it.
+                value = static_cast<int32_t>(
+                    (broadband::toneScale(_bbPct) * s * _envelope +
+                     broadband::levelFraction(_bbPct) * broadband::toneScale(_bbPct) * _burst.next()) *
+                    amplitude * kFullScale);
+            } else {
+                value = static_cast<int32_t>(s * amplitude * _envelope * kFullScale);
+            }
             uint32_t step = phaseStep;
             if (trainShape && _trainStep != 0) {
                 step = _trainStep;

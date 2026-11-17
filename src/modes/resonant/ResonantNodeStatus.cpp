@@ -86,6 +86,9 @@ void Node::printRbStatus(const char* line) {
         printKeyValue("hop_steps", hop.hopSteps);
         printKeyValue("hop_trill_pulses", hop.hopTrillPulses);
         printKeyValue("hop_trill_gap_ms", hop.hopTrillGapMs);
+        printKeyValue("broadband_level", hop.broadbandLevel);
+        printKeyValue("broadband_scope", hop.broadbandScope);
+        printKeyValue("broadband_low_hz", hop.broadbandLowHz);
         printKeyValue("hop_pulse_ms", hop.hopPulseMs);
         printKeyValue("hop_gap_ms", hop.hopGapMs);
     }

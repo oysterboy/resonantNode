@@ -44,6 +44,12 @@ public:
             hop[k] = hz[k];
         }
     }
+    void setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_t lowHz) override {
+        bbPct = levelPct;
+        bbTrillOnly = trillOnly;
+        bbLowHz = lowHz;
+        ++bbCalls;
+    }
     bool pulseTrainActive() const override { return trainEndMs != 0 && timebase::nowMs() < trainEndMs; }
     // A clip plays at 48 samples a millisecond (the echo shell's rate).
     bool startClip(const int16_t* samples, size_t count, float gain) override {
@@ -68,6 +74,10 @@ public:
     unsigned long trainEndMs = 0;
     uint32_t hop[8] = {};
     size_t hopSteps = 0;
+    uint32_t bbPct = 0;
+    bool bbTrillOnly = false;
+    uint32_t bbLowHz = 0;
+    int bbCalls = 0;
 };
 
 OutputRequest hopRequest() {
@@ -128,6 +138,25 @@ void test_hop_train_plays_the_bins_and_finishes_after_its_span() {
     TEST_ASSERT_EQUAL_UINT32(1165, out.finishedAtMs());
     TEST_ASSERT_EQUAL_UINT32(1, out.status().started);
     TEST_ASSERT_EQUAL_UINT32(1, out.status().done);
+}
+
+void test_the_broadband_burst_reaches_the_device_with_the_train() {
+    // 24.1: the request's burst settings go to the tone device before the train starts; none asked = level 0.
+    FakeTone tone;
+    ChirpOutput chirp(tone, 3200);
+    SoundOutput out(chirp);
+    TEST_ASSERT_TRUE(out.start(hopRequest()));
+    TEST_ASSERT_EQUAL_INT(1, tone.bbCalls);
+    TEST_ASSERT_EQUAL_UINT32(0, tone.bbPct);
+    out.stop();
+    OutputRequest r = hopRequest();
+    r.broadbandPct = 30;
+    r.broadbandTrillOnly = true;
+    r.broadbandLowHz = 6500;
+    TEST_ASSERT_TRUE(out.start(r));
+    TEST_ASSERT_EQUAL_UINT32(30, tone.bbPct);
+    TEST_ASSERT_TRUE(tone.bbTrillOnly);
+    TEST_ASSERT_EQUAL_UINT32(6500, tone.bbLowHz);
 }
 
 void test_idle_call_announces_waits_then_plays_the_train() {
@@ -345,6 +374,7 @@ void test_clip_shape_damping_dulls_highs() {
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_hop_train_plays_the_bins_and_finishes_after_its_span);
+    RUN_TEST(test_the_broadband_burst_reaches_the_device_with_the_train);
     RUN_TEST(test_idle_call_announces_waits_then_plays_the_train);
     RUN_TEST(test_idle_call_without_hop_ends_with_the_plain_chirp);
     RUN_TEST(test_stop_in_the_gap_cancels_the_call);

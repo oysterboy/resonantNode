@@ -6,6 +6,7 @@
 #include <freertos/task.h>
 
 #include "../app/RuntimeDefaults.h"
+#include "../output/BroadbandBurst.h"
 #include "../output/ToneOutput.h"
 #include "AudioSourceI2S.h"
 
@@ -47,6 +48,7 @@ public:
     bool startPulseTrain(uint32_t count, uint32_t onMs, uint32_t gapMs, uint32_t rampMs) override;
     void setPulseHop(const uint32_t* hz, size_t n) override;
     void setPulseLeadGap(uint32_t pulses, uint32_t gapMs) override;
+    void setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_t lowHz) override;
     void setPulseGains(const float* gain, size_t n) override;
     bool pulseTrainActive() const override;
     void setSweep(uint32_t endHz, uint32_t durationMs) override;
@@ -97,6 +99,9 @@ private:
     size_t _reqGainCount = 0;
     uint32_t _reqLeadPulses = 0;
     uint32_t _reqLeadGapMs = 0;
+    uint32_t _reqBroadbandPct = 0;
+    bool _reqBroadbandTrillOnly = false;
+    uint32_t _reqBroadbandLowHz = 0;
 
     // Task-only render state.
     uint32_t _phase = 0;
@@ -110,6 +115,11 @@ private:
     uint32_t _trainGapSamples = 0;
     uint32_t _leadPulsesLeft = 0;     // pulses still followed by the lead gap (the trill)
     uint32_t _leadGapSamples = 0;
+    // The broadband burst of the running train (output/BroadbandBurst.h): level 0 = none, the tone path untouched.
+    broadband::BroadbandBurst _burst;
+    uint32_t _bbPct = 0;
+    bool _bbTrillOnly = false;
+    void startPulseBurst();  // a pulse begins: a burst when the train's settings ask for one on this pulse
     uint32_t _trainRampMs = 0;
     uint32_t _hopHz[kMaxHop] = {};  // frequency per pulse, cycled; none = _toneHz
     size_t _hopCount = 0;

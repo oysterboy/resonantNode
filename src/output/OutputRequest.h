@@ -56,6 +56,11 @@ struct OutputRequest {
     // The first trillPulses pulses are each followed by trillGapMs instead of gapMs (the trill before the climb).
     size_t trillPulses = 0;
     unsigned long trillGapMs = 0;
+    // A burst of high-passed noise at the start of the pulses (output.broadband_*): broadbandPct of the tone's peak,
+    // 0 = none; on the trill's pulses only when broadbandTrillOnly; above broadbandLowHz.
+    uint32_t broadbandPct = 0;
+    bool broadbandTrillOnly = false;
+    uint32_t broadbandLowHz = 0;
     // IdleCall.
     uint32_t announceHz = 0;
     unsigned long announceMs = 0;
@@ -97,10 +102,10 @@ enum class OutputReject : uint8_t {
 
 enum class OutputPhase : uint8_t {
     Idle,
-    Playing,      // a Pattern or a HopTrain
-    Announce,     // IdleCall: the announcement tone
+    Playing,  // a Pattern or a HopTrain
+    Announce,  // IdleCall: the announcement tone
     AnnounceGap,  // IdleCall: silence before the call
-    Call,         // IdleCall: the call
+    Call,  // IdleCall: the call
 };
 
 struct OutputStatus {

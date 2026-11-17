@@ -229,6 +229,25 @@ void test_gapped_trill_before_the_glide() {
     TEST_ASSERT_FALSE(detection::checkHopGap(shape, sc).hardOk());
 }
 
+void test_broadband_settings_ride_on_the_train() {
+    // 24.1: off by default, so the shipped request carries no burst; set, the request carries the values.
+    NodeSignalComposer c;
+    TEST_ASSERT_EQUAL_UINT32(0, c.values().broadbandLevel);
+    OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Single, true, 2);
+    TEST_ASSERT_EQUAL_UINT32(0, r.broadbandPct);
+    TEST_ASSERT_FALSE(r.broadbandTrillOnly);
+    c.values().broadbandLevel = 40;
+    c.values().broadbandScope = 1;
+    c.values().broadbandLowHz = 6800;
+    r = c.compose(shippedGrid(), ChirpPattern::Single, true, 2);
+    TEST_ASSERT_EQUAL_UINT32(40, r.broadbandPct);
+    TEST_ASSERT_TRUE(r.broadbandTrillOnly);
+    TEST_ASSERT_EQUAL_UINT32(6800, r.broadbandLowHz);
+    // The idle call's train carries it too; the announcement tone does not need it.
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
+    TEST_ASSERT_EQUAL_UINT32(40, r.broadbandPct);
+}
+
 void test_trill_is_trimmed_to_the_span_limit() {
     // Steps, pulse and gap at their tops with 12 trill pulses (15 ms trill gaps) would be 6930 ms. The trill is
     // shortened, the call stays valid instead of falling back to the plain chirp.
@@ -266,6 +285,7 @@ int main(int, char**) {
     RUN_TEST(test_longest_train_and_call_fit_the_span_limit);
     RUN_TEST(test_trill_before_the_climb);
     RUN_TEST(test_gapped_trill_before_the_glide);
+    RUN_TEST(test_broadband_settings_ride_on_the_train);
     RUN_TEST(test_trill_is_trimmed_to_the_span_limit);
     return UNITY_END();
 }

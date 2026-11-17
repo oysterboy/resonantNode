@@ -227,6 +227,11 @@ enum class ParamId : uint16_t {
     // stored params are keyed by this enum's position.
     Output_HopTrillPulses,
     Output_HopTrillGapMs,
+    // The broadband burst at the start of the pulses (24.1): level in percent of the tone's peak (0 = off), scope
+    // (0 every pulse, 1 the trill's), the high-pass corner in Hz. Appended: stored params are keyed by position.
+    Output_BroadbandLevel,
+    Output_BroadbandScope,
+    Output_BroadbandLowHz,
 };
 
 }  // namespace param

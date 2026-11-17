@@ -463,6 +463,13 @@ substeps marked "on site" wait for those days.
         24.1.2 Broadband in the trill (variant B): the same source, but only in the trill pulses before the climb,
         so the matched climb carries none; one bin-wide pulse (the sine) is replaced or joined by the burst. Same
         param family, same measurements; the shape look-back (shape_pre_ms 120) is the point to watch.
+        Built on the host 2026-11-17 as output.broadband_level (0..100 % of the tone's peak, 0 = off and the output
+        unchanged), output.broadband_scope (0 every pulse = 24.1.1, 1 the trill's only = 24.1.2) and
+        output.broadband_low_hz (default 6500): src/output/BroadbandBurst.h (high-passed noise click, 4 ms, the
+        tone scaled by 1 / (1 + level) so the sum cannot clip), the request, the composer and I2sToneOutput; presets
+        bb-all and bb-trill. Host suites pass (test_broadband_burst, composer, sound output); the I2S render itself is
+        compiled and tried only on a board. Measured on the host: the click's 3.5 and 4.7 kHz bins lie about 20 dB
+        under its 7 kHz bin. Open: the board try (level sweep, contrast, shape.*, callmatrix, people).
         Both are tried against each other and against cricket; the one that places better by ear and holds the
         matrix stays, or neither (variant C, broadband as the detection signal, is a detector change: after the
         performance).

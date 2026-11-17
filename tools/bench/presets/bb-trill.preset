@@ -1,0 +1,11 @@
+# cricket with a broadband click on the trill's pulses only (24.1.2): 30 % of the tone's peak, above 6500 Hz; the climb carries none. Needs output.broadband_*
+# The detection params are cricket's (release debounce 20, decisions/2026-11-17-sound-layer-may-set-detection-params.md); the broadband adds none.
+PARAM SET output.hop_trill_pulses 10
+PARAM SET output.hop_trill_gap_ms 15
+PARAM SET output.hop_steps 5
+PARAM SET output.hop_pulse_ms 15
+PARAM SET output.hop_gap_ms 0
+PARAM SET detection.scalar_release_debounce_ms 20
+PARAM SET output.broadband_level 30
+PARAM SET output.broadband_scope 1
+PARAM SET output.broadband_low_hz 6500

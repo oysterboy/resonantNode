@@ -455,6 +455,17 @@ substeps marked "on site" wait for those days.
         its defaults, which get a decisions file if the owner sets them. More substeps expected (24.1.x).
         Owner 2026-11-17: the trill keeps its release debounce, detection.scalar_release_debounce_ms 20 in the
         cricket preset (shipped 10): the call stays one sound across the 15 ms trill gaps.
+        24.1.1 Broadband beside the climb (variant A), owner 2026-11-17: the call people can place
+        (docs/research/broadband-localizable-call.md). Build: a high-passed click or short noise burst mixed into
+        the tone at each step onset, above the highest window in use (about 6.5-8 kHz), a level param output.bb_level
+        with 0 = today's output byte-identical; output layer only. Try: the level sweep (off, -20, -15, -10 dB) on
+        contrast, shape.* and peak_bin, callmatrix.py against glide, then people pointing at a node.
+        24.1.2 Broadband in the trill (variant B): the same source, but only in the trill pulses before the climb,
+        so the matched climb carries none; one bin-wide pulse (the sine) is replaced or joined by the burst. Same
+        param family, same measurements; the shape look-back (shape_pre_ms 120) is the point to watch.
+        Both are tried against each other and against cricket; the one that places better by ear and holds the
+        matrix stays, or neither (variant C, broadband as the detection signal, is a detector change: after the
+        performance).
    24.2 Presets as files: tools/bench/presets/*.preset (calm, cricket, deep, glide, low, lowwindow), applied by USB
         or radio with tools/bench/nodepreset.py (--capture writes a board's setup as a preset; glide is R1's field of
         2026-11-16), tools/bench/presetpage.py builds the page; the glide preset turns the trill off. A preset is

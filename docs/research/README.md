@@ -148,4 +148,8 @@ whispernet.md                  a room that whispers back: the whisper detector (
                                delay line with the gate stored and delayed with the audio,
                                the loud bound as feedback guard; second piece beside
                                echo-room.md (promoted: ECHO-002, step 20, 2026-10-30)
+broadband-localizable-call.md  a call people can place: broadband energy beside the
+                               detection climb, what the band bank, contrast and amp
+                               inspectors see of it, where it can go (exploring;
+                               step 24.1.x, 2026-11-17)
 ```

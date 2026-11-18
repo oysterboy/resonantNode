@@ -895,6 +895,22 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket, uns
                                  bool selfChirpSuppressed, bool& sawPatternThisLoop) {
     const auto liveFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
     _detection.observeFrame(audioSamplePacket, liveFrequencyMeasurementPacket, audioSamplePacket.timeMs);
+    // A candidate the detector refused never becomes a verdict; with RB log full it gets its own line, so a call
+    // that was heard but dismissed shows why (several in one frame: only the last is printed, the count says so).
+    const auto reject = _detection.lastDetectorReject();
+    if (reject.count != _rbRejectsSeen) {
+        if (rbShouldLogDetail()) {
+            serialOut().print("RB reject reason=");
+            serialOut().print(reject.reason);
+            serialOut().print(" duration_ms=");
+            serialOut().print(reject.durationMs);
+            serialOut().print(" strength=");
+            serialOut().print(static_cast<unsigned long>(reject.strength + 0.5f));
+            serialOut().print(" new=");
+            serialOut().println(reject.count - _rbRejectsSeen);
+        }
+        _rbRejectsSeen = reject.count;
+    }
 
     detection::OccurrenceVerdict verdict;
     while (_detection.popOccurrenceVerdict(verdict)) {
@@ -932,6 +948,13 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket, uns
             serialOut().print(behaviorSeesVerdict ? b.lastDecisionName : "outputs_off");
             serialOut().print(" valid=");
             serialOut().print(verdict.valid ? 1 : 0);
+            // Why an invalid one failed: the reject and the first inspection that failed (contrast, amp, shape).
+            if (!verdict.valid) {
+                serialOut().print(" reject=");
+                serialOut().print(detection::verdictRejectReasonName(verdict.rejectReason));
+                serialOut().print(" failed=");
+                serialOut().print(detection::inspectionTargetName(verdict.firstFailedRequirementTarget));
+            }
             // Per-board strength drift, attributed to a sender by nodegroup.py.
             serialOut().print(" strength=");
             serialOut().print(static_cast<unsigned long>(verdict.primaryStrength + 0.5f));

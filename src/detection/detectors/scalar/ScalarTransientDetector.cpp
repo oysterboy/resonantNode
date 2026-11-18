@@ -308,6 +308,15 @@ const char* ScalarTransientDetector::lastOnsetRejectReasonName() const {
     return "none";
 }
 
+ScalarTransientDetector::LastTransientReject ScalarTransientDetector::lastTransientReject() const {
+    LastTransientReject out;
+    out.count = _counts.rejected;
+    out.reason = lastTransientRejectReasonName();
+    out.durationMs = _lastReject.durationMs;
+    out.strength = _lastReject.strength;
+    return out;
+}
+
 const char* ScalarTransientDetector::lastTransientRejectReasonName() const {
     switch (_lastReject.transient) {
         case TransientRejectReason::None:

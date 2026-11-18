@@ -227,6 +227,8 @@ private:
     // When the last own chirp stopped; SELFTEST Settle waits out its echo.
     unsigned long _lastOwnChirpEndMs = 0;
     unsigned long _rbLastWouldEmitHeardMs = 0;
+    // The detector's reject count the last RB reject line reported: a change prints the next one.
+    unsigned long _rbRejectsSeen = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
 
     // Baseline / startup state.

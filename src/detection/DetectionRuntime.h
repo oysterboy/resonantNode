@@ -67,6 +67,10 @@ public:
     // Occurrences inspected early because the 2-slot wait queue was full
     // (0 on the shipped values).
     unsigned long pendingInspectionOverflowCount() const;
+    // The detector's last refused candidate (a fact of the detector, passed through unchanged).
+    ScalarTransientDetector::LastTransientReject lastDetectorReject() const {
+        return _scalarDetector.lastTransientReject();
+    }
 
     // The Analyzer's side (SEQ trials): the detector's per-trial summaries and
     // its EVT stats line, the diagnostics counters. Harmless in the Node build

@@ -93,6 +93,17 @@ public:
     // The open candidate is below its release level, its end not yet confirmed (the release debounce runs).
     bool openCandidateReleasing() const;
 
+    // The last closed candidate this detector refused, read-only: `count` is the run-long reject count, so a reader
+    // that sees it change knows one more was refused, and why (the Node's RB reject line, for the bench's
+    // dismiss reasons). A candidate dropped by restartAfterInputGap is not a reject and does not count.
+    struct LastTransientReject {
+        unsigned long count = 0;
+        const char* reason = "none";
+        unsigned long durationMs = 0;
+        float strength = 0.0f;
+    };
+    LastTransientReject lastTransientReject() const;
+
 private:
     // Thresholds and gates (ScalarTransientConfig.h documents the fields).
     detection::ScalarTransientConfig _config = {};

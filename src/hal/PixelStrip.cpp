@@ -175,7 +175,7 @@ bool PixelStrip::show(const uint8_t* even, const uint8_t* odd, uint8_t bytesPerP
                                  static_cast<uint8_t>(colour[2] * scale), static_cast<uint8_t>(colour[3] * scale)};
         memcpy(_frame + static_cast<size_t>(pixel) * bytesPerPixel, wire, bytesPerPixel);
     }
-    // wait: blocks until the frame is out (about 1 ms for 28 pixels), for the test command; the light's effects
+    // wait: blocks until the frame is out (about 0.5 ms for 14 pixels, 30 us a pixel), for the test command; the light's effects
     // return at once and let the RMT finish on its own.
     return rmt_write_sample(kChannel, _frame, static_cast<size_t>(_pixels) * bytesPerPixel, wait) == ESP_OK;
 }

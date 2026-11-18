@@ -394,7 +394,7 @@ substeps marked "on site" wait for those days.
    28.1 With the owner: the ring and what the light shows (states, colours). Owner 2026-11-11: a WS2812 ring or a
         MOSFET-switched PWM one, chosen by about 2026-11-18; the kind a board-config constant, never a param
         (OUT-007). The shared part and the PWM driver first, the WS2812 driver only if that ring is chosen.
-        Owner 2026-11-13: a WS2812 RGB strip of 28 pixels; HSB with B the level; per state colour A (idle, rising
+        Owner 2026-11-13: a WS2812 RGB strip of 28 pixels (14 since 2026-11-18); HSB with B the level; per state colour A (idle, rising
         to ~0.5 toward the call) and B (heard, emitting to 1.0, afterglow), the frequency setting both hues, two
         variants each for the idle and the heard hue; echo a steady glow, Whispernet the smoothed replay
         (decisions/2026-11-13-light-colour-model-and-states.md). The PWM driver is no longer needed.

@@ -268,7 +268,10 @@ pins that collide or that the board must not drive.
 #endif
 #endif
 #ifndef LIGHT_PIXELS
-#define LIGHT_PIXELS 28 // the node's strip (docs/decisions/2026-11-13-light-colour-model-and-states.md)
+// The node's strip, 14 pixels since 2026-11-18 (owner; docs/decisions/2026-11-13-light-colour-model-and-states.md).
+// The cap holds the strip's total, so fewer pixels means brighter ones: full white estimates 3 x 14 x 13 = 546 mA,
+// 92 % of it under the 500 mA default (28 pixels: 1092 mA, 46 %), the brightest byte about 233 instead of 117.
+#define LIGHT_PIXELS 14
 #endif
 // The strip's "white" (chosen 2026-11-13 by eye on the black RGB reel: equal channels look bluish): LIGHT <pct> dims this.
 #ifndef LIGHT_WHITE_R

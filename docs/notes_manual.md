@@ -508,6 +508,29 @@ description.
 code, change `glide.preset` in the same commit, and a preset that differs from it on a detection param says so in its
 own comments.
 
+## Hearing test: the Analyzer over radio (2026-11-18)
+
+Whether one Node hears another, and why not, with the Nodes' own calls and images: no Analyzer image, no Emitter
+cable. `python tools/bench/hearingtest.py --gateway E0=COM12 --nodes R1,E2 --calls glide,cricket --window 2500-3500
+--block 300 --rounds 2 --out bench/sessions/<folder>` (the full usage in the script). One Node plays, the other is
+muted (it still detects), then the other way round; the player calls on a short silence timer (`--every`, set live),
+so every call is one independent trial. Blocks interleave the calls, reversed every other round. Ends with both muted
+and the silence timer back at 30000 / 10000.
+
+Per call it writes heard / invalid / dismissed / missed and the reason (calls.csv), per call and direction the rate
+with its 95 % range (summary.csv). The reasons come from three lines the Node prints under `RB log full`, mirrored by
+the radio log (`node.radio_log`):
+
+```text
+RB reject reason=<why> duration_ms= strength= matched_mean= coverage_ms= island_ms= gap_ms= new=N
+                                     the detector refused a candidate (too short / long, weak, coverage, island, gap)
+RB inspect id=<occ> <check>=<found>/<needed>:<value> ... rising= bins_hz=LOW-HIGH
+                                     after each RB verdict: every check of its inspection (stale=1: replaced)
+RB level peak=<input max> onset= release=          once a second: a call that opened no candidate, quiet or loud
+```
+
+An invalid `RB verdict` also names `reject=` and `failed=` (the first check that failed).
+
 ## Echo shell (esp32dev-echo, 2026-10-30)
 
 The shell the echo room and Whispernet will grow in (`src/modes/echo/`, roadmap-echo.md ECHO-003). It does not

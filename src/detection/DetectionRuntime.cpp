@@ -154,9 +154,12 @@ void IRAM_ATTR DetectionRuntime::observeFrame(const AudioSamplePacket& audioSamp
     if (streamRequiresFreshFrequency(_scalarTransientConfig.observedStream) && !frequencyEvidence.fresh) {
         _diagnostics.onNoFreshFrequencySkip();
     } else {
-        _scalarDetector.update(
-            audioSamplePacket,
-            selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream));
+        const float input =
+            selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream);
+        if (input > _inputPeak) {
+            _inputPeak = input;
+        }
+        _scalarDetector.update(audioSamplePacket, input);
         detectorInputProcessed = true;
         _diagnostics.onFreshDetectorInput();
     }
@@ -238,6 +241,7 @@ void DetectionRuntime::inspectAndRender(const Occurrence& occurrence,
     _haveLastInspectedRelease = true;
     _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
     _diagnostics.onInspected(inspected);
+    _lastInspectionFacts = makeInspectionFacts(inspected, _inspectionPlan);
 
     // The verdict is the last step of inspection (makeVerdict); FieldState,
     // the verdict queue and the Analyzer's pipeline event all take it here,

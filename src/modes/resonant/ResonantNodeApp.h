@@ -105,6 +105,7 @@ private:
     void printRbStatus(const char* line);
     void handleProfileCommand(const char* line);
     bool rbShouldLogDetail() const;
+    void printInspectionFacts(unsigned long occurrenceId) const;
     const char* rbLogModeName() const;
     bool setProfileFromName(const char* name);
     const char* profileName() const;
@@ -229,6 +230,7 @@ private:
     unsigned long _rbLastWouldEmitHeardMs = 0;
     // The detector's reject count the last RB reject line reported: a change prints the next one.
     unsigned long _rbRejectsSeen = 0;
+    unsigned long _rbLevelLastMs = 0;  // the last RB level line (once a second)
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
 
     // Baseline / startup state.

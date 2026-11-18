@@ -261,6 +261,10 @@ void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, flo
         } else {
             _lastReject.durationMs = peakDurationUs / 1000UL;
             _lastReject.strength = _peak.strength;
+            _lastReject.matchedMean = _facts.matchedMean();
+            _lastReject.coverageMs = static_cast<unsigned long>(_facts.coverageAboveReleaseUs / 1000ULL);
+            _lastReject.islandMaxMs = _facts.islandMaxMs;
+            _lastReject.gapMaxMs = _facts.gapMaxMs;
             _counts.rejected++;
             if (!durationAccepted) {
                 _lastReject.transient = peakDurationUs < minTransientDurationUs
@@ -314,6 +318,10 @@ ScalarTransientDetector::LastTransientReject ScalarTransientDetector::lastTransi
     out.reason = lastTransientRejectReasonName();
     out.durationMs = _lastReject.durationMs;
     out.strength = _lastReject.strength;
+    out.matchedMean = _lastReject.matchedMean;
+    out.coverageMs = _lastReject.coverageMs;
+    out.islandMaxMs = _lastReject.islandMaxMs;
+    out.gapMaxMs = _lastReject.gapMaxMs;
     return out;
 }
 

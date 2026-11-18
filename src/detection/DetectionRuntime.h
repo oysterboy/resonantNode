@@ -17,6 +17,7 @@
 #include "inspection/OccurrenceInspector.h"
 #include "inspection/VerdictProjection.h"
 #include "occurrences/Occurrence.h"
+#include "inspection/InspectionFacts.h"
 
 namespace detection {
 
@@ -71,6 +72,16 @@ public:
     ScalarTransientDetector::LastTransientReject lastDetectorReject() const {
         return _scalarDetector.lastTransientReject();
     }
+    // What the latest inspection measured, per module (InspectionFacts.h); its occurrenceId ties it to a verdict.
+    const InspectionFacts& lastInspectionFacts() const { return _lastInspectionFacts; }
+    // The loudest detector input since the last call, then reset: the Node's RB level line, so a call that opened
+    // no candidate still shows how loud it arrived against the onset threshold.
+    float takeInputPeak() {
+        const float peak = _inputPeak;
+        _inputPeak = 0.0f;
+        return peak;
+    }
+    const ScalarTransientConfig& scalarTransientConfig() const { return _scalarTransientConfig; }
 
     // The Analyzer's side (SEQ trials): the detector's per-trial summaries and
     // its EVT stats line, the diagnostics counters. Harmless in the Node build
@@ -112,6 +123,8 @@ private:
     bool _haveLastInspectedRelease = false;
     uint32_t _lastInspectedReleaseMs = 0;
     ActiveDetectionDiagnostics _diagnostics;
+    InspectionFacts _lastInspectionFacts = {};
+    float _inputPeak = 0.0f;
 
     RingQueue<OccurrenceVerdict, kResultQueueCapacity> _verdictQueue;
     bool _verdictQueueEnabled = true;

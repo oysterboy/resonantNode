@@ -1,6 +1,6 @@
-"""One-way hearing test: one node plays, the other only listens, then the other way round; every call gets an outcome.
+"""Hearing test, the Analyzer over radio: one node plays, the other only listens, then the other way round; every call gets an outcome.
 
-  python tools/bench/oneway.py --gateway E0=COM12 --nodes R1,E2 --calls bb-all,bb-trill,cricket,glide \
+  python tools/bench/hearingtest.py --gateway E0=COM12 --nodes R1,E2 --calls bb-all,bb-trill,cricket,glide \
       --window 2500-3500 --block 300 --rounds 2 --out bench/sessions/<folder>
 
 Why one-way: with both playing, the nodes answer each other, so one miss breaks a chain and the counts clump. Here the
@@ -16,8 +16,10 @@ Outcome per call (the player's "RB emit"), from the listener's lines in the --ma
   invalid   a verdict valid=0 (reject= / failed= say which inspection failed)
   dismissed an "RB reject" line: the detector refused the candidate (reason=: too short / long, weak, coverage, ...)
   missed    nothing at all: no candidate opened, or it was dropped without a reject
-Listener events outside every call's window are counted as stray. Needs the firmware of 4c1b0d8c or later for the
-dismiss reasons (older images print no RB reject line and no reject= / failed=).
+An invalid call carries its RB inspect values (each check: found / needed : value), a dismissed one the detector's
+measurements, a missed one the loudest input of the RB level lines in its window against the onset threshold.
+Listener events outside every call's window are counted as stray. Needs a Node image with the RB reject / inspect /
+level lines (notes_manual.md, "Hearing test"); an older image gives outcomes without reasons.
 
 Writes block_<n>_<call>_<player>-<listener>.log, calls.csv (one row per call), summary.csv and changes.txt.
 """
@@ -54,7 +56,7 @@ def field(text, key):
 
 def classify(path, player, listener, match):
     """Outcome per player call from one block's log."""
-    emits, events = [], []
+    emits, events, levels = [], [], []
     for line in open(path, encoding="utf-8"):
         p = line.rstrip("\n").split(" ", 2)
         if len(p) < 3:
@@ -64,6 +66,10 @@ def classify(path, player, listener, match):
             emits.append(t)
         elif who == listener and (text.startswith("RB verdict=") or text.startswith("RB reject ")):
             events.append((t, text))
+        elif who == listener and text.startswith("RB inspect ") and events and events[-1][1].startswith("RB verdict="):
+            events[-1] = (events[-1][0], events[-1][1] + " || " + text)
+        elif who == listener and text.startswith("RB level "):
+            levels.append((t, text))
     rows, used = [], set()
     rank = {"heard": 0, "invalid": 1, "dismissed": 2}
     for i, t in enumerate(emits):
@@ -77,10 +83,20 @@ def classify(path, player, listener, match):
                 kind = "heard" if "valid=1" in text else "invalid"
                 why = "" if kind == "heard" else "%s/%s" % (field(text, "reject"), field(text, "failed"))
                 why += " dur=%s" % field(text, "duration_ms")
+                if kind == "invalid" and " || RB inspect " in text:
+                    why += " [%s]" % text.split(" || RB inspect ", 1)[1]
             else:
-                kind, why = "dismissed", "%s dur=%s" % (field(text, "reason"), field(text, "duration_ms"))
+                kind, why = "dismissed", "%s dur=%s strength=%s coverage=%s island=%s gap=%s" % (
+                    field(text, "reason"), field(text, "duration_ms"), field(text, "strength"),
+                    field(text, "coverage_ms"), field(text, "island_ms"), field(text, "gap_ms"))
             if best == "missed" or rank[kind] < rank[best]:
                 best, detail = kind, why
+        if best == "missed":
+            near = [x for tl, x in levels if t <= tl < t + match + 1.0]
+            if near:
+                peak = max(int(field(x, "peak") or 0) for x in near)
+                onset = field(near[0], "onset")
+                detail = "%s peak=%d onset=%s" % ("quiet" if onset and peak < int(onset) else "loud", peak, onset)
         rows.append((t, best, detail.strip()))
     stray = len(events) - len(used)
     return rows, stray
@@ -157,8 +173,8 @@ def main():
                 tally[key].update(c)
                 tally[key]["stray"] += stray
                 for _, o, d in rows:
-                    if o in ("invalid", "dismissed"):
-                        reasons[key][o + " " + d.split(" dur=")[0]] += 1
+                    if o in ("invalid", "dismissed", "missed") and d:
+                        reasons[key][o + " " + d.split(" ")[0]] += 1
                 for t, o, d in rows:
                     allrows.append([block, r + 1, call, player, listener, "%.2f" % t, o, d])
                 say("  calls=%d heard=%d invalid=%d dismissed=%d missed=%d stray=%d"

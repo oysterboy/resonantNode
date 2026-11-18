@@ -101,6 +101,10 @@ public:
         const char* reason = "none";
         unsigned long durationMs = 0;
         float strength = 0.0f;
+        float matchedMean = 0.0f;
+        unsigned long coverageMs = 0;  // time above release
+        unsigned long islandMaxMs = 0;
+        unsigned long gapMaxMs = 0;
     };
     LastTransientReject lastTransientReject() const;
 
@@ -215,6 +219,10 @@ private:
         TransientRejectReason transient = TransientRejectReason::None;
         unsigned long durationMs = 0;
         float strength = 0.0f;
+        float matchedMean = 0.0f;
+        unsigned long coverageMs = 0;
+        unsigned long islandMaxMs = 0;
+        unsigned long gapMaxMs = 0;
     };
     LastReject _lastReject = {};
 

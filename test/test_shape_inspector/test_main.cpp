@@ -10,6 +10,7 @@ Runs in native-test-behavior.
 
 #include "../../src/detection/features/BinTrack.h"
 #include "../../src/detection/inspection/OccurrenceInspector.h"
+#include "../../src/detection/inspection/InspectionFacts.h"
 #include "../../src/detection/inspection/VerdictProjection.h"
 
 #include "../../src/detection/inspection/OccurrenceInspector.cpp"
@@ -313,6 +314,54 @@ void test_shape_holds_across_the_ms_wrap() {
 // The level a bin must reach is the detector's release threshold, handed to the inspector live
 // (DetectionRuntime::setScalarTransientConfig), not a copy in the plan. Above the train's level nothing counts
 // (review D1.5).
+// The facts the Node prints (RB inspect) are the inspection's own: the shape's class, required class and bins.
+void test_facts_of_a_hop_train() {
+    BinTrack track;
+    playSteps(track, 100, kHop, 5, 25, 10);
+    Occurrence occ = occurrence(100, 165);
+    occ.occurrenceId = 7;
+    const InspectedOccurrence in = inspect(track, shapePlan(), occ);
+    const InspectionFacts f = makeInspectionFacts(in, shapePlan());
+    TEST_ASSERT_TRUE(f.present);
+    TEST_ASSERT_EQUAL_UINT32(7, f.occurrenceId);
+    TEST_ASSERT_EQUAL_UINT8(1, f.count);
+    TEST_ASSERT_EQUAL(InspectionTarget::Shape, f.modules[0].target);
+    TEST_ASSERT_EQUAL(StrengthClass::Strong, f.modules[0].observed);
+    TEST_ASSERT_EQUAL(StrengthClass::Medium, f.modules[0].required);
+    TEST_ASSERT_FALSE(f.modules[0].skipped);
+    TEST_ASSERT_EQUAL_FLOAT(5.0f, f.modules[0].value);
+    TEST_ASSERT_EQUAL_UINT8(4, f.shapeRisingSteps);
+    TEST_ASSERT_EQUAL_UINT16(2950, f.shapeLowestBinHz);
+}
+
+// Magnitude modules take their value from their observation in plan order, a disabled one included in the count
+// of observations but not in the facts; a shape without band bins is marked skipped, as makeVerdict skips it.
+void test_facts_follow_the_plan_order() {
+    InspectionPlan plan = InspectionPlan{};
+    plan.modules[0].kind = InspectionModuleKind::MagnitudeFeatureStrength;
+    plan.modules[0].target = InspectionTarget::Amp;
+    plan.modules[0].enabled = false;
+    plan.modules[1].kind = InspectionModuleKind::MagnitudeFeatureStrength;
+    plan.modules[1].target = InspectionTarget::Contrast;
+    plan.modules[1].enabled = true;
+    plan.modules[1].minimumStrength = StrengthClass::Medium;
+    plan.modules[2] = shapePlan().modules[0];
+    plan.count = 3;
+    InspectedOccurrence in = {};
+    in.occurrence = occurrence(100, 120);
+    in.occurrence.band.contrastQuality = StrengthClass::Weak;
+    in.magnitudeObservationCount = 2;
+    in.magnitudeObservations[0].classificationValue = 999.0f;
+    in.magnitudeObservations[1].classificationValue = 1.7f;
+    const InspectionFacts f = makeInspectionFacts(in, plan);
+    TEST_ASSERT_EQUAL_UINT8(2, f.count);
+    TEST_ASSERT_EQUAL(InspectionTarget::Contrast, f.modules[0].target);
+    TEST_ASSERT_EQUAL(StrengthClass::Weak, f.modules[0].observed);
+    TEST_ASSERT_EQUAL_FLOAT(1.7f, f.modules[0].value);
+    TEST_ASSERT_EQUAL(InspectionTarget::Shape, f.modules[1].target);
+    TEST_ASSERT_TRUE(f.modules[1].skipped);
+}
+
 void test_shape_level_follows_the_release_threshold() {
     BinTrack track;
     playSteps(track, 100, kHop, 5, 25, 10, 9000);
@@ -342,5 +391,7 @@ int main(int, char**) {
     RUN_TEST(test_shipped_settings_still_reject_jumps_and_steady_tones);
     RUN_TEST(test_shape_holds_across_the_ms_wrap);
     RUN_TEST(test_shape_level_follows_the_release_threshold);
+    RUN_TEST(test_facts_of_a_hop_train);
+    RUN_TEST(test_facts_follow_the_plan_order);
     return UNITY_END();
 }

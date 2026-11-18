@@ -1,36 +1,8 @@
 #include "VerdictProjection.h"
 
+#include "InspectionFacts.h"
+
 namespace detection {
-
-namespace {
-
-StrengthClass strengthForTarget(const Occurrence& source, InspectionTarget target) {
-    switch (target) {
-        case InspectionTarget::Amp:
-            return source.magnitude.strengthClass;
-        case InspectionTarget::TargetScore:
-            return source.band.scoreStrength;
-        case InspectionTarget::Contrast:
-            return source.band.contrastQuality;
-        case InspectionTarget::TargetBand:
-            return source.band.targetBandStrength;
-        case InspectionTarget::Shape:
-            return source.shape.shapeClass;
-        case InspectionTarget::Attack:
-            return source.attack.attackClass;
-        case InspectionTarget::Loudness:
-            return source.level.levelClass;
-        case InspectionTarget::Modulation:
-            return source.modulation.modulationClass;
-        case InspectionTarget::Timbre:
-            return source.timbre.timbreClass;
-        case InspectionTarget::None:
-        default:
-            return StrengthClass::Unknown;
-    }
-}
-
-}  // namespace
 
 bool makeVerdict(const InspectedOccurrence& inspected, const InspectionPlan& plan, OccurrenceVerdict& out) {
     const Occurrence& source = inspected.occurrence;
@@ -75,7 +47,7 @@ bool makeVerdict(const InspectedOccurrence& inspected, const InspectionPlan& pla
         if (requirement.target == InspectionTarget::Shape && !source.shape.applicable) {
             continue;
         }
-        const StrengthClass observed = strengthForTarget(source, requirement.target);
+        const StrengthClass observed = observedStrength(source, requirement.target);
         if (observed >= requirement.minimumStrength) {
             continue;
         }

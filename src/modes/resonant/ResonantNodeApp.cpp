@@ -906,10 +906,33 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket, uns
             serialOut().print(reject.durationMs);
             serialOut().print(" strength=");
             serialOut().print(static_cast<unsigned long>(reject.strength + 0.5f));
+            serialOut().print(" matched_mean=");
+            serialOut().print(static_cast<unsigned long>(reject.matchedMean + 0.5f));
+            serialOut().print(" coverage_ms=");
+            serialOut().print(reject.coverageMs);
+            serialOut().print(" island_ms=");
+            serialOut().print(reject.islandMaxMs);
+            serialOut().print(" gap_ms=");
+            serialOut().print(reject.gapMaxMs);
             serialOut().print(" new=");
             serialOut().println(reject.count - _rbRejectsSeen);
         }
         _rbRejectsSeen = reject.count;
+    }
+    // Once a second the loudest detector input against the onset threshold: a call that opened no candidate at all
+    // shows whether it arrived too quiet or loud but without an onset.
+    if (timing::elapsedSince(now, _rbLevelLastMs, 1000UL)) {
+        _rbLevelLastMs = now;
+        const float peak = _detection.takeInputPeak();
+        if (rbShouldLogDetail()) {
+            const auto& sc = _detection.scalarTransientConfig();
+            serialOut().print("RB level peak=");
+            serialOut().print(static_cast<unsigned long>(peak + 0.5f));
+            serialOut().print(" onset=");
+            serialOut().print(static_cast<unsigned long>(sc.onsetDetectionThreshold + 0.5f));
+            serialOut().print(" release=");
+            serialOut().println(static_cast<unsigned long>(sc.onsetReleaseThreshold + 0.5f));
+        }
     }
 
     detection::OccurrenceVerdict verdict;
@@ -962,8 +985,43 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket, uns
             serialOut().print(verdict.primaryDurationMs);
             serialOut().print(" profile=");
             serialOut().println(profileName());
+            printInspectionFacts(verdict.occurrenceId);
         }
     }
+}
+
+// RB inspect: each check of the verdict's inspection, observed class / required class and the value behind it
+// (InspectionFacts.h). The facts are the latest inspection's; a second one in the same frame would replace them, so
+// a mismatched id prints stale=1 instead of another occurrence's values.
+void Node::printInspectionFacts(unsigned long occurrenceId) const {
+    const detection::InspectionFacts& f = _detection.lastInspectionFacts();
+    serialOut().print("RB inspect id=");
+    serialOut().print(occurrenceId);
+    if (!f.present || f.occurrenceId != occurrenceId) {
+        serialOut().println(" stale=1");
+        return;
+    }
+    for (uint8_t i = 0; i < f.count; ++i) {
+        const auto& m = f.modules[i];
+        serialOut().print(' ');
+        serialOut().print(detection::inspectionTargetName(m.target));
+        serialOut().print('=');
+        if (m.skipped) {
+            serialOut().print("skipped");
+            continue;
+        }
+        serialOut().print(detection::strengthClassName(m.observed));
+        serialOut().print('/');
+        serialOut().print(detection::strengthClassName(m.required));
+        serialOut().print(':');
+        serialOut().print(m.value, m.value < 100.0f ? 2 : 0);
+    }
+    serialOut().print(" rising=");
+    serialOut().print(f.shapeRisingSteps);
+    serialOut().print(" bins_hz=");
+    serialOut().print(f.shapeLowestBinHz);
+    serialOut().print('-');
+    serialOut().println(f.shapeHighestBinHz);
 }
 
 // --- logging / summaries ---

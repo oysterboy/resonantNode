@@ -437,7 +437,9 @@ substeps marked "on site" wait for those days.
         27-28k; a quiet-gated RB rebase found 1 s of quiet on E2 in 3 s, on E3 not in 20 s (bursts above the gate
         of 400), then passed twice; E3's boot after an OTA ended in FAILED_NO_QUIET and ran without a baseline
         until the rebase. E3 also reboots within 10-35 s whenever it may play (output.silent 1 saved since). Board,
-        not room; its supply or mic to be checked by the owner.
+        not room; its supply or mic to be checked by the owner. 2026-11-18, owner: E3 carries an electrolytic
+        capacitor from the BOOT pin to GND or VIN (which one not yet known) that the other D-AMP boards do not; a
+        first suspect for the reboots and the noise, to be traced on the board.
    29.2 The installation's procedure: NET * RB rebase force while the room is quiet (RB rebase when the gate
         should decide); confirm the radio path takes the forced route; a line in notes_manual.md.
         2026-11-17 (code reading, no board): the radio path is the serial path. RemoteCommandPolicy lets every

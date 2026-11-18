@@ -42,6 +42,13 @@ The 5 V rail is measured with the light at its cap, the hop train playing and th
 - The supply is not the limit: the installation's PeakTech 6226 gives 10 A at 24 V, about 4.7 A is the worst case on
   paper for twelve nodes at 0.5 A (parts list, 2026-11-15).
 
+## Revised 2026-11-18 (owner)
+
+- **The strip is 14 pixels, the default 550 mA.** Full white on 14 pixels estimates 3 x 14 x 13 = 546 mA; light.max_ma
+  starts at 550 (LIGHT_DEFAULT_MA), so the full level is not cut. At the 2026-11-13 ratio (0.31 A real for 500 mA
+  estimated at 20 mA a channel) that is still about 0.5 A of real current or less: the rule above holds. 0.8 A as
+  the default still waits for the closed-case check.
+
 ## Source
 
 Trello, "HW Node-Komponenten V1 (Tryout)" (2026-10-13, "gedimmt, kein zweiter Buck. Harte LED-Stromgrenze in der

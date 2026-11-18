@@ -258,8 +258,8 @@ pins that collide or that the board must not drive.
 // On the stripboards it sits on Aux S2 (GPIO 18, 330 ohm in the data line); elsewhere it is off until a build sets
 // LIGHT_PIN (the breadboard D-AMP nodes leave GPIO 18 free). LIGHT_MAX_MA is the hard ceiling of the board's 5 V for
 // the light: the driver scales every frame to it, and light.max_ma (default LIGHT_DEFAULT_MA) may sit anywhere below
-// it, never above. 0.8 A built in, 0.5 A by default until the closed case holds 0.8 A on the bench
-// (docs/decisions/2026-10-13-light-half-amp-on-board-5v.md, revised 2026-11-15).
+// it, never above. 0.8 A built in, 0.55 A by default until the closed case holds 0.8 A on the bench
+// (docs/decisions/2026-10-13-light-half-amp-on-board-5v.md, revised 2026-11-15 and 2026-11-18).
 #ifndef LIGHT_PIN
 #if defined(BOARD_LOCHRASTER_V1) || defined(BOARD_LOCHRASTER_V2)
 #define LIGHT_PIN AUX_S2_PIN
@@ -270,7 +270,7 @@ pins that collide or that the board must not drive.
 #ifndef LIGHT_PIXELS
 // The node's strip, 14 pixels since 2026-11-18 (owner; docs/decisions/2026-11-13-light-colour-model-and-states.md).
 // The cap holds the strip's total, so fewer pixels means brighter ones: full white estimates 3 x 14 x 13 = 546 mA,
-// 92 % of it under the 500 mA default (28 pixels: 1092 mA, 46 %), the brightest byte about 233 instead of 117.
+// all of it under the 550 mA default (28 pixels under 500: 1092 mA, 46 %), the brightest byte 255 instead of 117.
 #define LIGHT_PIXELS 14
 #endif
 // The strip's "white" (chosen 2026-11-13 by eye on the black RGB reel: equal channels look bluish): LIGHT <pct> dims this.
@@ -287,7 +287,9 @@ pins that collide or that the board must not drive.
 #define LIGHT_MAX_MA 800
 #endif
 #ifndef LIGHT_DEFAULT_MA
-#define LIGHT_DEFAULT_MA 500
+// 550 since 2026-11-18 (owner): full white on the 14-pixel strip estimates 546 mA, so the light's full level is not
+// cut (docs/decisions/2026-10-13-light-half-amp-on-board-5v.md, "Revised 2026-11-18").
+#define LIGHT_DEFAULT_MA 550
 #endif
 
 #include "BoardPinCheck.h"

@@ -501,9 +501,15 @@ substeps marked "on site" wait for those days.
         one. E3's high, bursty floor (e3_selftest.md there) makes its column unusable until its supply or mic is
         checked (step 29).
         2026-11-18, R1 and E2 at about 1 m, 2500-3500 Hz, 10 min a call, both playing (bench/sessions/2026-11-18-
-        bb-all-1m): bb-all 77-83 %, bb-trill 80-86 %, cricket 86-100 %, glide 92-95 %, no invalid verdict. The
-        broadband click costs hearing on this window, more on every pulse than on the trill only. Open: the bb
-        presets on the other windows, and whether the click earns its cost in the room (localisation, 24.1.1).
+        bb-all-1m): bb-all 77-83 %, bb-trill 80-86 %, cricket 86-100 %, glide 92-95 %, no invalid verdict.
+        The same night, one way (tools/bench/hearingtest.py: the listener muted, the player on a 2.5 s silence timer,
+        5 min a block, both directions, two rounds reversed; bench/sessions/2026-11-18-hearingtest): 231-240 calls
+        per call and direction, every one heard (98-100 %), except glide E2 to R1 228 / 238 (92-98 %), whose 10
+        others R1 did detect: their inspect line came, the verdict line was lost on the radio. No invalid verdict,
+        no detector reject, no call unheard. So the dip of the both-playing run was its counting (answer chains,
+        overlapping calls), not the broadband click: at 1 m on 2500-3500 Hz all four calls are heard. E2 also logs a
+        12 ms duration_too_short reject on R1's 300 Hz announce tone, every call. Open: the bb presets on the other
+        windows and at room distance, and whether the click earns its place (localisation, 24.1.1).
    24.4 Further sound modifications, as they come (owner 2026-11-17: expected). Each one gets its own line here with
         its date and params, goes through the same matrix, and is cut or kept before the code freeze.
    The rehearsal (step 25) runs with the trill on.

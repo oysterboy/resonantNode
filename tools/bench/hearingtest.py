@@ -13,12 +13,17 @@ and the silence timer is back at 30000 / 10000.
 
 Outcome per call (the player's "RB emit"), from the listener's lines in the --match seconds after it, best first:
   heard     a verdict valid=1
+  detected  an RB inspect with no verdict before it: the node detected, the radio dropped the verdict line
   invalid   a verdict valid=0 (reject= / failed= say which inspection failed)
   dismissed an "RB reject" line: the detector refused the candidate (reason=: too short / long, weak, coverage, ...)
   missed    nothing at all: no candidate opened, or it was dropped without a reject
 An invalid call carries its RB inspect values (each check: found / needed : value), a dismissed one the detector's
 measurements, a missed one the loudest input of the RB level lines in its window against the onset threshold.
-Listener events outside every call's window are counted as stray. Needs a Node image with the RB reject / inspect /
+Listener events outside every call's window are counted as stray. A call whose window runs past the end of
+the block's log is left out. Only the call itself counts: the low announce tone of an idle call is not a call.
+
+  python tools/bench/hearingtest.py --gateway - --nodes A,B --window L-H --rescore --out <folder>
+re-scores the block logs already in <folder> without touching a board. Needs a Node image with the RB reject / inspect /
 level lines (notes_manual.md, "Hearing test"); an older image gives outcomes without reasons.
 
 Writes block_<n>_<call>_<player>-<listener>.log, calls.csv (one row per call), summary.csv and changes.txt.
@@ -62,24 +67,36 @@ def classify(path, player, listener, match):
         if len(p) < 3:
             continue
         t, who, text = float(p[0]), p[1], p[2]
-        if who == player and text.startswith("RB emit shape="):
+        # An idle call logs two emits: the low announce tone (shape=idle_call ... then=hop), then the call itself.
+        # The announce lies outside the detection window, so counting it would halve every rate.
+        if who == player and text.startswith("RB emit shape=") and not text.startswith("RB emit shape=idle_call"):
             emits.append(t)
         elif who == listener and (text.startswith("RB verdict=") or text.startswith("RB reject ")):
             events.append((t, text))
-        elif who == listener and text.startswith("RB inspect ") and events and events[-1][1].startswith("RB verdict="):
-            events[-1] = (events[-1][0], events[-1][1] + " || " + text)
+        elif who == listener and text.startswith("RB inspect "):
+            # The node prints inspect right after its verdict. An inspect with no verdict before it means the radio
+            # dropped the verdict line: the node did detect, so it is not a miss (seen 2026-11-18, mostly R1).
+            if events and events[-1][1].startswith("RB verdict=") and " || " not in events[-1][1]:
+                events[-1] = (events[-1][0], events[-1][1] + " || " + text)
+            else:
+                events.append((t, text))
         elif who == listener and text.startswith("RB level "):
             levels.append((t, text))
     rows, used = [], set()
-    rank = {"heard": 0, "invalid": 1, "dismissed": 2}
+    rank = {"heard": 0, "detected": 1, "invalid": 2, "dismissed": 3}
+    last = max([te for te, _ in events] + [tl for tl, _ in levels] + emits + [0.0])
     for i, t in enumerate(emits):
+        if t + match > last:
+            continue  # the block's log closed before an answer could arrive; neither heard nor missed
         end = min(t + match, emits[i + 1] if i + 1 < len(emits) else t + match)
         best, detail = "missed", ""
         for j, (te, text) in enumerate(events):
             if te < t or te >= end:
                 continue
             used.add(j)
-            if text.startswith("RB verdict="):
+            if text.startswith("RB inspect "):
+                kind, why = "detected", "verdict line lost [%s]" % text[len("RB inspect "):]
+            elif text.startswith("RB verdict="):
                 kind = "heard" if "valid=1" in text else "invalid"
                 why = "" if kind == "heard" else "%s/%s" % (field(text, "reject"), field(text, "failed"))
                 why += " dur=%s" % field(text, "duration_ms")
@@ -115,8 +132,42 @@ def main():
     ap.add_argument("--match", type=float, default=1.5, help="seconds after a call that count for it")
     ap.add_argument("--settle", type=int, default=8)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--rescore", action="store_true", help="re-classify the block logs in --out, no boards touched")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
+    tally = collections.defaultdict(collections.Counter)
+    reasons = collections.defaultdict(collections.Counter)
+    allrows = []
+
+    def score(block, rnd, call, player, listener, path):
+        rows, stray = classify(path, player, listener, a.match)
+        key = (call, "%s->%s" % (player, listener))
+        c = collections.Counter(o for _, o, _ in rows)
+        tally[key].update(c)
+        tally[key]["stray"] += stray
+        for _, o, d in rows:
+            if o in ("detected", "invalid", "dismissed", "missed") and d:
+                reasons[key][o + " " + d.split(" ")[0]] += 1
+        for t, o, d in rows:
+            allrows.append([block, rnd, call, player, listener, "%.2f" % t, o, d])
+        with open(os.path.join(a.out, "calls.csv"), "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["block", "round", "call", "player", "listener", "t", "outcome", "detail"])
+            w.writerows(allrows)
+        write_summary(a.out, tally, reasons)
+        return "  calls=%d heard=%d detected=%d invalid=%d dismissed=%d missed=%d stray=%d" % (
+            len(rows), c["heard"], c["detected"], c["invalid"], c["dismissed"], c["missed"], stray)
+
+    if a.rescore:
+        logs = sorted(f for f in os.listdir(a.out) if f.startswith("block_") and f.endswith(".log"))
+        per_round = 2 * len({f.split("_")[2] for f in logs})
+        for f in logs:
+            _, n, call, pair = f[:-4].split("_")
+            player, listener = pair.split("-")
+            print(f, score(int(n), (int(n) - 1) // per_round + 1, call, player, listener, os.path.join(a.out, f)))
+        for line in open(os.path.join(a.out, "summary.csv"), encoding="utf-8"):
+            print(line.rstrip())
+        return
     gw = nodepreset.parse(a.gateway)[0]
     x, y = [n for n in a.nodes.split(",") if n][:2]
     calls = [c for c in a.calls.split(",") if c]
@@ -131,9 +182,6 @@ def main():
     def send(cmds, targets):
         nodepreset.apply_radio(gw, targets, cmds)
 
-    tally = collections.defaultdict(collections.Counter)
-    reasons = collections.defaultdict(collections.Counter)
-    allrows = []
     block = 0
     for r in range(a.rounds):
         order = calls if r % 2 == 0 else calls[::-1]
@@ -167,23 +215,7 @@ def main():
                                 f.write("%.2f %s %s\n" % (time.time() - t0, m.group(1), m.group(2)))
                 s.close()
                 send(["PARAM SET output.silent 1"], [player])
-                rows, stray = classify(path, player, listener, a.match)
-                key = (call, "%s->%s" % (player, listener))
-                c = collections.Counter(o for _, o, _ in rows)
-                tally[key].update(c)
-                tally[key]["stray"] += stray
-                for _, o, d in rows:
-                    if o in ("invalid", "dismissed", "missed") and d:
-                        reasons[key][o + " " + d.split(" ")[0]] += 1
-                for t, o, d in rows:
-                    allrows.append([block, r + 1, call, player, listener, "%.2f" % t, o, d])
-                say("  calls=%d heard=%d invalid=%d dismissed=%d missed=%d stray=%d"
-                    % (len(rows), c["heard"], c["invalid"], c["dismissed"], c["missed"], stray))
-                with open(os.path.join(a.out, "calls.csv"), "w", newline="", encoding="utf-8") as f:
-                    w = csv.writer(f)
-                    w.writerow(["block", "round", "call", "player", "listener", "t", "outcome", "detail"])
-                    w.writerows(allrows)
-                write_summary(a.out, tally, reasons)
+                say(score(block, r + 1, call, player, listener, path))
     send(["PARAM SET output.silent 1", "PARAM SET behavior.call_after_silence_ms 30000",
           "PARAM SET behavior.call_after_silence_spread_ms 10000"], [x, y])
     say("done: both muted, silence timer back at 30000 / 10000 (live)")
@@ -194,14 +226,14 @@ def main():
 def write_summary(out, tally, reasons):
     with open(os.path.join(out, "summary.csv"), "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["call", "direction", "calls", "heard", "heard_pct", "range95", "invalid", "dismissed", "missed",
-                    "stray", "reasons"])
+        w.writerow(["call", "direction", "calls", "heard", "heard_pct", "range95", "detected", "invalid", "dismissed",
+                    "missed", "stray", "reasons"])
         for (call, d), c in sorted(tally.items()):
-            n = c["heard"] + c["invalid"] + c["dismissed"] + c["missed"]
+            n = c["heard"] + c["detected"] + c["invalid"] + c["dismissed"] + c["missed"]
             lo, hi = wilson(c["heard"], n)
             top = "; ".join("%s x%d" % (k, v) for k, v in reasons[(call, d)].most_common(4))
             w.writerow([call, d, n, c["heard"], round(100 * c["heard"] / n) if n else "", "%s-%s" % (lo, hi),
-                        c["invalid"], c["dismissed"], c["missed"], c["stray"], top])
+                        c["detected"], c["invalid"], c["dismissed"], c["missed"], c["stray"], top])
 
 
 if __name__ == "__main__":

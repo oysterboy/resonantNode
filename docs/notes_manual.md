@@ -517,8 +517,9 @@ muted (it still detects), then the other way round; the player calls on a short 
 so every call is one independent trial. Blocks interleave the calls, reversed every other round. Ends with both muted
 and the silence timer back at 30000 / 10000.
 
-Per call it writes heard / invalid / dismissed / missed and the reason (calls.csv), per call and direction the rate
-with its 95 % range (summary.csv). The reasons come from three lines the Node prints under `RB log full`, mirrored by
+Per call it writes heard / detected / invalid / dismissed / missed and the reason (calls.csv), per call and direction
+the rate with its 95 % range (summary.csv). "Detected" is an inspect line whose verdict line the radio dropped: the
+Node heard, the rate does not count it. `--rescore` re-scores a session's logs without touching a board. The reasons come from three lines the Node prints under `RB log full`, mirrored by
 the radio log (`node.radio_log`):
 
 ```text

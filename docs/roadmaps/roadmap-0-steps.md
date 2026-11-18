@@ -498,8 +498,12 @@ substeps marked "on site" wait for those days.
         rings longer up there: the 375 ms call reads 432-446 ms against the 450 maximum, R1 logged none). So the
         trill as set holds only on the middle windows; a shorter trill for the high ones is the next try (a preset
         change). The analysis window of heard_by.py (0.4 s) is too short for the trill; callmatrix.py counts without
-        one. Open: the broadband presets (24.1.1 / 24.1.2) through the same matrix; E3's high, bursty floor
-        (e3_selftest.md there) makes its column unusable until its supply or mic is checked (step 29).
+        one. E3's high, bursty floor (e3_selftest.md there) makes its column unusable until its supply or mic is
+        checked (step 29).
+        2026-11-18, R1 and E2 at about 1 m, 2500-3500 Hz, 10 min a call, both playing (bench/sessions/2026-11-18-
+        bb-all-1m): bb-all 77-83 %, bb-trill 80-86 %, cricket 86-100 %, glide 92-95 %, no invalid verdict. The
+        broadband click costs hearing on this window, more on every pulse than on the trill only. Open: the bb
+        presets on the other windows, and whether the click earns its cost in the room (localisation, 24.1.1).
    24.4 Further sound modifications, as they come (owner 2026-11-17: expected). Each one gets its own line here with
         its date and params, goes through the same matrix, and is cut or kept before the code freeze.
    The rehearsal (step 25) runs with the trill on.

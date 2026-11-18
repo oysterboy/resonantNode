@@ -11,7 +11,7 @@ import sys
 
 DIR = "tools/bench/presets"
 OUT = sys.argv[1]
-ORDER = ["glide", "lowwindow", "cricket", "wide", "low", "deep", "calm", "quiet"]
+ORDER = ["glide", "cricket", "bb-all", "bb-trill", "lowwindow", "wide", "low", "deep", "calm", "quiet"]
 
 
 def read(name):
@@ -61,6 +61,13 @@ for n in names:
     for c in other:
         rows.append('<tr><td class="path" colspan="3">%s</td></tr>' % e(c))
     note = "".join("<p class=\"note\">%s</p>" % e(x) for x in notes)
+    if not full:
+        det = [(path, value) for path, value in sets if path.startswith("detection.") and base.get(path) != value]
+        if det:
+            note += '<p class="det"><strong>Detection changes against glide:</strong> %s</p>' % ", ".join(
+                "<code>%s</code> %s (glide %s)" % (e(pth), e(v), e(base.get(pth, "unset"))) for pth, v in det)
+        else:
+            note += '<p class="det none">No detection changes against glide.</p>'
     body = ('<details%s><summary>%d settings</summary><div class="tw"><table>%s</table></div></details>'
             % ("" if full else " open", len(sets) + len(other), "".join(rows)))
     cards.append("""<section class="preset" id="%s">
@@ -113,6 +120,8 @@ nav a:hover, nav a:focus-visible { border-color: var(--accent); outline: none; }
   border: 1px solid var(--accent); border-radius: 4px; padding: 1px 6px; }
 .what { margin: 0; max-width: 70ch; }
 .note { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+.det { margin: 0; padding: 6px 10px; border-left: 3px solid var(--diff); background: var(--diffbg); max-width: 70ch; font-size: 14px; }
+.det.none { border-left-color: var(--line); background: transparent; color: var(--muted); }
 .cmd { margin: 0; background: var(--codebg); border-radius: 6px; padding: 8px 12px; overflow-x: auto; }
 summary { cursor: pointer; color: var(--muted); font-size: 14px; }
 summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

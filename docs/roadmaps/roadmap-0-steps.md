@@ -432,6 +432,12 @@ substeps marked "on site" wait for those days.
    roadmap-node.md NODE-020. Owner 2026-11-17: observation first.
    29.1 Observe: audio.baseline and the baseline state of every board (NET * RB STATUS), at a few moments of a
         day and after a boot; PARAM load stored= read first. Boards or moments? A lab note in docs/lab/.
+        2026-11-16 19:20-19:30, every board muted (bench/sessions/2026-11-16-call-matrix/e3_selftest.md): quiet
+        audio.level R1 2-62, E2 10-82, E3 106-200; SELFTEST mic floor_mean / peak E2 706 / 16274, E3 1429-1547 /
+        27-28k; a quiet-gated RB rebase found 1 s of quiet on E2 in 3 s, on E3 not in 20 s (bursts above the gate
+        of 400), then passed twice; E3's boot after an OTA ended in FAILED_NO_QUIET and ran without a baseline
+        until the rebase. E3 also reboots within 10-35 s whenever it may play (output.silent 1 saved since). Board,
+        not room; its supply or mic to be checked by the owner.
    29.2 The installation's procedure: NET * RB rebase force while the room is quiet (RB rebase when the gate
         should decide); confirm the radio path takes the forced route; a line in notes_manual.md.
         2026-11-17 (code reading, no board): the radio path is the serial path. RemoteCommandPolicy lets every
@@ -481,7 +487,17 @@ substeps marked "on site" wait for those days.
         setup, complete (50 params, 24 detection) and kept in the tree: applying it puts any board back, and a
         change to a default is made in the code and in glide.preset in the same commit.
    24.3 Measure: tools/bench/callmatrix.py (3ab2dd4), the detection rate per call and window through the gateway,
-        for the plain train, the trill and each preset in use. Open: the runs and their bench/sessions/ paths.
+        for the plain train, the trill and each preset in use. 2026-11-16, R1 and E2 playing, E3 a muted listener
+        (bench/sessions/2026-11-16-call-matrix, -cricket-field, -low-window-field; 10 min a cell, one window each,
+        the rate as the listener's valid detections over the other's calls): glide 77-89 % on all five windows
+        (250-1250 .. 5500-6500 Hz); cricket 76-93 % on 1250-2250, 2500-3500 and 4000-5000 (2500-3500: glide 86-87,
+        cricket 76-82), but 13-56 % on 250-1250 (E2 and E3 hear only the glide, ~121 / 86 ms: the low trill is not
+        carried; R1 hears the whole call and rejects most, reason not printed) and 0-38 % on 5500-6500 (the room
+        rings longer up there: the 375 ms call reads 432-446 ms against the 450 maximum, R1 logged none). So the
+        trill as set holds only on the middle windows; a shorter trill for the high ones is the next try (a preset
+        change). The analysis window of heard_by.py (0.4 s) is too short for the trill; callmatrix.py counts without
+        one. Open: the broadband presets (24.1.1 / 24.1.2) through the same matrix; E3's high, bursty floor
+        (e3_selftest.md there) makes its column unusable until its supply or mic is checked (step 29).
    24.4 Further sound modifications, as they come (owner 2026-11-17: expected). Each one gets its own line here with
         its date and params, goes through the same matrix, and is cut or kept before the code freeze.
    The rehearsal (step 25) runs with the trill on.

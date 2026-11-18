@@ -1,0 +1,681 @@
+13.02 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+16.67 E2 BEH verdict=none heard=0 now=1003737 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+16.67 E2 BEH emit start now=1003737 source=idle state=Chirping pattern=idle
+16.67 E2 RB emit accepted source=idle state=Chirping pattern=idle
+16.67 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+16.87 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+17.32 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7231 duration_ms=380 profile=TonalPulseScalar
+17.65 R1 BEH verdict=single_pulse heard=3294703 now=3295035 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+17.65 R1 BEH emit start now=3295035 source=heard_pattern state=Chirping pattern=single
+17.65 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+17.65 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+18.07 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6121 duration_ms=379 profile=TonalPulseScalar
+18.95 E2 BEH verdict=single_pulse heard=1005125 now=1006013 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+18.95 E2 BEH emit start now=1006013 source=heard_pattern state=Chirping pattern=single
+18.95 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+18.95 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+19.39 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7229 duration_ms=380 profile=TonalPulseScalar
+19.71 R1 BEH verdict=single_pulse heard=3296759 now=3297095 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+19.71 R1 BEH emit start now=3297095 source=heard_pattern state=Chirping pattern=single
+19.71 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+19.71 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+20.13 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6124 duration_ms=379 profile=TonalPulseScalar
+20.61 E2 BEH verdict=single_pulse heard=1007189 now=1007658 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+20.61 E2 BEH emit start now=1007658 source=heard_pattern state=Chirping pattern=single
+20.61 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+20.61 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+21.03 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7242 duration_ms=380 profile=TonalPulseScalar
+21.65 R1 BEH verdict=single_pulse heard=3298407 now=3299027 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+21.65 R1 BEH emit start now=3299027 source=heard_pattern state=Chirping pattern=single
+21.65 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+21.65 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+22.07 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6118 duration_ms=379 profile=TonalPulseScalar
+22.46 E2 BEH verdict=single_pulse heard=1009117 now=1009504 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+22.46 E2 BEH emit start now=1009504 source=heard_pattern state=Chirping pattern=single
+22.46 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+22.46 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+22.88 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7191 duration_ms=380 profile=TonalPulseScalar
+23.27 R1 BEH verdict=single_pulse heard=3300255 now=3300644 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+23.27 R1 BEH emit start now=3300644 source=heard_pattern state=Chirping pattern=single
+23.27 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+23.27 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+23.68 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6117 duration_ms=379 profile=TonalPulseScalar
+24.02 E2 BEH verdict=single_pulse heard=1010733 now=1011077 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+24.02 E2 BEH emit start now=1011077 source=heard_pattern state=Chirping pattern=single
+24.02 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+24.02 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+24.44 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7196 duration_ms=380 profile=TonalPulseScalar
+24.55 R1 BEH verdict=single_pulse heard=3301823 now=3301936 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+24.55 R1 BEH emit start now=3301936 source=heard_pattern state=Chirping pattern=single
+24.55 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+24.55 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+24.98 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6110 duration_ms=379 profile=TonalPulseScalar
+25.66 E2 BEH verdict=single_pulse heard=1012029 now=1012725 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+25.66 E2 BEH emit start now=1012725 source=heard_pattern state=Chirping pattern=single
+25.66 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+25.66 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+26.08 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7189 duration_ms=381 profile=TonalPulseScalar
+53.90 R1 BEH verdict=single_pulse heard=3303472 now=3331287 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+53.90 R1 BEH emit start now=3331287 source=idle state=Chirping pattern=idle
+53.90 R1 RB emit accepted source=idle state=Chirping pattern=idle
+53.90 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+54.13 E2 BEH emit start now=1041205 source=idle state=Chirping pattern=idle
+54.13 E2 RB emit accepted source=idle state=Chirping pattern=idle
+54.13 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+54.35 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+54.58 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+55.03 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6024 duration_ms=202 profile=TonalPulseScalar
+55.67 E2 BEH verdict=single_pulse heard=1042077 now=1042727 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+55.67 E2 BEH emit start now=1042727 source=heard_pattern state=Chirping pattern=single
+55.67 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+55.67 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+56.09 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6979 duration_ms=381 profile=TonalPulseScalar
+57.07 R1 BEH verdict=single_pulse heard=3333472 now=3334444 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+57.07 R1 BEH emit start now=3334444 source=heard_pattern state=Chirping pattern=single
+57.07 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+57.07 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+57.47 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6146 duration_ms=379 profile=TonalPulseScalar
+58.45 E2 BEH verdict=single_pulse heard=1044532 now=1045497 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+58.45 E2 BEH emit start now=1045497 source=heard_pattern state=Chirping pattern=single
+58.45 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+58.45 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+58.87 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6994 duration_ms=381 profile=TonalPulseScalar
+59.61 R1 BEH verdict=single_pulse heard=3336248 now=3336995 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+59.61 R1 BEH emit start now=3336995 source=heard_pattern state=Chirping pattern=single
+59.61 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+59.61 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+60.03 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6218 duration_ms=379 profile=TonalPulseScalar
+89.14 E2 BEH verdict=single_pulse heard=1047084 now=1076191 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+89.14 E2 BEH emit start now=1076191 source=idle state=Chirping pattern=idle
+89.14 E2 RB emit accepted source=idle state=Chirping pattern=idle
+89.14 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+89.32 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+92.53 R1 BEH verdict=single_pulse heard=3367160 now=3369915 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+92.53 R1 BEH emit start now=3369915 source=idle state=Chirping pattern=idle
+92.53 R1 RB emit accepted source=idle state=Chirping pattern=idle
+92.53 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+93.20 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+93.65 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6015 duration_ms=380 profile=TonalPulseScalar
+94.39 E2 BEH verdict=single_pulse heard=1080708 now=1081445 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+94.39 E2 BEH emit start now=1081445 source=heard_pattern state=Chirping pattern=single
+94.39 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+94.39 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+94.81 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6982 duration_ms=380 profile=TonalPulseScalar
+95.06 R1 BEH verdict=single_pulse heard=3372192 now=3372443 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+95.06 R1 BEH emit start now=3372443 source=heard_pattern state=Chirping pattern=single
+95.06 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+95.06 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+95.48 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6118 duration_ms=380 profile=TonalPulseScalar
+95.88 E2 BEH verdict=single_pulse heard=1082533 now=1082930 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+95.88 E2 BEH emit start now=1082930 source=heard_pattern state=Chirping pattern=single
+95.88 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+95.88 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+96.30 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7000 duration_ms=380 profile=TonalPulseScalar
+97.11 R1 BEH verdict=single_pulse heard=3373680 now=3374475 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+97.11 R1 BEH emit start now=3374475 source=heard_pattern state=Chirping pattern=single
+97.11 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+97.11 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+97.57 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6162 duration_ms=380 profile=TonalPulseScalar
+97.57 E2 BEH verdict=single_pulse heard=1084564 now=1084622 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+97.57 E2 BEH emit start now=1084622 source=heard_pattern state=Chirping pattern=single
+97.57 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+97.57 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+97.99 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6931 duration_ms=380 profile=TonalPulseScalar
+98.35 R1 BEH verdict=single_pulse heard=3375368 now=3375739 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+98.35 R1 BEH emit start now=3375739 source=heard_pattern state=Chirping pattern=single
+98.35 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+98.35 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+98.77 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6164 duration_ms=380 profile=TonalPulseScalar
+129.72 R1 BEH emit start now=3407117 source=idle state=Chirping pattern=idle
+129.72 R1 RB emit accepted source=idle state=Chirping pattern=idle
+129.72 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+130.40 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+130.85 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6019 duration_ms=379 profile=TonalPulseScalar
+131.07 E2 BEH verdict=single_pulse heard=1117907 now=1118118 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+131.07 E2 BEH emit start now=1118118 source=heard_pattern state=Chirping pattern=single
+131.07 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+131.07 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+131.48 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7036 duration_ms=380 profile=TonalPulseScalar
+132.01 R1 BEH verdict=single_pulse heard=3408865 now=3409387 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+132.01 R1 BEH emit start now=3409387 source=heard_pattern state=Chirping pattern=single
+132.01 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+132.01 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+132.43 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6067 duration_ms=379 profile=TonalPulseScalar
+132.55 E2 BEH verdict=single_pulse heard=1119475 now=1119608 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+132.55 E2 BEH emit start now=1119608 source=heard_pattern state=Chirping pattern=single
+132.55 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+132.55 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+132.97 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7025 duration_ms=380 profile=TonalPulseScalar
+158.56 R1 BEH verdict=single_pulse heard=3410361 now=3435951 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+158.56 R1 BEH emit start now=3435951 source=idle state=Chirping pattern=idle
+158.56 R1 RB emit accepted source=idle state=Chirping pattern=idle
+158.56 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+159.24 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+159.69 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6121 duration_ms=380 profile=TonalPulseScalar
+160.05 E2 BEH verdict=single_pulse heard=1146739 now=1147095 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+160.05 E2 BEH emit start now=1147095 source=heard_pattern state=Chirping pattern=single
+160.05 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+160.05 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+160.46 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6979 duration_ms=381 profile=TonalPulseScalar
+160.92 R1 BEH verdict=single_pulse heard=3437842 now=3438291 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+160.92 R1 BEH emit start now=3438291 source=heard_pattern state=Chirping pattern=single
+160.92 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+160.92 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+161.34 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6114 duration_ms=380 profile=TonalPulseScalar
+161.85 E2 BEH verdict=single_pulse heard=1148379 now=1148904 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+161.85 E2 BEH emit start now=1148904 source=heard_pattern state=Chirping pattern=single
+161.85 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+161.85 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+162.29 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6980 duration_ms=381 profile=TonalPulseScalar
+163.04 R1 BEH verdict=single_pulse heard=3439658 now=3440427 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+163.04 R1 BEH emit start now=3440427 source=heard_pattern state=Chirping pattern=single
+163.04 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+163.04 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+163.46 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6277 duration_ms=380 profile=TonalPulseScalar
+164.11 E2 BEH verdict=single_pulse heard=1150515 now=1151169 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+164.11 E2 BEH emit start now=1151169 source=heard_pattern state=Chirping pattern=single
+164.11 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+164.11 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+164.53 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6994 duration_ms=381 profile=TonalPulseScalar
+165.32 R1 BEH verdict=single_pulse heard=3441922 now=3442707 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+165.32 R1 BEH emit start now=3442707 source=heard_pattern state=Chirping pattern=single
+165.32 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+165.32 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+165.74 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6423 duration_ms=380 profile=TonalPulseScalar
+166.08 E2 BEH verdict=single_pulse heard=1152795 now=1153135 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+166.08 E2 BEH emit start now=1153135 source=heard_pattern state=Chirping pattern=single
+166.08 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+166.08 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+166.50 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6969 duration_ms=381 profile=TonalPulseScalar
+167.26 R1 BEH verdict=single_pulse heard=3443882 now=3444624 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+167.26 R1 BEH emit start now=3444624 source=heard_pattern state=Chirping pattern=single
+167.26 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+167.26 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+167.66 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6353 duration_ms=379 profile=TonalPulseScalar
+167.96 E2 BEH verdict=single_pulse heard=1154714 now=1155015 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+167.96 E2 BEH emit start now=1155015 source=heard_pattern state=Chirping pattern=single
+167.96 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+167.96 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+168.38 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7032 duration_ms=381 profile=TonalPulseScalar
+168.53 R1 BEH verdict=single_pulse heard=3445762 now=3445911 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+168.53 R1 BEH emit start now=3445911 source=heard_pattern state=Chirping pattern=single
+168.53 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+168.53 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+168.95 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6274 duration_ms=379 profile=TonalPulseScalar
+169.34 E2 BEH verdict=single_pulse heard=1156002 now=1156389 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+169.34 E2 BEH emit start now=1156389 source=heard_pattern state=Chirping pattern=single
+169.34 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+169.34 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+169.76 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7040 duration_ms=381 profile=TonalPulseScalar
+193.26 R1 BEH verdict=single_pulse heard=3447138 now=3470644 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+193.26 R1 BEH emit start now=3470644 source=idle state=Chirping pattern=idle
+193.26 R1 RB emit accepted source=idle state=Chirping pattern=idle
+193.26 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+193.94 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+194.39 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6057 duration_ms=379 profile=TonalPulseScalar
+195.29 E2 BEH verdict=single_pulse heard=1181434 now=1182343 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+195.29 E2 BEH emit start now=1182343 source=heard_pattern state=Chirping pattern=single
+195.29 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+195.29 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+195.71 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7097 duration_ms=380 profile=TonalPulseScalar
+196.48 R1 BEH verdict=single_pulse heard=3473090 now=3473859 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+196.48 R1 BEH emit start now=3473859 source=heard_pattern state=Chirping pattern=single
+196.48 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+196.48 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+196.90 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6082 duration_ms=379 profile=TonalPulseScalar
+197.79 E2 BEH verdict=single_pulse heard=1183946 now=1184837 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+197.79 E2 BEH emit start now=1184837 source=heard_pattern state=Chirping pattern=single
+197.79 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+197.79 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+198.20 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7146 duration_ms=380 profile=TonalPulseScalar
+199.18 R1 BEH verdict=single_pulse heard=3475586 now=3476571 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+199.18 R1 BEH emit start now=3476571 source=heard_pattern state=Chirping pattern=single
+199.18 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+199.18 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+199.60 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6107 duration_ms=379 profile=TonalPulseScalar
+200.39 E2 BEH verdict=single_pulse heard=1186658 now=1187447 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+200.39 E2 BEH emit start now=1187447 source=heard_pattern state=Chirping pattern=single
+200.39 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+200.39 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+200.81 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7164 duration_ms=380 profile=TonalPulseScalar
+201.48 R1 BEH verdict=single_pulse heard=3478194 now=3478848 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+201.48 R1 BEH emit start now=3478848 source=heard_pattern state=Chirping pattern=single
+201.48 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+201.48 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+201.91 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6134 duration_ms=379 profile=TonalPulseScalar
+202.61 E2 BEH verdict=single_pulse heard=1188938 now=1189649 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+202.61 E2 BEH emit start now=1189649 source=heard_pattern state=Chirping pattern=single
+202.61 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+202.61 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+203.02 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7161 duration_ms=380 profile=TonalPulseScalar
+203.72 R1 BEH verdict=single_pulse heard=3480402 now=3481099 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+203.72 R1 BEH emit start now=3481099 source=heard_pattern state=Chirping pattern=single
+203.72 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+203.72 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+204.14 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6136 duration_ms=379 profile=TonalPulseScalar
+204.33 E2 BEH verdict=single_pulse heard=1191186 now=1191383 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+204.33 E2 BEH emit start now=1191383 source=heard_pattern state=Chirping pattern=single
+204.33 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+204.33 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+204.74 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7175 duration_ms=380 profile=TonalPulseScalar
+205.44 R1 BEH verdict=single_pulse heard=3482130 now=3482819 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+205.44 R1 BEH emit start now=3482819 source=heard_pattern state=Chirping pattern=single
+205.44 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+205.44 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+205.85 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6158 duration_ms=379 profile=TonalPulseScalar
+206.29 E2 BEH verdict=single_pulse heard=1192906 now=1193333 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+206.29 E2 BEH emit start now=1193333 source=heard_pattern state=Chirping pattern=single
+206.29 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+206.29 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+206.71 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7173 duration_ms=380 profile=TonalPulseScalar
+207.11 R1 BEH verdict=single_pulse heard=3484082 now=3484486 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+207.11 R1 BEH emit start now=3484486 source=heard_pattern state=Chirping pattern=single
+207.11 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+207.11 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+207.53 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6166 duration_ms=378 profile=TonalPulseScalar
+208.06 E2 BEH verdict=single_pulse heard=1194569 now=1195113 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+208.06 E2 BEH emit start now=1195113 source=heard_pattern state=Chirping pattern=single
+208.06 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+208.06 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+208.49 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7152 duration_ms=380 profile=TonalPulseScalar
+208.77 R1 BEH verdict=single_pulse heard=3485866 now=3486155 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+208.77 R1 BEH emit start now=3486155 source=heard_pattern state=Chirping pattern=single
+208.77 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+208.77 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+209.19 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6145 duration_ms=379 profile=TonalPulseScalar
+210.06 E2 BEH verdict=single_pulse heard=1196242 now=1197106 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+210.06 E2 BEH emit start now=1197106 source=heard_pattern state=Chirping pattern=single
+210.06 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+210.06 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+210.48 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7156 duration_ms=380 profile=TonalPulseScalar
+210.99 R1 BEH verdict=single_pulse heard=3487858 now=3488380 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+210.99 R1 BEH emit start now=3488380 source=heard_pattern state=Chirping pattern=single
+210.99 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+210.99 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+211.41 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6198 duration_ms=379 profile=TonalPulseScalar
+233.43 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+241.70 R1 BEH emit start now=3519107 source=idle state=Chirping pattern=idle
+241.70 R1 RB emit accepted source=idle state=Chirping pattern=idle
+241.70 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+242.40 E2 BEH verdict=single_pulse heard=1198466 now=1229405 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+242.40 E2 BEH emit start now=1229405 source=idle state=Chirping pattern=idle
+242.40 E2 RB emit accepted source=idle state=Chirping pattern=idle
+242.40 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+242.40 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+242.54 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+242.99 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7082 duration_ms=111 profile=TonalPulseScalar
+243.87 R1 BEH verdict=single_pulse heard=3520379 now=3521236 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+243.87 R1 BEH emit start now=3521236 source=heard_pattern state=Chirping pattern=single
+243.87 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+243.87 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+244.28 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6168 duration_ms=379 profile=TonalPulseScalar
+244.76 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+244.76 E3 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+244.76 E3 RB plan_check status=warn history_needed_ms=560 history_ms=576 early_window_ms=20 issues=window_after_inspection
+262.66 E2 BEH verdict=single_pulse heard=1231321 now=1249712 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+262.66 E2 BEH emit start now=1249712 source=idle state=Chirping pattern=idle
+262.66 E2 RB emit accepted source=idle state=Chirping pattern=idle
+262.66 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+262.88 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+263.44 R1 BEH verdict=single_pulse heard=3540683 now=3540808 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+263.44 R1 BEH emit start now=3540808 source=heard_pattern state=Chirping pattern=single
+263.44 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+263.44 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+263.93 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6247 duration_ms=379 profile=TonalPulseScalar
+263.93 E2 BEH verdict=single_pulse heard=1250896 now=1250935 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+263.93 E2 BEH emit start now=1250935 source=heard_pattern state=Chirping pattern=single
+263.93 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+263.93 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+264.30 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7026 duration_ms=380 profile=TonalPulseScalar
+264.97 R1 BEH verdict=single_pulse heard=3541683 now=3542355 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+264.97 R1 BEH emit start now=3542355 source=heard_pattern state=Chirping pattern=single
+264.97 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+264.97 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+265.40 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6258 duration_ms=380 profile=TonalPulseScalar
+266.08 E2 BEH verdict=single_pulse heard=1252442 now=1253128 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+266.08 E2 BEH emit start now=1253128 source=heard_pattern state=Chirping pattern=single
+266.08 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+266.08 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+266.50 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7096 duration_ms=380 profile=TonalPulseScalar
+267.42 R1 BEH verdict=single_pulse heard=3543883 now=3544803 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+267.42 R1 BEH emit start now=3544803 source=heard_pattern state=Chirping pattern=single
+267.42 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+267.42 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+267.84 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6275 duration_ms=380 profile=TonalPulseScalar
+268.50 E2 BEH verdict=single_pulse heard=1254890 now=1255549 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+268.50 E2 BEH emit start now=1255549 source=heard_pattern state=Chirping pattern=single
+268.50 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+268.50 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+268.92 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7112 duration_ms=380 profile=TonalPulseScalar
+269.42 R1 BEH verdict=single_pulse heard=3546299 now=3546807 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+269.42 R1 BEH emit start now=3546807 source=heard_pattern state=Chirping pattern=single
+269.42 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+269.42 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+269.85 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6248 duration_ms=379 profile=TonalPulseScalar
+291.75 R1 BEH emit start now=3569152 source=idle state=Chirping pattern=idle
+291.75 R1 RB emit accepted source=idle state=Chirping pattern=idle
+291.75 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+292.45 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+292.90 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5926 duration_ms=379 profile=TonalPulseScalar
+293.01 E2 BEH verdict=single_pulse heard=1279936 now=1280053 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+293.01 E2 BEH emit start now=1280053 source=heard_pattern state=Chirping pattern=single
+293.01 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+293.01 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+293.43 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7047 duration_ms=381 profile=TonalPulseScalar
+294.42 R1 BEH verdict=single_pulse heard=3570804 now=3571799 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+294.42 R1 BEH emit start now=3571799 source=heard_pattern state=Chirping pattern=single
+294.42 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+294.42 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+294.93 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5965 duration_ms=379 profile=TonalPulseScalar
+294.93 E2 BEH verdict=single_pulse heard=1281888 now=1281981 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+294.93 E2 BEH emit start now=1281981 source=heard_pattern state=Chirping pattern=single
+294.93 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+294.93 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+295.35 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7117 duration_ms=381 profile=TonalPulseScalar
+296.23 R1 BEH verdict=single_pulse heard=3572732 now=3573611 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+296.23 R1 BEH emit start now=3573611 source=heard_pattern state=Chirping pattern=single
+296.23 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+296.23 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+296.65 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5971 duration_ms=379 profile=TonalPulseScalar
+297.47 E2 BEH verdict=single_pulse heard=1283696 now=1284518 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+297.47 E2 BEH emit start now=1284518 source=heard_pattern state=Chirping pattern=single
+297.47 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+297.47 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+298.00 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7075 duration_ms=381 profile=TonalPulseScalar
+298.00 R1 BEH verdict=single_pulse heard=3575268 now=3575360 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+298.00 R1 BEH emit start now=3575360 source=heard_pattern state=Chirping pattern=single
+298.00 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+298.00 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+298.41 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5968 duration_ms=379 profile=TonalPulseScalar
+298.79 E2 BEH verdict=single_pulse heard=1285448 now=1285839 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+298.79 E2 BEH emit start now=1285839 source=heard_pattern state=Chirping pattern=single
+298.79 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+298.79 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+299.21 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7079 duration_ms=381 profile=TonalPulseScalar
+300.03 R1 BEH verdict=single_pulse heard=3576588 now=3577414 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+300.03 R1 BEH emit start now=3577414 source=heard_pattern state=Chirping pattern=single
+300.03 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+300.03 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+300.45 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5950 duration_ms=379 profile=TonalPulseScalar
+300.67 E2 BEH verdict=single_pulse heard=1287496 now=1287714 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+300.67 E2 BEH emit start now=1287714 source=heard_pattern state=Chirping pattern=single
+300.67 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+300.67 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+301.09 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7100 duration_ms=381 profile=TonalPulseScalar
+301.63 R1 BEH verdict=single_pulse heard=3578468 now=3579011 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+301.63 R1 BEH emit start now=3579011 source=heard_pattern state=Chirping pattern=single
+301.63 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+301.63 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+302.06 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5996 duration_ms=379 profile=TonalPulseScalar
+302.20 E2 BEH verdict=single_pulse heard=1289096 now=1289245 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+302.20 E2 BEH emit start now=1289245 source=heard_pattern state=Chirping pattern=single
+302.20 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+302.20 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+302.62 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7101 duration_ms=381 profile=TonalPulseScalar
+303.21 R1 BEH verdict=single_pulse heard=3579996 now=3580599 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+303.21 R1 BEH emit start now=3580599 source=heard_pattern state=Chirping pattern=single
+303.21 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+303.70 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6005 duration_ms=379 profile=TonalPulseScalar
+303.70 E2 BEH verdict=single_pulse heard=1290688 now=1290757 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+303.70 E2 BEH emit start now=1290757 source=heard_pattern state=Chirping pattern=single
+303.70 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+303.70 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+304.17 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7090 duration_ms=380 profile=TonalPulseScalar
+304.17 R1 BEH verdict=single_pulse heard=3581508 now=3581548 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+304.17 R1 BEH emit start now=3581548 source=heard_pattern state=Chirping pattern=single
+304.17 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+304.17 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+304.59 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6033 duration_ms=379 profile=TonalPulseScalar
+304.81 E2 BEH verdict=single_pulse heard=1291632 now=1291853 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+304.81 E2 BEH emit start now=1291853 source=heard_pattern state=Chirping pattern=single
+304.81 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+304.81 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+305.24 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+305.24 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7076 duration_ms=380 profile=TonalPulseScalar
+305.49 R1 BEH verdict=single_pulse heard=3582604 now=3582860 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+305.49 R1 BEH emit start now=3582860 source=heard_pattern state=Chirping pattern=single
+305.49 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+305.49 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+305.90 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6002 duration_ms=379 profile=TonalPulseScalar
+306.60 E2 BEH verdict=single_pulse heard=1292944 now=1293653 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+306.60 E2 BEH emit start now=1293653 source=heard_pattern state=Chirping pattern=single
+306.60 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+306.60 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+307.04 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7082 duration_ms=380 profile=TonalPulseScalar
+307.41 R1 BEH verdict=single_pulse heard=3584404 now=3584783 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+307.41 R1 BEH emit start now=3584783 source=heard_pattern state=Chirping pattern=single
+307.41 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+307.41 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+307.83 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5953 duration_ms=379 profile=TonalPulseScalar
+308.25 E2 BEH verdict=single_pulse heard=1294872 now=1295293 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+308.25 E2 BEH emit start now=1295293 source=heard_pattern state=Chirping pattern=single
+308.25 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+308.25 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+308.67 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7071 duration_ms=380 profile=TonalPulseScalar
+308.85 R1 BEH verdict=single_pulse heard=3586044 now=3586229 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+308.85 R1 BEH emit start now=3586229 source=heard_pattern state=Chirping pattern=single
+308.85 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+308.85 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+309.27 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+309.27 E3 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+309.27 E3 RB plan_check status=warn history_needed_ms=560 history_ms=576 early_window_ms=20 issues=window_after_inspection
+309.27 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=5932 duration_ms=379 profile=TonalPulseScalar
+330.28 R1 BEH emit start now=3607675 source=idle state=Chirping pattern=idle
+330.28 R1 RB emit accepted source=idle state=Chirping pattern=idle
+330.28 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+330.96 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+331.43 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5948 duration_ms=379 profile=TonalPulseScalar
+331.78 E2 BEH verdict=single_pulse heard=1318464 now=1318829 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+331.78 E2 BEH emit start now=1318829 source=heard_pattern state=Chirping pattern=single
+331.78 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+331.78 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+332.21 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7159 duration_ms=380 profile=TonalPulseScalar
+333.11 R1 BEH verdict=single_pulse heard=3609580 now=3610491 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+333.11 R1 BEH emit start now=3610491 source=heard_pattern state=Chirping pattern=single
+333.11 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+333.11 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+333.53 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5972 duration_ms=378 profile=TonalPulseScalar
+333.90 E2 BEH verdict=single_pulse heard=1320575 now=1320945 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+333.90 E2 BEH emit start now=1320945 source=heard_pattern state=Chirping pattern=single
+333.90 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+333.90 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+334.32 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7095 duration_ms=380 profile=TonalPulseScalar
+355.78 E2 BEH emit start now=1342837 source=idle state=Chirping pattern=idle
+355.78 E2 RB emit accepted source=idle state=Chirping pattern=idle
+355.78 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+355.98 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+356.44 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7157 duration_ms=381 profile=TonalPulseScalar
+357.00 R1 BEH verdict=single_pulse heard=3633813 now=3634379 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+357.00 R1 BEH emit start now=3634379 source=heard_pattern state=Chirping pattern=single
+357.00 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+357.00 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+357.42 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6079 duration_ms=380 profile=TonalPulseScalar
+357.97 E2 BEH verdict=single_pulse heard=1344463 now=1345005 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+357.97 E2 BEH emit start now=1345005 source=heard_pattern state=Chirping pattern=single
+357.97 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+357.97 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+358.38 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7139 duration_ms=381 profile=TonalPulseScalar
+359.05 R1 BEH verdict=single_pulse heard=3635757 now=3636435 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+359.05 R1 BEH emit start now=3636435 source=heard_pattern state=Chirping pattern=single
+359.05 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+359.05 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+359.47 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6064 duration_ms=378 profile=TonalPulseScalar
+359.78 E2 BEH verdict=single_pulse heard=1346518 now=1346821 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+359.78 E2 BEH emit start now=1346821 source=heard_pattern state=Chirping pattern=single
+359.78 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+359.78 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+360.20 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7133 duration_ms=381 profile=TonalPulseScalar
+360.76 R1 BEH verdict=single_pulse heard=3637573 now=3638139 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+360.76 R1 BEH emit start now=3638139 source=heard_pattern state=Chirping pattern=single
+360.76 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+360.76 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+361.02 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+361.02 E3 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+361.18 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6145 duration_ms=378 profile=TonalPulseScalar
+384.49 E2 BEH verdict=single_pulse heard=1348223 now=1371549 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+384.49 E2 BEH emit start now=1371549 source=idle state=Chirping pattern=idle
+384.49 E2 RB emit accepted source=idle state=Chirping pattern=idle
+384.49 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+384.69 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+385.15 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7203 duration_ms=380 profile=TonalPulseScalar
+393.60 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+398.32 R1 BEH verdict=single_pulse heard=3662525 now=3675700 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+398.32 R1 BEH emit start now=3675700 source=idle state=Chirping pattern=idle
+398.32 R1 RB emit accepted source=idle state=Chirping pattern=idle
+398.32 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+398.99 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+399.48 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5978 duration_ms=381 profile=TonalPulseScalar
+399.48 E2 BEH verdict=single_pulse heard=1386487 now=1386521 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+399.48 E2 BEH emit start now=1386521 source=heard_pattern state=Chirping pattern=single
+399.48 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+399.48 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+399.90 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7116 duration_ms=381 profile=TonalPulseScalar
+400.66 R1 BEH verdict=single_pulse heard=3677278 now=3678047 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+400.66 R1 BEH emit start now=3678047 source=heard_pattern state=Chirping pattern=single
+400.66 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+401.10 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6105 duration_ms=379 profile=TonalPulseScalar
+404.23 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+438.73 E2 BEH verdict=single_pulse heard=1388135 now=1425781 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+438.73 E2 BEH emit start now=1425781 source=idle state=Chirping pattern=idle
+438.73 E2 RB emit accepted source=idle state=Chirping pattern=idle
+438.73 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+438.93 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+439.48 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7183 duration_ms=380 profile=TonalPulseScalar
+439.48 R1 BEH verdict=single_pulse heard=3716758 now=3716859 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+439.48 R1 BEH emit start now=3716859 source=heard_pattern state=Chirping pattern=single
+439.48 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+439.48 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+439.91 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6244 duration_ms=379 profile=TonalPulseScalar
+440.64 E2 BEH verdict=single_pulse heard=1426942 now=1427680 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+440.64 E2 BEH emit start now=1427680 source=heard_pattern state=Chirping pattern=single
+440.64 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+440.64 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+441.06 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7194 duration_ms=380 profile=TonalPulseScalar
+460.12 R1 BEH verdict=single_pulse heard=3718438 now=3737504 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+460.12 R1 BEH emit start now=3737504 source=idle state=Chirping pattern=idle
+460.12 R1 RB emit accepted source=idle state=Chirping pattern=idle
+460.12 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+460.80 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+461.25 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6036 duration_ms=379 profile=TonalPulseScalar
+461.58 E2 BEH verdict=single_pulse heard=1448286 now=1448614 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+461.58 E2 BEH emit start now=1448614 source=heard_pattern state=Chirping pattern=single
+461.58 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+461.58 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+461.98 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7107 duration_ms=381 profile=TonalPulseScalar
+467.99 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+467.99 E3 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+488.99 R1 BEH verdict=single_pulse heard=3739367 now=3766371 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+488.99 R1 BEH emit start now=3766371 source=idle state=Chirping pattern=idle
+488.99 R1 RB emit accepted source=idle state=Chirping pattern=idle
+488.99 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+489.67 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+490.12 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6182 duration_ms=379 profile=TonalPulseScalar
+490.42 E2 BEH verdict=single_pulse heard=1477157 now=1477465 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+490.42 E2 BEH emit start now=1477465 source=heard_pattern state=Chirping pattern=single
+490.42 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+490.42 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+490.84 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7117 duration_ms=380 profile=TonalPulseScalar
+491.15 R1 BEH verdict=single_pulse heard=3768223 now=3768536 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+491.15 R1 BEH emit start now=3768536 source=heard_pattern state=Chirping pattern=single
+491.15 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+491.15 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+491.57 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6230 duration_ms=379 profile=TonalPulseScalar
+492.30 E2 BEH verdict=single_pulse heard=1478621 now=1479341 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+492.30 E2 BEH emit start now=1479341 source=heard_pattern state=Chirping pattern=single
+492.30 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+492.30 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+492.71 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7110 duration_ms=380 profile=TonalPulseScalar
+493.43 R1 BEH verdict=single_pulse heard=3770095 now=3770811 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+493.43 R1 BEH emit start now=3770811 source=heard_pattern state=Chirping pattern=single
+493.43 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+493.43 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+493.85 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6230 duration_ms=379 profile=TonalPulseScalar
+494.30 E2 BEH verdict=single_pulse heard=1480893 now=1481343 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+494.30 E2 BEH emit start now=1481343 source=heard_pattern state=Chirping pattern=single
+494.30 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+494.30 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+494.72 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7124 duration_ms=380 profile=TonalPulseScalar
+495.48 R1 BEH verdict=single_pulse heard=3772095 now=3772854 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+495.48 R1 BEH emit start now=3772854 source=heard_pattern state=Chirping pattern=single
+495.48 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+495.48 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+495.89 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6193 duration_ms=379 profile=TonalPulseScalar
+517.37 E2 BEH verdict=single_pulse heard=1482933 now=1504418 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+517.37 E2 BEH emit start now=1504418 source=idle state=Chirping pattern=idle
+517.37 E2 RB emit accepted source=idle state=Chirping pattern=idle
+517.37 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+517.56 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+518.03 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7169 duration_ms=380 profile=TonalPulseScalar
+518.37 R1 BEH verdict=single_pulse heard=3795399 now=3795747 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+518.37 R1 BEH emit start now=3795747 source=heard_pattern state=Chirping pattern=single
+518.37 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+518.37 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+518.78 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6122 duration_ms=381 profile=TonalPulseScalar
+518.89 E2 BEH verdict=single_pulse heard=1505830 now=1505941 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+518.89 E2 BEH emit start now=1505941 source=heard_pattern state=Chirping pattern=single
+518.89 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+518.89 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+519.33 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7112 duration_ms=380 profile=TonalPulseScalar
+519.52 R1 BEH verdict=single_pulse heard=3796695 now=3796899 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+519.52 R1 BEH emit start now=3796899 source=heard_pattern state=Chirping pattern=single
+519.52 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+519.52 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+519.94 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6125 duration_ms=379 profile=TonalPulseScalar
+520.48 E2 BEH verdict=single_pulse heard=1506981 now=1507517 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+520.48 E2 BEH emit start now=1507517 source=heard_pattern state=Chirping pattern=single
+520.48 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+520.48 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+520.89 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=7111 duration_ms=381 profile=TonalPulseScalar
+537.05 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+537.05 E3 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+540.57 E2 BEH emit start now=1527637 source=idle state=Chirping pattern=idle
+540.57 E2 RB emit accepted source=idle state=Chirping pattern=idle
+540.57 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+540.79 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+541.24 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7184 duration_ms=381 profile=TonalPulseScalar
+542.01 R1 BEH verdict=single_pulse heard=3818616 now=3819391 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+542.01 R1 BEH emit start now=3819391 source=heard_pattern state=Chirping pattern=single
+542.01 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+542.01 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+542.44 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6110 duration_ms=379 profile=TonalPulseScalar
+543.09 E2 BEH verdict=single_pulse heard=1529476 now=1530133 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+543.09 E2 BEH emit start now=1530133 source=heard_pattern state=Chirping pattern=single
+543.09 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+543.09 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+543.59 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7158 duration_ms=381 profile=TonalPulseScalar
+543.59 R1 BEH verdict=single_pulse heard=3820888 now=3820956 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+543.59 R1 BEH emit start now=3820956 source=heard_pattern state=Chirping pattern=single
+543.59 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+543.59 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+543.99 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6092 duration_ms=378 profile=TonalPulseScalar
+561.58 E3 RB signal band=2950-4700 bins=5 hop=on rotation=2 base=0 band_per_node=1 steps=5 trill=0 trill_gap_ms=15 pulse_ms=15 gap_ms=0 order=2500,2750,3000,3250,3500
+572.10 E2 BEH verdict=single_pulse heard=1531035 now=1559149 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+572.10 E2 BEH emit start now=1559149 source=idle state=Chirping pattern=idle
+572.10 E2 RB emit accepted source=idle state=Chirping pattern=idle
+572.10 E2 RB emit shape=idle_call announce_hz=300 announce_ms=20 gap_ms=200 then=hop
+572.30 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+572.80 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7132 duration_ms=380 profile=TonalPulseScalar
+572.80 R1 BEH verdict=single_pulse heard=3850128 now=3850174 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+572.80 R1 BEH emit start now=3850174 source=heard_pattern state=Chirping pattern=single
+572.80 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+572.80 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+573.21 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=6131 duration_ms=380 profile=TonalPulseScalar
+573.56 E2 BEH verdict=single_pulse heard=1560252 now=1560592 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+573.56 E2 BEH emit start now=1560592 source=heard_pattern state=Chirping pattern=single
+573.56 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+573.56 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+573.97 R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=7163 duration_ms=380 profile=TonalPulseScalar
+574.29 R1 BEH verdict=single_pulse heard=3851352 now=3851664 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+574.29 R1 BEH emit start now=3851664 source=heard_pattern state=Chirping pattern=single
+574.29 R1 RB emit accepted source=heard_pattern state=Chirping pattern=single
+574.29 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+574.71 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=declined_by_level valid=1 strength=6155 duration_ms=381 profile=TonalPulseScalar
+598.71 R1 BEH emit start now=3876107 source=idle state=Chirping pattern=idle
+598.71 R1 RB emit accepted source=idle state=Chirping pattern=idle
+598.71 R1 RB emit shape=idle_call announce_hz=300 announce_ms=500 gap_ms=200 then=hop
+599.40 R1 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500
+599.91 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 strength=5969 duration_ms=379 profile=TonalPulseScalar
+599.91 E2 BEH verdict=single_pulse heard=1586892 now=1586960 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+599.91 E2 BEH emit start now=1586960 source=heard_pattern state=Chirping pattern=single
+599.91 E2 RB emit accepted source=heard_pattern state=Chirping pattern=single
+599.91 E2 RB emit shape=hop steps=15 pulse_ms=15 gap_ms=0 order=2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2500,2750,3000,3250,3500

@@ -512,7 +512,8 @@ own comments.
 
 Whether one Node hears another, and why not, with the Nodes' own calls and images: no Analyzer image, no Emitter
 cable. `python tools/bench/hearingtest.py --gateway E0=COM12 --nodes R1,E2 --calls glide,cricket --window 2500-3500
---block 300 --rounds 2 --out bench/sessions/<folder>` (the full usage in the script). One Node plays, the other is
+--block 300 --rounds 2 --out bench/sessions/<folder>` (the full usage in the script; `--window` takes several bands,
+comma-separated, run one after the other). One Node plays, the other is
 muted (it still detects), then the other way round; the player calls on a short silence timer (`--every`, set live),
 so every call is one independent trial. Blocks interleave the calls, reversed every other round. Ends with both muted
 and the silence timer back at 30000 / 10000.

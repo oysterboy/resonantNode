@@ -19,9 +19,12 @@ Amends: decisions/2026-11-19-trill-only-drops-the-shape-check.md (its "Rules out
    the proven fallback behind it.
 4. The radio log runs during the tryout, so the room's false detections are counted per 10 minutes, against the
    desk's number.
-5. The drift (behavior moving the base bin while calls go unanswered) is parked: with whole-window listening a node
-   hears calls anywhere in the window, so the drift's reason is gone at desk distance. It comes back if the tryout
-   shows bins failing between nodes at room distance.
+5. The drift (behavior moving the base bin while calls go unanswered) waits for a pitch map, not for the tryout.
+   Whole-window listening takes away one of its two jobs (finding the others' pitch); the other, moving off a
+   pitch the room cancels between two nodes, is untested: the whole-window desk check played every call at the
+   window's lowest pitch. The map (owner 2026-11-19: "step the pitches more fine"; 1 m to 2.5 m is the realistic
+   node distance): trill alone, whole window, the player pinned to each pitch in 50 Hz steps (2500-3700 Hz), at 1 m
+   and at 2 m. A pitch that fails for one pair brings the drift back; a clean map at both distances drops it.
 
 ## Why
 

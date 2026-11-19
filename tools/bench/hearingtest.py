@@ -7,7 +7,8 @@ Why one-way: with both playing, the nodes answer each other, so one miss breaks 
 listener is muted (output.silent 1, it still detects), so the player never hears an answer and calls on its silence
 timer (behavior.call_after_silence_ms --every, spread --spread, set live): each call is one independent trial.
 
-Order: per round every call in both directions, the calls' order reversed every other round (A B C D, D C B A), so a
+Order: window by window (--window takes several, comma-separated, run in the order given); per window and round
+every call in both directions, the calls' order reversed every other round (A B C D, D C B A), so a
 slow drift of the room does not land on one call. Everything is live (nothing saved); at the end every node is muted
 and the silence timer is back at 30000 / 10000.
 
@@ -124,7 +125,8 @@ def main():
     ap.add_argument("--gateway", required=True)
     ap.add_argument("--nodes", required=True, help="two nodes, A,B: A plays to B, then B to A")
     ap.add_argument("--calls", default="glide,cricket")
-    ap.add_argument("--window", required=True, help="low-high Hz, one window for both")
+    ap.add_argument("--window", required=True,
+                    help="low-high Hz, one window for both; several comma-separated run one after the other")
     ap.add_argument("--block", type=int, default=300, help="seconds per call and direction")
     ap.add_argument("--rounds", type=int, default=2)
     ap.add_argument("--every", type=int, default=2500, help="the player's call_after_silence_ms")
@@ -139,9 +141,9 @@ def main():
     reasons = collections.defaultdict(collections.Counter)
     allrows = []
 
-    def score(block, rnd, call, player, listener, path):
+    def score(block, rnd, call, window, player, listener, path):
         rows, stray = classify(path, player, listener, a.match)
-        key = (call, "%s->%s" % (player, listener))
+        key = (window, call, "%s->%s" % (player, listener))
         c = collections.Counter(o for _, o, _ in rows)
         tally[key].update(c)
         tally[key]["stray"] += stray
@@ -149,10 +151,10 @@ def main():
             if o in ("detected", "invalid", "dismissed", "missed") and d:
                 reasons[key][o + " " + d.split(" ")[0]] += 1
         for t, o, d in rows:
-            allrows.append([block, rnd, call, player, listener, "%.2f" % t, o, d])
+            allrows.append([block, rnd, window, call, player, listener, "%.2f" % t, o, d])
         with open(os.path.join(a.out, "calls.csv"), "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
-            w.writerow(["block", "round", "call", "player", "listener", "t", "outcome", "detail"])
+            w.writerow(["block", "round", "window", "call", "player", "listener", "t", "outcome", "detail"])
             w.writerows(allrows)
         write_summary(a.out, tally, reasons)
         return "  calls=%d heard=%d detected=%d invalid=%d dismissed=%d missed=%d stray=%d" % (
@@ -162,16 +164,21 @@ def main():
         logs = sorted(f for f in os.listdir(a.out) if f.startswith("block_") and f.endswith(".log"))
         per_round = 2 * len({f.split("_")[2] for f in logs})
         for f in logs:
-            _, n, call, pair = f[:-4].split("_")
+            p = f[:-4].split("_")
+            if len(p) == 6:  # block_<n>_r<round>_<call>_<low-high>_<player-listener>
+                n, rnd, call, window, pair = int(p[1]), int(p[2][1:]), p[3], p[4], p[5]
+            else:  # the one-window name of 2026-11-18: block_<n>_<call>_<player-listener>
+                n, call, pair = int(p[1]), p[2], p[3]
+                rnd, window = (n - 1) // per_round + 1, a.window
             player, listener = pair.split("-")
-            print(f, score(int(n), (int(n) - 1) // per_round + 1, call, player, listener, os.path.join(a.out, f)))
+            print(f, score(n, rnd, call, window, player, listener, os.path.join(a.out, f)))
         for line in open(os.path.join(a.out, "summary.csv"), encoding="utf-8"):
             print(line.rstrip())
         return
     gw = nodepreset.parse(a.gateway)[0]
     x, y = [n for n in a.nodes.split(",") if n][:2]
     calls = [c for c in a.calls.split(",") if c]
-    lo, hi = a.window.split("-")
+    windows = [w for w in a.window.split(",") if w]
 
     def say(text):
         line = "%s %s" % (time.strftime("%H:%M:%S"), text)
@@ -183,7 +190,9 @@ def main():
         nodepreset.apply_radio(gw, targets, cmds)
 
     block = 0
-    for r in range(a.rounds):
+    rounds = [(w, r) for w in windows for r in range(a.rounds)]
+    for window, r in rounds:
+        lo, hi = window.split("-")
         order = calls if r % 2 == 0 else calls[::-1]
         for call in order:
             for player, listener in ((x, y), (y, x)):
@@ -199,7 +208,8 @@ def main():
                       "PARAM SET behavior.call_after_silence_spread_ms %d" % a.spread, "PARAM SET output.silent 0"],
                      [player])
                 time.sleep(a.settle)
-                path = os.path.join(a.out, "block_%02d_%s_%s-%s.log" % (block, call, player, listener))
+                path = os.path.join(a.out, "block_%02d_r%d_%s_%s_%s-%s.log" % (block, r + 1, call, window, player,
+                                                                              listener))
                 s = nodepreset.open_port(gw[1], timeout=0.05)
                 t0, buf = time.time(), b""
                 with open(path, "w", encoding="utf-8") as f:
@@ -215,7 +225,7 @@ def main():
                                 f.write("%.2f %s %s\n" % (time.time() - t0, m.group(1), m.group(2)))
                 s.close()
                 send(["PARAM SET output.silent 1"], [player])
-                say(score(block, r + 1, call, player, listener, path))
+                say(score(block, r + 1, call, window, player, listener, path))
     send(["PARAM SET output.silent 1", "PARAM SET behavior.call_after_silence_ms 30000",
           "PARAM SET behavior.call_after_silence_spread_ms 10000"], [x, y])
     say("done: both muted, silence timer back at 30000 / 10000 (live)")
@@ -226,13 +236,13 @@ def main():
 def write_summary(out, tally, reasons):
     with open(os.path.join(out, "summary.csv"), "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["call", "direction", "calls", "heard", "heard_pct", "range95", "detected", "invalid", "dismissed",
+        w.writerow(["window", "call", "direction", "calls", "heard", "heard_pct", "range95", "detected", "invalid", "dismissed",
                     "missed", "stray", "reasons"])
-        for (call, d), c in sorted(tally.items()):
+        for (window, call, d), c in sorted(tally.items(), key=lambda kv: (int(kv[0][0].split("-")[0]), kv[0][1:])):
             n = c["heard"] + c["detected"] + c["invalid"] + c["dismissed"] + c["missed"]
             lo, hi = wilson(c["heard"], n)
-            top = "; ".join("%s x%d" % (k, v) for k, v in reasons[(call, d)].most_common(4))
-            w.writerow([call, d, n, c["heard"], round(100 * c["heard"] / n) if n else "", "%s-%s" % (lo, hi),
+            top = "; ".join("%s x%d" % (k, v) for k, v in reasons[(window, call, d)].most_common(4))
+            w.writerow([window, call, d, n, c["heard"], round(100 * c["heard"] / n) if n else "", "%s-%s" % (lo, hi),
                         c["detected"], c["invalid"], c["dismissed"], c["missed"], c["stray"], top])
 
 

@@ -512,6 +512,15 @@ substeps marked "on site" wait for those days.
         windows and at room distance, and whether the click earns its place (localisation, 24.1.1).
    24.4 Further sound modifications, as they come (owner 2026-11-17: expected). Each one gets its own line here with
         its date and params, goes through the same matrix, and is cut or kept before the code freeze.
+        24.4.1 A trill closer to a field cricket (owner 2026-11-19): each trill pulse fades in and out
+        (output.trill_fade_ms), falls a little in pitch (output.trill_droop_hz), and the first pulses grow
+        (output.trill_swell_pulses); every one 0 = off and the output unchanged. New preset fieldcricket; cricket
+        stays as it is. Measured with hearingtest.py against cricket, on the bands where cricket holds.
+   24.5 Naming pass (owner 2026-11-19), the last substep before the freeze: the presets (glide, cricket,
+        fieldcricket, bb-all, bb-trill, ...), the sound params (output.hop_trill_*, output.broadband_*, output.trill_*)
+        and the scripts (callmatrix.py, hearingtest.py, nodepreset.py) read as one vocabulary; renamed together, the
+        guide's pointers and the preset files in the same commit, and a stored param under an old path checked on
+        every board.
    The rehearsal (step 25) runs with the trill on.
    Gate: on the desk every node hears the others as before (hop10 10 / 10 per base bin, nodecheck green on every
    board), T2h byte-identical, with the glide setup; then the code freeze until the performance. Detection CODE is

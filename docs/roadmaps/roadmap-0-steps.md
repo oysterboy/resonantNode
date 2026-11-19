@@ -530,7 +530,9 @@ substeps marked "on site" wait for those days.
         only on a shared bin (trill 15-16 %, fieldtrill 9-20 %, cricket 99-100 %); every node on the whole window
         (band_per_node 0) trill 98-100 %, fieldtrill 99-100 %, cricket 98-100 %. False detections: 0 in 80 min
         per setup, quiet and noise, both presets; but the noise reached the onset only 1-4 s per 20 min, so the
-        noise half is open: a louder rerun (falsealarm.py --conditions noise); (4) a map of the bins that fail per pair at room
+        noise half is open: a louder rerun (falsealarm.py --conditions noise). Louder rerun 2026-11-19 evening (whole
+        window, noise over the onset half the time): trill 4.5-5.2 false detections per 10 min, cricket 0 in 40 min;
+        the gate fails, so by the decision's revisit clause a short climb with the shape check kept is next; (4) a map of the bins that fail per pair at room
         distance (hearingtest.py --bins); (5) the drift in behavior: N unanswered calls move the base one bin, a
         random direction turning at the band's edges, held once answered, away from a neighbour on the same bin,
         all params 0 = off, an RB seek log line; (6) a desk try at room distance from a failing bin, then three

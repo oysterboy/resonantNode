@@ -535,7 +535,8 @@ substeps marked "on site" wait for those days.
         the gate fails. Owner 2026-11-19 evening (decisions/2026-11-19-trill-only-judged-at-the-tryout.md): trill-only
         is judged at the tryout on the whole window, preset trillrise (trill + 4-bin rise, shape check kept) is the
         backup, desk-checked the same night. Part 4 becomes a pitch map (hearingtest.py --listen band --pitches, trill,
-        50 Hz steps 2500-3700) at 1 m (night of 2026-11-19) and 2 m (nodes moved 2026-11-20 noon, run that night),
+        50 Hz steps 2500-3700) at 1 m (night of 2026-11-19) and 2 m (nodes moved 2026-11-20 noon, SELFTEST on every node after
+        the move, run that night),
         E4 a third node if it is ready; parts 5-6 (drift) only if a pitch fails for a pair; (4) a map of the bins that fail per pair at room
         distance (hearingtest.py --bins); (5) the drift in behavior: N unanswered calls move the base one bin, a
         random direction turning at the band's edges, held once answered, away from a neighbour on the same bin,

@@ -7,7 +7,8 @@ Every node gets the preset and the window, RB log full and the radio log, and is
 detects) with its idle call off, so whatever it detects came from the room. Per preset two blocks: quiet, then the
 noise file looped through the lab PC's default output (Windows SoundPlayer, the device's own volume; --noise none
 skips it; --conditions noise runs the noise blocks only). The presets alternate, reversed in the second round
-(--rounds), so a drift of the room does not land on one preset. At the end every node stays muted with its idle call back on (live; a reboot loads the stored setup).
+(--rounds), so a drift of the room does not land on one preset. At the end every node stays muted with its idle
+call back on (live; a reboot loads the stored setup).
 
 Counted per node and block from the radio log: valid verdicts (a false alarm: behavior would answer it), invalid
 verdicts (with the failed check), detector rejects (with the reason), and from the once-a-second RB level lines the

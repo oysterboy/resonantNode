@@ -526,7 +526,11 @@ substeps marked "on site" wait for those days.
         its calls go unanswered, so the nodes settle on bins that work between them. Trill + glide stays the safe
         setup. Parts: (1) the decision; (2) presets trill and fieldtrill; (3) desk check at 1 m: heard against
         cricket (hearingtest.py) and false detections with no node playing, quiet and in the lab PC's noise file,
-        against cricket, gate about one in ten minutes in noise; (4) a map of the bins that fail per pair at room
+        against cricket, gate about one in ten minutes in noise. Run 2026-11-19 (R1, E2, 1 m, window 2500-3500; bench/sessions/2026-11-19-trill-desk): each node on its own bin (band_per_node 1) a one-bin call is heard
+        only on a shared bin (trill 15-16 %, fieldtrill 9-20 %, cricket 99-100 %); every node on the whole window
+        (band_per_node 0) trill 98-100 %, fieldtrill 99-100 %, cricket 98-100 %. False detections: 0 in 80 min
+        per setup, quiet and noise, both presets; but the noise reached the onset only 1-4 s per 20 min, so the
+        noise half is open: a louder rerun (falsealarm.py --conditions noise); (4) a map of the bins that fail per pair at room
         distance (hearingtest.py --bins); (5) the drift in behavior: N unanswered calls move the base one bin, a
         random direction turning at the band's edges, held once answered, away from a neighbour on the same bin,
         all params 0 = off, an RB seek log line; (6) a desk try at room distance from a failing bin, then three

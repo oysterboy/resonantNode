@@ -28,3 +28,17 @@ detector rejects in noise, all duration_too_short.
 
 The noise is too weak to count: loudest input 1220-2390 against the onset of 2000, over the onset 0-4 s per
 20 min. The noise half needs a louder rerun (falsealarm.py --conditions noise, the speaker turned up).
+
+## Louder noise (`falsealarm-loud/`, evening, speaker turned up, every node on the whole window)
+
+Noise blocks only, 2 x 20 min per preset. Now the noise counts: over the onset about half of every block (R1 ~670 s,
+E2 ~970 s per 20 min), loudest 8200-16800.
+
+| Preset | R1 valid (per 10 min) | E2 valid (per 10 min) | Rejects R1 / E2 |
+|---|---|---|---|
+| trill | 18 (4.5) | 21 (5.2) | 3004 / 6841 |
+| cricket | 0 | 0 | 2808 / 6956 |
+
+The trill-only setup fails the false-detection gate (about one per 10 min): the shape check is what keeps cricket at
+zero. The false calls were short (75-110 ms, single_pulse). By the decision's "Revisit when", the next try is a short
+climb at the end of the trill with the shape check kept.

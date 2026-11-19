@@ -1,0 +1,5 @@
+preset,condition,node,minutes,valid,valid_per_10min,invalid,reject,peak,seconds_over_onset,details
+cricket,noise,E2,40,0,0.0,769,6956,14514,1955,reject duration_too_short x5548; invalid contrast x749; reject coverage_too_low x528; reject strength_too_low x516; reject longest_island_too_short x308; reject duration_too_long x56; invalid shape x20
+cricket,noise,R1,40,0,0.0,64,2808,8369,1338,reject duration_too_short x2559; reject strength_too_low x146; reject coverage_too_low x78; invalid contrast x45; reject longest_island_too_short x25; invalid shape x19
+trill,noise,E2,40,21,5.2,815,6841,16799,1949,reject duration_too_short x5422; invalid contrast x815; reject coverage_too_low x525; reject strength_too_low x503; reject longest_island_too_short x328; reject duration_too_long x63
+trill,noise,R1,40,18,4.5,40,3004,9591,1355,reject duration_too_short x2706; reject strength_too_low x165; reject coverage_too_low x100; invalid contrast x40; reject longest_island_too_short x32; reject duration_too_long x1

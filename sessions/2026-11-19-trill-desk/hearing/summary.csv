@@ -1,0 +1,7 @@
+window,call,direction,calls,heard,heard_pct,range95,detected,invalid,dismissed,missed,stray,reasons
+2500-3500,cricket,E2->R1,244,242,99,97-100,2,0,0,0,221,detected verdict x2
+2500-3500,cricket,R1->E2,227,227,100,98-100,0,0,0,0,223,
+2500-3500,fieldtrill,E2->R1,237,22,9,6-14,0,0,20,195,3,missed quiet x186; dismissed duration_too_short x20; missed loud x9
+2500-3500,fieldtrill,R1->E2,233,47,20,16-26,0,0,5,181,112,missed quiet x91; missed loud x90; dismissed duration_too_short x5
+2500-3500,trill,E2->R1,236,38,16,12-21,0,0,7,191,98,missed quiet x106; missed loud x85; dismissed duration_too_short x7
+2500-3500,trill,R1->E2,233,35,15,11-20,0,0,9,189,1,missed quiet x179; missed loud x10; dismissed longest_island_too_short x9

@@ -1,0 +1,9 @@
+preset,condition,node,minutes,valid,valid_per_10min,invalid,reject,peak,seconds_over_onset,details
+cricket,noise,E2,20,0,0.0,0,4,2189,4,reject duration_too_short x4
+cricket,noise,R1,20,0,0.0,0,0,1220,0,
+cricket,quiet,E2,20,0,0.0,0,0,378,0,
+cricket,quiet,R1,20,0,0.0,0,0,342,0,
+trill,noise,E2,20,0,0.0,0,3,2182,3,reject duration_too_short x3
+trill,noise,R1,20,0,0.0,0,0,1239,0,
+trill,quiet,E2,20,0,0.0,0,0,97,0,
+trill,quiet,R1,20,0,0.0,0,0,185,0,

@@ -42,6 +42,10 @@ public:
     void setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_t lowHz) {
         _toneOutput.setPulseBroadband(levelPct, trillOnly, lowHz);
     }
+    // The trill shape of the next device-timed train (ToneOutput::setPulseTrillShape).
+    void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses) {
+        _toneOutput.setPulseTrillShape(fadeMs, droopHz, swellPulses);
+    }
     // Sweep inside the next plain chirp (OUT-005): glide from the tone to
     // endHz over durationMs; endHz = 0 clears. Stays set until cleared.
     void setSweep(uint32_t endHz, uint32_t durationMs) { _toneOutput.setSweep(endHz, durationMs); }

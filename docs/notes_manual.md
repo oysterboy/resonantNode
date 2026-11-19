@@ -213,6 +213,7 @@ the sites are listed above. Paths renamed on 2026-11-06 are mapped in
 | `output.hop_trill_pulses`, `output.hop_trill_gap_ms` | pulses on the base pitch before the climb (up to 12), each as long as a step and followed by the trill gap; the climb keeps `hop_gap_ms` (a cricket-like trill before the glide; 0 pulses = the plain train; shortened if a call would pass 6 s) | count, ms | yes |
 
 | `output.broadband_level`, `output.broadband_scope`, `output.broadband_low_hz` | a click of high-passed noise at the start of the pulses so people can place the call (docs/research/broadband-localizable-call.md): level in percent of the tone's peak (0 = off, the output is then unchanged; the tone gives up 20 log10(1 + level) dB of headroom, 3.5 dB at 50), scope 0 = every pulse and 1 = the trill's only, the click above low_hz (default 6500, above the detection window; a window that reaches it needs a higher corner) | %, 0/1, Hz | yes, from the next call |
+| `output.trill_fade_ms`, `output.trill_droop_hz`, `output.trill_swell_pulses` | the trill's pulses shaped like a field cricket's (src/output/TrillShape.h; preset fieldcricket): a raised-cosine fade in and out at each end of a trill pulse (held to half the pulse), a pitch fall across each pulse centred on its bin (held to 400 Hz), the first pulses growing from half level to full; each 0 = off, all 0 = the plain trill. The climb is never shaped | ms, Hz, pulses | yes, from the next call |
 
 | `output.idle_announce_hz`, `output.idle_announce_ms` | the call's lead-in tone and its length (0 Hz = none) | Hz, ms | yes |
 

@@ -11,7 +11,7 @@ import sys
 
 DIR = "tools/bench/presets"
 OUT = sys.argv[1]
-ORDER = ["glide", "cricket", "bb-all", "bb-trill", "lowwindow", "wide", "low", "deep", "calm", "quiet"]
+ORDER = ["glide", "cricket", "fieldcricket", "bb-all", "bb-trill", "lowwindow", "wide", "low", "deep", "calm", "quiet"]
 
 
 def read(name):

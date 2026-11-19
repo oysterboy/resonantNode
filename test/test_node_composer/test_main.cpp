@@ -248,6 +248,22 @@ void test_broadband_settings_ride_on_the_train() {
     TEST_ASSERT_EQUAL_UINT32(40, r.broadbandPct);
 }
 
+void test_trill_shape_rides_on_the_train() {
+    // 24.4.1: off by default, so the shipped request is the plain trill; set, the request carries the values.
+    NodeSignalComposer c;
+    OutputRequest r = c.compose(shippedGrid(), ChirpPattern::Single, true, 2);
+    TEST_ASSERT_EQUAL_UINT32(0, r.trillFadeMs);
+    TEST_ASSERT_EQUAL_UINT32(0, r.trillDroopHz);
+    TEST_ASSERT_EQUAL_UINT32(0, r.trillSwellPulses);
+    c.values().trillFadeMs = 4;
+    c.values().trillDroopHz = 150;
+    c.values().trillSwellPulses = 3;
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
+    TEST_ASSERT_EQUAL_UINT32(4, r.trillFadeMs);
+    TEST_ASSERT_EQUAL_UINT32(150, r.trillDroopHz);
+    TEST_ASSERT_EQUAL_UINT32(3, r.trillSwellPulses);
+}
+
 void test_trill_is_trimmed_to_the_span_limit() {
     // Steps, pulse and gap at their tops with 12 trill pulses (15 ms trill gaps) would be 6930 ms. The trill is
     // shortened, the call stays valid instead of falling back to the plain chirp.
@@ -286,6 +302,7 @@ int main(int, char**) {
     RUN_TEST(test_trill_before_the_climb);
     RUN_TEST(test_gapped_trill_before_the_glide);
     RUN_TEST(test_broadband_settings_ride_on_the_train);
+    RUN_TEST(test_trill_shape_rides_on_the_train);
     RUN_TEST(test_trill_is_trimmed_to_the_span_limit);
     return UNITY_END();
 }

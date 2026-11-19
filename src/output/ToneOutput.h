@@ -58,6 +58,13 @@ public:
         (void)trillOnly;
         (void)lowHz;
     }
+    // Optional (24.4.1): the NEXT train's trill pulses shaped like a cricket's (output/TrillShape.h): fade, pitch
+    // fall, swell; all 0 = the plain trill. A device that can't ignores it.
+    virtual void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses) {
+        (void)fadeMs;
+        (void)droopHz;
+        (void)swellPulses;
+    }
     // True from startPulseTrain() until the last pulse has ramped to silence.
     virtual bool pulseTrainActive() const { return false; }
     // Optional: a sweep inside a plain tone (OUT-005). From the next toneOn()

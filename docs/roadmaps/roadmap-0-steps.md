@@ -516,6 +516,11 @@ substeps marked "on site" wait for those days.
         (output.trill_fade_ms), falls a little in pitch (output.trill_droop_hz), and the first pulses grow
         (output.trill_swell_pulses); every one 0 = off and the output unchanged. New preset fieldcricket; cricket
         stays as it is. Measured with hearingtest.py against cricket, on the bands where cricket holds.
+        Built on the host 2026-11-19: src/output/TrillShape.h (pure, test_trill_shape), the request, the composer
+        and I2sToneOutput; the climb is never shaped. fieldcricket sets fade 4 ms, fall 150 Hz, swell 3. Host suites
+        pass, the four main images compile; the render itself is tried only on a board. Open: flash, listen, then
+        the hearing test. The presets cricket, bb-all and bb-trill do not reset the shape yet: tonight's run uses
+        them on the older image; the three reset lines go in after it (glide.preset has them).
    24.5 Naming pass (owner 2026-11-19), the last substep before the freeze: the presets (glide, cricket,
         fieldcricket, bb-all, bb-trill, ...), the sound params (output.hop_trill_*, output.broadband_*, output.trill_*)
         and the scripts (callmatrix.py, hearingtest.py, nodepreset.py) read as one vocabulary; renamed together, the

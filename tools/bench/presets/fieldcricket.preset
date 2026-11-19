@@ -1,0 +1,12 @@
+# Cricket with the trill shaped like a field cricket's (24.4.1): each trill pulse fades in and out, falls a little in pitch, and the first three grow from half level. Needs output.trill_* (image of 2026-11-19 or later)
+# The climb is unshaped (the detector matches it). Fade 4 ms of each 15 ms pulse; fall 150 Hz across a pulse, centred on its bin (about 5 % at 3 kHz, a field cricket falls a few percent).
+PARAM SET output.hop_trill_pulses 10
+PARAM SET output.hop_trill_gap_ms 15
+PARAM SET output.hop_steps 5
+PARAM SET output.hop_pulse_ms 15
+PARAM SET output.hop_gap_ms 0
+PARAM SET detection.scalar_release_debounce_ms 20
+PARAM SET output.broadband_level 0
+PARAM SET output.trill_fade_ms 4
+PARAM SET output.trill_droop_hz 150
+PARAM SET output.trill_swell_pulses 3

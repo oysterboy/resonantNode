@@ -7,6 +7,7 @@
 
 #include "../app/RuntimeDefaults.h"
 #include "../output/BroadbandBurst.h"
+#include "../output/TrillShape.h"
 #include "../output/ToneOutput.h"
 #include "AudioSourceI2S.h"
 
@@ -49,6 +50,7 @@ public:
     void setPulseHop(const uint32_t* hz, size_t n) override;
     void setPulseLeadGap(uint32_t pulses, uint32_t gapMs) override;
     void setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_t lowHz) override;
+    void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses) override;
     void setPulseGains(const float* gain, size_t n) override;
     bool pulseTrainActive() const override;
     void setSweep(uint32_t endHz, uint32_t durationMs) override;
@@ -102,6 +104,7 @@ private:
     uint32_t _reqBroadbandPct = 0;
     bool _reqBroadbandTrillOnly = false;
     uint32_t _reqBroadbandLowHz = 0;
+    trill::Shape _reqTrillShape;
 
     // Task-only render state.
     uint32_t _phase = 0;
@@ -120,6 +123,15 @@ private:
     uint32_t _bbPct = 0;
     bool _bbTrillOnly = false;
     void startPulseBurst();  // a pulse begins: a burst when the train's settings ask for one on this pulse
+    // The trill shape of the running train (output/TrillShape.h); none = the tone path untouched.
+    trill::Shape _trillShape;
+    uint32_t _trillPulses = 0;        // the train's trill pulses, to number the one that is playing
+    uint32_t _trainPulseSamples = 0;  // heard samples of one pulse (onMs)
+    uint32_t _trillFadeSamples = 0;
+    uint32_t _pulsePos = 0;           // samples since the current pulse began
+    bool _pulseShaped = false;        // the current pulse is a trill pulse and the shape is on
+    float _pulseSwell = 1.0f;         // the current trill pulse's level
+    void startPulseShape();           // a pulse begins: take its trill shape
     uint32_t _trainRampMs = 0;
     uint32_t _hopHz[kMaxHop] = {};  // frequency per pulse, cycled; none = _toneHz
     size_t _hopCount = 0;

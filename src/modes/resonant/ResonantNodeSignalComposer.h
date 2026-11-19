@@ -63,6 +63,12 @@ public:
         uint32_t broadbandLevel = 0;
         uint32_t broadbandScope = 0;
         uint32_t broadbandLowHz = 6500;
+        // The trill's pulses shaped like a field cricket's (24.4.1, output/TrillShape.h): a fade in and out of
+        // trillFadeMs, a pitch fall of trillDroopHz across each pulse, the first trillSwellPulses growing from half
+        // level. Each 0 = off; all 0 = the plain trill.
+        uint32_t trillFadeMs = 0;
+        uint32_t trillDroopHz = 0;
+        uint32_t trillSwellPulses = 0;
         uint32_t idleAnnounceHz = 300;
         uint32_t idleAnnounceMs = 500;
     };
@@ -129,6 +135,13 @@ inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& 
                        0U, 1U);
     registry.addUInt32(ParamId::Output_BroadbandLowHz, ModuleId::Output, "output.broadband_low_hz", &hop.broadbandLowHz,
                        1000U, runtime::kMaxToneHz);
+    // The fade is held to half a pulse and the fall to trill::kMaxDroopHz by the device, so the ranges stay plain.
+    registry.addUInt32(ParamId::Output_TrillFadeMs, ModuleId::Output, "output.trill_fade_ms", &hop.trillFadeMs, 0U,
+                       50U);
+    registry.addUInt32(ParamId::Output_TrillDroopHz, ModuleId::Output, "output.trill_droop_hz", &hop.trillDroopHz, 0U,
+                       400U);
+    registry.addUInt32(ParamId::Output_TrillSwellPulses, ModuleId::Output, "output.trill_swell_pulses",
+                       &hop.trillSwellPulses, 0U, static_cast<uint32_t>(runtime::kMaxTrillPulses));
     registry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &hop.idleAnnounceHz,
                        0U, runtime::kMaxToneHz);
     registry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &hop.idleAnnounceMs,

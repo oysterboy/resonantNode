@@ -232,6 +232,11 @@ enum class ParamId : uint16_t {
     Output_BroadbandLevel,
     Output_BroadbandScope,
     Output_BroadbandLowHz,
+    // The trill's pulses shaped like a cricket's (output/TrillShape.h): fade in ms, pitch fall in Hz, swell in pulses;
+    // each 0 = off. Appended: stored params are keyed by position.
+    Output_TrillFadeMs,
+    Output_TrillDroopHz,
+    Output_TrillSwellPulses,
 };
 
 }  // namespace param

@@ -61,6 +61,10 @@ struct OutputRequest {
     uint32_t broadbandPct = 0;
     bool broadbandTrillOnly = false;
     uint32_t broadbandLowHz = 0;
+    // The trill's pulses shaped like a cricket's (output.trill_*, output/TrillShape.h); all 0 = the plain trill.
+    uint32_t trillFadeMs = 0;
+    uint32_t trillDroopHz = 0;
+    uint32_t trillSwellPulses = 0;
     // IdleCall.
     uint32_t announceHz = 0;
     unsigned long announceMs = 0;

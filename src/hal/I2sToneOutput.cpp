@@ -169,6 +169,21 @@ void I2sToneOutput::setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_
     portEXIT_CRITICAL(&_trainMux);
 }
 
+void I2sToneOutput::setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses) {
+    portENTER_CRITICAL(&_trainMux);
+    _reqTrillShape.fadeMs = fadeMs;
+    _reqTrillShape.droopHz = droopHz > trill::kMaxDroopHz ? trill::kMaxDroopHz : droopHz;
+    _reqTrillShape.swellPulses = swellPulses;
+    portEXIT_CRITICAL(&_trainMux);
+}
+
+// _leadPulsesLeft still counts the pulse that is starting while it is a trill pulse (it drops when the pulse ends).
+void I2sToneOutput::startPulseShape() {
+    _pulsePos = 0;
+    _pulseShaped = _trillShape.any() && _leadPulsesLeft > 0;
+    _pulseSwell = _pulseShaped ? trill::swellGain(_trillPulses - _leadPulsesLeft, _trillShape.swellPulses) : 1.0f;
+}
+
 // _leadPulsesLeft still counts the pulse that is starting while it is a trill pulse (it drops when the pulse ends).
 void I2sToneOutput::startPulseBurst() {
     if (_bbPct > 0 && (!_bbTrillOnly || _leadPulsesLeft > 0)) {
@@ -276,6 +291,12 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
             _burst.configure(sampleRateHz, _reqBroadbandLowHz);
             startPulseBurst();
         }
+        _trillShape = _reqTrillShape;
+        _reqTrillShape = trill::Shape{};  // for the NEXT train only, like the broadband request
+        _trillPulses = _reqLeadPulses;
+        _trainPulseSamples = pulseSamples;
+        _trillFadeSamples = (sampleRateHz * _trillShape.fadeMs) / 1000U;
+        startPulseShape();
     }
     portEXIT_CRITICAL(&_trainMux);
 }
@@ -376,6 +397,7 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
                     }
                     _trainGain = nextGain();
                     startPulseBurst();
+                    startPulseShape();
                 }
             }
             if (_trainRunning && _trainSegmentLeft > 0) {
@@ -389,6 +411,7 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
                 _trainStep = 0;
                 _gainCount = 0;  // a plain tone after the train plays at _amplitude
                 _trainGain = 1.0f;
+                _pulseShaped = false;
                 portENTER_CRITICAL(&_trainMux);
                 if (!_trainRequested) {
                     _trainActive = false;
@@ -405,8 +428,13 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
         }
 
         int32_t value = 0;
+        const bool shaped = _pulseShaped && trainShape;
         if (_envelope > 0.0f) {
-            const float s = sinf(static_cast<float>(_phase) * kPhaseToRadians);
+            float s = sinf(static_cast<float>(_phase) * kPhaseToRadians);
+            if (shaped) {
+                // The trill pulse's own fade and swell ride on the train's envelope (output/TrillShape.h).
+                s *= _pulseSwell * trill::fadeGain(_pulsePos, _trainPulseSamples, _trillFadeSamples);
+            }
             // Without a gain list the product is _amplitude itself, bit for bit the plain tone.
             const float amplitude = _gainCount > 0 ? _amplitude * _trainGain : _amplitude;
             if (_bbPct > 0 && trainShape) {
@@ -421,6 +449,11 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
             uint32_t step = phaseStep;
             if (trainShape && _trainStep != 0) {
                 step = _trainStep;
+                if (shaped && _trillShape.droopHz > 0) {
+                    const float offset = trill::droopOffsetHz(_pulsePos, _trainPulseSamples, _trillShape.droopHz) *
+                        (4294967296.0f / static_cast<float>(sampleRateHz));
+                    step = static_cast<uint32_t>(static_cast<int64_t>(_trainStep) + static_cast<int64_t>(offset));
+                }
             } else if (sweeping) {
                 if (_sweepPos < sweepSamples) {
                     step = static_cast<uint32_t>(_sweepStepF);
@@ -437,6 +470,9 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
             _phase = 0;
             _sweepPos = 0;
             _sweepStepF = static_cast<float>(phaseStep);
+        }
+        if (shaped) {
+            ++_pulsePos;
         }
         frames[2 * i] = value;
         frames[2 * i + 1] = value;

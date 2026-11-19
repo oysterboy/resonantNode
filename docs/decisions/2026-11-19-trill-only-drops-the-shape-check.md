@@ -3,6 +3,8 @@
 Status: decided (owner 2026-11-19: "I'd go with one (detection drops shape check) as it's cleanest and simplest
 conceptually. I want to try this. We keep the trill+glide as the 'safe bet' option")
 Date: 2026-11-19
+Amended by: decisions/2026-11-19-trill-only-judged-at-the-tryout.md (the desk gate failed; the room
+judges trill-only at the tryout, trill + rise is the backup)
 
 ## Decision
 

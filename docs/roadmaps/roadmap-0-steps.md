@@ -532,7 +532,10 @@ substeps marked "on site" wait for those days.
         per setup, quiet and noise, both presets; but the noise reached the onset only 1-4 s per 20 min, so the
         noise half is open: a louder rerun (falsealarm.py --conditions noise). Louder rerun 2026-11-19 evening (whole
         window, noise over the onset half the time): trill 4.5-5.2 false detections per 10 min, cricket 0 in 40 min;
-        the gate fails, so by the decision's revisit clause a short climb with the shape check kept is next; (4) a map of the bins that fail per pair at room
+        the gate fails. Owner 2026-11-19 evening (decisions/2026-11-19-trill-only-judged-at-the-tryout.md): trill-only
+        is judged at the tryout on the whole window, preset trillrise (trill + 4-bin rise, shape check kept) is the
+        backup, desk-checked the same night; parts 4-6 (bin map, drift) parked until the tryout shows bins failing
+        at room distance; (4) a map of the bins that fail per pair at room
         distance (hearingtest.py --bins); (5) the drift in behavior: N unanswered calls move the base one bin, a
         random direction turning at the band's edges, held once answered, away from a neighbour on the same bin,
         all params 0 = off, an RB seek log line; (6) a desk try at room distance from a failing bin, then three

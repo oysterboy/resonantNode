@@ -1,0 +1,14 @@
+# Trill + rise: 10 pulses on the base pitch with 15 ms gaps, then a short gapless rise over 4 bins (15 ms x 4); 360 ms. The backup to trill-only (decisions/2026-11-19-trill-only-judged-at-the-tryout.md)
+# The rise is what keeps the shape check (3 bins, 2 rising steps, as shipped): 4 bins leave one spare for a bin the room loses. The gapless rise (60 ms) meets the 20 ms longest-stretch rule, so the pulses stay 15 ms as in cricket. The release debounce (20) outlasts the trill gap.
+PARAM SET output.hop_trill_pulses 10
+PARAM SET output.hop_trill_gap_ms 15
+PARAM SET output.hop_steps 4
+PARAM SET output.hop_pulse_ms 15
+PARAM SET output.hop_gap_ms 0
+PARAM SET detection.scalar_release_debounce_ms 20
+PARAM SET detection.shape_medium_min_bins 3
+PARAM SET detection.shape_medium_min_rising_steps 2
+PARAM SET output.broadband_level 0
+PARAM SET output.trill_fade_ms 0
+PARAM SET output.trill_droop_hz 0
+PARAM SET output.trill_swell_pulses 0

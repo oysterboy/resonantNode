@@ -27,6 +27,11 @@ the block's log is left out. Only the call itself counts: the low announce tone 
 re-scores the block logs already in <folder> without touching a board. Needs a Node image with the RB reject / inspect /
 level lines (notes_manual.md, "Hearing test"); an older image gives outcomes without reasons.
 
+--pitches (with --listen band) pins the player's pitch, one block per pitch of the window's grid (250 Hz apart;
+output.hop_rotation, set live per block): the summary then has one row per pitch, "<window>@<Hz>". Without it the
+player calls from wherever its base sits, which under --listen band is the window's lowest pitch. Several windows
+shifted by less than 250 Hz (2500-3500,2550-3550,...) step the pitches finer.
+
 Writes block_<n>_<call>_<player>-<listener>.log, calls.csv (one row per call), summary.csv and changes.txt.
 """
 import argparse
@@ -120,6 +125,9 @@ def classify(path, player, listener, match):
     return rows, stray
 
 
+BIN_HZ = 250  # the band bins' spacing (src/app/RuntimeDefaults.h, kBandBinSpacingHz)
+
+
 def listen_cmds(listen, lo, hi):
     """Where the nodes listen. own: a band per node, the window as its range (the detector listens on as many bins as
     the call has steps, from the node's base: one bin for a trill alone). band: the detector on the whole window."""
@@ -147,6 +155,8 @@ def main():
     ap.add_argument("--listen", choices=["own", "band"], default="own",
                     help="own: each node listens on its own bins (behavior.band_per_node 1, as many bins as its call "
                     "has steps); band: every node listens on the whole window (band_per_node 0, detection.band_*)")
+    ap.add_argument("--pitches", action="store_true",
+                    help="with --listen band: one block per pitch of the window, the player pinned to it")
     ap.add_argument("--rescore", action="store_true", help="re-classify the block logs in --out, no boards touched")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -202,41 +212,55 @@ def main():
     def send(cmds, targets):
         nodepreset.apply_radio(gw, targets, cmds)
 
+    def run_block(block, r, call, window, player, listener):
+        time.sleep(a.settle)
+        path = os.path.join(a.out, "block_%02d_r%d_%s_%s_%s-%s.log" % (block, r + 1, call, window, player, listener))
+        s = nodepreset.open_port(gw[1], timeout=0.05)
+        t0, buf = time.time(), b""
+        with open(path, "w", encoding="utf-8") as f:
+            while time.time() - t0 < a.block:
+                chunk = s.read(4096)
+                if not chunk:
+                    continue
+                buf += chunk
+                while b"\n" in buf:
+                    raw, buf = buf.split(b"\n", 1)
+                    m = LOG.match(raw.decode("ascii", errors="replace").strip())
+                    if m:
+                        f.write("%.2f %s %s\n" % (time.time() - t0, m.group(1), m.group(2)))
+        s.close()
+        send(["PARAM SET output.silent 1"], [player])
+        say(score(block, r + 1, call, window, player, listener, path))
+
+    if a.pitches and a.listen != "band":
+        sys.exit("--pitches needs --listen band: with a band per node the player's base wanders while unheard")
     block = 0
     rounds = [(w, r) for w in windows for r in range(a.rounds)]
     for window, r in rounds:
         lo, hi = window.split("-")
         order = calls if r % 2 == 0 else calls[::-1]
         for call in order:
-            for player, listener in ((x, y), (y, x)):
-                block += 1
-                _, cmds = nodepreset.read_preset(call)
-                say("block %d round %d: %s, %s plays to %s, window %s-%s Hz" % (block, r + 1, call, player, listener,
-                                                                               lo, hi))
-                send(cmds + listen_cmds(a.listen, lo, hi) + ["PARAM SET node.radio_log 20", "RB log full"], [x, y])
-                send(["PARAM SET output.silent 1"], [listener])
-                send(["PARAM SET behavior.call_enabled 1", "PARAM SET behavior.call_after_silence_ms %d" % a.every,
-                      "PARAM SET behavior.call_after_silence_spread_ms %d" % a.spread, "PARAM SET output.silent 0"],
-                     [player])
-                time.sleep(a.settle)
-                path = os.path.join(a.out, "block_%02d_r%d_%s_%s_%s-%s.log" % (block, r + 1, call, window, player,
-                                                                              listener))
-                s = nodepreset.open_port(gw[1], timeout=0.05)
-                t0, buf = time.time(), b""
-                with open(path, "w", encoding="utf-8") as f:
-                    while time.time() - t0 < a.block:
-                        chunk = s.read(4096)
-                        if not chunk:
-                            continue
-                        buf += chunk
-                        while b"\n" in buf:
-                            raw, buf = buf.split(b"\n", 1)
-                            m = LOG.match(raw.decode("ascii", errors="replace").strip())
-                            if m:
-                                f.write("%.2f %s %s\n" % (time.time() - t0, m.group(1), m.group(2)))
-                s.close()
-                send(["PARAM SET output.silent 1"], [player])
-                say(score(block, r + 1, call, window, player, listener, path))
+            _, cmds = nodepreset.read_preset(call)
+            steps = int(next((c.split()[-1] for c in cmds if c.startswith("PARAM SET output.hop_steps ")), "1"))
+            bases = (int(hi) - int(lo)) // BIN_HZ + 1 - (steps - 1) if a.pitches else 1
+            for b in range(bases):
+                at = "%s@%d" % (window, int(lo) + b * BIN_HZ) if a.pitches else window
+                for player, listener in ((x, y), (y, x)):
+                    block += 1
+                    say("block %d round %d: %s, %s plays to %s, window %s-%s Hz%s" % (
+                        block, r + 1, call, player, listener, lo, hi, ", pitch %s Hz" % at.split("@")[1] if a.pitches
+                        else ""))
+                    send(cmds + listen_cmds(a.listen, lo, hi) + ["PARAM SET node.radio_log 20", "RB log full"], [x, y])
+                    send(["PARAM SET output.silent 1"], [listener])
+                    # The base is re-seeded only when the rotation changes: a detour, so a base that glided toward
+                    # what the node heard as listener is reset even when the rotation stays the same.
+                    pin = (["PARAM SET output.hop_rotation 15", "PARAM SET output.hop_rotation %d" % b]
+                           if a.pitches else [])
+                    send(pin + ["PARAM SET behavior.call_enabled 1",
+                                "PARAM SET behavior.call_after_silence_ms %d" % a.every,
+                                "PARAM SET behavior.call_after_silence_spread_ms %d" % a.spread,
+                                "PARAM SET output.silent 0"], [player])
+                    run_block(block, r, call, at, player, listener)
     send(["PARAM SET output.silent 1", "PARAM SET behavior.call_after_silence_ms 30000",
           "PARAM SET behavior.call_after_silence_spread_ms 10000"], [x, y])
     say("done: both muted, silence timer back at 30000 / 10000 (live)")
@@ -249,7 +273,7 @@ def write_summary(out, tally, reasons):
         w = csv.writer(f)
         w.writerow(["window", "call", "direction", "calls", "heard", "heard_pct", "range95", "detected", "invalid", "dismissed",
                     "missed", "stray", "reasons"])
-        for (window, call, d), c in sorted(tally.items(), key=lambda kv: (int(kv[0][0].split("-")[0]), kv[0][1:])):
+        for (window, call, d), c in sorted(tally.items(), key=lambda kv: (int(kv[0][0].split("-")[0]), int((kv[0][0] + "@0").split("@")[1]), kv[0][1:])):
             n = c["heard"] + c["detected"] + c["invalid"] + c["dismissed"] + c["missed"]
             lo, hi = wilson(c["heard"], n)
             top = "; ".join("%s x%d" % (k, v) for k, v in reasons[(window, call, d)].most_common(4))

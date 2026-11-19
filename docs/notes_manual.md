@@ -521,7 +521,8 @@ and the silence timer back at 30000 / 10000.
 
 Per call it writes heard / detected / invalid / dismissed / missed and the reason (calls.csv), per call and direction
 the rate with its 95 % range (summary.csv). "Detected" is an inspect line whose verdict line the radio dropped: the
-Node heard, the rate does not count it. `--rescore` re-scores a session's logs without touching a board. The reasons come from three lines the Node prints under `RB log full`, mirrored by
+Node heard, the rate does not count it. `--rescore` re-scores a session's logs without touching a board. `--listen band --pitches` pins the player's pitch, one block per pitch of the
+window (rows `<window>@<Hz>`); windows shifted by less than 250 Hz (`2500-3500,2550-3550,...`) step the pitches finer. The reasons come from three lines the Node prints under `RB log full`, mirrored by
 the radio log (`node.radio_log`):
 
 ```text

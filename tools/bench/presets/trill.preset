@@ -1,0 +1,14 @@
+# Trill only: 11 pulses of 20 ms on the base pitch with 15 ms gaps, no climb; 370 ms. The shape check dropped by params (decisions/2026-11-19-trill-only-drops-the-shape-check.md). Needs output.trill_* (image of 2026-11-19 or later)
+# Pulses of 20 ms, not 15: the detector wants one unbroken stretch of 20 ms (scalar_min_longest_island_ms), which in cricket is the gapless climb. hop_steps 1 makes the climb one pulse on the base bin, so the call is the trill alone. A call on one bin has one bin and no rising step: shape medium_min_bins 1 and medium_min_rising_steps 0 (shipped 3 and 2) let it pass. The release debounce (20) outlasts the 15 ms gap, as in cricket.
+PARAM SET output.hop_trill_pulses 10
+PARAM SET output.hop_trill_gap_ms 15
+PARAM SET output.hop_steps 1
+PARAM SET output.hop_pulse_ms 20
+PARAM SET output.hop_gap_ms 0
+PARAM SET detection.scalar_release_debounce_ms 20
+PARAM SET detection.shape_medium_min_bins 1
+PARAM SET detection.shape_medium_min_rising_steps 0
+PARAM SET output.broadband_level 0
+PARAM SET output.trill_fade_ms 0
+PARAM SET output.trill_droop_hz 0
+PARAM SET output.trill_swell_pulses 0

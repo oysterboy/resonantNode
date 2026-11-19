@@ -521,7 +521,17 @@ substeps marked "on site" wait for those days.
         pass, the four main images compile; the render itself is tried only on a board. Open: flash, listen, then
         the hearing test. R1 (USB) and E2 (radio) run this image since 2026-11-19 morning; cricket, bb-all, bb-trill
         and glide set the shape to 0, so applying one after fieldcricket turns it off.
-   24.5 Naming pass (owner 2026-11-19), the last substep before the freeze: the presets (glide, cricket,
+   24.5 Trill-only with drift (owner 2026-11-19, decisions/2026-11-19-trill-only-drops-the-shape-check.md): the trill
+        alone on the base bin, no climb, the shape check dropped by params; then behavior moves the base bin while
+        its calls go unanswered, so the nodes settle on bins that work between them. Trill + glide stays the safe
+        setup. Parts: (1) the decision; (2) presets trill and fieldtrill; (3) desk check at 1 m: heard against
+        cricket (hearingtest.py) and false detections with no node playing, quiet and in the lab PC's noise file,
+        against cricket, gate about one in ten minutes in noise; (4) a map of the bins that fail per pair at room
+        distance (hearingtest.py --bins); (5) the drift in behavior: N unanswered calls move the base one bin, a
+        random direction turning at the band's edges, held once answered, away from a neighbour on the same bin,
+        all params 0 = off, an RB seek log line; (6) a desk try at room distance from a failing bin, then three
+        nodes. Judged in the room in step 18 against trill + glide.
+   24.6 Naming pass (owner 2026-11-19), the last substep before the freeze: the presets (glide, cricket,
         fieldcricket, bb-all, bb-trill, ...), the sound params (output.hop_trill_*, output.broadband_*, output.trill_*)
         and the scripts (callmatrix.py, hearingtest.py, nodepreset.py) read as one vocabulary; renamed together, the
         guide's pointers and the preset files in the same commit, and a stored param under an old path checked on

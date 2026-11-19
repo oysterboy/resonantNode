@@ -534,6 +534,13 @@ RB level peak=<input max> onset= release=          once a second: a call that op
 
 An invalid `RB verdict` also names `reject=` and `failed=` (the first check that failed).
 
+False alarms, what the room alone makes the Nodes detect: `python tools/bench/falsealarm.py --gateway E0=COM12
+--nodes R1,E2 --presets trill,cricket --window 2500-3500 --block 1200 --noise C:/Users/admin/Downloads/bench_audio.wav
+--out bench/sessions/<folder>`. Every Node muted with its idle call off; per preset a quiet block and a block with the
+noise file looped from the lab PC. summary.csv: valid verdicts per 10 minutes per Node, the invalid and rejected ones
+with their reasons, and the loudest input with the seconds it reached the onset (a noise block that never does tested
+nothing). Same image as the hearing test.
+
 ## Echo shell (esp32dev-echo, 2026-10-30)
 
 The shell the echo room and Whispernet will grow in (`src/modes/echo/`, roadmap-echo.md ECHO-003). It does not

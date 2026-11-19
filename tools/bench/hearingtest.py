@@ -120,6 +120,16 @@ def classify(path, player, listener, match):
     return rows, stray
 
 
+def listen_cmds(listen, lo, hi):
+    """Where the nodes listen. own: a band per node, the window as its range (the detector listens on as many bins as
+    the call has steps, from the node's base: one bin for a trill alone). band: the detector on the whole window."""
+    cmds = ["PARAM SET behavior.band_range_low_hz %s" % lo, "PARAM SET behavior.band_range_high_hz %s" % hi]
+    if listen == "band":
+        return cmds + ["PARAM SET behavior.band_per_node 0", "PARAM SET detection.band_low_hz %s" % lo,
+                       "PARAM SET detection.band_high_hz %s" % hi]
+    return cmds + ["PARAM SET behavior.band_per_node 1"]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--gateway", required=True)
@@ -134,6 +144,9 @@ def main():
     ap.add_argument("--match", type=float, default=1.5, help="seconds after a call that count for it")
     ap.add_argument("--settle", type=int, default=8)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--listen", choices=["own", "band"], default="own",
+                    help="own: each node listens on its own bins (behavior.band_per_node 1, as many bins as its call "
+                    "has steps); band: every node listens on the whole window (band_per_node 0, detection.band_*)")
     ap.add_argument("--rescore", action="store_true", help="re-classify the block logs in --out, no boards touched")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -200,9 +213,7 @@ def main():
                 _, cmds = nodepreset.read_preset(call)
                 say("block %d round %d: %s, %s plays to %s, window %s-%s Hz" % (block, r + 1, call, player, listener,
                                                                                lo, hi))
-                send(cmds + ["PARAM SET behavior.band_per_node 1", "PARAM SET behavior.band_range_low_hz %s" % lo,
-                             "PARAM SET behavior.band_range_high_hz %s" % hi, "PARAM SET node.radio_log 20",
-                             "RB log full"], [x, y])
+                send(cmds + listen_cmds(a.listen, lo, hi) + ["PARAM SET node.radio_log 20", "RB log full"], [x, y])
                 send(["PARAM SET output.silent 1"], [listener])
                 send(["PARAM SET behavior.call_enabled 1", "PARAM SET behavior.call_after_silence_ms %d" % a.every,
                       "PARAM SET behavior.call_after_silence_spread_ms %d" % a.spread, "PARAM SET output.silent 0"],

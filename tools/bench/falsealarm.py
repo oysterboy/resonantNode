@@ -25,7 +25,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import nodepreset  # noqa: E402
-from hearingtest import LOG, field  # noqa: E402
+from hearingtest import LOG, field, listen_cmds  # noqa: E402
 
 
 def start_noise(path):
@@ -66,6 +66,9 @@ def main():
     ap.add_argument("--block", type=int, default=1200, help="seconds per preset and condition")
     ap.add_argument("--rounds", type=int, default=1)
     ap.add_argument("--noise", default="none", help="a .wav looped during the noise blocks, or none")
+    ap.add_argument("--listen", choices=["own", "band"], default="own",
+                    help="own: each node listens on its own bins (behavior.band_per_node 1, as many bins as its call "
+                    "has steps); band: every node listens on the whole window (band_per_node 0, detection.band_*)")
     ap.add_argument("--settle", type=int, default=8)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
@@ -88,10 +91,9 @@ def main():
     for r in range(a.rounds):
         for preset in (presets if r % 2 == 0 else presets[::-1]):
             _, cmds = nodepreset.read_preset(preset)
-            nodepreset.apply_radio(gw, nodes, cmds + [
-                "PARAM SET behavior.band_per_node 1", "PARAM SET behavior.band_range_low_hz %s" % lo,
-                "PARAM SET behavior.band_range_high_hz %s" % hi, "PARAM SET node.radio_log 20", "RB log full",
-                "PARAM SET behavior.call_enabled 0", "PARAM SET output.silent 1"])
+            nodepreset.apply_radio(gw, nodes, cmds + listen_cmds(a.listen, lo, hi) + [
+                "PARAM SET node.radio_log 20", "RB log full", "PARAM SET behavior.call_enabled 0",
+                "PARAM SET output.silent 1"])
             for cond in conditions:
                 block += 1
                 say("block %d round %d: %s, %s, window %s-%s Hz, nobody calling" % (block, r + 1, preset, cond, lo, hi))

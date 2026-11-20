@@ -8,7 +8,7 @@ listener is muted (output.silent 1, it still detects), so the player never hears
 timer (behavior.call_after_silence_ms --every, spread --spread, set live): each call is one independent trial.
 
 Several nodes (--nodes A,B,C,D): each plays in turn while all the others listen, so one block scores every listener
-(nodes in a line 1 m apart: 1, 2 and 3 m at once). Two nodes are the old A to B, then B to A.
+(nodes in a line 1 m apart: 1, 2 and 3 m at once); --listen-only names nodes that never play. Two nodes are the old A to B, then B to A.
 
 Order: window by window (--window takes several, comma-separated, run in the order given); per window and round
 every call with each node playing, the calls' order reversed every other round (A B C D, D C B A), so a
@@ -145,6 +145,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--gateway", required=True)
     ap.add_argument("--nodes", required=True, help="two or more, A,B,...: each plays in turn, the others listen")
+    ap.add_argument("--listen-only", default="", help="nodes of --nodes that never play (e.g. a board with a silent amp)")
     ap.add_argument("--calls", default="glide,cricket")
     ap.add_argument("--window", required=True,
                     help="low-high Hz, one window for both; several comma-separated run one after the other")
@@ -255,7 +256,7 @@ def main():
             bases = (int(hi) - int(lo)) // BIN_HZ + 1 - (steps - 1) if a.pitches else 1
             for b in range(bases):
                 at = "%s@%d" % (window, int(lo) + b * BIN_HZ) if a.pitches else window
-                for player in nodes:
+                for player in [n for n in nodes if n not in a.listen_only.split(",")]:
                     listeners = [n for n in nodes if n != player]
                     block += 1
                     say("block %d round %d: %s, %s plays to %s, window %s-%s Hz%s" % (

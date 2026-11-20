@@ -43,8 +43,8 @@ public:
         _toneOutput.setPulseBroadband(levelPct, trillOnly, lowHz);
     }
     // The trill shape of the next device-timed train (ToneOutput::setPulseTrillShape).
-    void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses) {
-        _toneOutput.setPulseTrillShape(fadeMs, droopHz, swellPulses);
+    void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses, uint32_t scope) {
+        _toneOutput.setPulseTrillShape(fadeMs, droopHz, swellPulses, scope);
     }
     // The trill pulse lengths of the next device-timed train (ToneOutput::setPulseTrillLength).
     void setPulseTrillLength(uint32_t endMs, uint32_t jitterMs) { _toneOutput.setPulseTrillLength(endMs, jitterMs); }

@@ -15,7 +15,8 @@ Three settings, each 0 = off; with all three 0 the device's output is the plain 
          stays on its bin (held to kMaxDroopHz)
   swell  the first swellPulses trill pulses grow from half level to full; the rest play at full level
 
-Only the trill's pulses are shaped: the climb after it is what the detector matches, and stays as it is.
+By default only the trill's pulses are shaped: the climb after it is what the detector matches, and stays as it
+is; Shape::scope can reach it too (kScope*).
 
 Owns: the three per-sample shapes. Does not: decide which pulses are trill pulses (I2sToneOutput), choose the
 values (output.trill_* params), or know detection. Pure, host-tested (test_trill_shape).
@@ -31,9 +32,26 @@ struct Shape {
     uint32_t fadeMs = 0;
     uint32_t droopHz = 0;
     uint32_t swellPulses = 0;
+    uint32_t scope = 0;  // which pulses the shape reaches (kScope*); not a shape of its own, so not in any()
 
     bool any() const { return fadeMs > 0 || droopHz > 0 || swellPulses > 0; }
 };
+
+// Where the shape reaches (owner 2026-11-20: "worth testing shall be tested"). The rise is what the detector matches,
+// so the default keeps it plain; the other two let the rise sound like the trill, at a cost to test on the bench:
+// the fades put a dip between the rise's gapless steps, the fall smears its bins.
+constexpr uint32_t kScopeTrill = 0;          // the trill's pulses only
+constexpr uint32_t kScopeWithRise = 1;       // the rise's steps too, fades and fall
+constexpr uint32_t kScopeRiseFallOnly = 2;   // the rise's steps get the fall only: no fades, so it stays gapless
+constexpr uint32_t kScopeMax = kScopeRiseFallOnly;
+
+// Whether a pulse is shaped at all (fall, fades, swell as they apply), and whether it gets the fades.
+inline bool shapes(bool trillPulse, uint32_t scope) {
+    return trillPulse || scope == kScopeWithRise || scope == kScopeRiseFallOnly;
+}
+inline bool fades(bool trillPulse, uint32_t scope) {
+    return trillPulse || scope == kScopeWithRise;
+}
 
 // Gain of the sample at pos (samples since the pulse began) in a pulse of pulseSamples heard samples; 1 outside
 // the fades, 0 at and past the pulse's end. fadeSamples 0: 1 everywhere.

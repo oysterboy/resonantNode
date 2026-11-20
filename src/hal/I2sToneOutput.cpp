@@ -169,11 +169,12 @@ void I2sToneOutput::setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_
     portEXIT_CRITICAL(&_trainMux);
 }
 
-void I2sToneOutput::setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses) {
+void I2sToneOutput::setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses, uint32_t scope) {
     portENTER_CRITICAL(&_trainMux);
     _reqTrillShape.fadeMs = fadeMs;
     _reqTrillShape.droopHz = droopHz > trill::kMaxDroopHz ? trill::kMaxDroopHz : droopHz;
     _reqTrillShape.swellPulses = swellPulses;
+    _reqTrillShape.scope = scope > trill::kScopeMax ? trill::kScopeTrill : scope;
     portEXIT_CRITICAL(&_trainMux);
 }
 
@@ -204,8 +205,12 @@ void I2sToneOutput::startPulseLength(uint32_t sampleRateHz) {
 // _leadPulsesLeft still counts the pulse that is starting while it is a trill pulse (it drops when the pulse ends).
 void I2sToneOutput::startPulseShape() {
     _pulsePos = 0;
-    _pulseShaped = _trillShape.any() && _leadPulsesLeft > 0;
-    _pulseSwell = _pulseShaped ? trill::swellGain(_trillPulses - _leadPulsesLeft, _trillShape.swellPulses) : 1.0f;
+    const bool trillPulse = _leadPulsesLeft > 0;
+    _pulseShaped = _trillShape.any() && trill::shapes(trillPulse, _trillShape.scope);
+    _pulseFadeSamples = _pulseShaped && trill::fades(trillPulse, _trillShape.scope) ? _trillFadeSamples : 0;
+    // The swell counts the trill's pulses; a shaped rise step plays at full level.
+    _pulseSwell =
+        _pulseShaped && trillPulse ? trill::swellGain(_trillPulses - _leadPulsesLeft, _trillShape.swellPulses) : 1.0f;
 }
 
 // _leadPulsesLeft still counts the pulse that is starting while it is a trill pulse (it drops when the pulse ends).
@@ -464,7 +469,7 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
             float s = sinf(static_cast<float>(_phase) * kPhaseToRadians);
             if (shaped) {
                 // The trill pulse's own fade and swell ride on the train's envelope (output/TrillShape.h).
-                s *= _pulseSwell * trill::fadeGain(_pulsePos, _trainPulseSamples, _trillFadeSamples);
+                s *= _pulseSwell * trill::fadeGain(_pulsePos, _trainPulseSamples, _pulseFadeSamples);
             }
             // Without a gain list the product is _amplitude itself, bit for bit the plain tone.
             const float amplitude = _gainCount > 0 ? _amplitude * _trainGain : _amplitude;

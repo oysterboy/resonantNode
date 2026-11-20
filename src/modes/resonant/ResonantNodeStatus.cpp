@@ -92,6 +92,7 @@ void Node::printRbStatus(const char* line) {
         printKeyValue("trill_fade_ms", hop.trillFadeMs);
         printKeyValue("trill_droop_hz", hop.trillDroopHz);
         printKeyValue("trill_swell_pulses", hop.trillSwellPulses);
+        printKeyValue("trill_shape_scope", hop.trillShapeScope);
         printKeyValue("trill_pulse_end_ms", hop.trillPulseEndMs);
         printKeyValue("trill_pulse_jitter_ms", hop.trillPulseJitterMs);
         printKeyValue("hop_pulse_ms", hop.hopPulseMs);

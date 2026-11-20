@@ -50,7 +50,7 @@ public:
     void setPulseHop(const uint32_t* hz, size_t n) override;
     void setPulseLeadGap(uint32_t pulses, uint32_t gapMs) override;
     void setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_t lowHz) override;
-    void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses) override;
+    void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses, uint32_t scope) override;
     void setPulseTrillLength(uint32_t endMs, uint32_t jitterMs) override;
     void setPulseGains(const float* gain, size_t n) override;
     bool pulseTrainActive() const override;
@@ -131,7 +131,8 @@ private:
     uint32_t _trainPulseSamples = 0;  // heard samples of one pulse (onMs)
     uint32_t _trillFadeSamples = 0;
     uint32_t _pulsePos = 0;           // samples since the current pulse began
-    bool _pulseShaped = false;        // the current pulse is a trill pulse and the shape is on
+    bool _pulseShaped = false;        // the shape is on and reaches the current pulse (trill::shapes)
+    uint32_t _pulseFadeSamples = 0;   // the current pulse's fades; 0 = none (trill::fades)
     float _pulseSwell = 1.0f;         // the current trill pulse's level
     void startPulseShape();           // a pulse begins: take its trill shape
     // The trill pulse lengths of the running train (trill::Length); none = every pulse _trainOnMsBase long.

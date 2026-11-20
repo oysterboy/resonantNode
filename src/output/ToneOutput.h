@@ -60,10 +60,11 @@ public:
     }
     // Optional (24.4.1): the NEXT train's trill pulses shaped like a cricket's (output/TrillShape.h): fade, pitch
     // fall, swell; all 0 = the plain trill. A device that can't ignores it.
-    virtual void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses) {
+    virtual void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses, uint32_t scope) {
         (void)fadeMs;
         (void)droopHz;
         (void)swellPulses;
+        (void)scope;
     }
     // Optional: the NEXT train's trill pulse lengths (output/TrillShape.h, trill::Length): a ramp to endMs and a
     // random variation of up to jitterMs; both 0 = every pulse plays the train's pulse length.

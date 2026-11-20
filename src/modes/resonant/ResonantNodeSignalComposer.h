@@ -70,6 +70,9 @@ public:
         uint32_t trillFadeMs = 0;
         uint32_t trillDroopHz = 0;
         uint32_t trillSwellPulses = 0;
+        // Which pulses the shape reaches (trill::kScope*): 0 the trill's, 1 the rise's steps too, 2 the rise's steps
+        // the fall only (they stay gapless).
+        uint32_t trillShapeScope = 0;
         // The trill's pulse lengths (output/TrillShape.h, trill::Length): the last pulse trillPulseEndMs long, the
         // ones between stepping from hopPulseMs to it, each varied at random by up to trillPulseJitterMs. Each 0 =
         // off. The call's length changes with them: a preset keeps it inside the detector's maximum.
@@ -148,6 +151,8 @@ inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& 
                        400U);
     registry.addUInt32(ParamId::Output_TrillSwellPulses, ModuleId::Output, "output.trill_swell_pulses",
                        &hop.trillSwellPulses, 0U, static_cast<uint32_t>(runtime::kMaxTrillPulses));
+    registry.addUInt32(ParamId::Output_TrillShapeScope, ModuleId::Output, "output.trill_shape_scope",
+                       &hop.trillShapeScope, 0U, trill::kScopeMax);
     registry.addUInt32(ParamId::Output_TrillPulseEndMs, ModuleId::Output, "output.trill_pulse_end_ms",
                        &hop.trillPulseEndMs, 0U, trill::kMaxPulseMs);
     registry.addUInt32(ParamId::Output_TrillPulseJitterMs, ModuleId::Output, "output.trill_pulse_jitter_ms",

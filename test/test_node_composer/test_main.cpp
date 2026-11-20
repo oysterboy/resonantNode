@@ -269,6 +269,10 @@ void test_trill_shape_rides_on_the_train() {
     r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
     TEST_ASSERT_EQUAL_UINT32(25, r.trillPulseEndMs);
     TEST_ASSERT_EQUAL_UINT32(4, r.trillPulseJitterMs);
+    TEST_ASSERT_EQUAL_UINT32(0, r.trillShapeScope);
+    c.values().trillShapeScope = 2;
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
+    TEST_ASSERT_EQUAL_UINT32(2, r.trillShapeScope);
 }
 
 void test_trill_is_trimmed_to_the_span_limit() {

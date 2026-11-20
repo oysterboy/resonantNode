@@ -65,6 +65,7 @@ struct OutputRequest {
     uint32_t trillFadeMs = 0;
     uint32_t trillDroopHz = 0;
     uint32_t trillSwellPulses = 0;
+    uint32_t trillShapeScope = 0;  // trill::kScope*: the trill's pulses only, or the rise's steps too
     // The trill's pulse lengths (output.trill_pulse_*, trill::Length); both 0 = every pulse plays pulseMs.
     uint32_t trillPulseEndMs = 0;
     uint32_t trillPulseJitterMs = 0;

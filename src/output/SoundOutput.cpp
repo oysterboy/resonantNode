@@ -204,7 +204,8 @@ bool SoundOutput::startHop(const OutputRequest& request) {
     _chirp.setPulseHop(request.hopHz, request.hopSteps);
     _chirp.setPulseLeadGap(static_cast<uint32_t>(request.trillPulses), static_cast<uint32_t>(request.trillGapMs));
     _chirp.setPulseBroadband(request.broadbandPct, request.broadbandTrillOnly, request.broadbandLowHz);
-    _chirp.setPulseTrillShape(request.trillFadeMs, request.trillDroopHz, request.trillSwellPulses);
+    _chirp.setPulseTrillShape(request.trillFadeMs, request.trillDroopHz, request.trillSwellPulses,
+                              request.trillShapeScope);
     _chirp.setPulseTrillLength(request.trillPulseEndMs, request.trillPulseJitterMs);
     _chirp.startPulseTrain(static_cast<uint32_t>(request.hopSteps), request.pulseMs, request.gapMs);
     if (!_chirp.isActive()) {

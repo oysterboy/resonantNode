@@ -241,6 +241,8 @@ enum class ParamId : uint16_t {
     // in ms; each 0 = off. Appended: stored params are keyed by position.
     Output_TrillPulseEndMs,
     Output_TrillPulseJitterMs,
+    // Which pulses the trill shape reaches (trill::kScope*). Appended: stored params are keyed by position.
+    Output_TrillShapeScope,
 };
 
 }  // namespace param

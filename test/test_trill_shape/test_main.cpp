@@ -93,6 +93,21 @@ void test_pulse_length_jitter_adds_and_is_held() {
     TEST_ASSERT_EQUAL_UINT32(trill::kMaxPulseMs, trill::pulseMs(9, 10, 20, j, 5));
 }
 
+void test_scope_decides_which_pulses_are_shaped_and_faded() {
+    // Default: the trill only; the rise stays plain, which is what the detector matches.
+    TEST_ASSERT_TRUE(trill::shapes(true, trill::kScopeTrill));
+    TEST_ASSERT_FALSE(trill::shapes(false, trill::kScopeTrill));
+    TEST_ASSERT_TRUE(trill::shapes(false, trill::kScopeWithRise));
+    TEST_ASSERT_TRUE(trill::fades(false, trill::kScopeWithRise));
+    // Fall only on the rise: shaped, but no fades, so its steps stay gapless.
+    TEST_ASSERT_TRUE(trill::shapes(false, trill::kScopeRiseFallOnly));
+    TEST_ASSERT_FALSE(trill::fades(false, trill::kScopeRiseFallOnly));
+    TEST_ASSERT_TRUE(trill::fades(true, trill::kScopeRiseFallOnly));
+    trill::Shape s;
+    s.scope = trill::kScopeWithRise;
+    TEST_ASSERT_FALSE(s.any());  // a scope alone shapes nothing
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_off_is_the_plain_trill);
@@ -103,5 +118,6 @@ int main(int, char**) {
     RUN_TEST(test_pulse_length_off_keeps_the_base);
     RUN_TEST(test_pulse_length_ramps_from_base_to_end);
     RUN_TEST(test_pulse_length_jitter_adds_and_is_held);
+    RUN_TEST(test_scope_decides_which_pulses_are_shaped_and_faded);
     return UNITY_END();
 }

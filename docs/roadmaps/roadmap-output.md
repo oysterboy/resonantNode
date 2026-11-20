@@ -135,7 +135,12 @@ session cited; the light runs on every node in the room from 2026-12-07.
 ### OUT-008 - the idle announcement as a falling sweep
 
 Status: TODO (owner 2026-11-20: "change idle announce sound, use rise backwards? (should not confuse detection)";
-a later change, not for the 2 m pitch map).
+a later change, not for the 2 m pitch map). Built 2026-11-20: `output.idle_announce_end_hz` (the sweep; 0 = the
+steady tone), on every node from dd22ab0a, shipped values unchanged. Heard on E2 the same day: 500 ms "way too
+long"; of three short ones the owner chose A, 60 ms falling 1,100 -> 500 Hz. Open: A as the shipped default
+(replacing the 300 Hz / 500 ms of decisions/2026-10-17-idle-call-wakes-the-network.md, with a decision file); then a
+substep, parked by the owner: a lower announcement level (`output.idle_announce_level_pct`, a level for the plain
+tone only; written 2026-11-20 on the branch `parked/announce-level`, host tests to rerun when it is picked up).
 
 ```text
 What: the idle call's lead-in (output.idle_announce_hz / _ms, today one plain tone, 300 Hz on the

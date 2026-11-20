@@ -1,0 +1,14 @@
+# Trill only with 25 ms pulses: 9 pulses, 15 ms gaps, 345 ms. Each pulse clears the 20 ms longest-stretch rule with ~5 ms to spare (the 20 ms pulse measured 16-19 ms on weak pitches, bench/sessions/2026-11-20-pitchmap-1m); 9 pulses keep it inside the 450 ms maximum.
+PARAM SET output.hop_trill_gap_ms 15
+PARAM SET output.hop_steps 1
+PARAM SET output.hop_gap_ms 0
+PARAM SET detection.scalar_release_debounce_ms 20
+PARAM SET detection.shape_medium_min_bins 1
+PARAM SET detection.shape_medium_min_rising_steps 0
+PARAM SET output.broadband_level 0
+PARAM SET output.trill_fade_ms 0
+PARAM SET output.trill_droop_hz 0
+PARAM SET output.trill_swell_pulses 0
+PARAM SET output.hop_trill_pulses 8
+PARAM SET output.hop_pulse_ms 25
+PARAM SET detection.scalar_min_longest_island_ms 20

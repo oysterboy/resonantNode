@@ -1,0 +1,417 @@
+10:43:34 NET sent seq=41537 target=* text=PARAM SET output.silent 1
+10:43:34 NET reply from=E3 seq=41537 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+10:43:34 NET reply from=E3 seq=41537 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+10:43:34 NET reply from=E3 seq=41537 done parts=1
+10:43:34 NET reply from=E4 seq=41537 part=0 PARAM SET path=output.silent module=output old=0 new=1 status=ok
+10:43:34 NET reply from=E4 seq=41537 part=0 RB silent=1
+10:43:34 NET reply from=E4 seq=41537 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+10:43:34 NET reply from=E4 seq=41537 done parts=1
+10:43:34 NET reply from=R1 seq=41537 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+10:43:34 NET reply from=R1 seq=41537 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+10:43:34 NET reply from=R1 seq=41537 done parts=1
+10:43:34 NET reply from=E2 seq=41537 part=0 PARAM SET path=output.silent module=output old=0 new=1 status=ok
+10:43:34 NET reply from=E2 seq=41537 part=0 RB silent=1
+10:43:34 NET reply from=E2 seq=41537 part=0 RB hop_check status=ok train_ms=75 heard_train_ms=125 gap_ms=0 release_debounce_ms=10 max_gap_ms=20 duration_ms=70..450 issues=none
+10:43:34 NET reply from=E2 seq=41537 done parts=1
+10:43:38 NET sent seq=41538 target=* text=NET PING
+10:43:38 NET reply from=E4 seq=41538 part=0 NET node=E4 started=1 build=ec38c754 silent=1 uptime_s=48 rx=4 rejected=2 queue_full=0 tx=34 tx_failed=0 outbox_full=0 commands=1 log=20 log_sent=33 log_dropped=18
+10:43:38 NET reply from=E4 seq=41538 done parts=1
+10:43:38 NET reply from=E3 seq=41538 part=0 NET node=E3 started=1 build=ec38c754 silent=1 uptime_s=338 rx=244 rejected=5 queue_full=0 tx=28 tx_failed=0 outbox_full=0 commands=2 log=20 log_sent=26 log_dropped=19
+10:43:38 NET reply from=E3 seq=41538 done parts=1
+10:43:38 NET reply from=E2 seq=41538 part=0 NET node=E2 started=1 build=ec38c754 silent=1 uptime_s=116 rx=80 rejected=1 queue_full=0 tx=28 tx_failed=0 outbox_full=0 commands=1 log=20 log_sent=27 log_dropped=18
+10:43:38 NET reply from=E2 seq=41538 done parts=1
+10:43:38 NET reply from=R1 seq=41538 part=0 NET node=R1 started=1 build=ec38c754 silent=1 uptime_s=3745 rx=1630 rejected=452 queue_full=0 tx=22 tx_failed=0 outbox_full=0 commands=6 log=0 log_sent=0 log_dropped=0
+10:43:38 NET reply from=R1 seq=41538 done parts=1
+10:43:42 NET sent seq=41539 target=* text=NET PING
+10:43:42 NET reply from=E4 seq=41539 part=0 NET node=E4 started=1 build=ec38c754 silent=1 uptime_s=52 rx=7 rejected=4 queue_full=0 tx=35 tx_failed=0 outbox_full=0 commands=2 log=20 log_sent=33 log_dropped=18
+10:43:42 NET reply from=E4 seq=41539 done parts=1
+10:43:42 NET reply from=E2 seq=41539 part=0 NET node=E2 started=1 build=ec38c754 silent=1 uptime_s=120 rx=83 rejected=3 queue_full=0 tx=29 tx_failed=0 outbox_full=0 commands=2 log=20 log_sent=27 log_dropped=18
+10:43:42 NET reply from=E2 seq=41539 done parts=1
+10:43:42 NET reply from=E3 seq=41539 part=0 NET node=E3 started=1 build=ec38c754 silent=1 uptime_s=342 rx=247 rejected=7 queue_full=0 tx=29 tx_failed=0 outbox_full=0 commands=3 log=20 log_sent=26 log_dropped=19
+10:43:42 NET reply from=E3 seq=41539 done parts=1
+10:43:42 NET reply from=R1 seq=41539 part=0 NET node=R1 started=1 build=ec38c754 silent=1 uptime_s=3749 rx=1633 rejected=454 queue_full=0 tx=23 tx_failed=0 outbox_full=0 commands=7 log=0 log_sent=0 log_dropped=0
+10:43:42 NET reply from=R1 seq=41539 done parts=1
+10:43:46 NET sent seq=41540 target=R1 text=SELFTEST
+10:43:46 NET reply from=R1 seq=41540 part=0 NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+10:43:46 NET reply from=R1 seq=41540 part=0 SELFTEST_BEGIN role=node mode=full board=lochraster_v2
+10:43:53 NET reply from=R1 seq=41540 part=1 SELFTEST check=board result=PASS mac=c8:2e:18:c0:bd:0c board=lochraster_v2 role=node version=0.4.0 git=ec38c754 built=Nov_20_2026 built_time=09:40:28 uptime_ms=3753407
+10:43:53 NET reply from=R1 seq=41540 part=1 SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=194618 floor_mean=1041 floor_peak=48394 bit8_pct=49.6 framing=ok slot=0
+10:43:53 NET reply from=R1 seq=41540 part=2 SELFTEST_AMP n=1 floor=2430 tone=547949 snr_db=47.1 samples=6400 valid=1
+10:43:53 NET reply from=R1 seq=41540 part=3 SELFTEST_AMP n=2 floor=1501 tone=547480 snr_db=51.2 samples=6400 valid=1
+10:43:54 NET reply from=R1 seq=41540 part=3 SELFTEST_AMP n=3 floor=1743 tone=548196 snr_db=49.9 samples=6400 valid=1
+10:43:54 NET reply from=R1 seq=41540 part=3 SELFTEST_AMP n=4 floor=1440 tone=548003 snr_db=51.6 samples=6400 valid=1
+10:43:54 NET reply from=R1 seq=41540 part=4 SELFTEST_AMP n=5 floor=1332 tone=547449 snr_db=52.3 samples=6400 valid=1
+10:43:54 NET reply from=R1 seq=41540 part=4 SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=547949 floor=1501 snr_db=51.2 snr_min_db=47.1 snr_max_db=52.3 tone_spread=1.00 pass_db=30.0 max_spread=1.30
+10:43:54 NET reply from=R1 seq=41540 part=5 SELFTEST_RESTORE detection=reset baseline=SETTLE
+10:43:54 NET reply from=R1 seq=41540 part=5 SELFTEST check=own_chirp_suppressed result=SKIP reason=silent
+10:43:54 NET reply from=R1 seq=41540 part=5 SELFTEST check=external_chirp result=SKIP reason=not_requested
+10:43:54 NET reply from=R1 seq=41540 part=5 SELFTEST_SUMMARY result=PASS pass=4 fail=0 skip=2 role=node
+10:43:54 NET reply from=R1 seq=41540 done parts=6
+10:43:54 NET sent seq=41541 target=* text=NET PING
+10:43:54 NET reply from=E4 seq=41541 part=0 NET node=E4 started=1 build=ec38c754 silent=1 uptime_s=64 rx=12 rejected=7 queue_full=0 tx=36 tx_failed=0 outbox_full=0 commands=3 log=20 log_sent=33 log_dropped=18
+10:43:54 NET reply from=E4 seq=41541 done parts=1
+10:43:54 NET reply from=R1 seq=41541 part=0 NET node=R1 started=1 build=ec38c754 silent=1 uptime_s=3760 rx=1638 rejected=457 queue_full=0 tx=30 tx_failed=0 outbox_full=0 commands=9 log=0 log_sent=0 log_dropped=0
+10:43:54 NET reply from=R1 seq=41541 done parts=1
+10:43:54 NET reply from=E2 seq=41541 part=0 NET node=E2 started=1 build=ec38c754 silent=1 uptime_s=131 rx=88 rejected=6 queue_full=0 tx=30 tx_failed=0 outbox_full=0 commands=3 log=20 log_sent=27 log_dropped=18
+10:43:54 NET reply from=E2 seq=41541 done parts=1
+10:43:54 NET reply from=E3 seq=41541 part=0 NET node=E3 started=1 build=ec38c754 silent=1 uptime_s=353 rx=252 rejected=10 queue_full=0 tx=30 tx_failed=0 outbox_full=0 commands=4 log=20 log_sent=26 log_dropped=19
+10:43:54 NET reply from=E3 seq=41541 done parts=1
+10:43:58 NET sent seq=41542 target=* text=NET PING
+10:43:58 NET reply from=R1 seq=41542 part=0 NET node=R1 started=1 build=ec38c754 silent=1 uptime_s=3764 rx=1639 rejected=457 queue_full=0 tx=31 tx_failed=0 outbox_full=0 commands=10 log=0 log_sent=0 log_dropped=0
+10:43:58 NET reply from=R1 seq=41542 done parts=1
+10:43:58 NET reply from=E3 seq=41542 part=0 NET node=E3 started=1 build=ec38c754 silent=1 uptime_s=357 rx=253 rejected=10 queue_full=0 tx=31 tx_failed=0 outbox_full=0 commands=5 log=20 log_sent=26 log_dropped=19
+10:43:58 NET reply from=E3 seq=41542 done parts=1
+10:43:58 NET reply from=E2 seq=41542 part=0 NET node=E2 started=1 build=ec38c754 silent=1 uptime_s=135 rx=89 rejected=6 queue_full=0 tx=31 tx_failed=0 outbox_full=0 commands=4 log=20 log_sent=27 log_dropped=18
+10:43:58 NET reply from=E2 seq=41542 done parts=1
+10:43:58 NET reply from=E4 seq=41542 part=0 NET node=E4 started=1 build=ec38c754 silent=1 uptime_s=68 rx=14 rejected=8 queue_full=0 tx=37 tx_failed=0 outbox_full=0 commands=4 log=20 log_sent=33 log_dropped=18
+10:43:58 NET reply from=E4 seq=41542 done parts=1
+10:44:02 NET sent seq=41543 target=E2 text=SELFTEST
+10:44:02 NET reply from=E2 seq=41543 part=0 NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+10:44:02 NET reply from=E2 seq=41543 part=0 SELFTEST_BEGIN role=node mode=full board=damp
+10:44:09 NET reply from=E2 seq=41543 part=1 SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=node version=0.4.0 git=ec38c754 built=Nov_20_2026 built_time=10:37:09 uptime_ms=139803
+10:44:09 NET reply from=E2 seq=41543 part=1 SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=112655 floor_mean=748 floor_peak=18161 bit8_pct=50.4 framing=ok slot=0
+10:44:09 NET reply from=E2 seq=41543 part=2 SELFTEST_AMP n=1 floor=1931 tone=279706 snr_db=43.2 samples=6400 valid=1
+10:44:09 NET reply from=E2 seq=41543 part=3 SELFTEST_AMP n=2 floor=1995 tone=284831 snr_db=43.1 samples=6400 valid=1
+10:44:09 NET reply from=E2 seq=41543 part=3 SELFTEST_AMP n=3 floor=1463 tone=284874 snr_db=45.8 samples=6400 valid=1
+10:44:09 NET reply from=E2 seq=41543 part=3 SELFTEST_AMP n=4 floor=2115 tone=284954 snr_db=42.6 samples=6400 valid=1
+10:44:09 NET reply from=E2 seq=41543 part=3 SELFTEST_AMP n=5 floor=1882 tone=284076 snr_db=43.6 samples=6400 valid=1
+10:44:09 NET reply from=E2 seq=41543 part=4 SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=284831 floor=1931 snr_db=43.2 snr_min_db=42.6 snr_max_db=45.8 tone_spread=1.02 pass_db=30.0 max_spread=1.30
+10:44:09 NET reply from=E2 seq=41543 part=5 SELFTEST_RESTORE detection=reset baseline=SETTLE
+10:44:09 NET reply from=E2 seq=41543 part=5 SELFTEST check=own_chirp_suppressed result=SKIP reason=silent
+10:44:09 NET reply from=E2 seq=41543 part=5 SELFTEST check=external_chirp result=SKIP reason=not_requested
+10:44:09 NET reply from=E2 seq=41543 part=5 SELFTEST_SUMMARY result=PASS pass=4 fail=0 skip=2 role=node
+10:44:09 NET reply from=E2 seq=41543 done parts=6
+10:44:09 NET sent seq=41544 target=* text=NET PING
+10:44:09 NET reply from=E2 seq=41544 part=0 NET node=E2 started=1 build=ec38c754 silent=1 uptime_s=147 rx=93 rejected=8 queue_full=0 tx=38 tx_failed=0 outbox_full=0 commands=6 log=20 log_sent=27 log_dropped=18
+10:44:09 NET reply from=E2 seq=41544 done parts=1
+10:44:09 NET reply from=R1 seq=41544 part=0 NET node=R1 started=1 build=ec38c754 silent=1 uptime_s=3776 rx=1643 rejected=459 queue_full=0 tx=32 tx_failed=0 outbox_full=0 commands=11 log=0 log_sent=0 log_dropped=0
+10:44:09 NET reply from=R1 seq=41544 done parts=1
+10:44:09 NET reply from=E4 seq=41544 part=0 NET node=E4 started=1 build=ec38c754 silent=1 uptime_s=79 rx=18 rejected=10 queue_full=0 tx=38 tx_failed=0 outbox_full=0 commands=5 log=20 log_sent=33 log_dropped=18
+10:44:09 NET reply from=E4 seq=41544 done parts=1
+10:44:09 NET reply from=E3 seq=41544 part=0 NET node=E3 started=1 build=ec38c754 silent=1 uptime_s=369 rx=257 rejected=12 queue_full=0 tx=32 tx_failed=0 outbox_full=0 commands=6 log=20 log_sent=26 log_dropped=19
+10:44:09 NET reply from=E3 seq=41544 done parts=1
+10:44:09 NET log from=E2 RB baseline active
+10:44:13 NET sent seq=41545 target=* text=NET PING
+10:44:13 NET reply from=R1 seq=41545 part=0 NET node=R1 started=1 build=ec38c754 silent=1 uptime_s=3780 rx=1647 rejected=461 queue_full=0 tx=33 tx_failed=0 outbox_full=0 commands=12 log=0 log_sent=0 log_dropped=0
+10:44:13 NET reply from=R1 seq=41545 done parts=1
+10:44:13 NET reply from=E4 seq=41545 part=0 NET node=E4 started=1 build=ec38c754 silent=1 uptime_s=83 rx=22 rejected=12 queue_full=0 tx=39 tx_failed=0 outbox_full=0 commands=6 log=20 log_sent=33 log_dropped=18
+10:44:13 NET reply from=E4 seq=41545 done parts=1
+10:44:13 NET reply from=E2 seq=41545 part=0 NET node=E2 started=1 build=ec38c754 silent=1 uptime_s=151 rx=96 rejected=10 queue_full=0 tx=40 tx_failed=0 outbox_full=0 commands=7 log=20 log_sent=28 log_dropped=18
+10:44:13 NET reply from=E2 seq=41545 done parts=1
+10:44:13 NET reply from=E3 seq=41545 part=0 NET node=E3 started=1 build=ec38c754 silent=1 uptime_s=373 rx=261 rejected=14 queue_full=0 tx=33 tx_failed=0 outbox_full=0 commands=7 log=20 log_sent=26 log_dropped=19
+10:44:13 NET reply from=E3 seq=41545 done parts=1
+10:44:17 NET sent seq=41546 target=E4 text=SELFTEST
+10:44:17 NET reply from=E4 seq=41546 part=0 NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+10:44:17 NET reply from=E4 seq=41546 part=0 SELFTEST_BEGIN role=node mode=full board=damp
+10:44:24 NET reply from=E4 seq=41546 part=1 SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=ec38c754 built=Nov_20_2026 built_time=10:37:09 uptime_ms=87516
+10:44:24 NET reply from=E4 seq=41546 part=1 SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=93455 floor_mean=1472 floor_peak=25824 bit8_pct=50.4 framing=ok slot=0
+10:44:24 NET reply from=E4 seq=41546 part=2 SELFTEST_AMP n=1 floor=3652 tone=334856 snr_db=39.2 samples=6400 valid=1
+10:44:24 NET reply from=E4 seq=41546 part=3 SELFTEST_AMP n=2 floor=3239 tone=340112 snr_db=40.4 samples=6400 valid=1
+10:44:24 NET reply from=E4 seq=41546 part=3 SELFTEST_AMP n=3 floor=3252 tone=332551 snr_db=40.2 samples=6400 valid=1
+10:44:24 NET reply from=E4 seq=41546 part=3 SELFTEST_AMP n=4 floor=3777 tone=327746 snr_db=38.8 samples=6400 valid=1
+10:44:24 NET reply from=E4 seq=41546 part=3 SELFTEST_AMP n=5 floor=4911 tone=366558 snr_db=37.5 samples=6400 valid=1
+10:44:24 NET reply from=E4 seq=41546 part=4 SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=334856 floor=3652 snr_db=39.2 snr_min_db=37.5 snr_max_db=40.4 tone_spread=1.12 pass_db=30.0 max_spread=1.30
+10:44:24 NET reply from=E4 seq=41546 part=5 SELFTEST_RESTORE detection=reset baseline=SETTLE
+10:44:24 NET reply from=E4 seq=41546 part=5 SELFTEST check=own_chirp_suppressed result=SKIP reason=silent
+10:44:24 NET reply from=E4 seq=41546 part=5 SELFTEST check=external_chirp result=SKIP reason=not_requested
+10:44:24 NET reply from=E4 seq=41546 part=5 SELFTEST_SUMMARY result=PASS pass=4 fail=0 skip=2 role=node
+10:44:24 NET reply from=E4 seq=41546 done parts=6
+10:44:24 NET sent seq=41547 target=* text=NET PING
+10:44:24 NET reply from=E2 seq=41547 part=0 NET node=E2 started=1 build=ec38c754 silent=1 uptime_s=162 rx=101 rejected=13 queue_full=0 tx=41 tx_failed=0 outbox_full=0 commands=8 log=20 log_sent=28 log_dropped=18
+10:44:24 NET reply from=E2 seq=41547 done parts=1
+10:44:25 NET reply from=R1 seq=41547 part=0 NET node=R1 started=1 build=ec38c754 silent=1 uptime_s=3791 rx=1652 rejected=464 queue_full=0 tx=34 tx_failed=0 outbox_full=0 commands=13 log=0 log_sent=0 log_dropped=0
+10:44:25 NET reply from=R1 seq=41547 done parts=1
+10:44:25 NET reply from=E3 seq=41547 part=0 NET node=E3 started=1 build=ec38c754 silent=1 uptime_s=384 rx=266 rejected=17 queue_full=0 tx=34 tx_failed=0 outbox_full=0 commands=8 log=20 log_sent=26 log_dropped=19
+10:44:25 NET reply from=E3 seq=41547 done parts=1
+10:44:25 NET reply from=E4 seq=41547 part=0 NET node=E4 started=1 build=ec38c754 silent=1 uptime_s=94 rx=27 rejected=15 queue_full=0 tx=46 tx_failed=0 outbox_full=0 commands=8 log=20 log_sent=33 log_dropped=18
+10:44:25 NET reply from=E4 seq=41547 done parts=1
+10:44:25 NET log from=E4 RB baseline active
+10:44:28 NET sent seq=41548 target=* text=NET PING
+10:44:28 NET reply from=E2 seq=41548 part=0 NET node=E2 started=1 build=ec38c754 silent=1 uptime_s=166 rx=104 rejected=14 queue_full=0 tx=42 tx_failed=0 outbox_full=0 commands=9 log=20 log_sent=28 log_dropped=18
+10:44:28 NET reply from=E2 seq=41548 done parts=1
+10:44:29 NET reply from=E4 seq=41548 part=0 NET node=E4 started=1 build=ec38c754 silent=1 uptime_s=98 rx=29 rejected=16 queue_full=0 tx=48 tx_failed=0 outbox_full=0 commands=9 log=20 log_sent=34 log_dropped=18
+10:44:29 NET reply from=E4 seq=41548 done parts=1
+10:44:29 NET reply from=R1 seq=41548 part=0 NET node=R1 started=1 build=ec38c754 silent=1 uptime_s=3795 rx=1655 rejected=465 queue_full=0 tx=35 tx_failed=0 outbox_full=0 commands=14 log=0 log_sent=0 log_dropped=0
+10:44:29 NET reply from=R1 seq=41548 done parts=1
+10:44:29 NET reply from=E3 seq=41548 part=0 NET node=E3 started=1 build=ec38c754 silent=1 uptime_s=388 rx=269 rejected=18 queue_full=0 tx=35 tx_failed=0 outbox_full=0 commands=9 log=20 log_sent=26 log_dropped=19
+10:44:29 NET reply from=E3 seq=41548 done parts=1
+10:44:32 NET sent seq=41549 target=E3 text=SELFTEST
+10:44:32 NET reply from=E3 seq=41549 part=0 NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+10:44:32 NET reply from=E3 seq=41549 part=0 SELFTEST_BEGIN role=node mode=full board=damp
+10:44:39 NET reply from=E3 seq=41549 part=1 SELFTEST check=board result=PASS mac=24:dc:c3:49:b7:38 board=damp role=node version=0.4.0 git=ec38c754 built=Nov_20_2026 built_time=10:37:09 uptime_ms=392515
+10:44:39 NET reply from=E3 seq=41549 part=1 SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=69878 floor_mean=1391 floor_peak=5391 bit8_pct=49.5 framing=ok slot=0
+10:44:39 NET reply from=E3 seq=41549 part=2 SELFTEST_AMP n=1 floor=2342 tone=372724 snr_db=44.0 samples=6400 valid=1
+10:44:40 NET reply from=E3 seq=41549 part=3 SELFTEST_AMP n=2 floor=2647 tone=373252 snr_db=43.0 samples=6400 valid=1
+10:44:40 NET reply from=E3 seq=41549 part=3 SELFTEST_AMP n=3 floor=2241 tone=374946 snr_db=44.5 samples=6400 valid=1
+10:44:40 NET reply from=E3 seq=41549 part=3 SELFTEST_AMP n=4 floor=1551 tone=375271 snr_db=47.7 samples=6400 valid=1
+10:44:40 NET reply from=E3 seq=41549 part=3 SELFTEST_AMP n=5 floor=1626 tone=374699 snr_db=47.2 samples=6400 valid=1
+10:44:40 NET reply from=E3 seq=41549 part=4 SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=374699 floor=2241 snr_db=44.5 snr_min_db=43.0 snr_max_db=47.7 tone_spread=1.01 pass_db=30.0 max_spread=1.30
+10:44:40 NET reply from=E3 seq=41549 part=5 SELFTEST_RESTORE detection=reset baseline=SETTLE
+10:44:40 NET reply from=E3 seq=41549 part=5 SELFTEST check=own_chirp_suppressed result=SKIP reason=silent
+10:44:40 NET reply from=E3 seq=41549 part=5 SELFTEST check=external_chirp result=SKIP reason=not_requested
+10:44:40 NET reply from=E3 seq=41549 part=5 SELFTEST_SUMMARY result=PASS pass=4 fail=0 skip=2 role=node
+10:44:40 NET reply from=E3 seq=41549 done parts=6
+10:44:40 NET sent seq=41550 target=* text=NET PING
+10:44:40 NET reply from=R1 seq=41550 part=0 NET node=R1 started=1 build=ec38c754 silent=1 uptime_s=3806 rx=1659 rejected=467 queue_full=0 tx=36 tx_failed=0 outbox_full=0 commands=15 log=0 log_sent=0 log_dropped=0
+10:44:40 NET reply from=R1 seq=41550 done parts=1
+10:44:40 NET reply from=E3 seq=41550 part=0 NET node=E3 started=1 build=ec38c754 silent=1 uptime_s=399 rx=273 rejected=20 queue_full=0 tx=42 tx_failed=0 outbox_full=0 commands=11 log=20 log_sent=26 log_dropped=19
+10:44:40 NET reply from=E3 seq=41550 done parts=1
+10:44:40 NET reply from=E2 seq=41550 part=0 NET node=E2 started=1 build=ec38c754 silent=1 uptime_s=177 rx=108 rejected=16 queue_full=0 tx=43 tx_failed=0 outbox_full=0 commands=10 log=20 log_sent=28 log_dropped=18
+10:44:40 NET reply from=E2 seq=41550 done parts=1
+10:44:40 NET reply from=E4 seq=41550 part=0 NET node=E4 started=1 build=ec38c754 silent=1 uptime_s=110 rx=34 rejected=19 queue_full=0 tx=49 tx_failed=0 outbox_full=0 commands=10 log=20 log_sent=34 log_dropped=18
+10:44:40 NET reply from=E4 seq=41550 done parts=1
+10:44:40 NET log from=E3 RB baseline active
+11:40:20 NET sent seq=42897 target=* text=PARAM SET output.silent 1
+11:40:20 NET reply from=E4 seq=42897 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:40:20 NET reply from=E4 seq=42897 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:40:20 NET reply from=E4 seq=42897 done parts=1
+11:40:20 NET reply from=E2 seq=42897 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:40:20 NET reply from=E2 seq=42897 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:40:20 NET reply from=E2 seq=42897 done parts=1
+11:40:20 NET reply from=E3 seq=42897 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:40:20 NET reply from=E3 seq=42897 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:40:20 NET reply from=E3 seq=42897 done parts=1
+11:40:20 NET reply from=R1 seq=42897 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:40:20 NET reply from=R1 seq=42897 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:40:20 NET reply from=R1 seq=42897 done parts=1
+11:40:24 NET sent seq=42898 target=* text=NET PING
+11:40:24 NET reply from=E2 seq=42898 part=0 NET node=E2 started=1 build=dd22ab0a silent=1 uptime_s=1422 rx=6978 rejected=1873 queue_full=0 tx=2328 tx_failed=0 outbox_full=0 commands=271 log=20 log_sent=2009 log_dropped=18
+11:40:24 NET reply from=E2 seq=42898 done parts=1
+11:40:24 NET reply from=E4 seq=42898 part=0 NET node=E4 started=1 build=dd22ab0a silent=1 uptime_s=1558 rx=7455 rejected=1878 queue_full=0 tx=1876 tx_failed=0 outbox_full=0 commands=227 log=20 log_sent=1601 log_dropped=18
+11:40:24 NET reply from=E4 seq=42898 done parts=1
+11:40:24 NET reply from=E3 seq=42898 part=0 NET node=E3 started=1 build=dd22ab0a silent=1 uptime_s=1558 rx=7659 rejected=1874 queue_full=0 tx=1648 tx_failed=0 outbox_full=0 commands=227 log=20 log_sent=1373 log_dropped=19
+11:40:24 NET reply from=E3 seq=42898 done parts=1
+11:40:24 NET reply from=R1 seq=42898 part=0 NET node=R1 started=1 build=dd22ab0a silent=1 uptime_s=1662 rx=7804 rejected=1881 queue_full=0 tx=1536 tx_failed=0 outbox_full=0 commands=229 log=20 log_sent=1259 log_dropped=0
+11:40:24 NET reply from=R1 seq=42898 done parts=1
+11:40:28 NET sent seq=42899 target=* text=NET PING
+11:40:28 NET reply from=E4 seq=42899 part=0 NET node=E4 started=1 build=dd22ab0a silent=1 uptime_s=1562 rx=7468 rejected=1878 queue_full=0 tx=1881 tx_failed=0 outbox_full=0 commands=228 log=20 log_sent=1605 log_dropped=18
+11:40:28 NET reply from=E4 seq=42899 done parts=1
+11:40:28 NET reply from=E2 seq=42899 part=0 NET node=E2 started=1 build=dd22ab0a silent=1 uptime_s=1426 rx=6991 rejected=1873 queue_full=0 tx=2333 tx_failed=0 outbox_full=0 commands=272 log=20 log_sent=2013 log_dropped=18
+11:40:28 NET reply from=E2 seq=42899 done parts=1
+11:40:28 NET reply from=E3 seq=42899 part=0 NET node=E3 started=1 build=dd22ab0a silent=1 uptime_s=1562 rx=7672 rejected=1874 queue_full=0 tx=1653 tx_failed=0 outbox_full=0 commands=228 log=20 log_sent=1377 log_dropped=19
+11:40:28 NET reply from=E3 seq=42899 done parts=1
+11:40:28 NET reply from=R1 seq=42899 part=0 NET node=R1 started=1 build=dd22ab0a silent=1 uptime_s=1666 rx=7817 rejected=1881 queue_full=0 tx=1541 tx_failed=0 outbox_full=0 commands=230 log=20 log_sent=1263 log_dropped=0
+11:40:28 NET reply from=R1 seq=42899 done parts=1
+11:40:32 NET sent seq=42900 target=E4 text=SELFTEST
+11:40:32 NET reply from=E4 seq=42900 part=0 NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+11:40:32 NET reply from=E4 seq=42900 part=0 SELFTEST_BEGIN role=node mode=full board=damp
+11:40:39 NET reply from=E4 seq=42900 part=1 SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=dd22ab0a built=Nov_20_2026 built_time=11:13:32 uptime_ms=1566845
+11:40:39 NET reply from=E4 seq=42900 part=1 SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=59543 floor_mean=1127 floor_peak=3603 bit8_pct=49.9 framing=ok slot=0
+11:40:39 NET reply from=E4 seq=42900 part=2 SELFTEST_AMP n=1 floor=3413 tone=664 snr_db=-14.2 samples=6400 valid=1
+11:40:39 NET reply from=E4 seq=42900 part=3 SELFTEST_AMP n=2 floor=2014 tone=905 snr_db=-6.9 samples=6400 valid=1
+11:40:39 NET reply from=E4 seq=42900 part=3 SELFTEST_AMP n=3 floor=2254 tone=742 snr_db=-9.6 samples=6400 valid=1
+11:40:39 NET reply from=E4 seq=42900 part=3 SELFTEST_AMP n=4 floor=3044 tone=1716 snr_db=-5.0 samples=6400 valid=1
+11:40:39 NET reply from=E4 seq=42900 part=3 SELFTEST_AMP n=5 floor=3722 tone=1540 snr_db=-7.7 samples=6400 valid=1
+11:40:39 NET reply from=E4 seq=42900 part=4 SELFTEST check=amp result=FAIL reason=low_snr chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=905 floor=3044 snr_db=-7.7 snr_min_db=-14.2 snr_max_db=-5.0 tone_spread=2.58 pass_db=30.0 max_spread=1.30
+11:40:39 NET reply from=E4 seq=42900 part=5 SELFTEST_RESTORE detection=reset baseline=SETTLE
+11:40:39 NET reply from=E4 seq=42900 part=5 RB reject reason=none duration_ms=0 strength=0 matched_mean=0 coverage_ms=0 island_ms=0 gap_ms=0 new=4294967147
+11:40:39 NET reply from=E4 seq=42900 part=6 SELFTEST check=own_chirp_suppressed result=SKIP reason=silent
+11:40:39 NET reply from=E4 seq=42900 part=6 SELFTEST check=external_chirp result=SKIP reason=not_requested
+11:40:39 NET reply from=E4 seq=42900 part=6 SELFTEST_SUMMARY result=FAIL pass=3 fail=1 skip=2 role=node
+11:40:39 NET reply from=E4 seq=42900 done parts=7
+11:40:39 NET sent seq=42901 target=* text=NET PING
+11:40:39 NET reply from=E4 seq=42901 part=0 NET node=E4 started=1 build=dd22ab0a silent=1 uptime_s=1574 rx=7509 rejected=1882 queue_full=0 tx=1893 tx_failed=0 outbox_full=0 commands=230 log=20 log_sent=1609 log_dropped=18
+11:40:39 NET reply from=E4 seq=42901 done parts=1
+11:40:39 NET reply from=E2 seq=42901 part=0 NET node=E2 started=1 build=dd22ab0a silent=1 uptime_s=1438 rx=7023 rejected=1876 queue_full=0 tx=2346 tx_failed=0 outbox_full=0 commands=273 log=20 log_sent=2025 log_dropped=18
+11:40:39 NET reply from=E2 seq=42901 done parts=1
+11:40:39 NET reply from=E3 seq=42901 part=0 NET node=E3 started=1 build=dd22ab0a silent=1 uptime_s=1573 rx=7705 rejected=1877 queue_full=0 tx=1665 tx_failed=0 outbox_full=0 commands=229 log=20 log_sent=1388 log_dropped=19
+11:40:40 NET reply from=E3 seq=42901 done parts=1
+11:40:40 NET reply from=R1 seq=42901 part=0 NET node=R1 started=1 build=dd22ab0a silent=1 uptime_s=1677 rx=7849 rejected=1884 queue_full=0 tx=1554 tx_failed=0 outbox_full=0 commands=231 log=20 log_sent=1275 log_dropped=0
+11:40:40 NET reply from=R1 seq=42901 done parts=1
+11:40:40 NET log from=E4 RB baseline active
+11:47:29 trong/medium:4.00 rising=3 bins_hz=2750-3500
+11:47:29 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=5938 duration_ms=296 profile=TonalPulseScalar
+11:47:29 NET log from=E2 RB inspect id=478 contrast=medium/medium:32292 amp=medium/medium:2036 shape=strong/medium:4.00 rising=4 bins_hz=2750-3500
+11:47:29 NET sent seq=42961 target=* text=PARAM SET output.silent 1
+11:47:29 NET reply from=E4 seq=42961 part=0 PARAM SET path=output.silent module=output old=0 new=1 status=ok
+11:47:29 NET reply from=E4 seq=42961 part=0 RB silent=1
+11:47:29 NET reply from=E4 seq=42961 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:47:29 NET reply from=E4 seq=42961 done parts=1
+11:47:29 NET reply from=R1 seq=42961 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:47:29 NET reply from=R1 seq=42961 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:47:29 NET reply from=R1 seq=42961 done parts=1
+11:47:29 NET reply from=E2 seq=42961 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:47:29 NET reply from=E2 seq=42961 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:47:29 NET reply from=E2 seq=42961 done parts=1
+11:47:29 NET reply from=E3 seq=42961 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:47:29 NET reply from=E3 seq=42961 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:47:29 NET reply from=E3 seq=42961 done parts=1
+11:47:33 NET sent seq=42962 target=* text=NET PING
+11:47:33 NET reply from=E4 seq=42962 part=0 NET node=E4 started=1 build=dd22ab0a silent=1 uptime_s=1987 rx=9677 rejected=2001 queue_full=0 tx=3028 tx_failed=0 outbox_full=0 commands=291 log=20 log_sent=2683 log_dropped=18
+11:47:33 NET reply from=E4 seq=42962 done parts=1
+11:47:33 NET reply from=R1 seq=42962 part=0 NET node=R1 started=1 build=dd22ab0a silent=1 uptime_s=2090 rx=10575 rejected=2003 queue_full=0 tx=2073 tx_failed=0 outbox_full=0 commands=234 log=20 log_sent=1791 log_dropped=0
+11:47:33 NET reply from=R1 seq=42962 done parts=1
+11:47:33 NET reply from=E3 seq=42962 part=0 NET node=E3 started=1 build=dd22ab0a silent=1 uptime_s=1986 rx=10225 rejected=1996 queue_full=0 tx=2390 tx_failed=0 outbox_full=0 commands=232 log=20 log_sent=2110 log_dropped=19
+11:47:33 NET reply from=E3 seq=42962 done parts=1
+11:47:33 NET reply from=E2 seq=42962 part=0 NET node=E2 started=1 build=dd22ab0a silent=1 uptime_s=1851 rx=9513 rejected=1995 queue_full=0 tx=3101 tx_failed=0 outbox_full=0 commands=276 log=20 log_sent=2777 log_dropped=18
+11:47:33 NET reply from=E2 seq=42962 done parts=1
+11:47:34 NET log from=E4 RB reject reason=duration_too_short duration_ms=5 strength=5514 matched_mean=4406 coverage_ms=4 island_ms=5 gap_ms=0 new=1
+11:47:34 NET log from=E3 RB reject reason=duration_too_short duration_ms=1 strength=2264 matched_mean=2264 coverage_ms=0 island_ms=1 gap_ms=0 new=1
+11:47:34 NET log from=E4 RB reject reason=duration_too_short duration_ms=4 strength=2508 matched_mean=2341 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+11:47:34 NET log from=E4 RB reject reason=duration_too_short duration_ms=3 strength=2238 matched_mean=2194 coverage_ms=2 island_ms=3 gap_ms=0 new=1
+11:47:34 NET log from=E4 RB reject reason=duration_too_short duration_ms=4 strength=2773 matched_mean=2572 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+11:47:35 NET log from=E3 RB reject reason=duration_too_short duration_ms=2 strength=2187 matched_mean=2035 coverage_ms=1 island_ms=2 gap_ms=0 new=1
+11:47:35 NET log from=E2 RB reject reason=duration_too_short duration_ms=23 strength=3965 matched_mean=2466 coverage_ms=17 island_ms=7 gap_ms=3 new=1
+11:47:35 NET log from=E4 RB reject reason=duration_too_short duration_ms=35 strength=5031 matched_mean=3036 coverage_ms=14 island_ms=6 gap_ms=8 new=1
+11:47:37 NET sent seq=42963 target=* text=NET PING
+11:47:37 NET reply from=E4 seq=42963 part=0 NET node=E4 started=1 build=dd22ab0a silent=1 uptime_s=1991 rx=9693 rejected=2001 queue_full=0 tx=3038 tx_failed=0 outbox_full=0 commands=292 log=20 log_sent=2692 log_dropped=18
+11:47:37 NET reply from=E4 seq=42963 done parts=1
+11:47:37 NET reply from=E2 seq=42963 part=0 NET node=E2 started=1 build=dd22ab0a silent=1 uptime_s=1855 rx=9533 rejected=1995 queue_full=0 tx=3107 tx_failed=0 outbox_full=0 commands=277 log=20 log_sent=2782 log_dropped=18
+11:47:37 NET reply from=E2 seq=42963 done parts=1
+11:47:37 NET reply from=R1 seq=42963 part=0 NET node=R1 started=1 build=dd22ab0a silent=1 uptime_s=2094 rx=10596 rejected=2003 queue_full=0 tx=2078 tx_failed=0 outbox_full=0 commands=235 log=20 log_sent=1795 log_dropped=0
+11:47:37 NET reply from=R1 seq=42963 done parts=1
+11:47:37 NET reply from=E3 seq=42963 part=0 NET node=E3 started=1 build=dd22ab0a silent=1 uptime_s=1990 rx=10244 rejected=1996 queue_full=0 tx=2397 tx_failed=0 outbox_full=0 commands=233 log=20 log_sent=2116 log_dropped=19
+11:47:37 NET reply from=E3 seq=42963 done parts=1
+11:47:41 NET sent seq=42964 target=E4 text=SELFTEST
+11:47:41 NET reply from=E4 seq=42964 part=0 NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+11:47:41 NET reply from=E4 seq=42964 part=0 SELFTEST_BEGIN role=node mode=full board=damp
+11:47:42 NET log from=R1 RB reject reason=duration_too_short duration_ms=11 strength=2884 matched_mean=2424 coverage_ms=10 island_ms=11 gap_ms=0 new=1
+11:47:42 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=12677 duration_ms=141 profile=TonalPulseScalar
+11:47:42 NET log from=E2 RB inspect id=480 contrast=medium/medium:31430 amp=strong/medium:8162 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:42 NET log from=R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=4041 duration_ms=94 profile=TonalPulseScalar
+11:47:42 NET log from=R1 RB inspect id=460 contrast=medium/medium:31456 amp=medium/medium:2017 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:42 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7199 duration_ms=200 profile=TonalPulseScalar
+11:47:42 NET log from=E3 RB inspect id=652 contrast=medium/medium:31458 amp=medium/medium:3531 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:43 NET log from=R1 RB reject reason=duration_too_short duration_ms=12 strength=3236 matched_mean=2666 coverage_ms=11 island_ms=12 gap_ms=0 new=1
+11:47:43 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=12069 duration_ms=132 profile=TonalPulseScalar
+11:47:43 NET log from=E2 RB inspect id=481 contrast=medium/medium:31423 amp=strong/medium:7951 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:43 NET log from=R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=4382 duration_ms=87 profile=TonalPulseScalar
+11:47:43 NET log from=R1 RB inspect id=462 contrast=medium/medium:31424 amp=medium/medium:2205 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:43 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7240 duration_ms=191 profile=TonalPulseScalar
+11:47:43 NET log from=E3 RB inspect id=653 contrast=medium/medium:31451 amp=medium/medium:3507 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:45 NET log from=R1 RB reject reason=duration_too_short duration_ms=13 strength=3084 matched_mean=2548 coverage_ms=12 island_ms=13 gap_ms=0 new=1
+11:47:45 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=11650 duration_ms=128 profile=TonalPulseScalar
+11:47:45 NET log from=E2 RB inspect id=482 contrast=medium/medium:31413 amp=strong/medium:7297 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:45 NET log from=R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=3871 duration_ms=89 profile=TonalPulseScalar
+11:47:45 NET log from=R1 RB inspect id=464 contrast=medium/medium:31431 amp=medium/medium:2230 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:45 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7479 duration_ms=193 profile=TonalPulseScalar
+11:47:45 NET log from=E3 RB inspect id=654 contrast=medium/medium:31409 amp=medium/medium:3558 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:46 NET log from=R1 RB reject reason=duration_too_short duration_ms=13 strength=3275 matched_mean=2677 coverage_ms=12 island_ms=13 gap_ms=0 new=1
+11:47:46 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=13135 duration_ms=134 profile=TonalPulseScalar
+11:47:46 NET log from=E2 RB inspect id=483 contrast=medium/medium:31417 amp=strong/medium:8697 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:46 NET log from=R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=3854 duration_ms=85 profile=TonalPulseScalar
+11:47:46 NET log from=R1 RB inspect id=466 contrast=medium/medium:31477 amp=medium/medium:2265 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:46 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7382 duration_ms=190 profile=TonalPulseScalar
+11:47:46 NET log from=E3 RB inspect id=655 contrast=medium/medium:31463 amp=medium/medium:3118 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:47 NET log from=R1 RB reject reason=duration_too_short duration_ms=19 strength=3293 matched_mean=2369 coverage_ms=18 island_ms=19 gap_ms=0 new=1
+11:47:47 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=10961 duration_ms=140 profile=TonalPulseScalar
+11:47:48 NET log from=E2 RB inspect id=484 contrast=medium/medium:31423 amp=strong/medium:7174 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:48 NET log from=R1 RB reject reason=duration_too_short duration_ms=53 strength=3960 matched_mean=3025 coverage_ms=52 island_ms=53 gap_ms=0 new=1
+11:47:48 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7196 duration_ms=190 profile=TonalPulseScalar
+11:47:48 NET log from=E3 RB inspect id=656 contrast=medium/medium:31432 amp=medium/medium:4156 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:47:48 NET reply from=E4 seq=42964 part=1 SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=dd22ab0a built=Nov_20_2026 built_time=11:13:32 uptime_ms=1995466
+11:47:48 NET reply from=E4 seq=42964 part=1 SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=70359 floor_mean=1328 floor_peak=9577 bit8_pct=49.7 framing=ok slot=0
+11:47:48 NET reply from=E4 seq=42964 part=2 SELFTEST_AMP n=1 floor=2939 tone=527705 snr_db=45.1 samples=6400 valid=1
+11:47:48 NET reply from=E4 seq=42964 part=3 SELFTEST_AMP n=2 floor=2244 tone=527778 snr_db=47.4 samples=6400 valid=1
+11:47:48 NET reply from=E4 seq=42964 part=3 SELFTEST_AMP n=3 floor=4487 tone=522873 snr_db=41.3 samples=6400 valid=1
+11:47:48 NET reply from=E4 seq=42964 part=3 SELFTEST_AMP n=4 floor=5596 tone=525952 snr_db=39.5 samples=6400 valid=1
+11:47:48 NET reply from=E4 seq=42964 part=3 SELFTEST_AMP n=5 floor=3016 tone=509592 snr_db=44.6 samples=6400 valid=1
+11:47:48 NET reply from=E4 seq=42964 part=4 SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=525952 floor=3016 snr_db=44.6 snr_min_db=39.5 snr_max_db=47.4 tone_spread=1.04 pass_db=30.0 max_spread=1.30
+11:47:48 NET reply from=E4 seq=42964 part=5 SELFTEST_RESTORE detection=reset baseline=SETTLE
+11:47:48 NET reply from=E4 seq=42964 part=5 RB reject reason=none duration_ms=0 strength=0 matched_mean=0 coverage_ms=0 island_ms=0 gap_ms=0 new=4294967276
+11:47:48 NET reply from=E4 seq=42964 part=6 SELFTEST check=own_chirp_suppressed result=SKIP reason=silent
+11:47:48 NET reply from=E4 seq=42964 part=6 SELFTEST check=external_chirp result=SKIP reason=not_requested
+11:47:48 NET reply from=E4 seq=42964 part=6 SELFTEST_SUMMARY result=PASS pass=4 fail=0 skip=2 role=node
+11:47:48 NET reply from=E4 seq=42964 done parts=7
+11:47:48 NET sent seq=42965 target=* text=NET PING
+11:47:48 NET reply from=E4 seq=42965 part=0 NET node=E4 started=1 build=dd22ab0a silent=1 uptime_s=2002 rx=9743 rejected=2005 queue_full=25 tx=3050 tx_failed=0 outbox_full=0 commands=294 log=20 log_sent=2696 log_dropped=18
+11:47:48 NET reply from=E4 seq=42965 done parts=1
+11:47:48 NET reply from=E2 seq=42965 part=0 NET node=E2 started=1 build=dd22ab0a silent=1 uptime_s=1866 rx=9590 rejected=1998 queue_full=0 tx=3129 tx_failed=0 outbox_full=0 commands=278 log=20 log_sent=2803 log_dropped=18
+11:47:48 NET reply from=E2 seq=42965 done parts=1
+11:47:48 NET reply from=R1 seq=42965 part=0 NET node=R1 started=1 build=dd22ab0a silent=1 uptime_s=2106 rx=10648 rejected=2006 queue_full=0 tx=2105 tx_failed=0 outbox_full=0 commands=236 log=20 log_sent=1821 log_dropped=0
+11:47:48 NET reply from=R1 seq=42965 done parts=1
+11:47:48 NET reply from=E3 seq=42965 part=0 NET node=E3 started=1 build=dd22ab0a silent=1 uptime_s=2002 rx=10300 rejected=1999 queue_full=0 tx=2420 tx_failed=0 outbox_full=0 commands=234 log=20 log_sent=2138 log_dropped=19
+11:47:48 NET reply from=E3 seq=42965 done parts=1
+11:47:48 NET log from=E4 RB baseline active
+11:58:35 NET sent seq=43122 target=* text=PARAM SET output.silent 1
+11:58:35 NET reply from=E2 seq=43122 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:58:35 NET reply from=E2 seq=43122 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:58:35 NET reply from=E2 seq=43122 done parts=1
+11:58:35 NET reply from=E4 seq=43122 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:58:35 NET reply from=E4 seq=43122 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:58:35 NET reply from=E4 seq=43122 done parts=1
+11:58:35 NET reply from=R1 seq=43122 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:58:35 NET reply from=R1 seq=43122 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:58:35 NET reply from=R1 seq=43122 done parts=1
+11:58:35 NET reply from=E3 seq=43122 part=0 PARAM SET path=output.silent module=output old=1 new=1 status=ok
+11:58:35 NET reply from=E3 seq=43122 part=0 RB hop_check status=ok train_ms=380 heard_train_ms=430 gap_ms=0 release_debounce_ms=20 max_gap_ms=20 duration_ms=70..450 issues=none
+11:58:35 NET reply from=E3 seq=43122 done parts=1
+11:58:39 NET sent seq=43123 target=* text=NET PING
+11:58:39 NET reply from=E4 seq=43123 part=0 NET node=E4 started=1 build=dd22ab0a silent=1 uptime_s=2654 rx=20913 rejected=2290 queue_full=25 tx=6568 tx_failed=0 outbox_full=0 commands=380 log=20 log_sent=6124 log_dropped=18
+11:58:39 NET reply from=E4 seq=43123 done parts=1
+11:58:39 NET reply from=E2 seq=43123 part=0 NET node=E2 started=1 build=dd22ab0a silent=1 uptime_s=2517 rx=20503 rejected=2281 queue_full=0 tx=6902 tx_failed=0 outbox_full=0 commands=364 log=20 log_sent=6486 log_dropped=18
+11:58:39 NET reply from=E2 seq=43123 done parts=1
+11:58:39 NET reply from=E3 seq=43123 part=0 NET node=E3 started=1 build=dd22ab0a silent=1 uptime_s=2653 rx=21216 rejected=2282 queue_full=0 tx=6188 tx_failed=0 outbox_full=0 commands=320 log=20 log_sent=5816 log_dropped=19
+11:58:39 NET reply from=E3 seq=43123 done parts=1
+11:58:39 NET reply from=R1 seq=43123 part=0 NET node=R1 started=1 build=dd22ab0a silent=1 uptime_s=2757 rx=21847 rejected=2286 queue_full=0 tx=5591 tx_failed=0 outbox_full=0 commands=322 log=20 log_sent=5217 log_dropped=0
+11:58:39 NET reply from=R1 seq=43123 done parts=1
+11:58:43 NET sent seq=43124 target=* text=NET PING
+11:58:43 NET reply from=E2 seq=43124 part=0 NET node=E2 started=1 build=dd22ab0a silent=1 uptime_s=2522 rx=20518 rejected=2283 queue_full=0 tx=6907 tx_failed=0 outbox_full=0 commands=365 log=20 log_sent=6490 log_dropped=18
+11:58:43 NET reply from=E2 seq=43124 done parts=1
+11:58:43 NET reply from=E3 seq=43124 part=0 NET node=E3 started=1 build=dd22ab0a silent=1 uptime_s=2657 rx=21231 rejected=2284 queue_full=0 tx=6193 tx_failed=0 outbox_full=0 commands=321 log=20 log_sent=5820 log_dropped=19
+11:58:43 NET reply from=E3 seq=43124 done parts=1
+11:58:43 NET reply from=R1 seq=43124 part=0 NET node=R1 started=1 build=dd22ab0a silent=1 uptime_s=2761 rx=21862 rejected=2288 queue_full=0 tx=5596 tx_failed=0 outbox_full=0 commands=323 log=20 log_sent=5221 log_dropped=0
+11:58:43 NET reply from=R1 seq=43124 done parts=1
+11:58:44 NET reply from=E4 seq=43124 part=0 NET node=E4 started=1 build=dd22ab0a silent=1 uptime_s=2658 rx=20928 rejected=2292 queue_full=25 tx=6573 tx_failed=0 outbox_full=0 commands=381 log=20 log_sent=6128 log_dropped=18
+11:58:44 NET reply from=E4 seq=43124 done parts=1
+11:58:47 NET sent seq=43125 target=E4 text=SELFTEST
+11:58:47 NET reply from=E4 seq=43125 part=0 NET note=selftest_by_radio rule=one_node_at_a_time_others_silent
+11:58:47 NET reply from=E4 seq=43125 part=0 SELFTEST_BEGIN role=node mode=full board=damp
+11:58:49 NET log from=R1 RB reject reason=duration_too_short duration_ms=12 strength=2899 matched_mean=2398 coverage_ms=11 island_ms=12 gap_ms=0 new=1
+11:58:49 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=11499 duration_ms=143 profile=TonalPulseScalar
+11:58:49 NET log from=E2 RB inspect id=1599 contrast=medium/medium:31463 amp=strong/medium:7291 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:49 NET log from=R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=4703 duration_ms=104 profile=TonalPulseScalar
+11:58:49 NET log from=R1 RB inspect id=1632 contrast=medium/medium:31450 amp=medium/medium:2667 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:49 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7328 duration_ms=205 profile=TonalPulseScalar
+11:58:49 NET log from=E3 RB inspect id=1886 contrast=medium/medium:31439 amp=medium/medium:3774 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:50 NET log from=R1 RB reject reason=duration_too_short duration_ms=11 strength=2880 matched_mean=2439 coverage_ms=10 island_ms=11 gap_ms=0 new=1
+11:58:50 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=11324 duration_ms=137 profile=TonalPulseScalar
+11:58:50 NET log from=E2 RB inspect id=1600 contrast=medium/medium:31448 amp=strong/medium:7272 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:50 NET log from=R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=4517 duration_ms=93 profile=TonalPulseScalar
+11:58:50 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7317 duration_ms=195 profile=TonalPulseScalar
+11:58:50 NET log from=E3 RB inspect id=1887 contrast=medium/medium:31451 amp=medium/medium:3734 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:51 NET log from=R1 RB reject reason=duration_too_short duration_ms=12 strength=2892 matched_mean=2414 coverage_ms=11 island_ms=12 gap_ms=0 new=1
+11:58:51 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=11284 duration_ms=137 profile=TonalPulseScalar
+11:58:52 NET log from=E2 RB inspect id=1601 contrast=medium/medium:31455 amp=strong/medium:7307 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:52 NET log from=R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=4366 duration_ms=94 profile=TonalPulseScalar
+11:58:52 NET log from=R1 RB inspect id=1636 contrast=medium/medium:31468 amp=medium/medium:2445 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:52 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7279 duration_ms=198 profile=TonalPulseScalar
+11:58:52 NET log from=E3 RB inspect id=1888 contrast=medium/medium:31445 amp=medium/medium:3765 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:53 NET log from=R1 RB reject reason=duration_too_short duration_ms=10 strength=2870 matched_mean=2502 coverage_ms=9 island_ms=10 gap_ms=0 new=1
+11:58:53 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=11211 duration_ms=136 profile=TonalPulseScalar
+11:58:53 NET log from=E2 RB inspect id=1602 contrast=medium/medium:31453 amp=strong/medium:7257 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:53 NET log from=R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=4667 duration_ms=94 profile=TonalPulseScalar
+11:58:53 NET log from=R1 RB inspect id=1638 contrast=medium/medium:31476 amp=medium/medium:2606 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:53 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7340 duration_ms=194 profile=TonalPulseScalar
+11:58:53 NET log from=E3 RB inspect id=1889 contrast=medium/medium:31453 amp=medium/medium:3849 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:54 NET log from=R1 RB reject reason=duration_too_short duration_ms=12 strength=2979 matched_mean=2388 coverage_ms=11 island_ms=12 gap_ms=0 new=1
+11:58:54 NET log from=E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=11306 duration_ms=135 profile=TonalPulseScalar
+11:58:54 NET log from=E2 RB inspect id=1603 contrast=medium/medium:31444 amp=strong/medium:7293 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:54 NET log from=R1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=4717 duration_ms=96 profile=TonalPulseScalar
+11:58:54 NET log from=R1 RB inspect id=1640 contrast=medium/medium:31465 amp=medium/medium:2638 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:54 NET log from=E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=shape strength=7334 duration_ms=194 profile=TonalPulseScalar
+11:58:54 NET log from=E3 RB inspect id=1890 contrast=medium/medium:31450 amp=medium/medium:3844 shape=none/medium:1.00 rising=0 bins_hz=3250-3250
+11:58:54 NET reply from=E4 seq=43125 part=1 SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=dd22ab0a built=Nov_20_2026 built_time=11:13:32 uptime_ms=2662250
+11:58:54 NET reply from=E4 seq=43125 part=1 SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=368709 floor_mean=1868 floor_peak=29215 bit8_pct=50.3 framing=ok slot=0
+11:58:54 NET reply from=E4 seq=43125 part=2 SELFTEST_AMP n=1 floor=1853 tone=519369 snr_db=48.9 samples=6400 valid=1
+11:58:54 NET reply from=E4 seq=43125 part=3 SELFTEST_AMP n=2 floor=2229 tone=519375 snr_db=47.3 samples=6400 valid=1
+11:58:54 NET reply from=E4 seq=43125 part=3 SELFTEST_AMP n=3 floor=3306 tone=520401 snr_db=43.9 samples=6400 valid=1
+11:58:54 NET reply from=E4 seq=43125 part=3 SELFTEST_AMP n=4 floor=4409 tone=519697 snr_db=41.4 samples=6400 valid=1
+11:58:55 NET reply from=E4 seq=43125 part=4 SELFTEST_AMP n=5 floor=25157 tone=519799 snr_db=26.3 samples=6400 valid=1
+11:58:55 NET reply from=E4 seq=43125 part=4 SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=519697 floor=3306 snr_db=43.9 snr_min_db=26.3 snr_max_db=48.9 tone_spread=1.00 pass_db=30.0 max_spread=1.30
+11:58:55 NET reply from=E4 seq=43125 part=5 SELFTEST_RESTORE detection=reset baseline=SETTLE
+11:58:55 NET reply from=E4 seq=43125 part=5 RB reject reason=none duration_ms=0 strength=0 matched_mean=0 coverage_ms=0 island_ms=0 gap_ms=0 new=4294967007
+11:58:55 NET reply from=E4 seq=43125 part=6 SELFTEST check=own_chirp_suppressed result=SKIP reason=silent
+11:58:55 NET reply from=E4 seq=43125 part=6 SELFTEST check=external_chirp result=SKIP reason=not_requested
+11:58:55 NET reply from=E4 seq=43125 part=6 SELFTEST_SUMMARY result=PASS pass=4 fail=0 skip=2 role=node
+11:58:55 NET reply from=E4 seq=43125 done parts=7
+11:58:55 NET sent seq=43126 target=* text=NET PING
+11:58:55 NET reply from=E4 seq=43126 part=0 NET node=E4 started=1 build=dd22ab0a silent=1 uptime_s=2669 rx=20979 rejected=2296 queue_full=51 tx=6585 tx_failed=0 outbox_full=0 commands=383 log=20 log_sent=6132 log_dropped=18
+11:58:55 NET reply from=E4 seq=43126 done parts=1
+11:58:55 NET reply from=E3 seq=43126 part=0 NET node=E3 started=1 build=dd22ab0a silent=1 uptime_s=2669 rx=21290 rejected=2288 queue_full=0 tx=6216 tx_failed=0 outbox_full=0 commands=322 log=20 log_sent=5842 log_dropped=19
+11:58:55 NET reply from=E3 seq=43126 done parts=1
+11:58:55 NET reply from=E2 seq=43126 part=0 NET node=E2 started=1 build=dd22ab0a silent=1 uptime_s=2533 rx=20577 rejected=2287 queue_full=0 tx=6930 tx_failed=0 outbox_full=0 commands=366 log=20 log_sent=6512 log_dropped=18
+11:58:55 NET reply from=E2 seq=43126 done parts=1
+11:58:55 NET reply from=R1 seq=43126 part=0 NET node=R1 started=1 build=dd22ab0a silent=1 uptime_s=2773 rx=21916 rejected=2292 queue_full=0 tx=5624 tx_failed=0 outbox_full=0 commands=324 log=20 log_sent=5248 log_dropped=0
+11:58:55 NET reply from=R1 seq=43126 done parts=1
+11:58:55 NET log from=E4 RB baseline active

@@ -1,0 +1,25 @@
+window,call,direction,calls,heard,heard_pct,range95,detected,invalid,dismissed,missed,stray,reasons
+2500-3500@2500,trill-taper-glide-grain-rise,E2->E3,23,23,100,86-100,0,0,0,0,20,
+2500-3500@2500,trill-taper-glide-grain-rise,E2->E4,23,22,96,79-99,0,1,0,0,18,invalid support_too_low/amp x1
+2500-3500@2500,trill-taper-glide-grain-rise,E2->R1,23,23,100,86-100,0,0,0,0,18,
+2500-3500@2500,trill-taper-glide-grain-rise,E3->E2,22,22,100,85-100,0,0,0,0,3,
+2500-3500@2500,trill-taper-glide-grain-rise,E3->E4,22,22,100,85-100,0,0,0,0,19,
+2500-3500@2500,trill-taper-glide-grain-rise,E3->R1,22,0,0,0-15,0,0,22,0,4,dismissed duration_too_short x15; dismissed strength_too_low x7
+2500-3500@2500,trill-taper-glide-grain-rise,E4->E2,24,0,0,0-14,0,0,0,24,0,missed quiet x24
+2500-3500@2500,trill-taper-glide-grain-rise,E4->E3,24,0,0,0-14,0,0,0,24,0,missed quiet x24
+2500-3500@2500,trill-taper-glide-grain-rise,E4->R1,24,0,0,0-14,0,0,0,24,0,missed quiet x24
+2500-3500@2500,trill-taper-glide-grain-rise,R1->E2,24,24,100,86-100,0,0,0,0,1,
+2500-3500@2500,trill-taper-glide-grain-rise,R1->E3,24,0,0,0-14,0,0,24,0,4,dismissed duration_too_short x24
+2500-3500@2500,trill-taper-glide-grain-rise,R1->E4,24,24,100,86-100,0,0,0,0,2,
+2500-3500@2750,trill-taper-glide-grain-rise,E2->E3,24,23,96,80-99,1,0,0,0,12,detected verdict x1
+2500-3500@2750,trill-taper-glide-grain-rise,E2->E4,23,23,100,86-100,0,0,0,0,13,
+2500-3500@2750,trill-taper-glide-grain-rise,E2->R1,23,22,96,79-99,1,0,0,0,14,detected verdict x1
+2500-3500@2750,trill-taper-glide-grain-rise,E3->E2,22,22,100,85-100,0,0,0,0,5,
+2500-3500@2750,trill-taper-glide-grain-rise,E3->E4,22,22,100,85-100,0,0,0,0,30,
+2500-3500@2750,trill-taper-glide-grain-rise,E3->R1,22,0,0,0-15,0,0,19,3,3,dismissed duration_too_short x19; missed loud x3
+2500-3500@2750,trill-taper-glide-grain-rise,E4->E2,25,0,0,0-13,0,0,0,25,0,missed quiet x25
+2500-3500@2750,trill-taper-glide-grain-rise,E4->E3,25,0,0,0-13,0,0,0,25,0,missed quiet x25
+2500-3500@2750,trill-taper-glide-grain-rise,E4->R1,25,0,0,0-13,0,0,0,25,0,missed quiet x25
+2500-3500@2750,trill-taper-glide-grain-rise,R1->E2,25,25,100,87-100,0,0,0,0,3,
+2500-3500@2750,trill-taper-glide-grain-rise,R1->E3,26,20,77,58-89,0,0,6,0,0,dismissed coverage_too_low x6
+2500-3500@2750,trill-taper-glide-grain-rise,R1->E4,25,14,56,37-73,0,11,0,0,1,invalid support_too_low/amp x11

@@ -4,7 +4,8 @@ Status: decided (owner 2026-11-19: "I'd go with one (detection drops shape check
 conceptually. I want to try this. We keep the trill+glide as the 'safe bet' option")
 Date: 2026-11-19
 Amended by: decisions/2026-11-19-trill-only-judged-at-the-tryout.md (the desk gate failed; the room
-judges trill-only at the tryout, trill + rise is the backup)
+judges trill-only at the tryout, trill + rise is the backup); decisions/2026-11-20-trill-taper-and-the-12-ms-island.md
+(trill-only's longest-stretch rule 12 ms, the tapering pulse)
 
 ## Decision
 

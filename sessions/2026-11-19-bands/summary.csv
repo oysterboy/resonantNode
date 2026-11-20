@@ -1,0 +1,31 @@
+window,call,direction,calls,heard,heard_pct,range95,detected,invalid,dismissed,missed,stray,reasons
+250-1250,bb-all,E2->R1,238,226,95,91-97,7,5,0,0,439,detected verdict x7; invalid support_too_low/contrast x5
+250-1250,bb-all,R1->E2,237,230,97,94-99,0,7,0,0,227,invalid support_too_low/shape x7
+250-1250,cricket,E2->R1,236,228,97,93-98,3,5,0,0,445,invalid support_too_low/contrast x5; detected verdict x3
+250-1250,cricket,R1->E2,234,234,100,98-100,0,0,0,0,223,
+250-1250,fieldcricket,E2->R1,241,237,98,96-99,4,0,0,0,432,detected verdict x4
+250-1250,fieldcricket,R1->E2,231,231,100,98-100,0,0,0,0,223,
+1250-2250,bb-all,E2->R1,233,231,99,97-100,2,0,0,0,2,detected verdict x2
+1250-2250,bb-all,R1->E2,227,25,11,8-16,0,202,0,0,12,invalid support_too_low/amp x202
+1250-2250,cricket,E2->R1,245,243,99,97-100,2,0,0,0,1,detected verdict x2
+1250-2250,cricket,R1->E2,234,233,100,98-100,0,1,0,0,4,invalid support_too_low/amp x1
+1250-2250,fieldcricket,E2->R1,238,236,99,97-100,2,0,0,0,3,detected verdict x2
+1250-2250,fieldcricket,R1->E2,231,231,100,98-100,0,0,0,0,18,
+2500-3500,bb-all,E2->R1,241,238,99,96-100,3,0,0,0,223,detected verdict x3
+2500-3500,bb-all,R1->E2,236,236,100,98-100,0,0,0,0,238,
+2500-3500,cricket,E2->R1,239,235,98,96-99,4,0,0,0,222,detected verdict x4
+2500-3500,cricket,R1->E2,240,240,100,98-100,0,0,0,0,228,
+2500-3500,fieldcricket,E2->R1,238,236,99,97-100,2,0,0,0,229,detected verdict x2
+2500-3500,fieldcricket,R1->E2,236,236,100,98-100,0,0,0,0,230,
+4000-5000,bb-all,E2->R1,241,235,98,95-99,6,0,0,0,1,detected verdict x6
+4000-5000,bb-all,R1->E2,236,236,100,98-100,0,0,0,0,4,
+4000-5000,cricket,E2->R1,242,237,98,95-99,5,0,0,0,3,detected verdict x5
+4000-5000,cricket,R1->E2,235,235,100,98-100,0,0,0,0,8,
+4000-5000,fieldcricket,E2->R1,239,236,99,96-100,3,0,0,0,2,detected verdict x3
+4000-5000,fieldcricket,R1->E2,229,229,100,98-100,0,0,0,0,5,
+5500-6500,bb-all,E2->R1,238,232,97,95-99,3,0,3,0,1,detected verdict x3; dismissed duration_too_long x3
+5500-6500,bb-all,R1->E2,235,235,100,98-100,0,0,0,0,4,
+5500-6500,cricket,E2->R1,240,134,56,50-62,0,0,104,2,3,dismissed duration_too_long x104; missed loud x2
+5500-6500,cricket,R1->E2,234,234,100,98-100,0,0,0,0,4,
+5500-6500,fieldcricket,E2->R1,233,216,93,89-95,1,0,16,0,1,dismissed duration_too_long x16; detected verdict x1
+5500-6500,fieldcricket,R1->E2,230,230,100,98-100,0,0,0,0,5,

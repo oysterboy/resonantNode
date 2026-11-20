@@ -55,6 +55,7 @@ public:
     void setPulseGains(const float* gain, size_t n) override;
     bool pulseTrainActive() const override;
     void setSweep(uint32_t endHz, uint32_t durationMs) override;
+    void setToneLevel(float level) override { _toneLevel = level < 0.0f ? 0.0f : (level > 1.0f ? 1.0f : level); }
     bool startClip(const int16_t* samples, size_t count, float gain) override;
     bool clipActive() const override;
 
@@ -85,6 +86,7 @@ private:
     // Sweep inside a plain tone (setSweep): glide target and length; 0 = steady.
     volatile uint32_t _sweepEndHz = 0;
     volatile uint32_t _sweepMs = 0;
+    volatile float _toneLevel = 1.0f;  // the plain tone's level (setToneLevel); trains play at _amplitude
 
     // Pulse-train handoff, caller <-> task, under _trainMux.
     mutable portMUX_TYPE _trainMux = portMUX_INITIALIZER_UNLOCKED;

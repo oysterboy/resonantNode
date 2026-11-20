@@ -245,6 +245,7 @@ enum class ParamId : uint16_t {
     Output_TrillShapeScope,
     // The idle announcement's end tone: a falling (or rising) sweep from output.idle_announce_hz. Appended.
     Output_IdleAnnounceEndHz,
+    Output_IdleAnnounceLevelPct,  // the announcement's level, % of the call's. Appended.
 };
 
 }  // namespace param

@@ -51,6 +51,7 @@ public:
     // Sweep inside the next plain chirp (OUT-005): glide from the tone to
     // endHz over durationMs; endHz = 0 clears. Stays set until cleared.
     void setSweep(uint32_t endHz, uint32_t durationMs) { _toneOutput.setSweep(endHz, durationMs); }
+    void setToneLevel(float level) { _toneOutput.setToneLevel(level); }
     // A recorded clip (ECHO-001), played and timed by the device; inactive at once when the device can't play one.
     void startClip(const int16_t* samples, size_t count, float gain);
     void stop();

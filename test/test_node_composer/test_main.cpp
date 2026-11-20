@@ -109,6 +109,7 @@ void test_idle_call_without_hop() {
     c.values().idleAnnounceEndHz = 500;
     r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
     TEST_ASSERT_EQUAL_UINT32(500, r.announceEndHz);
+    TEST_ASSERT_EQUAL_UINT32(100, r.announceLevelPct);  // shipped: the call's level
     c.values().idleAnnounceEndHz = 50;
     r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
     TEST_ASSERT_EQUAL_UINT32(OutputLimits().minHz, r.announceEndHz);

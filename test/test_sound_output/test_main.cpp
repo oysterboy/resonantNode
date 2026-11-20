@@ -27,6 +27,7 @@ public:
         sweepEndHz = endHz;
         sweepMs = durationMs;
     }
+    void setToneLevel(float l) override { toneLevel = l; }
     void toneOn() override {
         on = true;
         ++toneOns;
@@ -73,6 +74,7 @@ public:
     uint32_t lastOnHz = 0;
     uint32_t sweepEndHz = 0;
     uint32_t sweepMs = 0;
+    float toneLevel = 1.0f;
     bool on = false;
     int toneOns = 0;
     int trains = 0;
@@ -191,13 +193,16 @@ void test_idle_call_announcement_sweeps_then_clears() {
     OutputRequest r = idleCall(true);
     r.announceHz = 1100;
     r.announceEndHz = 500;
+    r.announceLevelPct = 40;
     TEST_ASSERT_TRUE(out.start(r));
+    TEST_ASSERT_EQUAL_FLOAT(0.4f, tone.toneLevel);
     TEST_ASSERT_EQUAL_UINT32(1100, tone.lastOnHz);
     TEST_ASSERT_EQUAL_UINT32(500, tone.sweepEndHz);
     TEST_ASSERT_EQUAL_UINT32(500, tone.sweepMs);
     TEST_ASSERT_EQUAL_UINT32(1700, runUntil(out, 1001, 3000, SoundOutput::kEventCallStarted));
     TEST_ASSERT_EQUAL_UINT32(0, tone.sweepEndHz);
     TEST_ASSERT_EQUAL_UINT32(0, tone.sweepMs);
+    TEST_ASSERT_EQUAL_FLOAT(1.0f, tone.toneLevel);  // the call plays at the device's level
     // Out of the output's range: rejected like the start tone.
     r.announceEndHz = 50;
     TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::FrequencyOutOfRange),

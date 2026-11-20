@@ -480,7 +480,8 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
                      broadband::levelFraction(_bbPct) * broadband::toneScale(_bbPct) * _burst.next()) *
                     amplitude * kFullScale);
             } else {
-                value = static_cast<int32_t>(s * amplitude * _envelope * kFullScale);
+                const float level = trainShape ? 1.0f : _toneLevel;
+                value = static_cast<int32_t>(s * amplitude * level * _envelope * kFullScale);
             }
             uint32_t step = phaseStep;
             if (trainShape && _trainStep != 0) {

@@ -181,6 +181,7 @@ bool SoundOutput::start(const OutputRequest& request) {
             _chirp.setToneHz(request.announceHz);
             _chirp.setTiming(request.announceMs, 0);
             _chirp.setSweep(request.announceEndHz, request.announceEndHz != 0 ? request.announceMs : 0U);
+            _chirp.setToneLevel(static_cast<float>(request.announceLevelPct > 100 ? 100 : request.announceLevelPct) / 100.0f);
             _chirp.start(ChirpPattern::Single);
             if (!_chirp.isActive()) {
                 restoreChirpSetup();
@@ -282,4 +283,5 @@ void SoundOutput::restoreChirpSetup() {
     _chirp.setToneHz(_savedToneHz);
     _chirp.setTiming(_savedOnMs, _savedPauseMs);
     _chirp.setSweep(0, 0);  // the Node's calls are plain tones or trains; a sweep stays set until cleared
+    _chirp.setToneLevel(1.0f);
 }

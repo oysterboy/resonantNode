@@ -83,6 +83,7 @@ public:
         // 0: the announcement is one steady tone; else it glides from idleAnnounceHz to this over idleAnnounceMs
         // (OUT-008: the rise played backwards, below every listening window so no node detects it).
         uint32_t idleAnnounceEndHz = 0;
+        uint32_t idleAnnounceLevelPct = 100;  // the announcement's level, % of the call's
     };
 
     static constexpr unsigned long kIdleAnnounceGapMs = 200;
@@ -166,6 +167,8 @@ inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& 
                        20U, 2000U);
     registry.addUInt32(ParamId::Output_IdleAnnounceEndHz, ModuleId::Output, "output.idle_announce_end_hz",
                        &hop.idleAnnounceEndHz, 0U, runtime::kMaxToneHz);
+    registry.addUInt32(ParamId::Output_IdleAnnounceLevelPct, ModuleId::Output, "output.idle_announce_level_pct",
+                       &hop.idleAnnounceLevelPct, 0U, 100U);
 }
 
 }  // namespace param

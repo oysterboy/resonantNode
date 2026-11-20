@@ -71,6 +71,7 @@ struct OutputRequest {
     uint32_t trillPulseJitterMs = 0;
     // IdleCall.
     uint32_t announceHz = 0;
+    uint32_t announceLevelPct = 100;  // the announcement's level, % of the device's
     uint32_t announceEndHz = 0;  // 0: a steady tone; else the announcement glides from announceHz to it
     unsigned long announceMs = 0;
     unsigned long announceGapMs = 0;

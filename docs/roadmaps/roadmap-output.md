@@ -132,9 +132,24 @@ ceiling, the 5 V rail as above, the floor in the band with the light off and at 
 session cited; the light runs on every node in the room from 2026-12-07.
 ```
 
-### OUT-008 - the idle announcement as a falling sweep
+### OUT-008 - the idle announcement: a light dip instead of a sound
 
-Status: TODO (owner 2026-11-20: "change idle announce sound, use rise backwards? (should not confuse detection)";
+Status: TODO. Plan changed by the owner 2026-11-20 midday: "remove the idle announce. instead fade led to quite
+low. then usual call light". So:
+- the idle call plays the call alone, no announcement tone and no gap;
+- before it, the light fades down to a low level (near light.floor_pct), then jumps to 1.0 with the call as every
+  emission does (decisions/2026-11-15-node-light-one-colour-and-floor.md, whose table row "the idle call's
+  announcement and gap: held" this replaces).
+
+Today `output.idle_announce_hz 0` does not mean that: it falls back to the old two-tone idle pattern
+(decisions/2026-10-17-idle-call-wakes-the-network.md). So the change needs code:
+- the call without an announcement;
+- the dip as a light state with its own length.
+
+Then a decision file amending both decisions. The sweep work below stays in the firmware unused, or is removed with
+it.
+
+History, same day (owner: "change idle announce sound, use rise backwards? (should not confuse detection)";
 a later change, not for the 2 m pitch map). Built 2026-11-20: `output.idle_announce_end_hz` (the sweep; 0 = the
 steady tone), on every node from dd22ab0a, shipped values unchanged. Heard on E2 the same day: 500 ms "way too
 long"; of three short ones the owner chose A, 60 ms falling 1,100 -> 500 Hz. Open: A as the shipped default

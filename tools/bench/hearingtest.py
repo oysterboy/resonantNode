@@ -1,4 +1,4 @@
-"""Hearing test, the Analyzer over radio: one node plays, the other only listens, then the other way round; every call gets an outcome.
+"""Hearing test, the Analyzer over radio: one node plays, every other node only listens, then the next plays; every call gets an outcome per listener.
 
   python tools/bench/hearingtest.py --gateway E0=COM12 --nodes R1,E2 --calls bb-all,bb-trill,cricket,glide \
       --window 2500-3500 --block 300 --rounds 2 --out bench/sessions/<folder>
@@ -7,8 +7,11 @@ Why one-way: with both playing, the nodes answer each other, so one miss breaks 
 listener is muted (output.silent 1, it still detects), so the player never hears an answer and calls on its silence
 timer (behavior.call_after_silence_ms --every, spread --spread, set live): each call is one independent trial.
 
+Several nodes (--nodes A,B,C,D): each plays in turn while all the others listen, so one block scores every listener
+(nodes in a line 1 m apart: 1, 2 and 3 m at once). Two nodes are the old A to B, then B to A.
+
 Order: window by window (--window takes several, comma-separated, run in the order given); per window and round
-every call in both directions, the calls' order reversed every other round (A B C D, D C B A), so a
+every call with each node playing, the calls' order reversed every other round (A B C D, D C B A), so a
 slow drift of the room does not land on one call. Everything is live (nothing saved); at the end every node is muted
 and the silence timer is back at 30000 / 10000.
 
@@ -32,7 +35,7 @@ output.hop_rotation, set live per block): the summary then has one row per pitch
 player calls from wherever its base sits, which under --listen band is the window's lowest pitch. Several windows
 shifted by less than 250 Hz (2500-3500,2550-3550,...) step the pitches finer.
 
-Writes block_<n>_<call>_<player>-<listener>.log, calls.csv (one row per call), summary.csv and changes.txt.
+Writes block_<n>_r<round>_<call>_<window>_<player>-<listener+listener...>.log, calls.csv (one row per call), summary.csv and changes.txt.
 """
 import argparse
 import collections
@@ -141,7 +144,7 @@ def listen_cmds(listen, lo, hi):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--gateway", required=True)
-    ap.add_argument("--nodes", required=True, help="two nodes, A,B: A plays to B, then B to A")
+    ap.add_argument("--nodes", required=True, help="two or more, A,B,...: each plays in turn, the others listen")
     ap.add_argument("--calls", default="glide,cricket")
     ap.add_argument("--window", required=True,
                     help="low-high Hz, one window for both; several comma-separated run one after the other")
@@ -164,7 +167,11 @@ def main():
     reasons = collections.defaultdict(collections.Counter)
     allrows = []
 
-    def score(block, rnd, call, window, player, listener, path):
+    def score(block, rnd, call, window, player, listeners, path):
+        return "\n".join("  %s->%s %s" % (player, ln, score_one(block, rnd, call, window, player, ln, path))
+                         for ln in listeners)
+
+    def score_one(block, rnd, call, window, player, listener, path):
         rows, stray = classify(path, player, listener, a.match)
         key = (window, call, "%s->%s" % (player, listener))
         c = collections.Counter(o for _, o, _ in rows)
@@ -180,7 +187,7 @@ def main():
             w.writerow(["block", "round", "window", "call", "player", "listener", "t", "outcome", "detail"])
             w.writerows(allrows)
         write_summary(a.out, tally, reasons)
-        return "  calls=%d heard=%d detected=%d invalid=%d dismissed=%d missed=%d stray=%d" % (
+        return "calls=%d heard=%d detected=%d invalid=%d dismissed=%d missed=%d stray=%d" % (
             len(rows), c["heard"], c["detected"], c["invalid"], c["dismissed"], c["missed"], stray)
 
     if a.rescore:
@@ -193,13 +200,15 @@ def main():
             else:  # the one-window name of 2026-11-18: block_<n>_<call>_<player-listener>
                 n, call, pair = int(p[1]), p[2], p[3]
                 rnd, window = (n - 1) // per_round + 1, a.window
-            player, listener = pair.split("-")
-            print(f, score(n, rnd, call, window, player, listener, os.path.join(a.out, f)))
+            player, listeners = pair.split("-", 1)
+            print(f, score(n, rnd, call, window, player, listeners.split("+"), os.path.join(a.out, f)))
         for line in open(os.path.join(a.out, "summary.csv"), encoding="utf-8"):
             print(line.rstrip())
         return
     gw = nodepreset.parse(a.gateway)[0]
-    x, y = [n for n in a.nodes.split(",") if n][:2]
+    nodes = [n for n in a.nodes.split(",") if n]
+    if len(nodes) < 2:
+        sys.exit("--nodes needs two or more")
     calls = [c for c in a.calls.split(",") if c]
     windows = [w for w in a.window.split(",") if w]
 
@@ -212,9 +221,10 @@ def main():
     def send(cmds, targets):
         nodepreset.apply_radio(gw, targets, cmds)
 
-    def run_block(block, r, call, window, player, listener):
+    def run_block(block, r, call, window, player, listeners):
         time.sleep(a.settle)
-        path = os.path.join(a.out, "block_%02d_r%d_%s_%s_%s-%s.log" % (block, r + 1, call, window, player, listener))
+        path = os.path.join(a.out, "block_%02d_r%d_%s_%s_%s-%s.log" % (block, r + 1, call, window, player,
+                                                                       "+".join(listeners)))
         s = nodepreset.open_port(gw[1], timeout=0.05)
         t0, buf = time.time(), b""
         with open(path, "w", encoding="utf-8") as f:
@@ -230,7 +240,7 @@ def main():
                         f.write("%.2f %s %s\n" % (time.time() - t0, m.group(1), m.group(2)))
         s.close()
         send(["PARAM SET output.silent 1"], [player])
-        say(score(block, r + 1, call, window, player, listener, path))
+        say(score(block, r + 1, call, window, player, listeners, path))
 
     if a.pitches and a.listen != "band":
         sys.exit("--pitches needs --listen band: with a band per node the player's base wanders while unheard")
@@ -245,13 +255,14 @@ def main():
             bases = (int(hi) - int(lo)) // BIN_HZ + 1 - (steps - 1) if a.pitches else 1
             for b in range(bases):
                 at = "%s@%d" % (window, int(lo) + b * BIN_HZ) if a.pitches else window
-                for player, listener in ((x, y), (y, x)):
+                for player in nodes:
+                    listeners = [n for n in nodes if n != player]
                     block += 1
                     say("block %d round %d: %s, %s plays to %s, window %s-%s Hz%s" % (
-                        block, r + 1, call, player, listener, lo, hi, ", pitch %s Hz" % at.split("@")[1] if a.pitches
+                        block, r + 1, call, player, ",".join(listeners), lo, hi, ", pitch %s Hz" % at.split("@")[1] if a.pitches
                         else ""))
-                    send(cmds + listen_cmds(a.listen, lo, hi) + ["PARAM SET node.radio_log 20", "RB log full"], [x, y])
-                    send(["PARAM SET output.silent 1"], [listener])
+                    send(cmds + listen_cmds(a.listen, lo, hi) + ["PARAM SET node.radio_log 20", "RB log full"], nodes)
+                    send(["PARAM SET output.silent 1"], listeners)
                     # The base is re-seeded only when the rotation changes: a detour, so a base that glided toward
                     # what the node heard as listener is reset even when the rotation stays the same.
                     pin = (["PARAM SET output.hop_rotation 15", "PARAM SET output.hop_rotation %d" % b]
@@ -260,10 +271,10 @@ def main():
                                 "PARAM SET behavior.call_after_silence_ms %d" % a.every,
                                 "PARAM SET behavior.call_after_silence_spread_ms %d" % a.spread,
                                 "PARAM SET output.silent 0"], [player])
-                    run_block(block, r, call, at, player, listener)
+                    run_block(block, r, call, at, player, listeners)
     send(["PARAM SET output.silent 1", "PARAM SET behavior.call_after_silence_ms 30000",
-          "PARAM SET behavior.call_after_silence_spread_ms 10000"], [x, y])
-    say("done: both muted, silence timer back at 30000 / 10000 (live)")
+          "PARAM SET behavior.call_after_silence_spread_ms 10000"], nodes)
+    say("done: every node muted, silence timer back at 30000 / 10000 (live)")
     for line in open(os.path.join(a.out, "summary.csv"), encoding="utf-8"):
         print(line.rstrip())
 

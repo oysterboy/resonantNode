@@ -206,6 +206,27 @@ Gate: the spread of audio.baseline over the nodes, measured and dated; the rebas
 (bench workflow) with its result; no threshold changed (CLAUDE.md, "Tuning").
 ```
 
+### NODE-021 - one clock end to end: FirmwareOta bypasses TimeBase, ms wrap and cross-node time unchecked
+
+Status: DEFERRED, known issue (found 2026-11-20, review of `src/app/TimeBase.h`, `TimingUtils.h` and a grep of all
+time reads in `src/`; nothing changed, nothing built or run).
+
+```text
+Known: TimeBase (NODE-017) is the one clock: nowUs64() never wraps, absolute ms are 32-bit and compared with
+TimingUtils.h (right while two times are < 2^31 ms = 24.8 days apart).
+1) src/app/FirmwareOta.cpp:36 reads esp_timer_get_time() / 1000 directly. With TIMEBASE_OFFSET_US = 0 it equals
+   timebase::nowMs(); in a wraptest build it is off by the offset. Breaks the rule "time only from timebase".
+   Fix: use timebase::nowMs(); then grep src/ for any other direct esp_timer_get_time / millis / micros.
+2) Not run (NODE-017 archive header): the Node past 72 min of real uptime, the 49.7-day ms wrap
+   (-D TIMEBASE_OFFSET_US=4294787296000ULL) and test_timebase on the board.
+3) nowMs() is a per-device uptime. Check NodeNet / NetGateway: are ms stamps from different nodes compared or
+   correlated anywhere? If yes, they need a sync (or must be sent as durations), not just 64 bits.
+4) Wrap-safe compares only hold below 24.8 days between two times; check long idle deadlines (behavior schedule,
+   suppress windows) for gaps that long.
+Gate: no direct time read outside TimeBase (grep clean); the ms-wrap offset run and the Node 72 min run passed and
+dated; 3) answered in notes or decisions; no threshold changed (CLAUDE.md, "Tuning").
+```
+
 ## Current focus
 
 ```text

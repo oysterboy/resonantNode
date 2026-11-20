@@ -65,6 +65,9 @@ struct OutputRequest {
     uint32_t trillFadeMs = 0;
     uint32_t trillDroopHz = 0;
     uint32_t trillSwellPulses = 0;
+    // The trill's pulse lengths (output.trill_pulse_*, trill::Length); both 0 = every pulse plays pulseMs.
+    uint32_t trillPulseEndMs = 0;
+    uint32_t trillPulseJitterMs = 0;
     // IdleCall.
     uint32_t announceHz = 0;
     unsigned long announceMs = 0;

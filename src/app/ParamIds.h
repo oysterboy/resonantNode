@@ -237,6 +237,10 @@ enum class ParamId : uint16_t {
     Output_TrillFadeMs,
     Output_TrillDroopHz,
     Output_TrillSwellPulses,
+    // The trill's pulse lengths (output/TrillShape.h, trill::Length): the last pulse's length and a random variation,
+    // in ms; each 0 = off. Appended: stored params are keyed by position.
+    Output_TrillPulseEndMs,
+    Output_TrillPulseJitterMs,
 };
 
 }  // namespace param

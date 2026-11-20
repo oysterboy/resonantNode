@@ -262,6 +262,13 @@ void test_trill_shape_rides_on_the_train() {
     TEST_ASSERT_EQUAL_UINT32(4, r.trillFadeMs);
     TEST_ASSERT_EQUAL_UINT32(150, r.trillDroopHz);
     TEST_ASSERT_EQUAL_UINT32(3, r.trillSwellPulses);
+    TEST_ASSERT_EQUAL_UINT32(0, r.trillPulseEndMs);
+    TEST_ASSERT_EQUAL_UINT32(0, r.trillPulseJitterMs);
+    c.values().trillPulseEndMs = 25;
+    c.values().trillPulseJitterMs = 4;
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
+    TEST_ASSERT_EQUAL_UINT32(25, r.trillPulseEndMs);
+    TEST_ASSERT_EQUAL_UINT32(4, r.trillPulseJitterMs);
 }
 
 void test_trill_is_trimmed_to_the_span_limit() {

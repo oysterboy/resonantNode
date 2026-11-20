@@ -78,6 +78,8 @@ bool NodeSignalComposer::composeHopTrain(const BandGrid& grid, uint32_t baseBin,
     request.trillFadeMs = _values.trillFadeMs;
     request.trillDroopHz = _values.trillDroopHz;
     request.trillSwellPulses = _values.trillSwellPulses;
+    request.trillPulseEndMs = _values.trillPulseEndMs;
+    request.trillPulseJitterMs = _values.trillPulseJitterMs;
     return true;
 }
 

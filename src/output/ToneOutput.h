@@ -65,6 +65,12 @@ public:
         (void)droopHz;
         (void)swellPulses;
     }
+    // Optional: the NEXT train's trill pulse lengths (output/TrillShape.h, trill::Length): a ramp to endMs and a
+    // random variation of up to jitterMs; both 0 = every pulse plays the train's pulse length.
+    virtual void setPulseTrillLength(uint32_t endMs, uint32_t jitterMs) {
+        (void)endMs;
+        (void)jitterMs;
+    }
     // True from startPulseTrain() until the last pulse has ramped to silence.
     virtual bool pulseTrainActive() const { return false; }
     // Optional: a sweep inside a plain tone (OUT-005). From the next toneOn()

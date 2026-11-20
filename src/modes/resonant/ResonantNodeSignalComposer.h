@@ -9,6 +9,7 @@
 #include "../../app/RuntimeDefaults.h"
 #include "../../detection/HopGapContract.h"
 #include "../../output/OutputRequest.h"
+#include "../../output/TrillShape.h"
 
 class FreqBandStream;
 
@@ -69,6 +70,11 @@ public:
         uint32_t trillFadeMs = 0;
         uint32_t trillDroopHz = 0;
         uint32_t trillSwellPulses = 0;
+        // The trill's pulse lengths (output/TrillShape.h, trill::Length): the last pulse trillPulseEndMs long, the
+        // ones between stepping from hopPulseMs to it, each varied at random by up to trillPulseJitterMs. Each 0 =
+        // off. The call's length changes with them: a preset keeps it inside the detector's maximum.
+        uint32_t trillPulseEndMs = 0;
+        uint32_t trillPulseJitterMs = 0;
         uint32_t idleAnnounceHz = 300;
         uint32_t idleAnnounceMs = 500;
     };
@@ -142,6 +148,10 @@ inline void describeParams(ParamRegistry& registry, NodeSignalComposer::Values& 
                        400U);
     registry.addUInt32(ParamId::Output_TrillSwellPulses, ModuleId::Output, "output.trill_swell_pulses",
                        &hop.trillSwellPulses, 0U, static_cast<uint32_t>(runtime::kMaxTrillPulses));
+    registry.addUInt32(ParamId::Output_TrillPulseEndMs, ModuleId::Output, "output.trill_pulse_end_ms",
+                       &hop.trillPulseEndMs, 0U, trill::kMaxPulseMs);
+    registry.addUInt32(ParamId::Output_TrillPulseJitterMs, ModuleId::Output, "output.trill_pulse_jitter_ms",
+                       &hop.trillPulseJitterMs, 0U, 20U);
     registry.addUInt32(ParamId::Output_IdleAnnounceHz, ModuleId::Output, "output.idle_announce_hz", &hop.idleAnnounceHz,
                        0U, runtime::kMaxToneHz);
     registry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &hop.idleAnnounceMs,

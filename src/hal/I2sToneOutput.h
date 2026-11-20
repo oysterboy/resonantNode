@@ -51,6 +51,7 @@ public:
     void setPulseLeadGap(uint32_t pulses, uint32_t gapMs) override;
     void setPulseBroadband(uint32_t levelPct, bool trillOnly, uint32_t lowHz) override;
     void setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32_t swellPulses) override;
+    void setPulseTrillLength(uint32_t endMs, uint32_t jitterMs) override;
     void setPulseGains(const float* gain, size_t n) override;
     bool pulseTrainActive() const override;
     void setSweep(uint32_t endHz, uint32_t durationMs) override;
@@ -105,6 +106,7 @@ private:
     bool _reqBroadbandTrillOnly = false;
     uint32_t _reqBroadbandLowHz = 0;
     trill::Shape _reqTrillShape;
+    trill::Length _reqTrillLength;
 
     // Task-only render state.
     uint32_t _phase = 0;
@@ -132,6 +134,12 @@ private:
     bool _pulseShaped = false;        // the current pulse is a trill pulse and the shape is on
     float _pulseSwell = 1.0f;         // the current trill pulse's level
     void startPulseShape();           // a pulse begins: take its trill shape
+    // The trill pulse lengths of the running train (trill::Length); none = every pulse _trainOnMsBase long.
+    trill::Length _trillLength;
+    uint32_t _trainOnMsBase = 0;      // the train's pulse length (onMs)
+    uint32_t _trainRampSamples = 0;
+    uint32_t _basePulseSamples = 0;   // heard samples of a pulse at _trainOnMsBase
+    void startPulseLength(uint32_t sampleRateHz);  // a pulse begins: its length (overrides the segment counter)
     uint32_t _trainRampMs = 0;
     uint32_t _hopHz[kMaxHop] = {};  // frequency per pulse, cycled; none = _toneHz
     size_t _hopCount = 0;

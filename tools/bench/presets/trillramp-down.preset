@@ -1,0 +1,16 @@
+# Trill only, the pulses shrinking from 25 to 15 ms (10 trill pulses, 15 ms gaps, then the base pulse), ~375 ms. The longest-stretch rule at 12 ms (owner 2026-11-20 accepts the detection change).
+PARAM SET output.hop_trill_gap_ms 15
+PARAM SET output.hop_steps 1
+PARAM SET output.hop_gap_ms 0
+PARAM SET detection.scalar_release_debounce_ms 20
+PARAM SET detection.shape_medium_min_bins 1
+PARAM SET detection.shape_medium_min_rising_steps 0
+PARAM SET output.broadband_level 0
+PARAM SET output.trill_fade_ms 0
+PARAM SET output.trill_droop_hz 0
+PARAM SET output.trill_swell_pulses 0
+PARAM SET output.hop_trill_pulses 10
+PARAM SET output.hop_pulse_ms 25
+PARAM SET output.trill_pulse_end_ms 15
+PARAM SET output.trill_pulse_jitter_ms 0
+PARAM SET detection.scalar_min_longest_island_ms 12

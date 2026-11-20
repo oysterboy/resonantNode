@@ -177,6 +177,30 @@ void I2sToneOutput::setPulseTrillShape(uint32_t fadeMs, uint32_t droopHz, uint32
     portEXIT_CRITICAL(&_trainMux);
 }
 
+void I2sToneOutput::setPulseTrillLength(uint32_t endMs, uint32_t jitterMs) {
+    portENTER_CRITICAL(&_trainMux);
+    _reqTrillLength.endMs = endMs;
+    _reqTrillLength.jitterMs = jitterMs;
+    portEXIT_CRITICAL(&_trainMux);
+}
+
+// A trill pulse gets its own length (ramp, random variation); every other pulse the train's. Call right after the
+// segment counter is set to _trainOnSamples: this overrides it. _leadPulsesLeft counts the starting pulse while it
+// is a trill pulse.
+void I2sToneOutput::startPulseLength(uint32_t sampleRateHz) {
+    _trainPulseSamples = _basePulseSamples;
+    if (!_trillLength.any() || _leadPulsesLeft == 0) {
+        return;
+    }
+    const uint32_t j = _trillLength.jitterMs;
+    const int32_t jitter = j > 0 ? static_cast<int32_t>(esp_random() % (2U * j + 1U)) - static_cast<int32_t>(j) : 0;
+    const uint32_t ms =
+        trill::pulseMs(_trillPulses - _leadPulsesLeft, _trillPulses, _trainOnMsBase, _trillLength, jitter);
+    const uint32_t pulseSamples = (sampleRateHz * ms) / 1000U;
+    _trainPulseSamples = pulseSamples;
+    _trainSegmentLeft = pulseSamples > _trainRampSamples ? pulseSamples - _trainRampSamples : 1;
+}
+
 // _leadPulsesLeft still counts the pulse that is starting while it is a trill pulse (it drops when the pulse ends).
 void I2sToneOutput::startPulseShape() {
     _pulsePos = 0;
@@ -296,7 +320,13 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
         _trillPulses = _reqLeadPulses;
         _trainPulseSamples = pulseSamples;
         _trillFadeSamples = (sampleRateHz * _trillShape.fadeMs) / 1000U;
+        _trillLength = _reqTrillLength;
+        _reqTrillLength = trill::Length{};  // for the NEXT train only, like the shape
+        _trainOnMsBase = _reqTrainOnMs;
+        _trainRampSamples = rampSamples;
+        _basePulseSamples = pulseSamples;
         startPulseShape();
+        startPulseLength(sampleRateHz);
     }
     portEXIT_CRITICAL(&_trainMux);
 }
@@ -392,6 +422,7 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
                 } else {
                     _trainOn = true;
                     _trainSegmentLeft = _trainOnSamples;
+                    startPulseLength(sampleRateHz);
                     if (_hopCount > 0) {
                         _trainStep = hopStep(sampleRateHz);
                     }

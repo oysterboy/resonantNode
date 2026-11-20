@@ -68,6 +68,43 @@ inline float droopOffsetHz(uint32_t pos, uint32_t pulseSamples, uint32_t droopHz
     return d * (0.5f - x);
 }
 
+// Pulse length inside the trill (owner 2026-11-20: hear a ramp and a random variation of the pulse length). Each
+// 0 = off; both 0 = every trill pulse plays hop_pulse_ms.
+//   endMs     the last trill pulse's length; the pulses between step linearly from the first (baseMs) to it
+//   jitterMs  each trill pulse lengthened or shortened by a random amount up to jitterMs (drawn by the caller)
+struct Length {
+    uint32_t endMs = 0;
+    uint32_t jitterMs = 0;
+
+    bool any() const { return endMs > 0 || jitterMs > 0; }
+};
+
+// Pulses shorter than this stop sounding like a tone; longer than this they stop sounding like a trill.
+constexpr uint32_t kMinPulseMs = 5;
+constexpr uint32_t kMaxPulseMs = 60;
+
+// Length in ms of trill pulse k of pulses (0 = the first), jitter already drawn in [-jitterMs, +jitterMs]; held to
+// kMinPulseMs..kMaxPulseMs. With len.any() false: baseMs.
+inline uint32_t pulseMs(uint32_t k, uint32_t pulses, uint32_t baseMs, const Length& len, int32_t jitter) {
+    if (!len.any()) {
+        return baseMs;
+    }
+    float ms = static_cast<float>(baseMs);
+    if (len.endMs > 0 && pulses > 1) {
+        const uint32_t last = pulses - 1;
+        const float x = static_cast<float>(k < last ? k : last) / static_cast<float>(last);
+        ms += (static_cast<float>(len.endMs) - static_cast<float>(baseMs)) * x;
+    }
+    ms += static_cast<float>(jitter);
+    if (ms < static_cast<float>(kMinPulseMs)) {
+        return kMinPulseMs;
+    }
+    if (ms > static_cast<float>(kMaxPulseMs)) {
+        return kMaxPulseMs;
+    }
+    return static_cast<uint32_t>(ms + 0.5f);
+}
+
 // Level of trill pulse k (0 = the first): kSwellStart rising to 1 over the first swellPulses, then 1.
 inline float swellGain(uint32_t k, uint32_t swellPulses) {
     if (k >= swellPulses) {

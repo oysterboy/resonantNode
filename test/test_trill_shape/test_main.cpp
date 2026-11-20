@@ -66,6 +66,33 @@ void test_the_swell_grows_from_half_to_full() {
     TEST_ASSERT_EQUAL_FLOAT(1.0f, trill::swellGain(9, 3));
 }
 
+void test_pulse_length_off_keeps_the_base() {
+    const trill::Length off;
+    TEST_ASSERT_FALSE(off.any());
+    TEST_ASSERT_EQUAL_UINT32(20, trill::pulseMs(0, 10, 20, off, 0));
+    TEST_ASSERT_EQUAL_UINT32(20, trill::pulseMs(9, 10, 20, off, 5));  // no jitter without jitterMs
+}
+
+void test_pulse_length_ramps_from_base_to_end() {
+    trill::Length ramp;
+    ramp.endMs = 29;
+    TEST_ASSERT_EQUAL_UINT32(20, trill::pulseMs(0, 10, 20, ramp, 0));
+    TEST_ASSERT_EQUAL_UINT32(23, trill::pulseMs(3, 10, 20, ramp, 0));
+    TEST_ASSERT_EQUAL_UINT32(29, trill::pulseMs(9, 10, 20, ramp, 0));
+    ramp.endMs = 11;  // a falling ramp
+    TEST_ASSERT_EQUAL_UINT32(11, trill::pulseMs(9, 10, 20, ramp, 0));
+}
+
+void test_pulse_length_jitter_adds_and_is_held() {
+    trill::Length j;
+    j.jitterMs = 5;
+    TEST_ASSERT_EQUAL_UINT32(25, trill::pulseMs(4, 10, 20, j, 5));
+    TEST_ASSERT_EQUAL_UINT32(15, trill::pulseMs(4, 10, 20, j, -5));
+    TEST_ASSERT_EQUAL_UINT32(trill::kMinPulseMs, trill::pulseMs(0, 10, 6, j, -5));
+    j.endMs = 58;
+    TEST_ASSERT_EQUAL_UINT32(trill::kMaxPulseMs, trill::pulseMs(9, 10, 20, j, 5));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_off_is_the_plain_trill);
@@ -73,5 +100,8 @@ int main(int, char**) {
     RUN_TEST(test_a_fade_longer_than_half_the_pulse_is_held_to_half);
     RUN_TEST(test_the_fall_is_centred_on_the_pulse);
     RUN_TEST(test_the_swell_grows_from_half_to_full);
+    RUN_TEST(test_pulse_length_off_keeps_the_base);
+    RUN_TEST(test_pulse_length_ramps_from_base_to_end);
+    RUN_TEST(test_pulse_length_jitter_adds_and_is_held);
     return UNITY_END();
 }

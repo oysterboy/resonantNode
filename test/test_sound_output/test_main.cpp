@@ -23,6 +23,10 @@ class FakeTone : public ToneOutput {
 public:
     void begin() override {}
     void setToneHz(uint32_t hz) override { toneHz = hz; }
+    void setSweep(uint32_t endHz, uint32_t durationMs) override {
+        sweepEndHz = endHz;
+        sweepMs = durationMs;
+    }
     void toneOn() override {
         on = true;
         ++toneOns;
@@ -67,6 +71,8 @@ public:
 
     uint32_t toneHz = 0;
     uint32_t lastOnHz = 0;
+    uint32_t sweepEndHz = 0;
+    uint32_t sweepMs = 0;
     bool on = false;
     int toneOns = 0;
     int trains = 0;
@@ -175,6 +181,27 @@ void test_idle_call_announces_waits_then_plays_the_train() {
     TEST_ASSERT_EQUAL_UINT32(3200, tone.toneHz);  // tone restored after the announcement
     TEST_ASSERT_EQUAL_UINT32(1865, runUntil(out, callAt + 1, 3000, SoundOutput::kEventFinished));
     TEST_ASSERT_EQUAL_UINT32(1, out.status().done);
+}
+
+// OUT-008: the announcement glides from announceHz to announceEndHz over its length; the call after it is plain.
+void test_idle_call_announcement_sweeps_then_clears() {
+    FakeTone tone;
+    ChirpOutput chirp(tone, 3200);
+    SoundOutput out(chirp);
+    OutputRequest r = idleCall(true);
+    r.announceHz = 1100;
+    r.announceEndHz = 500;
+    TEST_ASSERT_TRUE(out.start(r));
+    TEST_ASSERT_EQUAL_UINT32(1100, tone.lastOnHz);
+    TEST_ASSERT_EQUAL_UINT32(500, tone.sweepEndHz);
+    TEST_ASSERT_EQUAL_UINT32(500, tone.sweepMs);
+    TEST_ASSERT_EQUAL_UINT32(1700, runUntil(out, 1001, 3000, SoundOutput::kEventCallStarted));
+    TEST_ASSERT_EQUAL_UINT32(0, tone.sweepEndHz);
+    TEST_ASSERT_EQUAL_UINT32(0, tone.sweepMs);
+    // Out of the output's range: rejected like the start tone.
+    r.announceEndHz = 50;
+    TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::FrequencyOutOfRange),
+                      static_cast<int>(SoundOutput::validate(r, OutputLimits())));
 }
 
 void test_idle_call_without_hop_ends_with_the_plain_chirp() {
@@ -376,6 +403,7 @@ int main(int, char**) {
     RUN_TEST(test_hop_train_plays_the_bins_and_finishes_after_its_span);
     RUN_TEST(test_the_broadband_burst_reaches_the_device_with_the_train);
     RUN_TEST(test_idle_call_announces_waits_then_plays_the_train);
+    RUN_TEST(test_idle_call_announcement_sweeps_then_clears);
     RUN_TEST(test_idle_call_without_hop_ends_with_the_plain_chirp);
     RUN_TEST(test_stop_in_the_gap_cancels_the_call);
     RUN_TEST(test_limits_reject_and_nothing_sounds);

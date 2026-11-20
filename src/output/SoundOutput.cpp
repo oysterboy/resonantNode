@@ -111,6 +111,10 @@ OutputReject SoundOutput::validate(const OutputRequest& request, const OutputLim
             if (request.announceHz < limits.minHz || request.announceHz > limits.maxHz) {
                 return OutputReject::FrequencyOutOfRange;
             }
+            if (request.announceEndHz != 0 &&
+                (request.announceEndHz < limits.minHz || request.announceEndHz > limits.maxHz)) {
+                return OutputReject::FrequencyOutOfRange;
+            }
             if (request.announceMs < limits.minAnnounceMs || request.announceMs > limits.maxAnnounceMs) {
                 return OutputReject::AnnounceOutOfRange;
             }
@@ -176,6 +180,7 @@ bool SoundOutput::start(const OutputRequest& request) {
             _savedPauseMs = _chirp.chirpPauseMs();
             _chirp.setToneHz(request.announceHz);
             _chirp.setTiming(request.announceMs, 0);
+            _chirp.setSweep(request.announceEndHz, request.announceEndHz != 0 ? request.announceMs : 0U);
             _chirp.start(ChirpPattern::Single);
             if (!_chirp.isActive()) {
                 restoreChirpSetup();
@@ -276,4 +281,5 @@ void SoundOutput::stop() {
 void SoundOutput::restoreChirpSetup() {
     _chirp.setToneHz(_savedToneHz);
     _chirp.setTiming(_savedOnMs, _savedPauseMs);
+    _chirp.setSweep(0, 0);  // the Node's calls are plain tones or trains; a sweep stays set until cleared
 }

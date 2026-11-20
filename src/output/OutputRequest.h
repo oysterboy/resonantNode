@@ -71,6 +71,7 @@ struct OutputRequest {
     uint32_t trillPulseJitterMs = 0;
     // IdleCall.
     uint32_t announceHz = 0;
+    uint32_t announceEndHz = 0;  // 0: a steady tone; else the announcement glides from announceHz to it
     unsigned long announceMs = 0;
     unsigned long announceGapMs = 0;
     // Clip: int16 samples at the port's rate, owned by the caller and left untouched until the request ends;

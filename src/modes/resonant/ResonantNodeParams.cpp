@@ -21,7 +21,7 @@ void NodeParams::describe(const Fields& f) {
     _registry.setGroupNamer(param::moduleNameForGroup);
     param::describeParams(_registry, f.scalar);      // detection.scalar_* (13)
     param::describeParams(_registry, f.band);        // detection.band_low_hz / band_high_hz
-    param::describeParams(_registry, f.output);      // output.hop_* / idle_announce_* (7)
+    param::describeParams(_registry, f.output);      // output.hop_* / trill_* / broadband_* / idle_announce_*
     param::describeParams(_registry, f.node);        // output.silent, node.radio_enabled
     param::describeParams(_registry, f.behavior);    // behavior.* (13)
     param::describeParams(_registry, f.inspection);  // detection.contrast_medium / amp_medium, detection.shape_* (8)

@@ -243,6 +243,8 @@ enum class ParamId : uint16_t {
     Output_TrillPulseJitterMs,
     // Which pulses the trill shape reaches (trill::kScope*). Appended: stored params are keyed by position.
     Output_TrillShapeScope,
+    // The idle announcement's end tone: a falling (or rising) sweep from output.idle_announce_hz. Appended.
+    Output_IdleAnnounceEndHz,
 };
 
 }  // namespace param

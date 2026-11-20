@@ -217,6 +217,7 @@ the sites are listed above. Paths renamed on 2026-11-06 are mapped in
 | `output.trill_pulse_end_ms`, `output.trill_pulse_jitter_ms` | the trill's pulse lengths (src/output/TrillShape.h; presets trillramp-up, trillramp-down, trillrand): the last trill pulse's length, the ones between stepping from `hop_pulse_ms` to it; each trill pulse varied at random by up to the jitter; held to 5-60 ms, each 0 = off. The call's length changes with them, so a preset keeps it inside the detector's 450 ms. The climb keeps `hop_pulse_ms` | ms, ms | yes, from the next call |
 
 | `output.idle_announce_hz`, `output.idle_announce_ms` | the call's lead-in tone and its length (0 Hz = none) | Hz, ms | yes |
+| `output.idle_announce_end_hz` | 0: the lead-in is one steady tone; else it glides from `idle_announce_hz` to this over its length (OUT-008: a falling sweep below every listening window) | Hz | yes |
 
 | `output.silent` | outputs off, detection keeps running | bool | yes |
 

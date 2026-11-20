@@ -86,6 +86,7 @@ void test_idle_call_with_hop() {
     TEST_ASSERT_EQUAL_UINT32(300, r.announceHz);
     TEST_ASSERT_EQUAL_UINT32(500, r.announceMs);
     TEST_ASSERT_EQUAL_UINT32(NodeSignalComposer::kIdleAnnounceGapMs, r.announceGapMs);
+    TEST_ASSERT_EQUAL_UINT32(0, r.announceEndHz);  // shipped: a steady tone
     TEST_ASSERT_EQUAL_UINT32(5, r.hopSteps);
     TEST_ASSERT_EQUAL_UINT32(3200, r.hopHz[0]);
     TEST_ASSERT_EQUAL_UINT32(15, r.pulseMs);
@@ -103,6 +104,15 @@ void test_idle_call_without_hop() {
     r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
     TEST_ASSERT_EQUAL_UINT32(OutputLimits().minHz, r.announceHz);
     TEST_ASSERT_EQUAL(static_cast<int>(OutputReject::None), static_cast<int>(SoundOutput::validate(r, OutputLimits())));
+    // A falling sweep (OUT-008): the end tone passes through, raised to OutputLimits.minHz like the start.
+    c.values().idleAnnounceHz = 1100;
+    c.values().idleAnnounceEndHz = 500;
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
+    TEST_ASSERT_EQUAL_UINT32(500, r.announceEndHz);
+    c.values().idleAnnounceEndHz = 50;
+    r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);
+    TEST_ASSERT_EQUAL_UINT32(OutputLimits().minHz, r.announceEndHz);
+    c.values().idleAnnounceEndHz = 0;
     // No announcement tone: the plain idle pattern.
     c.values().idleAnnounceHz = 0;
     r = c.compose(shippedGrid(), ChirpPattern::Idle, false, 0);

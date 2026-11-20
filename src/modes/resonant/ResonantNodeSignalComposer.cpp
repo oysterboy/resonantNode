@@ -102,6 +102,9 @@ OutputRequest NodeSignalComposer::compose(const BandGrid& grid, ChirpPattern pat
         const uint32_t minHz = OutputLimits().minHz;
         request.announceHz = _values.idleAnnounceHz < minHz ? minHz : _values.idleAnnounceHz;
         request.announceMs = _values.idleAnnounceMs;
+        request.announceEndHz = _values.idleAnnounceEndHz == 0
+            ? 0
+            : (_values.idleAnnounceEndHz < minHz ? minHz : _values.idleAnnounceEndHz);
         request.announceGapMs = kIdleAnnounceGapMs;
         const unsigned long announceSpanMs = request.announceMs + request.announceGapMs;
         const unsigned long callMaxMs = announceSpanMs < maxSpanMs ? maxSpanMs - announceSpanMs : 0;

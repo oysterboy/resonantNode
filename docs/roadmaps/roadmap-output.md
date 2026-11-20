@@ -132,6 +132,27 @@ ceiling, the 5 V rail as above, the floor in the band with the light off and at 
 session cited; the light runs on every node in the room from 2026-12-07.
 ```
 
+### OUT-008 - the idle announcement as a falling sweep
+
+Status: TODO (owner 2026-11-20: "change idle announce sound, use rise backwards? (should not confuse detection)";
+a later change, not for the 2 m pitch map).
+
+```text
+What: the idle call's lead-in (output.idle_announce_hz / _ms, today one plain tone, 300 Hz on the
+2026-10-17 decision) becomes the rise played backwards: a falling sweep, the call's end signature mirrored.
+
+Traps, from the detector as it is (no detection change in this item):
+- Merging: on the call's bins and with a short gap before the call, the detector sees sweep + call as one sound,
+  longer than its 450 ms limit: rejected as too long, and the call itself goes unheard.
+- The trill-only presets drop the shape check (decisions/2026-11-19-trill-only-drops-the-shape-check.md), so a
+  falling sweep inside the window can pass as a call there; the rise presets' rising-step rule rejects it.
+Proposed: the sweep below the listening window (e.g. 1,500 -> 800 Hz) with today's gap, so it is never inside
+what any node listens to. Needs a sweep in the announcement phase (SoundOutput plays one tone there now).
+
+Gate: host test of the announcement's request (range, length inside OutputLimits); on the bench, with every node
+calling, no verdict on an announcement and the call after it heard as before (a hearing-test block cited).
+```
+
 ## Current focus
 
 ```text

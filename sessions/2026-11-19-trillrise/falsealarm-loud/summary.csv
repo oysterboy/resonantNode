@@ -1,0 +1,3 @@
+preset,condition,node,minutes,valid,valid_per_10min,invalid,reject,peak,seconds_over_onset,details
+trillrise,noise,E2,40,0,0.0,800,6895,14472,1962,reject duration_too_short x5517; invalid contrast x781; reject coverage_too_low x508; reject strength_too_low x484; reject longest_island_too_short x326; reject duration_too_long x60; invalid shape x19
+trillrise,noise,R1,40,0,0.0,65,2750,8312,1344,reject duration_too_short x2501; reject strength_too_low x139; reject coverage_too_low x78; invalid contrast x42; reject longest_island_too_short x32; invalid shape x23

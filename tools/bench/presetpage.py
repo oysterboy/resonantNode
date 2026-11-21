@@ -11,7 +11,7 @@ import sys
 
 DIR = "tools/bench/presets"
 OUT = sys.argv[1]
-ORDER = ["trill-taper-rise", "trill-taper-glide-rise", "trill-taper-glide-riseclear", "trill-taper-glide-risefall", "trill-taper-grain-rise", "trill-taper-grain-riseclear", "trill-taper-glide-grain-rise", "trill-taper-glide-grain-riseclear", "trill-taper-glide-grain-risefall", "trill-taper", "trill-taper-grain", "trill-taper-glide", "trill-taper-glide-grain", "glide", "cricket", "fieldcricket", "trill", "fieldtrill", "trillrise", "trill25", "trill30", "trillramp-up", "trillramp-down", "trillrand", "bb-all", "bb-trill", "lowwindow", "wide", "low", "deep", "calm", "quiet"]
+ORDER = ["trill-taper-rise", "trill-taper-glide-rise", "trill-taper-glide-riseclear", "trill-taper-glide-risefall", "trill-taper-grain-rise", "trill-taper-grain-riseclear", "trill-taper-glide-grain-rise", "trill-taper-glide-grain-riseclear", "trill-taper-glide-grain-risefall", "trill-taper", "trill-taper-grain", "trill-taper-glide", "trill-taper-glide-grain", "trill-taper-glide-grain15", "trill-taper-glidelight-grain15", "trill-taper-glidelight", "trill-taper-grain15", "glide", "cricket", "fieldcricket", "trill", "fieldtrill", "trillrise", "trill25", "trill30", "trillramp-up", "trillramp-down", "trillrand", "bb-all", "bb-trill", "lowwindow", "wide", "low", "deep", "calm", "quiet"]
 
 
 def read(name):

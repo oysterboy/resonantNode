@@ -1,0 +1,4 @@
+# 2026-11-20 night: pitch map trill-taper-glide-grain-rise on the line of four
+
+One of five maps run the same night on the line R1 - E2 - E4 - E3, 1 m apart; setup, method and the comparison of
+all five: ../2026-11-20-line-map-trill-taper/README.md. Per-pitch rows: summary.csv; per-call outcomes: calls.csv.

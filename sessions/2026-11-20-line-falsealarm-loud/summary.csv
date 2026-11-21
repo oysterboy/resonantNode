@@ -1,0 +1,9 @@
+preset,condition,node,minutes,valid,valid_per_10min,invalid,reject,peak,seconds_over_onset,details
+trill-taper,noise,E2,20,1,0.5,43,1907,8111,768,reject duration_too_short x1599; reject strength_too_low x183; reject coverage_too_low x87; invalid contrast x43; reject longest_island_too_short x20; reject duration_too_long x18
+trill-taper,noise,E3,20,0,0.0,0,76,3498,61,reject duration_too_short x62; reject strength_too_low x14
+trill-taper,noise,E4,20,3,1.5,0,238,4543,191,reject duration_too_short x219; reject strength_too_low x13; reject coverage_too_low x6
+trill-taper,noise,R1,20,12,6.0,50,1508,7554,665,reject duration_too_short x1369; reject strength_too_low x82; reject coverage_too_low x53; invalid contrast x50; reject longest_island_too_short x4
+trill-taper-glide-grain-risefall,noise,E2,20,0,0.0,42,1964,7678,782,reject duration_too_short x1646; reject strength_too_low x183; reject coverage_too_low x92; invalid contrast x41; reject longest_island_too_short x27; reject duration_too_long x16; invalid shape x1
+trill-taper-glide-grain-risefall,noise,E3,20,0,0.0,0,82,3654,66,reject duration_too_short x66; reject strength_too_low x15; reject coverage_too_low x1
+trill-taper-glide-grain-risefall,noise,E4,20,1,0.5,2,236,4122,205,reject duration_too_short x212; reject strength_too_low x17; reject coverage_too_low x7; invalid contrast x1; invalid shape x1
+trill-taper-glide-grain-risefall,noise,R1,20,0,0.0,60,1529,7553,685,reject duration_too_short x1398; reject strength_too_low x72; reject coverage_too_low x50; invalid contrast x50; invalid shape x10; reject longest_island_too_short x9

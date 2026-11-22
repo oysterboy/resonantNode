@@ -1,0 +1,464 @@
+0.12 E4 RB level peak=4784 onset=2000 release=1500
+0.28 E2 RB level peak=6302 onset=2000 release=1500
+0.42 R1 BEH emit start now=126381156 source=idle state=Chirping pattern=idle
+0.42 R1 RB emit accepted source=idle state=Chirping pattern=idle
+0.42 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+0.67 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10355 duration_ms=82 profile=TonalPulseScalar
+0.67 E2 RB inspect id=25626 contrast=medium/medium:31113 amp=medium/medium:4504 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+0.67 E3 RB level peak=3420 onset=2000 release=1500
+0.67 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6611 duration_ms=95 profile=TonalPulseScalar
+0.67 E3 RB reject reason=coverage_too_low duration_ms=85 strength=3420 matched_mean=2114 coverage_ms=54 island_ms=16 gap_ms=8 new=1
+0.67 E4 RB inspect id=20369 contrast=medium/medium:30861 amp=medium/medium:2992 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+0.67 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+0.91 E3 RB reject reason=duration_too_short duration_ms=21 strength=2613 matched_mean=2008 coverage_ms=9 island_ms=7 gap_ms=11 new=1
+0.91 E3 RB reject reason=duration_too_short duration_ms=4 strength=2225 matched_mean=2095 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+1.18 E3 RB reject reason=duration_too_short duration_ms=7 strength=2189 matched_mean=2068 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+1.18 R1 RB level peak=99 onset=2000 release=1500
+1.18 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6618 duration_ms=389 profile=TonalPulseScalar
+1.18 E2 RB inspect id=25627 contrast=medium/medium:32708 amp=medium/medium:3582 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+1.18 E4 RB level peak=6611 onset=2000 release=1500
+1.18 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4857 duration_ms=403 profile=TonalPulseScalar
+1.18 E2 RB reject reason=duration_too_short duration_ms=8 strength=2382 matched_mean=2124 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+1.18 E4 RB inspect id=20370 contrast=medium/medium:32580 amp=medium/medium:2212 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+1.27 E2 RB level peak=10355 onset=2000 release=1500
+1.55 E3 RB level peak=2773 onset=2000 release=1500
+2.13 R1 RB level peak=1085 onset=2000 release=1500
+2.13 E4 RB level peak=557 onset=2000 release=1500
+2.27 E2 RB level peak=81 onset=2000 release=1500
+2.55 E3 RB level peak=35 onset=2000 release=1500
+2.93 R1 BEH emit start now=126383684 source=idle state=Chirping pattern=idle
+2.93 R1 RB emit accepted source=idle state=Chirping pattern=idle
+2.93 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+3.18 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10442 duration_ms=82 profile=TonalPulseScalar
+3.18 E2 RB inspect id=25629 contrast=medium/medium:30982 amp=medium/medium:4649 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+3.18 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6596 duration_ms=95 profile=TonalPulseScalar
+3.18 E4 RB inspect id=20371 contrast=medium/medium:30810 amp=medium/medium:2975 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+3.18 E3 RB reject reason=coverage_too_low duration_ms=85 strength=3313 matched_mean=2125 coverage_ms=52 island_ms=16 gap_ms=8 new=1
+3.18 E4 RB level peak=6596 onset=2000 release=1500
+3.18 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+3.27 E2 RB level peak=10442 onset=2000 release=1500
+3.36 E3 RB reject reason=duration_too_short duration_ms=22 strength=2535 matched_mean=1953 coverage_ms=10 island_ms=7 gap_ms=11 new=1
+3.43 E3 RB reject reason=duration_too_short duration_ms=4 strength=2196 matched_mean=2070 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+3.72 E3 RB level peak=3313 onset=2000 release=1500
+3.72 E3 RB reject reason=duration_too_short duration_ms=7 strength=2137 matched_mean=2048 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+3.72 R1 RB level peak=146 onset=2000 release=1500
+3.72 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6628 duration_ms=389 profile=TonalPulseScalar
+3.72 E2 RB inspect id=25630 contrast=medium/medium:32707 amp=medium/medium:3605 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+3.72 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4872 duration_ms=403 profile=TonalPulseScalar
+3.72 E4 RB inspect id=20372 contrast=medium/medium:32584 amp=medium/medium:2237 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+3.72 E2 RB reject reason=duration_too_short duration_ms=8 strength=2392 matched_mean=2118 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+4.12 E4 RB level peak=4872 onset=2000 release=1500
+4.27 E2 RB level peak=6628 onset=2000 release=1500
+4.48 R1 BEH emit start now=126385220 source=idle state=Chirping pattern=idle
+4.48 R1 RB emit accepted source=idle state=Chirping pattern=idle
+4.48 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+4.55 E3 RB level peak=2728 onset=2000 release=1500
+4.73 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10406 duration_ms=82 profile=TonalPulseScalar
+4.73 E2 RB inspect id=25632 contrast=medium/medium:30980 amp=medium/medium:4413 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+4.73 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3370 matched_mean=2144 coverage_ms=51 island_ms=16 gap_ms=8 new=1
+4.73 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6550 duration_ms=95 profile=TonalPulseScalar
+4.73 E4 RB inspect id=20373 contrast=medium/medium:30788 amp=medium/medium:2939 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+4.73 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+4.90 E3 RB reject reason=duration_too_short duration_ms=22 strength=2526 matched_mean=1966 coverage_ms=9 island_ms=6 gap_ms=12 new=1
+4.99 E3 RB reject reason=duration_too_short duration_ms=4 strength=2183 matched_mean=2059 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+5.27 E3 RB reject reason=duration_too_short duration_ms=7 strength=2116 matched_mean=2020 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+5.27 E4 RB level peak=6550 onset=2000 release=1500
+5.27 R1 RB level peak=1118 onset=2000 release=1500
+5.27 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6666 duration_ms=389 profile=TonalPulseScalar
+5.27 E2 RB inspect id=25633 contrast=medium/medium:32705 amp=medium/medium:3623 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+5.27 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4844 duration_ms=403 profile=TonalPulseScalar
+5.27 E4 RB inspect id=20374 contrast=medium/medium:32583 amp=medium/medium:2214 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+5.27 E2 RB reject reason=duration_too_short duration_ms=8 strength=2392 matched_mean=2102 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+5.27 E2 RB level peak=10406 onset=2000 release=1500
+5.55 E3 RB level peak=3370 onset=2000 release=1500
+6.18 E4 RB level peak=4219 onset=2000 release=1500
+6.18 R1 RB level peak=1070 onset=2000 release=1500
+6.25 E2 RB level peak=281 onset=2000 release=1500
+6.54 E3 RB level peak=37 onset=2000 release=1500
+7.18 E4 RB level peak=32 onset=2000 release=1500
+7.18 R1 RB level peak=120 onset=2000 release=1500
+7.25 E2 RB level peak=46 onset=2000 release=1500
+7.32 R1 BEH emit start now=126388072 source=idle state=Chirping pattern=idle
+7.32 R1 RB emit accepted source=idle state=Chirping pattern=idle
+7.32 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+7.58 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=contrast strength=10165 duration_ms=76 profile=TonalPulseScalar
+7.58 E2 RB inspect id=25635 contrast=weak/medium:29573 amp=medium/medium:3653 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+7.58 E3 RB reject reason=strength_too_low duration_ms=82 strength=2714 matched_mean=2121 coverage_ms=40 island_ms=16 gap_ms=10 new=1
+7.58 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=contrast strength=6656 duration_ms=92 profile=TonalPulseScalar
+7.58 E4 RB inspect id=20375 contrast=weak/medium:30146 amp=medium/medium:2899 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+7.58 E3 RB level peak=2714 onset=2000 release=1500
+7.58 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+7.74 E3 RB reject reason=duration_too_short duration_ms=21 strength=2531 matched_mean=1975 coverage_ms=9 island_ms=7 gap_ms=11 new=1
+7.82 E3 RB reject reason=duration_too_short duration_ms=5 strength=2209 matched_mean=1975 coverage_ms=4 island_ms=5 gap_ms=0 new=1
+8.14 E3 RB reject reason=duration_too_short duration_ms=7 strength=2242 matched_mean=2115 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+8.14 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6705 duration_ms=389 profile=TonalPulseScalar
+8.14 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4806 duration_ms=392 profile=TonalPulseScalar
+8.14 E2 RB inspect id=25636 contrast=medium/medium:32708 amp=medium/medium:3593 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+8.14 E4 RB inspect id=20376 contrast=medium/medium:32576 amp=medium/medium:2170 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+8.14 E2 RB reject reason=duration_too_short duration_ms=8 strength=2393 matched_mean=2116 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+8.14 E4 RB level peak=6656 onset=2000 release=1500
+8.14 R1 RB level peak=1032 onset=2000 release=1500
+8.25 E2 RB level peak=10165 onset=2000 release=1500
+8.55 E3 RB level peak=2753 onset=2000 release=1500
+9.15 E4 RB level peak=125 onset=2000 release=1500
+9.15 R1 RB level peak=121 onset=2000 release=1500
+9.28 E2 RB level peak=49 onset=2000 release=1500
+9.55 E3 RB level peak=36 onset=2000 release=1500
+9.97 R1 BEH emit start now=126390719 source=idle state=Chirping pattern=idle
+9.97 R1 RB emit accepted source=idle state=Chirping pattern=idle
+9.97 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+10.26 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10385 duration_ms=82 profile=TonalPulseScalar
+10.26 E2 RB inspect id=25638 contrast=medium/medium:31053 amp=medium/medium:4426 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+10.26 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3366 matched_mean=2120 coverage_ms=52 island_ms=16 gap_ms=7 new=1
+10.26 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6626 duration_ms=95 profile=TonalPulseScalar
+10.26 E4 RB inspect id=20377 contrast=medium/medium:30932 amp=medium/medium:2891 shape=medium/medium:3.00 rising=2 bins_hz=2600-3100
+10.26 E4 RB level peak=6626 onset=2000 release=1500
+10.26 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+10.26 E2 RB level peak=10385 onset=2000 release=1500
+10.39 E3 RB reject reason=duration_too_short duration_ms=52 strength=2549 matched_mean=1870 coverage_ms=25 island_ms=14 gap_ms=15 new=1
+10.46 E3 RB reject reason=duration_too_short duration_ms=4 strength=2182 matched_mean=2064 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+10.74 E3 RB level peak=3366 onset=2000 release=1500
+10.74 E3 RB reject reason=duration_too_short duration_ms=7 strength=2200 matched_mean=2064 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+10.74 R1 RB level peak=146 onset=2000 release=1500
+10.74 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6668 duration_ms=388 profile=TonalPulseScalar
+10.74 E2 RB inspect id=25639 contrast=medium/medium:32706 amp=medium/medium:3642 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+10.74 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4780 duration_ms=402 profile=TonalPulseScalar
+10.74 E4 RB inspect id=20378 contrast=medium/medium:32574 amp=medium/medium:2220 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+10.74 E2 RB reject reason=duration_too_short duration_ms=8 strength=2365 matched_mean=2090 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+11.18 E4 RB level peak=4780 onset=2000 release=1500
+11.26 E2 RB level peak=6668 onset=2000 release=1500
+11.56 E3 RB level peak=2776 onset=2000 release=1500
+11.67 R1 RB level peak=1071 onset=2000 release=1500
+12.13 E4 RB level peak=50 onset=2000 release=1500
+12.27 E2 RB level peak=48 onset=2000 release=1500
+12.57 E3 RB level peak=39 onset=2000 release=1500
+12.67 R1 RB level peak=160 onset=2000 release=1500
+13.14 E4 RB level peak=52 onset=2000 release=1500
+13.27 E2 RB level peak=54 onset=2000 release=1500
+13.42 R1 BEH emit start now=126394165 source=idle state=Chirping pattern=idle
+13.42 R1 RB emit accepted source=idle state=Chirping pattern=idle
+13.42 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+13.67 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10446 duration_ms=82 profile=TonalPulseScalar
+13.67 E3 RB level peak=3415 onset=2000 release=1500
+13.67 E2 RB inspect id=25641 contrast=medium/medium:31126 amp=medium/medium:4525 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+13.67 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3415 matched_mean=2124 coverage_ms=53 island_ms=16 gap_ms=7 new=1
+13.67 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6554 duration_ms=95 profile=TonalPulseScalar
+13.67 E4 RB inspect id=20379 contrast=medium/medium:30657 amp=medium/medium:2866 shape=medium/medium:3.00 rising=2 bins_hz=2600-3100
+13.67 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+13.91 E3 RB reject reason=duration_too_short duration_ms=52 strength=2614 matched_mean=1875 coverage_ms=25 island_ms=14 gap_ms=15 new=1
+13.91 E3 RB reject reason=duration_too_short duration_ms=4 strength=2184 matched_mean=2051 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+14.18 E3 RB reject reason=duration_too_short duration_ms=7 strength=2215 matched_mean=2080 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+14.18 R1 RB level peak=105 onset=2000 release=1500
+14.18 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6721 duration_ms=388 profile=TonalPulseScalar
+14.18 E2 RB inspect id=25642 contrast=medium/medium:32703 amp=medium/medium:3674 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+14.18 E4 RB level peak=6554 onset=2000 release=1500
+14.18 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4933 duration_ms=402 profile=TonalPulseScalar
+14.18 E4 RB inspect id=20380 contrast=medium/medium:32583 amp=medium/medium:2199 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+14.18 E2 RB reject reason=duration_too_short duration_ms=8 strength=2419 matched_mean=2111 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+14.27 E2 RB level peak=10446 onset=2000 release=1500
+14.56 E3 RB level peak=2773 onset=2000 release=1500
+15.14 R1 RB level peak=1104 onset=2000 release=1500
+15.14 E4 RB level peak=983 onset=2000 release=1500
+15.26 E2 RB level peak=92 onset=2000 release=1500
+15.56 E3 RB level peak=32 onset=2000 release=1500
+16.15 R1 BEH emit start now=126396844 source=idle state=Chirping pattern=idle
+16.15 R1 RB emit accepted source=idle state=Chirping pattern=idle
+16.15 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+16.15 E4 RB level peak=863 onset=2000 release=1500
+16.35 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10495 duration_ms=82 profile=TonalPulseScalar
+16.35 E2 RB inspect id=25644 contrast=medium/medium:31255 amp=medium/medium:4304 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+16.35 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3368 matched_mean=2134 coverage_ms=51 island_ms=16 gap_ms=7 new=1
+16.35 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6593 duration_ms=95 profile=TonalPulseScalar
+16.35 E4 RB inspect id=20381 contrast=medium/medium:30683 amp=medium/medium:2801 shape=medium/medium:3.00 rising=2 bins_hz=2600-3100
+16.35 E2 RB level peak=10495 onset=2000 release=1500
+16.35 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+16.60 E3 RB reject reason=duration_too_short duration_ms=52 strength=2565 matched_mean=1890 coverage_ms=26 island_ms=15 gap_ms=14 new=1
+16.60 E3 RB level peak=3368 onset=2000 release=1500
+16.60 E3 RB reject reason=duration_too_short duration_ms=4 strength=2246 matched_mean=2105 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+16.87 E3 RB reject reason=duration_too_short duration_ms=7 strength=2209 matched_mean=2083 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+16.87 R1 RB level peak=160 onset=2000 release=1500
+16.87 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6726 duration_ms=388 profile=TonalPulseScalar
+16.87 E2 RB inspect id=25645 contrast=medium/medium:32705 amp=medium/medium:3625 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+16.87 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4936 duration_ms=402 profile=TonalPulseScalar
+16.87 E4 RB inspect id=20382 contrast=medium/medium:32575 amp=medium/medium:2137 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+16.87 E2 RB reject reason=duration_too_short duration_ms=8 strength=2419 matched_mean=2124 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+17.15 E4 RB level peak=6593 onset=2000 release=1500
+17.27 E2 RB level peak=6726 onset=2000 release=1500
+17.57 E3 RB level peak=2790 onset=2000 release=1500
+17.79 R1 RB level peak=1070 onset=2000 release=1500
+18.14 E4 RB level peak=42 onset=2000 release=1500
+18.26 E2 RB level peak=56 onset=2000 release=1500
+18.55 E3 RB level peak=34 onset=2000 release=1500
+18.70 R1 BEH emit start now=126399428 source=idle state=Chirping pattern=idle
+18.70 R1 RB emit accepted source=idle state=Chirping pattern=idle
+18.70 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+18.93 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10483 duration_ms=83 profile=TonalPulseScalar
+18.93 E2 RB inspect id=25647 contrast=medium/medium:31241 amp=medium/medium:4244 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+18.93 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3328 matched_mean=2156 coverage_ms=50 island_ms=16 gap_ms=7 new=1
+18.93 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6678 duration_ms=96 profile=TonalPulseScalar
+18.93 E4 RB inspect id=20383 contrast=medium/medium:30733 amp=medium/medium:2922 shape=medium/medium:3.00 rising=2 bins_hz=2600-3100
+18.93 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+19.18 E3 RB reject reason=duration_too_short duration_ms=22 strength=2585 matched_mean=1992 coverage_ms=10 island_ms=8 gap_ms=11 new=1
+19.18 E4 RB level peak=6678 onset=2000 release=1500
+19.18 E3 RB reject reason=duration_too_short duration_ms=4 strength=2203 matched_mean=2042 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+19.45 E2 RB level peak=10483 onset=2000 release=1500
+19.45 E3 RB reject reason=duration_too_short duration_ms=7 strength=2133 matched_mean=2020 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+19.45 R1 RB level peak=104 onset=2000 release=1500
+19.45 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6624 duration_ms=388 profile=TonalPulseScalar
+19.45 E2 RB inspect id=25648 contrast=medium/medium:32706 amp=medium/medium:3599 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+19.45 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4797 duration_ms=403 profile=TonalPulseScalar
+19.45 E2 RB reject reason=duration_too_short duration_ms=8 strength=2356 matched_mean=2086 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+19.45 E4 RB inspect id=20384 contrast=medium/medium:32577 amp=medium/medium:2177 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+19.55 E3 RB level peak=3328 onset=2000 release=1500
+20.13 E4 RB level peak=4797 onset=2000 release=1500
+20.27 E2 RB level peak=6244 onset=2000 release=1500
+20.37 R1 RB level peak=1058 onset=2000 release=1500
+20.55 E3 RB level peak=91 onset=2000 release=1500
+21.13 E4 RB level peak=46 onset=2000 release=1500
+21.27 E2 RB level peak=40 onset=2000 release=1500
+21.37 R1 RB level peak=149 onset=2000 release=1500
+21.56 R1 BEH emit start now=126402303 source=idle state=Chirping pattern=idle
+21.56 R1 RB emit accepted source=idle state=Chirping pattern=idle
+21.56 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+21.56 E3 RB level peak=38 onset=2000 release=1500
+21.82 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10497 duration_ms=82 profile=TonalPulseScalar
+21.82 E2 RB inspect id=25650 contrast=medium/medium:31253 amp=medium/medium:4403 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+21.82 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3296 matched_mean=2145 coverage_ms=51 island_ms=16 gap_ms=7 new=1
+21.82 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6643 duration_ms=95 profile=TonalPulseScalar
+21.82 E4 RB inspect id=20385 contrast=medium/medium:30811 amp=medium/medium:2929 shape=medium/medium:3.00 rising=2 bins_hz=2600-3100
+21.82 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+22.06 E3 RB reject reason=duration_too_short duration_ms=22 strength=2572 matched_mean=1985 coverage_ms=10 island_ms=8 gap_ms=11 new=1
+22.06 E3 RB reject reason=duration_too_short duration_ms=4 strength=2219 matched_mean=2090 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+22.14 E4 RB level peak=6643 onset=2000 release=1500
+22.38 E3 RB reject reason=duration_too_short duration_ms=7 strength=2161 matched_mean=2029 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+22.38 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6641 duration_ms=388 profile=TonalPulseScalar
+22.38 E2 RB inspect id=25651 contrast=medium/medium:32705 amp=medium/medium:3620 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+22.38 E2 RB level peak=10497 onset=2000 release=1500
+22.38 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4854 duration_ms=402 profile=TonalPulseScalar
+22.38 E4 RB inspect id=20386 contrast=medium/medium:32571 amp=medium/medium:2199 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+22.38 E2 RB reject reason=duration_too_short duration_ms=8 strength=2427 matched_mean=2115 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+22.38 R1 RB level peak=1069 onset=2000 release=1500
+22.56 E3 RB level peak=3296 onset=2000 release=1500
+23.13 E4 RB level peak=4165 onset=2000 release=1500
+23.27 E2 RB level peak=2427 onset=2000 release=1500
+23.37 R1 RB level peak=162 onset=2000 release=1500
+23.57 E3 RB level peak=33 onset=2000 release=1500
+24.13 E4 RB level peak=36 onset=2000 release=1500
+24.25 E2 RB level peak=42 onset=2000 release=1500
+24.37 R1 RB level peak=159 onset=2000 release=1500
+24.55 E3 RB level peak=30 onset=2000 release=1500
+24.75 R1 BEH emit start now=126405500 source=idle state=Chirping pattern=idle
+24.75 R1 RB emit accepted source=idle state=Chirping pattern=idle
+24.75 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+25.00 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10440 duration_ms=82 profile=TonalPulseScalar
+25.00 E2 RB inspect id=25653 contrast=medium/medium:31094 amp=medium/medium:4272 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+25.00 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3320 matched_mean=2138 coverage_ms=51 island_ms=16 gap_ms=7 new=1
+25.00 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6614 duration_ms=95 profile=TonalPulseScalar
+25.00 E4 RB inspect id=20387 contrast=medium/medium:30789 amp=medium/medium:2829 shape=medium/medium:3.00 rising=2 bins_hz=2600-3100
+25.00 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+25.27 E4 RB level peak=6614 onset=2000 release=1500
+25.27 E3 RB reject reason=duration_too_short duration_ms=22 strength=2583 matched_mean=1961 coverage_ms=10 island_ms=8 gap_ms=11 new=1
+25.27 E3 RB reject reason=duration_too_short duration_ms=4 strength=2180 matched_mean=2040 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+25.27 E2 RB level peak=10440 onset=2000 release=1500
+25.55 E3 RB reject reason=duration_too_short duration_ms=7 strength=2173 matched_mean=2021 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+25.55 R1 RB level peak=146 onset=2000 release=1500
+25.55 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6751 duration_ms=388 profile=TonalPulseScalar
+25.55 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4898 duration_ms=392 profile=TonalPulseScalar
+25.55 E2 RB inspect id=25654 contrast=medium/medium:32703 amp=medium/medium:3622 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+25.55 E4 RB inspect id=20388 contrast=medium/medium:32567 amp=medium/medium:2212 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+25.55 E2 RB reject reason=duration_too_short duration_ms=8 strength=2412 matched_mean=2106 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+25.55 E3 RB level peak=3320 onset=2000 release=1500
+26.14 E4 RB level peak=4898 onset=2000 release=1500
+26.27 E2 RB level peak=6394 onset=2000 release=1500
+26.45 R1 RB level peak=1034 onset=2000 release=1500
+26.55 E3 RB level peak=201 onset=2000 release=1500
+27.14 E4 RB level peak=58 onset=2000 release=1500
+27.26 R1 BEH emit start now=126407982 source=idle state=Chirping pattern=idle
+27.26 R1 RB emit accepted source=idle state=Chirping pattern=idle
+27.26 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+27.26 E2 RB level peak=754 onset=2000 release=1500
+27.48 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10461 duration_ms=82 profile=TonalPulseScalar
+27.48 E2 RB inspect id=25656 contrast=medium/medium:31124 amp=medium/medium:4211 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+27.48 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3358 matched_mean=2136 coverage_ms=52 island_ms=16 gap_ms=7 new=1
+27.48 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6560 duration_ms=95 profile=TonalPulseScalar
+27.48 E4 RB inspect id=20389 contrast=medium/medium:30717 amp=medium/medium:2834 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+27.48 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+27.55 E3 RB level peak=3358 onset=2000 release=1500
+27.73 E3 RB reject reason=duration_too_short duration_ms=22 strength=2674 matched_mean=2034 coverage_ms=10 island_ms=8 gap_ms=11 new=1
+27.73 E3 RB reject reason=duration_too_short duration_ms=4 strength=2165 matched_mean=2014 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+28.00 E3 RB reject reason=duration_too_short duration_ms=7 strength=2158 matched_mean=2016 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+28.00 R1 RB level peak=123 onset=2000 release=1500
+28.00 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6715 duration_ms=389 profile=TonalPulseScalar
+28.00 E2 RB inspect id=25657 contrast=medium/medium:32706 amp=medium/medium:3607 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+28.00 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4886 duration_ms=403 profile=TonalPulseScalar
+28.00 E4 RB inspect id=20390 contrast=medium/medium:32580 amp=medium/medium:2193 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+28.00 E2 RB reject reason=duration_too_short duration_ms=8 strength=2385 matched_mean=2110 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+28.13 E4 RB level peak=6560 onset=2000 release=1500
+28.26 E2 RB level peak=10461 onset=2000 release=1500
+28.57 E3 RB level peak=2725 onset=2000 release=1500
+28.92 R1 RB level peak=1051 onset=2000 release=1500
+29.13 E4 RB level peak=53 onset=2000 release=1500
+29.27 E2 RB level peak=52 onset=2000 release=1500
+29.55 E3 RB level peak=38 onset=2000 release=1500
+29.81 R1 BEH emit start now=126410556 source=idle state=Chirping pattern=idle
+29.81 R1 RB emit accepted source=idle state=Chirping pattern=idle
+29.81 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+30.06 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10428 duration_ms=81 profile=TonalPulseScalar
+30.06 E2 RB inspect id=25659 contrast=medium/medium:31185 amp=medium/medium:4322 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+30.06 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3307 matched_mean=2131 coverage_ms=51 island_ms=16 gap_ms=7 new=1
+30.06 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6567 duration_ms=96 profile=TonalPulseScalar
+30.06 E4 RB inspect id=20391 contrast=medium/medium:30865 amp=medium/medium:2773 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+30.06 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+30.13 E4 RB level peak=6567 onset=2000 release=1500
+30.30 E3 RB reject reason=duration_too_short duration_ms=22 strength=2600 matched_mean=1961 coverage_ms=10 island_ms=8 gap_ms=11 new=1
+30.30 E2 RB level peak=10428 onset=2000 release=1500
+30.30 E3 RB reject reason=duration_too_short duration_ms=4 strength=2193 matched_mean=2027 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+30.58 E3 RB reject reason=duration_too_short duration_ms=7 strength=2178 matched_mean=2034 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+30.58 R1 RB level peak=120 onset=2000 release=1500
+30.58 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6604 duration_ms=389 profile=TonalPulseScalar
+30.58 E2 RB inspect id=25660 contrast=medium/medium:32710 amp=medium/medium:3607 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+30.58 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4823 duration_ms=402 profile=TonalPulseScalar
+30.58 E2 RB reject reason=duration_too_short duration_ms=8 strength=2431 matched_mean=2123 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+30.58 E4 RB inspect id=20392 contrast=medium/medium:32583 amp=medium/medium:2166 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+30.58 E3 RB level peak=3307 onset=2000 release=1500
+31.14 E4 RB level peak=4823 onset=2000 release=1500
+31.27 E2 RB level peak=6237 onset=2000 release=1500
+31.49 R1 RB level peak=1040 onset=2000 release=1500
+31.57 E3 RB level peak=490 onset=2000 release=1500
+31.89 R1 BEH emit start now=126412645 source=idle state=Chirping pattern=idle
+31.89 R1 RB emit accepted source=idle state=Chirping pattern=idle
+31.89 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+32.15 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10419 duration_ms=81 profile=TonalPulseScalar
+32.15 E2 RB inspect id=25662 contrast=medium/medium:31205 amp=medium/medium:4127 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+32.15 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3309 matched_mean=2169 coverage_ms=49 island_ms=16 gap_ms=7 new=1
+32.15 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6646 duration_ms=96 profile=TonalPulseScalar
+32.15 E4 RB inspect id=20393 contrast=medium/medium:30706 amp=medium/medium:2853 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+32.15 E4 RB level peak=6646 onset=2000 release=1500
+32.15 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+32.32 E2 RB level peak=10419 onset=2000 release=1500
+32.32 E3 RB reject reason=duration_too_short duration_ms=22 strength=2611 matched_mean=2008 coverage_ms=10 island_ms=8 gap_ms=11 new=1
+32.40 E3 RB reject reason=duration_too_short duration_ms=4 strength=2163 matched_mean=2003 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+32.66 E3 RB reject reason=duration_too_short duration_ms=7 strength=2134 matched_mean=2012 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+32.66 E3 RB level peak=3309 onset=2000 release=1500
+32.66 R1 RB level peak=140 onset=2000 release=1500
+32.66 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6663 duration_ms=389 profile=TonalPulseScalar
+32.66 E2 RB inspect id=25663 contrast=medium/medium:32708 amp=medium/medium:3649 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+32.66 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4743 duration_ms=402 profile=TonalPulseScalar
+32.66 E4 RB inspect id=20394 contrast=medium/medium:32570 amp=medium/medium:2191 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+32.66 E2 RB reject reason=duration_too_short duration_ms=8 strength=2424 matched_mean=2101 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+33.15 E4 RB level peak=4743 onset=2000 release=1500
+33.27 E2 RB level peak=6462 onset=2000 release=1500
+33.59 E3 RB level peak=2779 onset=2000 release=1500
+33.59 R1 RB level peak=1090 onset=2000 release=1500
+34.02 R1 BEH emit start now=126414757 source=idle state=Chirping pattern=idle
+34.02 R1 RB emit accepted source=idle state=Chirping pattern=idle
+34.02 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+34.27 E4 RB level peak=6707 onset=2000 release=1500
+34.27 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10457 duration_ms=81 profile=TonalPulseScalar
+34.27 E2 RB inspect id=25665 contrast=medium/medium:31305 amp=medium/medium:4264 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+34.27 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3309 matched_mean=2146 coverage_ms=51 island_ms=16 gap_ms=7 new=1
+34.27 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6707 duration_ms=96 profile=TonalPulseScalar
+34.27 E4 RB inspect id=20395 contrast=medium/medium:30647 amp=medium/medium:2836 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+34.27 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+34.27 E2 RB level peak=10457 onset=2000 release=1500
+34.43 E3 RB reject reason=duration_too_short duration_ms=22 strength=2539 matched_mean=1972 coverage_ms=9 island_ms=7 gap_ms=12 new=1
+34.57 E3 RB reject reason=duration_too_short duration_ms=4 strength=2198 matched_mean=2032 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+34.57 E3 RB level peak=3309 onset=2000 release=1500
+34.79 E3 RB reject reason=duration_too_short duration_ms=7 strength=2113 matched_mean=1983 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+34.79 R1 RB level peak=151 onset=2000 release=1500
+34.79 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6736 duration_ms=389 profile=TonalPulseScalar
+34.79 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4800 duration_ms=391 profile=TonalPulseScalar
+34.79 E2 RB inspect id=25666 contrast=medium/medium:32707 amp=medium/medium:3639 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+34.79 E4 RB inspect id=20396 contrast=medium/medium:32570 amp=medium/medium:2171 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+34.79 E2 RB reject reason=duration_too_short duration_ms=8 strength=2416 matched_mean=2107 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+35.16 E4 RB level peak=4800 onset=2000 release=1500
+35.26 E2 RB level peak=6736 onset=2000 release=1500
+35.55 E3 RB level peak=2654 onset=2000 release=1500
+35.70 R1 RB level peak=1074 onset=2000 release=1500
+36.14 E4 RB level peak=33 onset=2000 release=1500
+36.33 E2 RB level peak=45 onset=2000 release=1500
+36.33 R1 BEH emit start now=126417068 source=idle state=Chirping pattern=idle
+36.33 R1 RB emit accepted source=idle state=Chirping pattern=idle
+36.33 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+36.57 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10440 duration_ms=81 profile=TonalPulseScalar
+36.57 E2 RB inspect id=25668 contrast=medium/medium:31202 amp=medium/medium:4224 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+36.57 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3424 matched_mean=2160 coverage_ms=51 island_ms=16 gap_ms=7 new=1
+36.57 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6684 duration_ms=96 profile=TonalPulseScalar
+36.57 E4 RB inspect id=20397 contrast=medium/medium:30672 amp=medium/medium:2917 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+36.57 E3 RB level peak=3424 onset=2000 release=1500
+36.57 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+36.75 E3 RB reject reason=duration_too_short duration_ms=51 strength=2590 matched_mean=1877 coverage_ms=24 island_ms=14 gap_ms=14 new=1
+36.82 E3 RB reject reason=duration_too_short duration_ms=4 strength=2197 matched_mean=2041 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+37.13 E3 RB reject reason=duration_too_short duration_ms=7 strength=2177 matched_mean=2028 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+37.13 R1 RB level peak=131 onset=2000 release=1500
+37.13 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6676 duration_ms=389 profile=TonalPulseScalar
+37.13 E2 RB inspect id=25669 contrast=medium/medium:32703 amp=medium/medium:3620 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+37.13 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4822 duration_ms=402 profile=TonalPulseScalar
+37.13 E4 RB inspect id=20398 contrast=medium/medium:32589 amp=medium/medium:2233 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+37.13 E2 RB reject reason=duration_too_short duration_ms=8 strength=2318 matched_mean=2036 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+37.13 E4 RB level peak=6684 onset=2000 release=1500
+37.28 E2 RB level peak=10440 onset=2000 release=1500
+37.57 E3 RB level peak=2763 onset=2000 release=1500
+37.97 R1 BEH emit start now=126418712 source=idle state=Chirping pattern=idle
+37.97 R1 RB emit accepted source=idle state=Chirping pattern=idle
+37.97 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+38.27 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=contrast strength=10085 duration_ms=76 profile=TonalPulseScalar
+38.27 E2 RB inspect id=25671 contrast=weak/medium:29618 amp=medium/medium:3605 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+38.27 E3 RB reject reason=strength_too_low duration_ms=82 strength=2847 matched_mean=2062 coverage_ms=44 island_ms=16 gap_ms=10 new=1
+38.27 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=0 reject=support_too_low failed=contrast strength=6619 duration_ms=93 profile=TonalPulseScalar
+38.27 E4 RB inspect id=20399 contrast=weak/medium:30421 amp=medium/medium:2729 shape=medium/medium:3.00 rising=2 bins_hz=2600-3100
+38.27 E4 RB level peak=6619 onset=2000 release=1500
+38.27 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+38.27 E2 RB level peak=10085 onset=2000 release=1500
+38.39 E3 RB reject reason=duration_too_short duration_ms=51 strength=2567 matched_mean=1870 coverage_ms=23 island_ms=13 gap_ms=14 new=1
+38.55 E3 RB reject reason=duration_too_short duration_ms=36 strength=2277 matched_mean=1957 coverage_ms=14 island_ms=11 gap_ms=20 new=1
+38.55 E3 RB level peak=2847 onset=2000 release=1500
+38.73 E3 RB reject reason=duration_too_short duration_ms=6 strength=2227 matched_mean=2052 coverage_ms=5 island_ms=6 gap_ms=0 new=1
+38.73 R1 RB level peak=1032 onset=2000 release=1500
+38.73 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6563 duration_ms=389 profile=TonalPulseScalar
+38.73 E2 RB inspect id=25672 contrast=medium/medium:32705 amp=medium/medium:3594 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+38.73 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4881 duration_ms=402 profile=TonalPulseScalar
+38.73 E4 RB inspect id=20400 contrast=medium/medium:32586 amp=medium/medium:2194 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+38.73 E2 RB reject reason=duration_too_short duration_ms=9 strength=2415 matched_mean=2097 coverage_ms=8 island_ms=9 gap_ms=0 new=1
+39.13 E4 RB level peak=4881 onset=2000 release=1500
+39.27 E2 RB level peak=6563 onset=2000 release=1500
+39.56 E3 RB level peak=2688 onset=2000 release=1500
+39.74 R1 RB level peak=1020 onset=2000 release=1500
+39.74 R1 BEH emit start now=126420476 source=idle state=Chirping pattern=idle
+39.74 R1 RB emit accepted source=idle state=Chirping pattern=idle
+39.74 R1 RB emit shape=idle_call announce_hz=1100 announce_ms=60 gap_ms=200 then=hop
+39.74 R1 RB rest start reason=rest_level now=126420477 until=126429161 field_patterns=0
+39.98 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=10451 duration_ms=81 profile=TonalPulseScalar
+39.98 E2 RB inspect id=25674 contrast=medium/medium:31160 amp=medium/medium:4111 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+39.98 E3 RB reject reason=coverage_too_low duration_ms=84 strength=3385 matched_mean=2157 coverage_ms=50 island_ms=15 gap_ms=8 new=1
+39.98 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6583 duration_ms=96 profile=TonalPulseScalar
+39.98 E4 RB inspect id=20401 contrast=medium/medium:30612 amp=medium/medium:2858 shape=medium/medium:3.00 rising=1 bins_hz=2600-3100
+39.98 R1 RB emit shape=hop steps=11 pulse_ms=25 gap_ms=0 order=3600,3600,3600,3600,3600,3600,3600,3600,3600,3600,3600
+40.16 E4 RB level peak=6583 onset=2000 release=1500
+40.16 E3 RB reject reason=duration_too_short duration_ms=22 strength=2524 matched_mean=1967 coverage_ms=9 island_ms=7 gap_ms=12 new=1
+40.27 E3 RB reject reason=duration_too_short duration_ms=4 strength=2240 matched_mean=2086 coverage_ms=3 island_ms=4 gap_ms=0 new=1
+40.27 E2 RB level peak=10451 onset=2000 release=1500
+40.50 E3 RB reject reason=duration_too_short duration_ms=7 strength=2193 matched_mean=2026 coverage_ms=6 island_ms=7 gap_ms=0 new=1
+40.50 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=6558 duration_ms=389 profile=TonalPulseScalar
+40.50 E2 RB inspect id=25675 contrast=medium/medium:32707 amp=medium/medium:3616 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+40.50 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=outputs_off valid=1 strength=4813 duration_ms=402 profile=TonalPulseScalar
+40.50 E4 RB inspect id=20402 contrast=medium/medium:32584 amp=medium/medium:2179 shape=medium/medium:1.00 rising=0 bins_hz=3600-3600
+40.50 E2 RB reject reason=duration_too_short duration_ms=8 strength=2388 matched_mean=2063 coverage_ms=7 island_ms=8 gap_ms=0 new=1
+40.56 E3 RB level peak=3385 onset=2000 release=1500
+40.63 R1 RB level peak=1023 onset=2000 release=1500
+41.13 E4 RB level peak=4813 onset=2000 release=1500
+41.26 E2 RB level peak=6214 onset=2000 release=1500
+41.55 E3 RB level peak=190 onset=2000 release=1500
+41.65 R1 RB level peak=160 onset=2000 release=1500
+42.14 E4 RB level peak=36 onset=2000 release=1500
+42.27 E2 RB level peak=49 onset=2000 release=1500
+42.56 E3 RB level peak=45 onset=2000 release=1500
+42.66 R1 RB level peak=119 onset=2000 release=1500
+43.13 E4 RB level peak=42 onset=2000 release=1500
+43.26 E2 RB level peak=38 onset=2000 release=1500
+43.55 E3 RB level peak=34 onset=2000 release=1500
+43.65 R1 RB level peak=145 onset=2000 release=1500
+44.13 E4 RB level peak=31 onset=2000 release=1500
+44.26 E2 RB level peak=45 onset=2000 release=1500
+44.57 E3 RB level peak=39 onset=2000 release=1500
+44.65 R1 RB level peak=112 onset=2000 release=1500

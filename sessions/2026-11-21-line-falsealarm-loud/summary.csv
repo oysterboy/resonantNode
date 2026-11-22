@@ -1,0 +1,5 @@
+preset,condition,node,minutes,valid,valid_per_10min,invalid,reject,peak,seconds_over_onset,details
+trill-taper-rise,noise,E2,20,0,0.0,43,1935,7947,794,reject duration_too_short x1624; reject strength_too_low x189; reject coverage_too_low x82; invalid contrast x40; reject longest_island_too_short x23; reject duration_too_long x17; invalid shape x3
+trill-taper-rise,noise,E3,20,0,0.0,0,69,3766,56,reject duration_too_short x58; reject strength_too_low x11
+trill-taper-rise,noise,E4,20,0,0.0,2,204,4512,166,reject duration_too_short x184; reject strength_too_low x13; reject coverage_too_low x6; invalid shape x2; reject longest_island_too_short x1
+trill-taper-rise,noise,R1,20,0,0.0,60,1513,7590,679,reject duration_too_short x1370; reject strength_too_low x82; reject coverage_too_low x57; invalid contrast x50; invalid shape x10; reject longest_island_too_short x4

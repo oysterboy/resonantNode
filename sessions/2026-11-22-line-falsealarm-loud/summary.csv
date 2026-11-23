@@ -1,0 +1,9 @@
+preset,condition,node,minutes,valid,valid_per_10min,invalid,reject,peak,seconds_over_onset,details
+trill-taper-glide-riseclear,noise,E2,20,0,0.0,54,1952,8166,789,reject duration_too_short x1658; reject strength_too_low x164; reject coverage_too_low x92; invalid contrast x50; reject longest_island_too_short x20; reject duration_too_long x18; invalid shape x4
+trill-taper-glide-riseclear,noise,E3,20,0,0.0,0,80,3682,66,reject duration_too_short x65; reject strength_too_low x14; reject coverage_too_low x1
+trill-taper-glide-riseclear,noise,E4,20,0,0.0,0,159,3557,118,reject duration_too_short x140; reject strength_too_low x11; reject coverage_too_low x5; reject longest_island_too_short x3
+trill-taper-glide-riseclear,noise,R1,20,0,0.0,63,1533,7751,684,reject duration_too_short x1396; reject strength_too_low x92; invalid contrast x53; reject coverage_too_low x39; invalid shape x10; reject longest_island_too_short x6
+trill-taper-rise,noise,E2,20,0,0.0,53,1972,7994,786,reject duration_too_short x1693; reject strength_too_low x146; reject coverage_too_low x88; invalid contrast x49; reject longest_island_too_short x29; reject duration_too_long x16; invalid shape x4
+trill-taper-rise,noise,E3,20,0,0.0,0,83,3635,64,reject duration_too_short x69; reject strength_too_low x14
+trill-taper-rise,noise,E4,20,0,0.0,0,183,4380,144,reject duration_too_short x165; reject strength_too_low x12; reject coverage_too_low x3; reject longest_island_too_short x3
+trill-taper-rise,noise,R1,20,0,0.0,63,1508,7741,667,reject duration_too_short x1384; reject strength_too_low x82; invalid contrast x51; reject coverage_too_low x34; invalid shape x12; reject longest_island_too_short x8

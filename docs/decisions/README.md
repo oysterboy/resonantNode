@@ -120,6 +120,10 @@ what replaced it.
 | 2026-11-12 | [Board revisions: a generation, layout RCs inside it, frozen when a batch is cut](2026-11-12-board-revisions.md) |
 | 2026-11-17 | [The trill is part of the performance's sound; its values are settled before the freeze](2026-11-17-trill-is-part-of-the-performance.md) |
 | 2026-11-17 | [The sound layer may set detection params it needs (the trill's release debounce); glide stays the complete reference setup](2026-11-17-sound-layer-may-set-detection-params.md) |
+| 2026-11-19 | [Trill-only drops the shape check by params; trill + glide stays the safe setup](2026-11-19-trill-only-drops-the-shape-check.md) |
+| 2026-11-19 | [Trill-only is judged at the tryout; trill + rise is the backup; the drift is parked](2026-11-19-trill-only-judged-at-the-tryout.md) |
+| 2026-11-20 | [The trill tapers (25 to 15 ms), trill-only listens with a 12 ms longest stretch; the call parts get names](2026-11-20-trill-taper-and-the-12-ms-island.md) |
+| 2026-11-23 | [trill-taper-rise is the safe fallback; trill-taper, -glide and -glide-grain15 go to the room](2026-11-23-trill-taper-rise-is-the-fallback.md) |
 
 ## Open
 

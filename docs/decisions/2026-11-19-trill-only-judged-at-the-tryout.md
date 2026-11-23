@@ -3,6 +3,7 @@
 Status: decided (owner 2026-11-19 evening: "Try trill only at the tryout, see what happens in real life. Trill + Rise
 is the backup.")
 Date: 2026-11-19
+Amended by: decisions/2026-11-23-trill-taper-rise-is-the-fallback.md (the backup is trill-taper-rise)
 Amends: decisions/2026-11-19-trill-only-drops-the-shape-check.md (its "Rules out" and "Revisit when")
 
 ## Decision

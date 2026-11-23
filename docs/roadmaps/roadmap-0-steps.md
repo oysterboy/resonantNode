@@ -542,6 +542,18 @@ substeps marked "on site" wait for those days.
         random direction turning at the band's edges, held once answered, away from a neighbour on the same bin,
         all params 0 = off, an RB seek log line; (6) a desk try at room distance from a failing bin, then three
         nodes. Judged in the room in step 18 against trill + glide.
+        Run 2026-11-20 .. 11-23, three nights on the line R1 - E2 - E4 - E3, 1 m apart (1, 2 and 3 m at once; each
+        node plays while the others listen; hearingtest.py --listen band --pitches; R1, the prototype, read apart):
+        bench/sessions/2026-11-20-line-map-trill-taper (five presets, 15-25 pitches, loud noise),
+        2026-11-21-line-map-trill-taper (glide and grain split: grain at 15 % nearly free, the glide costs 10-15 points
+        at 2 m), 2026-11-22-line-map-trill-taper (the fallback). Between E nodes trill-taper 95-98 % at 1 m, 90-96 % at
+        2 m, 16 false calls in 20 min of loud noise; trill-taper-rise 96-99 % / 93-99 %, 0 false calls on two nights.
+        Owner 2026-11-23 (decisions/2026-11-23-trill-taper-rise-is-the-fallback.md): trill-taper-rise is the safe
+        fallback; trill-taper, -glide and -glide-grain15 run in the room before narrowing. Owner's ear 2026-11-20:
+        "rise nice, risefall very nice". For part 4: single pitches fail for single pairs at 2 m (trill-taper E2->E3 6 %
+        at 3050-3150 Hz and 13-44 % at 2500-2600, the other direction 62-100 % there; on 2026-11-21 E2->E3 93 % over the
+        15 pitches): by the rule above that brings the drift back; whether the holes are the room is untested (the
+        nodes were not moved), so parts 5-6 are not started.
    24.6 Naming pass (owner 2026-11-19), the last substep before the freeze: the presets (glide, cricket,
         fieldcricket, bb-all, bb-trill, ...), the sound params (output.hop_trill_*, output.broadband_*, output.trill_*)
         and the scripts (callmatrix.py, hearingtest.py, nodepreset.py) read as one vocabulary; renamed together, the
